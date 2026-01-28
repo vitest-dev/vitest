@@ -37,6 +37,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Generate CLI docs
+        run: pnpm -C docs run cli-table
+
       # check uncommited LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
         run: git diff --exit-code
@@ -223,7 +226,7 @@ jobs:
 
       - name: Install
         run: |
-          yq -i '.overrides.vite = "npm:rolldown-vite"' pnpm-workspace.yaml
+          yq -i '.overrides.vite = "npm:vite@beta"' pnpm-workspace.yaml
           git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
@@ -232,12 +235,14 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:no-bail
 
       - name: Test Examples
+        if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
       - name: Test Browser (playwright)
+        if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
       - uses: actions/upload-artifact@v6

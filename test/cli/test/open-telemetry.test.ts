@@ -1,6 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
-import { test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe.for([

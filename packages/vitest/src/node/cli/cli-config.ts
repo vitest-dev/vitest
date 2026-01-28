@@ -530,6 +530,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+        transform: (value) => {
+          if (typeof value === 'string') {
+            return new RegExp(value, 'i')
+          }
+          return value
+        },
+      },
+    },
   },
   diff: {
     description:
@@ -762,8 +785,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  listTags: {
+    description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
+    argument: '[type]',
+  },
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
+  tagsFilter: {
+    description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
+    argument: '<expression>',
+    array: true,
+  },
+  strictTags: {
+    description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
 
   experimental: {
@@ -775,8 +810,30 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       fsModuleCachePath: null,
       openTelemetry: null,
-      printImportBreakdown: {
-        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      importDurations: {
+        description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
+        argument: '',
+        transform(value) {
+          if (typeof value === 'boolean') {
+            return { print: value }
+          }
+          return value
+        },
+        subcommands: {
+          print: {
+            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
+          },
+          limit: {
+            description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
+            argument: '<number>',
+          },
+        },
+      },
+      viteModuleRunner: {
+        description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
+      },
+      nodeLoader: {
+        description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
       },
     },
   },
@@ -815,6 +872,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   filesOnly: null,
   projects: null,
   watchTriggerPatterns: null,
+  tags: null,
 }
 
 export const benchCliOptionsConfig: Pick<

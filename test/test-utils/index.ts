@@ -3,9 +3,9 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
+  TestCase,
   TestCollection,
   TestModule,
-  TestResult,
   TestSpecification,
   TestUserConfig,
   Vitest,
@@ -13,14 +13,13 @@ import type {
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { inspect } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished } from 'vitest'
+import { afterEach, onTestFinished, TestRunner } from 'vitest'
 import { startVitest } from 'vitest/node'
-import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 // override default colors to disable them in tests
@@ -197,7 +196,7 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
-    if (getCurrentTest()) {
+    if (TestRunner.getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
         process.exit = exit
@@ -222,15 +221,13 @@ export async function runVitest(
       return ctx?.state.getTestModules() || []
     },
     errorTree() {
-      return buildTestTree(ctx?.state.getTestModules() || [], (result) => {
-        if (result.state === 'failed') {
-          return result.errors.map(e => e.message)
-        }
-        return result.state
-      })
+      return buildErrorTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
+    },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(ctx?.state.getTestModules() || [], onResult)
     },
     waitForClose: async () => {
       await new Promise<void>(resolve => ctx!.onClose(resolve))
@@ -325,24 +322,15 @@ export function getInternalState(): WorkerGlobalState {
 }
 
 const originalFiles = new Map<string, string>()
-const createdFiles = new Set<string>()
-afterEach(() => {
-  originalFiles.forEach((content, file) => {
-    fs.writeFileSync(file, content, 'utf-8')
-  })
-  createdFiles.forEach((file) => {
+
+export function createFile(file: string, content: string) {
+  fs.mkdirSync(dirname(file), { recursive: true })
+  fs.writeFileSync(file, content, 'utf-8')
+  onTestFinished(() => {
     if (fs.existsSync(file)) {
       fs.unlinkSync(file)
     }
   })
-  originalFiles.clear()
-  createdFiles.clear()
-})
-
-export function createFile(file: string, content: string) {
-  createdFiles.add(file)
-  fs.mkdirSync(dirname(file), { recursive: true })
-  fs.writeFileSync(file, content, 'utf-8')
 }
 
 export function editFile(file: string, callback: (content: string) => string) {
@@ -351,6 +339,13 @@ export function editFile(file: string, callback: (content: string) => string) {
     originalFiles.set(file, content)
   }
   fs.writeFileSync(file, callback(content), 'utf-8')
+  onTestFinished(() => {
+    const original = originalFiles.get(file)
+    if (original !== undefined) {
+      fs.writeFileSync(file, original, 'utf-8')
+      originalFiles.delete(file)
+    }
+  })
 }
 
 export function resolvePath(baseUrl: string, path: string) {
@@ -413,6 +408,13 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    readFile: (file: string): string => {
+      const filepath = resolve(root, file)
+      if (relative(root, filepath).startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      return fs.readFileSync(filepath, 'utf-8')
+    },
     editFile: (file: string, callback: (content: string) => string) => {
       const filepath = resolve(root, file)
       if (!files.has(filepath)) {
@@ -444,6 +446,11 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     resolveFile: (file: string): string => {
       return resolve(root, file)
     },
+    renameFile: (oldFile: string, newFile: string) => {
+      const oldFilepath = resolve(root, oldFile)
+      const newFilepath = resolve(root, newFile)
+      return fs.renameSync(oldFilepath, newFilepath)
+    },
   }
 }
 
@@ -468,7 +475,27 @@ export async function runInlineTests(
     testTree() {
       return buildTestTree(vitest.ctx?.state.getTestModules() || [])
     },
+    buildTree(onResult: (testResult: TestCase) => any) {
+      return buildTestTree(vitest.ctx?.state.getTestModules() || [], onResult)
+    },
   }
+}
+
+export function replaceRoot(string: string, root: string) {
+  const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
+  if (!root.endsWith('/')) {
+    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  }
+  if (process.platform !== 'win32') {
+    return string
+      .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+      .replace(new RegExp(root, 'g'), '<root>/')
+  }
+  const normalizedRoot = root.replaceAll('/', '\\\\')
+  return string
+    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
+    .replace(new RegExp(root, 'g'), '<root>/')
+    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
 }
 
 export const ts = String.raw
@@ -483,7 +510,17 @@ export class StableTestFileOrderSorter {
   }
 }
 
-function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult) => unknown) {
+export function buildErrorTree(testModules: TestModule[]) {
+  return buildTestTree(testModules, (testCase) => {
+    const result = testCase.result()
+    if (result.state === 'failed') {
+      return result.errors.map(e => e.message)
+    }
+    return result.state
+  })
+}
+
+export function buildTestTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -497,8 +534,8 @@ function buildTestTree(testModules: TestModule[], onResult?: (result: TestResult
       }
       else if (child.type === 'test') {
         const result = child.result()
-        if (onResult) {
-          node[child.name] = onResult(result)
+        if (onTestCase) {
+          node[child.name] = onTestCase(child)
         }
         else {
           node[child.name] = result.state

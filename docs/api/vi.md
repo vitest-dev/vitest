@@ -37,6 +37,8 @@ function mock<T>(
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
+It is recommended to use `vi.mock` or `vi.hoisted` only inside test files. If Vite's [module runner](/config/experimental#experimental-vitemodulerunner) is disabled, they will not be hoisted. This is a performance optimisation to avoid ready unnecessary files.
+
 ::: warning
 `vi.mock` works only for modules that were imported with the `import` keyword. It doesn't work with `require`.
 
@@ -179,11 +181,11 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 function doMock(
   path: string,
   factory?: MockOptions | MockFactory<unknown>
-): void
+): Disposable
 function doMock<T>(
   module: Promise<T>,
   factory?: MockOptions | MockFactory<T>
-): void
+): Disposable
 ```
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
@@ -229,6 +231,24 @@ test('importing the next module imports mocked one', async () => {
 })
 ```
 
+::: tip
+In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` on the value returned from `vi.doMock()` to automatically call [`vi.doUnmock()`](#vi-dounmock) on the mocked module when the containing block is exited. This is especially useful when mocking a dynamically imported module for a single test case.
+
+```ts
+it('uses a mocked version of my-module', () => {
+  using _mockDisposable = vi.doMock('my-module')
+
+  const myModule = await import('my-module') // mocked
+
+  // my-module is restored here
+})
+
+it('uses the normal version of my-module again', () => {
+  const myModule = await import('my-module') // not mocked
+})
+```
+:::
+
 ### vi.mocked
 
 ```ts
@@ -244,7 +264,7 @@ function mocked<T>(
 
 Type helper for TypeScript. Just returns the object that was passed.
 
-When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
+When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is. You can pass down `{ partial: true, deep: true }` to make nested objects also partial recursively.
 
 ```ts [example.ts]
 export function add(x: number, y: number): number {
@@ -253,6 +273,10 @@ export function add(x: number, y: number): number {
 
 export function fetchSomething(): Promise<Response> {
   return fetch('https://vitest.dev/')
+}
+
+export function getUser(): { name: string; address: { city: string; zip: string } } {
+  return { name: 'John', address: { city: 'New York', zip: '10001' } }
 }
 ```
 
@@ -270,6 +294,13 @@ test('mock return value with only partially correct typing', async () => {
   vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
   vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
   // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
+})
+
+test('mock return value with deep partial typing', async () => {
+  vi.mocked(example.getUser, { partial: true, deep: true }).mockReturnValue({
+    address: { city: 'Los Angeles' },
+  })
+  expect(example.getUser().address.city).toBe('Los Angeles')
 })
 ```
 
@@ -597,7 +628,7 @@ it('calls console.log', () => {
 :::
 
 ::: tip
-You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations after every test. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation anymore, unless you spy again:
+You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/hooks#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations after every test. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation anymore, unless you spy again:
 
 ```ts
 const cart = {
@@ -1033,6 +1064,46 @@ The implementation is based internally on [`@sinonjs/fake-timers`](https://githu
 `vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
 But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
+
+### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
+
+- **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`
+
+Controls how fake timers are advanced.
+
+- `manual`: The default behavior. Timers will only advance when you call one of `vi.advanceTimers...()` methods.
+- `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
+- `interval`: Timers are advanced automatically by a specified interval.
+
+When `mode` is `'interval'`, you can also provide an `interval` in milliseconds.
+
+**Example:**
+
+```ts
+import { vi } from 'vitest'
+
+vi.useFakeTimers()
+
+// Manual mode (default)
+vi.setTimerTickMode({ mode: 'manual' })
+
+let i = 0
+setInterval(() => console.log(++i), 50)
+
+vi.advanceTimersByTime(150) // logs 1, 2, 3
+
+// nextTimerAsync mode
+vi.setTimerTickMode({ mode: 'nextTimerAsync' })
+
+// Timers will advance automatically after each macrotask
+await new Promise(resolve => setTimeout(resolve, 150)) // logs 4, 5, 6
+
+// interval mode (default when 'fakeTimers.shouldAdvanceTime' is `true`)
+vi.setTimerTickMode({ mode: 'interval', interval: 50 })
+
+// Timers will advance automatically every 50ms
+await new Promise(resolve => setTimeout(resolve, 150)) // logs 7, 8, 9
+```
 
 ### vi.isFakeTimers {#vi-isfaketimers}
 

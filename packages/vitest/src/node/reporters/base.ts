@@ -2,7 +2,7 @@ import type { File, Task, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
@@ -607,7 +607,7 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    if (this.ctx.config.experimental.printImportBreakdown) {
+    if (this.ctx.config.experimental.importDurations.print) {
       this.printImportsBreakdown()
     }
 
@@ -649,14 +649,15 @@ export abstract class BaseReporter implements Reporter {
 
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
     const maxTotalTime = sortedImports[0].totalTime
-    const topImports = sortedImports.slice(0, 10)
+    const limit = this.ctx.config.experimental.importDurations.limit
+    const topImports = sortedImports.slice(0, limit)
 
     const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
     const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
     const slowestImport = sortedImports[0]
 
     this.log()
-    this.log(c.bold('Import Duration Breakdown') + c.dim(' (ordered by Total Time) (Top 10)'))
+    this.log(c.bold('Import Duration Breakdown') + c.dim(` (ordered by Total Time) (Top ${limit})`))
 
     // if there are multiple files, it's highly possible that some of them will import the same large file
     // we group them to show the distinction between those files more easily

@@ -161,3 +161,11 @@ it('reports test file if it failed to load', async () => {
     ]
   `)
 })
+
+it('should warn if retry.condition is a function in config', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/retry-config',
+  })
+
+  expect(stderr).toContain('Warning: retry.condition function cannot be used inside a config file.')
+})
