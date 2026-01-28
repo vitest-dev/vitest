@@ -35,7 +35,7 @@ Browser Mode catches issues that DOM simulation libraries might miss, including:
 
 :::
 
-### Purpose of this Guide
+### Purpose of This Guide
 
 This guide focuses specifically on **component testing patterns and best practices** using Vitest's capabilities. While many examples use Browser Mode (as it's the recommended approach), the focus here is on component-specific testing strategies rather than browser configuration details.
 

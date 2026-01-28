@@ -58,6 +58,7 @@ describe('API', () => {
         'test-4.js': '',
       },
       {
+        ...options,
         includeTaskLocation: true,
         reporters: [
           'default',
@@ -99,10 +100,6 @@ describe('API', () => {
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 
@@ -366,7 +363,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
@@ -398,7 +395,7 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),

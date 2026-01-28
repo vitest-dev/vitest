@@ -104,3 +104,35 @@ await userEvent.click(page.getByRole('button'), {
   timeout: 1_000,
 })
 ```
+
+## `persistentContext` <Version>4.1.0</Version> {#persistentcontext}
+
+- **Type:** `boolean | string`
+- **Default:** `false`
+
+When enabled, Vitest uses Playwright's [persistent context](https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context) instead of a regular browser context. This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
+
+::: warning
+This option is ignored when running tests in parallel (e.g. when headless with [`fileParallelism`](/config/fileparallelism) enalbed) since persistent context cannot be shared across parallel sessions.
+:::
+
+- When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`
+- When set to a string, the value is used as the path to the user data directory
+
+```ts [vitest.config.js]
+import { playwright } from '@vitest/browser-playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: playwright({
+        persistentContext: true,
+        // or specify a custom directory:
+        // persistentContext: './my-browser-data',
+      }),
+      instances: [{ browser: 'chromium' }],
+    },
+  },
+})
+```

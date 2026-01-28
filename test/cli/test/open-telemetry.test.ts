@@ -1,5 +1,6 @@
+import type { TestUserConfig } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
-import { test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe.for([
@@ -20,13 +21,25 @@ describe.for([
         instances: [{ browser: 'chromium' as const }],
       },
     },
+    {
+      name: 'browser-sdk',
+      browser: {
+        enabled: true,
+        provider: playwright(),
+        headless: true,
+        instances: [{ browser: 'chromium' as const }],
+      },
+    },
   ])('$name doesn\'t crash vitest', async (custom) => {
-    const config = {
+    const config: TestUserConfig = {
       ...custom,
       experimental: {
         openTelemetry: {
           enabled: true,
           sdkPath: './otel.sdk.js',
+          browserSdkPath: custom.name === 'browser-sdk'
+            ? './otel.browser.sdk.js'
+            : undefined,
         },
       },
     }
@@ -35,8 +48,7 @@ describe.for([
       // root needs to be set before vitest sets up,
       // but browser options need to be in the config already
       root: './fixtures/otel-tests',
-    }, [], 'test', {
-      test: (type === 'root'
+      ...(type === 'root'
         ? config
         : { projects: [{ test: config }] }),
     })

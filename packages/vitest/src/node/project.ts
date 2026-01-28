@@ -1,11 +1,12 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
+import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ProjectName,
@@ -22,8 +23,10 @@ import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
+import { isRunnableDevEnvironment } from 'vite'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
+import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -35,7 +38,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
 import { VitestResolver } from './resolver'
-import { TestSpecification } from './spec'
+import { TestSpecification } from './test-specification'
 import { createViteServer } from './vite'
 
 export class TestProject {
@@ -144,7 +147,7 @@ export class TestProject {
    */
   public createSpecification(
     moduleId: string,
-    locations?: number[] | undefined,
+    locationsOrOptions?: number[] | TestSpecificationOptions | undefined,
     /** @internal */
     pool?: string,
   ): TestSpecification {
@@ -152,7 +155,7 @@ export class TestProject {
       this,
       moduleId,
       pool || getFilePoolName(this),
-      locations,
+      locationsOrOptions,
     )
   }
 
@@ -468,7 +471,7 @@ export class TestProject {
     }
     const provider = this.config.browser.provider || childProject.config.browser.provider
     if (provider == null) {
-      throw new Error(`Proider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
+      throw new Error(`Provider was not specified in the "browser.provider" setting. Please, pass down playwright(), webdriverio() or preview() from "@vitest/browser-playwright", "@vitest/browser-webdriverio" or "@vitest/browser-preview" package respectively.`)
     }
     if (typeof provider.serverFactory !== 'function') {
       throw new TypeError(`The browser provider options do not return a "serverFactory" function. Are you using the latest "@vitest/browser-${provider.name}" package?`)
@@ -505,7 +508,8 @@ export class TestProject {
         [
           this.vite?.close(),
           this.typechecker?.stop(),
-          this.browser?.close(),
+          // browser might not be set if it threw an error during initialization
+          (this.browser || this._parent?._parentBrowser?.vite)?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
       ).then(() => {
@@ -544,6 +548,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._config.api.token = this.vitest.config.api.token
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
@@ -568,11 +573,35 @@ export class TestProject {
     )
 
     const environment = server.environments.__vitest__
-    this.runner = new ServerModuleRunner(
-      environment,
-      this._fetcher,
-      this._config,
-    )
+    this.runner = this._config.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(this._config.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          this._config,
+        )
+
+    const ssrEnvironment = server.environments.ssr
+    if (isRunnableDevEnvironment(ssrEnvironment)) {
+      const ssrRunner = new ServerModuleRunner(
+        ssrEnvironment,
+        this._fetcher,
+        this._config,
+      )
+      Object.defineProperty(ssrEnvironment, 'runner', {
+        value: ssrRunner,
+        writable: true,
+        configurable: true,
+      })
+    }
+  }
+
+  /** @internal */
+  public _getViteEnvironments(): DevEnvironment[] {
+    return [
+      ...Object.values(this.browser?.vite.environments || {}),
+      ...Object.values(this.vite.environments || {}),
+    ]
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {

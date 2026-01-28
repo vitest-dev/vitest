@@ -3,7 +3,7 @@ import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
 import { isatty } from 'node:tty'
@@ -12,7 +12,7 @@ import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
-import { getSpecificationsEnvironments } from '../utils/test-helpers'
+import { getSpecificationsOptions } from '../utils/test-helpers'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -87,7 +87,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     let workerId = 0
 
     const sorted = await sequencer.sort(specs)
-    const environments = await getSpecificationsEnvironments(specs)
+    const { environments, tags } = await getSpecificationsOptions(specs)
     const groups = groupSpecs(sorted, environments)
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
@@ -147,12 +147,19 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
+            files: specs.map(spec => ({
+              filepath: spec.moduleId,
+              fileTags: tags.get(spec),
+              testLocations: spec.testLines,
+              testNamePattern: spec.testNamePattern,
+              testIds: spec.testIds,
+              testTagsFilter: spec.testTagsFilter,
+            })),
             invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
+            environment,
           },
-          environment,
           project,
           env,
           execArgv,
@@ -332,7 +339,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType<typeof getSpecificationsEnvironments>>) {
+function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecification, ContextTestEnvironment>) {
   // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
   type SpecsForRunner = TestSpecification[]
 

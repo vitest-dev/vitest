@@ -472,8 +472,8 @@ receives an object with the following properties:
 
 - `testName: string`
 
-  The [`test`](/api/#test)'s name, including parent
-  [`describe`](/api/#describe), sanitized.
+  The [`test`](/api/test)'s name, including parent
+  [`describe`](/api/describe), sanitized.
 
 - `attachmentsDir: string`
 

@@ -16,20 +16,27 @@ test('can pass down the config as a module', async () => {
 
 it('correctly inherit from the cli', async () => {
   const { ctx } = await runVitest({
-    root: 'fixtures/workspace-flags',
-    logHeapUsage: true,
-    allowOnly: true,
-    sequence: {
-      seed: 123,
+    $cliOptions: {
+      root: 'fixtures/workspace-flags',
+      logHeapUsage: true,
+      allowOnly: true,
+      sequence: {
+        seed: 123,
+      },
+      testTimeout: 5321,
+      pool: 'forks',
+      globals: true,
+      expandSnapshotDiff: true,
+      retry: 6,
+      testNamePattern: 'math',
+      passWithNoTests: true,
+      bail: 100,
+      experimental: {
+        importDurations: {
+          print: true,
+        },
+      },
     },
-    testTimeout: 5321,
-    pool: 'forks',
-    globals: true,
-    expandSnapshotDiff: true,
-    retry: 6,
-    testNamePattern: 'math',
-    passWithNoTests: true,
-    bail: 100,
   })
   const project = ctx!.projects[0]
   const config = project.config
@@ -46,6 +53,12 @@ it('correctly inherit from the cli', async () => {
     retry: 6,
     passWithNoTests: true,
     bail: 100,
+    experimental: expect.objectContaining({
+      importDurations: {
+        print: true,
+        limit: 10,
+      },
+    }),
   })
   expect(config.testNamePattern?.test('math')).toBe(true)
 })

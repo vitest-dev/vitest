@@ -242,7 +242,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest',
           'vitest/browser',
           'vitest/internal/browser',
-          'vitest/runners',
           'vite/module-runner',
           '@vitest/browser/utils',
           '@vitest/browser/context',
@@ -323,6 +322,12 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
+        }
+
+        const otelConfig = project.config.experimental.openTelemetry
+        if (otelConfig?.enabled && otelConfig.browserSdkPath) {
+          entries.push(otelConfig.browserSdkPath)
+          include.push('@opentelemetry/api')
         }
 
         return {

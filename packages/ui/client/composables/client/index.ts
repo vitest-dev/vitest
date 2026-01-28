@@ -69,6 +69,7 @@ export const client = (function createVitestClient() {
 
 export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
+export const availableProjects = shallowRef<string[]>([])
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
@@ -94,6 +95,8 @@ function clearTaskResult(task: RunnerTask) {
   const node = explorerTree.nodes.get(task.id)
   if (node) {
     node.state = undefined
+    // update task mode to allow change icon on skipped tests
+    task.mode = 'run'
     node.duration = undefined
     if (isTaskSuite(task)) {
       for (const t of task.tasks) {
@@ -113,6 +116,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
         const task = map.get(i.id)
         if (task) {
           task.state = undefined
+          task.mode = 'run'
           task.duration = undefined
         }
       }
@@ -120,6 +124,7 @@ function clearResults(useFiles: RunnerTestFile[]) {
     const file = map.get(f.id)
     if (file) {
       file.state = undefined
+      file.mode = 'run'
       file.duration = undefined
       if (isFileNode(file)) {
         file.collectDuration = undefined
@@ -180,6 +185,7 @@ watch(
           return file
         })
       }
+      availableProjects.value = projects.map(p => p.name)
       explorerTree.loadFiles(files, projects)
       client.state.collectFiles(files)
       explorerTree.startRun()

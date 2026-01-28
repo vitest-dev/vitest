@@ -1,3 +1,4 @@
+export { ChaiStyleAssertions } from './chai-style-assertions'
 export {
   ASYMMETRIC_MATCHERS_OBJECT,
   GLOBAL_EXPECT,

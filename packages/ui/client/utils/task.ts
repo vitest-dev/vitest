@@ -1,4 +1,5 @@
 import type { RunnerTask, RunnerTestSuite } from 'vitest'
+import { isDark } from '~/composables'
 
 export function isSuite(task: RunnerTask): task is RunnerTestSuite {
   return Object.hasOwn(task, 'tasks')
@@ -36,6 +37,7 @@ export interface ModuleLabelItem {
   id: string
   raw: string
   splits: string[]
+  readonly splitted: string[]
   candidate: string
   finished: boolean
 }
@@ -103,6 +105,7 @@ export function createModuleLabelItem(module: string): ModuleLabelItem {
   return {
     raw,
     splits,
+    splitted: [...splits],
     candidate: '',
     finished: false,
     id: module,
@@ -133,18 +136,23 @@ export function getDurationClass(duration: number) {
   }
 }
 
-export function getProjectNameColor(name: string | undefined) {
+export function getBadgeNameColor(name: string | undefined, transparent = false) {
   if (!name) {
     return ''
   }
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
-  const colors = ['yellow', 'cyan', 'green', 'magenta']
-  return colors[index % colors.length]
+  const colors = isDark.value
+    ? ['yellow', 'cyan', '#006800', 'magenta']
+    : ['#ff5400', '#02a4a4', 'green', 'magenta']
+  const transparentColors = isDark.value
+    ? ['#ffff0091', '#0ff6', '#5dbb5dc9', '#ff00ff80']
+    : ['#ff540091', '#00828266', '#5dbb5dc9', '#ff00ff80']
+  return (transparent ? transparentColors : colors)[index % colors.length]
 }
 
-export function getProjectTextColor(color: string) {
+export function getBadgeTextColor(color: string) {
   switch (color) {
     case 'blue':
     case 'green':

@@ -1318,7 +1318,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       + Received
 
         {
-          "a": Any<Number>,
+          "a": 1,
       -   "b": Any<Function>,
       +   "b": "string",
         }"
@@ -1341,6 +1341,29 @@ function getError(f: () => unknown) {
   }
   return expect.unreachable()
 }
+
+it('toMatchObject', () => {
+  expect(() => expect(null).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to match object Set{}]`)
+  expect(() => expect(undefined).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to match object Set{}]`)
+  expect(() => expect(1234).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1234 to match object Set{}]`)
+  expect(() => expect('hello').toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Map()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Map{}]`)
+
+  // subset equality works inside Set/Map
+  expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))
+  expect(new Map([[1, { a: 1 }]])).toMatchObject(new Map([[1, {}]]))
+
+  // Set/Map matches against empty object shape
+  expect(new Set()).toMatchObject({})
+  expect(new Map()).toMatchObject({})
+})
 
 it('toMatchObject error diff', () => {
   // single property on root (3 total properties, 1 expected)

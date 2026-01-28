@@ -716,6 +716,54 @@ describe('vi.fn() implementations', () => {
     expect(callArgs).toEqual(['test', 42])
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
+
+  test('vi.fn() with mockReturnValue throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockReturnValue(42)
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockReturnValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
+
+  test('vi.fn() with mockReturnValueOnce throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockReturnValueOnce(42)
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockReturnValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
+
+  test('vi.fn() with mockResolvedValue throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockResolvedValue(42)
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockResolvedValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
+
+  test('vi.fn() with mockResolvedValueOnce throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockResolvedValueOnce(42)
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockResolvedValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
+
+  test('vi.fn() with mockRejectedValue throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockRejectedValue(new Error('test'))
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockRejectedValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
+
+  test('vi.fn() with mockRejectedValueOnce throws when called with new', () => {
+    const Mock = vi.fn()
+    Mock.mockRejectedValueOnce(new Error('test'))
+    expect(() => new Mock()).toThrowError(
+      'Cannot use `mockRejectedValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
+    )
+  })
 })
 
 function assertStateEmpty(state: MockContext<any>) {

@@ -1,3 +1,4 @@
+import type { Plugin } from 'vite'
 import type { CliOptions } from 'vitest/node'
 import { join } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
@@ -269,16 +270,66 @@ describe.each(['deprecated', 'environment'] as const)('VitestResolver with Vite 
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/style.css?inline&lang=scss')).toBe(false)
     expect(await resolver.shouldExternalize('/usr/a/project/node_modules/lib/Component.vue?vue&type=template&lang=pug')).toBeUndefined()
   })
+
+  // Test that plugins can set noExternal/external in configEnvironment hook
+  // This simulates frameworks like Astro that add their packages via configEnvironment
+  test('collects noExternal/external from plugin configEnvironment', async () => {
+    const plugin: Plugin = {
+      name: 'test-plugin',
+      configEnvironment(name) {
+        if (name === 'ssr') {
+          return {
+            resolve: {
+              noExternal: ['plugin-inline-dep', '@framework/*'],
+              external: ['plugin-external-dep'],
+            },
+          }
+        }
+      },
+    }
+
+    // Also test merging with user config
+    const resolver = await getResolver(style, {}, {
+      noExternal: ['user-inline-dep'],
+      external: ['user-external-dep'],
+    }, [plugin])
+
+    // user config noExternal: should be inlined
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/user-inline-dep/index.js')).toBe(false)
+
+    // plugin noExternal: should be inlined
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/plugin-inline-dep/index.js')).toBe(false)
+
+    // plugin noExternal with wildcard: should be inlined
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@framework/core/index.js')).toBe(false)
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@framework/utils/index.js')).toBe(false)
+
+    // user config external: should be externalized
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/user-external-dep/index.js')).toBeTruthy()
+
+    // plugin external: should be externalized
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/plugin-external-dep/index.js')).toBeTruthy()
+
+    // other deps: default behavior
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/other-dep/index.cjs.js')).toBeTruthy()
+    expect(await resolver.shouldExternalize('/usr/a/project/node_modules/@other/lib/index.cjs.js')).toBeTruthy()
+  })
 })
 
-async function getResolver(style: 'environment' | 'deprecated', options: CliOptions, externalOptions: {
-  external?: true | string[]
-  noExternal?: true | string | RegExp | (string | RegExp)[]
-}) {
+async function getResolver(
+  style: 'environment' | 'deprecated',
+  options: CliOptions,
+  externalOptions: {
+    external?: true | string[]
+    noExternal?: true | string | RegExp | (string | RegExp)[]
+  },
+  plugins: Plugin[] = [],
+) {
   const ctx = await createVitest('test', {
     watch: false,
   }, style === 'environment'
     ? {
+        plugins,
         environments: {
           ssr: {
             resolve: externalOptions,
@@ -287,6 +338,7 @@ async function getResolver(style: 'environment' | 'deprecated', options: CliOpti
         test: options,
       }
     : {
+        plugins,
         ssr: externalOptions,
         test: options,
       })
