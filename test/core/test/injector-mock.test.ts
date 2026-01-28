@@ -915,21 +915,55 @@ export default (function getRandom() {
   // #8002
   test('with hashbang', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
+      hoistSimpleCode(
         `#!/usr/bin/env node
+vi.mock('foo');
 console.log("it can parse the hashbang")`,
       ),
-    ).toMatchInlineSnapshot(`undefined`)
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+      import { vi } from "vitest"
+      vi.mock('foo');
+      console.log("it can parse the hashbang")"
+    `)
   })
 
   test('import hoisted after hashbang', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
+      hoistSimpleCode(
         `#!/usr/bin/env node
+vi.mock('foo');
 console.log(foo);
 import foo from "foo"`,
       ),
-    ).toMatchInlineSnapshot(`undefined`)
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+      import { vi } from "vitest"
+      vi.mock('foo');
+      const __vi_import_0__ = await import("foo");
+      console.log(__vi_import_0__.default);"
+    `)
+  })
+
+  test('import hoisted after hashbang', () => {
+    expect(
+      hoistSimpleCode(
+        `#!/usr/bin/env node
+import { vi } from './proxy'
+vi.mock('foo');
+console.log(foo);
+import foo from "foo"`,
+      ),
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+
+      if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' option") }
+      __vi_import_0__.vi.mock('foo');
+      const __vi_import_0__ = await import("./proxy");
+      const __vi_import_1__ = await import("foo");
+
+      console.log(__vi_import_1__.default);"
+    `)
   })
 
   // #10289
