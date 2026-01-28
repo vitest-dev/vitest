@@ -30,13 +30,13 @@ describe('import durations', () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')
 
   it('should populate importDurations on File with import durations during execution', async () => {
-    const { exitCode, ctx } = await runVitest({
+    const { exitCode, ctx, stderr } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: { importDurations: { limit: 10 } },
     })
 
-    expect(exitCode).toBe(0)
+    expect(exitCode, `Expected exit code 0 but got ${exitCode}. stderr: ${stderr}`).toBe(0)
 
     const capturedFiles = ctx!.state.getFiles()
 
