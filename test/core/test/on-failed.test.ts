@@ -7,8 +7,6 @@ it.fails('on-failed', () => {
   const square4 = 4 ** 2
 
   onTestFailed(() => {
-    // eslint-disable-next-line no-console
-    console.log('Unexpected error encountered, internal states:', { square3, square4 })
     collected.push({ square3, square4 })
   })
 
