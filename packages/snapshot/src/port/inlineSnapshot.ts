@@ -45,7 +45,7 @@ export async function saveInlineSnapshots(
 }
 
 const startObjectRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*(?:\/\/[^\r\n]*\r?\n\s*)?\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
 
 function replaceObjectSnap(
   code: string,
@@ -147,7 +147,7 @@ function getCodeStartingAtIndex(code: string, index: number) {
 }
 
 const startRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*(?:\/\/[^\r\n]*\r?\n\s*)?\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
 export function replaceInlineSnap(
   code: string,
   s: MagicString,
