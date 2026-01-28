@@ -14,6 +14,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     maxWorkers: config.maxWorkers,
     base: config.base,
     logHeapUsage: config.logHeapUsage,
+    detectAsyncLeaks: config.detectAsyncLeaks,
     runner: config.runner,
     bail: config.bail,
     defines: config.defines,
