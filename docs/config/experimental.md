@@ -224,7 +224,8 @@ The `print` option controls CLI terminal output. The `limit` option controls how
 - Self: the time it took to import the module, excluding static imports;
 - Total: the time it took to import the module, including static imports. Note that this does not include `transform` time of the current module.
 
-<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown.png" />
+<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown.png" img-dark />
+<img alt="An example of import breakdown in the terminal" src="/reporter-import-breakdown-light.png" img-light />
 
 Note that if the file path is too long, Vitest will truncate it at the start until it fits 45 character limit.
 
