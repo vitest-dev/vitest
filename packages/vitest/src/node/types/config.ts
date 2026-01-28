@@ -365,7 +365,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  update?: boolean
+  update?: boolean | 'all' | 'new'
 
   /**
    * Watch mode

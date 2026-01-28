@@ -13,10 +13,10 @@ Path to config file
 
 ### update
 
-- **CLI:** `-u, --update`
+- **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot
+Update snapshot (accepts boolean, "new" or "all")
 
 ### watch
 

@@ -508,7 +508,9 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+        ? UPDATE_SNAPSHOT
+        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
