@@ -193,7 +193,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "^1.1.0",
-    "@bomb.sh/tab": "^0.0.11",
+    "@bomb.sh/tab": "^0.0.12",
     "@edge-runtime/vm": "^5.0.0",
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.0",
@@ -212,7 +212,7 @@
     "cac": "catalog:",
     "empathic": "^2.0.0",
     "flatted": "catalog:",
-    "happy-dom": "^20.3.7",
+    "happy-dom": "^20.4.0",
     "jsdom": "^27.4.0",
     "local-pkg": "^1.1.2",
     "mime": "^4.1.0",
