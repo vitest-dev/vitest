@@ -43,7 +43,7 @@ describe('dangerouslyIgnoreUnhandledErrors', () => {
 
         new Promise((_, reject) => reject(new Error("intentional unhandled error")))
       `,
-    }, config)
+    }, config, { fails: true })
   }
 })
 
@@ -59,7 +59,7 @@ test('unhandled rejections of main thread are reported even when no reporter is 
     config: false,
     globalSetup: ['setup-unhandled-rejections.js'],
     reporters: [{ onInit: () => {} }],
-  })
+  }, { fails: true })
 
   expect(exitCode).toBe(1)
   expect(stderr).toContain('Unhandled Rejection')
