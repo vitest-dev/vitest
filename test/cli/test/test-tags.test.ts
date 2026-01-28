@@ -1255,6 +1255,139 @@ test('multiple filter expressions act as AND', async () => {
   `)
 })
 
+test('tags can define meta in config', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['unit'] }, () => {})
+      test('test 2', { tags: ['e2e'] }, () => {})
+      test('test 3', { tags: ['unit', 'slow'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit', meta: { type: 'unit', priority: 1 } },
+          { name: 'e2e', meta: { type: 'e2e', browser: true } },
+          { name: 'slow', meta: { priority: 2, slow: true } },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const [test1, test2, test3] = testModule.children.array() as TestCase[]
+  expect(test1.meta()).toMatchInlineSnapshot(`
+    {
+      "priority": 1,
+      "type": "unit",
+    }
+  `)
+  expect(test2.meta()).toMatchInlineSnapshot(`
+    {
+      "browser": true,
+      "type": "e2e",
+    }
+  `)
+  expect(test3.meta()).toMatchInlineSnapshot(`
+    {
+      "priority": 2,
+      "slow": true,
+      "type": "unit",
+    }
+  `)
+})
+
+test('tag meta is inherited by suite and test meta', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      describe('suite', { tags: ['suite-tag'], meta: { suiteOwn: true } }, () => {
+        test('test', { tags: ['test-tag'], meta: { testOwn: true } }, () => {})
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'suite-tag', meta: { fromSuiteTag: 'value' } },
+          { name: 'test-tag', meta: { fromTestTag: 'value' } },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const suite = testModule.children.at(0) as TestSuite
+  const testCase = suite.children.at(0) as TestCase
+  // suite has a tag with metadata, but tags are only applied to tests,
+  // so suites don't get tag metadata
+  expect(suite.meta()).toMatchInlineSnapshot(`
+    {
+      "suiteOwn": true,
+    }
+  `)
+  expect(testCase.meta()).toMatchInlineSnapshot(`
+    {
+      "fromSuiteTag": "value",
+      "fromTestTag": "value",
+      "suiteOwn": true,
+      "testOwn": true,
+    }
+  `)
+})
+
+test('test meta overrides tag meta', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      test('test', { tags: ['tagged'], meta: { key: 'fromTest', testOnly: true } }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'tagged', meta: { key: 'fromTag', tagOnly: true } },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const testCase = testModule.children.at(0) as TestCase
+  expect(testCase.meta()).toMatchInlineSnapshot(`
+    {
+      "key": "fromTest",
+      "tagOnly": true,
+      "testOnly": true,
+    }
+  `)
+})
+
+test('multiple tags with meta are merged with priority order', async () => {
+  const { stderr, ctx } = await runInlineTests({
+    'basic.test.js': `
+      test('test', { tags: ['low', 'high'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'low', priority: 2, meta: { shared: 'low', lowOnly: true } },
+          { name: 'high', priority: 1, meta: { shared: 'high', highOnly: true } },
+        ],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  const testModule = ctx!.state.getTestModules()[0]
+  const testCase = testModule.children.at(0) as TestCase
+  expect(testCase.meta()).toMatchInlineSnapshot(`
+    {
+      "highOnly": true,
+      "lowOnly": true,
+      "shared": "high",
+    }
+  `)
+})
+
 function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
   return builder(test => test.options.tags)
 }
@@ -1271,4 +1404,21 @@ function removeUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
     }
   }
   return result
+}
+
+declare module 'vitest' {
+  interface TaskMeta {
+    type?: string
+    priority?: number
+    browser?: boolean
+    slow?: boolean
+    fromSuiteTag?: string
+    fromTestTag?: string
+    suiteOwn?: boolean
+    testOwn?: boolean
+    tagOnly?: boolean
+    shared?: string
+    lowOnly?: boolean
+    highOnly?: boolean
+  }
 }

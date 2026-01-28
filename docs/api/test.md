@@ -170,6 +170,45 @@ it('user returns data from db', { tags: ['db', 'flaky'] }, () => {
 })
 ```
 
+### meta <Version>4.1.0</Version> {#meta}
+
+- **Type:** `TaskMeta`
+
+Attaches custom [metadata](/api/advanced/metadata) available in reporters.
+
+::: warning
+Vitest merges top-level properties inherited from suites or tags. However, it does not perform a deep merge of nested objects.
+
+```ts
+import { describe, test } from 'vitest'
+
+describe(
+  'nested meta',
+  {
+    meta: {
+      nested: { object: true, array: false },
+    },
+  },
+  () => {
+    test(
+      'overrides part of meta',
+      {
+        meta: {
+          nested: { object: false }
+        },
+      },
+      ({ task }) => {
+        // task.meta === { nested: { object: false } }
+        // notice array got lost because "nested" object was overriden
+      }
+    )
+  }
+)
+```
+
+Prefer using non-nested meta, if possible.
+:::
+
 ### concurrent
 
 - **Type:** `boolean`
