@@ -4,10 +4,10 @@ import { readCoverageMap, runVitest, test } from '../utils'
 // TODO: browser mode?
 test('vi.mock({ spy: true }) collects coverage (#9290)', async () => {
   await runVitest({
-    include: ['fixtures/test/autospy-fixture.test.ts'],
+    include: ['fixtures/test/mock-autospy-fixture.test.ts'],
     coverage: {
       reporter: 'json',
-      include: ['fixtures/src/autospy-target.ts'],
+      include: ['fixtures/src/mock-autospy-target.ts'],
     },
   })
 
@@ -21,7 +21,7 @@ test('vi.mock({ spy: true }) collects coverage (#9290)', async () => {
     }
   `)
 
-  const coverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/autospy-target.ts')
+  const coverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/mock-autospy-target.ts')
   const functionCoverage = Object.keys(coverage.fnMap)
     .map(index => ({ name: coverage.fnMap[index].name, hits: coverage.f[index] }))
     .sort((a, b) => a.name.localeCompare(b.name))
