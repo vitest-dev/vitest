@@ -800,7 +800,7 @@ Note that you cannot introduce new fixtures inside `test.override`. Extend the t
 
 ### Type-Safe Hooks
 
-When using `test.extend`, the extended `test` object provides type-safe `beforeEach` and `afterEach` hooks that are aware of the new context:
+When using `test.extend`, the extended `test` object provides type-safe hooks that are aware of the extended context:
 
 ```ts
 const test = baseTest
@@ -815,3 +815,75 @@ test.afterEach(({ counter }) => {
   console.log('Final count:', counter.value)
 })
 ```
+
+#### Suite-Level Hooks with Fixtures <Version>4.1.0</Version> {#suite-level-hooks}
+
+The extended `test` object also provides `beforeAll`, `afterAll`, and `aroundAll` hooks that can access file-scoped and worker-scoped fixtures:
+
+```ts
+const test = baseTest
+  .extend('config', { scope: 'file' }, () => loadConfig())
+  .extend('database', { scope: 'file' }, async ({ config }, onCleanup) => {
+    const db = await createDatabase(config)
+    onCleanup(() => db.close())
+    return db
+  })
+
+// Access file-scoped fixtures in suite-level hooks
+test.beforeAll(async ({ database }) => {
+  await database.migrate()
+})
+
+test.afterAll(async ({ database }) => {
+  await database.cleanup()
+})
+
+test.aroundAll(async ({ database }, run) => {
+  await database.beginTransaction()
+  await run()
+  await database.rollbackTransaction()
+})
+```
+
+::: warning IMPORTANT
+Suite-level hooks (`beforeAll`, `afterAll`, `aroundAll`) **must be called on the `test` object returned from `test.extend()`** to have access to the extended fixtures. Using the global `beforeAll`/`afterAll`/`aroundAll` functions will not have access to your custom fixtures:
+
+```ts
+import { test as baseTest, beforeAll } from 'vitest'
+
+const test = baseTest
+  .extend('database', { scope: 'file' }, async ({}, onCleanup) => {
+    const db = await createDatabase()
+    onCleanup(() => db.close())
+    return db
+  })
+
+// ❌ WRONG: Global beforeAll doesn't have access to 'database'
+beforeAll(({ database }) => {
+  // Error: 'database' is undefined
+})
+
+// ✅ CORRECT: Use test.beforeAll to access fixtures
+test.beforeAll(({ database }) => {
+  // 'database' is available
+})
+```
+
+This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
+:::
+
+::: tip
+Suite-level hooks can only access **file-scoped** and **worker-scoped** fixtures. Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
+
+```ts
+const test = baseTest
+  .extend('testFixture', () => 'test-scoped')
+  .extend('fileFixture', { scope: 'file' }, () => 'file-scoped')
+
+// ❌ Error: test-scoped fixtures not available in beforeAll
+test.beforeAll(({ testFixture }) => {})
+
+// ✅ Works: file-scoped fixtures are available
+test.beforeAll(({ fileFixture }) => {})
+```
+:::

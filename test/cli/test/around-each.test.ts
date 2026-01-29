@@ -1597,13 +1597,13 @@ test('aroundAll teardown phase timeout', async () => {
   `)
 })
 
-test('aroundAll receives suite as second argument', async () => {
+test('aroundAll receives suite as third argument', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'suite-arg.test.ts': `
       import { test, describe, aroundAll } from 'vitest'
 
       describe('my suite', () => {
-        aroundAll(async (runSuite, suite) => {
+        aroundAll(async (runSuite, {}, suite) => {
           console.log('>> suite name:', suite.name)
           await runSuite()
         })

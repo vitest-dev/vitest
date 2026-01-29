@@ -3,7 +3,7 @@ import type { File, SuiteHooks } from './types/tasks'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { toArray } from '@vitest/utils/helpers'
 import { collectorContext, setFileContext } from './context'
-import { getHooks, setHooks } from './map'
+import { getHooks, getSuiteContext, setHooks, setSuiteContext } from './map'
 import { runSetupFiles } from './setup'
 import {
   clearCollectorContext,
@@ -78,6 +78,12 @@ export async function collectTests(
           }
 
           const defaultTasks = await getDefaultSuite().collect(file)
+
+          // Copy suite context from default suite to file for beforeAll/afterAll/aroundAll hooks
+          const defaultSuiteContext = getSuiteContext(defaultTasks)
+          if (defaultSuiteContext) {
+            setSuiteContext(file, defaultSuiteContext)
+          }
 
           const fileHooks = createSuiteHooks()
           mergeHooks(fileHooks, getHooks(defaultTasks))

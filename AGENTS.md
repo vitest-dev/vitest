@@ -35,7 +35,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Core directory test**: `CI=true pnpm test <test-file>` (for `test/core`)
 - **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
 
-When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchSnapshot` to include the test error and its stack.
+When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchInlineSnapshot` to include the test error and its stack. If snapshot is failing, update the snapshot instead of reverting it to `toContain`.
 
 If you need to typecheck tests, run `pnpm typecheck` from the root of the workspace.
 
