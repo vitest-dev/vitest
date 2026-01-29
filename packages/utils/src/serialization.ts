@@ -1,10 +1,6 @@
-import {
-  parse as flattedParse,
-  stringify as flattedStringify,
-  toJSON as flattedToJSON,
-} from 'flatted'
+import * as flatted from 'flatted'
 
-export { flattedParse as parse, flattedToJSON as toJSON }
+export { parse, toJSON } from 'flatted'
 
 function cloneByOwnProperties(value: object): Record<string, unknown> {
   // Clones the value's properties into a new Object. The simpler approach of
@@ -22,7 +18,7 @@ function cloneByOwnProperties(value: object): Record<string, unknown> {
  * Replacer function for serialization methods such as JSON.stringify() or
  * flatted.stringify(). Handles Error objects by extracting all properties.
  */
-function stringifyReplace(key: string, value: unknown): unknown {
+function stringifyReplace(_key: string, value: unknown): unknown {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {
@@ -39,5 +35,5 @@ function stringifyReplace(key: string, value: unknown): unknown {
  * Serialize data with circular reference handling and proper Error serialization.
  */
 export function stringify(value: unknown): string {
-  return flattedStringify(value, stringifyReplace)
+  return flatted.stringify(value, stringifyReplace)
 }
