@@ -198,23 +198,24 @@ Note that errors are serialized into simple objects: `instanceof Error` will alw
 function meta(): TaskMeta
 ```
 
-Custom [metadata](/api/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `suite.meta` object during a test run:
+Custom [metadata](/api/advanced/metadata) that was attached to the suite during its execution or collection. Since Vitest 4.1, the meta can be attached by providing a `meta` object during test collection:
 
-```ts {7,12}
+```ts {7,10}
 import { describe, test, TestRunner } from 'vitest'
 
-describe('the validation works correctly', () => {
-  // assign "decorated" during collection
-  const { suite } = TestRunner.getCurrentSuite()
-  suite!.meta.decorated = true
-
+describe('the validation works correctly', { meta: { decorated: true } }, () => {
   test('some test', ({ task }) => {
     // assign "decorated" during test run, it will be available
     // only in onTestCaseReady hook
     task.suite.meta.decorated = false
+
+    // tests inherit suite's metadata
+    task.meta.decorated === true
   })
 })
 ```
+
+Note that suite metadata will be inherited by tests since Vitest 4.1.
 
 :::tip
 If metadata was attached during collection (outside of the `test` function), then it will be available in [`onTestModuleCollected`](./reporters#ontestmodulecollected) hook in the custom reporter.
