@@ -90,13 +90,13 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "flatted": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
     "@types/estree": "catalog:",
     "diff-sequences": "^29.6.3",
+    "flatted": "catalog:",
     "loupe": "^3.2.1",
     "tinyhighlight": "^0.3.2"
   }

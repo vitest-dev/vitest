@@ -533,9 +533,6 @@ importers:
       birpc:
         specifier: 'catalog:'
         version: 4.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       ivya:
         specifier: ^1.7.0
         version: 1.7.0
@@ -832,9 +829,6 @@ importers:
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -953,9 +947,6 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -969,6 +960,9 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
+      flatted:
+        specifier: 'catalog:'
+        version: 3.3.3
       loupe:
         specifier: ^3.2.1
         version: 3.2.1
@@ -1108,9 +1102,6 @@ importers:
       empathic:
         specifier: ^2.0.0
         version: 2.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       happy-dom:
         specifier: ^20.3.7
         version: 20.3.7
@@ -1260,9 +1251,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       obug:
         specifier: ^2.1.1
         version: 2.1.1
