@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, isNativeRunner, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 test('vi.importActual() collects coverage of original module', async () => {
   await runVitest({
@@ -12,8 +12,8 @@ test('vi.importActual() collects coverage of original module', async () => {
 
   const coverageMap = await readCoverageMap()
 
-  if (isBrowser()) {
-    // Browser mode reports 100% due to different coverage collection behavior
+  // v8-browser and native runner report 100% due to different coverage collection behavior
+  if ((isBrowser() && isV8Provider()) || isNativeRunner()) {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
         "branches": "0/0 (100%)",
