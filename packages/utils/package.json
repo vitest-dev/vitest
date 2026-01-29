@@ -64,6 +64,10 @@
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
+    "./serialization": {
+      "types": "./dist/serialization.d.ts",
+      "default": "./dist/serialization.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -86,6 +90,7 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "flatted": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {

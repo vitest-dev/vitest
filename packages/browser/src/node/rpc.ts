@@ -9,8 +9,8 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { parse, stringify } from '@vitest/utils/serialization'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { dirname, join, resolve } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
@@ -360,7 +360,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
-        serialize: (data: any) => stringify(data, stringifyReplace),
+        serialize: (data: any) => stringify(data),
         deserialize: parse,
         timeout: -1, // createTesters can take a long time
       },
@@ -385,36 +385,4 @@ function retrieveSourceMapURL(source: string): string | null {
     return null
   }
   return lastMatch[1]
-}
-
-// Serialization support utils.
-function cloneByOwnProperties(value: any) {
-  // Clones the value's properties into a new Object. The simpler approach of
-  // Object.assign() won't work in the case that properties are not enumerable.
-  return Object.getOwnPropertyNames(value).reduce(
-    (clone, prop) => ({
-      ...clone,
-      [prop]: value[prop],
-    }),
-    {},
-  )
-}
-
-/**
- * Replacer function for serialization methods such as JS.stringify() or
- * flatted.stringify().
- */
-export function stringifyReplace(key: string, value: any): any {
-  if (value instanceof Error) {
-    const cloned = cloneByOwnProperties(value)
-    return {
-      name: value.name,
-      message: value.message,
-      stack: value.stack,
-      ...cloned,
-    }
-  }
-  else {
-    return value
-  }
 }

@@ -3,8 +3,8 @@ import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
+import { parse, stringify } from '@vitest/utils/serialization'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
@@ -112,17 +112,7 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
-      serialize: e =>
-        stringify(e, (_, v) => {
-          if (v instanceof Error) {
-            return {
-              name: v.name,
-              message: v.message,
-              stack: v.stack,
-            }
-          }
-          return v
-        }),
+      serialize: e => stringify(e),
       deserialize: parse,
       timeout: -1, // createTesters can take a while
     },

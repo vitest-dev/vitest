@@ -3,7 +3,7 @@ import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
-import { parse, stringify } from 'flatted'
+import { parse, stringifyRaw } from '@vitest/utils/serialization'
 import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
@@ -133,7 +133,7 @@ export class FileSystemModuleCache {
   }
 
   private toBase64(obj: unknown) {
-    const json = stringify(obj)
+    const json = stringifyRaw(obj)
     return Buffer.from(json).toString('base64')
   }
 
