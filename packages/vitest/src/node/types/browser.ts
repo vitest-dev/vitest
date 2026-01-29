@@ -50,7 +50,7 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
@@ -171,6 +171,14 @@ export interface BrowserConfigOptions {
    * @default !process.env.CI
    */
   ui?: boolean
+
+  /**
+   * Default position for the details panel in browser mode
+   * 'right' shows the details panel on the right side (horizontal split)
+   * 'bottom' shows the details panel at the bottom (vertical split)
+   * @default 'right'
+   */
+  detailsPanelPosition?: 'right' | 'bottom'
 
   /**
    * Default viewport size

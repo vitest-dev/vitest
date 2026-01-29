@@ -106,6 +106,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         isolate: browser.isolate,
         fileParallelism: browser.fileParallelism,
         ui: browser.ui,
+        detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
         locators: {
@@ -132,8 +133,13 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       : project._serializedDefines || '',
     experimental: {
       fsModuleCache: config.experimental.fsModuleCache ?? false,
-      printImportBreakdown: config.experimental.printImportBreakdown,
+      importDurations: config.experimental.importDurations,
+      viteModuleRunner: config.experimental.viteModuleRunner ?? true,
+      nodeLoader: config.experimental.nodeLoader ?? true,
       openTelemetry: config.experimental.openTelemetry,
     },
+    tags: config.tags || [],
+    tagsFilter: config.tagsFilter,
+    strictTags: config.strictTags ?? true,
   }
 }

@@ -9,7 +9,7 @@ outline: deep
 - **Default**: `!process.env.CI`
 - **CLI:** `--allowOnly`, `--allowOnly=false`
 
-By default, Vitest does not permit tests marked with the [`only`](/api/#test-only) flag in Continuous Integration (CI) environments. Conversely, in local development environments, Vitest allows these tests to run.
+By default, Vitest does not permit tests marked with the [`only`](/api/test#test-only) flag in Continuous Integration (CI) environments. Conversely, in local development environments, Vitest allows these tests to run.
 
 ::: info
 Vitest uses [`std-env`](https://www.npmjs.com/package/std-env) package to detect the environment.
@@ -32,6 +32,6 @@ vitest --allowOnly
 ```
 :::
 
-When enabled, Vitest will not fail the test suite if tests marked with [`only`](/api/#test-only) are detected, including in CI environments.
+When enabled, Vitest will not fail the test suite if tests marked with [`only`](/api/test#test-only) are detected, including in CI environments.
 
-When disabled, Vitest will fail the test suite if tests marked with [`only`](/api/#test-only) are detected, including in local development environments.
+When disabled, Vitest will fail the test suite if tests marked with [`only`](/api/test#test-only) are detected, including in local development environments.

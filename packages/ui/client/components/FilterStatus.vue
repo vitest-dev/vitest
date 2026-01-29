@@ -1,13 +1,25 @@
 <script setup lang="ts">
-defineProps<{ label: string }>()
+const { disabled = false } = defineProps<{
+  label: string
+  disabled?: boolean
+}>()
 const modelValue = defineModel<boolean | null>()
+
+function toggle() {
+  if (disabled) {
+    return
+  }
+
+  modelValue.value = !modelValue.value
+}
 </script>
 
 <template>
   <label
-    class="font-light text-sm checkbox flex items-center cursor-pointer py-1 text-sm w-full gap-y-1 mb-1px"
+    class="font-light text-sm checkbox flex items-center py-1 text-sm w-full gap-y-1 mb-1px"
+    :class="disabled ? 'cursor-not-allowed op50' : 'cursor-pointer'"
     v-bind="$attrs"
-    @click.prevent="modelValue = !modelValue"
+    @click.prevent="toggle"
   >
     <span
       :class="[
@@ -19,6 +31,7 @@ const modelValue = defineModel<boolean | null>()
     <input
       v-model="modelValue"
       type="checkbox"
+      :disabled="disabled"
       sr-only
     >
     <span flex-1 ms-2 select-none>{{ label }}</span>

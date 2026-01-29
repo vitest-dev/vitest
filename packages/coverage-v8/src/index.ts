@@ -69,5 +69,13 @@ function filterResult(coverage: Profiler.ScriptCoverage): boolean {
     return false
   }
 
+  if (coverage.url.includes('/@id/@vitest/')) {
+    return false
+  }
+
+  if (coverage.url.includes('/@vite/client')) {
+    return false
+  }
+
   return true
 }

@@ -40,6 +40,9 @@ const stackIgnorePatterns: (string | RegExp)[] = [
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
 
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`vitest=\\d{${NOW_LENGTH}}`)
+
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
   if (!urlLike.includes(':')) {
@@ -64,6 +67,9 @@ function extractLocation(urlLike: string) {
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url = url.slice(isWindows ? 5 : 4)
+  }
+  if (url.includes('vitest=')) {
+    url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }

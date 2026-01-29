@@ -302,6 +302,21 @@ function rerunTestSpecifications(
 
 This method emits `reporter.onWatcherRerun` and `onTestsRerun` events, then it runs tests with [`runTestSpecifications`](#runtestspecifications). If there were no errors in the main process, it will emit `reporter.onWatcherStart` event.
 
+## runTestFiles <Version>4.1.0</Version> {#runtestfiles}
+
+```ts
+function runTestFiles(
+  filepaths: string[],
+  allTestsRun = false
+): Promise<TestRunResult>
+```
+
+This automatically creates specifications to run based on filepaths filters.
+
+This is different from [`start`](#start) because it does not create a coverage provider, trigger `onInit` and `onWatcherStart` events, or throw an error if there are no files to run (in this case, the function will return empty arrays without triggering a test run).
+
+This function accepts the same filters as [`start`](#start) and the CLI.
+
 ## updateSnapshot
 
 ```ts
@@ -463,9 +478,7 @@ function onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void
 
 Register a handler that will be called when the test run is cancelled with [`vitest.cancelCurrentRun`](#cancelcurrentrun).
 
-::: warning EXPERIMENTAL
-Since 4.0.10, `onCancel` returns a teardown function that will remove the listener.
-:::
+Since 4.0.10, `onCancel` experimentally returns a teardown function that will remove the listener. Since 4.1.0 this behaviour is considered stable.
 
 ## onClose
 

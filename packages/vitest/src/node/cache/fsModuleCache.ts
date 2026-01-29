@@ -33,7 +33,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.3'
+  private version = '1.0.0-beta.4'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new Set<CacheKeyIdGenerator>()
@@ -108,7 +108,6 @@ export class FileSystemModuleCache {
       url: meta.url,
       file: meta.file,
       code,
-      importers: meta.importers,
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
     }
@@ -117,7 +116,6 @@ export class FileSystemModuleCache {
   async saveCachedModule<T extends FetchResult>(
     cachedFilePath: string,
     fetchResult: T,
-    importers: string[] = [],
     importedUrls: string[] = [],
     mappings: boolean = false,
   ): Promise<void> {
@@ -126,7 +124,6 @@ export class FileSystemModuleCache {
         file: fetchResult.file,
         id: fetchResult.id,
         url: fetchResult.url,
-        importers,
         importedUrls,
         mappings,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
@@ -367,7 +364,6 @@ export interface CachedInlineModuleMeta {
   id: string
   file: string | null
   code: string
-  importers: string[]
   mappings: boolean
   importedUrls: string[]
 }

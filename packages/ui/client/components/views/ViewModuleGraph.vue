@@ -17,7 +17,7 @@ import {
   PositionInitializers,
 } from 'd3-graph-controller'
 import { computed, onMounted, onUnmounted, ref, shallowRef, toRefs, watch } from 'vue'
-import { config, isReport } from '~/composables/client'
+import { isReport } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import IconButton from '../IconButton.vue'
 import Modal from '../Modal.vue'
@@ -56,7 +56,7 @@ const breakdownIconClass = computed(() => {
   }
   return textClass
 })
-const breakdownShow = ref(config.value?.experimental?.printImportBreakdown ?? breakdownIconClass.value === 'text-red')
+const breakdownShow = ref(breakdownIconClass.value === 'text-red')
 
 onMounted(() => {
   filteredGraph.value = filterGraphByLevels(graph.value, null, 2)
