@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "devalue": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {

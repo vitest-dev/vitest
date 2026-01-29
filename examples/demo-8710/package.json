@@ -1,8 +1,8 @@
 {
   "name": "@vitest/example-blob-benchmark",
+  "type": "module",
   "private": true,
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "generate": "node generate-tests.mjs",
     "test:blob": "vitest run --reporter=blob",
