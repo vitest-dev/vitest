@@ -877,10 +877,17 @@ export function resolveConfig(
   }
   resolved.experimental.importDurations ??= {} as any
   resolved.experimental.importDurations.print ??= false
+  resolved.experimental.importDurations.failOnDanger ??= false
   if (resolved.experimental.importDurations.limit == null) {
-    const shouldCollect = resolved.experimental.importDurations.print || resolved.ui
+    const shouldCollect
+      = resolved.experimental.importDurations.print
+        || resolved.experimental.importDurations.failOnDanger
+        || resolved.ui
     resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
   }
+  resolved.experimental.importDurations.thresholds ??= {} as any
+  resolved.experimental.importDurations.thresholds.warn ??= 100
+  resolved.experimental.importDurations.thresholds.danger ??= 500
 
   return resolved
 }
