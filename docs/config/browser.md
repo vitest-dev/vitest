@@ -93,6 +93,7 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 - [`browser.provider`](#browser-provider)
+- [`browser.detailsPanelPosition`](#browser-detailspanelposition)
 
 Under the hood, Vitest transforms these instances into separate [test projects](/api/advanced/test-project) sharing a single Vite server for better caching performance.
 
@@ -219,6 +220,14 @@ export interface BrowserProvider {
 - **CLI:** `--browser.ui=false`
 
 Should Vitest UI be injected into the page. By default, injects UI iframe during development.
+
+## browser.detailsPanelPosition
+
+- **Type:** `'right' | 'bottom'`
+- **Default:** `'right'`
+- **CLI:** `--browser.detailsPanelPosition=bottom`, `--browser.detailsPanelPosition=right`
+
+Controls the default position of the details panel in the Vitest UI when running browser tests. See [`browser.detailsPanelPosition`](/config/browser/detailspanelposition) for more details.
 
 ## browser.viewport
 

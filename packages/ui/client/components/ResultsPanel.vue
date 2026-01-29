@@ -11,8 +11,8 @@ const open = ref(true)
 <template>
   <div
     :open="open"
-    class="details-panel"
-    data-testid="details-panel"
+    class="results-panel"
+    data-testid="results-panel"
     @toggle="open = ($event.target as any).open"
   >
     <div
@@ -38,7 +38,7 @@ const open = ref(true)
 </template>
 
 <style>
-.details-panel {
+.results-panel {
   user-select: none;
   width: 100%;
 }

@@ -107,7 +107,8 @@ export function hoistMocks(
   } = options
 
   // hoist at the start of the file, after the hashbang
-  let hoistIndex = hashbangRE.exec(code)?.[0].length ?? 0
+  const hashbangEnd = hashbangRE.exec(code)?.[0].length ?? 0
+  let hoistIndex = hashbangEnd
 
   let hoistedModuleImported = false
 
@@ -535,11 +536,12 @@ export function hoistMocks(
     const utilityImports = [...usedUtilityExports]
     // "vi" or "vitest" is imported from a module other than "vitest"
     if (utilityImports.some(name => idToImportMap.has(name))) {
-      s.prepend(API_NOT_FOUND_CHECK(utilityImports))
+      s.appendLeft(hashbangEnd, API_NOT_FOUND_CHECK(utilityImports))
     }
     // if "vi" or "vitest" are not imported at all, import them
     else if (utilityImports.length) {
-      s.prepend(
+      s.appendLeft(
+        hashbangEnd,
         `import { ${[...usedUtilityExports].join(', ')} } from ${JSON.stringify(
           hoistedModule,
         )}\n`,

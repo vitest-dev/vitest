@@ -13,10 +13,10 @@ Path to config file
 
 ### update
 
-- **CLI:** `-u, --update`
+- **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot
+Update snapshot (accepts boolean, "new" or "all")
 
 ### watch
 
@@ -345,6 +345,13 @@ Run every browser test file in isolation. To disable isolation, use `--browser.i
 - **Config:** [browser.ui](/config/browser/ui)
 
 Show Vitest UI when running tests (default: `!process.env.CI`)
+
+### browser.detailsPanelPosition
+
+- **CLI:** `--browser.detailsPanelPosition <position>`
+- **Config:** [browser.detailsPanelPosition](/config/browser/detailspanelposition)
+
+Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
 
 ### browser.fileParallelism
 

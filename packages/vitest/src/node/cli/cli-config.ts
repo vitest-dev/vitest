@@ -78,7 +78,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot',
+    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    argument: '[type]',
   },
   watch: {
     shorthand: 'w',
@@ -355,6 +356,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ui: {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
+      },
+      detailsPanelPosition: {
+        description:
+          'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
+        argument: '<position>',
       },
       fileParallelism: {
         description:

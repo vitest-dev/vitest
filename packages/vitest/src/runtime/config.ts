@@ -109,6 +109,7 @@ export interface SerializedConfig {
     }
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined

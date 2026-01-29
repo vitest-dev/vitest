@@ -508,7 +508,9 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+        ? UPDATE_SNAPSHOT
+        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
@@ -736,12 +738,18 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  if (resolved.browser.isolate) {
+    logger.console.warn(
+      c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
+    )
+  }
   resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}
+  resolved.browser.detailsPanelPosition ??= 'right'
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
