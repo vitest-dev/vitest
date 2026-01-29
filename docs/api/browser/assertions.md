@@ -1154,7 +1154,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
   The algorithm/library used for comparing images.
 
-  [`"@blazediff/core"`](https://blazediff.dev/docs/core) is the only built-in comparator, but you can use custom ones by [registering them in the config file](/config/browser#browser-expect-toMatchScreenshot-comparators).
+  [`"@blazediff/core"`](https://blazediff.dev/docs/core) is the only built-in comparator, but you can use custom ones by [registering them in the config file](/config/browser/expect#browser-expect-tomatchscreenshot-comparators).
 
   Since v4.1, `"pixelmatch"` is a legacy alias for `"@blazediff/core"` and will be removed in the next major version.
 
