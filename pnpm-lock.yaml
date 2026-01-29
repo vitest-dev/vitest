@@ -470,18 +470,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  examples/repro-9290:
-    devDependencies:
-      '@vitest/coverage-v8':
-        specifier: workspace:*
-        version: link:../../packages/coverage-v8
-      vite:
-        specifier: 7.1.5
-        version: 7.1.5(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   examples/typecheck:
     devDependencies:
       '@types/node':
