@@ -1,8 +1,8 @@
 {
   "name": "@vitest/example-issue-8646",
-  "type": "module",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui"
