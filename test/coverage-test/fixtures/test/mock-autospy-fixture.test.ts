@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest'
-import { double, triple } from '../src/mock-autospy-target'
+import { double, triple } from '../src/mock-target'
 
-vi.mock(import('../src/mock-autospy-target'), { spy: true })
+vi.mock(import('../src/mock-target'), { spy: true })
 
 test('autospy calls original and can be spied on', () => {
   expect(double(5)).toBe(10)

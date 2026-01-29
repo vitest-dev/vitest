@@ -1,9 +1,9 @@
 import { expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
-test('vi.mock({ spy: true }) collects coverage of original module', async () => {
+test('vi.importActual() collects coverage of original module', async () => {
   await runVitest({
-    include: ['fixtures/test/mock-autospy-fixture.test.ts'],
+    include: ['fixtures/test/mock-importActual-fixture.test.ts'],
     coverage: {
       reporter: 'json',
       include: ['fixtures/src/mock-target.ts'],
