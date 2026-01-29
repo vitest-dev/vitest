@@ -44,10 +44,10 @@ const filteredGraph = shallowRef<ModuleGraph>(graph.value)
 const breakdownIconClass = computed(() => {
   let textClass = ''
   const importDurations = currentModule.value?.importDurations
-  if (!importDurations) {
+  const thresholds = config.value.experimental?.importDurations.thresholds
+  if (!importDurations || !thresholds) {
     return textClass
   }
-  const thresholds = config.value.experimental.importDurations.thresholds
   for (const moduleId in importDurations) {
     const { totalTime } = importDurations[moduleId]
     if (totalTime >= thresholds.danger) {
