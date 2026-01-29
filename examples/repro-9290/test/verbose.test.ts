@@ -2,8 +2,8 @@ import { expect, test, vi } from 'vitest'
 import something from '../src/module'
 
 // Manual spy approach - this DOES collect coverage
-vi.mock('../src/module', async () => {
-  const actual = await vi.importActual<typeof import('../src/module')>('../src/module')
+vi.mock(import('../src/module'), async (importOriginal) => {
+  const actual = await importOriginal()
   return {
     ...actual,
     default: vi.spyOn(actual, 'default'),
