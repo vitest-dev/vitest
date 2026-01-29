@@ -337,6 +337,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/demo-8710:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/fastify:
     devDependencies:
       '@vitest/ui':
