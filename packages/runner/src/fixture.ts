@@ -1,5 +1,5 @@
 import type { VitestRunner } from './types'
-import type { FixtureOptions, TestContext } from './types/tasks'
+import type { File, FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
 import { getFileContext } from './context'
 import { getTestFixture } from './map'
@@ -175,10 +175,38 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   cleanupFnArray.length = fromIndex
 }
 
-export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
+export interface WithFixturesOptions {
+  /**
+   * Whether this is a suite-level hook (beforeAll/afterAll/aroundAll).
+   * Suite hooks can only access file/worker scoped fixtures and static values.
+   */
+  isSuiteHook?: boolean
+  /**
+   * The original function to parse for fixture props.
+   * Use this when wrapping the function and the wrapper has different signature.
+   */
+  originalFn?: Function
+  /**
+   * The index of the argument that contains fixtures (for functions where
+   * fixtures are not in the first argument, like aroundEach/aroundAll).
+   */
+  contextArgumentIndex?: number
+  /**
+   * The test context to use. If not provided, the hookContext passed to the
+   * returned function will be used.
+   */
+  context?: TestContext
+  /**
+   * Error with stack trace captured at hook registration time.
+   * Used to provide better error messages with proper stack traces.
+   */
+  stackTraceError?: Error
+}
+
+export function withFixtures(runner: VitestRunner, fn: Function, file: File, options?: WithFixturesOptions) {
   return (hookContext?: TestContext): any => {
     const context: (TestContext & { [key: string]: any }) | undefined
-      = hookContext || testContext
+      = hookContext || options?.context
 
     if (!context) {
       return fn({})
@@ -189,7 +217,9 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
       return fn(context)
     }
 
-    const usedProps = getUsedProps(fn)
+    const fnToAnalyze = options?.originalFn ?? fn
+    const argumentIndex = (fn as any).__VITEST_FIXTURE_INDEX__ ?? options?.contextArgumentIndex
+    const usedProps = getUsedProps(fnToAnalyze, argumentIndex)
     const hasAutoFixture = fixtures.some(({ auto }) => auto)
     if (!usedProps.length && !hasAutoFixture) {
       return fn(context)
@@ -211,6 +241,25 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
     )
     const pendingFixtures = resolveDeps(usedFixtures)
 
+    // Check if suite-level hook is trying to access test-scoped fixtures
+    // Suite hooks (beforeAll/afterAll/aroundAll) can only access file/worker scoped fixtures
+    if (options?.isSuiteHook) {
+      const testScopedFixtures = pendingFixtures.filter(f => f.scope === 'test' && f.isFn)
+      if (testScopedFixtures.length > 0) {
+        const fixtureNames = testScopedFixtures.map(f => `"${f.prop}"`).join(', ')
+        const error = new Error(
+          `[@vitest/runner] Test-scoped fixtures cannot be used in beforeAll/afterAll/aroundAll hooks. `
+          + `The following fixtures are test-scoped: ${fixtureNames}. `
+          + `Use file or worker scoped fixtures instead, or move the logic to beforeEach/afterEach hooks.`,
+        )
+        // Use stack trace from hook registration for better error location
+        if (options.stackTraceError?.stack) {
+          error.stack = error.message + options.stackTraceError.stack.replace(options.stackTraceError.message, '')
+        }
+        throw error
+      }
+    }
+
     if (!pendingFixtures.length) {
       return fn(context)
     }
@@ -227,6 +276,7 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
           fixture,
           context!,
           cleanupFnArray,
+          file,
         )
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
@@ -250,8 +300,9 @@ function resolveFixtureValue(
   fixture: FixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
+  file: File,
 ) {
-  const fileContext = getFileContext(context.task.file)
+  const fileContext = getFileContext(file)
   const workerContext = runner.getWorkerContext?.()
 
   if (!fixture.isFn) {
@@ -385,7 +436,7 @@ function resolveDeps(
   return pendingFixtures
 }
 
-function getUsedProps(fn: Function) {
+function getUsedProps(fn: Function, fixtureIndex: number = 0) {
   let fnString = filterOutComments(fn.toString())
   // match lowered async function and strip it off
   // example code on esbuild-try https://esbuild.github.io/try/#YgAwLjI0LjAALS1zdXBwb3J0ZWQ6YXN5bmMtYXdhaXQ9ZmFsc2UAZQBlbnRyeS50cwBjb25zdCBvID0gewogIGYxOiBhc3luYyAoKSA9PiB7fSwKICBmMjogYXN5bmMgKGEpID0+IHt9LAogIGYzOiBhc3luYyAoYSwgYikgPT4ge30sCiAgZjQ6IGFzeW5jIGZ1bmN0aW9uKGEpIHt9LAogIGY1OiBhc3luYyBmdW5jdGlvbiBmZihhKSB7fSwKICBhc3luYyBmNihhKSB7fSwKCiAgZzE6IGFzeW5jICgpID0+IHt9LAogIGcyOiBhc3luYyAoeyBhIH0pID0+IHt9LAogIGczOiBhc3luYyAoeyBhIH0sIGIpID0+IHt9LAogIGc0OiBhc3luYyBmdW5jdGlvbiAoeyBhIH0pIHt9LAogIGc1OiBhc3luYyBmdW5jdGlvbiBnZyh7IGEgfSkge30sCiAgYXN5bmMgZzYoeyBhIH0pIHt9LAoKICBoMTogYXN5bmMgKCkgPT4ge30sCiAgLy8gY29tbWVudCBiZXR3ZWVuCiAgaDI6IGFzeW5jIChhKSA9PiB7fSwKfQ
@@ -405,12 +456,9 @@ function getUsedProps(fn: Function) {
     return []
   }
 
-  let first = args[0]
-  if ('__VITEST_FIXTURE_INDEX__' in fn) {
-    first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
-    if (!first) {
-      return []
-    }
+  const first = args[fixtureIndex]
+  if (!first) {
+    return []
   }
 
   if (!(first[0] === '{' && first.endsWith('}'))) {

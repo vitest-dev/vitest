@@ -36,7 +36,7 @@ import {
 } from './context'
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
-import { getHooks, setFn, setHooks, setTestFixture } from './map'
+import { getHooks, setFn, setHooks, setSuiteContext, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
 import { createChainable } from './utils/chain'
@@ -237,8 +237,9 @@ export function clearCollectorContext(
   }
   defaultSuite.file = file
   collectorContext.tasks.length = 0
-  defaultSuite.clear()
+  // Set currentSuite before clear() so initSuite() can access the file
   collectorContext.currentSuite = defaultSuite
+  defaultSuite.clear()
 }
 
 export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
@@ -415,7 +416,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(runner, handler, task.file, { context }), task),
           timeout,
           false,
           stackTraceError,
@@ -498,6 +499,27 @@ function createSuiteCollector(
         collectorFixtures = parsed.fixtures
       }
     },
+    mergeFixtureItems(items) {
+      if (!items?.length) {
+        return
+      }
+      const existingProps = new Set(collectorFixtures?.map(f => f.prop) || [])
+      const newItems = items.filter(item => !existingProps.has(item.prop))
+      if (!newItems.length) {
+        return
+      }
+      // Clone items to avoid mutation and add to collector fixtures
+      collectorFixtures = [...(collectorFixtures || []), ...newItems.map(item => ({ ...item }))]
+      // Resolve dependencies for all fixtures
+      for (const fixture of collectorFixtures) {
+        if (fixture.isFn && fixture.depProps?.length) {
+          fixture.deps = fixture.depProps
+            .filter(prop => prop !== fixture.prop)
+            .map(prop => collectorFixtures!.find(f => f.prop === prop))
+            .filter((f): f is FixtureItem => f != null)
+        }
+      }
+    },
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
@@ -572,6 +594,12 @@ function createSuiteCollector(
     }
 
     suite.tasks = allChildren
+
+    // Set suite context with the collector's fixtures for use in beforeAll/afterAll/aroundAll hooks
+    // Suite context doesn't have `task` (that's only for test context)
+    const suiteContext: Record<string, unknown> = Object.create(null)
+    setTestFixture(suiteContext as any, collectorFixtures)
+    setSuiteContext(suite, suiteContext)
 
     return suite
   }
@@ -1003,10 +1031,29 @@ export function createTaskCollector(
   taskFn.suite = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
-  taskFn.beforeAll = beforeAll
-  taskFn.afterAll = afterAll
   taskFn.aroundEach = aroundEach
-  taskFn.aroundAll = aroundAll
+
+  // Set up suite-level hooks - merge context fixtures if present
+  const fixtures = (context as { fixtures?: FixtureItem[] } | undefined)?.fixtures
+  if (fixtures?.length) {
+    taskFn.beforeAll = (...args: Parameters<typeof beforeAll>) => {
+      getCurrentSuite().mergeFixtureItems(fixtures)
+      return beforeAll(...args)
+    }
+    taskFn.afterAll = (...args: Parameters<typeof afterAll>) => {
+      getCurrentSuite().mergeFixtureItems(fixtures)
+      return afterAll(...args)
+    }
+    taskFn.aroundAll = (...args: Parameters<typeof aroundAll>) => {
+      getCurrentSuite().mergeFixtureItems(fixtures)
+      return aroundAll(...args)
+    }
+  }
+  else {
+    taskFn.beforeAll = beforeAll
+    taskFn.afterAll = afterAll
+    taskFn.aroundAll = aroundAll
+  }
 
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],

@@ -68,17 +68,19 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any, contex
  * });
  * ```
  */
-export function beforeAll(
-  fn: BeforeAllListener,
+export function beforeAll<ExtraContext = object>(
+  fn: BeforeAllListener<ExtraContext>,
   timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
-  return getCurrentSuite().on(
+  const runner = getRunner()
+
+  return getCurrentSuite<ExtraContext>().on(
     'beforeAll',
     Object.assign(
       withTimeout(
-        fn,
+        withBeforeAfterAllFixtures(runner, fn, stackTraceError),
         timeout,
         true,
         stackTraceError,
@@ -108,17 +110,69 @@ export function beforeAll(
  * });
  * ```
  */
-export function afterAll(fn: AfterAllListener, timeout?: number): void {
+export function afterAll<ExtraContext = object>(
+  fn: AfterAllListener<ExtraContext>,
+  timeout?: number,
+): void {
   assertTypes(fn, '"afterAll" callback', ['function'])
-  return getCurrentSuite().on(
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const runner = getRunner()
+  return getCurrentSuite<ExtraContext>().on(
     'afterAll',
     withTimeout(
-      fn,
+      withBeforeAfterAllFixtures(runner, fn, stackTraceError),
       timeout ?? getDefaultHookTimeout(),
       true,
-      new Error('STACK_TRACE_ERROR'),
+      stackTraceError,
     ),
   )
+}
+
+/**
+ * Wraps a beforeAll/afterAll listener to support fixtures.
+ * Handles the signature where:
+ * - First arg is context (where fixtures are destructured from)
+ * - Second arg is suite
+ */
+function withBeforeAfterAllFixtures<ExtraContext>(
+  runner: VitestRunner,
+  fn: BeforeAllListener<ExtraContext> | AfterAllListener<ExtraContext>,
+  stackTraceError: Error,
+): BeforeAllListener<ExtraContext> {
+  const wrapper: BeforeAllListener<ExtraContext> = (context, suite) => {
+    const innerFn = (ctx: any) => fn(ctx, suite)
+
+    const fixtureResolver = withFixtures(runner, innerFn, suite.file, {
+      isSuiteHook: true,
+      originalFn: fn,
+      stackTraceError,
+    })
+    return fixtureResolver(context as any)
+  }
+
+  return wrapper
+}
+
+/**
+ * Wraps a beforeEach/afterEach listener to support fixtures.
+ * Handles the signature where:
+ * - First arg is context (where fixtures are destructured from)
+ * - Second arg is suite
+ */
+function withBeforeAfterEachFixtures<ExtraContext>(
+  runner: VitestRunner,
+  fn: BeforeEachListener<ExtraContext> | AfterEachListener<ExtraContext>,
+): BeforeEachListener<ExtraContext> {
+  const wrapper: BeforeEachListener<ExtraContext> = (context, suite) => {
+    const innerFn = (ctx: any) => fn(ctx, suite)
+
+    const fixtureResolver = withFixtures(runner, innerFn, suite.file, {
+      originalFn: fn,
+    })
+    return fixtureResolver(context)
+  }
+
+  return wrapper
 }
 
 /**
@@ -149,11 +203,11 @@ export function beforeEach<ExtraContext = object>(
     'beforeEach',
     Object.assign(
       withTimeout(
-        withFixtures(runner, fn),
+        withBeforeAfterEachFixtures(runner, fn),
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
-        abortIfTimeout,
+        ([context], error) => abortIfTimeout([context], error),
       ),
       {
         [CLEANUP_TIMEOUT_KEY]: timeout,
@@ -189,11 +243,11 @@ export function afterEach<ExtraContext = object>(
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(
-      withFixtures(runner, fn),
+      withBeforeAfterEachFixtures(runner, fn),
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),
-      abortIfTimeout,
+      ([context], error) => abortIfTimeout([context], error),
     ),
   )
 }
@@ -280,9 +334,6 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
  * **Note:** When multiple `aroundAll` hooks are registered, they are nested inside each other.
  * The first registered hook is the outermost wrapper.
  *
- * **Note:** Unlike `aroundEach`, the `aroundAll` hook does not receive test context or support fixtures,
- * as it runs at the suite level before any individual test context is created.
- *
  * @param {Function} fn - The callback function that wraps the suite. Must call `runSuite()` to run the tests.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
@@ -295,23 +346,24 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
  * ```
  * @example
  * ```ts
- * // Example of using aroundAll with AsyncLocalStorage context
- * aroundAll(async (runSuite) => {
- *   await asyncLocalStorage.run({ suiteId: 'my-suite' }, runSuite);
+ * // Example of using aroundAll with fixtures
+ * aroundAll(async (runSuite, { db }) => {
+ *   await db.transaction(() => runSuite());
  * });
  * ```
  */
-export function aroundAll(
-  fn: AroundAllListener,
+export function aroundAll<ExtraContext = object>(
+  fn: AroundAllListener<ExtraContext>,
   timeout?: number,
 ): void {
   assertTypes(fn, '"aroundAll" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
   const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+  const runner = getRunner()
 
-  return getCurrentSuite().on(
+  return getCurrentSuite<ExtraContext>().on(
     'aroundAll',
-    Object.assign(fn, {
+    Object.assign(withAroundAllFixtures(runner, fn, stackTraceError), {
       [AROUND_TIMEOUT_KEY]: resolvedTimeout,
       [AROUND_STACK_TRACE_KEY]: stackTraceError,
     }),
@@ -379,19 +431,41 @@ function withAroundEachFixtures<ExtraContext>(
   runner: VitestRunner,
   fn: AroundEachListener<ExtraContext>,
 ): AroundEachListener<ExtraContext> {
-  // Create the wrapper that will be returned
   const wrapper: AroundEachListener<ExtraContext> = (runTest, context, suite) => {
-    // Create inner function that will be passed to withFixtures
-    // This function receives context (with fixtures resolved) and calls original fn
     const innerFn = (ctx: any) => fn(runTest, ctx, suite)
-    // Set fixture index to 1 to tell parser to look at second arg of original fn
-    // Set toString to return original fn string so parser extracts correct params
-    ;(innerFn as any).__VITEST_FIXTURE_INDEX__ = 1
-    ;(innerFn as any).toString = () => fn.toString()
 
-    // Use withFixtures to resolve fixtures, passing context as the hook context
-    const fixtureResolver = withFixtures(runner, innerFn)
+    const fixtureResolver = withFixtures(runner, innerFn, suite.file, {
+      originalFn: fn,
+      contextArgumentIndex: 1,
+    })
     return fixtureResolver(context)
+  }
+
+  return wrapper
+}
+
+/**
+ * Wraps an aroundAll listener to support fixtures.
+ * Similar to withAroundEachFixtures, but handles the aroundAll signature where:
+ * - First arg is runSuite function
+ * - Second arg is context (where fixtures are destructured from)
+ * - Third arg is suite
+ */
+function withAroundAllFixtures<ExtraContext>(
+  runner: VitestRunner,
+  fn: AroundAllListener<ExtraContext>,
+  stackTraceError: Error,
+): AroundAllListener<ExtraContext> {
+  const wrapper: AroundAllListener<ExtraContext> = (runSuite, context, suite) => {
+    const innerFn = (ctx: any) => fn(runSuite, ctx, suite)
+
+    const fixtureResolver = withFixtures(runner, innerFn, suite.file, {
+      isSuiteHook: true,
+      originalFn: fn,
+      contextArgumentIndex: 1,
+      stackTraceError,
+    })
+    return fixtureResolver(context as any)
   }
 
   return wrapper

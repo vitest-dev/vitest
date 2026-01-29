@@ -26,7 +26,7 @@ import { abortContextSignal, getFileContext } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
-import { getFn, getHooks } from './map'
+import { getFn, getHooks, getSuiteContext } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
@@ -409,11 +409,12 @@ async function callAroundAllHooks(
   suite: Suite,
   runSuiteInner: () => Promise<void>,
 ): Promise<void> {
+  const suiteContext = getSuiteContext(suite)
   await callAroundHooks(runSuiteInner, {
     hooks: getAroundAllHooks(suite),
     hookName: 'aroundAll',
     callbackName: 'runSuite()',
-    invokeHook: (hook, use) => hook(use, suite),
+    invokeHook: (hook, use) => hook(use, suiteContext, suite),
   })
 }
 
@@ -822,6 +823,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     let suiteRan = false
 
     try {
+      const suiteContext = getSuiteContext(suite)
       await callAroundAllHooks(suite, async () => {
         suiteRan = true
         try {
@@ -832,7 +834,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
               suite,
               'beforeAll',
               runner,
-              [suite],
+              [suiteContext, suite],
             ))
           }
           catch (e) {
@@ -873,7 +875,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
         finally {
           // afterAll runs even if beforeAll or suite children fail
           try {
-            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suiteContext, suite]))
             if (beforeAllCleanups.length) {
               await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
             }

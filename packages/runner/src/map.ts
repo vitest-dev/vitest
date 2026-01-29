@@ -6,6 +6,7 @@ import type { Suite, SuiteHooks, Test, TestContext } from './types/tasks'
 const fnMap = new WeakMap()
 const testFixtureMap = new WeakMap()
 const hooksMap = new WeakMap()
+const suiteContextMap = new WeakMap<Suite, Record<string, unknown>>()
 
 export function setFn(key: Test, fn: () => Awaitable<void>): void {
   fnMap.set(key, fn)
@@ -32,4 +33,16 @@ export function setHooks(key: Suite, hooks: SuiteHooks): void {
 
 export function getHooks(key: Suite): SuiteHooks {
   return hooksMap.get(key)
+}
+
+export function setSuiteContext(suite: Suite, context: Record<string, unknown>): void {
+  suiteContextMap.set(suite, context)
+}
+
+export function getSuiteContext(suite: Suite): Record<string, unknown> {
+  const suiteContext = suiteContextMap.get(suite)
+  if (!suiteContext) {
+    throw new Error(`Cannot find suite context for suite: ${suite.name}. This is likely a Vitest bug. Please, open a new issue with reproduction`)
+  }
+  return suiteContext
 }

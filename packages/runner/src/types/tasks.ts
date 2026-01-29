@@ -591,12 +591,19 @@ interface ExtendedAPI<ExtraContext> {
 }
 
 interface Hooks<ExtraContext> {
-  beforeAll: typeof beforeAll
-  afterAll: typeof afterAll
+  /**
+   * Suite-level hooks only receive file/worker scoped fixtures.
+   * Test-scoped fixtures are NOT available in beforeAll/afterAll/aroundAll.
+   */
+  beforeAll: typeof beforeAll<ExtractSuiteContext<ExtraContext>>
+  afterAll: typeof afterAll<ExtractSuiteContext<ExtraContext>>
+  aroundAll: typeof aroundAll<ExtractSuiteContext<ExtraContext>>
+  /**
+   * Test-level hooks receive all fixtures including test-scoped ones.
+   */
   beforeEach: typeof beforeEach<ExtraContext>
   afterEach: typeof afterEach<ExtraContext>
   aroundEach: typeof aroundEach<ExtraContext>
-  aroundAll: typeof aroundAll
 }
 
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
@@ -680,18 +687,18 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
       ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
 
       // Non-function value overloads (simple values without cleanup)
-      // Static values are always test-scoped (scope/auto don't apply to pre-initialized values)
+      // Static values are treated as worker-scoped since they're available everywhere
       // Overload 5: Static value with options (only injected is allowed)
       <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
         name: K,
         options: StaticFixtureOptions,
         value: T extends (...args: any[]) => any ? never : T,
-      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+      ): TestAPI<AddBuilderWorker<ExtraContext, K, T>>
       // Overload 6: Static value default (no options) - must exclude functions
       <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
         name: K,
         value: T extends (...args: any[]) => any ? never : T,
-      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+      ): TestAPI<AddBuilderWorker<ExtraContext, K, T>>
 
       // Object syntax overloads
       // Overload 7: Scoped fixtures with { $test?, $file?, $worker? } structure
@@ -887,6 +894,18 @@ export type ExtractBuilderTest<C> = C extends { $__test?: infer T }
   : object
 
 /**
+ * Extracts only file and worker fixtures from a context for use in suite-level hooks.
+ * Test-scoped function fixtures are NOT available in beforeAll/afterAll/aroundAll hooks.
+ * Static values are tracked as worker-scoped since they're available everywhere.
+ * If the context has scope tracking, only file/worker fixtures are extracted.
+ * If no scope tracking exists (legacy fixtures), all fixtures are included for backward compatibility.
+ */
+export type ExtractSuiteContext<C>
+  = C extends { $__worker?: any } | { $__file?: any } | { $__test?: any }
+    ? ExtractBuilderWorker<C> & ExtractBuilderFile<C>
+    : C
+
+/**
  * Adds a worker fixture to the context with proper scope tracking.
  */
 export type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Record<K, V> & {
@@ -1046,12 +1065,12 @@ export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & 
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
-export interface BeforeAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<unknown>
+export interface BeforeAllListener<ExtraContext = object> {
+  (context: ExtraContext, suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
-export interface AfterAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<unknown>
+export interface AfterAllListener<ExtraContext = object> {
+  (context: ExtraContext, suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
 export interface BeforeEachListener<ExtraContext = object> {
@@ -1076,20 +1095,21 @@ export interface AroundEachListener<ExtraContext = object> {
   ): Awaitable<unknown>
 }
 
-export interface AroundAllListener {
+export interface AroundAllListener<ExtraContext = object> {
   (
     runSuite: () => Promise<void>,
+    context: ExtraContext,
     suite: Readonly<Suite | File>
   ): Awaitable<unknown>
 }
 
 export interface SuiteHooks<ExtraContext = object> {
-  beforeAll: BeforeAllListener[]
-  afterAll: AfterAllListener[]
+  beforeAll: BeforeAllListener<ExtraContext>[]
+  afterAll: AfterAllListener<ExtraContext>[]
   beforeEach: BeforeEachListener<ExtraContext>[]
   afterEach: AfterEachListener<ExtraContext>[]
   aroundEach: AroundEachListener<ExtraContext>[]
-  aroundAll: AroundAllListener[]
+  aroundAll: AroundAllListener<ExtraContext>[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -1121,6 +1141,12 @@ export interface SuiteCollector<ExtraContext = object> {
     | SuiteCollector<ExtraContext>
   )[]
   scoped: (fixtures: Fixtures<any, ExtraContext>) => void
+  /**
+   * Merge FixtureItem[] directly into the collector's fixtures.
+   * Used internally to flow fixtures from test.extend() to the collector
+   * without round-trip conversion through object format.
+   */
+  mergeFixtureItems: (items: FixtureItem[]) => void
   fixtures: () => FixtureItem[] | undefined
   file?: File
   suite?: Suite
