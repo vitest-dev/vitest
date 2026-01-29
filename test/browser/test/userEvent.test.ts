@@ -886,7 +886,6 @@ describe('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
-    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, file)
