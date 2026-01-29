@@ -26,6 +26,11 @@ to = "/config/"
 status = 301
 
 [[redirects]]
+from = "/config/browser"
+to = "/config/browser/enabled"
+status = 301
+
+[[redirects]]
 from = "/guide/workspace"
 to = "/guide/projects"
 status = 301

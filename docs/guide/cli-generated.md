@@ -70,6 +70,20 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
+### api.allowExec
+
+- **CLI:** `--api.allowExec`
+- **Config:** [api.allowExec](/config/api#api-allowexec)
+
+Allow API to execute code. (Be careful when enabling this option in untrusted environments)
+
+### api.allowWrite
+
+- **CLI:** `--api.allowWrite`
+- **Config:** [api.allowWrite](/config/api#api-allowwrite)
+
+Allow API to edit files. (Be careful when enabling this option in untrusted environments)
+
 ### silent
 
 - **CLI:** `--silent [value]`
@@ -331,6 +345,20 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 - **Config:** [browser.api.strictPort](/config/browser/api#api-strictport)
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
+
+### browser.api.allowExec
+
+- **CLI:** `--browser.api.allowExec`
+- **Config:** [browser.api.allowExec](/config/browser/api#api-allowexec)
+
+Allow API to execute code. (Be careful when enabling this option in untrusted environments)
+
+### browser.api.allowWrite
+
+- **CLI:** `--browser.api.allowWrite`
+- **Config:** [browser.api.allowWrite](/config/browser/api#api-allowwrite)
+
+Allow API to edit files. (Be careful when enabling this option in untrusted environments)
 
 ### browser.isolate
 

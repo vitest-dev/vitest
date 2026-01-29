@@ -96,13 +96,17 @@ function onMousedown(editor: Editor, e: MouseEvent) {
 function buildShadowImportsHtml(imports: Experimental.UntrackedModuleDefinitionDiagnostic[]) {
   const shadowImportsDiv = document.createElement('div')
   shadowImportsDiv.classList.add('mb-5')
+  const root = config.value.root
+  if (!root) {
+    return
+  }
 
   imports.forEach(({ resolvedId, totalTime, external }) => {
     const importDiv = document.createElement('div')
     importDiv.append(document.createTextNode('import '))
 
     const sourceDiv = document.createElement('span')
-    const url = relative(config.value.root, resolvedId)
+    const url = relative(root, resolvedId)
     sourceDiv.textContent = `"/${url}"`
     sourceDiv.className = 'hover:underline decoration-gray cursor-pointer select-none'
     importDiv.append(sourceDiv)
@@ -152,6 +156,9 @@ function markImportDurations(codemirror: EditorFromTextArea) {
 
     if (untrackedModules?.length) {
       const importDiv = buildShadowImportsHtml(untrackedModules)
+      if (!importDiv) {
+        return
+      }
       widgetElements.push(importDiv)
       lineWidgets.push(codemirror.addLineWidget(0, importDiv, { above: true }))
     }
