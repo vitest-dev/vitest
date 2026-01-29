@@ -1,5 +1,3 @@
-// Serialization support utils using flatted for circular reference handling.
-
 import {
   parse as flattedParse,
   stringify as flattedStringify,
@@ -43,9 +41,3 @@ function stringifyReplace(key: string, value: unknown): unknown {
 export function stringify(value: unknown): string {
   return flattedStringify(value, stringifyReplace)
 }
-
-/**
- * Serialize data with circular reference handling but without Error serialization.
- * Use this when Error handling is not needed or handled separately.
- */
-export { flattedStringify as stringifyRaw }

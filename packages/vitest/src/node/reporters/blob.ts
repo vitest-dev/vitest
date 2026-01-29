@@ -6,7 +6,7 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
-import { parse, stringifyRaw } from '@vitest/utils/serialization'
+import { parse, stringify } from '@vitest/utils/serialization'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
 
@@ -85,7 +85,7 @@ export class BlobReporter implements Reporter {
 }
 
 export async function writeBlob(content: MergeReport, filename: string): Promise<void> {
-  const report = stringifyRaw(content)
+  const report = stringify(content)
 
   const dir = dirname(filename)
   if (!existsSync(dir)) {
