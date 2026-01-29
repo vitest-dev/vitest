@@ -112,6 +112,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         isolate: browser.isolate,
         fileParallelism: browser.fileParallelism,
         ui: browser.ui,
+        detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
         locators: {

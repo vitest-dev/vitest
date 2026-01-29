@@ -25,6 +25,10 @@ To develop and test `vitest` package:
 
 > 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
 
+### UI Development
+
+If you want to improve Vitest Browser Mode, see the [Browser Mode development guide](./packages/ui/README.md) for setup instructions and development workflow.
+
 ## Debugging
 
 ### VS Code
@@ -74,6 +78,7 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 
   - Add accompanying test case.
   - Provide a convincing reason to add this feature. Ideally, you should open a suggestion issue first and have it approved before working on it.
+  - When adding cli options, run `pnpm -C docs run cli-table` to update the cli-generated.md file
 
 - If fixing bug:
 

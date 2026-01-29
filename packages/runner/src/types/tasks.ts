@@ -570,6 +570,10 @@ export interface TestOptions {
   tags?: keyof TestTags extends never
     ? string[] | string
     : TestTags[keyof TestTags] | TestTags[keyof TestTags][]
+  /**
+   * Custom test metadata available to reporters.
+   */
+  meta?: Partial<TaskMeta>
 }
 
 export interface TestTags {}
@@ -735,10 +739,6 @@ export interface TaskCustomOptions extends TestOptions {
    * Whether the task was produced with `.each()` method.
    */
   each?: boolean
-  /**
-   * Custom metadata for the task that will be assigned to `task.meta`.
-   */
-  meta?: Record<string, unknown>
   /**
    * Task fixtures.
    */

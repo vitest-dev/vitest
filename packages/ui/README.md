@@ -26,4 +26,6 @@ nr test --api=3200
 
 Open the browser at the URL printed by the first command. For example, `http://localhost:5173/`. If you see a connection error, it means the port is specified incorrectly.
 
-To preview the browser tab, uncomment the "browser-dev-preview" plugin in `vite.config.ts`. To configure the browser state, update the `__vitest_browser_runner__` object in `browser.dev.js`.
+To preview the browser tab, uncomment the "browser-dev-preview" plugin in `vite.config.ts`.
+
+To configure the browser state, update the `__vitest_browser_runner__` object in `browser.dev.js`.

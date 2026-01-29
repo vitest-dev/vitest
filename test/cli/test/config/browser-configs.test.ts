@@ -554,6 +554,51 @@ test('fileParallelism on the instance works properly', async () => {
   expect(v.projects[1].config.browser.fileParallelism).toBe(true)
 })
 
+test('detailsPanelPosition defaults to right', async () => {
+  const { projects } = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+  expect(projects[0].config.browser.detailsPanelPosition).toBe('right')
+})
+
+test('detailsPanelPosition from config file is respected', async () => {
+  const { projects } = await vitest({}, {
+    browser: {
+      enabled: true,
+      provider: preview(),
+      detailsPanelPosition: 'bottom',
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+  expect(projects[0].config.browser.detailsPanelPosition).toBe('bottom')
+})
+
+test('CLI option --browser.detailsPanelPosition overrides config', async () => {
+  const { projects } = await vitest({
+    browser: {
+      detailsPanelPosition: 'bottom',
+    },
+  }, {
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      detailsPanelPosition: 'right',
+      instances: [
+        { browser: 'chromium' },
+      ],
+    },
+  })
+  expect(projects[0].config.browser.detailsPanelPosition).toBe('bottom')
+})
+
 function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {

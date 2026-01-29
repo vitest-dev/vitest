@@ -37,6 +37,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Generate CLI docs
+        run: pnpm -C docs run cli-table
+
       # check uncommited LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
         run: git diff --exit-code

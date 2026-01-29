@@ -112,6 +112,9 @@ export function WorkspaceVitestPlugin(
         if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
           vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
         }
+        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
+          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
+        }
 
         return {
           base: '/',

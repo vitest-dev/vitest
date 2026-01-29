@@ -13,10 +13,10 @@ Path to config file
 
 ### update
 
-- **CLI:** `-u, --update`
+- **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot
+Update snapshot (accepts boolean, "new" or "all")
 
 ### watch
 
@@ -373,6 +373,13 @@ Run every browser test file in isolation. To disable isolation, use `--browser.i
 - **Config:** [browser.ui](/config/browser/ui)
 
 Show Vitest UI when running tests (default: `!process.env.CI`)
+
+### browser.detailsPanelPosition
+
+- **CLI:** `--browser.detailsPanelPosition <position>`
+- **Config:** [browser.detailsPanelPosition](/config/browser/detailspanelposition)
+
+Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
 
 ### browser.fileParallelism
 
@@ -868,10 +875,10 @@ Enable caching of modules on the file system between reruns.
 
 ### experimental.importDurations.print
 
-- **CLI:** `--experimental.importDurations.print`
+- **CLI:** `--experimental.importDurations.print <boolean|on-warn>`
 - **Config:** [experimental.importDurations.print](/config/experimental#experimental-importdurations-print)
 
-Print import breakdown to CLI terminal after tests finish (default: false).
+When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).
 
 ### experimental.importDurations.limit
 
@@ -879,6 +886,27 @@ Print import breakdown to CLI terminal after tests finish (default: false).
 - **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
 
 Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).
+
+### experimental.importDurations.failOnDanger
+
+- **CLI:** `--experimental.importDurations.failOnDanger`
+- **Config:** [experimental.importDurations.failOnDanger](/config/experimental#experimental-importdurations-failondanger)
+
+Fail the test run if any import exceeds the danger threshold (default: false).
+
+### experimental.importDurations.thresholds.warn
+
+- **CLI:** `--experimental.importDurations.thresholds.warn <number>`
+- **Config:** [experimental.importDurations.thresholds.warn](/config/experimental#experimental-importdurations-thresholds-warn)
+
+Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).
+
+### experimental.importDurations.thresholds.danger
+
+- **CLI:** `--experimental.importDurations.thresholds.danger <number>`
+- **Config:** [experimental.importDurations.thresholds.danger](/config/experimental#experimental-importdurations-thresholds-danger)
+
+Danger threshold - imports exceeding this are shown in red (default: 500).
 
 ### experimental.viteModuleRunner
 

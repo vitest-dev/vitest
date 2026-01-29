@@ -160,6 +160,9 @@ export default defineConfig({
       if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
         return false
       }
+      if (log.startsWith('Importing from') && log.includes('is deprecated since Vitest 4.1')) {
+        return false
+      }
     },
     projects: [
       project('threads', 'red'),

@@ -84,7 +84,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot',
+    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    argument: '[type]',
   },
   watch: {
     shorthand: 'w',
@@ -367,6 +368,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ui: {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
+      },
+      detailsPanelPosition: {
+        description:
+          'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
+        argument: '<position>',
       },
       fileParallelism: {
         description:
@@ -833,11 +839,35 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
         subcommands: {
           print: {
-            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
+            description: 'When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).',
+            argument: '<boolean|on-warn>',
+            transform(value) {
+              if (value === 'on-warn') {
+                return 'on-warn'
+              }
+              return value
+            },
           },
           limit: {
             description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
             argument: '<number>',
+          },
+          failOnDanger: {
+            description: 'Fail the test run if any import exceeds the danger threshold (default: false).',
+          },
+          thresholds: {
+            description: 'Duration thresholds in milliseconds for coloring and warnings.',
+            argument: '',
+            subcommands: {
+              warn: {
+                description: 'Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).',
+                argument: '<number>',
+              },
+              danger: {
+                description: 'Danger threshold - imports exceeding this are shown in red (default: 500).',
+                argument: '<number>',
+              },
+            },
           },
         },
       },

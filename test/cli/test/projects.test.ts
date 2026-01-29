@@ -121,7 +121,7 @@ it('correctly inherits the root config', async () => {
 it('fails if workspace is empty', async () => {
   const { stderr } = await runVitest({
     projects: [],
-  })
+  }, [], { fails: true })
   expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The projects definition: [].')
 })
 
@@ -133,7 +133,7 @@ it('fails if workspace is filtered by the project', async () => {
     projects: [
       './vitest.config.js',
     ],
-  })
+  }, [], { fails: true })
   expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The projects definition: [
     "./vitest.config.js"
 ].`)
