@@ -15,7 +15,7 @@ pnpm test:blob
 ls -lh .vitest-reports/blob.json
 
 # Run merge-reports (use direct node to eliminate pnpm overhead)
-time node node_modules/vitest/vitest.mjs run --merge-reports .vitest-reports --reporter=json
+time node node_modules/vitest/vitest.mjs run --merge-reports --reporter=json --outputFile.json=./node_modules/.tmp/report.json
 ```
 
 ### Vary test count
