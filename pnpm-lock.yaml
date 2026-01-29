@@ -552,8 +552,8 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       ivya:
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ./ivya-1.6.0.tgz
+        version: file:packages/browser/ivya-1.6.0.tgz
       mime:
         specifier: ^4.1.0
         version: 4.1.0
@@ -7335,8 +7335,9 @@ packages:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
-  ivya@1.7.0:
-    resolution: {integrity: sha512-E4MM3/pCtgalpLP6PcDR6HIVdQo/0COef8omuvMyYid8GdKsKXmhPgV04k6u1791j1DQ1tCmu8Rn0H3kxoulEg==}
+  ivya@file:packages/browser/ivya-1.6.0.tgz:
+    resolution: {integrity: sha512-OA3zqlqlr7fGzk1It58xCEF7KGKgDMO0Rft5xemORh5XaGlrZd/Zq13eL9tW94bNRkt8qpLpiCIVdzZoC1ct0g==, tarball: file:packages/browser/ivya-1.6.0.tgz}
+    version: 1.6.0
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -15949,7 +15950,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@1.7.0: {}
+  ivya@file:packages/browser/ivya-1.6.0.tgz: {}
 
   jackspeak@3.4.0:
     dependencies:
