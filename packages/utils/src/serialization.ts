@@ -24,7 +24,7 @@ function cloneByOwnProperties(value: object): Record<string, unknown> {
  * Replacer function for serialization methods such as JSON.stringify() or
  * flatted.stringify(). Handles Error objects by extracting all properties.
  */
-export function stringifyReplace(key: string, value: unknown): unknown {
+function stringifyReplace(key: string, value: unknown): unknown {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {
