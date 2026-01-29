@@ -315,7 +315,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
-      filename: module.id,
+      // use original id for auto spy module (vi.mock(..., { spy: true }))
+      filename: module.id.startsWith('mock:') ? module.id.slice(5) : module.id,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
