@@ -243,7 +243,7 @@ export function clearCollectorContext(
 
 export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
   const currentSuite = (collectorContext.currentSuite
-    || defaultSuite) as SuiteCollector<ExtraContext>
+    || defaultSuite) as unknown as SuiteCollector<ExtraContext>
   assert(currentSuite, 'the current suite')
   return currentSuite
 }
@@ -862,12 +862,118 @@ export function createTaskCollector(
     return condition ? this : this.skip
   }
 
-  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
-    const collector = getCurrentSuite()
-    collector.scoped(fixtures)
+  /**
+   * Parse builder pattern arguments into a fixtures object.
+   * Handles both builder pattern (name, options?, value) and object syntax.
+   */
+  function parseBuilderFixtures(
+    fixturesOrName: Fixtures<Record<string, any>> | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ): Fixtures<Record<string, any>> {
+    // Object syntax: just return as-is
+    if (typeof fixturesOrName !== 'string') {
+      return fixturesOrName
+    }
+
+    const fixtureName = fixturesOrName
+    let fixtureOptions: object | undefined
+    let fixtureValue: any
+
+    if (maybeFn !== undefined) {
+      // (name, options, value) or (name, options, fn)
+      fixtureOptions = optionsOrFn as object
+      fixtureValue = maybeFn
+    }
+    else {
+      // (name, value) or (name, fn)
+      // Check if optionsOrFn looks like fixture options (has scope or auto)
+      if (
+        optionsOrFn !== null
+        && typeof optionsOrFn === 'object'
+        && !Array.isArray(optionsOrFn)
+        && ('scope' in optionsOrFn || 'auto' in optionsOrFn)
+      ) {
+        // (name, options) with no value - treat as empty object fixture
+        fixtureOptions = optionsOrFn as object
+        fixtureValue = {}
+      }
+      else {
+        // (name, value) or (name, fn)
+        fixtureOptions = undefined
+        fixtureValue = optionsOrFn
+      }
+    }
+
+    // Function value: wrap with onCleanup pattern
+    if (typeof fixtureValue === 'function') {
+      const builderFn = fixtureValue as (...args: any[]) => any
+
+      // Wrap builder pattern function (returns value) to use() pattern
+      const wrappedFn = async (ctx: any, use: (value: any) => Promise<void>) => {
+        let cleanup: (() => any) | undefined
+        const onCleanup = (fn: () => any) => {
+          if (cleanup !== undefined) {
+            throw new Error(
+              `onCleanup can only be called once per fixture. `
+              + `Define separate fixtures if you need multiple cleanup functions.`,
+            )
+          }
+          cleanup = fn
+        }
+        const value = await builderFn(ctx, onCleanup)
+        await use(value)
+        if (cleanup) {
+          await cleanup()
+        }
+      }
+
+      // Override toString() to preserve parameter parsing
+      // (getFixtureFnParams parses fn.toString() to extract deps)
+      const builderStr = builderFn.toString()
+      ;(wrappedFn as any).toString = () => builderStr
+
+      if (fixtureOptions) {
+        return { [fixtureName]: [wrappedFn, fixtureOptions] } as any
+      }
+      return { [fixtureName]: wrappedFn } as any
+    }
+
+    // Non-function value: use directly (only 'injected' option applies)
+    if (fixtureOptions) {
+      const staticOptions: { injected?: boolean } = {}
+      if ('injected' in fixtureOptions) {
+        staticOptions.injected = (fixtureOptions as any).injected
+      }
+      return { [fixtureName]: [fixtureValue, staticOptions] } as any
+    }
+    return { [fixtureName]: fixtureValue } as any
   }
 
-  taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
+  taskFn.override = function (
+    fixturesOrName: Fixtures<Record<string, any>> | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ) {
+    const fixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
+    const collector = getCurrentSuite()
+    collector.scoped(fixtures)
+    return this
+  }
+
+  // Deprecated: use override() instead
+  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
+    console.warn(`test.scoped() is deprecated and will be removed in future versions. Please use test.override() instead.`)
+    return taskFn.override(fixtures)
+  }
+
+  taskFn.extend = function (
+    fixturesOrName: Fixtures<Record<string, any>> | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ) {
+    const fixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
+
     const _context = mergeContextFixtures(
       fixtures,
       context || {},
@@ -894,6 +1000,7 @@ export function createTaskCollector(
   }
 
   taskFn.describe = suite
+  taskFn.suite = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
   taskFn.beforeAll = beforeAll

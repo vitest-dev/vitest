@@ -16,6 +16,10 @@ export interface FixtureItem extends FixtureOptions {
    * The dependencies(fixtures) of current fixture function.
    */
   deps?: FixtureItem[]
+  /**
+   * Raw dependency prop names (used for deferred resolution in scoped fixtures)
+   */
+  depProps?: string[]
 }
 
 export function mergeScopedFixtures(
@@ -34,11 +38,20 @@ export function mergeScopedFixtures(
     }
     newFixtures[useFixture.prop] = useFixture
   })
-  for (const fixtureKep in newFixtures) {
-    const fixture = newFixtures[fixtureKep]
-    // if the fixture was define before the scope, then its dep
-    // will reference the original fixture instead of the scope
-    fixture.deps = fixture.deps?.map(dep => newFixtures[dep.prop])
+  for (const fixtureKey in newFixtures) {
+    const fixture = newFixtures[fixtureKey]
+    // Use depProps (raw dependency names) if available, otherwise use deps
+    // This allows scoped fixtures to resolve dependencies from the original test
+    if (fixture.depProps?.length) {
+      fixture.deps = fixture.depProps
+        .filter(prop => prop !== fixture.prop && newFixtures[prop])
+        .map(prop => newFixtures[prop])
+    }
+    else if (fixture.deps?.length) {
+      // if the fixture was defined before the scope, then its dep
+      // will reference the original fixture instead of the scope
+      fixture.deps = fixture.deps.map(dep => newFixtures[dep.prop])
+    }
   }
   return Object.values(newFixtures)
 }
@@ -89,6 +102,8 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
       if (usedProps.length) {
+        // Store raw dependency names for deferred resolution in scoped fixtures
+        fixture.depProps = usedProps.filter(prop => prop !== fixture.prop)
         fixture.deps = context.fixtures!.filter(
           ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
         )
@@ -281,9 +296,14 @@ function resolveFixtureValue(
   }
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
+  // For file fixtures, merge worker context so they can access worker fixtures
+  const callContext = fixture.scope === 'file' && workerContext
+    ? { ...workerContext, ...fixtureContext }
+    : fixtureContext
+
   const promise = resolveFixtureFunction(
     fixture.value,
-    fixtureContext,
+    callContext,
     cleanupFnFileArray,
   ).then((value) => {
     fixtureContext[fixture.prop] = value

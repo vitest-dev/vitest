@@ -601,19 +601,174 @@ interface Hooks<ExtraContext> {
 
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
   & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
-    extend: <T extends Record<string, any> = object>(
-      fixtures: Fixtures<T, ExtraContext>,
-    ) => TestAPI<{
-      [K in keyof T | keyof ExtraContext]: K extends keyof T
-        ? T[K]
-        : K extends keyof ExtraContext
-          ? ExtraContext[K]
-          : never;
-    }>
+    /**
+     * Extend the test API with custom fixtures.
+     *
+     * @example
+     * ```ts
+     * // Simple test fixtures (backward compatible)
+     * const myTest = test.extend<{ foo: string }>({
+     *   foo: 'value',
+     * })
+     *
+     * // With scoped fixtures - use $test/$file/$worker structure
+     * const myTest = test.extend<{
+     *   $test: { testData: string }
+     *   $file: { fileDb: Database }
+     *   $worker: { workerConfig: Config }
+     * }>({
+     *   testData: async ({ fileDb }, use) => {
+     *     await use(await fileDb.getData())
+     *   },
+     *   fileDb: [async ({ workerConfig }, use) => {
+     *     // File fixture can only access workerConfig, NOT testData
+     *     const db = new Database(workerConfig)
+     *     await use(db)
+     *     await db.close()
+     *   }, { scope: 'file' }],
+     *   workerConfig: [async ({}, use) => {
+     *     // Worker fixture can only access other worker fixtures
+     *     await use(loadConfig())
+     *   }, { scope: 'worker' }],
+     * })
+     *
+     * // Builder pattern with automatic type inference
+     * const myTest = test
+     *   .extend('config', { scope: 'worker' }, async ({}) => {
+     *     return { port: 3000 }  // Type inferred as { port: number }
+     *   })
+     *   .extend('db', { scope: 'file' }, async ({ config }, onCleanup) => {
+     *     // TypeScript knows config is { port: number }
+     *     const db = new Database(config.port)
+     *     onCleanup(() => db.close())  // Register cleanup
+     *     return db  // Type inferred as Database
+     *   })
+     *   .extend('data', async ({ db }) => {
+     *     // TypeScript knows db is Database
+     *     return await db.getData()  // Type inferred from return
+     *   })
+     * ```
+     */
+    extend: {
+      // Builder pattern overloads with automatic type inference from return value
+      // MUST come first for correct TypeScript overload resolution
+
+      // Function overloads (with cleanup support via onCleanup)
+      // When extending with same key, T must match existing type (last value wins at runtime)
+      // Overload 1: Worker scope function - can only access worker fixtures
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        options: WorkerScopeFixtureOptions,
+        fn: BuilderFixtureFn<T, WorkerScopeContext<ExtraContext>>,
+      ): TestAPI<AddBuilderWorker<ExtraContext, K, T>>
+      // Overload 2: File scope function - can access worker + file fixtures
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        options: FileScopeFixtureOptions,
+        fn: BuilderFixtureFn<T, FileScopeContext<ExtraContext>>,
+      ): TestAPI<AddBuilderFile<ExtraContext, K, T>>
+      // Overload 3: Test scope function with options - can access all fixtures
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        options: TestScopeFixtureOptions,
+        fn: BuilderFixtureFn<T, TestScopeContext<ExtraContext>>,
+      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+      // Overload 4: Test scope function default (no options) - can access all fixtures
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        fn: BuilderFixtureFn<T, TestScopeContext<ExtraContext>>,
+      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+
+      // Non-function value overloads (simple values without cleanup)
+      // Static values are always test-scoped (scope/auto don't apply to pre-initialized values)
+      // Overload 5: Static value with options (only injected is allowed)
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        options: StaticFixtureOptions,
+        value: T extends (...args: any[]) => any ? never : T,
+      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+      // Overload 6: Static value default (no options) - must exclude functions
+      <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
+        name: K,
+        value: T extends (...args: any[]) => any ? never : T,
+      ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
+
+      // Object syntax overloads
+      // Overload 7: Scoped fixtures with { $test?, $file?, $worker? } structure
+      <T extends ScopedFixturesDef>(
+        fixtures: ScopedFixturesObject<T, ExtraContext>,
+      ): TestAPI<ExtractScopedFixtures<T> & ExtraContext>
+      // Overload 8: Legacy flat fixtures (backward compatible)
+      <T extends Record<string, any> = object>(
+        fixtures: Fixtures<T, ExtraContext>,
+      ): TestAPI<{
+        [K in keyof T | keyof ExtraContext]: K extends keyof T
+          ? T[K]
+          : K extends keyof ExtraContext
+            ? ExtraContext[K]
+            : never
+      }>
+    }
+    /**
+     * Overwrite fixture values for the current suite scope.
+     * Supports both object syntax and builder pattern.
+     *
+     * @example
+     * ```ts
+     * describe('with custom config', () => {
+     *   // Object syntax
+     *   test.override({ config: { port: 4000 } })
+     *
+     *   // Builder pattern - value
+     *   test.override('config', { port: 4000 })
+     *
+     *   // Builder pattern - function
+     *   test.override('config', () => ({ port: 4000 }))
+     *
+     *   // Builder pattern - function with cleanup
+     *   test.override('db', async ({ config }, onCleanup) => {
+     *     const db = await createDb(config)
+     *     onCleanup(() => db.close())
+     *     return db
+     *   })
+     * })
+     * ```
+     */
+    override: {
+      // Builder pattern overloads
+      // Overload 1: Function with options
+      <K extends keyof ExtraContext>(
+        name: K,
+        options: FixtureOptions,
+        fn: BuilderFixtureFn<ExtraContext[K], ExtraContext & TestContext>,
+      ): TestAPI<ExtraContext>
+      // Overload 2: Function without options
+      <K extends keyof ExtraContext>(
+        name: K,
+        fn: BuilderFixtureFn<ExtraContext[K], ExtraContext & TestContext>,
+      ): TestAPI<ExtraContext>
+      // Overload 3: Static value with options
+      <K extends keyof ExtraContext>(
+        name: K,
+        options: StaticFixtureOptions,
+        value: ExtraContext[K] extends (...args: any[]) => any ? never : ExtraContext[K],
+      ): TestAPI<ExtraContext>
+      // Overload 4: Static value without options
+      <K extends keyof ExtraContext>(
+        name: K,
+        value: ExtraContext[K] extends (...args: any[]) => any ? never : ExtraContext[K],
+      ): TestAPI<ExtraContext>
+      // Overload 5: Object syntax
+      (fixtures: Partial<Fixtures<ExtraContext>>): TestAPI<ExtraContext>
+    }
+    /**
+     * @deprecated Use `test.override()` instead
+     */
     scoped: (
       fixtures: Partial<Fixtures<ExtraContext>>,
-    ) => void
+    ) => TestAPI<ExtraContext>
     describe: SuiteAPI<ExtraContext>
+    suite: SuiteAPI<ExtraContext>
   }
 
 export interface FixtureOptions {
@@ -638,7 +793,146 @@ export interface FixtureOptions {
   scope?: 'test' | 'worker' | 'file'
 }
 
+/**
+ * Options for test-scoped fixtures.
+ * Test fixtures are set up before each test and have access to all fixtures.
+ */
+export interface TestScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+  /**
+   * @default 'test'
+   */
+  scope?: 'test'
+}
+
+/**
+ * Options for file-scoped fixtures.
+ * File fixtures are set up once per file and can only access other file fixtures and worker fixtures.
+ */
+export interface FileScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+  /**
+   * Must be 'file' for file-scoped fixtures.
+   */
+  scope: 'file'
+}
+
+/**
+ * Options for worker-scoped fixtures.
+ * Worker fixtures are set up once per worker and can only access other worker fixtures.
+ */
+export interface WorkerScopeFixtureOptions extends Omit<FixtureOptions, 'scope'> {
+  /**
+   * Must be 'worker' for worker-scoped fixtures.
+   */
+  scope: 'worker'
+}
+
+/**
+ * Options for static (non-function) fixture values.
+ * Static values are always test-scoped since they're pre-initialized.
+ * Only `injected` is allowed - `scope` and `auto` don't apply to static values.
+ */
+export interface StaticFixtureOptions {
+  /**
+   * Whether the injected value from the config should be preferred over the fixture value.
+   */
+  injected?: boolean
+}
+
 export type Use<T> = (value: T) => Promise<void>
+
+/**
+ * Cleanup registration function for builder pattern fixtures.
+ * Call this to register a cleanup function that runs after the test/file/worker completes.
+ *
+ * **Note:** This function can only be called once per fixture. If you need multiple
+ * cleanup operations, either combine them into a single cleanup function or split
+ * your fixture into multiple smaller fixtures.
+ */
+export type OnCleanup = (cleanup: () => Awaitable<void>) => void
+
+/**
+ * Builder pattern fixture function with automatic type inference.
+ * Returns the fixture value directly (type is inferred from return).
+ * Use onCleanup to register teardown logic.
+ *
+ * Parameters can be omitted if not needed:
+ * - `async () => value` - no dependencies, no cleanup
+ * - `async ({ dep }) => value` - with dependencies, no cleanup
+ * - `async ({ dep }, onCleanup) => value` - with dependencies and cleanup
+ */
+export type BuilderFixtureFn<T, Context> = (
+  context: Context,
+  onCleanup: OnCleanup,
+) => T | Promise<T>
+
+/**
+ * Extracts worker-scoped fixtures from a context that includes scope info.
+ */
+export type ExtractBuilderWorker<C> = C extends { $__worker?: infer W }
+  ? W extends Record<string, any> ? W : object
+  : object
+
+/**
+ * Extracts file-scoped fixtures from a context that includes scope info.
+ */
+export type ExtractBuilderFile<C> = C extends { $__file?: infer F }
+  ? F extends Record<string, any> ? F : object
+  : object
+
+/**
+ * Extracts test-scoped fixtures from a context that includes scope info.
+ */
+export type ExtractBuilderTest<C> = C extends { $__test?: infer T }
+  ? T extends Record<string, any> ? T : object
+  : object
+
+/**
+ * Adds a worker fixture to the context with proper scope tracking.
+ */
+export type AddBuilderWorker<C, K extends string, V> = Omit<C, '$__worker'> & Record<K, V> & {
+  readonly $__worker?: ExtractBuilderWorker<C> & Record<K, V>
+  readonly $__file?: ExtractBuilderFile<C>
+  readonly $__test?: ExtractBuilderTest<C>
+}
+
+/**
+ * Adds a file fixture to the context with proper scope tracking.
+ */
+export type AddBuilderFile<C, K extends string, V> = Omit<C, '$__file'> & Record<K, V> & {
+  readonly $__worker?: ExtractBuilderWorker<C>
+  readonly $__file?: ExtractBuilderFile<C> & Record<K, V>
+  readonly $__test?: ExtractBuilderTest<C>
+}
+
+/**
+ * Adds a test fixture to the context with proper scope tracking.
+ */
+export type AddBuilderTest<C, K extends string, V> = Omit<C, '$__test'> & Record<K, V> & {
+  readonly $__worker?: ExtractBuilderWorker<C>
+  readonly $__file?: ExtractBuilderFile<C>
+  readonly $__test?: ExtractBuilderTest<C> & Record<K, V>
+}
+
+/**
+ * Context available to worker-scoped fixtures.
+ * Worker fixtures can only access other worker fixtures.
+ * They do NOT have access to test context (task, expect, onTestFailed, etc.)
+ * since they run once per worker, outside of any specific test.
+ */
+export type WorkerScopeContext<C> = ExtractBuilderWorker<C>
+
+/**
+ * Context available to file-scoped fixtures.
+ * File fixtures can access worker and other file fixtures.
+ * They do NOT have access to test context (task, expect, onTestFailed, etc.)
+ * since they run once per file, outside of any specific test.
+ */
+export type FileScopeContext<C> = ExtractBuilderWorker<C> & ExtractBuilderFile<C>
+
+/**
+ * Context available to test-scoped fixtures (all fixtures + test context).
+ */
+export type TestScopeContext<C> = C & TestContext
 export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
   use: Use<T[K]>,
@@ -653,10 +947,74 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
+
+/**
+ * Fixture function with explicit context type for scoped fixtures.
+ */
+export type ScopedFixtureFn<Value, Context> = (
+  context: Context,
+  use: Use<Value>,
+) => Promise<void>
+
+/**
+ * Fixtures definition for backward compatibility.
+ * All fixtures are in T and any scope is allowed.
+ */
 export type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & TestContext>
-    | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
+    | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?]
+}
+
+/**
+ * Scoped fixtures definition using a single generic with optional scope keys.
+ * This provides better ergonomics than multiple generics.
+ * Uses $ prefix to avoid conflicts with fixture names.
+ *
+ * @example
+ * ```ts
+ * test.extend<{
+ *   $worker?: { config: Config }
+ *   $file?: { db: Database }
+ *   $test?: { data: string }
+ * }>({ ... })
+ * ```
+ */
+export interface ScopedFixturesDef {
+  $test?: Record<string, any>
+  $file?: Record<string, any>
+  $worker?: Record<string, any>
+}
+
+/**
+ * Extracts fixture types from a ScopedFixturesDef.
+ * Handles optional properties by using Exclude to remove undefined.
+ */
+export type ExtractScopedFixtures<T extends ScopedFixturesDef>
+  = ([Exclude<T['$test'], undefined>] extends [never] ? object : Exclude<T['$test'], undefined>)
+    & ([Exclude<T['$file'], undefined>] extends [never] ? object : Exclude<T['$file'], undefined>)
+    & ([Exclude<T['$worker'], undefined>] extends [never] ? object : Exclude<T['$worker'], undefined>)
+
+/**
+ * Creates the fixtures object type for ScopedFixturesDef with proper scope validation.
+ * - Test fixtures: can be defined as value, function, or tuple with optional scope
+ * - File fixtures: MUST have { scope: 'file' }
+ * - Worker fixtures: MUST have { scope: 'worker' }
+ */
+export type ScopedFixturesObject<T extends ScopedFixturesDef, ExtraContext = object> = {
+  // Test fixtures - scope is optional, have access to all fixtures + TestContext
+  [K in keyof NonNullable<T['$test']>]:
+    | NonNullable<T['$test']>[K]
+    | ScopedFixtureFn<NonNullable<T['$test']>[K], ExtractScopedFixtures<T> & ExtraContext & TestContext>
+    | [ScopedFixtureFn<NonNullable<T['$test']>[K], ExtractScopedFixtures<T> & ExtraContext & TestContext>, TestScopeFixtureOptions?]
+} & {
+  // File fixtures - scope: 'file' is REQUIRED, NO TestContext access
+  [K in keyof NonNullable<T['$file']>]:
+  [ScopedFixtureFn<NonNullable<T['$file']>[K], (NonNullable<T['$file']> & NonNullable<T['$worker']>) & ExtraContext>, FileScopeFixtureOptions]
+} & {
+  // Worker fixtures - scope: 'worker' is REQUIRED, NO TestContext access
+  [K in keyof NonNullable<T['$worker']>]:
+  [ScopedFixtureFn<NonNullable<T['$worker']>[K], NonNullable<T['$worker']> & ExtraContext>, WorkerScopeFixtureOptions]
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
