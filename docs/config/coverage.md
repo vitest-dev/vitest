@@ -58,6 +58,27 @@ List of files excluded from coverage as glob patterns.
 
 See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
 
+The internal implementation will by default write some configuration files into it, as listed below:
+```ts
+[
+  'vitest.config.ts',
+  'vitest.config.mts',
+  'vitest.config.cts',
+  'vitest.config.js',
+  'vitest.config.mjs',
+  'vitest.config.cjs',
+  'vite.config.ts',
+  'vite.config.mts',
+  'vite.config.cts',
+  'vite.config.js',
+  'vite.config.mjs',
+  'vite.config.cjs',
+  '**\/virtual:*',
+  '**\/__x00__*',
+  '**/node_modules/**'
+]
+```
+
 ## coverage.clean
 
 - **Type:** `boolean`
