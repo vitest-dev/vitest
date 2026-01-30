@@ -519,6 +519,67 @@ describe('vi.fn() implementations', () => {
     expect(mock()).toBe(undefined)
   })
 
+  test('vi.fn() with mockThrow', async () => {
+    const mock = vi.fn()
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrow overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrow overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    expect(() => mock()).toThrowError('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrowOnce', async () => {
+    const mock = vi.fn()
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(undefined)
+    mock.mockThrowOnce(new Error('error'))
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrowError('error')
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
   test('vi.fn() with mockResolvedValue', async () => {
     const mock = vi.fn()
     mock.mockResolvedValue(42)
