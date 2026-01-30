@@ -7,6 +7,7 @@ import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { validateNestedOptions } from '../../utils/validate-nested-options'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
@@ -188,13 +189,19 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
-      .action((filters, options) => collect('test', filters, options)),
+      .action((filters, options) => {
+        validateNestedOptions(options, cliOptionsConfig)
+        collect('test', filters, options)
+      }),
     collectCliOptionsConfig,
   )
 
   cli
     .command('[...filters]', undefined, options)
-    .action((filters, options) => start('test', filters, options))
+    .action((filters, options) => {
+      validateNestedOptions(options, cliOptionsConfig)
+      start('test', filters, options)
+    })
 
   setupTabCompletions(cli)
   return cli
@@ -238,6 +245,10 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   let { args, options } = createCLI(config).parse(arrayArgs, {
     run: false,
   })
+
+  // Validate nested options (e.g., experimental.*) against their defined subcommands
+  validateNestedOptions(options, cliOptionsConfig)
+
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
@@ -256,17 +267,20 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
 }
 
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
+  validateNestedOptions(argv, cliOptionsConfig)
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
   await start('test', [], argv)
 }
 
 async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   options.watch = true
   await start('test', cliFilters, options)
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   // "vitest run --watch" should still be watch mode
   options.run = !options.watch
 
@@ -274,6 +288,7 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
+  validateNestedOptions(options, cliOptionsConfig)
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
 }
