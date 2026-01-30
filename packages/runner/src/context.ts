@@ -1,7 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type {
-  File,
   RuntimeContext,
   SuiteCollector,
   Test,
@@ -230,18 +229,4 @@ function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Er
     error.stack = stackTraceError.stack.replace(error.message, stackTraceError.message)
   }
   return error
-}
-
-const fileContexts = new WeakMap<File, Record<string, unknown>>()
-
-export function getFileContext(file: File): Record<string, unknown> {
-  const context = fileContexts.get(file)
-  if (!context) {
-    throw new Error(`Cannot find file context for ${file.name}`)
-  }
-  return context
-}
-
-export function setFileContext(file: File, context: Record<string, unknown>): void {
-  fileContexts.set(file, context)
 }

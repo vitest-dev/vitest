@@ -2,7 +2,7 @@ import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { toArray } from '@vitest/utils/helpers'
-import { collectorContext, setFileContext } from './context'
+import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
 import { runSetupFiles } from './setup'
 import {
@@ -46,7 +46,6 @@ export async function collectTests(
         const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
         const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
-        setFileContext(file, Object.create(null))
         file.tags = fileTags
         file.shuffle = config.sequence.shuffle
 
@@ -103,10 +102,12 @@ export async function collectTests(
           file.collectDuration = now() - collectStart
         }
         catch (e) {
-          const error = processError(e)
+          const errors = e instanceof AggregateError
+            ? e.errors.map(e => processError(e, runner.config.diffOptions))
+            : [processError(e, runner.config.diffOptions)]
           file.result = {
             state: 'fail',
-            errors: [error],
+            errors,
           }
 
           const durations = runner.getImportDurations?.()
