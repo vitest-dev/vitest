@@ -216,6 +216,19 @@ Module Runner is a successor to `vite-node` implemented directly in Vite. Vitest
 
 Vite has its own externalization mechanism, but we decided to keep using the old one to reduce the amount of breaking changes. You can keep using [`server.deps`](/config/#server-deps) to inline or externalize packages.
 
+In Vitest v4, spying on namespace imports of native ESM modules can fail because module namespace exports are non-configurable by design. If you see an error like `Cannot spy on export "<name>". Module namespace is not configurable in ESM` when calling `vi.spyOn` on a namespace import:
+
+```ts
+import * as lodash from 'lodash'
+import { vi } from 'vitest'
+
+vi.spyOn(lodash, 'after')
+```
+
+- If this is a dependency, inline it with [`test.server.deps.inline`](/config/#server-deps-inline).
+- Otherwise, prefer module mocking patterns described in [Mocking Modules](/guide/mocking/modules).
+- In Browser Mode, spying on module exports has additional limitations. See [Limitations](/guide/browser/#spying-on-module-exports).
+
 This update should not be noticeable unless you rely on advanced features mentioned above.
 
 ### `workspace` is Replaced with `projects`
