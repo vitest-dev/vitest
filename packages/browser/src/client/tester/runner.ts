@@ -160,7 +160,15 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+      if (
+        this.config.browser.screenshotFailures
+        && document.body.clientHeight > 0
+        && task.result?.state === 'fail'
+        && task.type === 'test'
+        && task.artifacts.every(
+          artifact => artifact.type !== 'internal:toMatchScreenshot',
+        )
+      ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
         } as any /** TODO */).catch((err) => {
