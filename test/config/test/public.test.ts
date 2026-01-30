@@ -62,3 +62,23 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
   expect(vitestConfig.coverage.exclude).toContain('**/custom-exclude/**')
   expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
 })
+
+test('coverage.changed inherits from test.changed but can be overridden', async () => {
+  const { vitestConfig: inherited } = await resolveConfig({
+    changed: 'HEAD',
+    coverage: {
+      reporter: 'json',
+    },
+  })
+
+  expect(inherited.coverage.changed).toBe('HEAD')
+
+  const { vitestConfig: overridden } = await resolveConfig({
+    changed: 'HEAD',
+    coverage: {
+      changed: false,
+    },
+  })
+
+  expect(overridden.coverage.changed).toBe(false)
+})
