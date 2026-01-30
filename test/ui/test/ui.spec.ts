@@ -70,7 +70,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 1 Fail 16 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 2 Fail 17 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -227,7 +227,7 @@ test.describe('ui', () => {
     // match only failing files when fail filter applied
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText(/^Fail$/, { exact: true }).click()
-    await page.getByText('FAIL (1)').click()
+    await page.getByText('FAIL (2)').click()
     await expect(page.getByTestId('results-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
     await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 

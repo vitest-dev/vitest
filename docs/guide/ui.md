@@ -107,7 +107,7 @@ If the module was inlined, you will see three more windows:
 
 All static imports in the "Source" window show a total time it took to evaluate them by the current module. If the import was already evaluated in the module graph, it will show `0ms` because it is cached by that point.
 
-If the module took longer than 500 milliseconds to load, the time will be displayed in red. If the module took longer than 100 milliseconds, the time will be displayed in orange.
+If the module took longer than the [`danger` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 500ms) to load, the time will be displayed in red. If the module took longer than the [`warn` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 100ms), the time will be displayed in orange.
 
 You can click on an import source to jump into that module and traverse the graph further (note `./support/assertions/index.ts` below).
 
@@ -142,6 +142,6 @@ You can click on the module to see the Module Info. If the module is external, i
 
 The breakdown shows a list of modules with self time, total time, and a percentage relative to the time it took to load the whole test file.
 
-The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than 500 milliseconds to load, and it will be orange if there is at least one file that took longer than 100 milliseconds.
+The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than the [`danger` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 500ms) to load, and it will be orange if there is at least one file that took longer than the [`warn` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 100ms).
 
 You can use [`experimental.importDurations.limit`](/config/experimental#experimental-importdurationslimit) to control the number of imports displayed.

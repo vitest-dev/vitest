@@ -331,16 +331,32 @@ function createSuiteCollector(
       // higher priority should be last, run 1, 2, 3, ... etc
       .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
       .reduce((acc, tag) => {
-        const { name, description, priority, ...options } = tag
+        const { name, description, priority, meta, ...options } = tag
         Object.assign(acc, options)
+        if (meta) {
+          acc.meta = Object.assign(acc.meta ?? Object.create(null), meta)
+        }
         return acc
       }, {} as TestOptions)
 
+    const testOwnMeta = options.meta
     options = {
       ...tagsOptions,
       ...options,
     }
     const timeout = options.timeout ?? runner.config.testTimeout
+    const parentMeta = currentSuite?.meta
+    const tagMeta = tagsOptions.meta
+    const testMeta = Object.create(null)
+    if (tagMeta) {
+      Object.assign(testMeta, tagMeta)
+    }
+    if (parentMeta) {
+      Object.assign(testMeta, parentMeta)
+    }
+    if (testOwnMeta) {
+      Object.assign(testMeta, testOwnMeta)
+    }
     const task: Test = {
       id: '',
       name,
@@ -365,7 +381,7 @@ function createSuiteCollector(
           : options.todo
             ? 'todo'
             : 'run',
-      meta: options.meta ?? Object.create(null),
+      meta: testMeta,
       annotations: [],
       artifacts: [],
       tags: testTags,
@@ -513,7 +529,7 @@ function createSuiteCollector(
       file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
-      meta: Object.create(null),
+      meta: suiteOptions?.meta ?? Object.create(null),
       concurrent: suiteOptions?.concurrent,
       tags: unique([...parentTask?.tags || [], ...suiteTags]),
     }
@@ -604,9 +620,10 @@ function createSuite() {
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
 
+    const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
-      ...currentSuite?.options,
+      ...parentOptions,
       ...options,
     }
 
@@ -636,6 +653,10 @@ function createSuite() {
     }
     if (isSequential != null) {
       options.sequential = isSequential && !isConcurrent
+    }
+
+    if (parentMeta) {
+      options.meta = Object.assign(Object.create(null), parentMeta, options.meta)
     }
 
     return createSuiteCollector(

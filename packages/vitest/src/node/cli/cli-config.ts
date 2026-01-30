@@ -46,6 +46,12 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description:
       'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
+  allowExec: {
+    description: 'Allow API to execute code. (Be careful when enabling this option in untrusted environments)',
+  },
+  allowWrite: {
+    description: 'Allow API to edit files. (Be careful when enabling this option in untrusted environments)',
+  },
   middlewareMode: null,
 })
 
@@ -106,6 +112,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[port]',
     description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
     subcommands: apiConfig(defaultPort),
+    transform(portOrOptions) {
+      if (typeof portOrOptions === 'number') {
+        return { port: portOrOptions }
+      }
+      return portOrOptions
+    },
   },
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
@@ -827,11 +839,35 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
         subcommands: {
           print: {
-            description: 'Print import breakdown to CLI terminal after tests finish (default: false).',
+            description: 'When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).',
+            argument: '<boolean|on-warn>',
+            transform(value) {
+              if (value === 'on-warn') {
+                return 'on-warn'
+              }
+              return value
+            },
           },
           limit: {
             description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
             argument: '<number>',
+          },
+          failOnDanger: {
+            description: 'Fail the test run if any import exceeds the danger threshold (default: false).',
+          },
+          thresholds: {
+            description: 'Duration thresholds in milliseconds for coloring and warnings.',
+            argument: '',
+            subcommands: {
+              warn: {
+                description: 'Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).',
+                argument: '<number>',
+              },
+              danger: {
+                description: 'Danger threshold - imports exceeding this are shown in red (default: 500).',
+                argument: '<number>',
+              },
+            },
           },
         },
       },

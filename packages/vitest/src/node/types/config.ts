@@ -44,7 +44,22 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 export type ApiConfig = Pick<
   ServerOptions,
   'port' | 'strictPort' | 'host' | 'middlewareMode'
->
+> & {
+  /**
+   * Allow any write operations from the API server.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowWrite?: boolean
+  /**
+   * Allow running test files via the API.
+   * If `api.host` is exposed to network and `allowWrite` is true,
+   * anyone connected to the API server can run arbitrary code on your machine.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowExec?: boolean
+}
 
 export interface EnvironmentOptions {
   /**
@@ -864,15 +879,39 @@ export interface InlineConfig {
      */
     importDurations?: {
       /**
-       * Print import breakdown to CLI terminal after tests finish.
+       * When to print import breakdown to CLI terminal after tests finish.
+       * - `true`: Always print
+       * - `false`: Never print (default)
+       * - `'on-warn'`: Print only when any import exceeds the warn threshold
        * @default false
        */
-      print?: boolean
+      print?: boolean | 'on-warn'
       /**
        * Maximum number of imports to collect and display.
        * @default 0 (or 10 if `print` or UI is enabled)
        */
       limit?: number
+      /**
+       * Fail the test run if any import exceeds the danger threshold.
+       * When failing, the breakdown is always printed regardless of `print` setting.
+       * @default false
+       */
+      failOnDanger?: boolean
+      /**
+       * Duration thresholds in milliseconds for coloring and warnings.
+       */
+      thresholds?: {
+        /**
+         * Warning threshold - imports exceeding this are shown in yellow/orange.
+         * @default 100
+         */
+        warn?: number
+        /**
+         * Danger threshold - imports exceeding this are shown in red.
+         * @default 500
+         */
+        danger?: number
+      }
     }
 
     /**
@@ -1158,8 +1197,13 @@ export interface ResolvedConfig
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
-      print: boolean
+      print: boolean | 'on-warn'
       limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
     }
   }
 }
