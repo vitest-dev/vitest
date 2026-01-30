@@ -28,7 +28,7 @@ export default defineConfig({
       enabled: true,
       expect: {
         toMatchScreenshot: {
-          comparatorName: 'pixelmatch',
+          comparatorName: '@blazediff/core',
           comparatorOptions: {
             threshold: 0.2,
             allowedMismatchedPixels: 100,
