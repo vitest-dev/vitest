@@ -57,7 +57,6 @@
     "@bcoe/v8-coverage": "^1.0.2",
     "@vitest/utils": "workspace:*",
     "ast-v8-to-istanbul": "^0.3.10",
-    "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
@@ -70,6 +69,7 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@vitest/browser": "workspace:*",
+    "istanbul-lib-coverage": "catalog:",
     "pathe": "catalog:",
     "vitest": "workspace:*"
   }

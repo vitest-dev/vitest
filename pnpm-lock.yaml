@@ -153,6 +153,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
     path: patches/cac@6.7.14.patch
+  istanbul-lib-coverage:
+    hash: 7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c
+    path: patches/istanbul-lib-coverage.patch
   istanbul-lib-instrument:
     hash: fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11
     path: patches/istanbul-lib-instrument.patch
@@ -614,9 +617,6 @@ importers:
       '@jridgewell/trace-mapping':
         specifier: 'catalog:'
         version: 0.3.31
-      istanbul-lib-coverage:
-        specifier: 'catalog:'
-        version: 3.2.2
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
@@ -648,6 +648,9 @@ importers:
       '@types/istanbul-reports':
         specifier: 'catalog:'
         version: 3.0.4
+      istanbul-lib-coverage:
+        specifier: 'catalog:'
+        version: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       istanbul-lib-instrument:
         specifier: ^6.0.3
         version: 6.0.3(patch_hash=fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11)
@@ -672,9 +675,6 @@ importers:
       ast-v8-to-istanbul:
         specifier: ^0.3.10
         version: 0.3.10
-      istanbul-lib-coverage:
-        specifier: 'catalog:'
-        version: 3.2.2
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
@@ -706,6 +706,9 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
+      istanbul-lib-coverage:
+        specifier: 'catalog:'
+        version: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -1469,7 +1472,7 @@ importers:
         version: 20.4.0
       istanbul-lib-coverage:
         specifier: 'catalog:'
-        version: 3.2.2
+        version: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       istanbul-lib-report:
         specifier: 'catalog:'
         version: 3.0.1
@@ -1581,7 +1584,7 @@ importers:
         version: 2.0.6
       istanbul-lib-coverage:
         specifier: 'catalog:'
-        version: 3.2.2
+        version: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       jsdom:
         specifier: latest
         version: 27.4.0
@@ -15867,21 +15870,21 @@ snapshots:
 
   isexe@3.1.1: {}
 
-  istanbul-lib-coverage@3.2.2: {}
+  istanbul-lib-coverage@3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c): {}
 
   istanbul-lib-instrument@6.0.3(patch_hash=fa76adf262fdb0bf545d5c529c5420e0ae33df7f5e344a6c8a727a2ffc0b0b11):
     dependencies:
       '@babel/core': 7.28.6
       '@babel/parser': 7.27.2
       '@istanbuljs/schema': 0.1.3
-      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-coverage: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
 
   istanbul-lib-report@3.0.1:
     dependencies:
-      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-coverage: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
       make-dir: 4.0.0
       supports-color: 7.2.0
 
@@ -15889,7 +15892,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       debug: 4.4.3
-      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-coverage: 3.2.2(patch_hash=7a7f36edc254ebd0018a9cc608edee891bd8d5ba91fcfb25cfe4439de83b0f5c)
     transitivePeerDependencies:
       - supports-color
 

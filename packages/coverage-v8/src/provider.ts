@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
-import libCoverage from 'istanbul-lib-coverage'
+import * as libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'

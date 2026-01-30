@@ -1,3 +1,4 @@
+import swc from 'unplugin-swc'
 import { expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
@@ -59,5 +60,57 @@ test('uncovered files that require custom transform', async () => {
         "statements": "0/1 (0%)",
       },
     }
+  `)
+})
+
+test('merging reports from transforms that produce different end mappings', async () => {
+  await runVitest({
+    coverage: {
+      reporter: ['json', 'html'],
+    },
+
+    projects: [
+      {
+        test: { name: 'one', include: ['fixtures/test/math.test.ts'] },
+      },
+      {
+        test: { name: 'two', include: ['fixtures/test/math.test.ts'] },
+        plugins: [{
+          name: 'vitest-custom-multi-transform',
+          enforce: 'pre',
+          transform(code, id, options) {
+            if (id.includes('math.ts')) {
+              // @ts-expect-error -- Ignore complex type
+              return swc.vite({ jsc: { target: 'esnext' } }).transform(code, id, options)
+            }
+          },
+        }],
+      },
+    ],
+  })
+
+  const coverageMap = await readCoverageMap()
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
+
+  expect(fileCoverage).toMatchInlineSnapshot(`
+    {
+      "branches": "0/0 (100%)",
+      "functions": "2/8 (25%)",
+      "lines": "1/4 (25%)",
+      "statements": "1/4 (25%)",
+    }
+  `)
+
+  expect(Object.values(fileCoverage.fnMap).map(fn => fn.name)).toMatchInlineSnapshot(`
+    [
+      "sum",
+      "subtract",
+      "multiply",
+      "remainder",
+      "sum",
+      "subtract",
+      "multiply",
+      "remainder",
+    ]
   `)
 })
