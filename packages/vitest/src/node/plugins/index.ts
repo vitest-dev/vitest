@@ -1,7 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
-import { relative } from 'pathe'
+import { relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
@@ -30,7 +30,7 @@ export async function VitestPlugin(
   const userConfig = deepMerge({}, options) as UserConfig
 
   async function UIPlugin() {
-    await vitest.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), vitest.version)
+    await vitest.packageInstaller.ensureInstalled('@vitest/ui', resolve(options.root || process.cwd()), vitest.version)
     return (await import('@vitest/ui')).default(vitest)
   }
 
