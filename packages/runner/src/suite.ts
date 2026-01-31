@@ -1,4 +1,4 @@
-import type { TestFixtureRecord } from './fixture'
+import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
   File,
@@ -413,7 +413,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(handler, context), task),
           timeout,
           false,
           stackTraceError,
@@ -840,10 +840,10 @@ export function createTaskCollector(
    * Handles both builder pattern (name, options?, value) and object syntax.
    */
   function parseBuilderFixtures(
-    fixturesOrName: TestFixtureRecord | string,
+    fixturesOrName: UserFixtures | string,
     optionsOrFn?: object | ((...args: any[]) => any),
     maybeFn?: (...args: any[]) => any,
-  ): TestFixtureRecord {
+  ): UserFixtures {
     // Object syntax: just return as-is
     if (typeof fixturesOrName !== 'string') {
       return fixturesOrName
@@ -917,7 +917,7 @@ export function createTaskCollector(
 
   taskFn.override = function (
     this: TestAPI,
-    fixturesOrName: TestFixtureRecord | string,
+    fixturesOrName: UserFixtures | string,
     optionsOrFn?: object | ((...args: any[]) => any),
     maybeFn?: (...args: any[]) => any,
   ) {
@@ -926,14 +926,14 @@ export function createTaskCollector(
     return this
   }
 
-  taskFn.scoped = function (fixtures: TestFixtureRecord) {
+  taskFn.scoped = function (fixtures: UserFixtures) {
     console.warn(`test.scoped() is deprecated and will be removed in future versions. Please use test.override() instead.`)
     return this.override(fixtures)
   }
 
   taskFn.extend = function (
     this: TestAPI,
-    fixturesOrName: TestFixtureRecord | string,
+    fixturesOrName: UserFixtures | string,
     optionsOrFn?: object | ((...args: any[]) => any),
     maybeFn?: (...args: any[]) => any,
   ) {

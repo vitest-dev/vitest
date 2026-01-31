@@ -22,7 +22,7 @@ export function setTestFixture(
   testFixtureMap.set(key, fixture)
 }
 
-export function getTestFixturesManager<Context = TestContext>(key: Context): TestFixtures {
+export function getTestFixtures<Context = TestContext>(key: Context): TestFixtures {
   return testFixtureMap.get(key as any)
 }
 

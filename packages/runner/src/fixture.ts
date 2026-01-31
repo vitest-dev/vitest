@@ -2,7 +2,7 @@ import type { FixtureFn, Suite, VitestRunner } from './types'
 import type { File, FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
 import { FixtureDependencyError } from './errors'
-import { getTestFixturesManager } from './map'
+import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
 
 export interface TestFixtureItem extends FixtureOptions {
@@ -10,16 +10,17 @@ export interface TestFixtureItem extends FixtureOptions {
   value: unknown
   scope: 'test' | 'file' | 'worker'
   deps: Set<string>
-  // so it's possible to call { parent } inside the same fixture
+  // so it's possible to call base fixture inside ({ a: ({ a }, use) => {} })
   parent?: TestFixtureItem
 }
 
-export type TestFixtureRecord = Record<string, TestFixtureItem>
+export type UserFixtures = Record<string, unknown>
+export type FixtureRegistrations = Map<string, TestFixtureItem>
 
 export class TestFixtures {
-  private _suiteContexts: WeakMap<Suite | symbol, Record<string, any>>
-  private _overrides = new WeakMap<Suite, Map<string, TestFixtureItem>>()
-  private _registrations: Map<string, TestFixtureItem>
+  private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
+  private _overrides = new WeakMap<Suite, FixtureRegistrations>()
+  private _registrations: FixtureRegistrations
 
   private static _definitions: TestFixtures[] = []
   private static _builtinFixtures: string[] = [
@@ -47,22 +48,20 @@ export class TestFixtures {
     return TestFixtures._definitions.map(f => f.getFileContext(file))
   }
 
-  constructor(
-    registrations?: Map<string, TestFixtureItem>,
-  ) {
+  constructor(registrations?: FixtureRegistrations) {
     this._registrations = registrations ?? new Map()
     this._suiteContexts = new WeakMap()
     TestFixtures._definitions.push(this)
   }
 
-  extend(runner: VitestRunner, userFixtures: Record<string, any>): TestFixtures {
+  extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
     return new TestFixtures(registrations)
   }
 
-  get(suite: Suite): Map<string, TestFixtureItem> {
+  get(suite: Suite): FixtureRegistrations {
     let currentSuite: Suite | undefined = suite
     while (currentSuite) {
       const overrides = this._overrides.get(currentSuite)
@@ -78,7 +77,7 @@ export class TestFixtures {
     return this._registrations
   }
 
-  override(runner: VitestRunner, userFixtures: Record<string, any>): void {
+  override(runner: VitestRunner, userFixtures: UserFixtures): void {
     const { suite: currentSuite, file } = getCurrentSuite()
     const suite = currentSuite || file
     const isTopLevel = !currentSuite || currentSuite.file === currentSuite
@@ -86,8 +85,8 @@ export class TestFixtures {
     // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
     const suiteRegistrations = new Map(this.get(suite))
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
-    // if defined in top-level, just override all registrations,
-    // we don't support overriding suite-level fixtures anyway (it will throw an error)
+    // If defined in top-level, just override all registrations
+    // We don't support overriding suite-level fixtures anyway (it will throw an error)
     if (isTopLevel) {
       this._registrations = registrations
     }
@@ -112,7 +111,7 @@ export class TestFixtures {
 
   private parseUserFixtures(
     runner: VitestRunner,
-    userFixtures: Record<string, any>,
+    userFixtures: UserFixtures,
     supportNonTest: boolean,
     registrations = new Map<string, TestFixtureItem>(this._registrations),
   ) {
@@ -272,7 +271,7 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
-export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
+export function withFixtures(fn: Function, testContext?: TestContext) {
   const collector = getCurrentSuite()
   const suite = collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
@@ -282,20 +281,20 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
       return fn({})
     }
 
-    const fixturesManager = getTestFixturesManager(context)
-    if (!fixturesManager) {
+    const fixtures = getTestFixtures(context)
+    if (!fixtures) {
       return fn(context)
     }
 
-    const fixtures = fixturesManager.get(suite)
-    if (!fixtures.size) {
+    const registrations = fixtures.get(suite)
+    if (!registrations.size) {
       return fn(context)
     }
 
     const usedFixtures: TestFixtureItem[] = []
     const usedProps = getUsedProps(fn)
 
-    for (const fixture of fixtures.values()) {
+    for (const fixture of registrations.values()) {
       if (fixture.auto || usedProps.has(fixture.name)) {
         usedFixtures.push(fixture)
       }
@@ -310,7 +309,7 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
     }
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
 
-    const pendingFixtures = resolveDeps(usedFixtures, fixtures)
+    const pendingFixtures = resolveDeps(usedFixtures, registrations)
 
     if (!pendingFixtures.length) {
       return fn(context)
@@ -344,7 +343,7 @@ export function withFixtures(runner: VitestRunner, fn: Function, testContext?: T
       }
       else {
         const resolvedValue = await resolveScopeFixtureValue(
-          fixturesManager,
+          fixtures,
           suite,
           fixture,
         )
@@ -459,7 +458,7 @@ async function resolveFixtureFunction(
 
 function resolveDeps(
   usedFixtures: TestFixtureItem[],
-  fixtures: Map<string, TestFixtureItem>,
+  registrations: FixtureRegistrations,
   depSet = new Set<TestFixtureItem>(),
   pendingFixtures: TestFixtureItem[] = [],
 ) {
@@ -487,8 +486,8 @@ function resolveDeps(
 
     depSet.add(fixture)
     resolveDeps(
-      [...fixture.deps].map(n => n === fixture.name ? fixture.parent : fixtures.get(n)).filter(n => !!n),
-      fixtures,
+      [...fixture.deps].map(n => n === fixture.name ? fixture.parent : registrations.get(n)).filter(n => !!n),
+      registrations,
       depSet,
       pendingFixtures,
     )

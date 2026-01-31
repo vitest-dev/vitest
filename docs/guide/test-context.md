@@ -702,6 +702,10 @@ export default defineConfig({
 
 You can override fixture values for a specific suite and its children using `test.override`. This is useful when you need different fixture values for different test scenarios.
 
+::: tip
+Vitest will automatically inherit the options, if they are not provided when overriding. Note that you cannot override fixture's `scope` or `auto` options.
+:::
+
 #### Builder Pattern (Recommended)
 
 ```ts
