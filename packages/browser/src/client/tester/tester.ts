@@ -1,7 +1,7 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { parse } from 'flatted'
+import { parse } from '@vitest/utils/serialization'
 import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,

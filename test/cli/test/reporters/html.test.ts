@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import zlib from 'node:zlib'
 import { runInlineTests, runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
-import { parse } from 'flatted'
+import { parse } from '@vitest/utils/serialization'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 

@@ -1,9 +1,8 @@
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
+import { parse, stringify } from '@vitest/utils/serialization'
 import { createBirpc } from 'birpc'
-
-import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 
 export * from '@vitest/runner/utils'
@@ -90,17 +89,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
   const birpcHandlers = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: e =>
-      stringify(e, (_, v) => {
-        if (v instanceof Error) {
-          return {
-            name: v.name,
-            message: v.message,
-            stack: v.stack,
-          }
-        }
-        return v
-      }),
+    serialize: e => stringify(e),
     deserialize: parse,
     timeout: -1,
   } satisfies BirpcOptions<WebSocketHandlers>

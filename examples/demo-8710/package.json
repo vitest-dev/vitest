@@ -1,0 +1,14 @@
+{
+  "name": "@vitest/example-blob-benchmark",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "generate": "node generate-tests.mjs",
+    "test:blob": "vitest run --reporter=blob",
+    "merge": "vitest run --merge-reports .vitest-reports --reporter=json"
+  },
+  "devDependencies": {
+    "vitest": "latest"
+  }
+}

@@ -38,8 +38,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vitest/utils": "workspace:*",
     "birpc": "catalog:",
-    "flatted": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {

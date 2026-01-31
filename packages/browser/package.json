@@ -80,7 +80,6 @@
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
-    "flatted": "catalog:",
     "ivya": "^1.7.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",

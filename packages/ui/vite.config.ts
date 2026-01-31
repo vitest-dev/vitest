@@ -18,6 +18,7 @@ export default defineConfig({
     alias: {
       '~/': `${resolve(import.meta.dirname, 'client')}/`,
       '@vitest/ws-client': `${resolve(import.meta.dirname, '../ws-client/src/index.ts')}`,
+      '@vitest/utils/serialization': `${resolve(import.meta.dirname, '../utils/src/serialization.ts')}`,
     },
   },
   define: {

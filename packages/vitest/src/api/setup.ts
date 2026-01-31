@@ -18,14 +18,13 @@ import type {
 import { existsSync, promises as fs } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
+import { parse, stringify } from '@vitest/utils/serialization'
 import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
 import { isFileServingAllowed } from '../node/vite'
 import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
-import { stringifyReplace } from '../utils/serialization'
 import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {
@@ -196,7 +195,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           'onCollected',
           'onTaskUpdate',
         ],
-        serialize: (data: any) => stringify(data, stringifyReplace),
+        serialize: (data: any) => stringify(data),
         deserialize: parse,
         timeout: -1,
       },

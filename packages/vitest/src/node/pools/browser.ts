@@ -11,7 +11,7 @@ import crypto from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils/helpers'
-import { stringify } from 'flatted'
+import { stringify } from '@vitest/utils/serialization'
 import { createDebugger } from '../../utils/debugger'
 import { detectCodeBlock } from '../../utils/test-helpers'
 
