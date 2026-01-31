@@ -55,7 +55,7 @@ export default defineConfig({
 
 ## Reported Tasks
 
-Reported [events](/advanced/api/reporters) receive tasks for [tests](/advanced/api/test-case), [suites](/advanced/api/test-suite) and [modules](/advanced/api/test-module):
+Reported [events](/api/advanced/reporters) receive tasks for [tests](/api/advanced/test-case), [suites](/api/advanced/test-suite) and [modules](/api/advanced/test-module):
 
 ```ts twoslash
 import type { Reporter, TestModule } from 'vitest/node'
