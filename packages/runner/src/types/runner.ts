@@ -224,10 +224,6 @@ export interface VitestRunner {
    */
   viteEnvironment?: string
 
-  /**
-   * Return the worker context for fixtures specified with `scope: 'worker'`
-   */
-  getWorkerContext?: () => Record<string, unknown>
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
   // eslint-disable-next-line ts/method-signature-style

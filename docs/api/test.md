@@ -261,47 +261,42 @@ Whether the test is expected to fail. If it does, the test will pass, otherwise 
 
 - **Alias:** `it.extend`
 
-Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context.html#test-extend) for more information.
+Use `test.extend` to extend the test context with custom fixtures. This will return a new `test` and it's also extendable, so you can compose more fixtures or override existing ones by extending it as you need. See [Extend Test Context](/guide/test-context#extend-test-context) for more information.
 
 ```ts
 import { test as baseTest, expect } from 'vitest'
 
-const todos = []
-const archive = []
+export const test = baseTest
+  // Simple value - type is inferred as { port: number; host: string }
+  .extend('config', { port: 3000, host: 'localhost' })
+  // Function fixture - type is inferred from return value
+  .extend('server', async ({ config }) => {
+    // TypeScript knows config is { port: number; host: string }
+    return `http://${config.host}:${config.port}`
+  })
 
-const test = baseTest.extend({
-  todos: async ({ task }, use) => {
-    todos.push(1, 2, 3)
-    await use(todos)
-    todos.length = 0
-  },
-  archive,
-})
-
-test('add item', ({ todos }) => {
-  expect(todos.length).toBe(3)
-
-  todos.push(4)
-  expect(todos.length).toBe(4)
+test('server uses correct port', ({ config, server }) => {
+  // TypeScript knows the types:
+  // - config is { port: number; host: string }
+  // - server is string
+  expect(server).toBe('http://localhost:3000')
+  expect(config.port).toBe(3000)
 })
 ```
 
-## test.scoped <Version>3.1.0</Version> {#test-scoped}
+## test.override <Version>4.1.0</Version> {#test-override}
 
-- **Alias:** `it.scoped`
-
-Use `test.scoped` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Scoping Values to Suite](/guide/test-context.html#scoping-values-to-suite) for more information.
+Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.
 
 ```ts
 import { test as baseTest, describe, expect } from 'vitest'
 
-const test = baseTest.extend({
-  dependency: 'default',
-  dependant: ({ dependency }, use) => use({ dependency }),
-})
+const test = baseTest
+  .extend('dependency', 'default')
+  .extend('dependant', ({ dependency }) => dependency)
 
 describe('use scoped values', () => {
-  test.scoped({ dependency: 'new' })
+  test.override({ dependency: 'new' })
 
   test('uses scoped value', ({ dependant }) => {
     // `dependant` uses the new overridden value that is scoped
@@ -310,6 +305,16 @@ describe('use scoped values', () => {
   })
 })
 ```
+
+## test.scoped <Version>3.1.0</Version> <Deprecated /> {#test-scoped}
+
+- **Alias:** `it.scoped`
+
+::: danger DEPRECATED
+`test.scoped` is deprecated in favor of [`test.override`](#test-override) and will be removed in a future major version.
+:::
+
+Alias of [`test.override`](#test-override)
 
 ## test.skip
 
@@ -661,6 +666,10 @@ test.concurrent.for([
 
 Scoped `describe`. See [describe](/api/describe) for more information.
 
+## test.suite <Version>4.1.0</Version> {#test-suite}
+
+Alias for `suite`. See [describe](/api/describe) for more information.
+
 ## test.beforeEach
 
 Scoped `beforeEach` hook that inherits types from [`test.extend`](#test-extend). See [beforeEach](/api/hooks#beforeeach) for more information.
@@ -671,11 +680,11 @@ Scoped `afterEach` hook that inherits types from [`test.extend`](#test-extend). 
 
 ## test.beforeAll
 
-Scoped `beforeAll` hook. See [beforeAll](/api/hooks#beforeall) for more information.
+Scoped `beforeAll` hook that inherits types from [`test.extend`](#test-extend). See [beforeAll](/api/hooks#beforeall) for more information.
 
 ## test.afterAll
 
-Scoped `afterAll` hook. See [afterAll](/api/hooks#afterall) for more information.
+Scoped `afterAll` hook that inherits types from [`test.extend`](#test-extend). See [afterAll](/api/hooks#afterall) for more information.
 
 ## test.aroundEach <Version>4.1.0</Version> {#test-aroundeach}
 
@@ -683,7 +692,7 @@ Scoped `aroundEach` hook that inherits types from [`test.extend`](#test-extend).
 
 ## test.aroundAll <Version>4.1.0</Version> {#test-aroundall}
 
-Scoped `aroundAll` hook. See [aroundAll](/api/hooks#aroundall) for more information.
+Scoped `aroundAll` hook that inherits types from [`test.extend`](#test-extend). See [aroundAll](/api/hooks#aroundall) for more information.
 
 ## bench <Experimental /> {#bench}
 

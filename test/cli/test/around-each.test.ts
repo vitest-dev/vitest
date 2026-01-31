@@ -1156,8 +1156,8 @@ test('aroundEach with fixtures', async () => {
     >> user fixture setup
     >> test running, db available: true
     >> user fixture teardown
-    >> db fixture teardown
-    >> aroundEach teardown"
+    >> aroundEach teardown
+    >> db fixture teardown"
   `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {

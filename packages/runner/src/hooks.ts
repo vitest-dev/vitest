@@ -1,4 +1,3 @@
-import type { VitestRunner } from './types'
 import type {
   AfterAllListener,
   AfterEachListener,
@@ -144,12 +143,11 @@ export function beforeEach<ExtraContext = object>(
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
-  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
       withTimeout(
-        withFixtures(runner, fn),
+        withFixtures(fn),
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
@@ -185,11 +183,10 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
-  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(
-      withFixtures(runner, fn),
+      withFixtures(fn),
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),
@@ -351,11 +348,10 @@ export function aroundEach<ExtraContext = object>(
   assertTypes(fn, '"aroundEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
   const resolvedTimeout = timeout ?? getDefaultHookTimeout()
-  const runner = getRunner()
 
   // Create a wrapper function that supports fixtures in the second argument (context)
   // withFixtures resolves fixtures into context, then we call fn with all 3 args
-  const wrappedFn: AroundEachListener<ExtraContext> = withAroundEachFixtures(runner, fn)
+  const wrappedFn: AroundEachListener<ExtraContext> = withAroundEachFixtures(fn)
 
   // Store timeout and stack trace on the function for use in callAroundEachHooks
   // Setup and teardown phases will each have their own timeout
@@ -376,7 +372,6 @@ export function aroundEach<ExtraContext = object>(
  * - Third arg is suite
  */
 function withAroundEachFixtures<ExtraContext>(
-  runner: VitestRunner,
   fn: AroundEachListener<ExtraContext>,
 ): AroundEachListener<ExtraContext> {
   // Create the wrapper that will be returned
@@ -390,7 +385,7 @@ function withAroundEachFixtures<ExtraContext>(
     ;(innerFn as any).toString = () => fn.toString()
 
     // Use withFixtures to resolve fixtures, passing context as the hook context
-    const fixtureResolver = withFixtures(runner, innerFn)
+    const fixtureResolver = withFixtures(innerFn)
     return fixtureResolver(context)
   }
 

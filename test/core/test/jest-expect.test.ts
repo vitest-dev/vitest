@@ -1284,7 +1284,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripVTControlCharacters(error.diff)
+    const diff = stripVTControlCharacters(error.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1297,7 +1297,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripVTControlCharacters(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause!.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1313,7 +1313,7 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff!)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -1337,7 +1337,7 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff!))]
   }
   return expect.unreachable()
 }

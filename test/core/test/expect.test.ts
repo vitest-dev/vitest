@@ -532,7 +532,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected: 
           SchemaMatching {
@@ -572,7 +572,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected
           + Received
@@ -615,7 +615,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected
           + Received
@@ -652,7 +652,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toContain('SchemaMatching')
         expect(diff).toContain('ArrayContaining')
       }
@@ -670,7 +670,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected: 
           SchemaMatching
@@ -720,7 +720,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected
           + Received
@@ -754,7 +754,7 @@ describe('Standard Schema', () => {
       }
       catch (err) {
         const error = processError(err)
-        const diff = stripVTControlCharacters(error.diff)
+        const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
           "- Expected
           + Received
