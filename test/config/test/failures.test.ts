@@ -391,6 +391,12 @@ test('maxConcurrency 0 prints a warning', async () => {
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
 
+test('detectAsyncLeaks with browser mode prints a warning', async () => {
+  const { stderr } = await runVitest({ detectAsyncLeaks: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: playwright() } })
+
+  expect(stderr).toMatch('The optioon "detectAsyncLeaks" is not supported in browser mode and will be ignored.')
+})
+
 test('browser.instances is empty', async () => {
   const { stderr } = await runVitest({
     browser: {

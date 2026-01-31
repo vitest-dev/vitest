@@ -441,6 +441,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   logHeapUsage: {
     description: 'Show the size of heap for each test when running in node',
   },
+  detectAsyncLeaks: {
+    description: 'Detect asynchronous resources leaking from the test file (default: `false`)',
+  },
   allowOnly: {
     description:
       'Allow tests and suites that are marked as only (default: `!process.env.CI`)',
