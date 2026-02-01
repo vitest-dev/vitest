@@ -160,7 +160,7 @@ export class ExternalModulesExecutor {
     }
     else {
       const pkgData = findNearestPackageData(normalize(pathUrl))
-      type = pkgData.type === 'module' ? 'module' : 'commonjs'
+      type = pkgData?.type === 'module' ? 'module' : 'commonjs'
     }
 
     return { type, path: pathUrl, url: fileUrl }
