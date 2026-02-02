@@ -92,6 +92,9 @@ function isCustomObject(value: unknown): value is object {
   // check plain object
   const proto = Object.getPrototypeOf(value)
   if (proto === Object.prototype || proto === null) {
+    if (Object.getOwnPropertySymbols(value).length > 0) {
+      return true
+    }
     return false
   }
   // check devalue builtin support
@@ -112,7 +115,12 @@ const customTypes = {
         if (typeof (v as any).toJSON === 'function') {
           return (v as any).toJSON()
         }
-        return { ...v }
+        // drop symbol keys to mirror JSON/flatted behavior
+        const clone: any = {}
+        for (const key of Object.keys(v)) {
+          clone[key] = (v as any)[key]
+        }
+        return clone
       }
     },
   },
