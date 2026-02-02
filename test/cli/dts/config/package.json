@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dts-config",
+  "name": "@vitest/test-integration-dts-config",
   "type": "module",
   "private": true,
   "scripts": {

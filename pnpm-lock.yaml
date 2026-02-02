@@ -1288,6 +1288,27 @@ importers:
         specifier: 'catalog:'
         version: 8.19.0
 
+  test/cli/dts/browser-playwright:
+    devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../../../packages/browser-playwright
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/config:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/fixture-extend:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
   test/config:
     devDependencies:
       '@test/test-dep-config':
@@ -1494,27 +1515,6 @@ importers:
       vue:
         specifier: 'catalog:'
         version: 3.5.27(typescript@5.9.3)
-
-  test/dts-config:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/dts-fixture:
-    devDependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/dts-playwright:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
 
   test/node-runner: {}
 
