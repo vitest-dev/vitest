@@ -271,17 +271,39 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
-export function withFixtures(fn: Function, testContext?: TestContext) {
+export interface WithFixturesOptions {
+  /**
+   * Whether this is a suite-level hook (beforeAll/afterAll/aroundAll).
+   * Suite hooks can only access file/worker scoped fixtures and static values.
+   */
+  isSuiteHook?: boolean
+  /**
+   * The test context to use. If not provided, the hookContext passed to the
+   * returned function will be used.
+   */
+  context?: Record<string, any>
+  /**
+   * Error with stack trace captured at hook registration time.
+   * Used to provide better error messages with proper stack traces.
+   */
+  stackTraceError?: Error
+  /**
+   * Current fixtures from the context.
+   */
+  fixtures?: TestFixtures
+}
+
+export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
   const suite = collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
-    const context: (TestContext & { [key: string]: any }) | undefined = hookContext || testContext
+    const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
     if (!context) {
       return fn({})
     }
 
-    const fixtures = getTestFixtures(context)
+    const fixtures = options?.fixtures || getTestFixtures(context)
     if (!fixtures) {
       return fn(context)
     }
@@ -313,6 +335,25 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
 
     if (!pendingFixtures.length) {
       return fn(context)
+    }
+
+    // Check if suite-level hook is trying to access test-scoped fixtures
+    // Suite hooks (beforeAll/afterAll/aroundAll) can only access file/worker scoped fixtures
+    if (options?.isSuiteHook) {
+      const testScopedFixtures = pendingFixtures.filter(f => f.scope === 'test')
+      if (testScopedFixtures.length > 0) {
+        const fixtureNames = testScopedFixtures.map(f => `"${f.name}"`).join(', ')
+        const error = new FixtureDependencyError(
+          `Test-scoped fixtures cannot be used in beforeAll/afterAll/aroundAll hooks. `
+          + `The following fixtures are test-scoped: ${fixtureNames}. `
+          + `Use file or worker scoped fixtures instead, or move the logic to beforeEach/afterEach hooks.`,
+        )
+        // Use stack trace from hook registration for better error location
+        if (options.stackTraceError?.stack) {
+          error.stack = error.message + options.stackTraceError.stack.replace(options.stackTraceError.message, '')
+        }
+        throw error
+      }
     }
 
     if (!contextHasFixturesCache.has(context)) {
@@ -498,22 +539,27 @@ function resolveDeps(
   return pendingFixtures
 }
 
-const propsSymbol = Symbol('$vitest:fixture-props')
+const kPropsSymbol = Symbol('$vitest:fixture-props')
 
-export function migrateProps(from: Function, to: Function): void {
-  const props = getUsedProps(from)
-  Object.defineProperty(to, propsSymbol, {
+interface FixturePropsOptions {
+  index?: number
+  original?: Function
+}
+
+export function configureProps(fn: Function, options: FixturePropsOptions): void {
+  Object.defineProperty(fn, kPropsSymbol, {
+    value: options,
     enumerable: false,
-    writable: true,
-    value: props,
   })
 }
 
 function getUsedProps(fn: Function): Set<string> {
-  if (propsSymbol in fn) {
-    return fn[propsSymbol] as Set<string>
-  }
-  let fnString = filterOutComments(fn.toString())
+  const {
+    index: fixturesIndex = 0,
+    original: implementation = fn,
+  } = kPropsSymbol in fn ? fn[kPropsSymbol] as FixturePropsOptions : {}
+  let fnString = filterOutComments(implementation.toString())
+
   // match lowered async function and strip it off
   // example code on esbuild-try https://esbuild.github.io/try/#YgAwLjI0LjAALS1zdXBwb3J0ZWQ6YXN5bmMtYXdhaXQ9ZmFsc2UAZQBlbnRyeS50cwBjb25zdCBvID0gewogIGYxOiBhc3luYyAoKSA9PiB7fSwKICBmMjogYXN5bmMgKGEpID0+IHt9LAogIGYzOiBhc3luYyAoYSwgYikgPT4ge30sCiAgZjQ6IGFzeW5jIGZ1bmN0aW9uKGEpIHt9LAogIGY1OiBhc3luYyBmdW5jdGlvbiBmZihhKSB7fSwKICBhc3luYyBmNihhKSB7fSwKCiAgZzE6IGFzeW5jICgpID0+IHt9LAogIGcyOiBhc3luYyAoeyBhIH0pID0+IHt9LAogIGczOiBhc3luYyAoeyBhIH0sIGIpID0+IHt9LAogIGc0OiBhc3luYyBmdW5jdGlvbiAoeyBhIH0pIHt9LAogIGc1OiBhc3luYyBmdW5jdGlvbiBnZyh7IGEgfSkge30sCiAgYXN5bmMgZzYoeyBhIH0pIHt9LAoKICBoMTogYXN5bmMgKCkgPT4ge30sCiAgLy8gY29tbWVudCBiZXR3ZWVuCiAgaDI6IGFzeW5jIChhKSA9PiB7fSwKfQ
   //   __async(this, null, function*
@@ -532,21 +578,15 @@ function getUsedProps(fn: Function): Set<string> {
     return new Set()
   }
 
-  let first = args[0]
-  if ('__VITEST_FIXTURE_INDEX__' in fn) {
-    first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
-    if (!first) {
-      return new Set()
-    }
-  }
+  const fixturesArgument = args[fixturesIndex]
 
-  if (!(first[0] === '{' && first.endsWith('}'))) {
+  if (!(fixturesArgument[0] === '{' && fixturesArgument.endsWith('}'))) {
     throw new Error(
-      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`,
+      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${fixturesArgument}".`,
     )
   }
 
-  const _first = first.slice(1, -1).replace(/\s/g, '')
+  const _first = fixturesArgument.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
     return prop.replace(/:.*|=.*/g, '')
   })

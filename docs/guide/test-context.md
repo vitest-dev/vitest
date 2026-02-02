@@ -278,14 +278,6 @@ const test = baseTest
   .extend('simple', () => 'value')
 ```
 
-Non-function values only support the `injected` option:
-
-```ts
-const test = baseTest
-  .extend('baseUrl', { injected: true }, 'http://localhost:3000')
-  .extend('defaults', { port: 3000, host: 'localhost' })
-```
-
 #### Accessing Other Fixtures
 
 Each fixture can access previously defined fixtures via its first parameter. This works for both function and non-function fixtures:
@@ -504,15 +496,13 @@ Note that you cannot override non-test fixtures inside `describe` blocks:
 
 ```ts
 test.describe('a nested suite', () => {
-  test.override('port', 3000) // throws an error
+  test.override('port', { scope: 'worker' }, 3000) // throws an error
 })
 ```
 
 Consider overriding it on the top level of the module, or by using [`injected`](#default-fixture-injected) option and providing the value in the project config.
 
 Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overriden.
-
-<!-- TODO(v5) should this be addressed? force a new worker if worker fixture is overriden? -->
 :::
 
 #### Test Scope (Default)

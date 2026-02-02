@@ -2,9 +2,9 @@ import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
-  AroundAllListener,
   AroundEachListener,
   File,
+  RegisteredAroundAllListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -229,7 +229,7 @@ function getAroundEachHooks(suite: Suite): AroundEachListener[] {
   return hooks
 }
 
-function getAroundAllHooks(suite: Suite): AroundAllListener[] {
+function getAroundAllHooks(suite: Suite): RegisteredAroundAllListener[] {
   return getHooks(suite).aroundAll
 }
 
