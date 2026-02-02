@@ -7,8 +7,8 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
+import { parse } from '@vitest/utils/serialization'
 import { decompressSync, strFromU8 } from 'fflate'
-import { parse } from 'flatted'
 import { reactive } from 'vue'
 import { StateManager } from '../../../../ws-client/src/state'
 

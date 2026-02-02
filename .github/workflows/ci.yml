@@ -115,7 +115,7 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:no-bail
 
       - name: Test Examples
         run: pnpm run test:examples

@@ -50,7 +50,6 @@
   "dependencies": {
     "@vitest/utils": "workspace:*",
     "fflate": "^0.8.2",
-    "flatted": "catalog:",
     "pathe": "catalog:",
     "sirv": "catalog:",
     "tinyglobby": "catalog:",

@@ -64,6 +64,10 @@
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
+    "./serialization": {
+      "types": "./dist/serialization.d.ts",
+      "default": "./dist/serialization.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -86,12 +90,14 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "devalue": "^5.6.2",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
     "@types/estree": "catalog:",
     "diff-sequences": "^29.6.3",
+    "flatted": "3.3.3",
     "loupe": "^3.2.1",
     "tinyhighlight": "^0.3.2"
   }

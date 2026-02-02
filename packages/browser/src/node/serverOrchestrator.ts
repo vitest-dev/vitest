@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
-import { stringify } from 'flatted'
+import { stringify } from '@vitest/utils/serialization'
 import { replacer } from './utils'
 
 export async function resolveOrchestrator(

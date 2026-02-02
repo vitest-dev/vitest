@@ -2,8 +2,8 @@
 import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
+import { toJSON } from '@vitest/utils/serialization'
 import { debouncedWatch } from '@vueuse/core'
-import { toJSON } from 'flatted'
 import { computed, nextTick, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {

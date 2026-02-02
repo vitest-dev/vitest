@@ -63,9 +63,6 @@ catalogs:
     chai:
       specifier: ^6.2.2
       version: 6.2.2
-    flatted:
-      specifier: 3.3.3
-      version: 3.3.3
     istanbul-lib-coverage:
       specifier: ^3.2.2
       version: 3.2.2
@@ -533,9 +530,6 @@ importers:
       birpc:
         specifier: 'catalog:'
         version: 4.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       ivya:
         specifier: ^1.7.0
         version: 1.7.0
@@ -832,9 +826,6 @@ importers:
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -953,6 +944,9 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
+      devalue:
+        specifier: ^5.6.2
+        version: 5.6.2
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -966,6 +960,9 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
+      flatted:
+        specifier: 3.3.3
+        version: 3.3.3
       loupe:
         specifier: ^3.2.1
         version: 3.2.1
@@ -1105,9 +1102,6 @@ importers:
       empathic:
         specifier: ^2.0.0
         version: 2.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       happy-dom:
         specifier: ^20.4.0
         version: 20.4.0
@@ -1148,12 +1142,12 @@ importers:
 
   packages/ws-client:
     dependencies:
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       birpc:
         specifier: 'catalog:'
         version: 4.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       ws:
         specifier: 'catalog:'
         version: 8.19.0
@@ -1257,9 +1251,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
-      flatted:
-        specifier: 'catalog:'
-        version: 3.3.3
       obug:
         specifier: ^2.1.1
         version: 2.1.1
@@ -6118,6 +6109,9 @@ packages:
 
   detect-node@2.1.0:
     resolution: {integrity: sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==}
+
+  devalue@5.6.2:
+    resolution: {integrity: sha512-nPRkjWzzDQlsejL1WVifk5rvcFi/y1onBRxjaFMjZeR9mFpqu2gmAZ9xUB9/IEanEP/vBtGeGganC/GO1fmufg==}
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
@@ -14431,6 +14425,8 @@ snapshots:
   detect-libc@2.0.4: {}
 
   detect-node@2.1.0: {}
+
+  devalue@5.6.2: {}
 
   devlop@1.1.0:
     dependencies:

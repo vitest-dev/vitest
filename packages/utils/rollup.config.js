@@ -23,6 +23,7 @@ const entries = {
   'display': 'src/display.ts',
   'resolver': 'src/resolver.ts',
   'serialize': 'src/serialize.ts',
+  'serialization': 'src/serialization.ts',
 }
 
 const external = [
