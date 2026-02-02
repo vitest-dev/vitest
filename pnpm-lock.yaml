@@ -63,12 +63,6 @@ catalogs:
     chai:
       specifier: ^6.2.2
       version: 6.2.2
-    devalue:
-      specifier: ^5.6.2
-      version: 5.6.2
-    flatted:
-      specifier: 3.3.3
-      version: 3.3.3
     istanbul-lib-coverage:
       specifier: ^3.2.2
       version: 3.2.2
@@ -957,7 +951,7 @@ importers:
         specifier: workspace:*
         version: link:../pretty-format
       devalue:
-        specifier: 'catalog:'
+        specifier: ^5.6.2
         version: 5.6.2
       tinyrainbow:
         specifier: 'catalog:'
@@ -973,7 +967,7 @@ importers:
         specifier: ^29.6.3
         version: 29.6.3
       flatted:
-        specifier: 'catalog:'
+        specifier: 3.3.3
         version: 3.3.3
       loupe:
         specifier: ^3.2.1

@@ -90,14 +90,14 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "devalue": "catalog:",
+    "devalue": "^5.6.2",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
     "@types/estree": "catalog:",
     "diff-sequences": "^29.6.3",
-    "flatted": "catalog:",
+    "flatted": "3.3.3",
     "loupe": "^3.2.1",
     "tinyhighlight": "^0.3.2"
   }
