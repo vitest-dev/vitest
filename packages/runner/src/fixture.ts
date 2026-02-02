@@ -348,9 +348,9 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       if (testScopedFixtures.length > 0) {
         const fixtureNames = testScopedFixtures.map(f => `"${f.name}"`).join(', ')
         const alternativeHook = {
-          aroundAll: 'aroundAll',
-          beforeAll: 'beforeAll',
-          afterAll: 'afterAll',
+          aroundAll: 'aroundEach',
+          beforeAll: 'beforeEach',
+          afterAll: 'afterEach',
         }
         const error = new FixtureDependencyError(
           `Test-scoped fixtures cannot be used inside ${options.suiteHook} hook. `

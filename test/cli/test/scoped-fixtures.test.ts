@@ -500,7 +500,7 @@ test('cannot access test level fixtures in aroundAll hook', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts [ basic.test.ts ]
-    FixtureDependencyError: Test-scoped fixtures cannot be used inside aroundAll hook. The following fixtures are test-scoped: "value". Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to aroundAll hook.
+    FixtureDependencyError: Test-scoped fixtures cannot be used inside aroundAll hook. The following fixtures are test-scoped: "value". Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to aroundEach hook.
      ❯ basic.test.ts:4:16
           2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
           3| const results = await (({ extendedTest }) => {
@@ -637,7 +637,7 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts [ basic.test.ts ]
-    FixtureDependencyError: Test-scoped fixtures cannot be used inside beforeAll hook. The following fixtures are test-scoped: "testValue". Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to beforeAll hook.
+    FixtureDependencyError: Test-scoped fixtures cannot be used inside beforeAll hook. The following fixtures are test-scoped: "testValue". Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to beforeEach hook.
      ❯ basic.test.ts:4:16
           2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
           3| const results = await (({ extendedTest }) => {
