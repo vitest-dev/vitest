@@ -536,7 +536,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(() => functionWithError()).toThrow('Error message');
    * expect(() => parseJSON('invalid')).toThrow(SyntaxError);
    */
-  toThrow: (expected?: string | Constructable | RegExp | Error) => void
+  toThrow: (expected?: string | Constructable | RegExp | Error | unknown) => void
 
   /**
    * Used to test that a function throws when it is called.
@@ -547,7 +547,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(() => functionWithError()).toThrowError('Error message');
    * expect(() => parseJSON('invalid')).toThrowError(SyntaxError);
    */
-  toThrowError: (expected?: string | Constructable | RegExp | Error) => void
+  toThrowError: (expected?: string | Constructable | RegExp | Error | unknown) => void
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time

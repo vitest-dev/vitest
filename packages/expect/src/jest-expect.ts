@@ -16,6 +16,7 @@ import {
   arrayBufferEquality,
   generateToBeMessage,
   getObjectSubset,
+  isError,
   iterableEquality,
   equals as jestEquals,
   sparseArrayEquality,
@@ -808,7 +809,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (expected instanceof Error) {
+      if (isError(expected)) {
         const equal = jestEquals(thrown, expected, [
           ...customTesters,
           iterableEquality,
@@ -837,8 +838,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      throw new Error(
-        `"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`,
+      const equal = jestEquals(thrown, expected, [
+        ...customTesters,
+        iterableEquality,
+      ])
+      return this.assert(
+        equal,
+        'expected a thrown value #{this} to equal #{exp}',
+        'expected a thrown value #{this} not to equal #{exp}',
+        expected,
+        thrown,
       )
     },
   )
