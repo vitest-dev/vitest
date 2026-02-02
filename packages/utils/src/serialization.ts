@@ -49,12 +49,73 @@ function serializeError(error: Error) {
   }
 }
 
+// https://github.com/sveltejs/devalue/blob/fcf4e88275f2e2e45b9ea70ffaa5247c8f55f057/src/stringify.js
+const devalueBuiltins = new Set([
+  '[object Array]',
+  '[object Date]',
+  '[object RegExp]',
+  '[object Map]',
+  '[object Set]',
+  '[object URL]',
+  '[object URLSearchParams]',
+  '[object ArrayBuffer]',
+  '[object Int8Array]',
+  '[object Uint8Array]',
+  '[object Uint8ClampedArray]',
+  '[object Int16Array]',
+  '[object Uint16Array]',
+  '[object Int32Array]',
+  '[object Uint32Array]',
+  '[object Float32Array]',
+  '[object Float64Array]',
+  '[object BigInt64Array]',
+  '[object BigUint64Array]',
+  '[object Number]',
+  '[object String]',
+  '[object Boolean]',
+  '[object BigInt]',
+  '[object Temporal.Duration]',
+  '[object Temporal.Instant]',
+  '[object Temporal.PlainDate]',
+  '[object Temporal.PlainTime]',
+  '[object Temporal.PlainDateTime]',
+  '[object Temporal.PlainMonthDay]',
+  '[object Temporal.PlainYearMonth]',
+  '[object Temporal.ZonedDateTime]',
+])
+
+function isCustomObject(value: unknown): value is object {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const proto = Object.getPrototypeOf(value)
+  if (proto === Object.prototype || proto === null) {
+    return false
+  }
+  const tag = Object.prototype.toString.call(value)
+  if (devalueBuiltins.has(tag)) {
+    return false
+  }
+  return true
+}
+
 const customTypes = {
   stringify: {
-    Error: (v: unknown) => v instanceof Error ? serializeError(v) : undefined,
+    vi_error: (v: unknown) => v instanceof Error ? serializeError(v) : undefined,
+    // handle non-pojo like flatted since devalue throws otherwise
+    vi_custom: (v: unknown) => {
+      if (isCustomObject(v)) {
+        // mirror JSON/flatted behavior for custom toJSON
+        if (typeof (v as any).toJSON === 'function') {
+          return (v as any).toJSON()
+        }
+        return { ...v }
+      }
+    },
   },
   parse: {
-    Error: (v: unknown) => v,
+    vi_error: (v: unknown) => v,
+    vi_custom: (v: unknown) => v,
   },
 }
 
