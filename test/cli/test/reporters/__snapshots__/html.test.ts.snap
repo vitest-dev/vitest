@@ -12,6 +12,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "fullName": "json-fail.test.ts",
       "id": 0,
       "importDurations": {},
+      "logs": undefined,
       "meta": {},
       "mode": "run",
       "name": "json-fail.test.ts",
@@ -24,11 +25,14 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         "state": "fail",
       },
       "setupDuration": 0,
+      "shuffle": undefined,
       "tags": [],
       "tasks": [
         {
           "annotations": [],
           "artifacts": [],
+          "each": undefined,
+          "fails": undefined,
           "file": [Circular],
           "fullName": "json-fail.test.ts > should fail",
           "fullTestName": "should fail",
@@ -41,6 +45,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             {
               "content": "json-fail>should fail
 ",
+              "origin": undefined,
               "size": 1,
               "taskId": 0,
               "time": 0,
@@ -50,6 +55,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
           "meta": {},
           "mode": "run",
           "name": "should fail",
+          "repeats": undefined,
           "result": {
             "duration": 0,
             "errors": [
@@ -82,6 +88,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
+          "retry": undefined,
+          "shuffle": undefined,
+          "suite": undefined,
           "tags": [
             "fail",
           ],
@@ -140,6 +149,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "fullName": "all-passing-or-skipped.test.ts",
       "id": 0,
       "importDurations": {},
+      "logs": undefined,
       "meta": {},
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
@@ -152,11 +162,14 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         "state": "pass",
       },
       "setupDuration": 0,
+      "shuffle": undefined,
       "tags": [],
       "tasks": [
         {
           "annotations": [],
           "artifacts": [],
+          "each": undefined,
+          "fails": undefined,
           "file": [Circular],
           "fullName": "all-passing-or-skipped.test.ts > 2 + 3 = 5",
           "fullTestName": "2 + 3 = 5",
@@ -168,6 +181,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "run",
           "name": "2 + 3 = 5",
+          "repeats": undefined,
           "result": {
             "duration": 0,
             "repeatCount": 0,
@@ -175,6 +189,9 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "startTime": 0,
             "state": "pass",
           },
+          "retry": undefined,
+          "shuffle": undefined,
+          "suite": undefined,
           "tags": [],
           "timeout": 5000,
           "type": "test",
@@ -182,6 +199,8 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "annotations": [],
           "artifacts": [],
+          "each": undefined,
+          "fails": undefined,
           "file": [Circular],
           "fullName": "all-passing-or-skipped.test.ts > 3 + 3 = 6",
           "fullTestName": "3 + 3 = 6",
@@ -193,6 +212,11 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
+          "repeats": undefined,
+          "result": undefined,
+          "retry": undefined,
+          "shuffle": undefined,
+          "suite": undefined,
           "tags": [],
           "timeout": 5000,
           "type": "test",
