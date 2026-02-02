@@ -41,7 +41,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^7.2.0",
     "@antfu/ni": "^28.2.0",
-    "@playwright/test": "^1.58.0",
+    "@playwright/test": "^1.58.1",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
@@ -58,7 +58,7 @@
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
-    "rollup": "^4.57.0",
+    "rollup": "^4.57.1",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",

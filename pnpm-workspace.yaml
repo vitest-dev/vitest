@@ -59,8 +59,8 @@ catalog:
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.6.0
-  '@vitejs/plugin-vue': ^6.0.3
-  '@vueuse/core': ^14.1.0
+  '@vitejs/plugin-vue': ^6.0.4
+  '@vueuse/core': ^14.2.0
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
@@ -75,7 +75,7 @@ catalog:
   msw: ^2.12.7
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.58.0
+  playwright: ^1.58.1
   sirv: ^3.0.2
   std-env: ^3.10.0
   strip-literal: ^3.1.0
