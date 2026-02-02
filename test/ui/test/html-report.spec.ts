@@ -66,7 +66,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 1 Fail 16 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 2 Fail 17 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -78,7 +78,7 @@ test.describe('html report', () => {
     await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
     // report
-    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
@@ -102,7 +102,7 @@ test.describe('html report', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const sample = page.getByTestId('details-panel').getByLabel('fixtures/error.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('fixtures/error.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')

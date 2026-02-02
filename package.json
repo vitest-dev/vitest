@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.1.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@10.28.1",
+  "packageManager": "pnpm@10.28.2",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -26,7 +26,7 @@
     "test": "pnpm --filter test-core test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:ci:no-bail": "CI=true pnpm -r --no-bail --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
-    "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser --filter !test-dts-config --filter !test-dts-fixture --filter !test-dts-playwright --filter !test-ui --filter !test-cache run test --experimental.fsModuleCache",
+    "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser --filter '!@vitest/test-integration-dts-*' --filter !test-ui --filter !test-cache run test --experimental.fsModuleCache",
     "test:examples": "CI=true pnpm -r --reporter-hide-prefix --stream --filter '@vitest/example-*' run test",
     "test:ecosystem-ci": "ECOSYSTEM_CI=true pnpm test:ci",
     "typebuild": "tsx ./scripts/explain-types.ts",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^7.2.0",
     "@antfu/ni": "^28.2.0",
-    "@playwright/test": "^1.58.0",
+    "@playwright/test": "^1.58.1",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
@@ -58,7 +58,7 @@
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",
-    "rollup": "^4.56.0",
+    "rollup": "^4.57.1",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-license": "^3.6.0",
     "tinyglobby": "catalog:",

@@ -75,10 +75,10 @@
     "birpc": "catalog:",
     "codemirror": "^5.65.18",
     "codemirror-theme-vars": "^0.1.2",
-    "d3-graph-controller": "^3.1.6",
+    "d3-graph-controller": "^3.1.7",
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",
-    "rollup": "^4.56.0",
+    "rollup": "^4.57.1",
     "splitpanes": "^4.0.4",
     "typescript": "^5.9.3",
     "unocss": "catalog:",
@@ -87,7 +87,7 @@
     "vitest-browser-vue": "2.0.2",
     "vue": "catalog:",
     "vue-router": "^4.6.4",
-    "vue-tsc": "^3.2.3",
+    "vue-tsc": "^3.2.4",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }
