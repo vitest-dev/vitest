@@ -82,3 +82,41 @@ pnpm test bench run
   - devalue fastest (single hydration pass)
   - @ungap/structured-clone next (type reconstruction)
   - flatted slowest (reviver + second `_revive` pass).
+
+## Size comparison (FILE_COUNT=500)
+
+- flatted: 22M (`fixtures/blob-500-flatted.json`)
+- devalue: 23M (`fixtures/blob-500-devalue.json`)
+- @ungap/structured-clone: 18M (`fixtures/blob-500-ungap.json`)
+
+## Gzip size comparison (FILE_COUNT=500)
+
+- flatted: 2.14 MB (from 21.91 MB)
+- devalue: 2.62 MB (from 23.00 MB)
+- @ungap/structured-clone: 2.45 MB (from 17.63 MB)
+
+Computed with:
+
+```bash
+python - <<'PY'
+from pathlib import Path
+import gzip
+
+files = [
+  'examples/demo-8710/fixtures/blob-500-flatted.json',
+  'examples/demo-8710/fixtures/blob-500-devalue.json',
+  'examples/demo-8710/fixtures/blob-500-ungap.json',
+]
+
+for path in files:
+  data = Path(path).read_bytes()
+  gz = gzip.compress(data)
+  print(path, f"{len(data)/1024/1024:.2f} MB", f"{len(gz)/1024/1024:.2f} MB")
+PY
+```
+
+## Verdict for Vitest serialization
+
+- devalue is the best fit when paired with a forgiving reducer for flatted compatibility.
+- It keeps string transport + custom reducers, while covering more built-ins than flatted.
+- @ungap/structured-clone is fast and compact, but lack of replacer/reviver hooks is a mismatch for Vitest.
