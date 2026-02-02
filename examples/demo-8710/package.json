@@ -1,12 +1,11 @@
 {
   "name": "@vitest/example-blob-benchmark",
+  "type": "module",
   "private": true,
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "test": "vitest",
     "benchmark": "./run-benchmark.sh",
-    "bench:serialization": "vitest bench demo.bench.ts",
     "generate": "node generate-tests.mjs",
     "test:blob": "vitest run --reporter=blob",
     "merge": "vitest run --merge-reports .vitest-reports --reporter=json"
