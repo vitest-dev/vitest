@@ -39,7 +39,7 @@ import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } fro
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
-import { createChainable } from './utils/chain'
+import { createChainable, getChainableContext } from './utils/chain'
 import { createNoTagsError, validateTags } from './utils/tags'
 import { createTaskName } from './utils/tasks'
 
@@ -657,8 +657,9 @@ function createSuite() {
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const suite = this._withContext()
-    this._setContext('each', true)
+    const context = getChainableContext(this)
+    const suite = context.withContext()
+    context.setContext('each', true)
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -700,7 +701,7 @@ function createSuite() {
         }
       })
 
-      this._setContext('each', undefined)
+      context.setContext('each', undefined)
     }
   }
 
@@ -750,8 +751,9 @@ export function createTaskCollector(
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const test = this._withContext()
-    this._setContext('each', true)
+    const context = getChainableContext(this)
+    const test = context.withContext()
+    context.setContext('each', true)
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -794,7 +796,7 @@ export function createTaskCollector(
         }
       })
 
-      this._setContext('each', undefined)
+      context.setContext('each', undefined)
     }
   }
 
@@ -803,7 +805,8 @@ export function createTaskCollector(
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const test = this._withContext()
+    const context = getChainableContext(this)
+    const test = context.withContext()
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -922,7 +925,7 @@ export function createTaskCollector(
     maybeFn?: (...args: any[]) => any,
   ) {
     const userFixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
-    this._getFixtures().override(runner, userFixtures)
+    getChainableContext(this).getFixtures().override(runner, userFixtures)
     return this
   }
 
@@ -938,7 +941,7 @@ export function createTaskCollector(
     maybeFn?: (...args: any[]) => any,
   ) {
     const userFixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
-    const fixtures = this._getFixtures().extend(
+    const fixtures = getChainableContext(this).getFixtures().extend(
       runner,
       userFixtures,
     )
@@ -950,7 +953,7 @@ export function createTaskCollector(
     ) {
       fn.call(this, formatName(name), optionsOrFn, optionsOrTest)
     })
-    _test._mergeContext({ fixtures })
+    getChainableContext(_test).mergeContext({ fixtures })
 
     return _test
   }

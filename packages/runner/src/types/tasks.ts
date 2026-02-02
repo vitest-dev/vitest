@@ -1,7 +1,7 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
-import type { ChainableFunction } from '../utils/chain'
+import type { ChainableFunction, kChainableContext } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -453,13 +453,17 @@ interface TestCollectorCallable<C = object> {
   ): void
 }
 
-interface ChainableContext<API> {
-  /** @internal */
-  _mergeContext: (ctx: Partial<InternalTestContext>) => void
-  /** @internal */
-  _setContext: (key: keyof InternalTestContext, value: any) => void
-  /** @internal */
-  _withContext: () => API
+export interface ChainableContext<API> {
+  [kChainableContext]: {
+    /** @internal */
+    mergeContext: (ctx: Partial<InternalTestContext>) => void
+    /** @internal */
+    setContext: (key: keyof InternalTestContext, value: any) => void
+    /** @internal */
+    withContext: () => API
+    /** @internal */
+    getFixtures: () => TestFixtures
+  }
 }
 
 type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
@@ -786,9 +790,6 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     ) => TestAPI<ExtraContext>
     describe: SuiteAPI<ExtraContext>
     suite: SuiteAPI<ExtraContext>
-
-    /** @internal */
-    _getFixtures: () => TestFixtures
   }
 
 export interface InternalTestContext extends Record<

@@ -1,3 +1,5 @@
+import type { ChainableContext } from '../types/tasks'
+
 export type ChainableFunction<
   T extends string,
   F extends (...args: any) => any,
@@ -7,6 +9,12 @@ export type ChainableFunction<
 } & {
   fn: (this: Record<T, any>, ...args: Parameters<F>) => ReturnType<F>
 } & C
+
+export const kChainableContext: unique symbol = Symbol('kChainableContext')
+
+export function getChainableContext(chainable: any): ChainableContext<any>[typeof kChainableContext] {
+  return chainable[kChainableContext]
+}
 
 export function createChainable<T extends string, Args extends any[], R = any>(
   keys: T[],
@@ -18,14 +26,19 @@ export function createChainable<T extends string, Args extends any[], R = any>(
       return fn.apply(context, args)
     }
     Object.assign(chain, fn)
-    chain._withContext = () => chain.bind(context)
-    chain._getFixtures = () => (context as any).fixtures
-    chain._setContext = (key: T, value: any) => {
-      context[key] = value
-    }
-    chain._mergeContext = (ctx: Record<T, any>) => {
-      Object.assign(context, ctx)
-    }
+    Object.defineProperty(chain, kChainableContext, {
+      value: {
+        withContext: () => chain.bind(context),
+        getFixtures: () => (context as any).fixtures,
+        setContext: (key: T, value: any) => {
+          context[key] = value
+        },
+        mergeContext: (ctx: Record<T, any>) => {
+          Object.assign(context, ctx)
+        },
+      },
+      enumerable: false,
+    })
     for (const key of keys) {
       Object.defineProperty(chain, key, {
         get() {

@@ -209,14 +209,14 @@ test('worker fixture can import a static value from test fixture', async () => {
 
      FAIL  basic.test.ts [ basic.test.ts ]
     FixtureDependencyError: The worker "worker" fixture cannot depend on a test fixture "local".
-     ❯ test.js:5:43
-          3|     export const expect = globalThis.expect
-          4|     export const expectTypeOf = globalThis.expectTypeOf
-          5|     export const extendedTest = (() => it.extend({
-           |                                           ^
-          6|     local: "local",
-          7|     worker: [
-     ❯ test.js:11:6
+     ❯ test.js:4:39
+          2| export const expect = globalThis.expect
+          3| export const expectTypeOf = globalThis.expectTypeOf
+          4| export const extendedTest = (() => it.extend({
+           |                                       ^
+          5| local: "local",
+          6| worker: [
+     ❯ test.js:10:4
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -248,14 +248,14 @@ test('file fixture cannot import a static value from test fixture', async () => 
 
      FAIL  basic.test.ts [ basic.test.ts ]
     FixtureDependencyError: The file "file" fixture cannot depend on a test fixture "local".
-     ❯ test.js:5:43
-          3|     export const expect = globalThis.expect
-          4|     export const expectTypeOf = globalThis.expectTypeOf
-          5|     export const extendedTest = (() => it.extend({
-           |                                           ^
-          6|     local: "local",
-          7|     file: [
-     ❯ test.js:11:6
+     ❯ test.js:4:39
+          2| export const expect = globalThis.expect
+          3| export const expectTypeOf = globalThis.expectTypeOf
+          4| export const extendedTest = (() => it.extend({
+           |                                       ^
+          5| local: "local",
+          6| file: [
+     ❯ test.js:10:4
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -933,14 +933,14 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The file "fileValue" fixture cannot depend on a test fixture "testValue".
-       ❯ test.js:5:79
-            3|     export const expect = globalThis.expect
-            4|     export const expectTypeOf = globalThis.expectTypeOf
-            5|     export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }…
-             |                                                                               ^
-            6|       workerValue: [async ({}, use) => {
-            7|         log("workerValue setup");
-       ❯ test.js:22:8
+       ❯ test.js:4:75
+            2| export const expect = globalThis.expect
+            3| export const expectTypeOf = globalThis.expectTypeOf
+            4| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
+             |                                                                           ^
+            5|   workerValue: [async ({}, use) => {
+            6|     log("workerValue setup");
+       ❯ test.js:21:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -981,14 +981,14 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The worker "workerValue" fixture cannot depend on a file fixture "fileValue".
-       ❯ test.js:5:79
-            3|     export const expect = globalThis.expect
-            4|     export const expectTypeOf = globalThis.expectTypeOf
-            5|     export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }…
-             |                                                                               ^
-            6|       // @ts-expect-error - worker fixture cannot access file-scoped f…
-            7|       workerValue: [async ({ fileValue }, use) => {
-       ❯ test.js:22:8
+       ❯ test.js:4:75
+            2| export const expect = globalThis.expect
+            3| export const expectTypeOf = globalThis.expectTypeOf
+            4| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
+             |                                                                           ^
+            5|   // @ts-expect-error - worker fixture cannot access file-scoped fixtu…
+            6|   workerValue: [async ({ fileValue }, use) => {
+       ❯ test.js:21:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1029,14 +1029,14 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The worker "workerValue" fixture cannot depend on a test fixture "testValue".
-       ❯ test.js:5:79
-            3|     export const expect = globalThis.expect
-            4|     export const expectTypeOf = globalThis.expectTypeOf
-            5|     export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }…
-             |                                                                               ^
-            6|       // @ts-expect-error - worker fixture cannot access test-scoped f…
-            7|       workerValue: [async ({ testValue }, use) => {
-       ❯ test.js:22:8
+       ❯ test.js:4:75
+            2| export const expect = globalThis.expect
+            3| export const expectTypeOf = globalThis.expectTypeOf
+            4| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
+             |                                                                           ^
+            5|   // @ts-expect-error - worker fixture cannot access test-scoped fixtu…
+            6|   workerValue: [async ({ testValue }, use) => {
+       ❯ test.js:21:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1104,13 +1104,13 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts > should fail
       TypeError: Cannot read properties of undefined (reading 'name')
-       ❯ it.extend.fileValue.scope test.js:9:24
-            7|       fileValue: [async ({ task }, use) => {
-            8|         log("fileValue setup");
-            9|         await use(task.name);
-             |                        ^
-           10|         log("fileValue teardown");
-           11|       }, { scope: "file" }],
+       ❯ it.extend.fileValue.scope test.js:8:20
+            6|   fileValue: [async ({ task }, use) => {
+            7|     log("fileValue setup");
+            8|     await use(task.name);
+             |                    ^
+            9|     log("fileValue teardown");
+           10|   }, { scope: "file" }],
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1146,13 +1146,13 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts > should fail
       TypeError: Cannot read properties of undefined (reading 'name')
-       ❯ it.extend.workerValue.scope test.js:9:24
-            7|       workerValue: [async ({ task }, use) => {
-            8|         log("workerValue setup");
-            9|         await use(task.name);
-             |                        ^
-           10|         log("workerValue teardown");
-           11|       }, { scope: "worker" }],
+       ❯ it.extend.workerValue.scope test.js:8:20
+            6|   workerValue: [async ({ task }, use) => {
+            7|     log("workerValue setup");
+            8|     await use(task.name);
+             |                    ^
+            9|     log("workerValue teardown");
+           10|   }, { scope: "worker" }],
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1486,13 +1486,13 @@ describe('builder pattern API with automatic type inference', () => {
 
        FAIL  basic.test.ts > should fail because onCleanup called twice
       Error: onCleanup can only be called once per fixture. Define separate fixtures if you need multiple cleanup functions.
-       ❯ test.js:9:9
-            7|         log("resource setup");
-            8|         onCleanup(() => log("cleanup 1"));
-            9|         onCleanup(() => log("cleanup 2"));
-             |         ^
-           10|         return "value";
-           11|       });
+       ❯ test.js:8:5
+            6|     log("resource setup");
+            7|     onCleanup(() => log("cleanup 1"));
+            8|     onCleanup(() => log("cleanup 2"));
+             |     ^
+            9|     return "value";
+           10|   });
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1763,14 +1763,14 @@ describe('builder pattern API with automatic type inference', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The file "fileValue" fixture cannot depend on a test fixture "testValue".
-       ❯ test.js:9:10
-            7|         log("testValue setup");
-            8|         return "test";
-            9|       }).extend("fileValue", { scope: "file" }, async ({ testValue }) …
-             |          ^
-           10|         log("fileValue setup", testValue);
-           11|         return testValue.length;
-       ❯ test.js:13:7
+       ❯ test.js:8:6
+            6|     log("testValue setup");
+            7|     return "test";
+            8|   }).extend("fileValue", { scope: "file" }, async ({ testValue }) => {
+             |      ^
+            9|     log("fileValue setup", testValue);
+           10|     return testValue.length;
+       ❯ test.js:12:3
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1801,14 +1801,14 @@ describe('builder pattern API with automatic type inference', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The worker "workerValue" fixture cannot depend on a file fixture "fileValue".
-       ❯ test.js:9:10
-            7|         log("fileValue setup");
-            8|         return 42;
-            9|       }).extend("workerValue", { scope: "worker" }, async ({ fileValue…
-             |          ^
-           10|         log("workerValue setup", fileValue);
-           11|         return fileValue > 0;
-       ❯ test.js:13:7
+       ❯ test.js:8:6
+            6|     log("fileValue setup");
+            7|     return 42;
+            8|   }).extend("workerValue", { scope: "worker" }, async ({ fileValue }) …
+             |      ^
+            9|     log("workerValue setup", fileValue);
+           10|     return fileValue > 0;
+       ❯ test.js:12:3
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1840,14 +1840,14 @@ describe('builder pattern API with automatic type inference', () => {
 
        FAIL  basic.test.ts [ basic.test.ts ]
       FixtureDependencyError: The worker "workerValue" fixture cannot depend on a test fixture "testValue".
-       ❯ test.js:9:10
-            7|         log("testValue setup");
-            8|         return "test";
-            9|       }).extend("workerValue", { scope: "worker" }, async ({ testValue…
-             |          ^
-           10|         log("workerValue setup", testValue);
-           11|         return testValue.length > 0;
-       ❯ test.js:13:7
+       ❯ test.js:8:6
+            6|     log("testValue setup");
+            7|     return "test";
+            8|   }).extend("workerValue", { scope: "worker" }, async ({ testValue }) …
+             |      ^
+            9|     log("workerValue setup", testValue);
+           10|     return testValue.length > 0;
+       ❯ test.js:12:3
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1884,13 +1884,13 @@ describe('builder pattern API with automatic type inference', () => {
        FAIL  basic.test.ts > test runs but cleanup fails
        FAIL  basic.test.ts > test runs but cleanup fails
       Error: cleanup error
-       ❯ test.js:10:17
-            8|         onCleanup(() => {
-            9|           log("cleanup - throwing");
-           10|           throw new Error("cleanup error");
-             |                 ^
-           11|         });
-           12|         return "value";
+       ❯ test.js:9:13
+            7|     onCleanup(() => {
+            8|       log("cleanup - throwing");
+            9|       throw new Error("cleanup error");
+             |             ^
+           10|     });
+           11|     return "value";
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -2403,7 +2403,7 @@ async function runFixtureTests<T>(
     export const expect = globalThis.expect
     export const expectTypeOf = globalThis.expectTypeOf
     export const extendedTest = (${extendedTest.toString()})({ log: (...args) => console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName), expectTypeOf })
-    `,
+    `.trim().replace(/^[ \t]+/gm, m => m.slice(4)),
     'vitest.config.js': { test: { globals: true } },
     ...Object.entries(fs).reduce((acc, [key, value]) => {
       if (typeof value === 'object' && !Array.isArray(value)) {
