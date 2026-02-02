@@ -854,9 +854,7 @@ You can also test non-Error values that are thrown:
 
 ```ts
 test('throws non-Error values', () => {
-  // eslint-disable-next-line no-throw-literal
   expect(() => { throw 42 }).toThrowError(42)
-  // eslint-disable-next-line no-throw-literal
   expect(() => { throw { message: 'error' } }).toThrowError({ message: 'error' })
 })
 ```
