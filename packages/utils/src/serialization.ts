@@ -79,9 +79,11 @@ function isCustomObject(value: unknown): value is object {
 
 const customTypes = {
   stringify: {
-    vi_error: (v: unknown) => v instanceof Error ? serializeError(v) : undefined,
-    // handle non-pojo like flatted since devalue throws otherwise
     vi_custom: (v: unknown) => {
+      if (v instanceof Error) {
+        return serializeError(v)
+      }
+      // handle non-pojo like flatted since devalue throws otherwise
       if (isCustomObject(v)) {
         // mirror JSON/flatted behavior for custom toJSON
         if (typeof (v as any).toJSON === 'function') {
@@ -97,7 +99,6 @@ const customTypes = {
     },
   },
   parse: {
-    vi_error: (v: unknown) => v,
     vi_custom: (v: unknown) => v,
   },
 }
