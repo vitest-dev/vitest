@@ -5,6 +5,9 @@ Benchmark for blob reporter output size and merge-reports execution time.
 ## Usage
 
 ```bash
+# Run all steps (generate, blob, size, merge)
+pnpm benchmark
+
 # Generate test files (default: 100 files × 100 tests = 10,000 tests)
 pnpm generate
 

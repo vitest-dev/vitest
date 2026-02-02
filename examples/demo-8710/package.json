@@ -4,6 +4,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "benchmark": "./run-benchmark.sh",
     "generate": "node generate-tests.mjs",
     "test:blob": "vitest run --reporter=blob",
     "merge": "vitest run --merge-reports .vitest-reports --reporter=json"
