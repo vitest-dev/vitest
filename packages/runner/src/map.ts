@@ -1,5 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import type { FixtureItem } from './fixture'
+import type { TestFixtures } from './fixture'
 import type { Suite, SuiteHooks, Test, TestContext } from './types/tasks'
 
 // use WeakMap here to make the Test and Suite object serializable
@@ -17,12 +17,12 @@ export function getFn<Task = Test>(key: Task): () => Awaitable<void> {
 
 export function setTestFixture(
   key: TestContext,
-  fixture: FixtureItem[] | undefined,
+  fixture: TestFixtures,
 ): void {
   testFixtureMap.set(key, fixture)
 }
 
-export function getTestFixture<Context = TestContext>(key: Context): FixtureItem[] {
+export function getTestFixtures<Context = TestContext>(key: Context): TestFixtures {
   return testFixtureMap.get(key as any)
 }
 
