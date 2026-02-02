@@ -39,7 +39,7 @@ FILE_COUNT=500 node generate-tests.mjs
 Compare flatted vs devalue vs @ungap/structured-clone parse/stringify on blob outputs:
 
 ```bash
-pnpm test bench run
+pnpm vitest bench run
 ```
 
 ```sh

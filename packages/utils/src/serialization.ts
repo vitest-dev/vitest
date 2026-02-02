@@ -1,31 +1,3 @@
-// import * as flatted from 'flatted'
-
-// export { parse, toJSON } from 'flatted'
-
-// /**
-//  * Replacer function for serialization methods such as JSON.stringify() or
-//  * flatted.stringify(). Handles Error objects by extracting all properties.
-//  */
-// function stringifyReplace(_key: string, value: unknown): unknown {
-//   if (value instanceof Error) {
-//     const cloned = cloneByOwnProperties(value)
-//     return {
-//       name: value.name,
-//       message: value.message,
-//       stack: value.stack,
-//       ...cloned,
-//     }
-//   }
-//   return value
-// }
-
-// /**
-//  * Serialize data with circular reference handling and proper Error serialization.
-//  */
-// export function stringify(value: unknown): string {
-//   return flatted.stringify(value, stringifyReplace)
-// }
-
 import * as devalue from 'devalue'
 
 function cloneByOwnProperties(value: object): Record<string, unknown> {
