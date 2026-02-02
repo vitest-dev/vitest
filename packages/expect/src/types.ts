@@ -8,7 +8,6 @@
 
 import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
-import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -535,8 +534,9 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrow('Error message');
    * expect(() => parseJSON('invalid')).toThrow(SyntaxError);
+   * expect(() => { throw 42 }).toThrow(42);
    */
-  toThrow: (expected?: string | Constructable | RegExp | Error | unknown) => void
+  toThrow: (expected?: any) => void
 
   /**
    * Used to test that a function throws when it is called.
@@ -546,8 +546,9 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrowError('Error message');
    * expect(() => parseJSON('invalid')).toThrowError(SyntaxError);
+   * expect(() => { throw 42 }).toThrowError(42);
    */
-  toThrowError: (expected?: string | Constructable | RegExp | Error | unknown) => void
+  toThrowError: (expected?: any) => void
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time
