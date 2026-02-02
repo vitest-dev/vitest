@@ -601,6 +601,10 @@ function getUsedProps(fn: Function): Set<string> {
 
   const fixturesArgument = args[fixturesIndex]
 
+  if (!fixturesArgument) {
+    return new Set()
+  }
+
   if (!(fixturesArgument[0] === '{' && fixturesArgument.endsWith('}'))) {
     throw new Error(
       `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${fixturesArgument}".`,
