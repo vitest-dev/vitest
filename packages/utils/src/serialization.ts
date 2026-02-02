@@ -58,7 +58,7 @@ const customTypes = {
   },
 }
 
-export function parse(text: string): unknown {
+export function parse<T = any>(text: string): T {
   return devalue.parse(text, customTypes.parse)
 }
 
@@ -66,6 +66,6 @@ export function stringify(value: unknown): string {
   return devalue.stringify(value, customTypes.stringify)
 }
 
-export function toJSON(value: unknown): unknown {
+export function toJSON<T>(value: T): T {
   return parse(stringify(value))
 }
