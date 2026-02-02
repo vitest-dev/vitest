@@ -23,6 +23,7 @@ packages:
   - packages/*
   - examples/*
   - test/*
+  - test/cli/dts/*
   - test/config/fixtures/conditions-pkg
 overrides:
   '@types/node': $@types/node

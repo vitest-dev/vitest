@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dts-fixture",
+  "name": "@vitest/test-integration-dts-fixture-extend",
   "type": "module",
   "private": true,
   "scripts": {
