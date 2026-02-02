@@ -63,6 +63,12 @@ catalogs:
     chai:
       specifier: ^6.2.2
       version: 6.2.2
+    devalue:
+      specifier: ^5.6.2
+      version: 5.6.2
+    flatted:
+      specifier: 3.3.3
+      version: 3.3.3
     istanbul-lib-coverage:
       specifier: ^3.2.2
       version: 3.2.2
@@ -336,6 +342,12 @@ importers:
 
   examples/demo-8710:
     devDependencies:
+      devalue:
+        specifier: 'catalog:'
+        version: 5.6.2
+      flatted:
+        specifier: 'catalog:'
+        version: 3.3.3
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
