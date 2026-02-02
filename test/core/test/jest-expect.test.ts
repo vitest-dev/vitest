@@ -485,6 +485,18 @@ describe('jest-expect', () => {
       }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
 
+    it('custom error class', () => {
+      class Error1 extends Error {};
+      class Error2 extends Error {};
+
+      // underlying `toEqual` doesn't require constructor/prototype equality
+      expect(() => {
+        throw new Error1('hi')
+      }).toThrowError(new Error2('hi'))
+      expect(new Error1('hi')).toEqual(new Error2('hi'))
+      expect(new Error1('hi')).not.toStrictEqual(new Error2('hi'))
+    })
+
     it('non Error instance', () => {
       // primitives
       expect(() => {
@@ -1873,9 +1885,8 @@ it('error equality', () => {
     // different class
     const e1 = new MyError('hello', 'a')
     const e2 = new YourError('hello', 'a')
-    snapshotError(() => expect(e1).toEqual(e2))
-    expect(e1).not.toEqual(e2)
-    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    snapshotError(() => expect(e1).toStrictEqual(e2))
+    expect(e1).toEqual(e2)
     assert.deepEqual(e1, e2)
     nodeAssert.notDeepStrictEqual(e1, e2)
   }
