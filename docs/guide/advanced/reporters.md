@@ -4,7 +4,7 @@
 This is an advanced API. If you just want to configure built-in reporters, read the ["Reporters"](/guide/reporters) guide.
 :::
 
-You can import reporters from `vitest/reporters` and extend them to create your custom reporters.
+You can import reporters from `vitest/node` and extend them to create your custom reporters.
 
 ## Extending Built-in Reporters
 
@@ -18,29 +18,24 @@ export default class MyDefaultReporter extends DefaultReporter {
 }
 ```
 
-Of course, you can create your reporter from scratch. Just extend the `BaseReporter` class and implement the methods you need.
+::: warning
+However, note that exposed reports are not considered stable and can change the shape of their API within a minor version.
+:::
+
+Of course, you can create your reporter from scratch. Just implement the [`Reporter`](/api/advanced/reporters) interface:
 
 And here is an example of a custom reporter:
-
-```ts [custom-reporter.js]
-import { BaseReporter } from 'vitest/node'
-
-export default class CustomReporter extends BaseReporter {
-  onTestModuleCollected() {
-    const files = this.ctx.state.getFiles(this.watchFilters)
-    this.reportTestSummary(files)
-  }
-}
-```
-
-Or implement the `Reporter` interface:
 
 ```ts [custom-reporter.js]
 import type { Reporter } from 'vitest/node'
 
 export default class CustomReporter implements Reporter {
-  onTestModuleCollected() {
-    // print something
+  onTestModuleCollected(testModule) {
+    console.log(testModule.moduleId, 'is finished')
+
+    for (const test of testModule.children.allTests()) {
+      console.log(test.name, test.result().state)
+    }
   }
 }
 ```
@@ -60,9 +55,7 @@ export default defineConfig({
 
 ## Reported Tasks
 
-Instead of using the tasks that reporters receive, it is recommended to use the Reported Tasks API instead.
-
-You can get access to this API by calling `vitest.state.getReportedEntity(runnerTask)`:
+Reported [events](/api/advanced/reporters) receive tasks for [tests](/api/advanced/test-case), [suites](/api/advanced/test-suite) and [modules](/api/advanced/test-module):
 
 ```ts twoslash
 import type { Reporter, TestModule } from 'vitest/node'
@@ -94,10 +87,6 @@ class MyReporter implements Reporter {
 7. `TapFlatReporter`
 8. `HangingProcessReporter`
 9. `TreeReporter`
-
-### Base Abstract reporters:
-
-1. `BaseReporter`
 
 ### Interface reporters:
 
