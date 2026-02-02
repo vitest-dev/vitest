@@ -844,8 +844,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       ])
       return this.assert(
         equal,
-        'expected a thrown value #{this} to equal #{exp}',
-        'expected a thrown value #{this} not to equal #{exp}',
+        'expected a thrown value to equal #{exp}',
+        'expected a thrown value not to equal #{exp}',
         expected,
         thrown,
       )

@@ -486,6 +486,7 @@ describe('jest-expect', () => {
     })
 
     it('non Error instance', () => {
+      // primitives
       expect(() => {
         // eslint-disable-next-line no-throw-literal
         throw 42
@@ -494,14 +495,30 @@ describe('jest-expect', () => {
         // eslint-disable-next-line no-throw-literal
         throw 42
       }).not.toThrow(43)
+
+      expect(() => {
+        expect(() => {
+        // eslint-disable-next-line no-throw-literal
+          throw 42
+        }).toThrow(43)
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal 43]`)
+
+      // deep equality
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw { foo: 'hello world' }
+      }).toThrow({ foo: expect.stringContaining('hello') })
       expect(() => {
         // eslint-disable-next-line no-throw-literal
         throw { foo: 'bar' }
-      }).toThrow({ foo: 'bar' })
+      }).not.toThrow({ foo: expect.stringContaining('hello') })
+
       expect(() => {
+        expect(() => {
         // eslint-disable-next-line no-throw-literal
-        throw { foo: 'bar' }
-      }).not.toThrow({ foo: 'baz' })
+          throw { foo: 'bar' }
+        }).toThrow({ foo: expect.stringContaining('hello') })
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`)
     })
 
     it('error from different realm', async () => {
@@ -511,12 +528,12 @@ describe('jest-expect', () => {
       new vm.Script('fn = () => { throw new TypeError("oops") }; globalObject = this').runInContext(context)
       const { fn, globalObject } = context
 
-      // using constructor works
+      // constructor
       expect(fn).toThrow(globalObject.TypeError)
       expect(fn).not.toThrow(globalObject.ReferenceError)
       expect(fn).not.toThrow(globalObject.EvalError)
 
-      // using cross-realm error instance should also work
+      // instance
       expect(fn).toThrow(new globalObject.TypeError('oops'))
       expect(fn).not.toThrow(new globalObject.TypeError('message'))
       expect(fn).not.toThrow(new globalObject.ReferenceError('oops'))
