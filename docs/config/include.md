@@ -40,12 +40,16 @@ export default defineConfig({
   test: {
     projects: [
       {
-        name: 'unit',
-        include: ['./test/unit/*.test.js'],
+        test: {
+          name: 'unit',
+          include: ['./test/unit/*.test.js'],
+        },
       },
       {
-        name: 'e2e',
-        include: ['./test/e2e/*.test.js'],
+        test: {
+          name: 'e2e',
+          include: ['./test/e2e/*.test.js'],
+        },
       },
     ],
   },
