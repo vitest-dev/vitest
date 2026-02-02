@@ -721,6 +721,36 @@ test('test.override fixtures are scoped to their suite in beforeAll/afterAll', a
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > root test <time>"`)
 })
 
+test('test.override fixtures are scoped to their suite in beforeAll/afterAll when called after hooks', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(() => {
+    return it.extend('value', { scope: 'worker' }, 'default')
+  }, {
+    'basic.test.ts': ({ extendedTest, expect }) => {
+      extendedTest.beforeAll(({ value }) => {
+        console.log('>> fixture | root beforeAll |', value)
+      })
+      extendedTest.afterAll(({ value }) => {
+        console.log('>> fixture | root afterAll |', value)
+      })
+
+      extendedTest('root test', ({ value }) => {
+        expect(value).toBe('root')
+      })
+
+      // Override the value for this suite - the extended fixture is already
+      // available in hooks, but override changes the value
+      extendedTest.override('value', 'root')
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | root beforeAll | root
+    >> fixture | root afterAll | root"
+  `)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > root test <time>"`)
+})
+
 test('all hooks receive suite as the last argument', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(() => {
     return it.extend('value', { scope: 'file' }, 'test-value')
