@@ -12,6 +12,7 @@
     "merge": "vitest run --merge-reports .vitest-reports --reporter=json"
   },
   "devDependencies": {
+    "@ungap/structured-clone": "catalog:",
     "devalue": "catalog:",
     "flatted": "catalog:",
     "vitest": "latest"
