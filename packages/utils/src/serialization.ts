@@ -85,13 +85,16 @@ const devalueBuiltins = new Set([
 ])
 
 function isCustomObject(value: unknown): value is object {
+  // check primitive
   if (!value || typeof value !== 'object') {
     return false
   }
+  // check plain object
   const proto = Object.getPrototypeOf(value)
   if (proto === Object.prototype || proto === null) {
     return false
   }
+  // check devalue builtin support
   const tag = Object.prototype.toString.call(value)
   if (devalueBuiltins.has(tag)) {
     return false
