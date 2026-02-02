@@ -1,3 +1,4 @@
+import type { WithFixturesOptions } from './fixture'
 import type {
   AfterAllListener,
   AfterEachListener,
@@ -84,7 +85,7 @@ export function beforeAll<ExtraContext = object>(
     'beforeAll',
     Object.assign(
       withTimeout(
-        withSuiteFixtures(fn, context, stackTraceError),
+        withSuiteFixtures('beforeAll', fn, context, stackTraceError),
         timeout,
         true,
         stackTraceError,
@@ -125,7 +126,7 @@ export function afterAll<ExtraContext = object>(
   return getCurrentSuite<ExtraContext>().on(
     'afterAll',
     withTimeout(
-      withSuiteFixtures(fn, context, stackTraceError),
+      withSuiteFixtures('afterAll', fn, context, stackTraceError),
       timeout ?? getDefaultHookTimeout(),
       true,
       stackTraceError,
@@ -321,7 +322,13 @@ export function aroundAll<ExtraContext = object>(
   return getCurrentSuite().on(
     'aroundAll',
     Object.assign(
-      withSuiteFixtures(fn, context, stackTraceError, 1) as RegisteredAroundAllListener,
+      withSuiteFixtures(
+        'aroundAll',
+        fn,
+        context,
+        stackTraceError,
+        1,
+      ) as RegisteredAroundAllListener,
       {
         [AROUND_TIMEOUT_KEY]: resolvedTimeout,
         [AROUND_STACK_TRACE_KEY]: stackTraceError,
@@ -385,6 +392,7 @@ export function aroundEach<ExtraContext = object>(
 }
 
 function withSuiteFixtures(
+  suiteHook: WithFixturesOptions['suiteHook'],
   fn: Function,
   context: InternalChainableContext | undefined,
   stackTraceError: Error,
@@ -401,7 +409,7 @@ function withSuiteFixtures(
     const fileContext = fixtures?.getFileContext(suite.file)
 
     const fixtured = withFixtures(wrapper, {
-      isSuiteHook: true,
+      suiteHook,
       fixtures,
       context: fileContext,
       stackTraceError,

@@ -363,20 +363,33 @@ export type TestFsStructure = Record<
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
 
+export function stripIndent(str: string): string {
+  const match = str.match(/^[ \t]*(?=\S)/gm)
+  if (!match) {
+    return str
+  }
+  const indent = match.filter(m => !!m).reduce((min, line) => Math.min(min, line.length), Infinity)
+  if (indent === 0) {
+    return str
+  }
+  return str.replace(new RegExp(`^[ \\t]{${indent}}`, 'gm'), '')
+}
+
 function getGeneratedFileContent(content: TestFsStructure[string]) {
   if (typeof content === 'string') {
     return content
   }
   if (typeof content === 'function') {
-    return `await (${content})()`
+    return `await (${stripIndent(String(content))})()`
   }
   if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
     const imports = Object.entries(content[1].imports || [])
-    return `
+    const code = `
 ${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
-const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
+const results = await (${stripIndent(String(content[0]))})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
     `
+    return code
   }
   if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
     const name = content.test.browser.provider.name
@@ -409,6 +422,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    root,
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {

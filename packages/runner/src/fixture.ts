@@ -269,14 +269,12 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   cleanupFnArray.length = fromIndex
 }
 
-const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
-
 export interface WithFixturesOptions {
   /**
    * Whether this is a suite-level hook (beforeAll/afterAll/aroundAll).
    * Suite hooks can only access file/worker scoped fixtures and static values.
    */
-  isSuiteHook?: boolean
+  suiteHook?: 'beforeAll' | 'afterAll' | 'aroundAll'
   /**
    * The test context to use. If not provided, the hookContext passed to the
    * returned function will be used.
@@ -293,6 +291,8 @@ export interface WithFixturesOptions {
   fixtures?: TestFixtures
 }
 
+const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
+
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
   const suite = collector.suite || collector.file
@@ -300,6 +300,10 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
     if (!context) {
+      if (options?.suiteHook) {
+        validateSuiteHook(fn, options.suiteHook, options.stackTraceError)
+      }
+
       return fn({})
     }
 
@@ -339,14 +343,19 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
 
     // Check if suite-level hook is trying to access test-scoped fixtures
     // Suite hooks (beforeAll/afterAll/aroundAll) can only access file/worker scoped fixtures
-    if (options?.isSuiteHook) {
+    if (options?.suiteHook) {
       const testScopedFixtures = pendingFixtures.filter(f => f.scope === 'test')
       if (testScopedFixtures.length > 0) {
         const fixtureNames = testScopedFixtures.map(f => `"${f.name}"`).join(', ')
+        const alternativeHook = {
+          aroundAll: 'aroundAll',
+          beforeAll: 'beforeAll',
+          afterAll: 'afterAll',
+        }
         const error = new FixtureDependencyError(
-          `Test-scoped fixtures cannot be used in beforeAll/afterAll/aroundAll hooks. `
+          `Test-scoped fixtures cannot be used inside ${options.suiteHook} hook. `
           + `The following fixtures are test-scoped: ${fixtureNames}. `
-          + `Use file or worker scoped fixtures instead, or move the logic to beforeEach/afterEach hooks.`,
+          + `Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to ${alternativeHook[options.suiteHook]} hook.`,
         )
         // Use stack trace from hook registration for better error location
         if (options.stackTraceError?.stack) {
@@ -537,6 +546,18 @@ function resolveDeps(
   })
 
   return pendingFixtures
+}
+
+function validateSuiteHook(fn: Function, hook: string, error: Error | undefined) {
+  const usedProps = getUsedProps(fn)
+  if (usedProps.size) {
+    console.warn(`The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. Did you forget to call it as "test.${hook}()" instead of "${hook}()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks`)
+    if (error) {
+      const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
+      const stack = processor(error.stack || '')
+      console.warn(stack)
+    }
+  }
 }
 
 const kPropsSymbol = Symbol('$vitest:fixture-props')
