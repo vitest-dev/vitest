@@ -272,7 +272,7 @@ function isErrorEqual(
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
 
   let result = (
-    Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+    Object.prototype.toString.call(a) === Object.prototype.toString.call(b)
     && a.name === b.name
     && a.message === b.message
   )
