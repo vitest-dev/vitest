@@ -189,9 +189,9 @@ test('leaking server', async () => {
     'packages/example/test/example.test.ts': `
     import { Server } from "http";
 
-      test('leaking tcp socket', () => {
+      test('leaking tcp socket', async () => {
         const app = new Server();
-        app.listen({ host: "localhost", port: 0 });
+        await new Promise(resolve => app.listen({ host: "localhost", port: 0 }, resolve));
       })
     `,
   })
@@ -202,14 +202,15 @@ test('leaking server', async () => {
     "
     ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
 
-    GETADDRINFOREQWRAP leaking in packages/example/test/example.test.ts
-      4|       test('leaking tcp socket', () => {
+    TCPSERVERWRAP leaking in packages/example/test/example.test.ts
+      4|       test('leaking tcp socket', async () => {
       5|         const app = new Server();
-      6|         app.listen({ host: "localhost", port: 0 });
-       |             ^
+      6|         await new Promise(resolve => app.listen({ host: "localhost", port:…
+       |                                          ^
       7|       })
       8|
-     ❯ packages/example/test/example.test.ts:6:13
+     ❯ packages/example/test/example.test.ts:6:42
+     ❯ packages/example/test/example.test.ts:6:15
 
     "
   `)
