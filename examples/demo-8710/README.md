@@ -63,3 +63,22 @@ pnpm test bench run
     1.18x faster than @ungap/structured-clone
     1.68x faster than devalue
 ```
+
+## Perf notes (educated guess)
+
+**Internal mechanics**
+
+- `flatted`: uses `JSON.stringify`/`JSON.parse` with a custom replacer/reviver and a second pass (`_revive`) to resolve references.
+- `devalue`: performs a full JS traversal and manual string building on stringify; parse is `JSON.parse` plus direct index-based hydration.
+- `@ungap/structured-clone`: builds a tagged graph (type codes) and then uses `JSON.stringify`/`JSON.parse` on that graph, reconstructing values on parse.
+
+**Observed results explained**
+
+- stringify:
+  - flatted fastest (native JSON output)
+  - @ungap/structured-clone next (native JSON output of tagged graph)
+  - devalue slowest (JS string building + validation per node).
+- parse:
+  - devalue fastest (single hydration pass)
+  - @ungap/structured-clone next (type reconstruction)
+  - flatted slowest (reviver + second `_revive` pass).
