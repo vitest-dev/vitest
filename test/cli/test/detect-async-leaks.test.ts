@@ -12,8 +12,8 @@ test('does not report leaks when disabled', async () => {
     detectAsyncLeaks: false,
   })
 
-  expect(stdout).not.toContain('Leak')
-  expect(stderr).toBe('')
+  expect.soft(stdout).not.toContain('Leak')
+  expect.soft(stderr).toBe('')
 })
 
 test('timeout leak in test file', async () => {
@@ -25,7 +25,7 @@ test('timeout leak in test file', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -60,7 +60,7 @@ test('timeout leak in source file', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -97,7 +97,7 @@ test('multiple leaks', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  2 leak')
+  expect.soft(stdout).toContain('Leaks  2 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -135,7 +135,7 @@ test('interval leak in test file', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -165,7 +165,7 @@ test('fs handle leak in test file', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -196,7 +196,7 @@ test('leaking server', async () => {
     `,
   })
 
-  expect(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -240,7 +240,7 @@ test('leak in project setup', async () => {
     `,
   }, { projects: ['packages/*'] })
 
-  expect(stdout).toContain('Leaks  2 leak')
+  expect.soft(stdout).toContain('Leaks  2 leak')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
