@@ -498,21 +498,29 @@ export async function runInlineTests(
   }
 }
 
+const isWindows = process.platform === 'win32'
+
 export function replaceRoot(string: string, root: string) {
   const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
-  if (!root.endsWith('/')) {
-    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  if (!root.endsWith('/') && !isWindows) {
+    root += '?/'
   }
-  if (process.platform !== 'win32') {
+  if (!isWindows) {
     return string
       .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
       .replace(new RegExp(root, 'g'), '<root>/')
   }
-  const normalizedRoot = root.replaceAll('/', '\\\\')
+  let unixRoot = root.replace(/\\/g, '/')
+  let win32Root = root.replaceAll('/', '\\\\')
+  if (!root.endsWith('/') && !root.endsWith('\\')) {
+    unixRoot += '?/'
+    win32Root += '?\\\\'
+  }
+
   return string
-    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
-    .replace(new RegExp(root, 'g'), '<root>/')
-    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
+    .replace(new RegExp(schemaRoot, 'gi'), '<urlRoot>')
+    .replace(new RegExp(unixRoot, 'gi'), '<root>/')
+    .replace(new RegExp(win32Root, 'gi'), '<root>/')
 }
 
 export const ts = String.raw

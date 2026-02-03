@@ -44,8 +44,8 @@ test('test fixture cannot import from file fixture', async () => {
           2|   const extendedTest = it.extend({
            |                           ^
           3|     local: ({}, use) => use("local"),
-          4|     file: [
-     ❯ basic.test.ts:11:1
+          4|     file: [({ local }, use) => use(local), { scope: "file" }]
+     ❯ basic.test.ts:8:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -679,8 +679,6 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
   })
 
   expect(fixtures).toMatchInlineSnapshot(`">> fixture | beforeAll | file: undefined"`)
-  // TODO(debug): remove before merge
-  console.log('root', fs.root)
   expect(replaceRoot(stderr, fs.root)).toMatchInlineSnapshot(`
     "stderr | basic.test.ts
     The beforeAll hook uses fixtures "fileValue", but has no access to context. Did you forget to call it as "test.beforeAll()" instead of "beforeAll()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks
