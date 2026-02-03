@@ -22,7 +22,7 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
-import { abortContextSignal } from './context'
+import { abortContextSignal, createTimeoutPromise } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, TestFixtures } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
@@ -267,34 +267,6 @@ async function callAroundHooks<THook extends Function>(
     return
   }
 
-  const createTimeoutPromise = (
-    timeout: number,
-    phase: 'setup' | 'teardown',
-    stackTraceError: Error | undefined,
-  ): { promise: Promise<never>; clear: () => void } => {
-    let timer: ReturnType<typeof setTimeout> | undefined
-
-    const promise = new Promise<never>((_, reject) => {
-      if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
-        timer = setTimeout(() => {
-          const error = makeAroundHookTimeoutError(hookName, phase, timeout, stackTraceError)
-          onTimeout?.(error)
-          reject(error)
-        }, timeout)
-        timer.unref?.()
-      }
-    })
-
-    const clear = () => {
-      if (timer) {
-        clearTimeout(timer)
-        timer = undefined
-      }
-    }
-
-    return { promise, clear }
-  }
-
   const runNextHook = async (index: number): Promise<void> => {
     if (index >= hooks.length) {
       return runInner()
@@ -345,14 +317,22 @@ async function callAroundHooks<THook extends Function>(
       await runNextHook(index + 1)
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
-      teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
+      teardownTimeout = createTimeoutPromise(
+        timeout,
+        () => makeAroundHookTimeoutError(hookName, 'teardown', timeout, stackTraceError),
+        onTimeout,
+      )
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
     }
 
     // Start setup timeout
-    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
+    setupTimeout = createTimeoutPromise(
+      timeout,
+      () => makeAroundHookTimeoutError(hookName, 'setup', timeout, stackTraceError),
+      onTimeout,
+    )
 
     // Run the hook in the background
     ;(async () => {
