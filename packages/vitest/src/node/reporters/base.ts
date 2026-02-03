@@ -805,14 +805,20 @@ export abstract class BaseReporter implements Reporter {
         continue
       }
 
-      const sourceCode = readFileSync(stacks[0].file, 'utf-8')
-      this.ctx.logger.error(generateCodeFrame(
-        sourceCode.length > 100_000
-          ? sourceCode
-          : this.ctx.logger.highlight(stacks[0].file, sourceCode),
-        undefined,
-        stacks[0],
-      ))
+      try {
+        const sourceCode = readFileSync(stacks[0].file, 'utf-8')
+
+        this.ctx.logger.error(generateCodeFrame(
+          sourceCode.length > 100_000
+            ? sourceCode
+            : this.ctx.logger.highlight(stacks[0].file, sourceCode),
+          undefined,
+          stacks[0],
+        ))
+      }
+      catch {
+        // ignore error, do not produce more detailed message with code frame.
+      }
 
       printStack(
         this.ctx.logger,
