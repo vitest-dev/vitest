@@ -47,7 +47,7 @@ let printExitCode = false
 // TODO(debug): remove before merge
 globalThis.process = new Proxy(process, {
   set(target, p, newValue, receiver) {
-    if (printExitCode) {
+    if (printExitCode && p === 'exitCode') {
       console.warn('exitCode was set to', newValue)
     }
     return Reflect.set(target, p, newValue, receiver)
