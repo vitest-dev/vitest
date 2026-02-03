@@ -167,8 +167,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       return
     }
     coverageMap.filter((filename) => {
-      const normalized = slash(filename.split('?')[0])
-      return this.changedFiles!.has(normalized)
+      return this.changedFiles!.has(this.normalizeChangedFilename(filename))
     })
   }
 
@@ -204,11 +203,25 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       return false
     }
 
-    if (this.changedFiles && !this.changedFiles.has(filename)) {
+    if (this.changedFiles && !this.changedFiles.has(this.normalizeChangedFilename(filename))) {
       return false
     }
 
     return included
+  }
+
+  private normalizeChangedFilename(filename: string): string {
+    let normalized = filename.split('?')[0]
+    if (normalized.startsWith('file://')) {
+      normalized = fileURLToPath(normalized)
+    }
+    if (normalized.startsWith('/@fs/')) {
+      normalized = normalized.slice(4)
+    }
+    if (normalized.startsWith('/') && /^[a-z]:/i.test(normalized.slice(1))) {
+      normalized = normalized.slice(1)
+    }
+    return slash(normalized)
   }
 
   private async getUntestedFilesByRoot(
