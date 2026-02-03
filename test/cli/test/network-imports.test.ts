@@ -20,7 +20,7 @@ it.runIf(Number(major) <= 20).each([
     ...config,
     root: './fixtures/network-imports',
     pool,
-  })
+  }, [], { printExitCode: true })
   expect(ctx!.state.getTestModules()).toHaveLength(1)
   expect(ctx!.state.getTestModules()[0].state()).toBe('passed')
   expect(exitCode).toBe(0)

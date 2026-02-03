@@ -31,6 +31,7 @@ globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
+  printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
   mode?: 'test' | 'benchmark'
@@ -40,6 +41,18 @@ export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestCliOptions
 }
+
+let printExitCode = false
+
+// TODO(debug): remove before merge
+globalThis.process = new Proxy(process, {
+  set(target, p, newValue, receiver) {
+    if (printExitCode) {
+      console.warn('exitCode was set to', newValue)
+    }
+    return Reflect.set(target, p, newValue, receiver)
+  },
+})
 
 /**
  * The config is assumed to be the config on the fille system, not CLI options
@@ -56,6 +69,8 @@ export async function runVitest(
   cliFilters: string[] = [],
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
+  printExitCode = runnerOptions.printExitCode ?? false
+
   // Reset possible previous runs
   process.exitCode = 0
   let exitCode = process.exitCode
