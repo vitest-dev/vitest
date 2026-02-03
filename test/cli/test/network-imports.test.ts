@@ -22,7 +22,7 @@ it.runIf(Number(major) <= 20).each([
     pool,
   }, [], { printExitCode: true })
   expect([...ctx!.state.errorsSet]).toStrictEqual([])
-  expect(stderr.slice(13)).toBe(`ExperimentalWarning: Network Imports is an experimental feature and might change at any time
+  expect(stderr.replace(/\(node:\d+\)/, '(node:\d+)')).toBe(`(node:d+) ExperimentalWarning: Network Imports is an experimental feature and might change at any time
 (Use \`node --trace-warnings ...\` to show where the warning was created)
 `)
   expect(ctx!.state.getTestModules()).toHaveLength(1)
