@@ -1,6 +1,8 @@
 import { expect, test } from 'vitest'
 import { runInlineTests as base } from '../../test-utils'
 
+const isWindows = process.platform === 'win32'
+
 test('does not report leaks when disabled', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
@@ -165,9 +167,38 @@ test('fs handle leak in test file', async () => {
     `,
   })
 
-  expect.soft(stdout).toContain('Leaks  1 leak')
+  if (isWindows) {
+    expect.soft(stdout).toContain('Leaks  2 leaks')
 
-  expect(stderr).toMatchInlineSnapshot(`
+    expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 2 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    FSREQCALLBACK leaking in packages/example/test/example.test.ts
+      3|
+      4|       test('leaking fs handle', () => {
+      5|         readFile(import.meta.filename, () => {});
+       |         ^
+      6|       })
+      7|
+     ❯ packages/example/test/example.test.ts:5:9
+
+    FSREQCALLBACK leaking in packages/example/test/example.test.ts
+      3|
+      4|       test('leaking fs handle', () => {
+      5|         readFile(import.meta.filename, () => {});
+       |         ^
+      6|       })
+      7|
+     ❯ packages/example/test/example.test.ts:5:9
+
+    "
+    `)
+  }
+  else {
+    expect.soft(stdout).toContain('Leaks  1 leak')
+
+    expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
 
@@ -182,6 +213,7 @@ test('fs handle leak in test file', async () => {
 
     "
   `)
+  }
 })
 
 test('leaking server', async () => {
