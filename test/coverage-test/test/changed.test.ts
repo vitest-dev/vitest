@@ -76,9 +76,41 @@ test('{ coverage.changed: "HEAD" }', async () => {
       'fixtures/test/math.test.ts',
     ],
     coverage: {
-      include: ['fixtures/src/**'],
+      include: [
+        'fixtures/src/file-to-change.ts',
+        'fixtures/src/new-uncovered-file.ts',
+        'fixtures/src/math.ts',
+      ],
       reporter: 'json',
       changed: 'HEAD',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/file-to-change.ts",
+      "<process-cwd>/fixtures/src/new-uncovered-file.ts",
+    ]
+  `)
+})
+
+test('{ coverage.changed: "HEAD", excludeAfterRemap: true }', async () => {
+  await runVitest({
+    include: [
+      'fixtures/test/file-to-change.test.ts',
+      'fixtures/test/math.test.ts',
+    ],
+    coverage: {
+      include: [
+        'fixtures/src/file-to-change.ts',
+        'fixtures/src/new-uncovered-file.ts',
+        'fixtures/src/math.ts',
+      ],
+      reporter: 'json',
+      changed: 'HEAD',
+      excludeAfterRemap: true,
     },
   })
 
