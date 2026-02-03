@@ -5,15 +5,13 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src",
+    "dev": "NODE_ENV=development node --watch src/index.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run"
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "tsx": "^4.21.0",
-    "vite": "latest",
     "vitest": "latest"
   },
   "stackblitz": {

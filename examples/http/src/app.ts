@@ -1,7 +1,7 @@
 import { createServer as createHttpServer } from 'node:http'
-import { usersData } from '../mockData'
+import { usersData } from '../mockData.ts'
 
-function handleRequest(req: { method?: string, url?: string }, res: { statusCode: number, setHeader: (name: string, value: string) => void, end: (body?: string) => void }) {
+export const app = createHttpServer((req, res) => {
   if (req.method === 'GET' && req.url === '/users') {
     res.statusCode = 200
     res.setHeader('content-type', 'application/json')
@@ -12,10 +12,4 @@ function handleRequest(req: { method?: string, url?: string }, res: { statusCode
   res.statusCode = 404
   res.setHeader('content-type', 'text/plain')
   res.end('Not found')
-}
-
-function createServer() {
-  return createHttpServer(handleRequest)
-}
-
-export { createServer }
+})

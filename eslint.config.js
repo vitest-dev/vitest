@@ -25,8 +25,6 @@ export default antfu(
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
       'test/cli/deps/error/*',
-      'examples/**/mockServiceWorker.js',
-      'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',

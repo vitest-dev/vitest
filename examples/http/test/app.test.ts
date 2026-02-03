@@ -1,49 +1,40 @@
-import { afterAll, beforeAll, expect, test } from 'vitest'
+import { test as baseTest, expect } from 'vitest'
+import { usersData } from '../mockData.ts'
+import { app } from '../src/app.ts'
 
-import { usersData } from '../mockData'
-import { createServer } from '../src/app'
-
-let baseUrl = ''
-let server: ReturnType<typeof createServer>
-
-beforeAll(async () => {
-  server = createServer()
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(0, () => {
-      const address = server.address()
+const test = baseTest.extend('request', { scope: 'file' }, async ({}, ctx) => {
+  const baseUrl = await new Promise<string>((resolve, reject) => {
+    app.once('error', reject)
+    app.listen(() => {
+      const address = app.address()
       if (!address || typeof address === 'string') {
         reject(new Error('Unable to determine server port'))
         return
       }
-
-      baseUrl = `http://127.0.0.1:${address.port}`
-      resolve()
+      resolve(`http://127.0.0.1:${address.port}`)
     })
   })
-})
 
-afterAll(async () => {
-  await new Promise<void>((resolve, reject) => {
-    server.close((err) => {
-      if (err) {
-        reject(err)
-        return
-      }
-
-      resolve()
+  ctx.onCleanup(async () => {
+    await new Promise<void>((resolve, reject) => {
+      app.close(err => err ? reject(err) : resolve())
     })
   })
+
+  return {
+    get: (url: string) => fetch(new URL(url, baseUrl)),
+  }
 })
 
-test('returns the users list', async () => {
-  const response = await fetch(`${baseUrl}/users`)
-
+test('/users', async ({ request }) => {
+  const response = await request.get('/users')
   expect(response.status).toBe(200)
-
   const data = await response.json()
-
-  expect(data).toHaveLength(4)
   expect(data).toStrictEqual(usersData)
+})
+
+test('not found', async ({ request }) => {
+  const response = await request.get('/asdf')
+  expect(response.status).toBe(404)
+  expect(await response.text()).toBe('Not found')
 })
