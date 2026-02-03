@@ -850,16 +850,16 @@ const test = baseTest
   })
 
 // Access file-scoped fixtures in suite-level hooks
+test.aroundAll(async (runSuite, { database }) => {
+  await database.transaction(runSuite)
+})
+
 test.beforeAll(async ({ database }) => {
-  await database.migrate()
+  await database.createUsers()
 })
 
 test.afterAll(async ({ database }) => {
-  await database.cleanup()
-})
-
-test.aroundAll(async (runSuite, { database }) => {
-  await database.transaction(runSuite)
+  await database.removeUsers()
 })
 ```
 
