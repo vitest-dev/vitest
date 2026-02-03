@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, expect, test } from 'vitest'
 
-import { usersData } from '../mockData.js'
-import { createServer } from '../src/app.js'
+import { usersData } from '../mockData'
+import { createServer } from '../src/app'
 
 let baseUrl = ''
 let server: ReturnType<typeof createServer>

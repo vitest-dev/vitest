@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/example-fastify",
+  "name": "@vitest/example-http",
   "type": "module",
   "private": true,
   "license": "MIT",
@@ -12,8 +12,6 @@
   },
   "devDependencies": {
     "@vitest/ui": "latest",
-    "fastify": "^5.7.2",
-    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "vite": "latest",
     "vitest": "latest"

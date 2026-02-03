@@ -1,5 +1,5 @@
 import { createServer as createHttpServer } from 'node:http'
-import { usersData } from '../mockData.js'
+import { usersData } from '../mockData'
 
 function handleRequest(req: { method?: string, url?: string }, res: { statusCode: number, setHeader: (name: string, value: string) => void, end: (body?: string) => void }) {
   if (req.method === 'GET' && req.url === '/users') {
