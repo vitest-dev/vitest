@@ -16,11 +16,15 @@ it.runIf(Number(major) <= 20).each([
   'forks',
   'vmThreads',
 ])('importing from network in %s', async (pool) => {
-  const { ctx, exitCode } = await runVitest({
+  const { ctx, stderr, exitCode } = await runVitest({
     ...config,
     root: './fixtures/network-imports',
     pool,
   }, [], { printExitCode: true })
+  expect([...ctx!.state.errorsSet]).toStrictEqual([])
+  expect(stderr.slice(13)).toBe(`ExperimentalWarning: Network Imports is an experimental feature and might change at any time
+(Use \`node --trace-warnings ...\` to show where the warning was created)
+`)
   expect(ctx!.state.getTestModules()).toHaveLength(1)
   expect(ctx!.state.getTestModules()[0].state()).toBe('passed')
   expect(exitCode).toBe(0)
