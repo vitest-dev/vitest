@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inline.test.js 1`] = `
+"import { describe, expect, test } from 'vitest'
+
+// when snapshots are generated Vitest reruns \`toMatchInlineSnapshot\` checks
+// please, don't commit generated snapshots
+describe('snapshots are generated in correct order', async () => {
+  test('first snapshot', () => {
+    expect({ foo: ['bar'] }).toMatchInlineSnapshot(\`
+      Object {
+        "foo": Array [
+          "bar",
+        ],
+      }
+    \`)
+  })
+
+  test('second snapshot', () => {
+    expect({ foo: ['zed'] }).toMatchInlineSnapshot(\`
+      Object {
+        "foo": Array [
+          "zed",
+        ],
+      }
+    \`)
+  })
+})
+
+describe('snapshots with properties', () => {
+  test('without snapshot', () => {
+    expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, \`
+      Object {
+        "foo": Any<String>,
+      }
+    \`)
+  })
+
+  test('with snapshot', () => {
+    expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, \`
+      Object {
+        "first": Object {
+          "second": Object {
+            "foo": Any<String>,
+          },
+        },
+      }
+    \`)
+  })
+
+  test('mixed with and without snapshot', () => {
+    expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, \`
+      Object {
+        "first": Object {
+          "second": Object {
+            "foo": Any<String>,
+          },
+        },
+      }
+    \`)
+
+    expect({ first: { second: { foo: 'zed' } } }).toMatchInlineSnapshot(\`
+      Object {
+        "first": Object {
+          "second": Object {
+            "foo": "zed",
+          },
+        },
+      }
+    \`)
+  })
+})
+"
+`;
+
+exports[`inline-concurrent.test.js 1`] = `
+"import { it } from 'vitest'
+
+it.concurrent('1st', ({ expect }) => {
+  expect('hi1').toMatchInlineSnapshot(\`"hi1"\`)
+})
+
+it.concurrent('2nd', ({ expect }) => {
+  expect('hi2').toMatchInlineSnapshot(\`"hi2"\`)
+})
+
+it.concurrent('3rd', ({ expect }) => {
+  expect('hi3').toMatchInlineSnapshot(\`"hi3"\`)
+})
+"
+`;
+
+exports[`retry-inline.test.ts 1`] = `
+"import { expect, test } from 'vitest'
+
+test('inline repeats', { repeats: 1 }, () => {
+  expect('foo').toMatchInlineSnapshot(\`"foo"\`)
+})
+
+test('inline retry', { retry: 1 }, (ctx) => {
+  expect('foo').toMatchInlineSnapshot(\`"foo"\`)
+  if (ctx.task.result?.retryCount === 0) {
+    throw new Error('boom')
+  }
+})
+"
+`;
+
+exports[`same-title-inline.test.js 1`] = `
+"import { expect, test } from 'vitest'
+
+test('same title', () => {
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+})
+
+test('same title', () => {
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+})
+
+test('same title', () => {
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
+})
+"
+`;
