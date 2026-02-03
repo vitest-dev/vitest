@@ -1,7 +1,7 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
 
 test('correctly collects a simple test', async () => {
@@ -1078,6 +1078,7 @@ async function collectTestModule(code: string, options?: CliOptions) {
       ],
     },
   )
+  onTestFinished(() => vitest.close())
   return vitest.experimental_parseSpecification(
     vitest.getRootProject().createSpecification('simple.test.ts'),
   )

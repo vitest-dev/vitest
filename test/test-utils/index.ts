@@ -31,6 +31,7 @@ globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
+  printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
   mode?: 'test' | 'benchmark'
@@ -40,6 +41,8 @@ export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestCliOptions
 }
+
+const process_ = process
 
 /**
  * The config is assumed to be the config on the fille system, not CLI options
@@ -59,6 +62,18 @@ export async function runVitest(
   // Reset possible previous runs
   process.exitCode = 0
   let exitCode = process.exitCode
+
+  if (runnerOptions.printExitCode) {
+    globalThis.process = new Proxy(process_, {
+      set(target, p, newValue, receiver) {
+        if (p === 'exitCode') {
+          // eslint-disable-next-line no-console
+          console.trace('exitCode was set to', newValue)
+        }
+        return Reflect.set(target, p, newValue, receiver)
+      },
+    })
+  }
 
   // Prevent possible process.exit() calls, e.g. from --browser
   const exit = process.exit
@@ -194,6 +209,9 @@ export async function runVitest(
     cli.stderr += inspect(e)
   }
   finally {
+    if (runnerOptions.printExitCode) {
+      globalThis.process = process_
+    }
     exitCode = process.exitCode
     process.exitCode = 0
 
