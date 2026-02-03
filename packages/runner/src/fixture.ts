@@ -1,125 +1,234 @@
-import type { VitestRunner } from './types'
-import type { FixtureOptions, TestContext } from './types/tasks'
+import type { FixtureFn, Suite, VitestRunner } from './types'
+import type { File, FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
-import { getFileContext } from './context'
-import { getTestFixture } from './map'
+import { FixtureDependencyError } from './errors'
+import { getTestFixtures } from './map'
+import { getCurrentSuite } from './suite'
 
-export interface FixtureItem extends FixtureOptions {
-  prop: string
-  value: any
+export interface TestFixtureItem extends FixtureOptions {
+  name: string
+  value: unknown
   scope: 'test' | 'file' | 'worker'
-  /**
-   * Indicates whether the fixture is a function
-   */
-  isFn: boolean
-  /**
-   * The dependencies(fixtures) of current fixture function.
-   */
-  deps?: FixtureItem[]
+  deps: Set<string>
+  // so it's possible to call base fixture inside ({ a: ({ a }, use) => {} })
+  parent?: TestFixtureItem
 }
 
-export function mergeScopedFixtures(
-  testFixtures: FixtureItem[],
-  scopedFixtures: FixtureItem[],
-): FixtureItem[] {
-  const scopedFixturesMap = scopedFixtures.reduce<Record<string, FixtureItem>>((map, fixture) => {
-    map[fixture.prop] = fixture
-    return map
-  }, {})
-  const newFixtures: Record<string, FixtureItem> = {}
-  testFixtures.forEach((fixture) => {
-    const useFixture = scopedFixturesMap[fixture.prop] || {
-      // we need to clone the fixture because we override its values
-      ...fixture,
-    }
-    newFixtures[useFixture.prop] = useFixture
-  })
-  for (const fixtureKep in newFixtures) {
-    const fixture = newFixtures[fixtureKep]
-    // if the fixture was define before the scope, then its dep
-    // will reference the original fixture instead of the scope
-    fixture.deps = fixture.deps?.map(dep => newFixtures[dep.prop])
+export type UserFixtures = Record<string, unknown>
+export type FixtureRegistrations = Map<string, TestFixtureItem>
+
+export class TestFixtures {
+  private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
+  private _overrides = new WeakMap<Suite, FixtureRegistrations>()
+  private _registrations: FixtureRegistrations
+
+  private static _definitions: TestFixtures[] = []
+  private static _builtinFixtures: string[] = [
+    'task',
+    'signal',
+    'onTestFailed',
+    'onTestFinished',
+    'skip',
+    'annotate',
+  ] satisfies (keyof TestContext)[]
+
+  private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']
+  private static _fixtureScopes: string[] = ['test', 'file', 'worker']
+  private static _workerContextSymbol = Symbol('workerContext')
+
+  static clearDefinitions(): void {
+    TestFixtures._definitions.length = 0
   }
-  return Object.values(newFixtures)
-}
 
-export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
-  fixtures: Record<string, any>,
-  context: T,
-  runner: VitestRunner,
-): T {
-  const fixtureOptionKeys = ['auto', 'injected', 'scope']
-  const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
-    ([prop, value]) => {
-      const fixtureItem = { value } as FixtureItem
+  static getWorkerContexts(): Record<string, any>[] {
+    return TestFixtures._definitions.map(f => f.getWorkerContext())
+  }
+
+  static getFileContexts(file: File): Record<string, any>[] {
+    return TestFixtures._definitions.map(f => f.getFileContext(file))
+  }
+
+  constructor(registrations?: FixtureRegistrations) {
+    this._registrations = registrations ?? new Map()
+    this._suiteContexts = new WeakMap()
+    TestFixtures._definitions.push(this)
+  }
+
+  extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
+    const { suite } = getCurrentSuite()
+    const isTopLevel = !suite || suite.file === suite
+    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
+    return new TestFixtures(registrations)
+  }
+
+  get(suite: Suite): FixtureRegistrations {
+    let currentSuite: Suite | undefined = suite
+    while (currentSuite) {
+      const overrides = this._overrides.get(currentSuite)
+      // return the closest override
+      if (overrides) {
+        return overrides
+      }
+      if (currentSuite === currentSuite.file) {
+        break
+      }
+      currentSuite = currentSuite.suite || currentSuite.file
+    }
+    return this._registrations
+  }
+
+  override(runner: VitestRunner, userFixtures: UserFixtures): void {
+    const { suite: currentSuite, file } = getCurrentSuite()
+    const suite = currentSuite || file
+    const isTopLevel = !currentSuite || currentSuite.file === currentSuite
+    // Create a copy of the closest parent's registrations to avoid modifying them
+    // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
+    const suiteRegistrations = new Map(this.get(suite))
+    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
+    // If defined in top-level, just override all registrations
+    // We don't support overriding suite-level fixtures anyway (it will throw an error)
+    if (isTopLevel) {
+      this._registrations = registrations
+    }
+    else {
+      this._overrides.set(suite, registrations)
+    }
+  }
+
+  getFileContext(file: File): Record<string, any> {
+    if (!this._suiteContexts.has(file)) {
+      this._suiteContexts.set(file, Object.create(null))
+    }
+    return this._suiteContexts.get(file)!
+  }
+
+  getWorkerContext(): Record<string, any> {
+    if (!this._suiteContexts.has(TestFixtures._workerContextSymbol)) {
+      this._suiteContexts.set(TestFixtures._workerContextSymbol, Object.create(null))
+    }
+    return this._suiteContexts.get(TestFixtures._workerContextSymbol)!
+  }
+
+  private parseUserFixtures(
+    runner: VitestRunner,
+    userFixtures: UserFixtures,
+    supportNonTest: boolean,
+    registrations = new Map<string, TestFixtureItem>(this._registrations),
+  ) {
+    const errors: Error[] = []
+
+    Object.entries(userFixtures).forEach(([name, fn]) => {
+      let options: FixtureOptions | undefined
+      let value: unknown | undefined
+      let _options: FixtureOptions | undefined
 
       if (
-        Array.isArray(value)
-        && value.length >= 2
-        && isObject(value[1])
-        && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))
+        Array.isArray(fn)
+        && fn.length >= 2
+        && isObject(fn[1])
+        && Object.keys(fn[1]).some(key => TestFixtures._fixtureOptionKeys.includes(key))
       ) {
-        // fixture with options
-        Object.assign(fixtureItem, value[1])
-        const userValue = value[0]
-        fixtureItem.value = fixtureItem.injected
-          ? (runner.injectValue?.(prop) ?? userValue)
-          : userValue
+        _options = fn[1] as FixtureOptions
+        options = {
+          auto: _options.auto ?? false,
+          scope: _options.scope ?? 'test',
+          injected: _options.injected ?? false,
+        }
+        value = options.injected
+          ? (runner.injectValue?.(name) ?? fn[0])
+          : fn[0]
+      }
+      else {
+        value = fn
       }
 
-      fixtureItem.scope = fixtureItem.scope || 'test'
-      if (fixtureItem.scope === 'worker' && !runner.getWorkerContext) {
-        fixtureItem.scope = 'file'
+      const parent = registrations.get(name)
+      if (parent && options) {
+        if (parent.scope !== options.scope) {
+          errors.push(new FixtureDependencyError(`The "${name}" fixture was already registered with a "${options.scope}" scope.`))
+        }
+        if (parent.auto !== options.auto) {
+          errors.push(new FixtureDependencyError(`The "${name}" fixture was already registered as { auto: ${options.auto} }.`))
+        }
       }
-      fixtureItem.prop = prop
-      fixtureItem.isFn = typeof fixtureItem.value === 'function'
-      return fixtureItem
-    },
-  )
-
-  if (Array.isArray(context.fixtures)) {
-    context.fixtures = context.fixtures.concat(fixtureArray)
-  }
-  else {
-    context.fixtures = fixtureArray
-  }
-
-  // Update dependencies of fixture functions
-  fixtureArray.forEach((fixture) => {
-    if (fixture.isFn) {
-      const usedProps = getUsedProps(fixture.value)
-      if (usedProps.length) {
-        fixture.deps = context.fixtures!.filter(
-          ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
-        )
+      else if (parent) {
+        options = {
+          auto: parent.auto,
+          scope: parent.scope,
+          injected: parent.injected,
+        }
       }
-      // test can access anything, so we ignore it
-      if (fixture.scope !== 'test') {
-        fixture.deps?.forEach((dep) => {
-          if (!dep.isFn) {
-            // non fn fixtures are always resolved and available to anyone
-            return
-          }
-          // worker scope can only import from worker scope
-          if (fixture.scope === 'worker' && dep.scope === 'worker') {
-            return
-          }
-          // file scope an import from file and worker scopes
-          if (fixture.scope === 'file' && dep.scope !== 'test') {
-            return
-          }
+      else if (!options) {
+        options = {
+          auto: false,
+          injected: false,
+          scope: 'test',
+        }
+      }
 
-          throw new SyntaxError(`cannot use the ${dep.scope} fixture "${dep.prop}" inside the ${fixture.scope} fixture "${fixture.prop}"`)
-        })
+      if (options.scope && !TestFixtures._fixtureScopes.includes(options.scope)) {
+        errors.push(new FixtureDependencyError(`The "${name}" fixture has unknown scope "${options.scope}".`))
+      }
+
+      if (!supportNonTest && options.scope !== 'test') {
+        errors.push(new FixtureDependencyError(`The "${name}" fixture cannot be defined with a ${options.scope} scope${!_options?.scope && parent?.scope ? ' (inherited from the base fixture)' : ''} inside the describe block. Define it at the top level of the file instead.`))
+      }
+
+      const deps = isFixtureFunction(value)
+        ? getUsedProps(value)
+        : new Set<string>()
+      const item: TestFixtureItem = {
+        name,
+        value,
+        auto: options.auto ?? false,
+        injected: options.injected ?? false,
+        scope: options.scope ?? 'test',
+        deps,
+        parent,
+      }
+
+      registrations.set(name, item)
+
+      if (item.scope === 'worker' && (runner.pool === 'vmThreads' || runner.pool === 'vmForks')) {
+        item.scope = 'file'
+      }
+    })
+
+    // validate fixture dependency scopes
+    for (const fixture of registrations.values()) {
+      for (const depName of fixture.deps) {
+        if (TestFixtures._builtinFixtures.includes(depName)) {
+          continue
+        }
+
+        const dep = registrations.get(depName)
+        if (!dep) {
+          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
+          continue
+        }
+        if (depName === fixture.name && !fixture.parent) {
+          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`))
+          continue
+        }
+
+        if (TestFixtures._fixtureScopes.indexOf(fixture.scope) > TestFixtures._fixtureScopes.indexOf(dep.scope)) {
+          errors.push(new FixtureDependencyError(`The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`))
+          continue
+        }
       }
     }
-  })
 
-  return context
+    if (errors.length === 1) {
+      throw errors[0]
+    }
+    else if (errors.length > 1) {
+      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+    }
+    return registrations
+  }
 }
 
-const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
-const cleanupFnArrayMap = new Map<
+const cleanupFnArrayMap = new WeakMap<
   object,
   Array<() => void | Promise<void>>
 >()
@@ -160,120 +269,134 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   cleanupFnArray.length = fromIndex
 }
 
-export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
-  return (hookContext?: TestContext): any => {
-    const context: (TestContext & { [key: string]: any }) | undefined
-      = hookContext || testContext
+const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
+
+export function withFixtures(fn: Function, testContext?: TestContext) {
+  const collector = getCurrentSuite()
+  const suite = collector.suite || collector.file
+  return async (hookContext?: TestContext): Promise<any> => {
+    const context: (TestContext & { [key: string]: any }) | undefined = hookContext || testContext
 
     if (!context) {
       return fn({})
     }
 
-    const fixtures = getTestFixture(context)
-    if (!fixtures?.length) {
+    const fixtures = getTestFixtures(context)
+    if (!fixtures) {
       return fn(context)
     }
 
+    const registrations = fixtures.get(suite)
+    if (!registrations.size) {
+      return fn(context)
+    }
+
+    const usedFixtures: TestFixtureItem[] = []
     const usedProps = getUsedProps(fn)
-    const hasAutoFixture = fixtures.some(({ auto }) => auto)
-    if (!usedProps.length && !hasAutoFixture) {
-      return fn(context)
+
+    for (const fixture of registrations.values()) {
+      if (fixture.auto || usedProps.has(fixture.name)) {
+        usedFixtures.push(fixture)
+      }
     }
 
-    if (!fixtureValueMaps.get(context)) {
-      fixtureValueMaps.set(context, new Map<FixtureItem, any>())
+    if (!usedFixtures.length) {
+      return fn(context)
     }
-    const fixtureValueMap: Map<FixtureItem, any>
-      = fixtureValueMaps.get(context)!
 
     if (!cleanupFnArrayMap.has(context)) {
       cleanupFnArrayMap.set(context, [])
     }
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
 
-    const usedFixtures = fixtures.filter(
-      ({ prop, auto }) => auto || usedProps.includes(prop),
-    )
-    const pendingFixtures = resolveDeps(usedFixtures)
+    const pendingFixtures = resolveDeps(usedFixtures, registrations)
 
     if (!pendingFixtures.length) {
       return fn(context)
     }
 
-    async function resolveFixtures() {
-      for (const fixture of pendingFixtures) {
+    if (!contextHasFixturesCache.has(context)) {
+      contextHasFixturesCache.set(context, new WeakSet())
+    }
+    const cachedFixtures = contextHasFixturesCache.get(context)!
+
+    for (const fixture of pendingFixtures) {
+      if (fixture.scope === 'test') {
         // fixture could be already initialized during "before" hook
-        if (fixtureValueMap.has(fixture)) {
+        // we can't check "fixture.name" in context because context may
+        // access the parent fixture ({ a: ({ a }) => {} })
+        if (cachedFixtures.has(fixture)) {
           continue
         }
+        cachedFixtures.add(fixture)
 
-        const resolvedValue = await resolveFixtureValue(
-          runner,
+        const resolvedValue = await resolveTestFixtureValue(
           fixture,
-          context!,
+          context,
           cleanupFnArray,
         )
-        context![fixture.prop] = resolvedValue
-        fixtureValueMap.set(fixture, resolvedValue)
+        context[fixture.name] = resolvedValue
 
-        if (fixture.scope === 'test') {
-          cleanupFnArray.unshift(() => {
-            fixtureValueMap.delete(fixture)
-          })
-        }
+        cleanupFnArray.push(() => {
+          cachedFixtures.delete(fixture)
+        })
+      }
+      else {
+        const resolvedValue = await resolveScopeFixtureValue(
+          fixtures,
+          suite,
+          fixture,
+        )
+        context[fixture.name] = resolvedValue
       }
     }
 
-    return resolveFixtures().then(() => fn(context))
+    return fn(context)
   }
 }
 
-const globalFixturePromise = new WeakMap<FixtureItem, Promise<unknown>>()
+function isFixtureFunction(value: unknown): value is FixtureFn<any, any, any> {
+  return typeof value === 'function'
+}
 
-function resolveFixtureValue(
-  runner: VitestRunner,
-  fixture: FixtureItem,
+function resolveTestFixtureValue(
+  fixture: TestFixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
 ) {
-  const fileContext = getFileContext(context.task.file)
-  const workerContext = runner.getWorkerContext?.()
-
-  if (!fixture.isFn) {
-    fileContext[fixture.prop] ??= fixture.value
-    if (workerContext) {
-      workerContext[fixture.prop] ??= fixture.value
-    }
+  if (!isFixtureFunction(fixture.value)) {
     return fixture.value
   }
 
-  if (fixture.scope === 'test') {
-    return resolveFixtureFunction(
-      fixture.value,
-      context,
-      cleanupFnArray,
-    )
+  return resolveFixtureFunction(
+    fixture.value,
+    context,
+    cleanupFnArray,
+  )
+}
+
+const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<unknown>>()
+
+async function resolveScopeFixtureValue(
+  fixtures: TestFixtures,
+  suite: Suite,
+  fixture: TestFixtureItem,
+) {
+  const workerContext = fixtures.getWorkerContext()
+  const fileContext = fixtures.getFileContext(suite.file)
+  const fixtureContext = fixture.scope === 'worker' ? workerContext : fileContext
+
+  if (!isFixtureFunction(fixture.value)) {
+    fixtureContext[fixture.name] = fixture.value
+    return fixture.value
   }
 
-  // in case the test runs in parallel
-  if (globalFixturePromise.has(fixture)) {
-    return globalFixturePromise.get(fixture)!
+  if (fixture.name in fixtureContext) {
+    return fixtureContext[fixture.name]
   }
 
-  let fixtureContext: Record<string, unknown>
-
-  if (fixture.scope === 'worker') {
-    if (!workerContext) {
-      throw new TypeError('[@vitest/runner] The worker context is not available in the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
-    }
-    fixtureContext = workerContext
-  }
-  else {
-    fixtureContext = fileContext
-  }
-
-  if (fixture.prop in fixtureContext) {
-    return fixtureContext[fixture.prop]
+  if (scopedFixturePromiseCache.has(fixture)) {
+    return scopedFixturePromiseCache.get(fixture)!
   }
 
   if (!cleanupFnArrayMap.has(fixtureContext)) {
@@ -283,15 +406,14 @@ function resolveFixtureValue(
 
   const promise = resolveFixtureFunction(
     fixture.value,
-    fixtureContext,
+    fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
   ).then((value) => {
-    fixtureContext[fixture.prop] = value
-    globalFixturePromise.delete(fixture)
+    fixtureContext[fixture.name] = value
+    scopedFixturePromiseCache.delete(fixture)
     return value
   })
-
-  globalFixturePromise.set(fixture, promise)
+  scopedFixturePromiseCache.set(fixture, promise)
   return promise
 }
 
@@ -335,29 +457,40 @@ async function resolveFixtureFunction(
 }
 
 function resolveDeps(
-  fixtures: FixtureItem[],
-  depSet = new Set<FixtureItem>(),
-  pendingFixtures: FixtureItem[] = [],
+  usedFixtures: TestFixtureItem[],
+  registrations: FixtureRegistrations,
+  depSet = new Set<TestFixtureItem>(),
+  pendingFixtures: TestFixtureItem[] = [],
 ) {
-  fixtures.forEach((fixture) => {
+  usedFixtures.forEach((fixture) => {
     if (pendingFixtures.includes(fixture)) {
       return
     }
-    if (!fixture.isFn || !fixture.deps) {
+    if (!isFixtureFunction(fixture.value) || !fixture.deps) {
       pendingFixtures.push(fixture)
       return
     }
     if (depSet.has(fixture)) {
-      throw new Error(
-        `Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet]
-          .reverse()
-          .map(d => d.prop)
-          .join(' <- ')}`,
-      )
+      if (fixture.parent) {
+        fixture = fixture.parent
+      }
+      else {
+        throw new Error(
+          `Circular fixture dependency detected: ${fixture.name} <- ${[...depSet]
+            .reverse()
+            .map(d => d.name)
+            .join(' <- ')}`,
+        )
+      }
     }
 
     depSet.add(fixture)
-    resolveDeps(fixture.deps, depSet, pendingFixtures)
+    resolveDeps(
+      [...fixture.deps].map(n => n === fixture.name ? fixture.parent : registrations.get(n)).filter(n => !!n),
+      registrations,
+      depSet,
+      pendingFixtures,
+    )
     pendingFixtures.push(fixture)
     depSet.clear()
   })
@@ -365,7 +498,21 @@ function resolveDeps(
   return pendingFixtures
 }
 
-function getUsedProps(fn: Function) {
+const propsSymbol = Symbol('$vitest:fixture-props')
+
+export function migrateProps(from: Function, to: Function): void {
+  const props = getUsedProps(from)
+  Object.defineProperty(to, propsSymbol, {
+    enumerable: false,
+    writable: true,
+    value: props,
+  })
+}
+
+function getUsedProps(fn: Function): Set<string> {
+  if (propsSymbol in fn) {
+    return fn[propsSymbol] as Set<string>
+  }
   let fnString = filterOutComments(fn.toString())
   // match lowered async function and strip it off
   // example code on esbuild-try https://esbuild.github.io/try/#YgAwLjI0LjAALS1zdXBwb3J0ZWQ6YXN5bmMtYXdhaXQ9ZmFsc2UAZQBlbnRyeS50cwBjb25zdCBvID0gewogIGYxOiBhc3luYyAoKSA9PiB7fSwKICBmMjogYXN5bmMgKGEpID0+IHt9LAogIGYzOiBhc3luYyAoYSwgYikgPT4ge30sCiAgZjQ6IGFzeW5jIGZ1bmN0aW9uKGEpIHt9LAogIGY1OiBhc3luYyBmdW5jdGlvbiBmZihhKSB7fSwKICBhc3luYyBmNihhKSB7fSwKCiAgZzE6IGFzeW5jICgpID0+IHt9LAogIGcyOiBhc3luYyAoeyBhIH0pID0+IHt9LAogIGczOiBhc3luYyAoeyBhIH0sIGIpID0+IHt9LAogIGc0OiBhc3luYyBmdW5jdGlvbiAoeyBhIH0pIHt9LAogIGc1OiBhc3luYyBmdW5jdGlvbiBnZyh7IGEgfSkge30sCiAgYXN5bmMgZzYoeyBhIH0pIHt9LAoKICBoMTogYXN5bmMgKCkgPT4ge30sCiAgLy8gY29tbWVudCBiZXR3ZWVuCiAgaDI6IGFzeW5jIChhKSA9PiB7fSwKfQ
@@ -377,19 +524,19 @@ function getUsedProps(fn: Function) {
   }
   const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {
-    return []
+    return new Set()
   }
 
   const args = splitByComma(match[1])
   if (!args.length) {
-    return []
+    return new Set()
   }
 
   let first = args[0]
   if ('__VITEST_FIXTURE_INDEX__' in fn) {
     first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
     if (!first) {
-      return []
+      return new Set()
     }
   }
 
@@ -411,7 +558,7 @@ function getUsedProps(fn: Function) {
     )
   }
 
-  return props
+  return new Set(props)
 }
 
 function splitByComma(s: string) {

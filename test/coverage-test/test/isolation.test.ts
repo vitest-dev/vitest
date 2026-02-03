@@ -27,10 +27,6 @@ for (const isolate of [true, false]) {
         coverage: {
           reporter: 'json',
         },
-
-        browser: {
-          isolate,
-        },
       })
 
       const coverageMap = await readCoverageMap()

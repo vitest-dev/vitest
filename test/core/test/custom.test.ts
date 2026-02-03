@@ -10,6 +10,12 @@ import {
 } from 'vitest'
 import { Gardener } from '../src/custom/gardener.js'
 
+declare module 'vitest' {
+  interface TaskMeta {
+    customPropertyToDifferentiateTask?: boolean
+  }
+}
+
 // this function will be called, when Vitest collects tasks
 const myCustomTask = TestRunner.createChainable(['todo'], function (name: string, fn: () => void) {
   TestRunner.getCurrentSuite().task(name, {

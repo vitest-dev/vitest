@@ -4,6 +4,7 @@ import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
+  CliOptions as TestCliOptions,
   TestCollection,
   TestModule,
   TestSpecification,
@@ -37,7 +38,7 @@ export interface VitestRunnerCLIOptions {
 
 export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
-  $cliOptions?: TestUserConfig
+  $cliOptions?: TestCliOptions
 }
 
 /**

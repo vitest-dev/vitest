@@ -168,8 +168,10 @@ function astParseFile(filepath: string, code: string) {
       }
 
       message = message
-        // Vite SSR injects these
-        .replace(/__vite_ssr_import_\d+__\./g, '')
+        // vite 7+
+        .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+        // vite <7
+        .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
         // Vitest module mocker injects these
         .replace(/__vi_import_\d+__\./g, '')
 

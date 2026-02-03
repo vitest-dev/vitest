@@ -1284,7 +1284,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripVTControlCharacters(error.diff)
+    const diff = stripVTControlCharacters(error.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1297,7 +1297,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripVTControlCharacters(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause!.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1313,7 +1313,7 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff!)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -1337,7 +1337,7 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff!))]
   }
   return expect.unreachable()
 }
@@ -1363,6 +1363,80 @@ it('toMatchObject', () => {
   // Set/Map matches against empty object shape
   expect(new Set()).toMatchObject({})
   expect(new Map()).toMatchObject({})
+})
+
+it('proxy equality', () => {
+  // { intercepted: 'original', passthrough: 'original' } => { intercepted: 'proxied', passthrough: 'original' }
+  const proxyActual = new Proxy({ intercepted: 'original', passthrough: 'original' }, {
+    get(target, prop, receiver) {
+      if (prop === 'intercepted') {
+        return 'proxied'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+  // { intercepted: 'original' } => { intercepted: 'proxied' }
+  const proxyExpected = new Proxy({ intercepted: 'original' }, {
+    get(target, prop, receiver) {
+      if (prop === 'intercepted') {
+        return 'proxied'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+
+  // objectContaining
+  expect(proxyActual).toEqual(expect.objectContaining({ intercepted: 'proxied', passthrough: 'original' }))
+  expect(proxyActual).not.toEqual(expect.objectContaining({ intercepted: 'original' }))
+  expect({ intercepted: 'proxied', extra: 'ignored' }).toEqual(expect.objectContaining(proxyExpected))
+  expect({ intercepted: 'original' }).not.toEqual(expect.objectContaining(proxyExpected))
+
+  // toMatchObject
+  expect(proxyActual).toMatchObject({ intercepted: 'proxied', passthrough: 'original' })
+  expect(proxyActual).not.toMatchObject({ intercepted: 'original' })
+  expect({ intercepted: 'proxied', extra: 'ignored' }).toMatchObject(proxyExpected)
+  expect({ intercepted: 'original' }).not.toMatchObject(proxyExpected)
+
+  // toEqual
+  expect(proxyActual).toEqual({ intercepted: 'proxied', passthrough: 'original' })
+  expect(proxyActual).not.toEqual({ intercepted: 'original', passthrough: 'original' })
+  expect({ intercepted: 'proxied' }).toEqual(proxyExpected)
+  expect({ intercepted: 'original' }).not.toEqual(proxyExpected)
+
+  // empty target proxy with only `get` trap
+  const proxyBad = new Proxy({} as any, {
+    get(target, prop, receiver) {
+      if (prop === 'virtual') {
+        return 'value'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+  expect(proxyBad).not.toEqual(expect.objectContaining({ virtual: 'value' }))
+  expect(proxyBad).not.toMatchObject({ virtual: 'value' })
+  expect(proxyBad).not.toEqual({ virtual: 'value' })
+  expect({ virtual: 'value' }).not.toEqual(proxyBad)
+
+  // empty target proxy with required traps
+  const proxyGood = new Proxy({}, {
+    get(target, prop, receiver) {
+      if (prop === 'virtual') {
+        return 'value'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+    ownKeys: () => ['virtual'],
+    getOwnPropertyDescriptor(target, prop) {
+      if (prop === 'virtual') {
+        return { enumerable: true, configurable: true, value: 'value' }
+      }
+      return Reflect.getOwnPropertyDescriptor(target, prop)
+    },
+  })
+  expect(proxyGood).toEqual({ virtual: 'value' })
+  expect(proxyGood).toMatchObject({ virtual: 'value' })
+  expect(proxyGood).toEqual(expect.objectContaining({ virtual: 'value' }))
+  expect({ virtual: 'value' }).toEqual(proxyGood)
 })
 
 it('toMatchObject error diff', () => {

@@ -442,7 +442,7 @@ export default defineConfig({
 In Vitest 4.0 snapshots that include custom elements will print the shadow root contents. To restore the previous behavior, set the [`printShadowRoot` option](/config/#snapshotformat) to `false`.
 
 ```js{15-22}
-// before Vite 4.0
+// before Vitest 4.0
 exports[`custom element with shadow root 1`] = `
 "<body>
   <div>
@@ -451,7 +451,7 @@ exports[`custom element with shadow root 1`] = `
 </body>"
 `
 
-// after Vite 4.0
+// after Vitest 4.0
 exports[`custom element with shadow root 1`] = `
 "<body>
   <div>

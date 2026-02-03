@@ -35,6 +35,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
 ]
 
@@ -197,7 +198,10 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
 
   if (method) {
     method = method
-      .replace(/__vite_ssr_import_\d+__\./g, '')
+    // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
       .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 

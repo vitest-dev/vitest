@@ -286,7 +286,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex flex-col flex-row"
       Received: "flex flex-col""
     `)
@@ -297,7 +297,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex-col"
       Received: "flex flex-col""
     `)

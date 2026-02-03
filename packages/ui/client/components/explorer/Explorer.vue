@@ -10,9 +10,9 @@ import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
 import { activeFileId, selectedTest } from '~/composables/params'
-import DetailsPanel from '../DetailsPanel.vue'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
+import ResultsPanel from '../ResultsPanel.vue'
 import ExplorerItem from './ExplorerItem.vue'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
@@ -236,7 +236,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
-      <DetailsPanel>
+      <ResultsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
@@ -342,7 +342,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             </template>
           </RecycleScroller>
         </template>
-      </DetailsPanel>
+      </ResultsPanel>
     </div>
   </div>
 </template>
