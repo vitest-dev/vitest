@@ -48,7 +48,7 @@ let printExitCode = false
 globalThis.process = new Proxy(process, {
   set(target, p, newValue, receiver) {
     if (printExitCode && p === 'exitCode') {
-      console.warn('exitCode was set to', newValue)
+      console.trace('exitCode was set to', newValue)
     }
     return Reflect.set(target, p, newValue, receiver)
   },
