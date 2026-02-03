@@ -125,9 +125,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     return libCoverage.createCoverageMap({})
   }
 
-  async generateCoverage(reportContext: ReportContext): Promise<CoverageMap> {
-    this.setReportContext(reportContext)
-    const { allTestsRun } = reportContext
+  async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+    await this.updateChangedFiles()
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
@@ -138,6 +137,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         coverageMapByEnvironment.merge(coverage)
       },
       onFinished: async () => {
+        if (!this.options.excludeAfterRemap) {
+          this.filterChangedFiles(coverageMapByEnvironment)
+        }
+
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const transformedCoverage = await transformCoverage(coverageMapByEnvironment)

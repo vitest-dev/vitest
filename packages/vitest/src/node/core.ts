@@ -12,7 +12,7 @@ import type { ProcessPool } from './pool'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions } from './types/coverage'
+import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
@@ -36,7 +36,7 @@ import { resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
-import { FilesNotFoundError, GitNotFoundError } from './errors'
+import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
 import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from './module-diagnostic'
 import { VitestPackageInstaller } from './packageInstaller'
@@ -743,14 +743,11 @@ export class Vitest {
       if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
-          const reportContext = this.coverageProvider
-            ? await this.getCoverageReportContext(true)
-            : { allTestsRun: true }
-          const coverage = await this.coverageProvider?.generateCoverage?.(reportContext)
+          const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
           await this._testRun.end([], [], coverage)
           // Report coverage for uncovered files
-          await this.reportCoverage(coverage, reportContext)
+          await this.reportCoverage(coverage, true)
         })
 
         if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
@@ -923,15 +920,12 @@ export class Vitest {
           }
         }
         finally {
-          const reportContext = this.coverageProvider
-            ? await this.getCoverageReportContext(allTestsRun)
-            : { allTestsRun }
-          const coverage = await this.coverageProvider?.generateCoverage(reportContext)
+          const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
           const errors = this.state.getUnhandledErrors()
           this._checkUnhandledErrors(errors)
           await this._testRun.end(specs, errors, coverage)
-          await this.reportCoverage(coverage, reportContext)
+          await this.reportCoverage(coverage, allTestsRun)
         }
       })()
         .finally(() => {
@@ -1367,26 +1361,7 @@ export class Vitest {
     }
   }
 
-  private async getCoverageReportContext(allTestsRun: boolean): Promise<ReportContext> {
-    const reportContext: ReportContext = { allTestsRun }
-    const coverageChanged = this._coverageOptions.changed
-    if (!coverageChanged) {
-      return reportContext
-    }
-    const { VitestGit } = await import('./git')
-    const vitestGit = new VitestGit(this.config.root)
-    const changedFiles = await vitestGit.findChangedFiles({
-      changedSince: coverageChanged,
-    })
-    if (!changedFiles) {
-      process.exitCode = 1
-      throw new GitNotFoundError()
-    }
-    reportContext.changedFiles = Array.from(new Set(changedFiles))
-    return reportContext
-  }
-
-  private async reportCoverage(coverage: unknown, reportContext: ReportContext): Promise<void> {
+  private async reportCoverage(coverage: unknown, allTestsRun: boolean): Promise<void> {
     if (this.state.getCountOfFailedTests() > 0) {
       await this.coverageProvider?.onTestFailure?.()
 
@@ -1396,7 +1371,7 @@ export class Vitest {
     }
 
     if (this.coverageProvider) {
-      await this.coverageProvider.reportCoverage(coverage, reportContext)
+      await this.coverageProvider.reportCoverage(coverage, { allTestsRun })
       // notify coverage iframe reload
       for (const reporter of this.reporters) {
         if (reporter instanceof WebSocketReporter) {
