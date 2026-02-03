@@ -3,11 +3,21 @@ import type { ViteUserConfig } from 'vitest/config'
 import type { TestSpecification, TestUserConfig } from 'vitest/node'
 import type { TestFsStructure } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
-import { describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { replaceRoot, runInlineTests, stripIndent } from '../../test-utils'
 
 // "it" is used inside subtests, we can't "import" it because vitest will inject __vite_ssr_import__
 declare const it: TestAPI
+
+if (rolldownVersion) {
+  beforeEach(({ skip }) => {
+    // TODO: remove skip when we only test against rolldown
+    // oxc has a dofferent output of inlined functions in "runInlineTests"
+    // it keeps comments and formats the output
+    skip()
+  })
+}
 
 test('test fixture cannot import from file fixture', async () => {
   const { stderr } = await runInlineTests({
@@ -17,10 +27,7 @@ test('test fixture cannot import from file fixture', async () => {
         local: string
       }>({
         local: ({}, use) => use('local'),
-        file: [
-          ({ local }, use) => use(local),
-          { scope: 'file' },
-        ],
+        file: [({ local }, use) => use(local), { scope: 'file' }],
       })
 
       extendedTest('not working', ({ file: _file }) => {})

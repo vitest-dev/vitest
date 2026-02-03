@@ -364,15 +364,16 @@ export type TestFsStructure = Record<
 >
 
 export function stripIndent(str: string): string {
-  const match = str.match(/^[ \t]*(?=\S)/gm)
+  const normalized = str.replace(/\t/g, '  ')
+  const match = normalized.match(/^[ \t]*(?=\S)/gm)
   if (!match) {
-    return str
+    return normalized
   }
   const indent = match.filter(m => !!m).reduce((min, line) => Math.min(min, line.length), Infinity)
   if (indent === 0) {
-    return str
+    return normalized
   }
-  return str.replace(new RegExp(`^[ \\t]{${indent}}`, 'gm'), '')
+  return normalized.replace(new RegExp(`^[ ]{${indent}}`, 'gm'), '')
 }
 
 function getGeneratedFileContent(content: TestFsStructure[string]) {
@@ -380,7 +381,8 @@ function getGeneratedFileContent(content: TestFsStructure[string]) {
     return content
   }
   if (typeof content === 'function') {
-    return `await (${stripIndent(String(content))})()`
+    const code = `await (${stripIndent(String(content))})()`
+    return code
   }
   if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
     const imports = Object.entries(content[1].imports || [])
