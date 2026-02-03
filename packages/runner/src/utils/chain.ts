@@ -1,4 +1,4 @@
-import type { ChainableContext } from '../types/tasks'
+import type { InternalChainableContext, SuiteAPI, TestAPI } from '../types/tasks'
 
 export type ChainableFunction<
   T extends string,
@@ -12,8 +12,11 @@ export type ChainableFunction<
 
 export const kChainableContext: unique symbol = Symbol('kChainableContext')
 
-export function getChainableContext(chainable: any): ChainableContext<any>[typeof kChainableContext] {
-  return chainable[kChainableContext]
+export function getChainableContext(chainable: SuiteAPI): InternalChainableContext
+export function getChainableContext(chainable: TestAPI): InternalChainableContext
+export function getChainableContext(chainable: any): InternalChainableContext | undefined
+export function getChainableContext(chainable: any): InternalChainableContext | undefined {
+  return chainable?.[kChainableContext]
 }
 
 export function createChainable<T extends string, Args extends any[], R = any>(
@@ -50,6 +53,9 @@ export function createChainable<T extends string, Args extends any[], R = any>(
   }
 
   const chain = create(context ?? {} as any) as any
-  chain.fn = fn
+  Object.defineProperty(chain, 'fn', {
+    value: fn,
+    enumerable: false,
+  })
   return chain
 }

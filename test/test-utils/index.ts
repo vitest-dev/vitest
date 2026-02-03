@@ -363,20 +363,35 @@ export type TestFsStructure = Record<
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
 
+export function stripIndent(str: string): string {
+  const normalized = str.replace(/\t/g, '  ')
+  const match = normalized.match(/^[ \t]*(?=\S)/gm)
+  if (!match) {
+    return normalized
+  }
+  const indent = match.filter(m => !!m).reduce((min, line) => Math.min(min, line.length), Infinity)
+  if (indent === 0) {
+    return normalized
+  }
+  return normalized.replace(new RegExp(`^[ ]{${indent}}`, 'gm'), '')
+}
+
 function getGeneratedFileContent(content: TestFsStructure[string]) {
   if (typeof content === 'string') {
     return content
   }
   if (typeof content === 'function') {
-    return `await (${content})()`
+    const code = `await (${stripIndent(String(content))})()`
+    return code
   }
   if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
     const imports = Object.entries(content[1].imports || [])
-    return `
+    const code = `
 ${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
-const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
+const results = await (${stripIndent(String(content[0]))})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
     `
+    return code
   }
   if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
     const name = content.test.browser.provider.name
@@ -409,6 +424,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    root,
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {
@@ -482,21 +498,29 @@ export async function runInlineTests(
   }
 }
 
+const isWindows = process.platform === 'win32'
+
 export function replaceRoot(string: string, root: string) {
   const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
-  if (!root.endsWith('/')) {
-    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  if (!root.endsWith('/') && !isWindows) {
+    root += '?/'
   }
-  if (process.platform !== 'win32') {
+  if (!isWindows) {
     return string
       .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
       .replace(new RegExp(root, 'g'), '<root>/')
   }
-  const normalizedRoot = root.replaceAll('/', '\\\\')
+  let unixRoot = root.replace(/\\/g, '/')
+  let win32Root = root.replaceAll('/', '\\\\')
+  if (!root.endsWith('/') && !root.endsWith('\\')) {
+    unixRoot += '?/'
+    win32Root += '?\\\\'
+  }
+
   return string
-    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
-    .replace(new RegExp(root, 'g'), '<root>/')
-    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
+    .replace(new RegExp(schemaRoot, 'gi'), '<urlRoot>')
+    .replace(new RegExp(unixRoot, 'gi'), '<root>/')
+    .replace(new RegExp(win32Root, 'gi'), '<root>/')
 }
 
 export const ts = String.raw

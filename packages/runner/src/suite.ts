@@ -34,7 +34,7 @@ import {
   runWithSuite,
   withTimeout,
 } from './context'
-import { migrateProps, TestFixtures, withFixtures } from './fixture'
+import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
@@ -403,9 +403,8 @@ function createSuiteCollector(
     })
     setTestFixture(context, options.fixtures ?? new TestFixtures())
 
-    // custom can be called from any place, let's assume the limit is 15 stacks
     const limit = Error.stackTraceLimit
-    Error.stackTraceLimit = 15
+    Error.stackTraceLimit = 10
     const stackTraceError = new Error('STACK_TRACE_ERROR')
     Error.stackTraceLimit = limit
 
@@ -413,7 +412,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
           timeout,
           false,
           stackTraceError,
@@ -823,8 +822,7 @@ export function createTaskCollector(
         // monkey-patch handler to allow parsing fixture
         const handlerWrapper = handler ? (ctx: any) => handler(item, ctx) : undefined
         if (handlerWrapper) {
-          (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
-          (handlerWrapper as any).toString = () => handler!.toString()
+          configureProps(handlerWrapper, { index: 1, original: handler })
         }
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
@@ -903,7 +901,7 @@ export function createTaskCollector(
           await cleanup()
         }
       }
-      migrateProps(builderFn, fixture)
+      configureProps(fixture, { original: builderFn })
 
       if (fixtureOptions) {
         return { [fixtureName]: [fixture, fixtureOptions] } as any
