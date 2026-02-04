@@ -1156,8 +1156,8 @@ test('aroundEach with fixtures', async () => {
     >> user fixture setup
     >> test running, db available: true
     >> user fixture teardown
-    >> db fixture teardown
-    >> aroundEach teardown"
+    >> aroundEach teardown
+    >> db fixture teardown"
   `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
@@ -1597,13 +1597,13 @@ test('aroundAll teardown phase timeout', async () => {
   `)
 })
 
-test('aroundAll receives suite as second argument', async () => {
+test('aroundAll receives suite as third argument', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'suite-arg.test.ts': `
       import { test, describe, aroundAll } from 'vitest'
 
       describe('my suite', () => {
-        aroundAll(async (runSuite, suite) => {
+        aroundAll(async (runSuite, {}, suite) => {
           console.log('>> suite name:', suite.name)
           await runSuite()
         })

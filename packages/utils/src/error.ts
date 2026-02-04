@@ -10,7 +10,7 @@ export function processError(
   _err: any,
   diffOptions?: DiffOptions,
   seen: WeakSet<WeakKey> = new WeakSet(),
-): any {
+): TestError {
   if (!_err || typeof _err !== 'object') {
     return { message: String(_err) }
   }

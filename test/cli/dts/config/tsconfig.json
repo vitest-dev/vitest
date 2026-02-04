@@ -1,11 +1,13 @@
 {
-  "extends": ["../dts-config/tsconfig.patch.json"],
+  "extends": ["../_shared/tsconfig.patch.json"],
   "compilerOptions": {
+    "noUncheckedSideEffectImports": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "types": [],
     "strict": true,
     "noEmit": true
   },
-  "include": ["src", "*.ts"]
+  "include": ["vite.config.ts"]
 }

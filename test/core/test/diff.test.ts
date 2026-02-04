@@ -349,7 +349,7 @@ function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions)
   }
   catch (e) {
     const error = processError(e, options)
-    return error.diff
+    return error.diff!
   }
   return expect.unreachable()
 }
