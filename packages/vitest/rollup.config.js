@@ -105,7 +105,7 @@ const plugins = [
   commonjs(),
   oxc({
     transform: {
-      target: 'node18',
+      target: 'node20',
       define: {
         // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
         // in the release version the "if" with this condition should not be present

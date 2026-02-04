@@ -37,7 +37,7 @@ const plugins = [
     esmExternals: ['@jridgewell/trace-mapping'],
   }),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 
