@@ -17,7 +17,7 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   ...dtsUtils.isolatedDecl(),
   oxc({
-    transform: { target: ['node20', 'safari16'] },
+    transform: { target: 'node20' },
   }),
 ]
 
