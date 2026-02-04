@@ -189,7 +189,7 @@
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
-    "vite": "^6.0.0 || ^7.0.0",
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0-0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
