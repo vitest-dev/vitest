@@ -1,9 +1,18 @@
 // eslint-disable-next-line no-restricted-imports
-import type { InlineConfig, ResolvedConfig, ViteDevServer } from 'vite'
+import type { ResolvedConfig, ViteDevServer } from 'vite'
+import { createRequire } from 'node:module'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 
-const vite: typeof import('vite') = await import(resolveModule('vite', { paths: [process.cwd()] }) || 'vite')
+const workspaceVite = resolveModule('vite', { paths: [process.cwd()] })
+const require = createRequire(import.meta.url)
+const VITE_CJS_IGNORE_WARNING = process.env.VITE_CJS_IGNORE_WARNING
+process.env.VITE_CJS_IGNORE_WARNING = 'true'
+// Import the version which is installed by the user.
+// In v5 this should be replaced with `peerDependency`.
+const vite: typeof import('vite') = require(workspaceVite || 'vite')
+process.env.VITE_CJS_IGNORE_WARNING = VITE_CJS_IGNORE_WARNING
+
 export const parseAst: typeof vite.parseAst = vite.parseAst
 export const parseAstAsync: typeof vite.parseAstAsync = vite.parseAstAsync
 export const searchForWorkspaceRoot: typeof vite.searchForWorkspaceRoot = vite.searchForWorkspaceRoot
@@ -21,26 +30,6 @@ export const rollupVersion: typeof vite.rollupVersion = vite.rollupVersion
 export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
 // eslint-disable-next-line no-restricted-imports
 export type * from 'vite'
-
-export async function createViteServer(inlineConfig?: InlineConfig): Promise<ViteDevServer> {
-  // Vite prints an error (https://github.com/vitejs/vite/issues/14328)
-  // But Vitest works correctly either way
-  const error = console.error
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string'
-      && args[0].includes('WebSocket server error:')
-    ) {
-      return
-    }
-    error(...args)
-  }
-
-  const server = await vite.createServer(inlineConfig)
-
-  console.error = error
-  return server
-}
 
 // backward compat implementation
 /**

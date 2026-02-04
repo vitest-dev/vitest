@@ -10,7 +10,7 @@ import { deepClone, slash } from '@vitest/utils/helpers'
 import * as find from 'empathic/find'
 import { resolveModule } from 'local-pkg'
 import { configFiles } from '../constants'
-import { createViteServer, mergeConfig } from '../vite'
+import { createServer, mergeConfig } from '../vite'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 
@@ -43,7 +43,7 @@ export async function createVitest(
   }
 
   try {
-    const server = await createViteServer(
+    const server = await createServer(
       mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })),
     )
 

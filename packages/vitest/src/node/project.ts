@@ -26,7 +26,7 @@ import { glob } from 'tinyglobby'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
-import { createViteServer, isRunnableDevEnvironment } from '../vite'
+import { createServer, isRunnableDevEnvironment } from '../vite'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -722,7 +722,7 @@ export async function initializeProject(
     ],
   }
 
-  await createViteServer(config)
+  await createServer(config)
 
   return project
 }
