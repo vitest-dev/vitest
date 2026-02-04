@@ -6,7 +6,7 @@ it('exports snapshot', async ({ skip, task }) => {
   skip(task.file.pool !== 'threads', 'run only once inside threads')
 
   const manifest = await getPackageExportsManifest({
-    importMode: 'package', // or 'dist' or 'package'
+    importMode: 'package',
     cwd: resolve(import.meta.dirname, '../../../packages/vitest'),
     resolveExportEntries(entries) {
       return entries.filter(([key]) => key !== './browser')

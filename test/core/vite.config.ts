@@ -1,5 +1,5 @@
 import type { LabelColor } from 'vitest'
-import type { Pool } from 'vitest/node'
+import type { Pool, TestUserConfig } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
 import { rolldownVersion } from 'vitest/node'
@@ -167,17 +167,25 @@ export default defineConfig({
     projects: [
       project('threads', 'red'),
       project('forks', 'green'),
-      project('vmThreads', 'blue'),
+      project('vmThreads', 'blue', {
+        // VM pools don't support require(esm), so we can't test vitest/node there
+        exclude: [
+          './test/cli-test.test.ts',
+          './test/module-diagnostic.test.ts',
+          './test/injector-mock.test.ts',
+        ],
+      }),
     ],
   },
 })
 
-function project(pool: Pool, color: LabelColor) {
+function project(pool: Pool, color: LabelColor, options?: TestUserConfig) {
   return {
     extends: './vite.config.ts',
     test: {
       name: { label: pool, color },
       pool,
+      ...options,
     },
   }
 }
