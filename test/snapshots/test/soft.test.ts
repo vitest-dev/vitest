@@ -92,13 +92,13 @@ test('soft', async () => {
     Expected: "--file-1--"
     Received: "--file-1-edit--"
 
-     ❯ basic.test.ts:9:3
-          7| 
-          8| test('toMatchFileSnapshot', async () => {
-          9|   await expect.soft('--file-1-edit--').toMatchFileSnapshot('./__snapsh…
-           |   ^
-         10|   await expect.soft('--file-2-edit--').toMatchFileSnapshot('./__snapsh…
-         11| })
+     ❯ basic.test.ts:13:5
+         11|   //   console.log("[e]", e)
+         12|   // }
+         13|     await expect.soft('--file-1-edit--').toMatchFileSnapshot('./__snap…
+           |     ^
+         14| 
+         15|   await expect.soft('--file-2-edit--').toMatchFileSnapshot('./__snapsh…
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
 
@@ -108,13 +108,13 @@ test('soft', async () => {
     Expected: "--file-2--"
     Received: "--file-2-edit--"
 
-     ❯ basic.test.ts:10:3
-          8| test('toMatchFileSnapshot', async () => {
-          9|   await expect.soft('--file-1-edit--').toMatchFileSnapshot('./__snapsh…
-         10|   await expect.soft('--file-2-edit--').toMatchFileSnapshot('./__snapsh…
+     ❯ basic.test.ts:15:3
+         13|     await expect.soft('--file-1-edit--').toMatchFileSnapshot('./__snap…
+         14| 
+         15|   await expect.soft('--file-2-edit--').toMatchFileSnapshot('./__snapsh…
            |   ^
-         11| })
-         12| 
+         16| })
+         17| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
 
@@ -124,13 +124,13 @@ test('soft', async () => {
     Expected: "[Error: --error-1--]"
     Received: "[Error: --error-1-edit--]"
 
-     ❯ basic.test.ts:14:62
-         12| 
-         13| test('toThrowErrorMatchingSnapshot', () => {
-         14|   expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowEr…
+     ❯ basic.test.ts:19:62
+         17| 
+         18| test('toThrowErrorMatchingSnapshot', () => {
+         19|   expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowEr…
            |                                                              ^
-         15|   expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowEr…
-         16| })
+         20|   expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowEr…
+         21| })
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
 
@@ -140,13 +140,13 @@ test('soft', async () => {
     Expected: "[Error: --error-2--]"
     Received: "[Error: --error-2-edit--]"
 
-     ❯ basic.test.ts:15:62
-         13| test('toThrowErrorMatchingSnapshot', () => {
-         14|   expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowEr…
-         15|   expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowEr…
+     ❯ basic.test.ts:20:62
+         18| test('toThrowErrorMatchingSnapshot', () => {
+         19|   expect.soft(() => { throw new Error('--error-1-edit--') }).toThrowEr…
+         20|   expect.soft(() => { throw new Error('--error-2-edit--') }).toThrowEr…
            |                                                              ^
-         16| })
-         17| 
+         21| })
+         22| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
 

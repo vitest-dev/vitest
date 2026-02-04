@@ -16,13 +16,12 @@ export function createAssertionMessage(
   return `expect${soft}(actual)${promise}.${not}${name}`
 }
 
-const RECORD_ASYNC_EXPECT_SYMBOL = Symbol.for('vitest.recordAsyncExpect')
-
 export function recordAsyncExpect(
   _test: any,
   promise: Promise<any>,
   assertion: string,
   error: Error,
+  isSoft?: boolean,
 ): Promise<any> {
   const test = _test as Test | undefined
   // record promise for test, that resolves before test ends
@@ -41,6 +40,12 @@ export function recordAsyncExpect(
     // record promise
     if (!test.promises) {
       test.promises = []
+    }
+    // setup `expect.soft` handler instead of `wrapAssertion` to avoid double tracking
+    if (isSoft) {
+      promise = promise.then(noop, (err) => {
+        handleTestError(test, err)
+      })
     }
     test.promises.push(promise)
 
@@ -71,7 +76,7 @@ export function recordAsyncExpect(
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
-      [RECORD_ASYNC_EXPECT_SYMBOL as any]: true,
+      ['__vitest_async_soft__' as any]: isSoft,
     } satisfies Promise<any>
   }
 
@@ -117,12 +122,8 @@ export function wrapAssertion(
       const result = fn.apply(this, args)
 
       if (result && typeof result === 'object' && typeof result.then === 'function') {
-        // don't invoke `then` on `recordAsyncExpect` wrapper
-        // to avoid breaking hanging promise detection
-        if (RECORD_ASYNC_EXPECT_SYMBOL in result) {
-          (result as any as Promise<any>).catch((err) => {
-            handleTestError(test, err)
-          })
+        // don't invoke `then` on `expect.soft` to detect non-awaited promises
+        if ((result as any).__vitest_async_soft__) {
           return result
         }
         return result.then(noop, (err) => {
