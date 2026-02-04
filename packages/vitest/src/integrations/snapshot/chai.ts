@@ -220,10 +220,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           'toThrowErrorMatchingInlineSnapshot cannot be used with "not"',
         )
       }
-      const isSoft = utils.flag(this, 'soft')
-      if (isSoft) {
-        throw new Error('toThrowErrorMatchingInlineSnapshot cannot be used with "soft"')
-      }
       const test = getTest('toThrowErrorMatchingInlineSnapshot', this)
       const isInsideEach = test.each || test.suite?.each
       if (isInsideEach) {
