@@ -62,32 +62,36 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   }
 
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
-    utils.addMethod(chai.Assertion.prototype, key, wrapAssertion(utils, key, function (
-      this,
-      properties?: object,
-      message?: string,
-    ) {
-      utils.flag(this, '_name', key)
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error(`${key} cannot be used with "not"`)
-      }
-      const expected = utils.flag(this, 'object')
-      const test = getTest(key, this)
-      if (typeof properties === 'string' && typeof message === 'undefined') {
-        message = properties
-        properties = undefined
-      }
-      const errorMessage = utils.flag(this, 'message')
-      getSnapshotClient().assert({
-        received: expected,
-        message,
-        isInline: false,
-        properties,
-        errorMessage,
-        ...getTestNames(test),
-      })
-    }))
+    utils.addMethod(
+      chai.Assertion.prototype,
+      key,
+      wrapAssertion(utils, key, function (
+        this,
+        properties?: object,
+        message?: string,
+      ) {
+        utils.flag(this, '_name', key)
+        const isNot = utils.flag(this, 'negate')
+        if (isNot) {
+          throw new Error(`${key} cannot be used with "not"`)
+        }
+        const expected = utils.flag(this, 'object')
+        const test = getTest(key, this)
+        if (typeof properties === 'string' && typeof message === 'undefined') {
+          message = properties
+          properties = undefined
+        }
+        const errorMessage = utils.flag(this, 'message')
+        getSnapshotClient().assert({
+          received: expected,
+          message,
+          isInline: false,
+          properties,
+          errorMessage,
+          ...getTestNames(test),
+        })
+      }),
+    )
   }
 
   utils.addMethod(
@@ -124,10 +128,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
 
-  const toMatchInlineSnapshotImpl = wrapAssertion(
-    utils,
+  utils.addMethod(
+    chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function __INLINE_SNAPSHOT_OFFSET_3__(
+    wrapAssertion(utils, 'toMatchInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
       properties?: object,
       inlineSnapshot?: string,
@@ -167,14 +171,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchInlineSnapshot',
-    toMatchInlineSnapshotImpl,
-  )
-
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
@@ -198,11 +196,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }),
   )
-
-  const toThrowErrorMatchingInlineSnapshotImpl = wrapAssertion(
-    utils,
+  utils.addMethod(
+    chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
-    function __INLINE_SNAPSHOT_OFFSET_3__(
+    wrapAssertion(utils, 'toThrowErrorMatchingInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
       inlineSnapshot: string,
       message: string,
@@ -238,13 +235,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toThrowErrorMatchingInlineSnapshot',
-    toThrowErrorMatchingInlineSnapshotImpl,
-  )
-
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
 }
