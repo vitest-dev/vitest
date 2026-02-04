@@ -1,7 +1,7 @@
 import type {
   InlineConfig as ViteInlineConfig,
   UserConfig as ViteUserConfig,
-} from 'vite'
+} from '../vite'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestOptions } from './core'
 import type { VitestRunMode } from './types/config'
@@ -9,11 +9,10 @@ import { resolve } from 'node:path'
 import { deepClone, slash } from '@vitest/utils/helpers'
 import * as find from 'empathic/find'
 import { resolveModule } from 'local-pkg'
-import { mergeConfig } from 'vite'
 import { configFiles } from '../constants'
+import { createViteServer, mergeConfig } from '../vite'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
-import { createViteServer } from './vite'
 
 export async function createVitest(
   mode: VitestRunMode,

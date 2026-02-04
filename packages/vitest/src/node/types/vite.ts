@@ -1,6 +1,6 @@
 /* eslint-disable unused-imports/no-unused-vars */
 
-import type { HookHandler } from 'vite'
+import type { HookHandler } from '../../vite'
 import type { InlineConfig } from './config'
 import type { VitestPluginContext } from './plugin'
 

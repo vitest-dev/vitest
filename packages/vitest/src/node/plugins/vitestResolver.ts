@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from '../../vite'
 import type { Vitest } from '../core'
 import { join, resolve } from 'pathe'
 import { distDir } from '../../paths'

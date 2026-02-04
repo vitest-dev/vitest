@@ -1,5 +1,5 @@
-import * as vite from 'vite'
 import { Vitest } from '../node/core'
+import * as vite from '../vite'
 
 export const version: string = Vitest.version
 
@@ -164,10 +164,8 @@ export type {
 export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 export type { WorkerContext } from '../node/types/worker'
-export { isFileServingAllowed } from '../node/vite'
 export { createViteLogger } from '../node/viteLogger'
 export type { WatcherTriggerPattern } from '../node/watcher'
-
 export { distDir, rootDir } from '../paths'
 
 export type {
@@ -180,7 +178,20 @@ export type {
 } from '../typecheck/types'
 
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
+
 export { createDebugger } from '../utils/debugger'
+export {
+  esbuildVersion,
+  isCSSRequest,
+  isFileLoadingAllowed,
+  isFileServingAllowed,
+  parseAst,
+  parseAstAsync,
+  rolldownVersion,
+  rollupVersion,
+  version as viteVersion,
+} from '../vite'
+export type * as Vite from '../vite'
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -189,20 +200,6 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
+
 export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
-
-export {
-  esbuildVersion,
-  isCSSRequest,
-  isFileLoadingAllowed,
-  parseAst,
-  parseAstAsync,
-  rollupVersion,
-  version as viteVersion,
-} from 'vite'
-
-// rolldownVersion is exported only by rolldown-vite
-export const rolldownVersion: string | undefined = (vite as any).rolldownVersion
-
-export type * as Vite from 'vite'

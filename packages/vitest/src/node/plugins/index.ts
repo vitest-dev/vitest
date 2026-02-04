@@ -1,11 +1,11 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { UserConfig as ViteConfig, Plugin as VitePlugin } from '../../vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
-import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { rolldownVersion } from '../../vite'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
@@ -121,7 +121,7 @@ export async function VitestPlugin(
           },
         }
 
-        if ('rolldownVersion' in vite) {
+        if (rolldownVersion) {
           config = {
             ...config,
             // eslint-disable-next-line ts/ban-ts-comment

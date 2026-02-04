@@ -1,4 +1,4 @@
-import type { DevEnvironment } from 'vite'
+import type { DevEnvironment } from '../../vite'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { cleanUrl, withTrailingSlash, wrapId } from '@vitest/utils/helpers'

@@ -1,4 +1,4 @@
-import type { DevEnvironment } from 'vite'
+import type { DevEnvironment } from '../../vite'
 import type { ResolvedConfig } from '../types/config'
 import type { VitestFetchFunction } from './fetchModule'
 import { readFile } from 'node:fs/promises'

@@ -1,5 +1,5 @@
-import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
+import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from '../../vite'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'

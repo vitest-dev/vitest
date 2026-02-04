@@ -1,5 +1,4 @@
 import type { ImportDuration } from '@vitest/runner'
-import type { EnvironmentModuleGraph, TransformResult } from 'vite'
 import type {
   ModuleDefinitionDiagnostic,
   ModuleDefinitionDurationsDiagnostic,
@@ -8,6 +7,7 @@ import type {
   SourceModuleLocations,
   UntrackedModuleDefinitionDiagnostic,
 } from '../types/module-locations'
+import type { EnvironmentModuleGraph, TransformResult } from '../vite'
 import type { TestModule } from './reporters/reported-tasks'
 import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'

@@ -1,12 +1,12 @@
 import type {
   DepOptimizationOptions,
   UserConfig as ViteConfig,
-} from 'vite'
+} from '../../vite'
 import type { DepsOptimizationOptions } from '../types/config'
 import { dirname } from 'pathe'
-import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
-import * as vite from 'vite'
 import { rootDir } from '../../paths'
+import { searchForWorkspaceRoot, version as viteVersion } from '../../vite'
+import * as vite from '../../vite'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,

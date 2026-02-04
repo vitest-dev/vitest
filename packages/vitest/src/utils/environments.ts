@@ -1,5 +1,5 @@
-import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../node/project'
+import type { DevEnvironment } from '../vite'
 
 export function getTestFileEnvironment(project: TestProject, testFile: string, browser = false): DevEnvironment | undefined {
   if (browser) {

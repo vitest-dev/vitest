@@ -1,6 +1,6 @@
-import type { EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
+import type { EnvironmentModuleNode } from '../vite'
 import { getTestFileEnvironment } from './environments'
 
 export async function getModuleGraph(

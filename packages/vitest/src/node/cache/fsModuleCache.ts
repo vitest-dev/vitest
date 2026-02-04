@@ -1,4 +1,4 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment, FetchResult } from '../../vite'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -6,8 +6,8 @@ import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
-import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
+import { searchForWorkspaceRoot } from '../../vite'
 import { hash } from '../hash'
 
 const debugFs = createDebugger('vitest:cache:fs')

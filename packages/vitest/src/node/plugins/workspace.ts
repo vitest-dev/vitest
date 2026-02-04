@@ -1,12 +1,12 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { UserConfig as ViteConfig, Plugin as VitePlugin } from '../../vite'
 import type { TestProject } from '../project'
 import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
-import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { rolldownVersion } from '../../vite'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
@@ -177,7 +177,7 @@ export function WorkspaceVitestPlugin(
           test: {},
         }
 
-        if ('rolldownVersion' in vite) {
+        if (rolldownVersion) {
           config = {
             ...config,
             // eslint-disable-next-line ts/ban-ts-comment

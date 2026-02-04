@@ -1,6 +1,6 @@
 import type { File, RunMode, Suite, Test } from '@vitest/runner'
-import type { Rollup } from 'vite'
 import type { TestProject } from '../node/project'
+import type { Rollup } from '../vite'
 import {
   calculateSuiteHash,
   createTaskName,
@@ -10,7 +10,7 @@ import {
 } from '@vitest/runner/utils'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
-import { parseAstAsync } from 'vite'
+import { parseAstAsync } from '../vite'
 
 interface ParsedFile extends File {
   start: number

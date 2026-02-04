@@ -1,13 +1,13 @@
 import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { IncomingMessage } from 'node:http'
-import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
 import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { ViteDevServer } from '../vite'
 import type {
   ExternalResult,
   TransformResultWithSource,
@@ -22,10 +22,10 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
-import { isFileServingAllowed } from '../node/vite'
 import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
+import { isFileServingAllowed } from '../vite'
 import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {

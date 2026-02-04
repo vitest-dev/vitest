@@ -1,4 +1,4 @@
-import type { ResolveOptions, UserConfig, Plugin as VitePlugin } from 'vite'
+import type { ResolveOptions, UserConfig, Plugin as VitePlugin } from '../../vite'
 import { builtinModules } from 'node:module'
 import { normalize } from 'pathe'
 import { escapeRegExp } from '../../utils/base'

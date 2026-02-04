@@ -10,7 +10,7 @@ import type {
   TestArtifact,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
-import type { DevEnvironment } from 'vite'
+import type { DevEnvironment } from '../../vite'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 

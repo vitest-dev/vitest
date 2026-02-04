@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-imports -- this file is bundled separetly and can use "vite" */
+
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 
 import type {

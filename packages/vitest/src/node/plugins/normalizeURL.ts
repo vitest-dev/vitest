@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from '../../vite'
 import { stripLiteral } from 'strip-literal'
 
 const metaUrlLength = 'import.meta.url'.length

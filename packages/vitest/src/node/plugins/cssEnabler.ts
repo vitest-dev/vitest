@@ -1,4 +1,4 @@
-import type { Plugin as VitePlugin } from 'vite'
+import type { Plugin as VitePlugin } from '../../vite'
 import type { CSSModuleScopeStrategy, ResolvedConfig } from '../types/config'
 import { toArray } from '@vitest/utils/helpers'
 import { relative } from 'pathe'

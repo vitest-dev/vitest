@@ -1,4 +1,4 @@
-import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import type { ResolvedConfig as ResolvedViteConfig } from '../../vite'
 import type { Vitest } from '../core'
 import type { Logger } from '../logger'
 import type { BenchmarkBuiltinReporters } from '../reporters'
@@ -15,7 +15,6 @@ import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
-import { mergeConfig } from 'vite'
 import {
   configFiles,
   defaultBrowserPort,
@@ -25,6 +24,7 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { mergeConfig } from '../../vite'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 

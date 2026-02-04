@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from '../../vite'
 import { resolve } from 'pathe'
 import { VitestCache } from '../cache'
 

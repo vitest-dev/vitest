@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from '../../vite'
 import { automockPlugin, hoistMocksPlugin } from '@vitest/mocker/node'
 import { normalize } from 'pathe'
 import { distDir } from '../../paths'

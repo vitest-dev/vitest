@@ -69,28 +69,29 @@ export default antfu(
       ],
 
       'import/no-named-as-default': 'off',
-    },
-  },
-  {
-    files: [`packages/*/*.{js,mjs,d.ts}`],
-    rules: {
-      'antfu/no-import-dist': 'off',
+      'antfu/no-top-level-await': 'off',
     },
   },
   {
     files: [`packages/${GLOB_SRC}`],
     rules: {
+      'antfu/no-import-dist': 'off',
       'no-restricted-imports': [
         'error',
         {
-          paths: ['vitest', 'path', 'vitest/node'],
+          paths: [
+            'vitest',
+            'path',
+            'vitest/node',
+            { name: 'vite', message: 'Import from "src/vite.ts" instead.' },
+          ],
         },
       ],
     },
   },
   {
-    // these files define vitest as peer dependency
-    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*}/${GLOB_SRC}`],
+    // these files define vitest or vite as peer dependency
+    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*,mocker}/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -107,6 +108,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'no-restricted-imports': 'off',
       'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',

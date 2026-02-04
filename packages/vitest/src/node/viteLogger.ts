@@ -1,4 +1,4 @@
-import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType, Rollup } from 'vite'
+import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType, Rollup } from '../vite'
 import type { Logger as VitestLogger } from './logger'
 import colors from 'tinyrainbow'
 
