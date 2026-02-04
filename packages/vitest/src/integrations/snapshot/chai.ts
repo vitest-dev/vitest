@@ -122,7 +122,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       return recordAsyncExpect(
         test,
         promise,
-        createAssertionMessage(utils, this as any, true),
+        createAssertionMessage(utils, this, true),
         error,
         utils.flag(this, 'soft'),
       )

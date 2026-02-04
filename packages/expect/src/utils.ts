@@ -41,7 +41,7 @@ export function recordAsyncExpect(
     if (!test.promises) {
       test.promises = []
     }
-    // setup `expect.soft` handler instead of `wrapAssertion` to avoid double tracking
+    // setup `expect.soft` handler here instead of `wrapAssertion` to avoid double tracking
     if (isSoft) {
       promise = promise.then(noop, (err) => {
         handleTestError(test, err)
