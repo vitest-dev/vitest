@@ -12,6 +12,7 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  /^@?vitest(\/|$)/,
 ]
 
 const entries = {
@@ -29,7 +30,7 @@ const plugins = [
   }),
   commonjs(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: ['node20', 'safari16'] },
   }),
 ]
 

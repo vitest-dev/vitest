@@ -19,7 +19,6 @@ const entries = {
   'constants': 'src/constants.ts',
   'offset': 'src/offset.ts',
   'timers': 'src/timers.ts',
-  'highlight': 'src/highlight.ts',
   'display': 'src/display.ts',
   'resolver': 'src/resolver.ts',
   'serialize': 'src/serialize.ts',
@@ -40,7 +39,7 @@ const plugins = [
   }),
   json(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: 'node20' },
   }),
   commonjs(),
 ]

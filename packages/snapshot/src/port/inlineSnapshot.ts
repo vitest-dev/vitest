@@ -1,11 +1,11 @@
 import type MagicString from 'magic-string'
 import type { SnapshotEnvironment } from '../types'
-import { getCallLastIndex } from '../../../utils/src/helpers'
+import { getCallLastIndex } from '@vitest/utils/helpers'
 import {
   lineSplitRE,
   offsetToLineNumber,
   positionToOffset,
-} from '../../../utils/src/offset'
+} from '@vitest/utils/offset'
 
 export interface InlineSnapshot {
   snapshot: string
