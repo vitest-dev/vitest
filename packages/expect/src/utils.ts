@@ -15,6 +15,8 @@ export function createAssertionMessage(
   return `expect(actual)${promise}.${not}${name}`
 }
 
+const RECORD_ASYNC_EXPECT_SYMBOL = Symbol.for('vitest.recordAsyncExpect')
+
 export function recordAsyncExpect(
   _test: any,
   promise: Promise<any>,
@@ -68,6 +70,7 @@ export function recordAsyncExpect(
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
+      [RECORD_ASYNC_EXPECT_SYMBOL as any]: true,
     } satisfies Promise<any>
   }
 
@@ -113,6 +116,14 @@ export function wrapAssertion(
       const result = fn.apply(this, args)
 
       if (result && typeof result === 'object' && typeof result.then === 'function') {
+        // don't invoke `then` on `recordAsyncExpect` wrapper
+        // to avoid breaking hanging promise detection
+        if (RECORD_ASYNC_EXPECT_SYMBOL in result) {
+          (result as any as Promise<any>).catch((err) => {
+            handleTestError(test, err)
+          })
+          return result
+        }
         return result.then(noop, (err) => {
           handleTestError(test, err)
         })

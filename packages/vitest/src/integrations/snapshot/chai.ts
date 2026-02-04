@@ -115,9 +115,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...getTestNames(test),
       })
 
-      // TODO:
-      // `wrapAssertion` with `expect.soft` calls `promise.then` automatically,
-      // so `recordAsyncExpect`'s hanging promise detection doesn't work.
       return recordAsyncExpect(
         test,
         promise,
