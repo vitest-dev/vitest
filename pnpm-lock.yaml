@@ -972,9 +972,6 @@ importers:
       loupe:
         specifier: ^3.2.1
         version: 3.2.1
-      tinyhighlight:
-        specifier: ^0.3.2
-        version: 0.3.2(picocolors@1.1.1)
 
   packages/vitest:
     dependencies:
