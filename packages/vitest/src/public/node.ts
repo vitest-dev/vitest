@@ -191,7 +191,6 @@ export {
   rollupVersion,
   version as viteVersion,
 } from '../vite'
-export type * as Vite from '../vite'
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -200,6 +199,8 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-
 export { generateFileHash } from '@vitest/runner/utils'
+
 export type { SerializedError } from '@vitest/utils'
+// eslint-disable-next-line no-restricted-imports
+export type * as Vite from 'vite'
