@@ -10,8 +10,10 @@ test('soft', async () => {
   const customFile1 = join(root, '__snapshots__/custom1.txt')
   const customFile2 = join(root, '__snapshots__/custom2.txt')
 
-  // reset and create snapshots from scratch
+  // remove snapshots
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
+
+  // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
@@ -46,6 +48,7 @@ test('soft', async () => {
     .replace(`--file-2--`, `--file-2-edit--`)
     .replace(`--error-1--`, `--error-1-edit--`)
     .replace(`--error-2--`, `--error-2-edit--`))
+
   result = await runVitest({ root, update: false })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
