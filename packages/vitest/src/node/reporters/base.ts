@@ -857,7 +857,19 @@ export abstract class BaseReporter implements Reporter {
         )
       }
 
-      const screenshotPaths = tasks.map(t => t.meta?.failScreenshotPath).filter(screenshot => screenshot != null)
+      const screenshotPaths = tasks.reduce<string[]>((paths, t) => {
+        if (t.type === 'test') {
+          for (const artifact of t.artifacts) {
+            if (artifact.type === 'internal:failureScreenshot') {
+              if (artifact.attachments.length) {
+                paths.push(artifact.attachments[0].originalPath)
+              }
+            }
+          }
+        }
+
+        return paths
+      }, [])
 
       this.ctx.logger.printError(error, {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
