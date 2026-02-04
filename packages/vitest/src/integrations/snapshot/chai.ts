@@ -63,7 +63,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
 
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
     utils.addMethod(chai.Assertion.prototype, key, wrapAssertion(utils, key, function (
-      this: Chai.AssertionStatic & Chai.Assertion,
+      this,
       properties?: object,
       message?: string,
     ) {
@@ -93,7 +93,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    wrapAssertion(utils, 'toMatchFileSnapshot', function (this: Chai.AssertionStatic & Chai.Assertion, file: string, message?: string) {
+    wrapAssertion(utils, 'toMatchFileSnapshot', function (this, file: string, message?: string) {
       utils.flag(this, '_name', 'toMatchFileSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
@@ -179,7 +179,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this: Chai.AssertionStatic & Chai.Assertion, properties?: object, message?: string) {
+    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, properties?: object, message?: string) {
       utils.flag(this, '_name', 'toThrowErrorMatchingSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
