@@ -127,11 +127,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
 
-  utils.addMethod(
-    chai.Assertion.prototype,
+  const toMatchInlineSnapshotImpl = wrapAssertion(
+    utils,
     'toMatchInlineSnapshot',
-    function __INLINE_SNAPSHOT__(
-      this: Record<string, unknown>,
+    function (
+      this,
       properties?: object,
       inlineSnapshot?: string,
       message?: string,
@@ -140,10 +140,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
         throw new Error('toMatchInlineSnapshot cannot be used with "not"')
-      }
-      const isSoft = utils.flag(this, 'soft')
-      if (isSoft) {
-        throw new Error('toMatchInlineSnapshot cannot be used with "soft"')
       }
       const test = getTest('toMatchInlineSnapshot', this)
       const isInsideEach = test.each || test.suite?.each
@@ -176,6 +172,16 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     },
   )
+  Object.defineProperty(toMatchInlineSnapshotImpl, 'name', {
+    value: '__INLINE_SNAPSHOT__',
+    configurable: true,
+  })
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchInlineSnapshot',
+    toMatchInlineSnapshotImpl,
+  )
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
@@ -199,11 +205,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }),
   )
-  utils.addMethod(
-    chai.Assertion.prototype,
+
+  const toThrowErrorMatchingInlineSnapshotImpl = wrapAssertion(
+    utils,
     'toThrowErrorMatchingInlineSnapshot',
-    function __INLINE_SNAPSHOT__(
-      this: Record<string, unknown>,
+    function (
+      this,
       inlineSnapshot: string,
       message: string,
     ) {
@@ -244,5 +251,15 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     },
   )
+  Object.defineProperty(toThrowErrorMatchingInlineSnapshotImpl, 'name', {
+    value: '__INLINE_SNAPSHOT__',
+    configurable: true,
+  })
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toThrowErrorMatchingInlineSnapshot',
+    toThrowErrorMatchingInlineSnapshotImpl,
+  )
+
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
 }
