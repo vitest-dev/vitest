@@ -108,3 +108,88 @@ function removeLines(log: string) {
 function removeNodeModules(log: string) {
   return log.replace(/[^ ]*\/node_modules\//g, '(NODE_MODULES)/')
 }
+
+it('custom helper with captureStackTrace', async () => {
+  const { stderr, errorTree } = await runVitest({
+    root: resolve(import.meta.dirname, '../fixtures/stacktraces-custom-helper'),
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > sync
+    AssertionError: expected 3 to be 4 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 4
+    + 3
+
+     ❯ basic.test.ts:5:3
+          3| 
+          4| test("sync", async () => {
+          5|   assertHelper(3, 4);
+           |   ^
+          6| });
+          7| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+     FAIL  basic.test.ts > async
+    AssertionError: expected 3 to be 4 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 4
+    + 3
+
+     ❯ basic.test.ts:9:3
+          7| 
+          8| test("async", async () => {
+          9|   await assertHelperAsync(3, 4)
+           |   ^
+         10| })
+         11| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  basic.test.ts > bad
+    AssertionError: expected 3 to be 4 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 4
+    + 3
+
+     ❯ assertHelperBad helper.ts:23:20
+         21| 
+         22| export function assertHelperBad(expected: any, actual: any) {
+         23|   expect(expected).toBe(actual);
+           |                    ^
+         24| }
+         25| 
+     ❯ basic.test.ts:13:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "async": [
+          "expected 3 to be 4 // Object.is equality",
+        ],
+        "bad": [
+          "expected 3 to be 4 // Object.is equality",
+        ],
+        "sync": [
+          "expected 3 to be 4 // Object.is equality",
+        ],
+      },
+    }
+  `)
+})

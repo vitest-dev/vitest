@@ -97,8 +97,9 @@ it.each([
 
 it('can modify the global test name pattern', async () => {
   const { ctx } = await runVitest({
+    standalone: true,
+    watch: true,
     testNamePattern: 'custom',
-    include: ['non-existing'],
   })
 
   expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)
