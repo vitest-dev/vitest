@@ -2,10 +2,9 @@
 import type { ResolvedConfig, ViteDevServer } from 'vite'
 import { createRequire } from 'node:module'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { resolveModule } from 'local-pkg'
 
-const workspaceVite = resolveModule('vite', { paths: [process.cwd()] })
 const require = createRequire(import.meta.url)
+const workspaceVite = require.resolve('vite', { paths: [process.cwd()] })
 const VITE_CJS_IGNORE_WARNING = process.env.VITE_CJS_IGNORE_WARNING
 process.env.VITE_CJS_IGNORE_WARNING = 'true'
 // Import the version which is installed by the user.
