@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import { resolveModule } from 'local-pkg'
+// eslint-disable-next-line no-restricted-imports
+import * as staticVite from 'vite'
 
 const require = createRequire(import.meta.url)
 const workspaceVite = require.resolve('vite', { paths: [process.cwd()] })
@@ -15,6 +17,11 @@ process.env.VITE_CJS_IGNORE_WARNING = 'true'
 // This monstrosity of a file is required only to avoid breaking changes in v4.
 const vite: typeof import('vite') = require(workspaceVite || 'vite')
 process.env.VITE_CJS_IGNORE_WARNING = VITE_CJS_IGNORE_WARNING
+
+// TODO: if "peerDeps" works without "deps", then we just need this log
+if (vite.version !== staticVite.version) {
+  console.warn(`Vite version Vitest uses is different from the one installed in the root. Vitest uses ${staticVite.version}, while the root has ${vite.version}.`)
+}
 
 export const parseAst: typeof vite.parseAst = (input, options) => {
   try {

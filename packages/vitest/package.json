@@ -139,7 +139,8 @@
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
-    "jsdom": "*"
+    "jsdom": "*",
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0-0"
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
@@ -168,6 +169,9 @@
     },
     "jsdom": {
       "optional": true
+    },
+    "vite": {
+      "optional": false
     }
   },
   "dependencies": {
