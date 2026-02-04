@@ -115,12 +115,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...getTestNames(test),
       })
 
-      // const isSoft = utils.flag(this, 'soft')
-      // if (isSoft) {
-      //   // assert result with soft wrapAssertion instead of recordAsyncExpect
-      //   return promise
-      // }
-
+      // TODO:
+      // `wrapAssertion` by `expect.soft` will call `promise.then` automatically,
+      // so `recordAsyncExpect` cannot track hanging promise.
       return recordAsyncExpect(
         test,
         promise,
