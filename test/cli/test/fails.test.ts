@@ -1,4 +1,3 @@
-import type { TestCase } from 'vitest/node'
 import { playwright } from '@vitest/browser-playwright'
 
 import { resolve } from 'pathe'
@@ -50,8 +49,8 @@ it('should not report coverage when "coverage.reportOnFailure" has default value
   expect(stdout).not.toMatch('Coverage report from istanbul')
 })
 
-it('prints a warning if the assertion is not awaited', async () => {
-  const { stderr, results, root } = await runInlineTests({
+it.only('prints a warning if the assertion is not awaited', async () => {
+  const { stderr, results, root, errorTree } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -69,21 +68,28 @@ it('prints a warning if the assertion is not awaited', async () => {
       expect(1).toBe(2)
     })
 
-    test('toMatchSnapshot not awaited', () => {
+    test('toMatchFileSnapshot not awaited', () => {
       expect(1).toMatchFileSnapshot('./snapshot.txt')
+    })
+
+    test('soft + toMatchFileSnapshot not awaited', () => {
+      expect.soft(1).toMatchFileSnapshot('./snapshot-soft.txt')
     })
     `,
   })
-  expect(results[0].children.size).toEqual(4)
-  const failedTest = results[0].children.at(2) as TestCase
-  expect(failedTest.result()).toEqual({
-    state: 'failed',
-    errors: [
-      expect.objectContaining({
-        message: expect.stringContaining('expected 1 to be 2'),
-      }),
-    ],
-  })
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "base.test.js": {
+        "not awaited and failed": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "several not awaited": "passed",
+        "single not awaited": "passed",
+        "soft + toMatchFileSnapshot not awaited": "passed",
+        "toMatchFileSnapshot not awaited": "passed",
+      },
+    }
+  `)
   const warnings: string[] = []
   const lines = stderr.split('\n')
   lines.forEach((line, index) => {
@@ -103,6 +109,8 @@ it('prints a warning if the assertion is not awaited', async () => {
         at <rootDir>/base.test.js:14:33",
       "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:19:17",
+      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+        at <rootDir>/base.test.js:23:22",
     ]
   `)
 })
