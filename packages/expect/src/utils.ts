@@ -93,7 +93,10 @@ export function wrapAssertion(
     }
 
     if (!utils.flag(this, 'soft')) {
-      return fn.apply(this, args)
+      // de-opt from WebKit's tail call optimization to ensure inlint snapshot stacktrace offset
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      const result = fn.apply(this, args)
+      return result
     }
 
     const test: Test = utils.flag(this, 'vitest-test')
