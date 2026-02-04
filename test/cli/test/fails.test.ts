@@ -49,8 +49,8 @@ it('should not report coverage when "coverage.reportOnFailure" has default value
   expect(stdout).not.toMatch('Coverage report from istanbul')
 })
 
-it.only('prints a warning if the assertion is not awaited', async () => {
-  const { stderr, results, root, errorTree } = await runInlineTests({
+it('prints a warning if the assertion is not awaited', async () => {
+  const { stderr, root, errorTree } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -109,7 +109,7 @@ it.only('prints a warning if the assertion is not awaited', async () => {
         at <rootDir>/base.test.js:14:33",
       "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:19:17",
-      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+      "Promise returned by \`expect.soft(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:23:22",
     ]
   `)

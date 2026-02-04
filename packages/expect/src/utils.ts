@@ -8,11 +8,12 @@ export function createAssertionMessage(
   assertion: Assertion,
   hasArgs: boolean,
 ) {
+  const soft = util.flag(assertion, 'soft') ? '.soft' : ''
   const not = util.flag(assertion, 'negate') ? 'not.' : ''
   const name = `${util.flag(assertion, '_name')}(${hasArgs ? 'expected' : ''})`
   const promiseName = util.flag(assertion, 'promise')
   const promise = promiseName ? `.${promiseName}` : ''
-  return `expect(actual)${promise}.${not}${name}`
+  return `expect${soft}(actual)${promise}.${not}${name}`
 }
 
 const RECORD_ASYNC_EXPECT_SYMBOL = Symbol.for('vitest.recordAsyncExpect')
