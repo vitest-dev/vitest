@@ -1,4 +1,4 @@
-import type { ChaiPlugin } from '@vitest/expect'
+import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
@@ -97,7 +97,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    wrapAssertion(utils, 'toMatchFileSnapshot', function (this, file: string, message?: string) {
+    function (this: Assertion, file: string, message?: string) {
       utils.flag(this, '_name', 'toMatchFileSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
@@ -126,7 +126,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         error,
         utils.flag(this, 'soft'),
       )
-    }),
+    },
   )
 
   utils.addMethod(

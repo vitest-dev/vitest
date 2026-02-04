@@ -41,7 +41,8 @@ export function recordAsyncExpect(
     if (!test.promises) {
       test.promises = []
     }
-    // setup `expect.soft` handler here instead of `wrapAssertion` to avoid double tracking
+    // setup `expect.soft` handler here instead of `wrapAssertion`
+    // to avoid double error tracking while keeping non-await promise detection.
     if (isSoft) {
       promise = promise.then(noop, (err) => {
         handleTestError(test, err)
@@ -76,7 +77,6 @@ export function recordAsyncExpect(
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
-      ['__vitest_async_soft__' as any]: isSoft,
     } satisfies Promise<any>
   }
 
@@ -122,10 +122,6 @@ export function wrapAssertion(
       const result = fn.apply(this, args)
 
       if (result && typeof result === 'object' && typeof result.then === 'function') {
-        // don't invoke `then` on `expect.soft` to detect non-awaited promises
-        if ((result as any).__vitest_async_soft__) {
-          return result
-        }
         return result.then(noop, (err) => {
           handleTestError(test, err)
         })
