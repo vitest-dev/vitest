@@ -76,6 +76,8 @@ it('prints a warning if the assertion is not awaited', async () => {
       expect.soft(1).toMatchFileSnapshot('./snapshot-soft.txt')
     })
     `,
+  }, {
+    update: true,
   })
   expect(errorTree()).toMatchInlineSnapshot(`
     {
