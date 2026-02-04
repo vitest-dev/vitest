@@ -40,10 +40,10 @@ test('soft inline', async () => {
 
   // edit tests to introduce snapshot errors
   editFile(testFile, s => s
-    .replace("expect.soft('--snap-1--')", "expect.soft('--snap-1-edit--')")
-    .replace("expect.soft('--snap-2--')", "expect.soft('--snap-2-edit--')")
-    .replace("new Error('--error-1--')", "new Error('--error-1-edit--')")
-    .replace("new Error('--error-2--')", "new Error('--error-2-edit--')"))
+    .replace('expect.soft(\'--snap-1--\')', 'expect.soft(\'--snap-1-edit--\')')
+    .replace('expect.soft(\'--snap-2--\')', 'expect.soft(\'--snap-2-edit--\')')
+    .replace('new Error(\'--error-1--\')', 'new Error(\'--error-1-edit--\')')
+    .replace('new Error(\'--error-2--\')', 'new Error(\'--error-2-edit--\')'))
 
   result = await runVitest({ root, update: false })
   expect(result.errorTree()).toMatchInlineSnapshot(`

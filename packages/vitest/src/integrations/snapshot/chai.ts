@@ -130,7 +130,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   const toMatchInlineSnapshotImpl = wrapAssertion(
     utils,
     'toMatchInlineSnapshot',
-    function (
+    function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
       properties?: object,
       inlineSnapshot?: string,
@@ -172,10 +172,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     },
   )
-  Object.defineProperty(toMatchInlineSnapshotImpl, 'name', {
-    value: '__INLINE_SNAPSHOT__',
-    configurable: true,
-  })
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
@@ -209,7 +205,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   const toThrowErrorMatchingInlineSnapshotImpl = wrapAssertion(
     utils,
     'toThrowErrorMatchingInlineSnapshot',
-    function (
+    function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
       inlineSnapshot: string,
       message: string,
@@ -247,10 +243,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     },
   )
-  Object.defineProperty(toThrowErrorMatchingInlineSnapshotImpl, 'name', {
-    value: '__INLINE_SNAPSHOT__',
-    configurable: true,
-  })
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
