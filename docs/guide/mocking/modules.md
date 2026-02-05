@@ -56,7 +56,7 @@ vi.mock(import('./example.js'), () => {
 ```
 
 ::: tip
-Remember that you can call `vi.mock` in a [setup file](/config/#setupfiles) to apply the module mock in every test file automatically.
+Remember that you can call `vi.mock` in a [setup file](/config/setupfiles) to apply the module mock in every test file automatically.
 :::
 
 ::: tip
@@ -316,6 +316,8 @@ The module mocking plugins are available in the [`@vitest/mocker` package](https
 ### JSDOM, happy-dom, Node
 
 When you run your tests in an emulated environment, Vitest creates a [module runner](https://vite.dev/guide/api-environment-runtimes.html#modulerunner) that can consume Vite code. The module runner is designed in such a way that Vitest can hook into the module evaluation and replace it with the mock, if it was registered. This means that Vitest runs your code in an ESM-like environment, but it doesn't use native ESM mechanism directly. This allows the test runner to bend the rules around ES Modules immutability, allowing users to call `vi.spyOn` on a seemingly ES Module.
+
+If module runner is [disabled](/config/experimental#experimental-vitemodulerunner) and [node loader](/config/experimental#experimental-nodeloader) is not explicitly disabled, Vitest will [register a loader hook](https://nodejs.org/api/module.html#customization-hooks) that transforms original modules into mocked ones. In this mode users cannot call `vi.spyOn` on an ES Module because Vitest uses a native loader mechanism with all its guard rails. In addition to that, Vitest also has to inject a `mock` query into every mocked module which is visible in the stack trace.
 
 ### Browser Mode
 

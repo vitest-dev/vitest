@@ -5,6 +5,7 @@ import type { Params } from '~/composables/params'
 import { debouncedWatch } from '@vueuse/core'
 import { toJSON } from 'flatted'
 import { computed, nextTick, ref } from 'vue'
+import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
   client,
@@ -12,11 +13,12 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
+import { tagsDefinitions } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
 import { selectedTest, viewMode } from '~/composables/params'
-import { getProjectNameColor, getProjectTextColor } from '~/utils/task'
+import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
 import IconButton from './IconButton.vue'
 import StatusIcon from './StatusIcon.vue'
 import ViewConsoleOutput from './views/ViewConsoleOutput.vue'
@@ -155,10 +157,10 @@ debouncedWatch(
 
 const projectNameColor = computed(() => {
   const projectName = current.value?.file.projectName || ''
-  return explorerTree.colors.get(projectName) || getProjectNameColor(current.value?.file.projectName)
+  return explorerTree.colors.get(projectName) || getBadgeNameColor(current.value?.file.projectName)
 })
 
-const projectNameTextColor = computed(() => getProjectTextColor(projectNameColor.value))
+const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
 
 const testTitle = computed(() => {
   const testId = selectedTest.value
@@ -170,10 +172,23 @@ const testTitle = computed(() => {
   while (node) {
     names.push(node.name)
     node = node.suite
-      ? node.suite
-      : (node === node.file ? undefined : node.file)
   }
   return names.reverse().join(' > ')
+})
+
+const tags = computed(() => {
+  const testId = selectedTest.value
+  if (!testId) {
+    return []
+  }
+  const node = client.state.idMap.get(testId)
+  return (node?.tags || []).map(tag => ({
+    name: tag,
+    description: tagsDefinitions.value[tag]?.description,
+    bg: getBadgeNameColor(tag, true),
+    border: getBadgeNameColor(tag),
+    text: 'white',
+  }))
 })
 </script>
 
@@ -195,11 +210,28 @@ const testTitle = computed(() => {
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light"
           :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
+          cursor-default
         >
           {{ current.file.projectName }}
         </span>
-        <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ testTitle }}
+        <div flex-1 font-light overflow-hidden text-sm flex>
+          <span op-50 truncate>
+            {{ testTitle }}
+          </span>
+
+          <span
+            v-for="tag of tags"
+            :key="tag.name"
+            v-tooltip.bottom="tag.description"
+            class="rounded-full ml-2 px-2 text-xs font-light"
+            :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
+            :title="tag.description"
+            cursor-default
+            flex
+            items-center
+          >
+            {{ tag.name }}
+          </span>
         </div>
         <div class="flex text-lg">
           <IconButton
@@ -210,6 +242,7 @@ const testTitle = computed(() => {
             :disabled="!current?.filepath"
             @click="open"
           />
+          <DetailsHeaderButtons v-if="browserState" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>

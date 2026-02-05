@@ -5,7 +5,7 @@ import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
-import type { TestSpecification } from '../node/spec'
+import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
@@ -20,9 +20,9 @@ import { performance } from 'node:perf_hooks'
 import { noop } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { isFileServingAllowed } from 'vite'
 import { WebSocketServer } from 'ws'
 import { API_PATH } from '../constants'
+import { isFileServingAllowed } from '../node/vite'
 import { getTestFileEnvironment } from '../utils/environments'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
@@ -59,9 +59,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs, events) {
-          await ctx._testRun.updated(packs, events)
-        },
         getFiles() {
           return ctx.state.getFiles()
         },
@@ -80,12 +77,24 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
               `Test file "${id}" was not registered, so it cannot be updated using the API.`,
             )
           }
+          // silently ignore write attempts if not allowed
+          if (!ctx.config.api.allowWrite) {
+            return
+          }
           return fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files, resetTestNamePattern) {
+          // silently ignore exec attempts if not allowed
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
         },
         async rerunTask(id) {
+          // silently ignore exec attempts if not allowed
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunTask(id)
         },
         getConfig() {
@@ -150,6 +159,11 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return getModuleGraph(ctx, project, id, browser)
         },
         async updateSnapshot(file?: File) {
+          // silently ignore exec/write attempts if not allowed
+          // this function both executes the code and write snapshots
+          if (!ctx.config.api.allowExec || !ctx.config.api.allowWrite) {
+            return
+          }
           if (!file) {
             await ctx.updateSnapshot()
           }

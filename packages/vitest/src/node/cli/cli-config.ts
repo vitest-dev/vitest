@@ -46,6 +46,12 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description:
       'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
+  allowExec: {
+    description: 'Allow API to execute code. (Be careful when enabling this option in untrusted environments)',
+  },
+  allowWrite: {
+    description: 'Allow API to edit files. (Be careful when enabling this option in untrusted environments)',
+  },
   middlewareMode: null,
 })
 
@@ -78,7 +84,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot',
+    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    argument: '[type]',
   },
   watch: {
     shorthand: 'w',
@@ -105,6 +112,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[port]',
     description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
     subcommands: apiConfig(defaultPort),
+    transform(portOrOptions) {
+      if (typeof portOrOptions === 'number') {
+        return { port: portOrOptions }
+      }
+      return portOrOptions
+    },
   },
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
@@ -356,6 +369,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
+      detailsPanelPosition: {
+        description:
+          'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
+        argument: '<position>',
+      },
       fileParallelism: {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
@@ -530,6 +548,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+        transform: (value) => {
+          if (typeof value === 'string') {
+            return new RegExp(value, 'i')
+          }
+          return value
+        },
+      },
+    },
   },
   diff: {
     description:
@@ -762,8 +803,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  listTags: {
+    description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
+    argument: '[type]',
+  },
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
+  tagsFilter: {
+    description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
+    argument: '<expression>',
+    array: true,
+  },
+  strictTags: {
+    description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
 
   experimental: {
@@ -775,8 +828,54 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       fsModuleCachePath: null,
       openTelemetry: null,
-      printImportBreakdown: {
-        description: 'Print import breakdown after the summary. If the reporter doesn\'t support summary, this will have no effect. Note that UI\'s "Module Graph" tab always has an import breakdown.',
+      importDurations: {
+        description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
+        argument: '',
+        transform(value) {
+          if (typeof value === 'boolean') {
+            return { print: value }
+          }
+          return value
+        },
+        subcommands: {
+          print: {
+            description: 'When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).',
+            argument: '<boolean|on-warn>',
+            transform(value) {
+              if (value === 'on-warn') {
+                return 'on-warn'
+              }
+              return value
+            },
+          },
+          limit: {
+            description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
+            argument: '<number>',
+          },
+          failOnDanger: {
+            description: 'Fail the test run if any import exceeds the danger threshold (default: false).',
+          },
+          thresholds: {
+            description: 'Duration thresholds in milliseconds for coloring and warnings.',
+            argument: '',
+            subcommands: {
+              warn: {
+                description: 'Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).',
+                argument: '<number>',
+              },
+              danger: {
+                description: 'Danger threshold - imports exceeding this are shown in red (default: 500).',
+                argument: '<number>',
+              },
+            },
+          },
+        },
+      },
+      viteModuleRunner: {
+        description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
+      },
+      nodeLoader: {
+        description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
       },
     },
   },
@@ -815,6 +914,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   filesOnly: null,
   projects: null,
   watchTriggerPatterns: null,
+  tags: null,
 }
 
 export const benchCliOptionsConfig: Pick<

@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { describe, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 const toMatchTest = /* ts */`
@@ -173,7 +173,7 @@ describe('serial', { concurrent: true }, () => {
       test: testBoundLocalExtend,
     },
   ] as const)('works with $name', async ({ options, test }, { expect }) => {
-    const { stdout } = await runInlineTests(
+    const { stdout, stderr } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
@@ -181,6 +181,7 @@ describe('serial', { concurrent: true }, () => {
       { reporters: ['tap'], ...options },
     )
 
+    expect(stderr).toBe('')
     expect(stdout.replace(/[\d.]+ms/g, '<time>')).toMatchInlineSnapshot(`
       "TAP version 13
       1..1

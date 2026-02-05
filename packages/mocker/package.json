@@ -1,7 +1,7 @@
 {
   "name": "@vitest/mocker",
   "type": "module",
-  "version": "4.0.15",
+  "version": "4.1.0-beta.3",
   "description": "Vitest module mocker implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -44,7 +44,11 @@
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
     },
-    "./*": "./*"
+    "./transforms": {
+      "types": "./dist/transforms.d.ts",
+      "default": "./dist/transforms.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -79,6 +83,8 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn-walk": "catalog:",
+    "cjs-module-lexer": "^2.2.0",
+    "es-module-lexer": "^2.0.0",
     "msw": "catalog:",
     "pathe": "catalog:",
     "vite": "^6.3.5"

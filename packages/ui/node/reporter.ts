@@ -1,7 +1,6 @@
 import type { Task, TestAttachment } from '@vitest/runner'
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
-import type { HTMLOptions, Vitest } from 'vitest/node'
-import type { Reporter } from 'vitest/reporters'
+import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -91,6 +90,14 @@ export default class HTMLReporter implements Reporter {
             promises.push(this.processAttachment(attachment))
           }
         })
+        task.artifacts.forEach((artifact) => {
+          const attachments = artifact.attachments
+          if (attachments) {
+            attachments.forEach((attachment) => {
+              promises.push(this.processAttachment(attachment))
+            })
+          }
+        })
       }
       else {
         task.tasks.forEach(processAttachments)
@@ -101,7 +108,7 @@ export default class HTMLReporter implements Reporter {
       processAttachments(file)
       const projectName = file.projectName || ''
       const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
+      const browser = resolvedConfig.browser.enabled
       result.moduleGraph[projectName] ??= {}
       result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
         this.ctx,

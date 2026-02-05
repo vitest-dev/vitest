@@ -3,7 +3,7 @@ import type { VisualRegressionArtifact } from '@vitest/runner'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { recordArtifact } from '@vitest/runner'
+import { recordArtifact } from 'vitest'
 import { getBrowserState } from '../../utils'
 import { convertToSelector } from '../tester-utils'
 
@@ -78,7 +78,7 @@ export default async function toMatchScreenshot(
     }
 
     if (result.diff) {
-      attachments.push({ name: 'diff', path: result.diff })
+      attachments.push({ name: 'diff', ...result.diff })
     }
 
     if (attachments.length > 0) {
@@ -107,7 +107,7 @@ export default async function toMatchScreenshot(
               ? `\nActual screenshot:\n  ${this.utils.RECEIVED_COLOR(result.actual.path)}`
               : null,
             result.diff
-              ? this.utils.DIM_COLOR(`\nDiff image:\n  ${result.diff}`)
+              ? this.utils.DIM_COLOR(`\nDiff image:\n  ${result.diff.path}`)
               : null,
             '',
           ]

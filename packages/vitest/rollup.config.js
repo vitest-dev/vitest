@@ -25,13 +25,13 @@ const entries = {
   'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
   'environments': 'src/public/environments.ts',
-  'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
+  'runtime': 'src/public/runtime.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
   'worker': 'src/public/worker.ts',
-  'module-runner': 'src/public/module-runner.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
+  'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
@@ -51,11 +51,11 @@ const dtsEntries = {
   'environments': 'src/public/environments.ts',
   'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
+  'runtime': 'src/public/runtime.ts',
   'suite': 'src/public/suite.ts',
   'config': 'src/public/config.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
-  'mocker': 'src/public/mocker.ts',
   'snapshot': 'src/public/snapshot.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
@@ -79,7 +79,7 @@ const external = [
   'vitest/browser',
   'vite/module-runner',
   '@vitest/mocker',
-  '@vitest/mocker/node',
+  /@vitest\/mocker\/\w+/,
   '@vitest/utils/diff',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
@@ -105,10 +105,11 @@ const plugins = [
   commonjs(),
   oxc({
     transform: {
-      target: 'node18',
+      target: 'node20',
       define: {
         // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
         // in the release version the "if" with this condition should not be present
+        // To test strict token locally, build by e.g. `VITEST_GENERATE_UI_TOKEN=true pnpm build`
         __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {

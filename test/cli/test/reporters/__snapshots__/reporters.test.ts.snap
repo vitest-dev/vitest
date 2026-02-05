@@ -1,0 +1,1097 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JUnit reporter (no outputFile entry) 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with custom function classnameTemplate 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with custom string classname 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="my-custom-classname" name="Math.sqrt()" time="0.001442286">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with custom string classnameTemplate 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with outputFile 1`] = `
+"JUNIT report written to <process-cwd>/report.xml
+"
+`;
+
+exports[`JUnit reporter with outputFile 2`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with outputFile in non-existing directory 1`] = `
+"JUNIT report written to <process-cwd>/junitReportDirectory/deeply/nested/report.xml
+"
+`;
+
+exports[`JUnit reporter with outputFile in non-existing directory 2`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with outputFile object 1`] = `
+"JUNIT report written to <process-cwd>/report_object.xml
+"
+`;
+
+exports[`JUnit reporter with outputFile object 2`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter with outputFile object in non-existing directory 1`] = `
+"JUNIT report written to <process-cwd>/junitReportDirectory_object/deeply/nested/report.xml
+"
+`;
+
+exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+</testsuites>
+"
+`;
+
+exports[`JUnit reporter without classname 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
+    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`json reporter (no outputFile entry) 1`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`json reporter 1`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`json reporter with outputFile 1`] = `
+"JSON report written to <process-cwd>/report.json
+"
+`;
+
+exports[`json reporter with outputFile 2`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`json reporter with outputFile in non-existing directory 1`] = `
+"JSON report written to <process-cwd>/jsonReportDirectory/deeply/nested/report.json
+"
+`;
+
+exports[`json reporter with outputFile in non-existing directory 2`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`json reporter with outputFile object 1`] = `
+"JSON report written to <process-cwd>/report_object.json
+"
+`;
+
+exports[`json reporter with outputFile object 2`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`json reporter with outputFile object in non-existing directory 1`] = `
+"JSON report written to <process-cwd>/jsonReportDirectory_object/deeply/nested/report.json
+"
+`;
+
+exports[`json reporter with outputFile object in non-existing directory 2`] = `
+{
+  "numFailedTestSuites": 1,
+  "numFailedTests": 1,
+  "numPassedTestSuites": 1,
+  "numPassedTests": 6,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
+  "numTotalTestSuites": 2,
+  "numTotalTests": 9,
+  "snapshot": {
+    "_test": true,
+    "added": 100,
+  },
+  "startTime": 1642587001759,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.4422860145568848,
+          "failureMessages": [
+            "AssertionError: expected 2.23606797749979 to equal 2
+    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
+    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
+    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
+    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)
+    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)
+    at async /vitest/packages/vitest/dist/entry.js:1798:7
+    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)
+    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)
+    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20",
+          ],
+          "fullName": "suite Math.sqrt()",
+          "location": {
+            "column": 32,
+            "line": 8,
+          },
+          "meta": {},
+          "status": "failed",
+          "tags": [],
+          "title": "Math.sqrt()",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 1.0237109661102295,
+          "failureMessages": [],
+          "fullName": "suite JSON",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "JSON",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite async with timeout",
+          "meta": {},
+          "status": "skipped",
+          "tags": [],
+          "title": "async with timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 100.50598406791687,
+          "failureMessages": [],
+          "fullName": "suite timeout",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "timeout",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 20.184875011444092,
+          "failureMessages": [],
+          "fullName": "suite callback setup success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.33245420455932617,
+          "failureMessages": [],
+          "fullName": "suite callback test success ",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success ",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 19.738605976104736,
+          "failureMessages": [],
+          "fullName": "suite callback setup success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback setup success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "duration": 0.1923508644104004,
+          "failureMessages": [],
+          "fullName": "suite callback test success done(false)",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "callback test success done(false)",
+        },
+        {
+          "ancestorTitles": [
+            "suite",
+          ],
+          "failureMessages": [],
+          "fullName": "suite todo test",
+          "meta": {},
+          "status": "todo",
+          "tags": [],
+          "title": "todo test",
+        },
+      ],
+      "endTime": 1642587001759,
+      "message": "",
+      "name": "/vitest/test/core/test/basic.test.ts",
+      "startTime": 1642587001759,
+      "status": "failed",
+    },
+  ],
+}
+`;
+
+exports[`tap reporter 1`] = `
+"TAP version 13
+1..1
+not ok 1 - basic.test.ts # time=145.99ms {
+    1..1
+    ok 1 - suite # time=1.90ms {
+        1..9
+        not ok 1 - Math.sqrt() # time=1.44ms
+            ---
+            error:
+                name: "AssertionError"
+                message: "expected 2.23606797749979 to equal 2"
+            at: "/vitest/test/core/test/basic.test.ts:8:32"
+            actual: "2.23606797749979"
+            expected: "2"
+            ...
+        ok 2 - JSON # time=1.02ms
+        ok 3 - async with timeout # SKIP
+        ok 4 - timeout # time=100.51ms
+        ok 5 - callback setup success  # time=20.18ms
+        ok 6 - callback test success  # time=0.33ms
+        ok 7 - callback setup success done(false) # time=19.74ms
+        ok 8 - callback test success done(false) # time=0.19ms
+        ok 9 - todo test # TODO
+    }
+}
+"
+`;
+
+exports[`tap-flat reporter 1`] = `
+"TAP version 13
+1..9
+not ok 1 - basic.test.ts > suite > Math.sqrt() # time=1.44ms
+    ---
+    error:
+        name: "AssertionError"
+        message: "expected 2.23606797749979 to equal 2"
+    at: "/vitest/test/core/test/basic.test.ts:8:32"
+    actual: "2.23606797749979"
+    expected: "2"
+    ...
+ok 2 - basic.test.ts > suite > JSON # time=1.02ms
+ok 3 - basic.test.ts > suite > async with timeout # SKIP
+ok 4 - basic.test.ts > suite > timeout # time=100.51ms
+ok 5 - basic.test.ts > suite > callback setup success  # time=20.18ms
+ok 6 - basic.test.ts > suite > callback test success  # time=0.33ms
+ok 7 - basic.test.ts > suite > callback setup success done(false) # time=19.74ms
+ok 8 - basic.test.ts > suite > callback test success done(false) # time=0.19ms
+ok 9 - basic.test.ts > suite > todo test # TODO
+"
+`;

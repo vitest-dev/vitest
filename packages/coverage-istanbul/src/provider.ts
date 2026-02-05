@@ -15,8 +15,7 @@ import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import c from 'tinyrainbow'
-import { BaseCoverageProvider } from 'vitest/coverage'
-import { isCSSRequest } from 'vitest/node'
+import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
@@ -49,6 +48,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
         // @ts-expect-error missing type
         importAttributesKeyword: 'with',
       },
+
+      // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
+      ignoreLines: true,
     })
   }
 
@@ -88,28 +90,30 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       sourceMap as any,
     )
 
-    const transformMap = new GenMapping(sourceMap)
+    if (!id.includes('vitest-uncovered-coverage=true')) {
+      const transformMap = new GenMapping(sourceMap)
 
-    eachMapping(new TraceMap(sourceMap as any), (mapping) => {
-      addMapping(transformMap, {
-        generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
-        original: { line: mapping.generatedLine, column: mapping.generatedColumn },
-        content: sourceCode,
-        name: mapping.name || '',
-        source: mapping.source || '',
+      eachMapping(new TraceMap(sourceMap as any), (mapping) => {
+        addMapping(transformMap, {
+          generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          original: { line: mapping.generatedLine, column: mapping.generatedColumn },
+          content: sourceCode,
+          name: mapping.name || '',
+          source: mapping.source || '',
+        })
       })
-    })
 
-    const encodedMap = toEncodedMap(transformMap)
-    delete encodedMap.file
-    delete encodedMap.ignoreList
-    delete encodedMap.sourceRoot
+      const encodedMap = toEncodedMap(transformMap)
+      delete encodedMap.file
+      delete encodedMap.ignoreList
+      delete encodedMap.sourceRoot
 
-    this.instrumenter.instrumentSync(
-      sourceCode,
-      id,
-      encodedMap as any,
-    )
+      this.instrumenter.instrumentSync(
+        sourceCode,
+        id,
+        encodedMap as any,
+      )
+    }
 
     const map = this.instrumenter.lastSourceMap() as any
     this.transformedModuleIds.add(id)
@@ -198,9 +202,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
-    return parseModule(
-      await fs.readFile(configFilePath, 'utf8'),
-    )
+    const contents = await fs.readFile(configFilePath, 'utf8')
+
+    return parseModule(`${contents}${this.autoUpdateMarker}`)
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
@@ -225,7 +229,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
       }
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await transform(`${filename}?cache=${cacheKey}`)
+      await transform(`${filename}?cache=${cacheKey}&vitest-uncovered-coverage=true`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
 

@@ -1,19 +1,27 @@
+import type { WithFixturesOptions } from './fixture'
 import type {
   AfterAllListener,
   AfterEachListener,
+  AroundAllListener,
+  AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
+  File,
+  InternalChainableContext,
   OnTestFailedHandler,
   OnTestFinishedHandler,
+  RegisteredAroundAllListener,
+  Suite,
   TaskHook,
   TaskPopulated,
   TestContext,
 } from './types/tasks'
 import { assertTypes } from '@vitest/utils/helpers'
 import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
-import { withFixtures } from './fixture'
+import { configureProps, withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
+import { getChainableContext } from './utils/chain'
 
 function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
@@ -21,6 +29,8 @@ function getDefaultHookTimeout() {
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
+const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
+const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
   if (typeof result === 'function') {
@@ -63,17 +73,19 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any, contex
  * });
  * ```
  */
-export function beforeAll(
-  fn: BeforeAllListener,
+export function beforeAll<ExtraContext = object>(
+  this: unknown,
+  fn: BeforeAllListener<ExtraContext>,
   timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
-  return getCurrentSuite().on(
+  const context = getChainableContext(this)
+  return getCurrentSuite<ExtraContext>().on(
     'beforeAll',
     Object.assign(
       withTimeout(
-        fn,
+        withSuiteFixtures('beforeAll', fn, context, stackTraceError),
         timeout,
         true,
         stackTraceError,
@@ -103,15 +115,21 @@ export function beforeAll(
  * });
  * ```
  */
-export function afterAll(fn: AfterAllListener, timeout?: number): void {
+export function afterAll<ExtraContext = object>(
+  this: unknown,
+  fn: AfterAllListener<ExtraContext>,
+  timeout?: number,
+): void {
   assertTypes(fn, '"afterAll" callback', ['function'])
-  return getCurrentSuite().on(
+  const context = getChainableContext(this)
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  return getCurrentSuite<ExtraContext>().on(
     'afterAll',
     withTimeout(
-      fn,
+      withSuiteFixtures('afterAll', fn, context, stackTraceError),
       timeout ?? getDefaultHookTimeout(),
       true,
-      new Error('STACK_TRACE_ERROR'),
+      stackTraceError,
     ),
   )
 }
@@ -139,12 +157,11 @@ export function beforeEach<ExtraContext = object>(
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
-  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
       withTimeout(
-        withFixtures(runner, fn),
+        withFixtures(fn),
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
@@ -180,11 +197,10 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
-  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(
-      withFixtures(runner, fn),
+      withFixtures(fn),
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),
@@ -265,6 +281,154 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
     )
   },
 )
+
+/**
+ * Registers a callback function that wraps around all tests within the current suite.
+ * The callback receives a `runSuite` function that must be called to run the suite's tests.
+ * This hook is useful for scenarios where you need to wrap an entire suite in a context
+ * (e.g., starting a server, opening a database connection that all tests share).
+ *
+ * **Note:** When multiple `aroundAll` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * @param {Function} fn - The callback function that wraps the suite. Must call `runSuite()` to run the tests.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundAll to wrap suite in a tracing span
+ * aroundAll(async (runSuite) => {
+ *   await tracer.trace('test-suite', runSuite);
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Example of using aroundAll with fixtures
+ * aroundAll(async (runSuite, { db }) => {
+ *   await db.transaction(() => runSuite());
+ * });
+ * ```
+ */
+export function aroundAll<ExtraContext = object>(
+  this: unknown,
+  fn: AroundAllListener<ExtraContext>,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+  const context = getChainableContext(this)
+
+  return getCurrentSuite().on(
+    'aroundAll',
+    Object.assign(
+      withSuiteFixtures(
+        'aroundAll',
+        fn,
+        context,
+        stackTraceError,
+        1,
+      ) as RegisteredAroundAllListener,
+      {
+        [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+        [AROUND_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
+  )
+}
+
+/**
+ * Registers a callback function that wraps around each test within the current suite.
+ * The callback receives a `runTest` function that must be called to run the test.
+ * This hook is useful for scenarios where you need to wrap tests in a context (e.g., database transactions).
+ *
+ * **Note:** When multiple `aroundEach` hooks are registered, they are nested inside each other.
+ * The first registered hook is the outermost wrapper.
+ *
+ * @param {Function} fn - The callback function that wraps the test. Must call `runTest()` to run the test.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
+ * @returns {void}
+ * @example
+ * ```ts
+ * // Example of using aroundEach to wrap tests in a database transaction
+ * aroundEach(async (runTest) => {
+ *   await database.transaction(() => runTest());
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Example of using aroundEach with fixtures
+ * aroundEach(async (runTest, { db }) => {
+ *   await db.transaction(() => runTest());
+ * });
+ * ```
+ */
+export function aroundEach<ExtraContext = object>(
+  fn: AroundEachListener<ExtraContext>,
+  timeout?: number,
+): void {
+  assertTypes(fn, '"aroundEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const resolvedTimeout = timeout ?? getDefaultHookTimeout()
+
+  const wrapper: AroundEachListener<ExtraContext> = (runTest, context, suite) => {
+    const innerFn = (ctx: any) => fn(runTest, ctx, suite)
+    configureProps(innerFn, { index: 1, original: fn })
+
+    const fixtureResolver = withFixtures(innerFn)
+    return fixtureResolver(context)
+  }
+
+  return getCurrentSuite<ExtraContext>().on(
+    'aroundEach',
+    Object.assign(
+      wrapper,
+      {
+        [AROUND_TIMEOUT_KEY]: resolvedTimeout,
+        [AROUND_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
+  )
+}
+
+function withSuiteFixtures(
+  suiteHook: WithFixturesOptions['suiteHook'],
+  fn: Function,
+  context: InternalChainableContext | undefined,
+  stackTraceError: Error,
+  contextIndex = 0,
+) {
+  return (...args: any[]) => {
+    const suite = args.at(-1) as Suite | File
+    const prefix = args.slice(0, -1) // this is potential "runSuite"
+
+    const wrapper = (ctx: any) => fn(...prefix, ctx, suite)
+    configureProps(wrapper, { index: contextIndex, original: fn })
+
+    const fixtures = context?.getFixtures()
+    const fileContext = fixtures?.getFileContext(suite.file)
+
+    const fixtured = withFixtures(wrapper, {
+      suiteHook,
+      fixtures,
+      context: fileContext,
+      stackTraceError,
+    })
+    return fixtured()
+  }
+}
+
+export function getAroundHookTimeout(hook: Function): number {
+  return AROUND_TIMEOUT_KEY in hook && typeof hook[AROUND_TIMEOUT_KEY] === 'number'
+    ? hook[AROUND_TIMEOUT_KEY]
+    : getDefaultHookTimeout()
+}
+
+export function getAroundHookStackTrace(hook: Function): Error | undefined {
+  return AROUND_STACK_TRACE_KEY in hook && hook[AROUND_STACK_TRACE_KEY] instanceof Error
+    ? hook[AROUND_STACK_TRACE_KEY]
+    : undefined
+}
 
 function createTestHook<T>(
   name: string,

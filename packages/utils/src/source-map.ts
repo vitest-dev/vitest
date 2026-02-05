@@ -35,10 +35,14 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
 ]
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
+
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`vitest=\\d{${NOW_LENGTH}}`)
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
@@ -64,6 +68,9 @@ function extractLocation(urlLike: string) {
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url = url.slice(isWindows ? 5 : 4)
+  }
+  if (url.includes('vitest=')) {
+    url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
@@ -191,7 +198,10 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
 
   if (method) {
     method = method
-      .replace(/__vite_ssr_import_\d+__\./g, '')
+    // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
       .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 

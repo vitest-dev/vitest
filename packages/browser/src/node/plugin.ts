@@ -242,7 +242,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest',
           'vitest/browser',
           'vitest/internal/browser',
-          'vitest/runners',
           'vite/module-runner',
           '@vitest/browser/utils',
           '@vitest/browser/context',
@@ -323,6 +322,12 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
+        }
+
+        const otelConfig = project.config.experimental.openTelemetry
+        if (otelConfig?.enabled && otelConfig.browserSdkPath) {
+          entries.push(otelConfig.browserSdkPath)
+          include.push('@opentelemetry/api')
         }
 
         return {
@@ -620,6 +625,18 @@ body {
             ? { rolldownOptions: { plugins: [rolldownPlugin] } }
             : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
+      },
+    },
+    {
+      name: 'vitest:browser:__vitest_browser_import_meta_env_init__',
+      transform: {
+        handler(code) {
+          // this transform runs after `vitest:meta-env-replacer` so that
+          // `import.meta.env` will be handled by Vite import analysis to match behavior.
+          if (code.includes('__vitest_browser_import_meta_env_init__')) {
+            return code.replace('__vitest_browser_import_meta_env_init__', 'import.meta.env')
+          }
+        },
       },
     },
   ]

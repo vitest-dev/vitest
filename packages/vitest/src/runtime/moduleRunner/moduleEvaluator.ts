@@ -11,7 +11,6 @@ import type { VitestVmOptions } from './moduleRunner'
 import { createRequire, isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { isAbsolute } from 'pathe'
 import {
   ssrDynamicImportKey,
   ssrExportAllKey,
@@ -178,14 +177,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )
   }
 
-  private async _runInlinedModule(
+  private _createCJSGlobals(
     context: ModuleRunnerContext,
-    code: string,
     module: Readonly<EvaluatedModuleNode>,
     span: Span,
-  ): Promise<any> {
-    context.__vite_ssr_import_meta__.env = this.env
-
+  ) {
     const { Reflect, Proxy, Object } = this.primitives
 
     const exportsObject = context[ssrModuleExportsKey]
@@ -255,7 +251,25 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       },
     }
 
+    const require = this.createRequire(context[ssrImportMetaKey].url)
+
+    return {
+      exports: cjsExports,
+      module: moduleProxy,
+      require,
+      __filename: context[ssrImportMetaKey].filename,
+      __dirname: context[ssrImportMetaKey].dirname,
+    }
+  }
+
+  private async _runInlinedModule(
+    context: ModuleRunnerContext,
+    code: string,
+    module: Readonly<EvaluatedModuleNode>,
+    span: Span,
+  ): Promise<any> {
     const meta = context[ssrImportMetaKey]
+    meta.env = this.env
 
     const testFilepath = this.options.getCurrentTestFilepath?.()
     if (testFilepath === module.file) {
@@ -266,14 +280,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       })
     }
 
-    const filename = meta.filename
-    const dirname = meta.dirname
-
-    span.setAttributes({
-      'code.file.path': filename,
-    })
-
-    const require = this.createRequire(filename)
+    span.setAttribute('code.file.path', meta.filename)
 
     const argumentsList = [
       ssrModuleExportsKey,
@@ -283,7 +290,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       ssrExportAllKey,
       // vite 7 support
       '__vite_ssr_exportName__',
+    ]
 
+    const cjsGlobals = this._createCJSGlobals(context, module, span)
+    argumentsList.push(
       // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
       // backwards compat for vite-node
       '__filename',
@@ -291,7 +301,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       'module',
       'exports',
       'require',
-    ]
+    )
 
     if (this.compiledFunctionArgumentsNames) {
       argumentsList.push(...this.compiledFunctionArgumentsNames)
@@ -305,7 +315,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     )})=>{{`
     const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
-      filename: module.id,
+      // use original id for auto spy module (vi.mock(..., { spy: true }))
+      filename: module.id.startsWith('mock:') ? module.id.slice(5) : module.id,
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
@@ -322,35 +333,25 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
-      const dynamicRequest = async (dep: string, options: ImportCallOptions) => {
-        dep = String(dep)
-        // TODO: support more edge cases?
-        // vite doesn't support dynamic modules by design, but we have to
-        if (dep[0] === '#') {
-          return context[ssrDynamicImportKey](wrapId(dep), options)
-        }
-        return context[ssrDynamicImportKey](dep, options)
-      }
-
       await initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],
         context[ssrImportKey],
-        dynamicRequest,
+        context[ssrDynamicImportKey],
         context[ssrExportAllKey],
         // vite 7 support, remove when vite 7+ is supported
-        (context as any).__vite_ssr_exportName__
-        || ((name: string, getter: () => unknown) => Object.defineProperty(exportsObject, name, {
+        context.__vite_ssr_exportName__
+        || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
           enumerable: true,
           configurable: true,
           get: getter,
         })),
 
-        filename,
-        dirname,
-        moduleProxy,
-        cjsExports,
-        require,
+        cjsGlobals.__filename,
+        cjsGlobals.__dirname,
+        cjsGlobals.module,
+        cjsGlobals.exports,
+        cjsGlobals.require,
 
         ...this.compiledFunctionArgumentsValues,
       )
@@ -362,15 +363,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
   }
 
-  private createRequire(filename: string) {
-    // \x00 is a rollup convention for virtual files,
-    // it is not allowed in actual file names
-    if (filename[0] === '\x00' || !isAbsolute(filename)) {
-      return () => ({})
-    }
+  private createRequire(url: string) {
     return this.vm
-      ? this.vm.externalModulesExecutor.createRequire(filename)
-      : createRequire(filename)
+      ? this.vm.externalModulesExecutor.createRequire(url)
+      : createRequire(url)
   }
 
   private shouldInterop(path: string, mod: any): boolean {

@@ -1,6 +1,6 @@
 import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'

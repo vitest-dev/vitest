@@ -1,9 +1,9 @@
-import type { Vitest } from 'vitest/node'
-import type { JsonTestResults } from 'vitest/reporters'
+import type { JsonTestResults, Vitest } from 'vitest/node'
 import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { buildTestTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
 
 function noop() {}
@@ -77,6 +77,35 @@ describe('running browser tests', async () => {
     expect(failedTests).toHaveLength(0)
   })
 
+  test('tags are collected', () => {
+    expect(vitest.config.tags).toEqual([
+      { name: 'e2e', priority: 10 },
+      { name: 'test', priority: 5 },
+      { name: 'browser', priority: 1 },
+    ])
+
+    const testModule = vitest.state.getTestModules().find(m => m.moduleId.includes('tags.test.ts'))
+    expect.assert(testModule)
+    expect(buildTestTree([testModule], t => t.tags)).toMatchInlineSnapshot(`
+      {
+        "test/tags.test.ts": {
+          "suite 1": {
+            "suite 2": {
+              "test 2": [
+                "browser",
+                "e2e",
+              ],
+            },
+            "test 1": [
+              "browser",
+              "test",
+            ],
+          },
+        },
+      }
+    `)
+  })
+
   test('runs in-source tests', () => {
     expect(stdout).toContain('src/actions.ts')
     const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
@@ -128,6 +157,10 @@ describe('console logging tests', async () => {
     expect(stdout).toMatch(/time: [\d.]+ ms/)
     expect(stdout).toMatch(/\[console-time-fake\]: [\d.]+ ms/)
     expect(stdout).not.toContain('[console-time-fake]: 0 ms')
+    expect(stdout).toContain('hello from one')
+    expect(stdout).toContain(`hello from two {
+  "hello": "object",
+}`)
   })
 
   test('logs are redirected to stderr', () => {
@@ -338,111 +371,111 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
     expect(snapshot).toMatchInlineSnapshot(`
       " FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:44:45
+       ❯ hooks-timeout.test.ts:39:45
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:26:45
+       ❯ hooks-timeout.test.ts:23:45
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:35:45
+       ❯ hooks-timeout.test.ts:31:45
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:17:45
+       ❯ hooks-timeout.test.ts:15:45
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:7:33
+       ❯ hooks-timeout.test.ts:6:33
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:70:47
+       ❯ hooks-timeout.test.ts:62:47
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:79:47
+       ❯ hooks-timeout.test.ts:70:47
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:54:47
+       ❯ hooks-timeout.test.ts:48:47
 
        FAIL  |chromium| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:61:47
+       ❯ hooks-timeout.test.ts:54:47
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:44:45
+       ❯ hooks-timeout.test.ts:39:45
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:26:45
+       ❯ hooks-timeout.test.ts:23:45
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:35:45
+       ❯ hooks-timeout.test.ts:31:45
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:17:45
+       ❯ hooks-timeout.test.ts:15:45
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:7:33
+       ❯ hooks-timeout.test.ts:6:33
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:70:47
+       ❯ hooks-timeout.test.ts:62:47
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:79:47
+       ❯ hooks-timeout.test.ts:70:47
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:54:47
+       ❯ hooks-timeout.test.ts:48:47
 
        FAIL  |firefox| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:61:47
+       ❯ hooks-timeout.test.ts:54:47
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > afterAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:44:45
+       ❯ hooks-timeout.test.ts:39:45
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > afterEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:26:45
+       ❯ hooks-timeout.test.ts:23:45
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > beforeAll
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:35:45
+       ❯ hooks-timeout.test.ts:31:45
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > beforeEach > skipped
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:17:45
+       ❯ hooks-timeout.test.ts:15:45
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > click on non-existing element fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:7:33
+       ❯ hooks-timeout.test.ts:6:33
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:70:47
+       ❯ hooks-timeout.test.ts:62:47
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFailed > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:79:47
+       ❯ hooks-timeout.test.ts:70:47
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:54:47
+       ❯ hooks-timeout.test.ts:48:47
 
        FAIL  |webkit| hooks-timeout.test.ts > timeouts are failing correctly > onTestFinished > fails global
       TimeoutError: locator.click: Timeout <ms> exceeded.
-       ❯ hooks-timeout.test.ts:61:47"
+       ❯ hooks-timeout.test.ts:54:47"
     `)
   }
   else {

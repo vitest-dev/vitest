@@ -10,6 +10,7 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
+  Traces,
 } from 'vitest/internal/browser'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -24,6 +25,14 @@ const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
 const debug = debugVar && debugVar !== 'false'
   ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
   : undefined
+
+const otelConfig = getConfig().experimental.openTelemetry
+const traces = new Traces({
+  enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
+  sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
+})
+let rootTesterSpan: ReturnType<Traces['startContextSpan']> | undefined
+getBrowserState().traces = traces
 
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
@@ -61,9 +70,19 @@ channel.addEventListener('message', async (e) => {
     }
     case 'cleanup': {
       await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
+      rootTesterSpan?.span.end()
+      await traces.finish()
       break
     }
     case 'prepare': {
+      await traces.waitInit()
+      const tracesContext = traces.getContextFromCarrier(data.otelCarrier)
+      traces.recordInitSpan(tracesContext)
+      rootTesterSpan = traces.startContextSpan(
+        `vitest.browser.tester.run`,
+        tracesContext,
+      )
+      traces.bind(rootTesterSpan.context)
       await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
       break
     }
@@ -101,7 +120,8 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   const state = getWorkerState()
 
-  state.metaEnv = import.meta.env
+  // @ts-expect-error replaced with `import.meta.env` by transform
+  state.metaEnv = __vitest_browser_import_meta_env_init__
   state.onCancel = onCancel
   state.ctx.rpc = rpc as any
   state.rpc = rpc as any
@@ -181,12 +201,19 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
     state.filepath = file.filepath
     debug?.('running test file', file.filepath)
 
-    if (method === 'run') {
-      await startTests([file], runner)
-    }
-    else {
-      await collectTests([file], runner)
-    }
+    await traces.$(
+      `vitest.test.runner.${method}.module`,
+      { attributes: { 'code.file.path': file.filepath },
+      },
+      async () => {
+        if (method === 'run') {
+          await startTests([file], runner)
+        }
+        else {
+          await collectTests([file], runner)
+        }
+      },
+    )
   }
 }
 

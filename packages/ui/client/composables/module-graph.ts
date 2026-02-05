@@ -8,6 +8,7 @@ import type {
 import type { ModuleGraphData } from 'vitest'
 import { defineGraph, defineLink, defineNode } from 'd3-graph-controller'
 import { calcExternalLabels, createModuleLabelItem } from '~/utils/task'
+import { config } from './client'
 
 export type ModuleType = 'external' | 'inline'
 export type ModuleNode = GraphNode<ModuleType>
@@ -25,7 +26,7 @@ function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
     createModuleLabelItem(module),
   )
   const map = calcExternalLabels(labels)
-  return labels.map(({ raw, id, splits }) => {
+  return labels.map(({ raw, id, splitted }) => {
     return defineNode<ModuleType, ModuleNode>({
       color: 'var(--color-node-external)',
       label: {
@@ -33,7 +34,7 @@ function defineExternalModuleNodes(modules: string[]): ModuleNode[] {
         fontSize: '0.875rem',
         text: id.includes('node_modules')
           ? (map.get(raw) ?? raw)
-          : splits.pop()!,
+          : splitted[splitted.length - 1],
       },
       isFocused: false,
       id,
@@ -64,11 +65,15 @@ export function getModuleGraph(
     return defineGraph({})
   }
 
-  const externalizedNodes = defineExternalModuleNodes(data.externalized)
+  const externalizedNodes = !config.value.experimental?.viteModuleRunner
+    ? defineExternalModuleNodes([...data.inlined, ...data.externalized])
+    : defineExternalModuleNodes(data.externalized)
   const inlinedNodes
-    = data.inlined.map(module =>
-      defineInlineModuleNode(module, module === rootPath),
-    ) ?? []
+    = !config.value.experimental?.viteModuleRunner
+      ? []
+      : data.inlined.map(module =>
+        defineInlineModuleNode(module, module === rootPath),
+      ) ?? []
   const nodes = [...externalizedNodes, ...inlinedNodes]
   const nodeMap = Object.fromEntries(nodes.map(node => [node.id, node]))
   const links = Object.entries(data.graph).flatMap(

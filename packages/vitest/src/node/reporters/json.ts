@@ -39,6 +39,7 @@ export interface JsonAssertionResult {
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
+  tags: string[]
 }
 
 export interface JsonTestResult {
@@ -161,6 +162,7 @@ export class JsonReporter implements Reporter {
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
           meta: t.meta,
+          tags: t.tags || [],
         } satisfies JsonAssertionResult
       })
 

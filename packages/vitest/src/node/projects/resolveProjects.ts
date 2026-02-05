@@ -58,6 +58,7 @@ export async function resolveProjects(
     'inspect',
     'inspectBrk',
     'fileParallelism',
+    'tagsFilter',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -87,7 +88,28 @@ export async function resolveProjects(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
+      {
+        ...options,
+        root,
+        configFile,
+        plugins: [
+          {
+            name: 'vitest:tags',
+            // don't inherit tags from workspace config, they are merged separately
+            configResolved(config) {
+              ;(config as any).test ??= {}
+              config.test!.tags = options.test?.tags
+            },
+            api: {
+              vitest: {
+                experimental: { ignoreFsModuleCache: true },
+              },
+            },
+          },
+          ...options.plugins || [],
+        ],
+        test: { ...options.test, ...cliOverrides },
+      },
     )))
   })
 
@@ -253,6 +275,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     headless,
     screenshotDirectory,
     screenshotFailures,
+    fileParallelism,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -276,6 +299,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
       provider: provider ?? currentConfig.provider,
+      fileParallelism: fileParallelism ?? currentConfig.fileParallelism,
       name: browser,
       instances: [], // projects cannot spawn more configs
     },

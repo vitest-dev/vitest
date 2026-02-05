@@ -4,6 +4,7 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
   TestAnnotation,
   TestArtifact,
@@ -11,6 +12,7 @@ import type {
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../test-specification'
 
 class ReportedTaskImplementation {
   /**
@@ -101,6 +103,11 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
+  /**
+   * Tags associated with the test.
+   */
+  public readonly tags: string[]
+
   /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
@@ -115,6 +122,7 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = this.module
     }
     this.options = buildOptions(task)
+    this.tags = this.options.tags || []
   }
 
   /**
@@ -218,6 +226,18 @@ export class TestCase extends ReportedTaskImplementation {
       repeatCount: result.repeatCount ?? 0,
       flaky: !!result.retryCount && result.state === 'pass' && result.retryCount > 0,
     }
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test case.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds: [this.id] },
+      isTypecheck ? 'typecheck' : undefined,
+    )
   }
 }
 
@@ -420,6 +440,19 @@ export class TestSuite extends SuiteImplementation {
   }
 
   /**
+   * Returns a new test specification that can be used to filter or run this specific test suite.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    const testIds = [...this.children.allTests()].map(test => test.id)
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds },
+      isTypecheck ? 'typecheck' : undefined,
+    )
+  }
+
+  /**
    * Full name of the suite including all parent suites separated with `>`.
    */
   public get fullName(): string {
@@ -474,6 +507,18 @@ export class TestModule extends SuiteImplementation {
   }
 
   /**
+   * Returns a new test specification that can be used to filter or run this specific test module.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.moduleId,
+      undefined,
+      isTypecheck ? 'typecheck' : undefined,
+    )
+  }
+
+  /**
    * Checks the running state of the test file.
    */
   public state(): TestModuleState {
@@ -524,8 +569,13 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | undefined
+  readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
+  readonly tags: string[] | undefined
+  /**
+   * Only tests have a `timeout` option.
+   */
+  readonly timeout: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
@@ -537,8 +587,10 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
+    tags: task.tags,
+    timeout: task.type === 'test' ? task.timeout : undefined,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called
     // only for tests and suites

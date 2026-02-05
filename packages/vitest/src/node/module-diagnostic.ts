@@ -13,7 +13,7 @@ import type { StateManager } from './state'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { createIndexLocationsMap } from '../utils/base'
 
-// this function recieves the module diagnostic with the location of imports
+// this function receives the module diagnostic with the location of imports
 // and populates it with collected import durations; the duration is injected
 // only if the current module is the one that imported the module
 // if testModule is not defined, then Vitest aggregates durations of ALL collected test modules

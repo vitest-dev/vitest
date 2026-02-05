@@ -10,6 +10,7 @@ import type {
   UserEventHoverOptions,
   UserEventSelectOptions,
   UserEventUploadOptions,
+  UserEventWheelOptions,
 } from 'vitest/browser'
 import {
   asLocator,
@@ -25,7 +26,7 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { escapeForTextSelector, isLocator } from '../tester-utils'
+import { escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from '../tester-utils'
 
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
 export {
@@ -86,6 +87,23 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
+  public wheel(options: UserEventWheelOptions): Promise<void> {
+    return ensureAwaited<void>(async () => {
+      await this.triggerCommand<void>('__vitest_wheel', this.selector, resolveUserEventWheelOptions(options))
+
+      const browser = getBrowserState().config.browser.name
+
+      // looks like on Chromium the scroll event gets dispatched a frame later
+      if (browser === 'chromium' || browser === 'chrome') {
+        return new Promise((resolve) => {
+          requestAnimationFrame(() => {
+            resolve()
+          })
+        })
+      }
+    })
+  }
+
   public clear(options?: UserEventClearOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_clear', this.selector, options)
   }
@@ -117,7 +135,8 @@ export abstract class Locator {
       return {
         name: file.name,
         mimeType: file.type,
-        base64: bas64String,
+        // strip prefix `data:[<media-type>][;base64],`
+        base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
     return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)

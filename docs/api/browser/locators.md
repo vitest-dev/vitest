@@ -7,7 +7,7 @@ outline: [2, 3]
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser#browser-provider), not just playwright.
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
 
 ::: tip
 This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
@@ -647,6 +647,23 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ```
 
 - [See more at `userEvent.tripleClick`](/api/browser/interactivity#userevent-tripleclick)
+
+### wheel <Version>4.1.0</Version> {#wheel}
+
+```ts
+function wheel(options: UserEventWheelOptions): Promise<void>
+```
+
+Triggers a [`wheel` event](https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event) on an element. You can use the options to choose a general scroll `direction` or a precise `delta` value.
+
+```ts
+import { page } from 'vitest/browser'
+
+// Scroll right
+await page.getByRole('tablist').wheel({ direction: 'right' })
+```
+
+- [See more at `userEvent.wheel`](/api/browser/interactivity#userevent-wheel)
 
 ### clear
 

@@ -50,6 +50,47 @@ fn.length // == 2
 The custom function implementation in the types below is marked with a generic `<T>`.
 :::
 
+::: warning Class Support {#class-support}
+Shorthand methods like `mockReturnValue`, `mockReturnValueOnce`, `mockResolvedValue` and others cannot be used on a mocked class. Class constructors have [unintuitive behaviour](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor) regarding the return value:
+
+```ts {2,7}
+const CorrectDogClass = vi.fn(class {
+  constructor(public name: string) {}
+})
+
+const IncorrectDogClass = vi.fn(class {
+  constructor(public name: string) {
+    return { name }
+  }
+})
+
+const Marti = new CorrectDogClass('Marti')
+const Newt = new IncorrectDogClass('Newt')
+
+Marti instanceof CorrectDogClass // ✅ true
+Newt instanceof IncorrectDogClass // ❌ false!
+```
+
+Even though the shapes are the same, the _return value_ from the constructor is assigned to `Newt`, which is a plain object, not an instance of a mock. Vitest guards you against this behaviour in shorthand methods (but not in `mockImplementation`!) and throws an error instead.
+
+If you need to mock constructed instance of a class, consider using the `class` syntax with `mockImplementation` instead:
+
+```ts
+mock.mockReturnValue({ hello: () => 'world' }) // [!code --]
+mock.mockImplementation(class { hello = () => 'world' }) // [!code ++]
+```
+
+If you need to test the behaviour where this is a valid use case, you can use `mockImplementation` with a `constructor`:
+
+```ts
+mock.mockImplementation(class {
+  constructor(name: string) {
+    return { name }
+  }
+})
+```
+:::
+
 ## getMockImplementation
 
 ```ts

@@ -1,14 +1,15 @@
-import type { FixtureItem } from './fixture'
+import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
   File,
-  Fixtures,
+  InternalTestContext,
   RunMode,
   Suite,
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
   SuiteHooks,
+  SuiteOptions,
   Task,
   TaskCustomOptions,
   TaskPopulated,
@@ -23,6 +24,7 @@ import {
   isObject,
   objectAttr,
   toArray,
+  unique,
 } from '@vitest/utils/helpers'
 import {
   abortIfTimeout,
@@ -32,12 +34,13 @@ import {
   runWithSuite,
   withTimeout,
 } from './context'
-import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
-import { afterAll, afterEach, beforeAll, beforeEach } from './hooks'
+import { configureProps, TestFixtures, withFixtures } from './fixture'
+import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { findTestFileStackTrace } from './utils'
-import { createChainable } from './utils/chain'
+import { createChainable, getChainableContext } from './utils/chain'
+import { createNoTagsError, validateTags } from './utils/tags'
 import { createTaskName } from './utils/tasks'
 
 /**
@@ -187,7 +190,13 @@ let currentTestFilepath: string
 
 function assert(condition: any, message: string) {
   if (!condition) {
-    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+    throw new Error(
+      `Vitest failed to find ${message}. One of the following is possible:`
+      + '\n- "vitest" is imported directly without running "vitest" command'
+      + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+      + '\n- "vitest" is imported inside Vite / Vitest config file'
+      + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n',
+    )
   }
 }
 
@@ -207,7 +216,11 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  const options: SuiteOptions = {}
+  if (config.concurrent != null) {
+    options.concurrent = config.concurrent
+  }
+  const collector = suite('', options, () => {})
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -217,12 +230,12 @@ export function clearCollectorContext(
   file: File,
   currentRunner: VitestRunner,
 ): void {
+  currentTestFilepath = file.filepath
+  runner = currentRunner
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
   defaultSuite.file = file
-  runner = currentRunner
-  currentTestFilepath = file.filepath
   collectorContext.tasks.length = 0
   defaultSuite.clear()
   collectorContext.currentSuite = defaultSuite
@@ -230,7 +243,7 @@ export function clearCollectorContext(
 
 export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
   const currentSuite = (collectorContext.currentSuite
-    || defaultSuite) as SuiteCollector<ExtraContext>
+    || defaultSuite) as unknown as SuiteCollector<ExtraContext>
   assert(currentSuite, 'the current suite')
   return currentSuite
 }
@@ -241,8 +254,12 @@ export function createSuiteHooks(): SuiteHooks {
     afterAll: [],
     beforeEach: [],
     afterEach: [],
+    aroundEach: [],
+    aroundAll: [],
   }
 }
+
+const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
 
 function parseArguments<T extends (...args: any[]) => any>(
   optionsOrFn: T | object | undefined,
@@ -288,18 +305,56 @@ function createSuiteCollector(
   factory: SuiteFactory = () => {},
   mode: RunMode,
   each?: boolean,
-  suiteOptions?: TestOptions,
-  parentCollectorFixtures?: FixtureItem[],
+  suiteOptions?: SuiteOptions,
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
   let suite!: Suite
-
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
-    const timeout = options?.timeout ?? runner.config.testTimeout
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const parentTags = parentTask?.tags || []
+    const testTags = unique([...parentTags, ...toArray(options.tags)])
+    const tagsOptions = testTags
+      .map((tag) => {
+        const tagDefinition = runner.config.tags?.find(t => t.name === tag)
+        if (!tagDefinition && runner.config.strictTags) {
+          throw createNoTagsError(runner.config.tags, tag)
+        }
+        return tagDefinition
+      })
+      .filter(r => r != null)
+      // higher priority should be last, run 1, 2, 3, ... etc
+      .sort((tag1, tag2) => (tag2.priority ?? POSITIVE_INFINITY) - (tag1.priority ?? POSITIVE_INFINITY))
+      .reduce((acc, tag) => {
+        const { name, description, priority, meta, ...options } = tag
+        Object.assign(acc, options)
+        if (meta) {
+          acc.meta = Object.assign(acc.meta ?? Object.create(null), meta)
+        }
+        return acc
+      }, {} as TestOptions)
+
+    const testOwnMeta = options.meta
+    options = {
+      ...tagsOptions,
+      ...options,
+    }
+    const timeout = options.timeout ?? runner.config.testTimeout
+    const parentMeta = currentSuite?.meta
+    const tagMeta = tagsOptions.meta
+    const testMeta = Object.create(null)
+    if (tagMeta) {
+      Object.assign(testMeta, tagMeta)
+    }
+    if (parentMeta) {
+      Object.assign(testMeta, parentMeta)
+    }
+    if (testOwnMeta) {
+      Object.assign(testMeta, testOwnMeta)
+    }
     const task: Test = {
       id: '',
       name,
@@ -324,9 +379,10 @@ function createSuiteCollector(
           : options.todo
             ? 'todo'
             : 'run',
-      meta: options.meta ?? Object.create(null),
+      meta: testMeta,
       annotations: [],
       artifacts: [],
+      tags: testTags,
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
@@ -339,18 +395,16 @@ function createSuiteCollector(
       task.concurrent = true
     }
     task.shuffle = suiteOptions?.shuffle
-
     const context = createTestContext(task, runner)
     // create test context
     Object.defineProperty(task, 'context', {
       value: context,
       enumerable: false,
     })
-    setTestFixture(context, options.fixtures)
+    setTestFixture(context, options.fixtures ?? new TestFixtures())
 
-    // custom can be called from any place, let's assume the limit is 15 stacks
     const limit = Error.stackTraceLimit
-    Error.stackTraceLimit = 15
+    Error.stackTraceLimit = 10
     const stackTraceError = new Error('STACK_TRACE_ERROR')
     Error.stackTraceLimit = limit
 
@@ -358,7 +412,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
           timeout,
           false,
           stackTraceError,
@@ -395,10 +449,15 @@ function createSuiteCollector(
     }
 
     // inherit concurrent / sequential from suite
-    options.concurrent
-      = this.concurrent || (!this.sequential && options?.concurrent)
-    options.sequential
-      = this.sequential || (!this.concurrent && options?.sequential)
+    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
+    if (options.concurrent != null && concurrent != null) {
+      options.concurrent = concurrent
+    }
+
+    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
+    if (options.sequential != null && sequential != null) {
+      options.sequential = sequential
+    }
 
     const test = task(formatName(name), {
       ...this,
@@ -409,8 +468,6 @@ function createSuiteCollector(
     test.type = 'test'
   })
 
-  let collectorFixtures = parentCollectorFixtures
-
   const collector: SuiteCollector = {
     type: 'collector',
     name,
@@ -418,24 +475,12 @@ function createSuiteCollector(
     suite,
     options: suiteOptions,
     test,
+    file: suite.file,
     tasks,
     collect,
     task,
     clear,
     on: addHook,
-    fixtures() {
-      return collectorFixtures
-    },
-    scoped(fixtures) {
-      const parsed = mergeContextFixtures(
-        fixtures,
-        { fixtures: collectorFixtures },
-        runner,
-      )
-      if (parsed.fixtures) {
-        collectorFixtures = parsed.fixtures
-      }
-    },
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
@@ -448,6 +493,9 @@ function createSuiteCollector(
     }
 
     const currentSuite = collectorContext.currentSuite?.suite
+    const parentTask = currentSuite ?? collectorContext.currentSuite?.file
+    const suiteTags = toArray(suiteOptions?.tags)
+    validateTags(runner.config, suiteTags)
 
     suite = {
       id: '',
@@ -464,8 +512,9 @@ function createSuiteCollector(
       file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       shuffle: suiteOptions?.shuffle,
       tasks: [],
-      meta: Object.create(null),
+      meta: suiteOptions?.meta ?? Object.create(null),
       concurrent: suiteOptions?.concurrent,
+      tags: unique([...parentTask?.tags || [], ...suiteTags]),
     }
 
     if (runner && includeLocation && runner.config.includeTaskLocation) {
@@ -535,42 +584,63 @@ function createSuite() {
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
-    factoryOrOptions?: SuiteFactory | TestOptions,
+    factoryOrOptions?: SuiteFactory | SuiteOptions,
     optionsOrFactory?: number | SuiteFactory,
   ) {
-    let mode: RunMode = this.only
-      ? 'only'
-      : this.skip
-        ? 'skip'
-        : this.todo
-          ? 'todo'
-          : 'run'
+    if (getCurrentTest()) {
+      throw new Error(
+        'Calling the suite function inside test function is not allowed. It can be only called at the top level or inside another suite function.',
+      )
+    }
+
     const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
     let { options, handler: factory } = parseArguments(
       factoryOrOptions,
       optionsOrFactory,
-    )
-
-    if (mode === 'run' && !factory) {
-      mode = 'todo'
-    }
+    ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
     const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
 
+    const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
-      ...currentSuite?.options,
+      ...parentOptions,
       ...options,
-      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
+    }
+
+    const shuffle = this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle
+    if (shuffle != null) {
+      options.shuffle = shuffle
+    }
+
+    let mode: RunMode = (this.only ?? options.only)
+      ? 'only'
+      : (this.skip ?? options.skip)
+          ? 'skip'
+          : (this.todo ?? options.todo)
+              ? 'todo'
+              : 'run'
+
+    // passed as test(name), assume it's a "todo"
+    if (mode === 'run' && !factory) {
+      mode = 'todo'
     }
 
     // inherit concurrent / sequential from suite
     const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
     const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
-    options.concurrent = isConcurrent && !isSequential
-    options.sequential = isSequential && !isConcurrent
+    if (isConcurrent != null) {
+      options.concurrent = isConcurrent && !isSequential
+    }
+    if (isSequential != null) {
+      options.sequential = isSequential && !isConcurrent
+    }
+
+    if (parentMeta) {
+      options.meta = Object.assign(Object.create(null), parentMeta, options.meta)
+    }
 
     return createSuiteCollector(
       formatName(name),
@@ -578,20 +648,17 @@ function createSuite() {
       mode,
       this.each,
       options,
-      currentSuite?.fixtures(),
     )
   }
 
   suiteFn.each = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: SuiteAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const suite = this.withContext()
-    this.setContext('each', true)
+    const context = getChainableContext(this)
+    const suite = context.withContext()
+    context.setContext('each', true)
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -633,7 +700,7 @@ function createSuite() {
         }
       })
 
-      this.setContext('each', undefined)
+      context.setContext('each', undefined)
     }
   }
 
@@ -675,20 +742,17 @@ function createSuite() {
 
 export function createTaskCollector(
   fn: (...args: any[]) => any,
-  context?: Record<string, unknown>,
 ): TestAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: TestAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const test = this.withContext()
-    this.setContext('each', true)
+    const context = getChainableContext(this)
+    const test = context.withContext()
+    context.setContext('each', true)
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -731,19 +795,17 @@ export function createTaskCollector(
         }
       })
 
-      this.setContext('each', undefined)
+      context.setContext('each', undefined)
     }
   }
 
   taskFn.for = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: TestAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
-    const test = this.withContext()
+    const context = getChainableContext(this)
+    const test = context.withContext()
 
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
@@ -760,8 +822,7 @@ export function createTaskCollector(
         // monkey-patch handler to allow parsing fixture
         const handlerWrapper = handler ? (ctx: any) => handler(item, ctx) : undefined
         if (handlerWrapper) {
-          (handlerWrapper as any).__VITEST_FIXTURE_INDEX__ = 1;
-          (handlerWrapper as any).toString = () => handler!.toString()
+          configureProps(handlerWrapper, { index: 1, original: handler })
         }
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
@@ -775,67 +836,153 @@ export function createTaskCollector(
     return condition ? this : this.skip
   }
 
-  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
-    const collector = getCurrentSuite()
-    collector.scoped(fixtures)
+  /**
+   * Parse builder pattern arguments into a fixtures object.
+   * Handles both builder pattern (name, options?, value) and object syntax.
+   */
+  function parseBuilderFixtures(
+    fixturesOrName: UserFixtures | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ): UserFixtures {
+    // Object syntax: just return as-is
+    if (typeof fixturesOrName !== 'string') {
+      return fixturesOrName
+    }
+
+    const fixtureName = fixturesOrName
+    let fixtureOptions: object | undefined
+    let fixtureValue: any
+
+    if (maybeFn !== undefined) {
+      // (name, options, value) or (name, options, fn)
+      fixtureOptions = optionsOrFn as object
+      fixtureValue = maybeFn
+    }
+    else {
+      // (name, value) or (name, fn)
+      // Check if optionsOrFn looks like fixture options (has scope or auto)
+      if (
+        optionsOrFn !== null
+        && typeof optionsOrFn === 'object'
+        && !Array.isArray(optionsOrFn)
+        && ('scope' in optionsOrFn || 'auto' in optionsOrFn)
+      ) {
+        // (name, options) with no value - treat as empty object fixture
+        fixtureOptions = optionsOrFn as object
+        fixtureValue = {}
+      }
+      else {
+        // (name, value) or (name, fn)
+        fixtureOptions = undefined
+        fixtureValue = optionsOrFn
+      }
+    }
+
+    // Function value: wrap with onCleanup pattern
+    if (typeof fixtureValue === 'function') {
+      const builderFn = fixtureValue as (...args: any[]) => any
+
+      // Wrap builder pattern function (returns value) to use() pattern
+      const fixture = async (ctx: any, use: (value: any) => Promise<void>) => {
+        let cleanup: (() => any) | undefined
+        const onCleanup = (fn: () => any) => {
+          if (cleanup !== undefined) {
+            throw new Error(
+              `onCleanup can only be called once per fixture. `
+              + `Define separate fixtures if you need multiple cleanup functions.`,
+            )
+          }
+          cleanup = fn
+        }
+        const value = await builderFn(ctx, { onCleanup })
+        await use(value)
+        if (cleanup) {
+          await cleanup()
+        }
+      }
+      configureProps(fixture, { original: builderFn })
+
+      if (fixtureOptions) {
+        return { [fixtureName]: [fixture, fixtureOptions] } as any
+      }
+      return { [fixtureName]: fixture } as any
+    }
+
+    // Non-function value: use directly
+    if (fixtureOptions) {
+      return { [fixtureName]: [fixtureValue, fixtureOptions] } as any
+    }
+    return { [fixtureName]: fixtureValue } as any
   }
 
-  taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
-    const _context = mergeContextFixtures(
-      fixtures,
-      context || {},
+  taskFn.override = function (
+    this: TestAPI,
+    fixturesOrName: UserFixtures | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ) {
+    const userFixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
+    getChainableContext(this).getFixtures().override(runner, userFixtures)
+    return this
+  }
+
+  taskFn.scoped = function (fixtures: UserFixtures) {
+    console.warn(`test.scoped() is deprecated and will be removed in future versions. Please use test.override() instead.`)
+    return this.override(fixtures)
+  }
+
+  taskFn.extend = function (
+    this: TestAPI,
+    fixturesOrName: UserFixtures | string,
+    optionsOrFn?: object | ((...args: any[]) => any),
+    maybeFn?: (...args: any[]) => any,
+  ) {
+    const userFixtures = parseBuilderFixtures(fixturesOrName, optionsOrFn, maybeFn)
+    const fixtures = getChainableContext(this).getFixtures().extend(
       runner,
+      userFixtures,
     )
 
-    const originalWrapper = fn
-    return createTest(function (
+    const _test = createTest(function (
       name: string | Function,
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestFunction,
     ) {
-      const collector = getCurrentSuite()
-      const scopedFixtures = collector.fixtures()
-      const context = { ...this }
-      if (scopedFixtures) {
-        context.fixtures = mergeScopedFixtures(
-          context.fixtures || [],
-          scopedFixtures,
-        )
-      }
-      originalWrapper.call(context, formatName(name), optionsOrFn, optionsOrTest)
-    }, _context)
+      fn.call(this, formatName(name), optionsOrFn, optionsOrTest)
+    })
+    getChainableContext(_test).mergeContext({ fixtures })
+
+    return _test
   }
 
+  taskFn.describe = suite
+  taskFn.suite = suite
   taskFn.beforeEach = beforeEach
   taskFn.afterEach = afterEach
   taskFn.beforeAll = beforeAll
   taskFn.afterAll = afterAll
+  taskFn.aroundEach = aroundEach
+  taskFn.aroundAll = aroundAll
 
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
+    { fixtures: new TestFixtures() },
   ) as TestAPI
-
-  if (context) {
-    (_test as any).mergeContext(context)
-  }
 
   return _test
 }
 
 function createTest(
   fn: (
-    this: Record<
-      'concurrent' | 'sequential' | 'skip' | 'only' | 'todo' | 'fails' | 'each',
-      boolean | undefined
-    > & { fixtures?: FixtureItem[] },
+    this: InternalTestContext,
     title: string,
     optionsOrFn?: TestOptions | TestFunction,
     optionsOrTest?: number | TestFunction,
   ) => void,
-  context?: Record<string, any>,
 ) {
-  return createTaskCollector(fn, context) as TestAPI
+  return createTaskCollector(fn) as TestAPI
 }
 
 function formatName(name: string | Function) {

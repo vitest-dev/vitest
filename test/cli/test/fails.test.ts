@@ -7,7 +7,7 @@ import { expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 const root = resolve(import.meta.dirname, '../fixtures/fails')
-const files = await glob(['**/*.test.ts'], { cwd: root, dot: true, expandDirectories: false })
+const files = await glob(['**/*.test.{ts,js}'], { cwd: root, dot: true, expandDirectories: false })
 
 it.each(files)('should fail %s', async (file) => {
   const { stderr } = await runVitest({ root }, [file])
@@ -93,15 +93,15 @@ it('prints a warning if the assertion is not awaited', async () => {
   })
   expect(warnings).toMatchInlineSnapshot(`
     [
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:5:33",
-      "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:10:32",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:9:33",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:14:33",
-      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:19:17",
     ]
   `)
@@ -116,16 +116,56 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
-  }, {}, {}, {
-    test: {
-      browser: {
-        enabled: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-        headless: true,
-      },
+  }, {
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      headless: true,
     },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
   expect(stderr).toContain('base.test.js:5:33')
+})
+
+it('reports test file if it failed to load', async () => {
+  const hooks: string[] = []
+  await runInlineTests({
+    'basic.test.js': `throw new Error('fail')`,
+  }, {
+    reporters: [
+      'default',
+      {
+        onTestModuleQueued(testModule) {
+          hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+        },
+        onTestModuleStart(testModule) {
+          hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
+        },
+        onTestModuleCollected(testModule) {
+          hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
+        },
+        onTestModuleEnd(testModule) {
+          hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
+        },
+      },
+    ],
+  })
+
+  expect(hooks).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued:basic.test.js",
+      "onTestModuleCollected:basic.test.js",
+      "onTestModuleStart:basic.test.js",
+      "onTestModuleEnd:basic.test.js",
+    ]
+  `)
+})
+
+it('should warn if retry.condition is a function in config', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/retry-config',
+  })
+
+  expect(stderr).toContain('Warning: retry.condition function cannot be used inside a config file.')
 })

@@ -105,11 +105,17 @@ interface TaskOptions {
   readonly shuffle: boolean | undefined
   readonly retry: number | undefined
   readonly repeats: number | undefined
+  readonly tags: string[] | undefined
+  readonly timeout: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 ```
 
 The options that test was collected with.
+
+## tags <Version>4.1.0</Version> {#tags}
+
+[Tags](/guide/test-tags) that were implicitly or explicitly assigned to the test.
 
 ## ok
 
@@ -137,7 +143,13 @@ test('the validation works correctly', ({ task }) => {
 })
 ```
 
-If the test did not finish running yet, the meta will be an empty object.
+If the test did not finish running yet, the meta will be an empty object, unless it has static meta:
+
+```ts
+test('the validation works correctly', { meta: { decorated: true } })
+```
+
+Since Vitest 4.1, Vitest inherits [`meta`](/api/advanced/test-suite#meta) property defined on the [suite](/api/advanced/test-suite).
 
 ## result
 
@@ -280,3 +292,11 @@ function artifacts(): ReadonlyArray<TestArtifact>
 ```
 
 [Test artifacts](/api/advanced/artifacts) recorded via the `recordArtifact` API during the test execution.
+
+## toTestSpecification <Version>4.1.0</Version> {#totestspecification}
+
+```ts
+function toTestSpecification(): TestSpecification
+```
+
+Returns a new [test specification](/api/advanced/test-specification) that can be used to filter or run this specific test case.

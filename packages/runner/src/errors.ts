@@ -19,3 +19,19 @@ export class TestRunAbortError extends Error {
     this.reason = reason
   }
 }
+
+export class FixtureDependencyError extends Error {
+  public name = 'FixtureDependencyError'
+}
+
+export class AroundHookSetupError extends Error {
+  public name = 'AroundHookSetupError'
+}
+
+export class AroundHookTeardownError extends Error {
+  public name = 'AroundHookTeardownError'
+}
+
+export class AroundHookMultipleCallsError extends Error {
+  public name = 'AroundHookMultipleCallsError'
+}

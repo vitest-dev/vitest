@@ -35,6 +35,10 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Core directory test**: `CI=true pnpm test <test-file>` (for `test/core`)
 - **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
 
+When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchInlineSnapshot` to include the test error and its stack. If snapshot is failing, update the snapshot instead of reverting it to `toContain`.
+
+If you need to typecheck tests, run `pnpm typecheck` from the root of the workspace.
+
 ### Testing Utilities
 - **`runInlineTests`** from `test/test-utils/index.ts` - You must use this for complex file system setups (>1 file)
 - **`runVitest`** from `test/test-utils/index.ts` - You can use this to run Vitest programmatically
@@ -100,6 +104,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - Main docs in `docs/` directory
 - Built with `pnpm docs:build`
 - Local dev server: `pnpm docs`
+- When adding cli options, run `pnpm -C docs run cli-table` to update the cli-generated.md file
 
 ## Dependencies and Tools
 

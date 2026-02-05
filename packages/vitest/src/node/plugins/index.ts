@@ -61,9 +61,11 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         ;(options as unknown as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
 
         let open: string | boolean | undefined = false
 
@@ -258,8 +260,6 @@ export async function VitestPlugin(
         }
       },
       configureServer: {
-        // runs after vite:import-analysis as it relies on `server` instance on Vite 5
-        order: 'post',
         async handler(server) {
           if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
             server.watcher.on('ready', () => {
