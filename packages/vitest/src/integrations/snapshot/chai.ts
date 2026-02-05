@@ -143,12 +143,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         throw new Error('toMatchInlineSnapshot cannot be used with "not"')
       }
       const test = getTest('toMatchInlineSnapshot', this)
-      const isInsideEach = test.each || test.suite?.each
-      if (isInsideEach) {
-        throw new Error(
-          'InlineSnapshot cannot be used inside of test.each or describe.each',
-        )
-      }
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       if (typeof properties === 'string') {
@@ -211,12 +205,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         )
       }
       const test = getTest('toThrowErrorMatchingInlineSnapshot', this)
-      const isInsideEach = test.each || test.suite?.each
-      if (isInsideEach) {
-        throw new Error(
-          'InlineSnapshot cannot be used inside of test.each or describe.each',
-        )
-      }
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const promise = utils.flag(this, 'promise') as string | undefined
