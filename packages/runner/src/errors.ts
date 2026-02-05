@@ -20,6 +20,10 @@ export class TestRunAbortError extends Error {
   }
 }
 
+export class FixtureDependencyError extends Error {
+  public name = 'FixtureDependencyError'
+}
+
 export class AroundHookSetupError extends Error {
   public name = 'AroundHookSetupError'
 }

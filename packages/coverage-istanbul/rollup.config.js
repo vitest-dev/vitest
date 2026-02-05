@@ -3,6 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { join } from 'pathe'
+import { defineConfig } from 'rollup'
 import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
@@ -36,11 +37,11 @@ const plugins = [
     esmExternals: ['@jridgewell/trace-mapping'],
   }),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 
-export default () => [
+export default defineConfig(() => [
   {
     input: entries,
     output: {
@@ -60,5 +61,16 @@ export default () => [
     watch: false,
     external,
     plugins: dtsUtils.dts(),
+    onLog(level, log, handler) {
+      // we don't control the source of "istanbul-lib-coverage"
+      if (
+        level === 'warn'
+        && log.exporter === 'istanbul-lib-coverage'
+        && log.message.includes('"Range" is imported')
+      ) {
+        return
+      }
+      handler(level, log)
+    },
   },
-]
+])

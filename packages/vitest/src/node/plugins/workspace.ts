@@ -245,6 +245,7 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project:server',
+      enforce: 'pre',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)

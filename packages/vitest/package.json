@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.1.0-beta.2",
+  "version": "4.1.0-beta.3",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -218,6 +218,7 @@
     "mime": "^4.1.0",
     "prompts": "^2.4.2",
     "strip-literal": "catalog:",
+    "tinyhighlight": "catalog:",
     "ws": "catalog:"
   }
 }

@@ -33,9 +33,6 @@ import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
-// worker context is shared between all tests
-const workerContext = Object.create(null)
-
 export class TestRunner implements VitestTestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
@@ -89,10 +86,6 @@ export class TestRunner implements VitestTestRunner {
   onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
-  }
-
-  getWorkerContext(): Record<string, unknown> {
-    return workerContext
   }
 
   async onAfterRunSuite(suite: Suite): Promise<void> {

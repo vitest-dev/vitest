@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dts-playwright",
+  "name": "@vitest/test-integration-dts-browser-playwright",
   "type": "module",
   "private": true,
   "scripts": {

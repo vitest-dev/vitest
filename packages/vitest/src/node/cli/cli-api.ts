@@ -106,6 +106,7 @@ export async function startVitest(
     else {
       await ctx.start(cliFilters)
     }
+    return ctx
   }
   catch (e) {
     if (e instanceof FilesNotFoundError) {
@@ -131,14 +132,12 @@ export async function startVitest(
     ctx.logger.error('\n\n')
     return ctx
   }
-
-  if (ctx.shouldKeepServer()) {
-    return ctx
+  finally {
+    if (!ctx?.shouldKeepServer()) {
+      stdinCleanup?.()
+      await ctx.close()
+    }
   }
-
-  stdinCleanup?.()
-  await ctx.close()
-  return ctx
 }
 
 export async function prepareVitest(
