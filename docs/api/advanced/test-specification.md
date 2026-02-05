@@ -11,6 +11,7 @@ const specification = project.createSpecification(
     testLines: [20, 40],
     testNamePattern: /hello world/,
     testIds: ['1223128da3_0_0_0', '1223128da3_0_0'],
+    testTagsFilter: ['frontend and backend'],
   } // optional test filters
 )
 ```
@@ -39,7 +40,7 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 
 Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
 
-## pool <Badge type="warning">experimental</Badge> {#pool}
+## pool {#pool}
 
 The [`pool`](/config/#pool) in which the test module will run.
 
@@ -81,6 +82,10 @@ A regexp that matches the name of the test in this module. This value will overr
 ## testIds <Version>4.1.0</Version> {#testids}
 
 The ids of tasks inside of this specification to run.
+
+## testTagsFilter <Version>4.1.0</Version> {#testtagsfilter}
+
+The [tags filter](/guide/test-tags#syntax) that a test must pass in order to be included in the run. Multiple filters are treated as `AND`.
 
 ## toJSON
 

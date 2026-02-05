@@ -1,11 +1,11 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
-import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
-import { runVitestCli, useFS } from '../../test-utils'
+import { runInlineTests } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
+import { provider } from '../settings'
 
 const testFilename = 'basic.test.ts'
 const testName = 'screenshot-snapshot'
@@ -27,56 +27,45 @@ test('${testName}', async ({ expect }) => {
 
 const browser = 'chromium'
 
-export async function runInlineTests(
+async function runBrowserTests(
   structure: TestFsStructure,
   config: ViteUserConfig['test'] = {},
 ) {
-  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-
-  const fs = useFS(root, {
+  return runInlineTests({
     ...structure,
-    'vitest.config.ts': `
-    import { playwright } from '@vitest/browser-playwright'
-    export default {
-      test: {
-        browser: {
-          enabled: true,
-          screenshotFailures: false,
-          provider: playwright(),
-          headless: true,
-          instances: [{ browser: ${JSON.stringify(browser)} }],
+    'vitest.config.js': `
+      import { playwright } from '@vitest/browser-playwright'
+      export default {
+        test: {
+          browser: {
+            enabled: true,
+            screenshotFailures: false,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: ${JSON.stringify(browser)} }],
+          },
+          reporters: ['verbose'],
+          ...${JSON.stringify(config)},
         },
-        reporters: ['verbose'],
-        ...${JSON.stringify(config)},
-      },
-    }`,
-  })
-
-  const vitest = await runVitestCli({
-    nodeOptions: {
-      env: {
-        CI: 'false',
-        GITHUB_ACTIONS: undefined,
-        NO_COLOR: 'true',
-      },
+      }`,
+  }, {
+    $cliOptions: {
+      watch: true,
     },
-  }, '--root', root, '--watch')
-
-  return {
-    fs,
-    root,
-    ...vitest,
-  }
+  })
 }
 
-describe('--watch', () => {
+describe.runIf(provider.name === 'playwright')('--watch', () => {
   test(
     'fails when creating a snapshot for the first time and does NOT update it afterwards',
     async () => {
-      const { fs, stderr, vitest } = await runInlineTests(
+      const { fs, stderr, vitest } = await runBrowserTests(
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
+        },
+        {
+          update: 'new',
         },
       )
 
@@ -102,10 +91,13 @@ describe('--watch', () => {
   test(
     'creates a reference and fails when changing the DOM content',
     async () => {
-      const { fs, stderr, vitest } = await runInlineTests(
+      const { fs, stderr, vitest } = await runBrowserTests(
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
+        },
+        {
+          update: 'new',
         },
       )
 
@@ -126,7 +118,7 @@ describe('--watch', () => {
     test(
       'creates snapshot and does NOT update it if reference matches',
       async () => {
-        const { fs, stderr, vitest } = await runInlineTests(
+        const { fs, stderr, vitest } = await runBrowserTests(
           {
             [testFilename]: testContent,
             'utils.ts': utilsContent,
@@ -174,7 +166,7 @@ describe('--watch', () => {
     test(
       'creates snapshot and updates it if reference mismatches',
       async () => {
-        const { fs, stderr, vitest } = await runInlineTests(
+        const { fs, stderr, vitest } = await runBrowserTests(
           {
             [testFilename]: testContent,
             'utils.ts': utilsContent,

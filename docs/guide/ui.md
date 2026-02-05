@@ -107,7 +107,7 @@ If the module was inlined, you will see three more windows:
 
 All static imports in the "Source" window show a total time it took to evaluate them by the current module. If the import was already evaluated in the module graph, it will show `0ms` because it is cached by that point.
 
-If the module took longer than 500 milliseconds to load, the time will be displayed in red. If the module took longer than 100 milliseconds, the time will be displayed in orange.
+If the module took longer than the [`danger` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 500ms) to load, the time will be displayed in red. If the module took longer than the [`warn` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 100ms), the time will be displayed in orange.
 
 You can click on an import source to jump into that module and traverse the graph further (note `./support/assertions/index.ts` below).
 
@@ -133,7 +133,7 @@ If you are developing a custom integration on top of Vitest, you can use [`vites
 Please, leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9224).
 :::
 
-The Module Graph tab also provides an Import Breakdown with a list of modules that take the longest time to load (top 10 by default, but you can press "Show more" to load 10 more), sorted by Total Time.
+The Module Graph tab also provides an Import Breakdown with a list of modules that take the longest time to load (top 10 by default), sorted by Total Time.
 
 <img alt="Import breakdown with a list of top 10 modules that take the longest time to load" img-light src="/ui/light-import-breakdown.png">
 <img alt="Import breakdown with a list of top 10 modules that take the longest time to load" img-dark src="/ui/dark-import-breakdown.png">
@@ -142,6 +142,6 @@ You can click on the module to see the Module Info. If the module is external, i
 
 The breakdown shows a list of modules with self time, total time, and a percentage relative to the time it took to load the whole test file.
 
-The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than 500 milliseconds to load, and it will be orange if there is at least one file that took longer than 100 milliseconds.
+The "Show Import Breakdown" icon will have a red color if there is at least one file that took longer than the [`danger` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 500ms) to load, and it will be orange if there is at least one file that took longer than the [`warn` threshold](/config/experimental#experimental-importdurations-thresholds) (default: 100ms).
 
-By default, Vitest shows the breakdown automatically if there is at least one module that took longer than 500 milliseconds to load. You can control the behaviour by setting the [`experimental.printImportBreakdown`](/config/experimental#experimental-printimportbreakdown) option.
+You can use [`experimental.importDurations.limit`](/config/experimental#experimental-importdurationslimit) to control the number of imports displayed.

@@ -121,27 +121,63 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
   }
 
   mock.mockReturnValue = function mockReturnValue(value) {
-    return mock.mockImplementation(() => value)
+    return mock.mockImplementation(function () {
+      if (new.target) {
+        throwConstructorError('mockReturnValue')
+      }
+
+      return value
+    })
   }
 
   mock.mockReturnValueOnce = function mockReturnValueOnce(value) {
-    return mock.mockImplementationOnce(() => value)
+    return mock.mockImplementationOnce(function () {
+      if (new.target) {
+        throwConstructorError('mockReturnValueOnce')
+      }
+
+      return value
+    })
   }
 
   mock.mockResolvedValue = function mockResolvedValue(value) {
-    return mock.mockImplementation(() => Promise.resolve(value))
+    return mock.mockImplementation(function () {
+      if (new.target) {
+        throwConstructorError('mockResolvedValue')
+      }
+
+      return Promise.resolve(value)
+    })
   }
 
   mock.mockResolvedValueOnce = function mockResolvedValueOnce(value) {
-    return mock.mockImplementationOnce(() => Promise.resolve(value))
+    return mock.mockImplementationOnce(function () {
+      if (new.target) {
+        throwConstructorError('mockResolvedValueOnce')
+      }
+
+      return Promise.resolve(value)
+    })
   }
 
   mock.mockRejectedValue = function mockRejectedValue(value) {
-    return mock.mockImplementation(() => Promise.reject(value))
+    return mock.mockImplementation(function () {
+      if (new.target) {
+        throwConstructorError('mockRejectedValue')
+      }
+
+      return Promise.reject(value)
+    })
   }
 
   mock.mockRejectedValueOnce = function mockRejectedValueOnce(value) {
-    return mock.mockImplementationOnce(() => Promise.reject(value))
+    return mock.mockImplementationOnce(function () {
+      if (new.target) {
+        throwConstructorError('mockRejectedValueOnce')
+      }
+
+      return Promise.reject(value)
+    })
   }
 
   mock.mockClear = function mockClear() {
@@ -263,6 +299,12 @@ export function spyOn<T extends object, K extends keyof T>(
 
   if (originalDescriptor) {
     original = originalDescriptor[accessType]
+    // weird Proxy edge case where descriptor's value is undefined,
+    // but there's still a value on the object when called
+    // https://github.com/vitest-dev/vitest/issues/9439
+    if (original == null && accessType === 'value') {
+      original = object[key] as unknown as Procedure
+    }
   }
   else if (accessType !== 'value') {
     original = () => object[key]
@@ -636,6 +678,12 @@ export function clearAllMocks(): void {
 
 export function resetAllMocks(): void {
   REGISTERED_MOCKS.forEach(mock => mock.mockReset())
+}
+
+function throwConstructorError(shorthand: string): never {
+  throw new TypeError(
+    `Cannot use \`${shorthand}\` when called with \`new\`. Use \`mockImplementation\` with a \`class\` keyword instead. See https://vitest.dev/api/mock#class-support for more information.`,
+  )
 }
 
 export type {

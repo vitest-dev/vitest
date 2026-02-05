@@ -1,5 +1,6 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Vitest } from '../core'
+import type { Logger } from '../logger'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
@@ -55,9 +56,14 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
+/**
+ * @deprecated Internal function
+ */
 export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
+  parentApi?: ApiConfig,
+  logger?: Logger,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -95,6 +101,26 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
   }
   else {
     api = { middlewareMode: true }
+  }
+
+  // if the API server is exposed to network, disable write operations by default
+  if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
+    // assigned to browser
+    if (parentApi) {
+      if (api.allowWrite == null && api.allowExec == null) {
+        logger?.error(
+          c.yellow(
+            `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
+          ),
+        )
+      }
+    }
+    api.allowWrite ??= parentApi?.allowWrite ?? false
+    api.allowExec ??= parentApi?.allowExec ?? false
+  }
+  else {
+    api.allowWrite ??= parentApi?.allowWrite ?? true
+    api.allowExec ??= parentApi?.allowExec ?? true
   }
 
   return api
@@ -167,6 +193,34 @@ export function resolveConfig(
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
+
+  // shallow copy tags array to avoid mutating user config
+  resolved.tags = [...resolved.tags || []]
+  const definedTags = new Set<string>()
+  resolved.tags.forEach((tag) => {
+    if (!tag.name || typeof tag.name !== 'string') {
+      throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+    }
+    if (definedTags.has(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
+    }
+    if (tag.name.match(/\s/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
+    }
+    if (tag.name.match(/([!()*|&])/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+    }
+    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+    }
+    if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
+      throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
+    }
+    if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
+      throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
+    }
+    definedTags.add(tag.name)
+  })
 
   resolved.name = typeof options.name === 'string'
     ? options.name
@@ -294,6 +348,10 @@ export function resolveConfig(
         ].join(''))
       }
     }
+  }
+
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
+    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
   }
 
   const containsChromium = hasBrowserChromium(vitest, resolved)
@@ -476,7 +534,9 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+        ? UPDATE_SNAPSHOT
+        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
@@ -704,12 +764,18 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  if (resolved.browser.isolate) {
+    logger.console.warn(
+      c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
+    )
+  }
   resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}
+  resolved.browser.detailsPanelPosition ??= 'right'
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
@@ -761,6 +827,8 @@ export function resolveConfig(
   resolved.browser.api = resolveApiServerConfig(
     resolved.browser,
     defaultBrowserPort,
+    resolved.api,
+    logger,
   ) || {
     port: defaultBrowserPort,
   }
@@ -814,7 +882,7 @@ export function resolveConfig(
   resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
-  resolved.experimental ??= {}
+  resolved.experimental ??= {} as any
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -835,6 +903,19 @@ export function resolveConfig(
       resolved.experimental.fsModuleCachePath,
     )
   }
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.print ??= false
+  resolved.experimental.importDurations.failOnDanger ??= false
+  if (resolved.experimental.importDurations.limit == null) {
+    const shouldCollect
+      = resolved.experimental.importDurations.print
+        || resolved.experimental.importDurations.failOnDanger
+        || resolved.ui
+    resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
+  }
+  resolved.experimental.importDurations.thresholds ??= {} as any
+  resolved.experimental.importDurations.thresholds.warn ??= 100
+  resolved.experimental.importDurations.thresholds.danger ??= 500
 
   return resolved
 }

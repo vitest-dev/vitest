@@ -33,9 +33,6 @@ import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
-// worker context is shared between all tests
-const workerContext = Object.create(null)
-
 export class TestRunner implements VitestTestRunner {
   private snapshotClient = getSnapshotClient()
   private workerState = getWorkerState()
@@ -47,10 +44,12 @@ export class TestRunner implements VitestTestRunner {
   public pool: string = this.workerState.ctx.pool
   private _otel!: Traces
   public viteEnvironment: string
+  private viteModuleRunner: boolean
 
   constructor(public config: SerializedConfig) {
     const environment = this.workerState.environment
     this.viteEnvironment = environment.viteEnvironment || environment.name
+    this.viteModuleRunner = config.experimental.viteModuleRunner
   }
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
@@ -67,7 +66,12 @@ export class TestRunner implements VitestTestRunner {
           'code.file.path': filepath,
         },
       },
-      () => this.moduleRunner.import(filepath),
+      () => {
+        if (!this.viteModuleRunner) {
+          filepath = `${filepath}?vitest=${Date.now()}`
+        }
+        return this.moduleRunner.import(filepath)
+      },
     )
   }
 
@@ -82,10 +86,6 @@ export class TestRunner implements VitestTestRunner {
   onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
-  }
-
-  getWorkerContext(): Record<string, unknown> {
-    return workerContext
   }
 
   async onAfterRunSuite(suite: Suite): Promise<void> {
@@ -235,10 +235,21 @@ export class TestRunner implements VitestTestRunner {
   }
 
   getImportDurations(): Record<string, ImportDuration> {
-    const importDurations: Record<string, ImportDuration> = {}
-    const entries = this.workerState.moduleExecutionInfo?.entries() || []
+    const { limit } = this.config.experimental.importDurations
+    // skip sorting if limit is 0
+    if (limit === 0) {
+      return {}
+    }
 
-    for (const [filepath, { duration, selfTime, external, importer }] of entries) {
+    const entries = [...(this.workerState.moduleExecutionInfo?.entries() || [])]
+
+    // Sort by duration descending and keep top entries
+    const sortedEntries = entries
+      .sort(([, a], [, b]) => b.duration - a.duration)
+      .slice(0, limit)
+
+    const importDurations: Record<string, ImportDuration> = {}
+    for (const [filepath, { duration, selfTime, external, importer }] of sortedEntries) {
       importDurations[normalize(filepath)] = {
         selfTime,
         totalTime: duration,

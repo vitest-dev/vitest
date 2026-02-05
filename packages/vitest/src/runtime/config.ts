@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -76,6 +76,10 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
   retry: SerializableRetry
   includeTaskLocation: boolean | undefined
@@ -109,6 +113,7 @@ export interface SerializedConfig {
     }
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
@@ -119,13 +124,26 @@ export interface SerializedConfig {
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
-    printImportBreakdown: boolean | undefined
+    importDurations: {
+      print: boolean | 'on-warn'
+      limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
+    }
+    viteModuleRunner: boolean
+    nodeLoader: boolean
     openTelemetry: {
       enabled: boolean
       sdkPath?: string
       browserSdkPath?: string
     } | undefined
   }
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
 }
 
 export interface SerializedCoverageConfig {

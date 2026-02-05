@@ -31,6 +31,11 @@ it('correctly inherit from the cli', async () => {
       testNamePattern: 'math',
       passWithNoTests: true,
       bail: 100,
+      experimental: {
+        importDurations: {
+          print: true,
+        },
+      },
     },
   })
   const project = ctx!.projects[0]
@@ -48,6 +53,12 @@ it('correctly inherit from the cli', async () => {
     retry: 6,
     passWithNoTests: true,
     bail: 100,
+    experimental: {
+      importDurations: {
+        print: true,
+        limit: 10,
+      },
+    },
   })
   expect(config.testNamePattern?.test('math')).toBe(true)
 })

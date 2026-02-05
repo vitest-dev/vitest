@@ -43,20 +43,24 @@ const focusedNode = ref<string | null>(null)
 const filteredGraph = shallowRef<ModuleGraph>(graph.value)
 const breakdownIconClass = computed(() => {
   let textClass = ''
-  const importDurations = currentModule.value?.importDurations || {}
+  const importDurations = currentModule.value?.importDurations
+  const thresholds = config.value.experimental?.importDurations.thresholds
+  if (!importDurations || !thresholds) {
+    return textClass
+  }
   for (const moduleId in importDurations) {
     const { totalTime } = importDurations[moduleId]
-    if (totalTime >= 500) {
+    if (totalTime >= thresholds.danger) {
       textClass = 'text-red'
       break
     }
-    else if (totalTime >= 100) {
+    else if (totalTime >= thresholds.warn) {
       textClass = 'text-orange'
     }
   }
   return textClass
 })
-const breakdownShow = ref(config.value?.experimental?.printImportBreakdown ?? breakdownIconClass.value === 'text-red')
+const breakdownShow = ref(breakdownIconClass.value === 'text-red')
 
 onMounted(() => {
   filteredGraph.value = filterGraphByLevels(graph.value, null, 2)

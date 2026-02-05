@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
 import { useResizeObserver } from '@vueuse/core'
-
 import { hideAllPoppers } from 'floating-vue'
-
 import { computed, ref } from 'vue'
+
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
-
-import { config } from '~/composables/client'
-
+import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
-import { activeFileId } from '~/composables/params'
-import DetailsPanel from '../DetailsPanel.vue'
+import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
+import { activeFileId, selectedTest } from '~/composables/params'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
+import ResultsPanel from '../ResultsPanel.vue'
 import ExplorerItem from './ExplorerItem.vue'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
@@ -32,6 +30,8 @@ const emit = defineEmits<{
 const includeTaskLocation = computed(() => config.value.includeTaskLocation)
 
 const searchBox = ref<HTMLInputElement | undefined>()
+const selectProjectRef = ref<HTMLSelectElement | undefined>()
+const sortProjectRef = ref<HTMLSelectElement | undefined>()
 
 const {
   initialized,
@@ -47,7 +47,16 @@ const {
   filteredFiles,
   testsTotal,
   uiEntries,
-} = useSearch(searchBox)
+  enableProjects,
+  disableClearProjects,
+  currentProject,
+  currentProjectName,
+  clearProject,
+  disableProjectSort,
+  clearProjectSort,
+  disableClearProjectSort,
+  searchMatcher,
+} = useSearch(searchBox, selectProjectRef, sortProjectRef)
 
 const filterClass = ref<string>('grid-cols-2')
 const filterHeaderClass = ref<string>('grid-col-span-2')
@@ -72,6 +81,104 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
       </div>
       <div
+        v-if="enableProjects"
+        p="l3 y2 r2"
+        bg-header
+        border="b-2 base"
+        grid="~ cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 gap-y-1"
+        items-center
+      >
+        <!-- Row 1 -->
+        <div class="i-carbon:workspace" flex-shrink-0 />
+        <label for="project-select" text-sm>
+          Projects
+        </label>
+        <div class="relative flex-1">
+          <select
+            id="project-select"
+            ref="selectProjectRef"
+            v-model="currentProject"
+            w-full
+            appearance-none
+            bg-base
+            text-base
+            border="~ base rounded"
+            pl-2
+            pr-8
+            py-1
+            text-sm
+            cursor-pointer
+            hover:bg-active
+            class="outline-none"
+          >
+            <option :value="ALL_PROJECTS" class="text-base bg-base">
+              All Projects
+            </option>
+            <option
+              v-for="project in availableProjects"
+              :key="project"
+              :value="project"
+              class="text-base bg-base"
+            >
+              {{ project }}
+            </option>
+          </select>
+          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+        </div>
+
+        <IconButton
+          v-tooltip.bottom="'Clear project filter'"
+          :disabled="disableClearProjects"
+          title="Clear project filter"
+          icon="i-carbon:filter-remove"
+          @click.passive="clearProject(true)"
+        />
+
+        <!-- Row 2 -->
+        <div class="i-carbon:arrows-vertical" flex-shrink-0 />
+        <label for="project-sort" text-sm>
+          Sort by
+        </label>
+        <div class="relative flex-1" :class="{ 'op-50 cursor-not-allowed': disableProjectSort }">
+          <select
+            id="project-sort"
+            ref="sortProjectRef"
+            v-model="projectSort"
+            w-full
+            appearance-none
+            bg-base
+            text-base
+            border="~ base rounded"
+            pl-2
+            pr-8
+            py-1
+            text-sm
+            cursor-pointer
+            hover:bg-active
+            class="outline-none"
+            :disabled="disableProjectSort"
+          >
+            <option value="default" class="text-base bg-base">
+              Default
+            </option>
+            <option value="asc" class="text-base bg-base">
+              Project A-Z
+            </option>
+            <option value="desc" class="text-base bg-base">
+              Project Z-A
+            </option>
+          </select>
+          <div class="i-carbon:chevron-down absolute right-2 top-1/2 op50 -translate-y-1/2 pointer-events-none" />
+        </div>
+        <IconButton
+          v-tooltip.bottom="'Reset sort'"
+          :disabled="disableClearProjectSort"
+          title="Reset sort"
+          icon="i-carbon:filter-reset"
+          @click.passive="clearProjectSort(true)"
+        />
+      </div>
+      <div
         p="l3 y2 r2"
         flex="~ gap-2"
         items-center
@@ -82,7 +189,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <input
           ref="searchBox"
           v-model="search"
-          placeholder="Search..."
+          placeholder="Search... (e.g. test name, tag:expression)"
           outline="none"
           bg="transparent"
           font="light"
@@ -129,7 +236,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
-      <DetailsPanel>
+      <ResultsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
@@ -149,9 +256,12 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
           </div>
         </template>
         <!-- empty-state -->
-        <template v-if="(isFiltered || isFilteredByStatus) && uiEntries.length === 0">
+        <template v-if="(isFiltered || isFilteredByStatus || !!currentProjectName) && uiEntries.length === 0">
           <div v-if="initialized" flex="~ col" items-center p="x4 y4" font-light>
-            <div op30>
+            <div v-if="searchMatcher.error" text-red text-center>
+              {{ searchMatcher.error }}
+            </div>
+            <div v-else op30>
               No matched test
             </div>
             <button
@@ -226,13 +336,13 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
                 :duration="item.duration"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
-                :class="activeFileId === item.id ? 'bg-active' : ''"
+                :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"
                 :on-item-click="onItemClick"
               />
             </template>
           </RecycleScroller>
         </template>
-      </DetailsPanel>
+      </ResultsPanel>
     </div>
   </div>
 </template>

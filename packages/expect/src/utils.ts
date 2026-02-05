@@ -49,7 +49,7 @@ export function recordAsyncExpect(
         const stack = processor(error.stack)
         console.warn([
           `Promise returned by \`${assertion}\` was not awaited. `,
-          'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. ',
+          'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. ',
           'Please remember to await the assertion.\n',
           stack,
         ].join(''))

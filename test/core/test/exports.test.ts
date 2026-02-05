@@ -22,6 +22,8 @@ it('exports snapshot', async ({ skip, task }) => {
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",
+        "aroundAll": "function",
+        "aroundEach": "function",
         "assert": "function",
         "assertType": "function",
         "beforeAll": "function",

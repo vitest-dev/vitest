@@ -334,7 +334,12 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     code: string
     map?: Vite.Rollup.SourceMap
   }> {
-    const transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
+    // TODO: need to standardize file urls before this call somehow, this is messy
+    const filepath = url.match(/^file:\/\/\/\w:\//)
+      ? url.slice(8)
+      : removeStartsWith(url, FILE_PROTOCOL)
+    // TODO: do we still need to "catch" here? why would it fail?
+    const transformResult = await onTransform(filepath).catch(() => null)
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
@@ -377,15 +382,12 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       throw new Error(`Cannot access browser module graph because it was torn down.`)
     }
 
-    async function onTransform(filepath: string) {
-      if (environment === '__browser__' && project.browser) {
-        const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
-
-        if (result) {
-          return { ...result, code: `${result.code}// <inline-source-map>` }
-        }
+    const onTransform = async (filepath: string) => {
+      const result = await this.transformFile(filepath, project, environment)
+      if (result && environment === '__browser__' && project.browser) {
+        return { ...result, code: `${result.code}// <inline-source-map>` }
       }
-      return project.vite.environments[environment].transformRequest(filepath)
+      return result
     }
 
     const scriptCoverages = []

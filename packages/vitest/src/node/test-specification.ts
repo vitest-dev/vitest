@@ -9,6 +9,7 @@ export interface TestSpecificationOptions {
   testNamePattern?: RegExp
   testIds?: string[]
   testLines?: number[]
+  testTagsFilter?: string[]
 }
 
 export class TestSpecification {
@@ -26,7 +27,6 @@ export class TestSpecification {
   public readonly moduleId: string
   /**
    * The current test pool. It's possible to have multiple pools in a single test project with `typecheck.enabled`.
-   * @experimental In later versions, the project will only support a single pool.
    */
   public readonly pool: Pool
   /**
@@ -41,6 +41,10 @@ export class TestSpecification {
    * The ids of tasks inside of this specification to run.
    */
   public readonly testIds: string[] | undefined
+  /**
+   * The tags of tests to run.
+   */
+  public readonly testTagsFilter: string[] | undefined
 
   /**
    * This class represents a test suite for a test module within a single project.
@@ -73,6 +77,7 @@ export class TestSpecification {
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds
+      this.testTagsFilter = testLinesOrOptions.testTagsFilter
     }
   }
 
@@ -99,6 +104,7 @@ export class TestSpecification {
         testLines: this.testLines,
         testIds: this.testIds,
         testNamePattern: this.testNamePattern,
+        testTagsFilter: this.testTagsFilter,
       },
     ]
   }

@@ -23,6 +23,7 @@ packages:
   - packages/*
   - examples/*
   - test/*
+  - test/cli/dts/*
   - test/config/fixtures/conditions-pkg
 overrides:
   '@types/node': $@types/node
@@ -45,7 +46,7 @@ patchedDependencies:
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 
 catalog:
-  '@iconify-json/carbon': ^1.2.16
+  '@iconify-json/carbon': ^1.2.18
   '@iconify-json/logos': ^1.2.10
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
@@ -57,9 +58,9 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
-  '@unocss/reset': ^66.5.12
-  '@vitejs/plugin-vue': ^6.0.3
-  '@vueuse/core': ^12.8.2
+  '@unocss/reset': ^66.6.0
+  '@vitejs/plugin-vue': ^6.0.4
+  '@vueuse/core': ^14.2.0
   acorn-walk: ^8.3.4
   birpc: ^4.0.0
   cac: ^6.7.14
@@ -74,16 +75,18 @@ catalog:
   msw: ^2.12.7
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.57.0
+  playwright: ^1.58.1
   sirv: ^3.0.2
   std-env: ^3.10.0
   strip-literal: ^3.1.0
   tinyglobby: ^0.2.15
+  tinyhighlight: ^0.3.2
   tinyrainbow: ^3.0.3
+  tinyspy: ^4.0.4
   typescript: ^5.9.3
-  unocss: ^66.5.12
+  unocss: ^66.6.0
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.26
+  vue: ^3.5.27
   ws: ^8.19.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'

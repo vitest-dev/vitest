@@ -92,11 +92,16 @@ export type {
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
+  RawMatcherFn as Matcher,
+  ExpectationResult as MatcherResult,
   Matchers,
+  MatcherState,
 } from '@vitest/expect'
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   describe,
@@ -123,6 +128,7 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
+  SuiteOptions,
   TaskCustomOptions,
   TaskMeta,
   TaskState,
@@ -137,8 +143,9 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
-
   VitestRunnerConfig as TestRunnerConfig,
+
+  TestTags,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 

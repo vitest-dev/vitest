@@ -538,7 +538,7 @@ exports[`error equality 4`] = `
     "custom": "a",
   }",
   "expected": "[Error: hello]",
-  "message": "expected Error: hello { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
+  "message": "expected Error: hello { custom: 'a' } to strictly equal Error: hello { custom: 'a' }",
 }
 `;
 

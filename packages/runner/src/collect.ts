@@ -2,7 +2,7 @@ import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { toArray } from '@vitest/utils/helpers'
-import { collectorContext, setFileContext } from './context'
+import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
 import { runSetupFiles } from './setup'
 import {
@@ -16,6 +16,7 @@ import {
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
+import { createTagsFilter, validateTags } from './utils/tags'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
@@ -27,6 +28,7 @@ export async function collectTests(
 
   const config = runner.config
   const $ = runner.trace!
+  let defaultTagsFilter: ((testTags: string[]) => boolean) | undefined
 
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
@@ -37,16 +39,23 @@ export async function collectTests(
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
         const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
         const testIds = typeof spec === 'string' ? undefined : spec.testIds
+        const testTagsFilter = typeof spec === 'object' && spec.testTagsFilter
+          ? createTagsFilter(spec.testTagsFilter, config.tags)
+          : undefined
+
+        const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
         const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
-        setFileContext(file, Object.create(null))
+        file.tags = fileTags
         file.shuffle = config.sequence.shuffle
 
-        runner.onCollectStart?.(file)
-
-        clearCollectorContext(file, runner)
-
         try {
+          validateTags(runner.config, fileTags)
+
+          runner.onCollectStart?.(file)
+
+          clearCollectorContext(file, runner)
+
           const setupFiles = toArray(config.setupFiles)
           if (setupFiles.length) {
             const setupStart = now()
@@ -93,10 +102,12 @@ export async function collectTests(
           file.collectDuration = now() - collectStart
         }
         catch (e) {
-          const error = processError(e)
+          const errors = e instanceof AggregateError
+            ? e.errors.map(e => processError(e, runner.config.diffOptions))
+            : [processError(e, runner.config.diffOptions)]
           file.result = {
             state: 'fail',
-            errors: [error],
+            errors,
           }
 
           const durations = runner.getImportDurations?.()
@@ -108,11 +119,15 @@ export async function collectTests(
         calculateSuiteHash(file)
 
         const hasOnlyTasks = someTasksAreOnly(file)
+        if (!testTagsFilter && !defaultTagsFilter && config.tagsFilter) {
+          defaultTagsFilter = createTagsFilter(config.tagsFilter, config.tags)
+        }
         interpretTaskModes(
           file,
           testNamePattern ?? config.testNamePattern,
           testLocations,
           testIds,
+          testTagsFilter ?? defaultTagsFilter,
           hasOnlyTasks,
           false,
           config.allowOnly,

@@ -39,7 +39,8 @@ const {
 } = useScreenshot()
 
 function getLocationString(location: TestArtifactLocation) {
-  const path = relative(config.value.root, location.file)
+  const root = config.value.root
+  const path = root ? relative(root, location.file) : location.file
   return `${path}:${location.line}:${location.column}`
 }
 
@@ -90,7 +91,7 @@ const meta = computed(() => {
         >
           <pre v-html="test.result.htmlError" />
         </div>
-        <template v-else-if="test.result?.errors">
+        <template v-else-if="test.result?.errors && config.root">
           <ViewReportError
             v-for="(error, idx) of test.result.errors"
             :key="idx"
@@ -104,7 +105,7 @@ const meta = computed(() => {
     </div>
     <template v-else>
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+        The test has passed without any errors
       </div>
     </template>
     <template v-if="test.annotations.length">

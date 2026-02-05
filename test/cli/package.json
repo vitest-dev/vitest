@@ -7,18 +7,19 @@
   },
   "scripts": {
     "test": "vitest",
-    "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false"
+    "stacktraces": "vitest --root=./fixtures/stacktraces --watch=false",
+    "native": "vitest --root=./fixtures/no-module-runner --watch=false --no-isolate --max-workers=1"
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/sdk-node": "^0.209.0",
-    "@opentelemetry/sdk-trace-web": "^2.3.0",
+    "@opentelemetry/sdk-node": "^0.211.0",
+    "@opentelemetry/sdk-trace-web": "^2.5.0",
     "@test/pkg-reporter": "link:./deps/pkg-reporter",
     "@test/test-dep-error": "file:./deps/error",
     "@test/test-dep-linked": "link:./deps/linked",
     "@test/test-dep-url": "link:./deps/dep-url",
     "@types/ws": "catalog:",
-    "@vitejs/plugin-basic-ssl": "^2.1.3",
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
@@ -28,6 +29,7 @@
     "flatted": "catalog:",
     "obug": "^2.1.1",
     "playwright": "catalog:",
+    "tinyspy": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "^1.5.9",
     "vite": "latest",

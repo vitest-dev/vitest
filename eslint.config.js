@@ -107,6 +107,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
@@ -115,6 +116,7 @@ export default antfu(
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
       'import/no-mutable-exports': 'off',
+      'no-throw-literal': 'off',
     },
   },
   {

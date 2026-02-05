@@ -20,10 +20,12 @@ import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { join, normalize, relative } from 'pathe'
+import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
@@ -47,6 +49,7 @@ import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 
@@ -111,6 +114,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _config?: ResolvedConfig
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _fsCache!: FileSystemModuleCache
@@ -122,7 +126,6 @@ export class Vitest {
 
   private readonly specifications: VitestSpecifications
   private pool: ProcessPool | undefined
-  private _config?: ResolvedConfig
   private _vite?: ViteDevServer
   private _state?: StateManager
   private _cache?: VitestCache
@@ -238,11 +241,28 @@ export class Vitest {
       this._tmpDir,
     )
     const environment = server.environments.__vitest__
-    this.runner = new ServerModuleRunner(
-      environment,
-      this._fetcher,
-      resolved,
-    )
+    this.runner = resolved.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(resolved.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          resolved,
+        )
+    // patch default ssr runnable environment so third-party usage of `runner.import`
+    // still works with Vite's external/noExternal configuration.
+    const ssrEnvironment = server.environments.ssr
+    if (isRunnableDevEnvironment(ssrEnvironment)) {
+      const ssrRunner = new ServerModuleRunner(
+        ssrEnvironment,
+        this._fetcher,
+        resolved,
+      )
+      Object.defineProperty(ssrEnvironment, 'runner', {
+        value: ssrRunner,
+        writable: true,
+        configurable: true,
+      })
+    }
 
     if (this.config.watch) {
       // hijack server restart
@@ -318,6 +338,12 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
 
+    // populate will merge all configs into every project,
+    // we don't want that when just listing tags
+    if (!this.config.listTags) {
+      populateProjectsTags(this.coreWorkspaceProject, this.projects)
+    }
+
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
       : await createReporters(resolved.reporters, this)
@@ -336,6 +362,33 @@ export class Vitest {
       return null
     }
     return this._coverageProvider
+  }
+
+  public async listTags(): Promise<void> {
+    const listTags = this.config.listTags
+    if (typeof listTags === 'boolean') {
+      this.logger.printTags()
+    }
+    else if (listTags === 'json') {
+      const hasTags = [this.getRootProject(), ...this.projects].some(p => p.config.tags && p.config.tags.length > 0)
+      if (!hasTags) {
+        process.exitCode = 1
+        this.logger.printNoTestTagsFound()
+      }
+      else {
+        const manifest = {
+          tags: this.config.tags,
+          projects: this.projects.filter(p => p !== this.coreWorkspaceProject).map(p => ({
+            name: p.name,
+            tags: p.config.tags,
+          })),
+        }
+        this.logger.log(JSON.stringify(manifest, null, 2))
+      }
+    }
+    else {
+      throw new Error(`Unknown value for "test.listTags": ${listTags}`)
+    }
   }
 
   public async enableCoverage(): Promise<void> {
@@ -1071,12 +1124,24 @@ export class Vitest {
       throw new Error(`Task ${id} was not found`)
     }
 
-    const taskNamePattern = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const reportedTask = this.state.getReportedEntityById(id)
+    if (!reportedTask) {
+      throw new Error(`Test specification for task ${id} was not found`)
+    }
 
-    await this.changeNamePattern(
-      taskNamePattern,
-      [task.file.filepath],
-      'tasks' in task ? 'rerun suite' : 'rerun test',
+    const specifications = [reportedTask.toTestSpecification()]
+    await Promise.all([
+      this.report(
+        'onWatcherRerun',
+        [task.file.filepath],
+        'tasks' in task ? 'rerun suite' : 'rerun test',
+      ),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report(
+      'onWatcherStart',
+      ['module' in reportedTask ? reportedTask.module.task : reportedTask.task],
     )
   }
 
@@ -1327,9 +1392,12 @@ export class Vitest {
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)
         }
+        const teardownErrors: unknown[] = []
         // do teardown before closing the server
         for (const project of teardownProjects.reverse()) {
-          await project._teardownGlobalSetup()
+          await project._teardownGlobalSetup().catch((error) => {
+            teardownErrors.push(error)
+          })
         }
 
         const closePromises: unknown[] = this.projects.map(w => w.close())
@@ -1350,7 +1418,7 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          results.forEach((r) => {
+          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
             if (r.status === 'rejected') {
               this.logger.error('error during close', r.reason)
             }

@@ -17,6 +17,8 @@ By default, Vitest uses `utf-8` encoding but you can override it with options.
 
 ::: tip
 This API follows [`server.fs`](https://vitejs.dev/config/server-options.html#server-fs-allow) limitations for security reasons.
+
+If [`browser.api.allowWrite`](/config/browser/api) or [`api.allowWrite`](/config/api#api-allowwrite) are disabled, `writeFile` and `removeFile` functions won't do anything.
 :::
 
 ```ts

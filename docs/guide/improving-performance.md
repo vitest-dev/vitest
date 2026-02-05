@@ -34,16 +34,20 @@ export default defineConfig({
   test: {
     projects: [
       {
-        name: 'Isolated',
-        isolate: true, // (default value)
-        exclude: ['**.non-isolated.test.ts'],
+        test: {
+          name: 'Isolated',
+          isolate: true, // (default value)
+          exclude: ['**.non-isolated.test.ts'],
+        },
       },
       {
-        name: 'Non-isolated',
-        isolate: false,
-        include: ['**.non-isolated.test.ts'],
-      }
-    ]
+        test: {
+          name: 'Non-isolated',
+          isolate: false,
+          include: ['**.non-isolated.test.ts'],
+        },
+      },
+    ],
   },
 })
 ```

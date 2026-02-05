@@ -77,7 +77,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/test#test-concurrent).
 
 ::: warning
 When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
@@ -192,7 +192,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/test#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts [sort.bench.ts]
 import { bench, describe } from 'vitest'

@@ -70,7 +70,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 2 Fail 17 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -82,7 +82,7 @@ test.describe('ui', () => {
     await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
     // report
-    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
@@ -212,8 +212,8 @@ test.describe('ui', () => {
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (5)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await page.getByText('PASS (6)').click()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
     await page.getByPlaceholder('Search...').fill('nothing')
@@ -222,22 +222,22 @@ test.describe('ui', () => {
     // searching "add" will match "sample.test.ts" since it includes a test case named "add"
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match only failing files when fail filter applied
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText(/^Fail$/, { exact: true }).click()
-    await page.getByText('FAIL (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await page.getByText('FAIL (2)').click()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 
     // match only pass files when fail filter applied
     await page.getByPlaceholder('Search...').fill('console')
     await page.getByText(/^Fail$/, { exact: true }).click()
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 
     // html entities in task names are escaped
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
@@ -246,19 +246,36 @@ test.describe('ui', () => {
     await page.getByTestId('collapse-all').click()
     await page.getByTestId('expand-all').click()
     await expect(page.getByText('<MyComponent />')).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
 
     // html entities in task names are escaped
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
 
     // pass files with special chars
     await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
     await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
-    await page.getByText('char () - Square root of nine (9)').hover()
-    await page.getByLabel('Run current test').click()
-    await expect(page.getByText('All tests passed in this file')).toBeVisible()
+    const testItem = page.getByTestId('explorer-item').filter({ hasText: 'char () - Square root of nine (9)' })
+    await testItem.hover()
+    await testItem.getByLabel('Run current test').click()
+    await expect(page.getByText('The test has passed without any errors')).toBeVisible()
+  })
+
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('tag:db')
+
+    // only one test with the tag "db"
+    await expect(page.getByText('PASS (1)')).toBeVisible()
+    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+    await expect(page.getByText('No matched test')).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:unknown')
+    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -288,6 +305,25 @@ test.describe('ui', () => {
     await expect(page.getByLabel(/pass/i)).not.toBeChecked()
     await expect(page.getByLabel(/fail/i)).not.toBeChecked()
     await expect(page.getByLabel(/skip/i)).not.toBeChecked()
+  })
+
+  test('visual regression in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await test.step('attachments get processed', async () => {
+      const item = page.getByLabel('visual regression test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const artifact = page.getByRole('note')
+      await expect(artifact).toHaveCount(1)
+
+      await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
+      await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
+      await expect(artifact.getByRole('tablist')).toHaveText('Reference')
+      await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=.*?\.png/)
+      await expect(artifact.getByRole('tabpanel').getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=.*?\.png/)
+    })
   })
 })
 

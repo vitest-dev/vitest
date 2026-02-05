@@ -1,10 +1,11 @@
 // #region internal
+import type { TestModuleRunner } from '../runtime/moduleRunner/testModuleRunner'
 import { VitestModuleEvaluator } from '../runtime/moduleRunner/moduleEvaluator'
 import { VitestModuleRunner } from '../runtime/moduleRunner/moduleRunner'
 import {
   startVitestModuleRunner,
   VITEST_VM_CONTEXT_SYMBOL,
-} from '../runtime/moduleRunner/startModuleRunner'
+} from '../runtime/moduleRunner/startVitestModuleRunner'
 import { getWorkerState } from '../runtime/utils'
 // #endregion
 
@@ -25,6 +26,7 @@ export type { SnapshotEnvironment } from '@vitest/snapshot/environment'
  */
 export interface __TYPES {
   VitestModuleRunner: VitestModuleRunner
+  TestModuleRunner: TestModuleRunner
 }
 /**
  * @internal
