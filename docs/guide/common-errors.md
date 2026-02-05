@@ -45,24 +45,9 @@ export default defineConfig({
 
 ## Failed to Terminate Worker
 
-This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
+This error can happen when NodeJS's `fetch` is used with [`pool: 'threads'`](/config/pool#threads). See [#3077](https://github.com/vitest-dev/vitest/issues/3077) for details.
 
-As a workaround, you can switch to [`pool: 'forks'`](/config/#forks) or [`pool: 'vmForks'`](/config/#vmforks).
-
-::: code-group
-```ts [vitest.config.js]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    pool: 'forks',
-  },
-})
-```
-```bash [CLI]
-vitest --pool=forks
-```
-:::
+The default [`pool: 'forks'`](/config/pool#forks) does not have this issue. If you've explicitly set `pool: 'threads'`, switching back to `'forks'` or using [`'vmForks'`](/config/pool#vmforks) will resolve it.
 
 ## Custom package conditions are not resolved
 
