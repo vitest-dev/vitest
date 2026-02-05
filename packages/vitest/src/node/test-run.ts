@@ -332,9 +332,12 @@ function extractSourcemapFromFile(
 
 function createConvertSourceMapReadMap(originalFileName: string) {
   return (filename: string) => {
-    return readFileSync(
-      path.resolve(path.dirname(originalFileName), filename),
-      'utf-8',
-    )
+    // convertSourceMap can detect invalid filename from comments.
+    // fallback to empty source map to avoid errors.
+    const targetPath = path.resolve(path.dirname(originalFileName), filename)
+    if (existsSync(targetPath)) {
+      return readFileSync(targetPath, 'utf-8')
+    }
+    return '{}'
   }
 }
