@@ -469,7 +469,7 @@ export function generateCodeFrame(
           return ''
         }
 
-        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent)
+        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent).trimEnd()
         res.push(lineNo(j + 1) + (truncatedLine ? ' ' + truncatedLine : truncatedLine))
 
         if (j === i) {
