@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-svelte
 
-The [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
@@ -35,11 +35,11 @@ The package exposes two entry points: `vitest-browser-svelte` and `vitest-browse
 ## render
 
 ```ts
-export function render<T extends SvelteComponent>(
-  Component: ComponentType<T>,
+export function render<C extends Component>(
+  Component: ComponentImport<C>,
   options?: ComponentOptions<C>,
-  renderOptions?: SetupOptions,
-): RenderResult
+  renderOptions?: SetupOptions
+): RenderResult<C>
 ```
 
 ### Options
@@ -139,7 +139,7 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 #### rerender
 
 ```ts
-function rerender(props: Partial<ComponentProps<T>>): Promise<void>
+function rerender(props: Partial<ComponentProps<T>>): void
 ```
 
 Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes.

@@ -9,6 +9,7 @@ The community [`vitest-browser-vue`](https://www.npmjs.com/package/vitest-browse
 ```ts
 import { render } from 'vitest-browser-vue'
 import { expect, test } from 'vitest'
+import Component from './Component.vue'
 
 test('counter button increments the count', async () => {
   const screen = render(Component, {
@@ -31,7 +32,7 @@ If you have used `@testing-library/vue` in your tests before, you can keep using
 `vitest-browser-vue` returns APIs that interact well with built-in [locators](/api/browser/locators), [user events](/api/browser/interactivity) and [assertions](/api/browser/assertions): for example, Vitest will automatically retry the element until the assertion is successful, even if it was rerendered between the assertions.
 :::
 
-The package exposes two entry points: `vitest-browser-vue` and `vitest-browser-vue/pure`. They exposes identical API, but the `pure` entry point doesn't add a handler to remove the component before the next test has started.
+The package exposes two entry points: `vitest-browser-vue` and `vitest-browser-vue/pure`. They expose identical API, but the `pure` entry point doesn't add a handler to remove the component before the next test has started.
 
 ## render
 
@@ -52,7 +53,7 @@ By default, Vitest will create a `div`, append it to `document.body`, and render
 
 For example, if you are unit testing a `tbody` element, it cannot be a child of a `div`. In this case, you can specify a `table` as the render container.
 
-```jsx
+```js
 const table = document.createElement('table')
 
 const { container } = render(TableBody, {
@@ -78,7 +79,7 @@ await screen.getByRole('link', { name: 'Expand' }).click()
 
 #### container
 
-The containing DOM node where your Svelte component is rendered. This is a regular DOM node, so you technically could call `container.querySelector` etc. to inspect the children.
+The containing DOM node where your Vue component is rendered. This is a regular DOM node, so you technically could call `container.querySelector` etc. to inspect the children.
 
 :::danger
 If you find yourself using `container` to query for rendered elements then you should reconsider! The [locators](/api/browser/locators) are designed to be more resilient to changes that will be made to the component you're testing. Avoid using `container` to query for elements!
@@ -98,7 +99,7 @@ The queries returned by the `render` looks into `baseElement`, so you can use qu
 
 The [locator](/api/browser/locators) of your `container`. It is useful to use queries scoped only to your component, or pass it down to other assertions:
 
-```jsx
+```js
 import { render } from 'vitest-browser-vue'
 
 const { locator } = render(NumberDisplay, {
@@ -171,7 +172,7 @@ Remove all components rendered with [`render`](#render).
 
 To extend locator queries, see [`"Custom Locators"`](/api/browser/locators#custom-locators). For example, to make `render` return a new custom locator, define it using the `locators.extend` API:
 
-```jsx {5-7,12}
+```js {5-7,12}
 import { locators } from 'vitest/browser'
 import { render } from 'vitest-browser-vue'
 
