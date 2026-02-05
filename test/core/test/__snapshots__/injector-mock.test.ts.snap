@@ -3,7 +3,7 @@
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited assigned vi.hoisted is called inside vi.mock 1`] = `"Cannot call vi.hoisted() inside vi.mock('./mocked'): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited assigned vi.hoisted is called inside vi.mock 2`] = `
-"      2| 
+"      2|
       3| vi.mock('./mocked', async () => {
       4|   const variable = await vi.hoisted(() => 1)
        |                          ^
@@ -14,7 +14,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited vi.hoisted is called inside vi.mock 1`] = `"Cannot call vi.hoisted() inside vi.mock('./mocked'): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited vi.hoisted is called inside vi.mock 2`] = `
-"      2| 
+"      2|
       3| vi.mock('./mocked', async () => {
       4|   await vi.hoisted(() => 1)
        |         ^
@@ -26,7 +26,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited vi.hoisted is exported as default export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export default await vi.hoisted(async () => {
        | ^
       4|   return {}
@@ -37,7 +37,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if awaited vi.hoisted is exported as named export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export const values = await vi.hoisted(async () => {
        | ^
       4|   return {}
@@ -47,7 +47,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.hoisted is called inside vi.mock 1`] = `"Cannot call vi.hoisted() inside vi.mock('./mocked'): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.hoisted is called inside vi.mock 2`] = `
-"      2| 
+"      2|
       3| vi.mock('./mocked', () => {
       4|   const variable = vi.hoisted(() => 1)
        |                    ^
@@ -59,7 +59,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.hoisted is exported as a named export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export const values = vi.hoisted(async () => {
        | ^
       4|   return {}
@@ -70,7 +70,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.hoisted is exported as default 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export default vi.hoisted(() => {
        | ^
       4|   return {}
@@ -80,7 +80,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock inside vi.hoisted 1`] = `"Cannot call vi.mock('./mocked') inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock inside vi.hoisted 2`] = `
-"      2| 
+"      2|
       3| vi.hoisted(() => {
       4|   vi.mock('./mocked')
        |   ^
@@ -91,7 +91,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside assigned awaited vi.hoisted 1`] = `"Cannot call vi.mock('./mocked') inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside assigned awaited vi.hoisted 2`] = `
-"      2| 
+"      2|
       3| const values = await vi.hoisted(async () => {
       4|   vi.mock('./mocked')
        |   ^
@@ -102,7 +102,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside assigned vi.hoisted 1`] = `"Cannot call vi.mock('./mocked') inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside assigned vi.hoisted 2`] = `
-"      2| 
+"      2|
       3| const values = vi.hoisted(() => {
       4|   vi.mock('./mocked')
        |   ^
@@ -113,7 +113,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside awaited vi.hoisted 1`] = `"Cannot call vi.mock('./mocked') inside vi.hoisted(): both methods are hoisted to the top of the file and not actually called inside each other."`;
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is called inside awaited vi.hoisted 2`] = `
-"      2| 
+"      2|
       3| await vi.hoisted(async () => {
       4|   vi.mock('./mocked')
        |   ^
@@ -125,7 +125,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as a named export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export const mocked = vi.mock('./mocked')
        | ^
       4| "
@@ -135,7 +135,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.mock is exported as default export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export default vi.mock('./mocked')
        | ^
       4| "
@@ -145,7 +145,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as a named export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export const mocked = vi.unmock('./mocked')
        | ^
       4| "
@@ -155,7 +155,7 @@ exports[`throws an error when nodes are incompatible > correctly throws an error
 
 exports[`throws an error when nodes are incompatible > correctly throws an error if vi.unmock is exported as default export 2`] = `
 "      1| import { vi } from 'vitest'
-      2| 
+      2|
       3| export default vi.unmock('./mocked')
        | ^
       4| "
