@@ -25,7 +25,7 @@ test('should print correct indicator position', async () => {
     + 2
 
      ❯ indicator-position.test.js:12:17
-         10| 
+         10|
          11| test('', async () => {
          12|   expect(1 + 1).toBe(3)
            |                 ^
