@@ -1,7 +1,6 @@
 import { expect, test } from "vitest";
 import { helper } from "./helper.ts";
 
-
 const myEqual = helper((a: any, b: any) => {
   expect(a).toEqual(b);
 });
