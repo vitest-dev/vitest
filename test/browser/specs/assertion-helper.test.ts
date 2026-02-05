@@ -7,7 +7,13 @@ test('vi.helper hides internal stack traces', async () => {
   })
 
   expect(stderr).toMatchInlineSnapshot(`
-    "
+    "stderr | basic.test.ts > debug
+    Error: foo
+        at http://127.0.0.1:63315/home/hiroshi/code/others/vitest/test/browser/fixtures/assertion-helper/basic.test.ts?import&browserv=1770284597581:56:19
+        at async __MANUAL_HELPER_ASYNC__ (http://127.0.0.1:63315/home/hiroshi/code/others/vitest/test/browser/fixtures/assertion-helper/basic.test.ts?import&browserv=1770284597581:46:16)
+        at async http://127.0.0.1:63315/home/hiroshi/code/others/vitest/test/browser/fixtures/assertion-helper/basic.test.ts?import&browserv=1770284597581:58:3
+        at async http://127.0.0.1:63315/@fs/home/hiroshi/code/others/vitest/packages/runner/dist/index.js:1225:20
+
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  |chromium| basic.test.ts > sync
@@ -136,6 +142,7 @@ test('vi.helper hides internal stack traces', async () => {
         "async": [
           "expected 'left' to deeply equal 'right'",
         ],
+        "debug": "passed",
         "manual": [
           "expected 'manual' to deeply equal 'no'",
         ],

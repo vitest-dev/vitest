@@ -68,3 +68,15 @@ function helper<F extends (...args: any) => any>(fn: F): F {
   }
   return __MANUAL_HELPER__ as F;
 }
+
+test('debug', async () => {
+  const debugAsync = helper(async () => {
+    await new Promise(r => setTimeout(r, 1))
+    console.error(new Error("foo").stack)
+  })
+  await debugAsync()
+})
+
+// TODO:
+// - non builtin assertion
+// - unhandled error
