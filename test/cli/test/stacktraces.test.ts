@@ -194,7 +194,7 @@ it('custom helper with captureStackTrace', async () => {
   `)
 })
 
-// TODO: test browser mode
+// browser mode tested in test/browser/specs/assertion-helper.test.ts
 it('assertion helper', async () => {
   const { stderr, errorTree } = await runVitest({
     root: resolve(import.meta.dirname, '../fixtures/stacktraces-helper'),
