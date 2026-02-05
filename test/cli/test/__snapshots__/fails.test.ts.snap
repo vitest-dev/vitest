@@ -49,14 +49,6 @@ exports[`should fail hooks-timeout-before-hook-cleanup-callback.test.ts 1`] = `
 Error: Hook timed out in 102ms."
 `;
 
-exports[`should fail inline-snapshop-inside-each.test.ts 1`] = `
-"Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each
-Error: InlineSnapshot cannot be used inside of test.each or describe.each"
-`;
-
 exports[`should fail mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fail nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
