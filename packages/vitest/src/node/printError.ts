@@ -470,8 +470,8 @@ export function generateCodeFrame(
         }
 
         res.push(
-          lineNo(j + 1)
-          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
+          (lineNo(j + 1)
+            + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent)).trimEnd(),
         )
 
         if (j === i) {
