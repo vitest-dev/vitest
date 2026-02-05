@@ -3,6 +3,7 @@ import { click, dblClick, tripleClick } from './click'
 import { dragAndDrop } from './dragAndDrop'
 import { fill } from './fill'
 import { hover } from './hover'
+import { http } from './http'
 import { keyboard, keyboardCleanup } from './keyboard'
 import { takeScreenshot } from './screenshot'
 import { selectOptions } from './select'
@@ -39,4 +40,5 @@ export default {
   __vitest_startTracing: startTracing as typeof startTracing,
   __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
   __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
+  __vitest_http: http as typeof http,
 }
