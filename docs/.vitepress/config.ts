@@ -973,10 +973,10 @@ export default ({ mode }: { mode: string }) => {
                     text: 'svelte',
                     link: '/api/browser/svelte',
                   },
-                  {
-                    text: 'angular',
-                    link: '/api/browser/angular',
-                  },
+                  // {
+                  //   text: 'angular',
+                  //   link: '/api/browser/angular',
+                  // },
                 ],
               },
               {
