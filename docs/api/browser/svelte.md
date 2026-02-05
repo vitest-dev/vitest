@@ -81,11 +81,17 @@ This can be passed down in a third argument. You should rarely, if ever, need to
 
 If the `target` is specified, then this defaults to that, otherwise this defaults to `document.body`. This is used as the base element for the queries as well as what is printed when you use `debug()`.
 
-### Locators
+### Render Result
 
-The `render` function returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
+In addition to documented return value, the `render` function also returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
 
-### container
+```ts
+const screen = render(TableBody, props)
+
+await screen.getByRole('link', { name: 'Expand' }).click()
+```
+
+#### container
 
 The containing DOM node where your Svelte component is rendered. This is a regular DOM node, so you technically could call `container.querySelector` etc. to inspect the children.
 
@@ -93,7 +99,7 @@ The containing DOM node where your Svelte component is rendered. This is a regul
 If you find yourself using `container` to query for rendered elements then you should reconsider! The [locators](/api/browser/locators) are designed to be more resilient to changes that will be made to the component you're testing. Avoid using `container` to query for elements!
 :::
 
-### component
+#### component
 
 The mounted Svelte component instance. You can use this to access component methods and properties if needed.
 
@@ -105,7 +111,7 @@ const { component } = render(Counter, {
 // Access component exports if needed
 ```
 
-### locator
+#### locator
 
 The [locator](/api/browser/locators) of your `container`. It is useful to use queries scoped only to your component, or pass it down to other assertions:
 
@@ -120,20 +126,20 @@ await locator.getByRole('button').click()
 await expect.element(locator).toHaveTextContent('Hello World')
 ```
 
-### debug
+#### debug
 
 ```ts
-export function debug(
+function debug(
   el?: HTMLElement | HTMLElement[] | Locator | Locator[],
 ): void
 ```
 
 This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will print the DOM content of the container or specified elements to the console.
 
-### rerender
+#### rerender
 
 ```ts
-export function rerender(props: Partial<ComponentProps<T>>): Promise<void>
+function rerender(props: Partial<ComponentProps<T>>): Promise<void>
 ```
 
 Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes.
@@ -149,10 +155,10 @@ const { rerender } = render(NumberDisplay, {
 await rerender({ number: 2 })
 ```
 
-### unmount
+#### unmount
 
 ```ts
-export function unmount(): void
+function unmount(): void
 ```
 
 Unmount and destroy the Svelte component. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).

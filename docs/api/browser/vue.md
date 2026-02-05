@@ -66,7 +66,35 @@ const { container } = render(TableBody, {
 
 If the `container` is specified, then this defaults to that, otherwise this defaults to `document.body`. This is used as the base element for the queries as well as what is printed when you use `debug()`.
 
-### locator
+### Render Result
+
+In addition to documented return value, the `render` function also returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
+
+```ts
+const screen = render(TableBody, { props })
+
+await screen.getByRole('link', { name: 'Expand' }).click()
+```
+
+#### container
+
+The containing DOM node where your Svelte component is rendered. This is a regular DOM node, so you technically could call `container.querySelector` etc. to inspect the children.
+
+:::danger
+If you find yourself using `container` to query for rendered elements then you should reconsider! The [locators](/api/browser/locators) are designed to be more resilient to changes that will be made to the component you're testing. Avoid using `container` to query for elements!
+:::
+
+#### baseElement
+
+The containing DOM node where your Vue component is rendered in the `container`. If you don't specify the `baseElement` in the options of render, it will default to `document.body`.
+
+This is useful when the component you want to test renders something outside the container `div`, e.g. when you want to snapshot test your portal component which renders its HTML directly in the body.
+
+:::tip
+The queries returned by the `render` looks into `baseElement`, so you can use queries to test your portal component without the `baseElement`.
+:::
+
+#### locator
 
 The [locator](/api/browser/locators) of your `container`. It is useful to use queries scoped only to your component, or pass it down to other assertions:
 
@@ -81,10 +109,10 @@ await locator.getByRole('button').click()
 await expect.element(locator).toHaveTextContent('Hello World')
 ```
 
-### debug
+#### debug
 
 ```ts
-export function debug(
+function debug(
   el?: HTMLElement | HTMLElement[] | Locator | Locator[],
   maxLength?: number,
   options?: PrettyDOMOptions,
@@ -92,6 +120,44 @@ export function debug(
 ```
 
 This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will print the DOM content of the container or specified elements to the console.
+
+#### rerender
+
+```ts
+function rerender(props: Partial<Props>): void
+```
+
+It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
+
+```js
+import { render } from 'vitest-browser-vue'
+
+const { rerender } = render(NumberDisplay, { props: { number: 1 } })
+
+// re-render the same component with different props
+rerender({ number: 2 })
+```
+
+#### unmount
+
+```ts
+function unmount(): void
+```
+
+This will cause the rendered component to be unmounted. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+
+#### emitted
+
+```ts
+function emitted<T = unknown>(): Record<string, T[]>
+function emitted<T = unknown[]>(eventName: string): undefined | T[]
+```
+
+Returns the emitted events from the Component.
+
+::: warning
+Emitted values are an implementation detail not exposed directly to the user, so it is better to test how your emitted values are changing the displayed content by using [locators](/api/browser/locators) instead.
+:::
 
 ## cleanup
 

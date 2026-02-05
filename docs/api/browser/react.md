@@ -95,11 +95,17 @@ export function customRender(ui, options) {
 }
 ```
 
-### Locators
+### Render Result
 
-The `render` function returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
+In addition to documented return value, the `render` function also returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
 
-### container
+```tsx
+const screen = await render(<TableBody {...props} />)
+
+await screen.getByRole('link', { name: 'Expand' }).click()
+```
+
+#### container
 
 The containing `div` DOM node of your rendered React Element (rendered using `ReactDOM.render`). This is a regular DOM node, so you technically could call `container.querySelector` etc. to inspect the children.
 
@@ -107,7 +113,7 @@ The containing `div` DOM node of your rendered React Element (rendered using `Re
 If you find yourself using `container` to query for rendered elements then you should reconsider! The [locators](/api/browser/locators) are designed to be more resilient to changes that will be made to the component you're testing. Avoid using `container` to query for elements!
 :::
 
-### baseElement
+#### baseElement
 
 The containing DOM node where your React Element is rendered in the `container`. If you don't specify the `baseElement` in the options of render, it will default to `document.body`.
 
@@ -117,7 +123,7 @@ This is useful when the component you want to test renders something outside the
 The queries returned by the `render` looks into `baseElement`, so you can use queries to test your portal component without the `baseElement`.
 :::
 
-### locator
+#### locator
 
 The [locator](/api/browser/locators) of your `container`. It is useful to use queries scoped only to your component, or pass it down to other assertions:
 
@@ -130,10 +136,10 @@ await locator.getByRole('button').click()
 await expect.element(locator).toHaveTextContent('Hello World')
 ```
 
-### debug
+#### debug
 
 ```ts
-export function debug(
+function debug(
   el?: HTMLElement | HTMLElement[] | Locator | Locator[],
   maxLength?: number,
   options?: PrettyDOMOptions,
@@ -142,10 +148,10 @@ export function debug(
 
 This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will print the DOM content of the container or specified elements to the console.
 
-### rerender
+#### rerender
 
 ```ts
-export function rerender(ui: React.ReactNode): Promise<void>
+function rerender(ui: React.ReactNode): Promise<void>
 ```
 
 It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
@@ -159,10 +165,10 @@ const { rerender } = await render(<NumberDisplay number={1} />)
 await rerender(<NumberDisplay number={2} />)
 ```
 
-### unmount
+#### unmount
 
 ```ts
-export function unmount(): Promise<void>
+function unmount(): Promise<void>
 ```
 
 This will cause the rendered component to be unmounted. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
@@ -175,7 +181,7 @@ await unmount()
 // your component has been unmounted and now: container.innerHTML === ''
 ```
 
-### asFragment
+#### asFragment
 
 ```ts
 function asFragment(): DocumentFragment
@@ -250,7 +256,9 @@ await renderHook(() => {}, {
 
 `renderHook` returns a few useful methods and properties:
 
-### result
+### Render Hook Result
+
+#### result
 
 Holds the value of the most recently committed return value of the render-callback:
 
@@ -272,7 +280,7 @@ expect(result.current).toBe('Alice')
 
 Note that the value is held in `result.current`. Think of result as a [ref](https://react.dev/learn/referencing-values-with-refs) for the most recently committed value.
 
-### rerender {#renderhooks-rerender}
+#### rerender {#renderhooks-rerender}
 
 Renders the previously rendered render-callback with the new props:
 
@@ -285,7 +293,7 @@ const { rerender } = await renderHook(({ name = 'Alice' } = {}) => name)
 await rerender({ name: 'Bob' })
 ```
 
-### unmount {#renderhooks-unmount}
+#### unmount {#renderhooks-unmount}
 
 Unmounts the test hook.
 
