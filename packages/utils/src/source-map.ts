@@ -228,9 +228,15 @@ export function parseStacktrace(
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
+
+  // remove assertion helper's internal stacks
+  const helperIndex = stacks.findLastIndex(s => s.method === '__VITEST_HELPER__')
+  if (helperIndex >= 0) {
+    stacks = stacks.slice(helperIndex + 1)
+  }
 
   return stacks.map((stack) => {
     if (options.getUrlId) {
@@ -318,13 +324,6 @@ export function parseErrorStacktrace(
     if (e_.sourceURL != null && e_.line != null && e_._column != null) {
       stackFrames = parseStacktrace(`${e_.sourceURL}:${e_.line}:${e_.column}`, options)
     }
-  }
-
-  // remove assertion helper's internal stacks
-  const helperIndex = stackFrames.findLastIndex(f =>
-    f.method === '__VITEST_SKIP_TRACE__' || f.method === '__VITEST_SKIP_TRACE_ASYNC__')
-  if (helperIndex >= 0) {
-    stackFrames = stackFrames.slice(helperIndex + 1)
   }
 
   if (options.frameFilter) {

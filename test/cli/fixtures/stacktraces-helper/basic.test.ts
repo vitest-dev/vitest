@@ -1,20 +1,19 @@
-import { expect, test } from "vitest";
-import { helper } from "./helper.ts";
+import { expect, test, vi } from "vitest";
 
-const myEqual = helper((a: any, b: any) => {
+const myEqual = vi.helper((a: any, b: any) => {
   expect(a).toEqual(b);
 });
 
-const myEqualAsync = helper(async (a: any, b: any) => {
+const myEqualAsync = vi.helper(async (a: any, b: any) => {
   await new Promise((r) => setTimeout(r, 1));
   expect(a).toEqual(b);
 });
 
-const myEqualSoft = helper((a: any, b: any) => {
+const myEqualSoft = vi.helper((a: any, b: any) => {
   expect.soft(a).toEqual(b);
 });
 
-const myEqualSoftAsync = helper(async (a: any, b: any) => {
+const myEqualSoftAsync = vi.helper(async (a: any, b: any) => {
   await new Promise((r) => setTimeout(r, 1));
   expect.soft(a).toEqual(b);
 });

@@ -209,13 +209,13 @@ it('assertion helper', async () => {
     Expected: "right"
     Received: "left"
 
-     ❯ basic.test.ts:24:3
-         22| 
-         23| test("sync", () => {
-         24|   myEqual("left", "right");
+     ❯ basic.test.ts:22:3
+         20| 
+         21| test("sync", () => {
+         22|   myEqual("left", "right");
            |   ^
-         25| });
-         26| 
+         23| });
+         24| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
@@ -225,13 +225,13 @@ it('assertion helper', async () => {
     Expected: "right"
     Received: "left"
 
-     ❯ basic.test.ts:28:3
-         26| 
-         27| test("async", async () => {
-         28|   await myEqualAsync("left", "right");
+     ❯ basic.test.ts:26:3
+         24| 
+         25| test("async", async () => {
+         26|   await myEqualAsync("left", "right");
            |   ^
-         29| });
-         30| 
+         27| });
+         28| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
 
@@ -241,13 +241,13 @@ it('assertion helper', async () => {
     Expected: "right"
     Received: "left"
 
-     ❯ basic.test.ts:32:3
-         30| 
-         31| test("soft", () => {
-         32|   myEqualSoft("left", "right");
+     ❯ basic.test.ts:30:3
+         28| 
+         29| test("soft", () => {
+         30|   myEqualSoft("left", "right");
            |   ^
-         33| });
-         34| 
+         31| });
+         32| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
 
@@ -257,13 +257,13 @@ it('assertion helper', async () => {
     Expected: "right"
     Received: "left"
 
-     ❯ basic.test.ts:36:3
-         34| 
-         35| test("soft async", async () => {
-         36|   await myEqualSoftAsync("left", "right");
+     ❯ basic.test.ts:34:3
+         32| 
+         33| test("soft async", async () => {
+         34|   await myEqualSoftAsync("left", "right");
            |   ^
-         37| });
-         38| 
+         35| });
+         36| 
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
