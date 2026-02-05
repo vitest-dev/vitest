@@ -15,7 +15,7 @@ await expect.element(locator).toBeInTheDocument()
      18|         expect.element(element).toBeInTheDocument();
        |                                 ^
      19|       })
-     20|       
+     20|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
