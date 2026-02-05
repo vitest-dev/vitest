@@ -193,3 +193,98 @@ it('custom helper with captureStackTrace', async () => {
     }
   `)
 })
+
+// TODO: test browser mode
+it('assertion helper', async () => {
+  const { stderr, errorTree } = await runVitest({
+    root: resolve(import.meta.dirname, '../fixtures/stacktraces-helper'),
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > sync
+    AssertionError: expected 'left' to deeply equal 'right'
+
+    Expected: "right"
+    Received: "left"
+
+     ❯ basic.test.ts:24:3
+         22| 
+         23| test("sync", () => {
+         24|   myEqual("left", "right");
+           |   ^
+         25| });
+         26| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+     FAIL  basic.test.ts > async
+    AssertionError: expected 'left' to deeply equal 'right'
+
+    Expected: "right"
+    Received: "left"
+
+     ❯ basic.test.ts:28:3
+         26| 
+         27| test("async", async () => {
+         28|   await myEqualAsync("left", "right");
+           |   ^
+         29| });
+         30| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+     FAIL  basic.test.ts > soft
+    AssertionError: expected 'left' to deeply equal 'right'
+
+    Expected: "right"
+    Received: "left"
+
+     ❯ basic.test.ts:32:3
+         30| 
+         31| test("soft", () => {
+         32|   myEqualSoft("left", "right");
+           |   ^
+         33| });
+         34| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+     FAIL  basic.test.ts > soft async
+    AssertionError: expected 'left' to deeply equal 'right'
+
+    Expected: "right"
+    Received: "left"
+
+     ❯ basic.test.ts:36:3
+         34| 
+         35| test("soft async", async () => {
+         36|   await myEqualSoftAsync("left", "right");
+           |   ^
+         37| });
+         38| 
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "async": [
+          "expected 'left' to deeply equal 'right'",
+        ],
+        "soft": [
+          "expected 'left' to deeply equal 'right'",
+        ],
+        "soft async": [
+          "expected 'left' to deeply equal 'right'",
+        ],
+        "sync": [
+          "expected 'left' to deeply equal 'right'",
+        ],
+      },
+    }
+  `)
+})

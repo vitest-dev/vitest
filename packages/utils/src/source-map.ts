@@ -320,6 +320,13 @@ export function parseErrorStacktrace(
     }
   }
 
+  // remove assertion helper's internal stacks
+  const helperIndex = stackFrames.findLastIndex(f =>
+    f.method === '__VITEST_SKIP_TRACE__' || f.method === '__VITEST_SKIP_TRACE_ASYNC__')
+  if (helperIndex >= 0) {
+    stackFrames = stackFrames.slice(helperIndex + 1)
+  }
+
   if (options.frameFilter) {
     stackFrames = stackFrames.filter(
       f => options.frameFilter!(e as TestError, f) !== false,
