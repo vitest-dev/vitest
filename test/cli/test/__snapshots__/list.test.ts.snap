@@ -3,18 +3,18 @@
 exports[`basic output shows error 1`] = `
 "Error: describe error
  ❯ describe-error.test.ts:4:9
-      2| 
+      2|
       3| describe('describe error', () => {
       4|   throw new Error('describe error')
        |         ^
-      5| 
+      5|
       6|   it('wont run', () => {
 
 Error: top level error
  ❯ top-level-error.test.ts:1:7
       1| throw new Error('top level error')
        |       ^
-      2| 
+      2|
 
 "
 `;
@@ -78,18 +78,18 @@ exports[`correctly outputs all tests with args: "--typecheck.only" 1`] = `
 exports[`json output shows error 1`] = `
 "Error: describe error
  ❯ describe-error.test.ts:4:9
-      2| 
+      2|
       3| describe('describe error', () => {
       4|   throw new Error('describe error')
        |         ^
-      5| 
+      5|
       6|   it('wont run', () => {
 
 Error: top level error
  ❯ top-level-error.test.ts:1:7
       1| throw new Error('top level error')
        |       ^
-      2| 
+      2|
 
 "
 `;
@@ -97,18 +97,18 @@ Error: top level error
 exports[`json with a file output shows error 1`] = `
 "Error: describe error
  ❯ describe-error.test.ts:4:9
-      2| 
+      2|
       3| describe('describe error', () => {
       4|   throw new Error('describe error')
        |         ^
-      5| 
+      5|
       6|   it('wont run', () => {
 
 Error: top level error
  ❯ top-level-error.test.ts:1:7
       1| throw new Error('top level error')
        |       ^
-      2| 
+      2|
 
 "
 `;
