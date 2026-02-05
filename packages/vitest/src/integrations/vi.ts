@@ -171,19 +171,31 @@ export interface VitestUtils {
   /**
    * Wraps a function to create an assertion helper. When an assertion fails inside the helper,
    * the error stack trace will point to where the helper was called, not inside the helper itself.
-   *
-   * This is similar to Go's `t.Helper()` or Rust's `#[track_caller]`.
-   *
    * Works with both synchronous and asynchronous functions, and supports `expect.soft()`.
+   *
    * @example
    * ```ts
-   * const assertPositive = vi.helper((value: number) => {
-   *   expect(value).toBeGreaterThan(0)
+   * const myEqual = vi.helper((x, y) => {
+   *   expect(x).toEqual(y)
    * })
    *
    * test('example', () => {
-   *   assertPositive(-1) // Error will point to this line
+   *   myEqual('left', 'right') // Error points to this line
    * })
+   * ```
+   * Example output:
+   * ```
+   * FAIL  example.test.ts > example
+   * AssertionError: expected 'left' to deeply equal 'right'
+   *
+   * Expected: "right"
+   * Received: "left"
+   *
+   *  ❯ example.test.ts:6:3
+   *       4| test('example', () => {
+   *       5|   myEqual('left', 'right')
+   *        |   ^
+   *       6| })
    * ```
    * @param fn The assertion function to wrap
    * @returns A wrapped function with the same signature
