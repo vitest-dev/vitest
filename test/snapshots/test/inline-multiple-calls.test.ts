@@ -587,7 +587,7 @@ test('test.each/for', async () => {
       },
     }
   `)
-    expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+  expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
       Object {
         "added": 0,
         "didUpdate": false,
@@ -704,7 +704,7 @@ test('test.each/for', async () => {
     });
     "
   `)
-    expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+  expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
       Object {
         "added": 0,
         "didUpdate": true,
