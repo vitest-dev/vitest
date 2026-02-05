@@ -433,6 +433,24 @@ test('test.each/for', async () => {
       },
     }
   `)
+  expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+    Object {
+      "added": 6,
+      "didUpdate": false,
+      "failure": false,
+      "filesAdded": 1,
+      "filesRemoved": 0,
+      "filesRemovedList": Array [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 6,
+      "unchecked": 0,
+      "uncheckedKeysByFile": Array [],
+      "unmatched": 0,
+      "updated": 0,
+    }
+  `)
 
   // edit tests to introduce errors
   editFile(testFile, s => s.replaceAll(`"hello"`, `"hey"`))
@@ -569,6 +587,24 @@ test('test.each/for', async () => {
       },
     }
   `)
+    expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+      Object {
+        "added": 0,
+        "didUpdate": false,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": Array [],
+        "filesUnmatched": 1,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 3,
+        "unchecked": 0,
+        "uncheckedKeysByFile": Array [],
+        "unmatched": 3,
+        "updated": 0,
+      }
+    `)
 
   // fails with update=all
   result = await runVitest({ root, include: [testFile], update: 'all' })
@@ -668,4 +704,22 @@ test('test.each/for', async () => {
     });
     "
   `)
+    expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+      Object {
+        "added": 0,
+        "didUpdate": true,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": Array [],
+        "filesUnmatched": 0,
+        "filesUpdated": 1,
+        "matched": 0,
+        "total": 3,
+        "unchecked": 0,
+        "uncheckedKeysByFile": Array [],
+        "unmatched": 0,
+        "updated": 3,
+      }
+    `)
 })
