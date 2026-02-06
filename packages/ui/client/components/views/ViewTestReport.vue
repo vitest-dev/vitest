@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import type { TestArtifactLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
-import { relative } from 'pathe'
 import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { config } from '~/composables/client'
-import { showAttachmentSource } from '~/composables/codemirror'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
+import { getLocationString, openLocation } from '~/composables/location'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
-import VisualRegression from '../artifacts/visual-regression/VisualRegression.vue'
+import Artifacts from '../artifacts/Artifacts.vue'
 import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -23,16 +21,6 @@ const failed = computed(() => {
   }
   return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
 })
-
-function openLocation(location?: TestArtifactLocation) {
-  return showAttachmentSource(props.test, location)
-}
-
-function getLocationString(location: TestArtifactLocation) {
-  const root = config.value.root
-  const path = root ? relative(root, location.file) : location.file
-  return `${path}:${location.line}:${location.column}`
-}
 
 const kWellKnownMeta = new Set([
   'benchmark',
@@ -114,7 +102,7 @@ const meta = computed(() => {
               title="Open in Editor"
               class="flex gap-1 text-yellow-500/80 cursor-pointer"
               ws-nowrap
-              @click="openLocation(annotation.location)"
+              @click="openLocation(test, annotation.location)"
             >
               {{ getLocationString(annotation.location) }}
             </span>
@@ -138,44 +126,7 @@ const meta = computed(() => {
         <AnnotationAttachmentImage :annotation="annotation" />
       </div>
     </template>
-    <template v-if="test.artifacts.length">
-      <h1 m-2>
-        Test Artifacts
-      </h1>
-      <div
-        v-for="artifact, index of test.artifacts"
-        :key="artifact.type + index"
-        bg="yellow-500/10"
-        text="yellow-500 sm"
-        p="x3 y2"
-        m-2
-        rounded
-        role="note"
-      >
-        <div flex="~ gap-2 items-center justify-between" overflow-hidden>
-          <div>
-            <span
-              v-if="artifact.location && artifact.location.file === test.file.filepath"
-              v-tooltip.bottom="'Open in Editor'"
-              title="Open in Editor"
-              class="flex gap-1 text-yellow-500/80 cursor-pointer"
-              ws-nowrap
-              @click="openLocation(artifact.location)"
-            >
-              {{ getLocationString(artifact.location) }}
-            </span>
-            <span
-              v-else-if="artifact.location && artifact.location.file !== test.file.filepath"
-              class="flex gap-1 text-yellow-500/80"
-              ws-nowrap
-            >
-              {{ getLocationString(artifact.location) }}
-            </span>
-          </div>
-        </div>
-        <VisualRegression v-if="artifact.type === 'internal:toMatchScreenshot' && artifact.kind === 'visual-regression'" :regression="artifact" />
-      </div>
-    </template>
+    <Artifacts :test="test" />
     <template v-if="meta.length">
       <h1 m-2>
         Test Meta
