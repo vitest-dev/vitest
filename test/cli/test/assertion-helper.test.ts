@@ -10,7 +10,7 @@ it('assertion helper', async () => {
   expect(stderr).toMatchInlineSnapshot(`
     "stderr | basic.test.ts > helper with logs
     [test-myHelperWithLogs]
-     ❯ basic.test.ts:104:3
+     ❯ basic.test.ts:105:3
 
 
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
