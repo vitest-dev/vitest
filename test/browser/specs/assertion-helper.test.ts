@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import { runBrowserTests } from './utils'
 
 test('vi.helper hides internal stack traces', async () => {
+  // TODO: errorTree by projects
   const { stderr, errorTree } = await runBrowserTests({
     root: './fixtures/assertion-helper',
   })

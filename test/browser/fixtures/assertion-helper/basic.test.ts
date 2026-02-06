@@ -76,7 +76,3 @@ test('soft async', async () => {
 //   })
 //   await debugAsync()
 // })
-
-// TODO:
-// - non builtin assertion
-// - unhandled error
