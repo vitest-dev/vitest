@@ -33,7 +33,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 8,
                       "file": "basic.test.ts",
-                      "line": 29,
+                      "line": 26,
                       "method": "",
                     },
                   ],
@@ -46,7 +46,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 14,
                       "file": "basic.test.ts",
-                      "line": 33,
+                      "line": 30,
                       "method": "",
                     },
                   ],
@@ -59,7 +59,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 8,
                       "file": "basic.test.ts",
-                      "line": 37,
+                      "line": 34,
                       "method": "",
                     },
                   ],
@@ -72,7 +72,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 10,
                       "file": "basic.test.ts",
-                      "line": 25,
+                      "line": 22,
                       "method": "",
                     },
                   ],
@@ -94,7 +94,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 2,
                       "file": "basic.test.ts",
-                      "line": 29,
+                      "line": 26,
                       "method": "",
                     },
                   ],
@@ -107,7 +107,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 2,
                       "file": "basic.test.ts",
-                      "line": 33,
+                      "line": 30,
                       "method": "",
                     },
                   ],
@@ -120,7 +120,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 2,
                       "file": "basic.test.ts",
-                      "line": 37,
+                      "line": 34,
                       "method": "",
                     },
                   ],
@@ -133,7 +133,7 @@ test('vi.helper hides internal stack traces', async () => {
                     {
                       "column": 2,
                       "file": "basic.test.ts",
-                      "line": 25,
+                      "line": 22,
                       "method": "",
                     },
                   ],

@@ -1,8 +1,5 @@
 import { expect, test, vi } from 'vitest'
 
-// based on
-// test/cli/fixtures/stacktraces-helper
-
 const myEqual = vi.helper((a: any, b: any) => {
   expect(a).toEqual(b)
 })
