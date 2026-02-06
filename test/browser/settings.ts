@@ -16,7 +16,10 @@ export const providers = {
 export const provider
   = providerName === 'playwright' && process.env.BROWSER_WS_ENDPOINT
     ? playwright({
-        connectOptions: { wsEndpoint: process.env.BROWSER_WS_ENDPOINT },
+        connectOptions: {
+          wsEndpoint: process.env.BROWSER_WS_ENDPOINT,
+          exposeNetwork: '<loopback>',
+        },
       })
     : providers[providerName]()
 
