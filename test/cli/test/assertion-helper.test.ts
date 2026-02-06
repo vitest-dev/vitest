@@ -97,7 +97,7 @@ it('assertion helper', async () => {
     Received: "first"
 
      ❯ basic.test.ts:79:3
-         77| // #19 Multiple soft errors in one test
+         77| // Multiple soft errors in one test
          78| test("multiple soft", () => {
          79|   myEqualSoft("first", "x");
            |   ^

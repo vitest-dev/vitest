@@ -36,7 +36,7 @@ test("soft async", async () => {
 
 // --- Edge cases ---
 
-// #5 Nested helpers: outermost marker wins
+// Nested helpers: outermost marker wins
 const innerHelper = vi.helper((a: any, b: any) => {
   expect(a).toEqual(b);
 });
@@ -48,7 +48,7 @@ test("nested", () => {
   outerHelper("nested", "x");
 });
 
-// #8 Helper that passes
+// Helper that passes
 test("pass sync", () => {
   myEqual(1, 1);
 });
@@ -57,7 +57,7 @@ test("pass async", async () => {
   await myEqualAsync(1, 1);
 });
 
-// #9 Helper returning value
+// Helper returning value
 const myAdd = vi.helper((a: number, b: number) => {
   return a + b;
 });
@@ -74,13 +74,13 @@ test("return async", async () => {
   expect(await myAddAsync(1, 2)).toBe(3);
 });
 
-// #19 Multiple soft errors in one test
+// Multiple soft errors in one test
 test("multiple soft", () => {
   myEqualSoft("first", "x");
   myEqualSoft("second", "y");
 });
 
-// #21 Custom error in helper
+// Custom error in helper
 const throwCustom = vi.helper(() => {
   throw new Error("custom error from helper");
 });
