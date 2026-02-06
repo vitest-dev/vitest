@@ -75,6 +75,49 @@ These options are directly passed down to `playwright[browser].connect` command.
 Since this command connects to an existing Playwright server, any `launch` options will be ignored.
 :::
 
+### Running Browsers in Docker
+
+If your platform doesn't support Playwright browsers natively (e.g. WebKit on Arch Linux), you can run a [Playwright server in Docker](https://playwright.dev/docs/docker#remote-connection) and connect to it via `connectOptions`.
+
+Start a Playwright server using Docker Compose:
+
+```yaml [docker-compose.yml]
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 6677 --host 127.0.0.1"
+    init: true
+    network_mode: host
+```
+
+```sh
+docker compose up -d
+```
+
+Then configure Vitest to connect to it:
+
+```ts [vitest.config.ts]
+import { playwright } from '@vitest/browser-playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: playwright({
+        connectOptions: {
+          wsEndpoint: 'ws://127.0.0.1:6677/',
+        },
+      }),
+      instances: [{ browser: 'webkit' }],
+    },
+  },
+})
+```
+
+::: tip
+Using `network_mode: host` lets the containerized browser reach Vitest's dev server on localhost without needing to expose it on `0.0.0.0`. Make sure the Playwright version in the Docker image matches the version installed locally.
+:::
+
 ## contextOptions
 
 Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-browser#browser-new-context).

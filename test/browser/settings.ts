@@ -10,11 +10,20 @@ export const providers = {
   webdriverio,
 }
 
-export const provider = providers[providerName]()
+// Run browser test suites with playwright browsers in docker container
+// $ docker compose up -d
+// $ BROWSER_WS_ENDPOINT=ws://127.0.0.1:6677/ pnpm test:playwright
+export const provider
+  = providerName === 'playwright' && process.env.BROWSER_WS_ENDPOINT
+    ? playwright({
+        connectOptions: { wsEndpoint: process.env.BROWSER_WS_ENDPOINT },
+      })
+    : providers[providerName]()
+
 export const browser = process.env.BROWSER || (provider.name !== 'playwright' ? 'chromium' : 'chrome')
 
 const devInstances: BrowserInstanceOption[] = [
-  { browser },
+  { browser: browser as any },
 ]
 
 const playwrightInstances: BrowserInstanceOption[] = [

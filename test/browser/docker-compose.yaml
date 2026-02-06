@@ -1,0 +1,7 @@
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.58.1-noble
+    command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677 --host 127.0.0.1"
+    init: true
+    network_mode: host
+    user: pwuser
