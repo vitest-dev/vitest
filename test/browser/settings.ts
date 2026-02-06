@@ -4,24 +4,25 @@ import { preview } from '@vitest/browser-preview'
 import { webdriverio } from '@vitest/browser-webdriverio'
 
 const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
-export const providers = {
-  playwright,
-  preview,
-  webdriverio,
-}
 
 // Run browser test suites with playwright browsers in docker container
 // $ docker compose up -d
 // $ BROWSER_WS_ENDPOINT=ws://127.0.0.1:6677/ pnpm test:playwright
-export const provider
-  = providerName === 'playwright' && process.env.BROWSER_WS_ENDPOINT
-    ? playwright({
+export const providers = {
+  playwright: (options?: Parameters<typeof playwright>[0]) => playwright(process.env.BROWSER_WS_ENDPOINT
+    ? {
+        ...options,
         connectOptions: {
           wsEndpoint: process.env.BROWSER_WS_ENDPOINT,
           exposeNetwork: '<loopback>',
         },
-      })
-    : providers[providerName]()
+      }
+    : options),
+  preview,
+  webdriverio,
+}
+
+export const provider = providers[providerName]()
 
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },

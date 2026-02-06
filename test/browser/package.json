@@ -26,7 +26,8 @@
     "test:browser:preview": "PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
     "test:browser:webdriverio": "PROVIDER=webdriverio vitest",
-    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
+    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html",
+    "compose": "docker compose"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",
