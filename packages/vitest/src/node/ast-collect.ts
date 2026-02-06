@@ -161,6 +161,10 @@ function astParseFile(filepath: string, code: string) {
       }
       else {
         message = code.slice(messageNode.start, messageNode.end)
+
+        if (message.endsWith('.name')) {
+          message = message.slice(0, -5)
+        }
       }
 
       if (message.startsWith('0,')) {
