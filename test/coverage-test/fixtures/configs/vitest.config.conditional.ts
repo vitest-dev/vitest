@@ -7,7 +7,7 @@ export default defineConfig({
       name: 'test-resolve-conditional',
       resolveId: {
         order: 'pre',
-        handler(source, _importer, options) {
+        handler(source) {
           if (source.includes("fixtures/src/conditional")) {
             if (this.environment.config.consumer === 'server') {
               return resolve('fixtures/src/conditional/ssr.ts')
