@@ -2,18 +2,20 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  resolve: {
-    alias: [
-      {
-        find: /fixtures\/src\/conditional/,
-        replacement: "$1",
-        customResolver(_, __, options) {
-          if ('ssr' in options && options.ssr) {
-            return { id: resolve('fixtures/src/conditional/ssr.ts') }
+  plugins: [
+    {
+      name: 'test-resolve-conditional',
+      resolveId: {
+        order: 'pre',
+        handler(source) {
+          if (source.includes("fixtures/src/conditional")) {
+            if (this.environment.config.consumer === 'server') {
+              return resolve('fixtures/src/conditional/ssr.ts')
+            }
+            return resolve('fixtures/src/conditional/web.ts')
           }
-          return { id: resolve('fixtures/src/conditional/web.ts') }
-        },
+        }
       },
-    ],
-  },
+    }
+  ]
 })
