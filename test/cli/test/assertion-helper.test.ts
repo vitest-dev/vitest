@@ -80,13 +80,13 @@ it('assertion helper', async () => {
     Expected: "x"
     Received: "nested"
 
-     ❯ basic.test.ts:48:3
-         46|
-         47| test("nested", () => {
-         48|   outerHelper("nested", "x");
+     ❯ basic.test.ts:46:3
+         44|
+         45| test("nested", () => {
+         46|   outerHelper("nested", "x");
            |   ^
-         49| });
-         50|
+         47| });
+         48|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
 
@@ -96,13 +96,13 @@ it('assertion helper', async () => {
     Expected: "x"
     Received: "first"
 
-     ❯ basic.test.ts:79:3
-         77| // Multiple soft errors in one test
-         78| test("multiple soft", () => {
-         79|   myEqualSoft("first", "x");
+     ❯ basic.test.ts:77:3
+         75| // Multiple soft errors in one test
+         76| test("multiple soft", () => {
+         77|   myEqualSoft("first", "x");
            |   ^
-         80|   myEqualSoft("second", "y");
-         81| });
+         78|   myEqualSoft("second", "y");
+         79| });
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
 
@@ -112,25 +112,25 @@ it('assertion helper', async () => {
     Expected: "y"
     Received: "second"
 
-     ❯ basic.test.ts:80:3
-         78| test("multiple soft", () => {
-         79|   myEqualSoft("first", "x");
-         80|   myEqualSoft("second", "y");
+     ❯ basic.test.ts:78:3
+         76| test("multiple soft", () => {
+         77|   myEqualSoft("first", "x");
+         78|   myEqualSoft("second", "y");
            |   ^
-         81| });
-         82|
+         79| });
+         80|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
 
      FAIL  basic.test.ts > custom error
     Error: custom error from helper
-     ❯ basic.test.ts:89:3
-         87|
-         88| test("custom error", () => {
-         89|   throwCustom();
+     ❯ basic.test.ts:87:3
+         85|
+         86| test("custom error", () => {
+         87|   throwCustom();
            |   ^
-         90| });
-         91|
+         88| });
+         89|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
 
@@ -140,14 +140,14 @@ it('assertion helper', async () => {
     Expected: "x"
     Received: "wrapper"
 
-     ❯ assertEqualValues basic.test.ts:94:3
-         92| // non-helper wrapper calling a helper: stack should include the wrapp…
-         93| function assertEqualValues(a: any, b: any) {
-         94|   myEqual(a, b);
+     ❯ assertEqualValues basic.test.ts:92:3
+         90| // non-helper wrapper calling a helper: stack should include the wrapp…
+         91| function assertEqualValues(a: any, b: any) {
+         92|   myEqual(a, b);
            |   ^
-         95| }
-         96|
-     ❯ basic.test.ts:98:3
+         93| }
+         94|
+     ❯ basic.test.ts:96:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
 
