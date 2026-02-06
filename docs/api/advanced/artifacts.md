@@ -21,7 +21,7 @@ Each artifact includes:
 - Optional attachments, either files or inline content associated with the artifact
 - A source code location indicating where the artifact was created
 
-Vitest automatically manages attachment serialization (files are copied to [`attachmentsDir`](/config/#attachmentsdir)) and injects source location metadata, so you can focus on the data you want to record. All artifacts **must** extend from [`TestArtifactBase`](#testartifactbase) and all attachments from [`TestAttachment`](#testattachment) to be correctly handled internally.
+Vitest automatically manages attachment serialization (files are copied to [`attachmentsDir`](/config/attachmentsdir)) and injects source location metadata, so you can focus on the data you want to record. All artifacts **must** extend from [`TestArtifactBase`](#testartifactbase) and all attachments from [`TestAttachment`](#testattachment) to be correctly handled internally.
 
 ## API
 

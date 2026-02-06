@@ -431,7 +431,7 @@ test('performs a query', () => {
 ```
 
 ::: tip
-This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/sequence#sequence-hooks) option.
 :::
 
 ### onTestFailed

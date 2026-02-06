@@ -357,7 +357,7 @@ This method will gracefully cancel all ongoing tests. It will wait for started t
 function setGlobalTestNamePattern(pattern: string | RegExp): void
 ```
 
-This methods overrides the global [test name pattern](/config/#testnamepattern).
+This methods overrides the global [test name pattern](/config/testnamepattern).
 
 ::: warning
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
@@ -377,7 +377,7 @@ Returns the regexp used for the global test name pattern.
 function resetGlobalTestNamePattern(): void
 ```
 
-This methods resets the [test name pattern](/config/#testnamepattern). It means Vitest won't skip any tests now.
+This methods resets the [test name pattern](/config/testnamepattern). It means Vitest won't skip any tests now.
 
 ::: warning
 This method doesn't start running any tests. To run tests without a pattern, call [`runTestSpecifications`](#runtestspecifications).
@@ -452,7 +452,7 @@ function exit(force = false): Promise<void>
 
 Closes all projects and exit the process. If `force` is set to `true`, the process will exit immediately after closing the projects.
 
-This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
+This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/teardowntimeout) milliseconds.
 
 ## shouldKeepServer
 
@@ -548,7 +548,7 @@ function createCoverageProvider(): Promise<CoverageProvider | null>
 Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
 
 ::: warning
-This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
+This method will also clean all previous reports if [`coverage.clean`](/config/coverage#coverage-clean) is not set to `false`.
 :::
 
 ## enableCoverage <Version>4.0.0</Version> {#enablecoverage}
