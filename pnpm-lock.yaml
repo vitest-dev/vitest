@@ -1066,6 +1066,9 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 15.0.0
         version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
+      '@types/convert-source-map':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1102,6 +1105,9 @@ importers:
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      convert-source-map:
+        specifier: ^2.0.0
+        version: 2.0.0
       empathic:
         specifier: ^2.0.0
         version: 2.0.0
@@ -4754,6 +4760,9 @@ packages:
 
   '@types/codemirror@5.60.17':
     resolution: {integrity: sha512-AZq2FIsUHVMlp7VSe2hTfl5w4pcUkoFkM3zVsRKsn1ca8CXRDYvnin04+HP2REkwsxemuHqvDofdlhUWNpbwfw==}
+
+  '@types/convert-source-map@2.0.3':
+    resolution: {integrity: sha512-ag0BfJLZf6CQz8VIuRIEYQ5Ggwk/82uvTQf27RcpyDNbY0Vw49LIPqAxk5tqYfrCs9xDaIMvl4aj7ZopnYL8bA==}
 
   '@types/d3-force@3.0.10':
     resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
@@ -12820,6 +12829,8 @@ snapshots:
   '@types/codemirror@5.60.17':
     dependencies:
       '@types/tern': 0.23.4
+
+  '@types/convert-source-map@2.0.3': {}
 
   '@types/d3-force@3.0.10': {}
 
