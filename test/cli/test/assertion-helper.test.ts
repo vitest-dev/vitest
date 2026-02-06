@@ -8,7 +8,7 @@ it('assertion helper', async () => {
   })
   expect(stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > sync
     AssertionError: expected 'sync' to deeply equal 'x'
@@ -24,7 +24,7 @@ it('assertion helper', async () => {
          23| });
          24|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
 
      FAIL  basic.test.ts > async
     AssertionError: expected 'async' to deeply equal 'x'
@@ -40,7 +40,7 @@ it('assertion helper', async () => {
          27| });
          28|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
 
      FAIL  basic.test.ts > soft
     AssertionError: expected 'soft' to deeply equal 'x'
@@ -56,7 +56,7 @@ it('assertion helper', async () => {
          31| });
          32|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
 
      FAIL  basic.test.ts > soft async
     AssertionError: expected 'soft async' to deeply equal 'x'
@@ -72,7 +72,84 @@ it('assertion helper', async () => {
          35| });
          36|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+     FAIL  basic.test.ts > nested
+    AssertionError: expected 'nested' to deeply equal 'x'
+
+    Expected: "x"
+    Received: "nested"
+
+     ❯ basic.test.ts:48:3
+         46|
+         47| test("nested", () => {
+         48|   outerHelper("nested", "x");
+           |   ^
+         49| });
+         50|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+     FAIL  basic.test.ts > multiple soft
+    AssertionError: expected 'first' to deeply equal 'x'
+
+    Expected: "x"
+    Received: "first"
+
+     ❯ basic.test.ts:79:3
+         77| // #19 Multiple soft errors in one test
+         78| test("multiple soft", () => {
+         79|   myEqualSoft("first", "x");
+           |   ^
+         80|   myEqualSoft("second", "y");
+         81| });
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+     FAIL  basic.test.ts > multiple soft
+    AssertionError: expected 'second' to deeply equal 'y'
+
+    Expected: "y"
+    Received: "second"
+
+     ❯ basic.test.ts:80:3
+         78| test("multiple soft", () => {
+         79|   myEqualSoft("first", "x");
+         80|   myEqualSoft("second", "y");
+           |   ^
+         81| });
+         82|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+     FAIL  basic.test.ts > custom error
+    Error: custom error from helper
+     ❯ basic.test.ts:89:3
+         87|
+         88| test("custom error", () => {
+         89|   throwCustom();
+           |   ^
+         90| });
+         91|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+     FAIL  basic.test.ts > non-helper wrapper
+    AssertionError: expected 'wrapper' to deeply equal 'x'
+
+    Expected: "x"
+    Received: "wrapper"
+
+     ❯ assertEqualValues basic.test.ts:94:3
+         92| // non-helper wrapper calling a helper: stack should include the wrapp…
+         93| function assertEqualValues(a: any, b: any) {
+         94|   myEqual(a, b);
+           |   ^
+         95| }
+         96|
+     ❯ basic.test.ts:98:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
 
     "
   `)
@@ -82,6 +159,23 @@ it('assertion helper', async () => {
         "async": [
           "expected 'async' to deeply equal 'x'",
         ],
+        "custom error": [
+          "custom error from helper",
+        ],
+        "multiple soft": [
+          "expected 'first' to deeply equal 'x'",
+          "expected 'second' to deeply equal 'y'",
+        ],
+        "nested": [
+          "expected 'nested' to deeply equal 'x'",
+        ],
+        "non-helper wrapper": [
+          "expected 'wrapper' to deeply equal 'x'",
+        ],
+        "pass async": "passed",
+        "pass sync": "passed",
+        "return async": "passed",
+        "return sync": "passed",
         "soft": [
           "expected 'soft' to deeply equal 'x'",
         ],
