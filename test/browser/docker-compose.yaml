@@ -5,4 +5,4 @@ services:
     init: true
     user: pwuser
     ports:
-      - "6677:6677"
+      - '6677:6677'

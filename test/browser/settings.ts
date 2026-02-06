@@ -23,12 +23,6 @@ export const provider
       })
     : providers[providerName]()
 
-export const browser = process.env.BROWSER || (provider.name !== 'playwright' ? 'chromium' : 'chrome')
-
-const devInstances: BrowserInstanceOption[] = [
-  { browser: browser as any },
-]
-
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
   { browser: 'firefox' },
@@ -42,8 +36,8 @@ const webdriverioInstances: BrowserInstanceOption[] = [
   { browser: 'firefox' },
 ]
 
-export const instances = process.env.BROWSER
-  ? devInstances
+export const instances: BrowserInstanceOption[] = process.env.BROWSER
+  ? [{ browser: process.env.BROWSER as any }]
   : provider.name === 'playwright'
     ? playwrightInstances
     : webdriverioInstances
