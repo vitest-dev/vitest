@@ -599,3 +599,17 @@ export function buildTestTree(testModules: TestModule[], onTestCase?: (result: T
 
   return tree
 }
+
+export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
+  const projectTree: Record<string, Record<string, any>> = {}
+
+  for (const testModule of testModules) {
+    const projectName = testModule.project.name
+    projectTree[projectName] = {
+      ...projectTree[projectName],
+      ...buildTestTree([testModule], onTestCase),
+    }
+  }
+
+  return projectTree
+}
