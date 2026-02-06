@@ -34,8 +34,6 @@ test("soft async", async () => {
   await myEqualSoftAsync("soft async", "x");
 });
 
-// --- Edge cases ---
-
 // Nested helpers: outermost marker wins
 const innerHelper = vi.helper((a: any, b: any) => {
   expect(a).toEqual(b);
