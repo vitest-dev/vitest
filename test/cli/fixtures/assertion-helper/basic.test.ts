@@ -19,17 +19,17 @@ const myEqualSoftAsync = vi.helper(async (a: any, b: any) => {
 });
 
 test("sync", () => {
-  myEqual("left", "right");
+  myEqual("sync", "x");
 });
 
 test("async", async () => {
-  await myEqualAsync("left", "right");
+  await myEqualAsync("async", "x");
 });
 
 test("soft", () => {
-  myEqualSoft("left", "right");
+  myEqualSoft("soft", "x");
 });
 
 test("soft async", async () => {
-  await myEqualSoftAsync("left", "right");
+  await myEqualSoftAsync("soft async", "x");
 });
