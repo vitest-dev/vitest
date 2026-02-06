@@ -95,3 +95,12 @@ function assertEqualValues(a: any, b: any) {
 test("non-helper wrapper", () => {
   assertEqualValues("wrapper", "x");
 });
+
+// printConsoleTrace also hides internal stacks
+const myHelperWithLogs = vi.helper(() => {
+  console.error("[test-myHelperWithLogs]");
+});
+
+test("helper with logs", () => {
+  myHelperWithLogs();
+});

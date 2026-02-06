@@ -5,9 +5,14 @@ import { runVitest } from '../../test-utils'
 it('assertion helper', async () => {
   const { stderr, errorTree } = await runVitest({
     root: resolve(import.meta.dirname, '../fixtures/assertion-helper'),
+    printConsoleTrace: true,
   })
   expect(stderr).toMatchInlineSnapshot(`
-    "
+    "stderr | basic.test.ts > helper with logs
+    [test-myHelperWithLogs]
+     ❯ basic.test.ts:104:3
+
+
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > sync
@@ -162,6 +167,7 @@ it('assertion helper', async () => {
         "custom error": [
           "custom error from helper",
         ],
+        "helper with logs": "passed",
         "multiple soft": [
           "expected 'first' to deeply equal 'x'",
           "expected 'second' to deeply equal 'y'",
