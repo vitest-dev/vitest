@@ -19,7 +19,7 @@ AssertionError: expected 1 to be +0 // Object.is equality
       5|   expect(n).toBe(0);
        |             ^
       6| });
-      7| 
+      7|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
 
@@ -38,7 +38,7 @@ AssertionError: expected 2 to be +0 // Object.is equality
       5|   expect(n).toBe(0);
        |             ^
       6| });
-      7| 
+      7|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
 
@@ -58,7 +58,7 @@ AssertionError: expected 1 to be +0 // Object.is equality
      10|   expect(1).toBe(0);
        |             ^
      11| });
-     12| 
+     12|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
 
@@ -80,7 +80,7 @@ AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
      24|   expect(actual).toEqual(expect.arrayContaining(expected));
        |                  ^
      25| });
-     26| 
+     26|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
 
@@ -102,7 +102,7 @@ AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
      24|   expect(actual).toEqual(expect.arrayContaining(expected));
        |                  ^
      25| });
-     26| 
+     26|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
 

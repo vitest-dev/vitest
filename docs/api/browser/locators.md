@@ -830,6 +830,10 @@ This method returns a single element matching the locator's selector or `null` i
 
 If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
+::: danger
+This is an escape hatch for external APIs that do not support locators. Prefer using locator methods instead.
+:::
+
 Consider the following DOM structure:
 
 ```html
@@ -866,8 +870,10 @@ If _no element_ matches the selector, an error is thrown. Consider using [`.quer
 
 If _multiple elements_ match the selector, an error is thrown. Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
-::: tip
-This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/api/browser/assertions):
+::: danger
+This is an escape hatch for external APIs that do not support locators. Prefer using locator methods instead.
+
+It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/api/browser/assertions):
 
 ```ts
 await expect.element(page.getByRole('button')).toBeDisabled()

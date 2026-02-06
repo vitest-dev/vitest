@@ -127,12 +127,12 @@ it('custom helper with captureStackTrace', async () => {
     + 3
 
      ❯ basic.test.ts:5:3
-          3| 
+          3|
           4| test("sync", async () => {
           5|   assertHelper(3, 4);
            |   ^
           6| });
-          7| 
+          7|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
@@ -146,12 +146,12 @@ it('custom helper with captureStackTrace', async () => {
     + 3
 
      ❯ basic.test.ts:9:3
-          7| 
+          7|
           8| test("async", async () => {
           9|   await assertHelperAsync(3, 4)
            |   ^
          10| })
-         11| 
+         11|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
 
@@ -165,12 +165,12 @@ it('custom helper with captureStackTrace', async () => {
     + 3
 
      ❯ assertHelperBad helper.ts:23:20
-         21| 
+         21|
          22| export function assertHelperBad(expected: any, actual: any) {
          23|   expect(expected).toBe(actual);
            |                    ^
          24| }
-         25| 
+         25|
      ❯ basic.test.ts:13:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯

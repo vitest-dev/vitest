@@ -11,11 +11,11 @@ await expect.element(locator).toBeInTheDocument()
 
  ❯ expect-element.test.js:18:33
      16|         const element = page.getByText("Hello Vitest!");
-     17| 
+     17|
      18|         expect.element(element).toBeInTheDocument();
        |                                 ^
      19|       })
-     20|       
+     20|
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

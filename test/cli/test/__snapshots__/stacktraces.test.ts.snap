@@ -7,12 +7,12 @@ exports[`stacktrace filtering > filters stacktraces 1`] = `
  FAIL  error-with-stack.test.js > error in deps
 Error: Something truly horrible has happened!
  ❯ d error-with-stack.test.js:20:9
-     18| 
+     18|
      19| function d() {
      20|   throw new Error('Something truly horrible has happened!')
        |         ^
      21| }
-     22| 
+     22|
  ❯ c error-with-stack.test.js:16:3
  ❯ a error-with-stack.test.js:8:3
  ❯ error-with-stack.test.js:4:3
@@ -31,12 +31,12 @@ Error: __TEST_STACK__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/index.js:10:9
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/index.js:4:3
  ❯ error-in-package.test.js:8:12
-      6| 
+      6|
       7| test('js', () => {
       8|   testStack()
        |            ^
       9| })
-     10| 
+     10|
 
 ⎯⎯[1/4]⎯
 
@@ -48,7 +48,7 @@ Error: __TEST_STACK_TS__
      22|   throw new Error('__TEST_STACK_TS__')
        |         ^
      23| }
-     24| 
+     24|
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/ts.ts:12:3
  ❯ error-in-package.test.js:12:14
 
@@ -59,12 +59,12 @@ Error: __TEST_STACK_TRANSPILED__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:7:9
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.js:3:3
  ❯ error-in-package.test.js:16:22
-     14| 
+     14|
      15| test('transpiled', () => {
      16|   testStackTranspiled()
        |                      ^
      17| })
-     18| 
+     18|
 
 ⎯⎯[3/4]⎯
 
@@ -73,12 +73,12 @@ Error: __TEST_STACK_TRANSPILED_INLINE__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:7:9
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.js:3:3
  ❯ error-in-package.test.js:20:28
-     18| 
+     18|
      19| test('transpiled inline', () => {
      20|   testStackTranspiledInline()
        |                            ^
      21| })
-     22| 
+     22|
 
 ⎯⎯[4/4]⎯
 
@@ -92,12 +92,12 @@ exports[`stacktrace in dependency package > inline 1`] = `
  FAIL  error-in-package.test.js > js
 Error: __TEST_STACK__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/index.js:10:9
-      8| 
+      8|
       9| function innerTestStack() {
      10|   throw new Error('__TEST_STACK__')
        |         ^
      11| }
-     12| 
+     12|
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/index.js:4:3
  ❯ error-in-package.test.js:8:12
 
@@ -111,7 +111,7 @@ Error: __TEST_STACK_TS__
      22|   throw new Error('__TEST_STACK_TS__')
        |         ^
      23| }
-     24| 
+     24|
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/ts.ts:12:3
  ❯ error-in-package.test.js:12:14
 
@@ -122,12 +122,12 @@ Error: __TEST_STACK_TRANSPILED__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:22:9
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled.ts:12:3
  ❯ error-in-package.test.js:16:22
-     14| 
+     14|
      15| test('transpiled', () => {
      16|   testStackTranspiled()
        |                      ^
      17| })
-     18| 
+     18|
 
 ⎯⎯[3/4]⎯
 
@@ -136,12 +136,12 @@ Error: __TEST_STACK_TRANSPILED_INLINE__
  ❯ innerTestStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:22:9
  ❯ testStack (NODE_MODULES)/@test/test-dep-error/transpiled-inline.ts:12:3
  ❯ error-in-package.test.js:20:28
-     18| 
+     18|
      19| test('transpiled inline', () => {
      20|   testStackTranspiledInline()
        |                            ^
      21| })
-     22| 
+     22|
 
 ⎯⎯[4/4]⎯
 
@@ -155,12 +155,12 @@ exports[`stacktrace in vmThreads 1`] = `
  FAIL  error-with-stack.test.js > error in deps
 Error: Something truly horrible has happened!
  ❯ d error-with-stack.test.js:20:9
-     18| 
+     18|
      19| function d() {
      20|   throw new Error('Something truly horrible has happened!')
        |         ^
      21| }
-     22| 
+     22|
  ❯ c error-with-stack.test.js:16:3
  ❯ b error-with-stack.test.js:12:3
  ❯ a error-with-stack.test.js:8:3
@@ -183,7 +183,7 @@ ReferenceError: bar is not defined
       3|   return bar()
        |   ^
       4| }
-      5| 
+      5|
  ❯ error-in-deps.test.js:5:6
 
 ⎯⎯[1/1]⎯
@@ -204,7 +204,7 @@ imba-parser error: Unexpected 'CALL_END'
 
 exports[`stacktraces should respect sourcemaps > add.test.ts 1`] = `
 " ❯ add.test.ts:12:24
-     10| 
+     10|
      11| it('add', () => {
      12|   expect(add(a.count)).toBe(100)
        |                        ^
@@ -220,13 +220,13 @@ exports[`stacktraces should respect sourcemaps > add-in-imba.test.imba 1`] = `
       8|  expect(add(1)).toBe 3
        |                 ^
       9|  expect(add(1, 2, 3)).toBe 6
-     10| 
+     10|
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > add-in-js.test.js 1`] = `
 " ❯ add-in-js.test.js:6:17
-      4| 
+      4|
       5| it('add', () => {
       6|   expect(add()).toBe(100)
        |                 ^
@@ -245,63 +245,63 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js 1`] = `
 
 exports[`stacktraces should respect sourcemaps > error-in-package.test.js 1`] = `
 " ❯ error-in-package.test.js:8:12
-      6| 
+      6|
       7| test('js', () => {
       8|   testStack()
        |            ^
       9| })
-     10| 
+     10|
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > error-with-stack.test.js 1`] = `
 " ❯ d error-with-stack.test.js:20:9
-     18| 
+     18|
      19| function d() {
      20|   throw new Error('Something truly horrible has happened!')
        |         ^
      21| }
-     22| 
+     22|
  ❯ c error-with-stack.test.js:16:3"
 `;
 
 exports[`stacktraces should respect sourcemaps > mocked-global.test.js 1`] = `
 " ❯ mocked-global.test.js:6:13
-      4| 
+      4|
       5| test('failed', () => {
       6|   expect(1).toBe(2)
        |             ^
       7| })
-      8| 
+      8|
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > mocked-imported.test.js 1`] = `
 " ❯ mocked-imported.test.js:6:13
-      4| 
+      4|
       5| test('failed', () => {
       6|   expect(1).toBe(2)
        |             ^
       7| })
-      8| 
+      8|
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts 1`] = `
 " ❯ mocked-imported.test.ts:6:13
-      4| 
+      4|
       5| test('failed', () => {
       6|   expect(1).toBe(2)
        |             ^
       7| })
-      8| 
+      8|
 "
 `;
 
 exports[`stacktraces should respect sourcemaps > require-assertions.test.js 1`] = `
 " ❯ require-assertions.test.js:3:5
       1| import { test } from 'vitest'
-      2| 
+      2|
       3| test('assertion is not called', () => {
        |     ^
       4|   // no expect
