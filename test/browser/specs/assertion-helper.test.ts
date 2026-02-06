@@ -18,7 +18,7 @@ test('vi.helper hides internal stack traces', async () => {
       return ({ message: e.message, stacks })
     })
   })
-  expect(Object.keys(projectTree)).toEqual(instances.map(i => i.browser))
+  expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'firefox') {
