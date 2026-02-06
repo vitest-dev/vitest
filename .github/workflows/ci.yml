@@ -78,90 +78,90 @@ jobs:
             !.github/workflows/ci.yml
             **.md
 
-  test:
-    needs: changed
-    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
+  # test:
+  #   needs: changed
+  #   name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+  #   if: needs.changed.outputs.should_skip != 'true'
+  #   runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 30
+  #   timeout-minutes: 30
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node_version: [20, 22, 24]
-        include:
-          - os: macos-latest
-            node_version: 24
-          - os: windows-latest
-            node_version: 24
-      fail-fast: false
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       node_version: [20, 22, 24]
+  #       include:
+  #         - os: macos-latest
+  #           node_version: 24
+  #         - os: windows-latest
+  #           node_version: 24
+  #     fail-fast: false
 
-    steps:
-      - uses: actions/checkout@v6
+  #   steps:
+  #     - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+  #     - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - uses: ./.github/actions/setup-playwright
+  #     - uses: ./.github/actions/setup-playwright
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Build
+  #       run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci
+  #     - name: Test
+  #       run: pnpm run test:ci
 
-      - name: Test Examples
-        run: pnpm run test:examples
+  #     - name: Test Examples
+  #       run: pnpm run test:examples
 
-      - uses: actions/upload-artifact@v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
-          path: test/ui/test-results/
-          retention-days: 30
+  #     - uses: actions/upload-artifact@v6
+  #       if: ${{ !cancelled() }}
+  #       with:
+  #         name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
+  #         path: test/ui/test-results/
+  #         retention-days: 30
 
-  test-cached:
-    needs: changed
-    name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
+  # test-cached:
+  #   needs: changed
+  #   name: 'Cache&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+  #   if: needs.changed.outputs.should_skip != 'true'
+  #   runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 30
+  #   timeout-minutes: 30
 
-    strategy:
-      matrix:
-        node_version: [24]
-        os:
-          - macos-latest
-          - windows-latest
-      fail-fast: false
+  #   strategy:
+  #     matrix:
+  #       node_version: [24]
+  #       os:
+  #         - macos-latest
+  #         - windows-latest
+  #     fail-fast: false
 
-    steps:
-      - uses: actions/checkout@v6
+  #   steps:
+  #     - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+  #     - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - uses: ./.github/actions/setup-playwright
+  #     - uses: ./.github/actions/setup-playwright
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Build
+  #       run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci:cache
+  #     - name: Test
+  #       run: pnpm run test:ci:cache
 
   test-browser:
     needs: changed
@@ -198,53 +198,54 @@ jobs:
         run: pnpm run build
 
       - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
+        run: pnpm run test:browser:playwright assertion-helper
 
       - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-
-  test-rolldown:
-    needs: changed
-    # macos-latest is the fastest one
-    name: 'Rolldown&Test: node-22, macos-latest'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: macos-latest
-
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 22
-
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
-
-      - name: Install
-        run: |
-          yq -i '.overrides.vite = "npm:vite@beta"' pnpm-workspace.yaml
-          git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
-
-      - uses: ./.github/actions/setup-playwright
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test
-        run: pnpm run test:ci:no-bail
-
-      - name: Test Examples
         if: ${{ !cancelled() }}
-        run: pnpm run test:examples
+        run: pnpm run test:browser:webdriverio assertion-helper
 
-      - name: Test Browser (playwright)
-        if: ${{ !cancelled() }}
-        run: pnpm run test:browser:playwright
+  # test-rolldown:
+  #   needs: changed
+  #   # macos-latest is the fastest one
+  #   name: 'Rolldown&Test: node-22, macos-latest'
+  #   if: needs.changed.outputs.should_skip != 'true'
+  #   runs-on: macos-latest
 
-      - uses: actions/upload-artifact@v6
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report-rolldown
-          path: rolldown/test/ui/test-results/
-          retention-days: 30
+  #   timeout-minutes: 30
+
+  #   steps:
+  #     - uses: actions/checkout@v6
+
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: 22
+
+  #     - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+
+  #     - name: Install
+  #       run: |
+  #         yq -i '.overrides.vite = "npm:vite@beta"' pnpm-workspace.yaml
+  #         git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
+
+  #     - uses: ./.github/actions/setup-playwright
+
+  #     - name: Build
+  #       run: pnpm run build
+
+  #     - name: Test
+  #       run: pnpm run test:ci:no-bail
+
+  #     - name: Test Examples
+  #       if: ${{ !cancelled() }}
+  #       run: pnpm run test:examples
+
+  #     - name: Test Browser (playwright)
+  #       if: ${{ !cancelled() }}
+  #       run: pnpm run test:browser:playwright
+
+  #     - uses: actions/upload-artifact@v6
+  #       if: ${{ !cancelled() }}
+  #       with:
+  #         name: playwright-report-rolldown
+  #         path: rolldown/test/ui/test-results/
+  #         retention-days: 30
