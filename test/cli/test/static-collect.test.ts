@@ -775,6 +775,28 @@ test('collects tests when test functions are globals', async () => {
   `)
 })
 
+test('remove .name from the function identifiers', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test(Service.name, () => {
+      // ...
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "Service": {
+        "errors": [],
+        "fullName": "Service",
+        "id": "-1732721377_0",
+        "location": "4:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 test('collects tests with tags as a string', async () => {
   const testModule = await collectTests(`
     import { test } from 'vitest'
