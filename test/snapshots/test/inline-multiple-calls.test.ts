@@ -468,12 +468,12 @@ test('test.each/for', async () => {
     Received: "3"
 
      ❯ each.test.ts:4:22
-          2| 
+          2|
           3| test.for(["hey", "world"])("test %s", (arg) => {
           4|   expect(arg.length).toMatchInlineSnapshot(\`5\`);
            |                      ^
           5| });
-          6| 
+          6|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
 
@@ -484,12 +484,12 @@ test('test.each/for', async () => {
     Received: "5"
 
      ❯ each.test.ts:4:22
-          2| 
+          2|
           3| test.for(["hey", "world"])("test %s", (arg) => {
           4|   expect(arg.length).toMatchInlineSnapshot(\`5\`);
            |                      ^
           5| });
-          6| 
+          6|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
 
@@ -537,7 +537,7 @@ test('test.each/for', async () => {
          16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
            |      ^
          17| });
-         18| 
+         18|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
 
@@ -553,7 +553,7 @@ test('test.each/for', async () => {
          16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
            |      ^
          17| });
-         18| 
+         18|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
 
@@ -619,12 +619,12 @@ test('test.each/for', async () => {
     Received: "5"
 
      ❯ each.test.ts:4:22
-          2| 
+          2|
           3| test.for(["hey", "world"])("test %s", (arg) => {
           4|   expect(arg.length).toMatchInlineSnapshot(\`5\`);
            |                      ^
           5| });
-          6| 
+          6|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
@@ -656,7 +656,7 @@ test('test.each/for', async () => {
          16|   }).toThrowErrorMatchingInlineSnapshot(\`[Error: length = 5]\`)
            |      ^
          17| });
-         18| 
+         18|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
