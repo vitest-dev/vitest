@@ -281,7 +281,7 @@ function resolveOptions(ctx: Vitest) {
       ...conditions,
       '--experimental-import-meta-resolve',
       // https://github.com/vitest-dev/vitest/issues/8896
-      ...((globalThis as any).Deno ? [] : ['--require', suppressWarningsPath]),
+      ...((globalThis as any).Deno || process.versions.pnp ? [] : ['--require', suppressWarningsPath]),
     ],
     env: {
       TEST: 'true',
