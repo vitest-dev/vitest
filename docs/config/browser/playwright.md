@@ -105,17 +105,22 @@ export default defineConfig({
     browser: {
       provider: playwright({
         connectOptions: {
+          // match with playwright server port in docker
           wsEndpoint: 'ws://127.0.0.1:6677/',
         },
       }),
-      instances: [{ browser: 'webkit' }],
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
     },
   },
 })
 ```
 
 ::: tip
-Using `network_mode: host` lets the containerized browser reach Vitest's dev server on localhost without needing to expose it on `0.0.0.0`. Make sure the Playwright version in the Docker image matches the version installed locally.
+Using `network_mode: host` lets the containerized browser reach Vitest's dev server on localhost without needing to expose it on `0.0.0.0`. Alternatively you can use [`connectOptions.exposeNetwork`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-option-expose-network).
 :::
 
 ## contextOptions
