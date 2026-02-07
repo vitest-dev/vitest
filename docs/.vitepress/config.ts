@@ -749,6 +749,11 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/trace-view',
                 docFooterText: 'Trace View | Browser Mode',
               },
+              {
+                text: 'How It Works',
+                link: '/guide/browser/how-it-works',
+                docFooterText: 'How It Works | Browser Mode',
+              },
             ],
           },
           {
