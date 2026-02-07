@@ -1,9 +1,11 @@
-# browser test
+# Browser Tests
 
 ## Using docker playwright
 
+Some test suites don't support running it remotely (`fixtures/inspect` and `fixtures/insecure-context`).
+
 ```sh
-# Start playwright server
+# Start playwright browser server
 pnpm compose up -d
 
 # Run tests with BROWSER_WS_ENDPOINT
