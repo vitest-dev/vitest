@@ -370,7 +370,7 @@ export class DecodedMap {
     this._decodedMemo = memoizedState()
     this.url = from
     this.resolvedSources = (sources || []).map(s =>
-      resolve(s || '', from),
+      resolve(from, '..', s || ''),
     )
   }
 }
