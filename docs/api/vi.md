@@ -1335,3 +1335,42 @@ function resetConfig(): void
 ```
 
 If [`vi.setConfig`](#vi-setconfig) was called before, this will reset config to the original state.
+
+### vi.defineHelper <Version>4.1.0</Version> {#vi-defineHelper}
+
+```ts
+function defineHelper<F extends (...args: any) => any>(fn: F): F
+```
+
+Wraps a function to create an assertion helper. When an assertion fails inside the helper, the error stack trace will point to where the helper was called, not inside the helper itself. This makes it easier to identify the source of test failures when using custom assertion functions.
+
+Works with both synchronous and asynchronous functions, and supports `expect.soft()`.
+
+```ts
+import { expect, vi } from 'vitest'
+
+const assertPair = vi.defineHelper((a, b) => {
+  expect(a).toEqual(b)
+})
+
+test('example', () => {
+  assertPair('left', 'right') // Error points to this line
+})
+```
+
+Example output:
+
+<!-- eslint-skip -->
+```js
+FAIL  example.test.ts > example
+AssertionError: expected 'left' to deeply equal 'right'
+
+Expected: "right"
+Received: "left"
+
+ ❯ example.test.ts:8:3
+      7| test('example', () => {
+      8|   assertPair('left', 'right')
+       |   ^
+      9| })
+```
