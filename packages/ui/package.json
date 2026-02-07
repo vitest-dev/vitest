@@ -86,7 +86,7 @@
     "vite-plugin-pages": "^0.33.2",
     "vitest-browser-vue": "2.0.2",
     "vue": "catalog:",
-    "vue-router": "^4.6.4",
+    "vue-router": "^5.0.2",
     "vue-tsc": "^3.2.4",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
