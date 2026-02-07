@@ -11,6 +11,7 @@ export const providers = {
         ...options,
         connectOptions: {
           wsEndpoint: process.env.BROWSER_WS_ENDPOINT,
+          exposeNetwork: '<loopback>',
         },
       }
     : options),
