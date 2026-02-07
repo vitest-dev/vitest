@@ -1339,7 +1339,7 @@ If [`vi.setConfig`](#vi-setconfig) was called before, this will reset config to 
 ### vi.defineHelper <Version>4.1.0</Version> {#vi-defineHelper}
 
 ```ts
-function helper<F extends (...args: any) => any>(fn: F): F
+function defineHelper<F extends (...args: any) => any>(fn: F): F
 ```
 
 Wraps a function to create an assertion helper. When an assertion fails inside the helper, the error stack trace will point to where the helper was called, not inside the helper itself. This makes it easier to identify the source of test failures when using custom assertion functions.
