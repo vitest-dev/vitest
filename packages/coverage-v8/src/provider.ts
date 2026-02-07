@@ -41,6 +41,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+    await this.updateChangedFiles()
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()

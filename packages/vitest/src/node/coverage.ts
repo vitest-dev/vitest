@@ -17,6 +17,7 @@ import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
 import { resolveCoverageProviderModule } from '../utils/coverage'
+import { GitNotFoundError } from './errors'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -86,6 +87,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
   roots: string[] = []
+  private changedFiles?: Set<string>
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -142,6 +144,33 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       : [ctx.config.root]
   }
 
+  protected async updateChangedFiles(): Promise<void> {
+    const coverageChanged = this.options.changed
+    if (!coverageChanged) {
+      this.changedFiles = undefined
+      return
+    }
+    const { VitestGit } = await import('./git')
+    const vitestGit = new VitestGit(this.ctx.config.root)
+    const changedFiles = await vitestGit.findChangedFiles({
+      changedSince: coverageChanged,
+    })
+    if (!changedFiles) {
+      process.exitCode = 1
+      throw new GitNotFoundError()
+    }
+    this.changedFiles = new Set(changedFiles.map(file => slash(file)))
+  }
+
+  protected filterChangedFiles(coverageMap: CoverageMap): void {
+    if (!this.changedFiles) {
+      return
+    }
+    coverageMap.filter((filename) => {
+      return this.changedFiles!.has(this.normalizeChangedFilename(filename))
+    })
+  }
+
   /**
    * Check if file matches `coverage.include` but not `coverage.exclude`
    */
@@ -150,30 +179,49 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
     const filename = slash(_filename)
     const cacheHit = this.globCache.get(filename)
+    let included = cacheHit
+    if (included === undefined) {
+      // File outside project root with default allowExternal
+      if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+        this.globCache.set(filename, false)
+        return false
+      }
 
-    if (cacheHit !== undefined) {
-      return cacheHit
+      // By default `coverage.include` matches all files, except "coverage.exclude"
+      const glob = this.options.include || '**'
+
+      included = pm.isMatch(filename, glob, {
+        contains: true,
+        dot: true,
+        ignore: this.options.exclude,
+      })
+
+      this.globCache.set(filename, included)
     }
 
-    // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
-      this.globCache.set(filename, false)
-
+    if (!included) {
       return false
     }
 
-    // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
-
-    const included = pm.isMatch(filename, glob, {
-      contains: true,
-      dot: true,
-      ignore: this.options.exclude,
-    })
-
-    this.globCache.set(filename, included)
+    if (this.changedFiles && !this.changedFiles.has(this.normalizeChangedFilename(filename))) {
+      return false
+    }
 
     return included
+  }
+
+  private normalizeChangedFilename(filename: string): string {
+    let normalized = filename.split('?')[0]
+    if (normalized.startsWith('file://')) {
+      normalized = fileURLToPath(normalized)
+    }
+    if (normalized.startsWith('/@fs/')) {
+      normalized = normalized.slice(4)
+    }
+    if (normalized.startsWith('/') && /^[a-z]:/i.test(normalized.slice(1))) {
+      normalized = normalized.slice(1)
+    }
+    return slash(normalized)
   }
 
   private async getUntestedFilesByRoot(
@@ -189,12 +237,20 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       onlyFiles: true,
     })
 
+    if (this.changedFiles) {
+      includedFiles = includedFiles.filter(file => this.changedFiles!.has(slash(file)))
+    }
+    else if (this.ctx.config.changed) {
+      const related = this.ctx.config.related || []
+      if (!related.length) {
+        return []
+      }
+      const relatedSet = new Set(related.map(file => slash(file)))
+      includedFiles = includedFiles.filter(file => relatedSet.has(slash(file)))
+    }
+
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
     includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
-    }
 
     return includedFiles.map(file => slash(path.resolve(root, file)))
   }
