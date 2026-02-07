@@ -1,5 +1,6 @@
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
+import { getRunner } from '@vitest/runner'
 import { processError } from '@vitest/utils/error'
 import { noop } from '@vitest/utils/helpers'
 
@@ -78,7 +79,8 @@ function handleTestError(test: Test, err: unknown) {
   test.result ||= { state: 'fail' }
   test.result.state = 'fail'
   test.result.errors ||= []
-  test.result.errors.push(processError(err))
+  const runner = getRunner()
+  test.result.errors.push(processError(err, runner.config.diffOptions))
 }
 
 export function wrapAssertion(
