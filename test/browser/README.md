@@ -6,7 +6,7 @@ Some test suites don't support running it remotely (`fixtures/inspect` and `fixt
 
 ```sh
 # Start playwright browser server
-pnpm compose up -d
+pnpm docker up -d
 
 # Run tests with BROWSER_WS_ENDPOINT
 BROWSER_WS_ENDPOINT=ws://127.0.0.1:6677/ pnpm test:playwright
