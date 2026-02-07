@@ -168,6 +168,15 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
+    // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
+    // to specify a custom stack offset
+    for (let i = 0; i < stacks.length; i++) {
+      const match = stacks[i].method.match(/__INLINE_SNAPSHOT_OFFSET_(\d+)__/)
+      if (match) {
+        return stacks[i + Number(match[1])] ?? null
+      }
+    }
+
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i =>
