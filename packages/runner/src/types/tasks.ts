@@ -1293,6 +1293,8 @@ export interface TestArtifactLocation extends FileLocation {}
  * Base interface for all test artifacts.
  *
  * Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
+ *
+ * **Important**: when running with [`api.allowWrite`](https://vitest.dev/config/api#api-allowwrite) or [`browser.api.allowWrite`](https://vitest.dev/config/browser/api#api-allowwrite) disabled, Vitest empties the `attachments` array on every artifact before reporting it.
  */
 export interface TestArtifactBase {
   /** File or data attachments associated with this artifact */
