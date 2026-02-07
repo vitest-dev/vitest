@@ -21,6 +21,7 @@ export async function runInlineBrowserTests(
         enabled: true,
         provider,
         instances,
+        headless: true,
         ...config?.browser,
       } as TestUserConfig['browser'],
     },
@@ -38,7 +39,7 @@ export async function runBrowserTests(
     watch: false,
     reporters: 'none',
     ...config,
-    browser: config?.browser,
+    browser: { headless: true, ...config?.browser },
     $viteConfig: viteOverrides,
   }, include, runnerOptions)
 }
