@@ -825,6 +825,15 @@ export interface FixtureOptions {
    * @default 'test'
    */
   scope?: 'test' | 'worker' | 'file'
+  /**
+   * Timeout in milliseconds for the fixture's setup and teardown phases.
+   * If the fixture function does not call `use()` within the timeout, or if the
+   * teardown code after `use()` returns does not complete within the timeout,
+   * the fixture will fail with a timeout error.
+   *
+   * By default, there is no timeout.
+   */
+  timeout?: number
 }
 
 /**

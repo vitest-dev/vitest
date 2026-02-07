@@ -216,6 +216,35 @@ export function createTestContext(
   return runner.extendTaskContext?.(context) || context
 }
 
+export function createTimeoutPromise(
+  timeout: number,
+  makeError: () => Error,
+  onTimeout?: (error: Error) => void,
+): { promise: Promise<never>; clear: () => void } {
+  const { setTimeout, clearTimeout } = getSafeTimers()
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const promise = new Promise<never>((_, reject) => {
+    if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
+      timer = setTimeout(() => {
+        const error = makeError()
+        onTimeout?.(error)
+        reject(error)
+      }, timeout)
+      timer.unref?.()
+    }
+  })
+
+  const clear = () => {
+    if (timer) {
+      clearTimeout(timer)
+      timer = undefined
+    }
+  }
+
+  return { promise, clear }
+}
+
 function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error) {
   const message = `${
     isHook ? 'Hook' : 'Test'

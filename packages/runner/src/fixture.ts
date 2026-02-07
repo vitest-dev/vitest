@@ -1,6 +1,7 @@
 import type { FixtureFn, Suite, VitestRunner } from './types'
 import type { File, FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
+import { createTimeoutPromise } from './context'
 import { FixtureDependencyError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
@@ -32,7 +33,7 @@ export class TestFixtures {
     'annotate',
   ] satisfies (keyof TestContext)[]
 
-  private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']
+  private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope', 'timeout']
   private static _fixtureScopes: string[] = ['test', 'file', 'worker']
   private static _workerContextSymbol = Symbol('workerContext')
 
@@ -133,6 +134,7 @@ export class TestFixtures {
           auto: _options.auto ?? false,
           scope: _options.scope ?? 'test',
           injected: _options.injected ?? false,
+          timeout: _options.timeout,
         }
         value = options.injected
           ? (runner.injectValue?.(name) ?? fn[0])
@@ -156,6 +158,7 @@ export class TestFixtures {
           auto: parent.auto,
           scope: parent.scope,
           injected: parent.injected,
+          timeout: parent.timeout,
         }
       }
       else if (!options) {
@@ -183,6 +186,7 @@ export class TestFixtures {
         auto: options.auto ?? false,
         injected: options.injected ?? false,
         scope: options.scope ?? 'test',
+        timeout: options.timeout,
         deps,
         parent,
       }
@@ -422,6 +426,8 @@ function resolveTestFixtureValue(
     fixture.value,
     context,
     cleanupFnArray,
+    fixture.name,
+    fixture.timeout,
   )
 }
 
@@ -458,6 +464,8 @@ async function resolveScopeFixtureValue(
     fixture.value,
     fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
+    fixture.name,
+    fixture.timeout,
   ).then((value) => {
     fixtureContext[fixture.name] = value
     scopedFixturePromiseCache.delete(fixture)
@@ -467,6 +475,16 @@ async function resolveScopeFixtureValue(
   return promise
 }
 
+function makeFixtureTimeoutError(
+  fixtureName: string,
+  phase: 'setup' | 'teardown',
+  timeout: number,
+): Error {
+  return new Error(
+    `The ${phase} phase of the "${fixtureName}" fixture timed out after ${timeout}ms.`,
+  )
+}
+
 async function resolveFixtureFunction(
   fixtureFn: (
     context: unknown,
@@ -474,7 +492,11 @@ async function resolveFixtureFunction(
   ) => Promise<void>,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
+  fixtureName: string,
+  timeout?: number,
 ): Promise<unknown> {
+  const hasTimeout = timeout != null && timeout > 0 && timeout !== Number.POSITIVE_INFINITY
+
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
   let isUseFnArgResolved = false
@@ -490,7 +512,18 @@ async function resolveFixtureFunction(
       // start teardown by resolving `use` Promise
       useReturnPromise.resolve()
       // wait for finishing teardown
-      await fixtureReturn
+      if (hasTimeout) {
+        const teardownTimeout = createTimeoutPromise(
+          timeout,
+          () => makeFixtureTimeoutError(fixtureName, 'teardown', timeout),
+        )
+        await Promise
+          .race([fixtureReturn, teardownTimeout.promise])
+          .finally(() => teardownTimeout.clear())
+      }
+      else {
+        await fixtureReturn
+      }
     })
     await useReturnPromise
   }).catch((e: unknown) => {
@@ -502,6 +535,16 @@ async function resolveFixtureFunction(
     // otherwise re-throw to avoid silencing error during cleanup
     throw e
   })
+
+  if (hasTimeout) {
+    const setupTimeout = createTimeoutPromise(
+      timeout,
+      () => makeFixtureTimeoutError(fixtureName, 'setup', timeout),
+    )
+    return await Promise
+      .race([useFnArgPromise, setupTimeout.promise])
+      .finally(() => setupTimeout.clear())
+  }
 
   return useFnArgPromise
 }
