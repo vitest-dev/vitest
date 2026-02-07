@@ -34,7 +34,12 @@ const webdriverioInstances: BrowserInstanceOption[] = [
 ]
 
 export const instances: BrowserInstanceOption[] = process.env.BROWSER
-  ? [{ browser: process.env.BROWSER as any }]
+  ? [
+      {
+        browser: process.env.BROWSER as any,
+        headless: process.env.BROWSER === 'safari' ? false : undefined,
+      },
+    ]
   : provider.name === 'playwright'
     ? playwrightInstances
     : webdriverioInstances
