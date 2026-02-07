@@ -28,7 +28,7 @@ Or rewrite your path to not be relative to root:
 + import helpers from '../src/helpers'
 ```
 
-3. Make sure you don't have relative [aliases](/config/#alias). Vite treats them as relative to the file where the import is instead of the root.
+3. Make sure you don't have relative [aliases](/config/alias). Vite treats them as relative to the file where the import is instead of the root.
 
 ```ts
 import { defineConfig } from 'vitest/config'

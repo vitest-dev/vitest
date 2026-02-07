@@ -5,7 +5,7 @@ outline: deep
 
 # Reporters
 
-Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/#reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
+Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
 
 Using reporters via command line:
 
@@ -40,7 +40,7 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/#outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
 
 :::code-group
 ```bash [CLI]
@@ -294,7 +294,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/#outputfile) configuration option.
+Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -345,7 +345,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -417,7 +417,7 @@ Since Vitest 3, the JSON reporter includes coverage information in `coverageMap`
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-Output file can be specified using the [`outputFile`](/config/#outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
+Output file can be specified using the [`outputFile`](/config/outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
 
 :::code-group
 ```bash [CLI]

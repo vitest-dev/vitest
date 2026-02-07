@@ -140,7 +140,7 @@ The third argument indicated why the test run was finished:
 - `failed`: test run has at least one error (due to a syntax error during collection or an actual error during test execution)
 - `interrupted`: test was interrupted by [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
 
-If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/#passwithnotests).
+If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/passwithnotests).
 
 ::: details Example
 ```ts
@@ -324,7 +324,7 @@ function onTestCaseAnnotate(
 
 The `onTestCaseAnnotate` hook is associated with the [`context.annotate`](/guide/test-context#annotate) method. When `annotate` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
 
-If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
+If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/attachmentsdir)) and modifies the `path` property to reference it.
 
 ## onTestCaseArtifactRecord <Version type="experimental">4.0.11</Version> {#ontestcaseartifactrecord}
 
@@ -337,6 +337,6 @@ function onTestCaseArtifactRecord(
 
 The `onTestCaseArtifactRecord` hook is associated with the [`recordArtifact`](/api/advanced/artifacts#recordartifact) utility. When `recordArtifact` is invoked, Vitest serialises it and sends the same attachment to the main thread where reporter can interact with it.
 
-If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/#attachmentsdir)) and modifies the `path` property to reference it.
+If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/attachmentsdir)) and modifies the `path` property to reference it.
 
 Note: annotations, [even though they're built on top of this feature](/api/advanced/artifacts#relationship-with-annotations), won't hit this hook and won't appear in the `task.artifacts` array for backwards compatibility reasons until the next major version.

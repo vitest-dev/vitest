@@ -39,7 +39,7 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 ## Threads
 
 By default Vitest runs test files in [multiple processes](/guide/parallelism) using [`node:child_process`](https://nodejs.org/api/child_process.html), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
-To run tests in a single thread or process, see [`fileParallelism`](/config/#fileParallelism).
+To run tests in a single thread or process, see [`fileParallelism`](/config/fileparallelism).
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
@@ -102,7 +102,7 @@ Learn more at [Snapshot](/guide/snapshot).
 
 [Chai](https://www.chaijs.com/) is built-in for assertions with [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
 
-Notice that if you are using third-party libraries that add matchers, setting [`test.globals`](/config/#globals) to `true` will provide better compatibility.
+Notice that if you are using third-party libraries that add matchers, setting [`test.globals`](/config/globals) to `true` will provide better compatibility.
 
 ## Mocking
 
@@ -292,7 +292,7 @@ window.addEventListener('unhandledrejection', () => {
 ```
 :::
 
-Alternatively, you can also ignore reported errors with a [`dangerouslyIgnoreUnhandledErrors`](/config/#dangerouslyignoreunhandlederrors) option. Vitest will still report them, but they won't affect the test result (exit code won't be changed).
+Alternatively, you can also ignore reported errors with a [`dangerouslyIgnoreUnhandledErrors`](/config/dangerouslyignoreunhandlederrors) option. Vitest will still report them, but they won't affect the test result (exit code won't be changed).
 
 If you need to test that error was not caught, you can create a test that looks like this:
 

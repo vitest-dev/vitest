@@ -193,7 +193,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       reporter: {
         description:
-          'Coverage reporters to use. Visit [`coverage.reporter`](https://vitest.dev/config/#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)',
+          'Coverage reporters to use. Visit [`coverage.reporter`](https://vitest.dev/config/coverage#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
         array: true,
@@ -485,7 +485,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       hooks: {
         description:
-          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/#sequence-hooks) for more information (default: `"parallel"`)',
+          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/sequence#sequence-hooks) for more information (default: `"parallel"`)',
         argument: '<order>',
       },
       setupFiles: {
