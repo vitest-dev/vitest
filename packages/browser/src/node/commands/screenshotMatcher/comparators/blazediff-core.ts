@@ -1,6 +1,6 @@
 import type { ScreenshotComparatorRegistry } from '../../../../../context'
 import type { Comparator } from '../types'
-import pm from 'pixelmatch'
+import { diff } from '@blazediff/core'
 
 const defaultOptions = {
   allowedMismatchedPixelRatio: undefined,
@@ -12,9 +12,9 @@ const defaultOptions = {
   diffColor: [255, 0, 0],
   diffColorAlt: undefined,
   diffMask: false,
-} satisfies ScreenshotComparatorRegistry['pixelmatch']
+} satisfies ScreenshotComparatorRegistry['@blazediff/core']
 
-export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> = (
+export const blazediffCore: Comparator<ScreenshotComparatorRegistry['@blazediff/core']> = (
   reference,
   actual,
   { createDiff, ...options },
@@ -36,7 +36,7 @@ export const pixelmatch: Comparator<ScreenshotComparatorRegistry['pixelmatch']> 
     ? new Uint8Array(reference.data.length)
     : undefined
 
-  const mismatchedPixels = pm(
+  const mismatchedPixels = diff(
     reference.data,
     actual.data,
     diffBuffer,

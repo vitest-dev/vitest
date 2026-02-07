@@ -154,7 +154,7 @@ export default defineConfig({
     browser: {
       expect: {
         toMatchScreenshot: {
-          comparatorName: 'pixelmatch',
+          comparatorName: '@blazediff/core',
           comparatorOptions: {
             // 0-1, how different can colors be?
             threshold: 0.2,
@@ -174,7 +174,7 @@ Override global settings for specific tests:
 
 ```ts
 await expect(element).toMatchScreenshot('button-hover', {
-  comparatorName: 'pixelmatch',
+  comparatorName: '@blazediff/core',
   comparatorOptions: {
     // more lax comparison for text-heavy elements
     allowedMismatchedPixelRatio: 0.1,
@@ -339,7 +339,7 @@ possible solutions might be to:
 
   ```ts
   await expect(page.getByTestId('article-summary')).toMatchScreenshot({
-    comparatorName: 'pixelmatch',
+    comparatorName: '@blazediff/core',
     comparatorOptions: {
       // 10% of the pixels are allowed to change
       allowedMismatchedPixelRatio: 0.1,

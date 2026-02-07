@@ -1133,7 +1133,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button')
 
 // with options
 await expect.element(getByTestId('button')).toMatchScreenshot({
-  comparatorName: 'pixelmatch',
+  comparatorName: '@blazediff/core',
   comparatorOptions: {
     allowedMismatchedPixelRatio: 0.01,
   },
@@ -1141,7 +1141,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot({
 
 // with both name and options
 await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
-  comparatorName: 'pixelmatch',
+  comparatorName: '@blazediff/core',
   comparatorOptions: {
     allowedMismatchedPixelRatio: 0.01,
   },
@@ -1150,12 +1150,13 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
 ### Options
 
-- `comparatorName: "pixelmatch" = "pixelmatch"`
+- `comparatorName: "@blazediff/core" | "pixelmatch" = "@blazediff/core"`
 
-  The name of the algorithm/library used for comparing images.
+  The algorithm/library used for comparing images.
 
-  Currently, [`"pixelmatch"`](https://github.com/mapbox/pixelmatch) is the only
-  supported comparator.
+  [`"@blazediff/core"`](https://blazediff.dev/docs/core) is the only built-in comparator, but you can use custom ones by [registering them in the config file](/config/browser/expect#browser-expect-tomatchscreenshot-comparators).
+
+  Since v4.1, `"pixelmatch"` is a legacy alias for `"@blazediff/core"` and will be removed in the next major version.
 
 - `comparatorOptions: object`
 
@@ -1164,7 +1165,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
   Vitest has set default values out of the box, but they can be overridden.
 
-  - [`"pixelmatch"` options](#pixelmatch-comparator-options)
+  - [`"@blazediff/core"` options](#blazediff-core-comparator-options)
 
   ::: warning
   **Always explicitly set `comparatorName` to get proper type inference for
@@ -1181,9 +1182,9 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
     },
   })
 
-  // ✅ TypeScript knows these are pixelmatch options
+  // ✅ TypeScript knows these are `"@blazediff/core"` options
   await expect.element(button).toMatchScreenshot({
-    comparatorName: 'pixelmatch',
+    comparatorName: '@blazediff/core',
     comparatorOptions: {
       allowedMismatchedPixelRatio: 0.01,
     },
@@ -1208,9 +1209,9 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
   Setting this value to `0` disables the timeout, but if a stable screenshot
   can't be determined the process will not end.
 
-#### `"pixelmatch"` comparator options
+#### `"@blazediff/core"` comparator options
 
-The following options are available when using the `"pixelmatch"` comparator:
+The following options are available when using the `"@blazediff/core"` comparator:
 
 - `allowedMismatchedPixelRatio: number | undefined = undefined`
 
