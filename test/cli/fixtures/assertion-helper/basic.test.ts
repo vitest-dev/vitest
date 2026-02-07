@@ -1,19 +1,19 @@
 import { expect, test, vi } from "vitest";
 
-const myEqual = vi.helper((a: any, b: any) => {
+const myEqual = vi.defineHelper((a: any, b: any) => {
   expect(a).toEqual(b);
 });
 
-const myEqualAsync = vi.helper(async (a: any, b: any) => {
+const myEqualAsync = vi.defineHelper(async (a: any, b: any) => {
   await new Promise((r) => setTimeout(r, 1));
   expect(a).toEqual(b);
 });
 
-const myEqualSoft = vi.helper((a: any, b: any) => {
+const myEqualSoft = vi.defineHelper((a: any, b: any) => {
   expect.soft(a).toEqual(b);
 });
 
-const myEqualSoftAsync = vi.helper(async (a: any, b: any) => {
+const myEqualSoftAsync = vi.defineHelper(async (a: any, b: any) => {
   await new Promise((r) => setTimeout(r, 1));
   expect.soft(a).toEqual(b);
 });
@@ -35,10 +35,10 @@ test("soft async", async () => {
 });
 
 // Nested helpers: outermost marker wins
-const innerHelper = vi.helper((a: any, b: any) => {
+const innerHelper = vi.defineHelper((a: any, b: any) => {
   expect(a).toEqual(b);
 });
-const outerHelper = vi.helper((a: any, b: any) => {
+const outerHelper = vi.defineHelper((a: any, b: any) => {
   innerHelper(a, b);
 });
 
@@ -56,10 +56,10 @@ test("pass async", async () => {
 });
 
 // Helper returning value
-const myAdd = vi.helper((a: number, b: number) => {
+const myAdd = vi.defineHelper((a: number, b: number) => {
   return a + b;
 });
-const myAddAsync = vi.helper(async (a: number, b: number) => {
+const myAddAsync = vi.defineHelper(async (a: number, b: number) => {
   await new Promise((r) => setTimeout(r, 1));
   return a + b;
 });
@@ -79,7 +79,7 @@ test("multiple soft", () => {
 });
 
 // Custom error in helper
-const throwCustom = vi.helper(() => {
+const throwCustom = vi.defineHelper(() => {
   throw new Error("custom error from helper");
 });
 
@@ -97,7 +97,7 @@ test("non-helper wrapper", () => {
 });
 
 // printConsoleTrace also hides internal stacks
-const myHelperWithLogs = vi.helper(() => {
+const myHelperWithLogs = vi.defineHelper(() => {
   console.error("[test-myHelperWithLogs]");
 });
 

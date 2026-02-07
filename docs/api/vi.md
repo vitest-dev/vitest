@@ -1336,7 +1336,7 @@ function resetConfig(): void
 
 If [`vi.setConfig`](#vi-setconfig) was called before, this will reset config to the original state.
 
-### vi.helper <Version>4.1.0</Version> {#vi-helper}
+### vi.defineHelper <Version>4.1.0</Version> {#vi-defineHelper}
 
 ```ts
 function helper<F extends (...args: any) => any>(fn: F): F
@@ -1349,7 +1349,7 @@ Works with both synchronous and asynchronous functions, and supports `expect.sof
 ```ts
 import { expect, vi } from 'vitest'
 
-const assertPair = vi.helper((a, b) => {
+const assertPair = vi.defineHelper((a, b) => {
   expect(a).toEqual(b)
 })
 

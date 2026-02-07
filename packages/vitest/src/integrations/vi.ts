@@ -175,7 +175,7 @@ export interface VitestUtils {
    *
    * @example
    * ```ts
-   * const myEqual = vi.helper((x, y) => {
+   * const myEqual = vi.defineHelper((x, y) => {
    *   expect(x).toEqual(y)
    * })
    *
@@ -200,7 +200,7 @@ export interface VitestUtils {
    * @param fn The assertion function to wrap
    * @returns A wrapped function with the same signature
    */
-  helper: <F extends (...args: any) => any>(fn: F) => F
+  defineHelper: <F extends (...args: any) => any>(fn: F) => F
 
   /**
    * This is similar to [`vi.waitFor`](https://vitest.dev/api/vi#vi-waitfor), but if the callback throws any errors, execution is immediately interrupted and an error message is received.
@@ -610,7 +610,7 @@ function createVitest(): VitestUtils {
     fn,
     waitFor,
     waitUntil,
-    helper: (fn) => {
+    defineHelper: (fn) => {
       return function __VITEST_HELPER__(...args: any[]): any {
         const result = fn(...args)
         if (result && typeof result === 'object' && typeof result.then === 'function') {
