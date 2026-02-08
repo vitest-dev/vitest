@@ -1,13 +1,13 @@
 import { expect, test } from 'vitest'
 import { runInlineTests as base } from '../../test-utils'
 
-const isWindows = process.platform === 'win32'
-
 test('does not report leaks when disabled', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-      test('leaking timeout', () => {
+      test('leaks', () => {
         setTimeout(() => {}, 100_000)
+        setInterval(() => {}, 100_000)
+        new Promise((resolve) => {})
       })
     `,
   }, {
@@ -18,121 +18,70 @@ test('does not report leaks when disabled', async () => {
   expect.soft(stderr).toBe('')
 })
 
-test('timeout leak in test file', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'packages/example/test/example.test.ts': `
-      test('leaking timeout', () => {
-        setTimeout(() => {}, 100_000)
-      })
-    `,
-  })
-
-  expect.soft(stdout).toContain('Leaks  1 leak')
-
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
-
-    Timeout leaking in packages/example/test/example.test.ts
-      1|
-      2|       test('leaking timeout', () => {
-      3|         setTimeout(() => {}, 100_000)
-       |         ^
-      4|       })
-      5|
-     ❯ packages/example/test/example.test.ts:3:9
-
-    "
-  `)
-})
-
-test('timeout leak in source file', async () => {
+test('timeout', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
       import source from '../src/source'
 
-      test('leaking timeout', () => {
+      test('leak in test file', () => {
+        setTimeout(() => {}, 100_000)
+      })
+
+      test('leak in separate file', () => {
         source()
+      })
+
+      test('not a leak', () => {
+        const timeout = setTimeout(() => {}, 100_000)
+        clearTimeout(timeout)
       })
     `,
     'packages/example/src/source.ts': `
-      export default function source() {
+      export default function execute() {
         setTimeout(() => {}, 100_000)
       }
     `,
   })
 
-  expect.soft(stdout).toContain('Leaks  1 leak')
-
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
-
-    Timeout leaking in packages/example/test/example.test.ts
-      1|
-      2|       export default function source() {
-      3|         setTimeout(() => {}, 100_000)
-       |         ^
-      4|       }
-      5|
-     ❯ source packages/example/src/source.ts:3:9
-     ❯ packages/example/test/example.test.ts:5:9
-
-    "
-  `)
-})
-
-test('multiple leaks', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'packages/example/test/example.test.ts': `
-      import source from '../src/source'
-
-      test('leaking timeout', () => {
-        source()
-        setTimeout(() => {}, 100_000)
-      })
-    `,
-    'packages/example/src/source.ts': `
-      export default function source() {
-        setTimeout(() => {}, 100_000)
-      }
-    `,
-  })
-
-  expect.soft(stdout).toContain('Leaks  2 leak')
+  expect.soft(stdout).toContain('Leaks  2 leaks')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 2 ⎯⎯⎯⎯⎯⎯⎯⎯
 
     Timeout leaking in packages/example/test/example.test.ts
+      3|
+      4|       test('leak in test file', () => {
+      5|         setTimeout(() => {}, 100_000)
+       |         ^
+      6|       })
+      7|
+     ❯ packages/example/test/example.test.ts:5:9
+
+    Timeout leaking in packages/example/test/example.test.ts
       1|
-      2|       export default function source() {
+      2|       export default function execute() {
       3|         setTimeout(() => {}, 100_000)
        |         ^
       4|       }
       5|
-     ❯ source packages/example/src/source.ts:3:9
-     ❯ packages/example/test/example.test.ts:5:9
-
-    Timeout leaking in packages/example/test/example.test.ts
-      4|       test('leaking timeout', () => {
-      5|         source()
-      6|         setTimeout(() => {}, 100_000)
-       |         ^
-      7|       })
-      8|
-     ❯ packages/example/test/example.test.ts:6:9
+     ❯ execute packages/example/src/source.ts:3:9
+     ❯ packages/example/test/example.test.ts:9:9
 
     "
   `)
 })
 
-test('interval leak in test file', async () => {
+test('interval', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-      test('leaking interval', () => {
+      test('leak', () => {
         setInterval(() => {}, 100_000)
+      })
+
+      test('not a leak', () => {
+        const interval = setInterval(() => {}, 100_000)
+        clearInterval(interval)
       })
     `,
   })
@@ -145,7 +94,7 @@ test('interval leak in test file', async () => {
 
     Timeout leaking in packages/example/test/example.test.ts
       1|
-      2|       test('leaking interval', () => {
+      2|       test('leak', () => {
       3|         setInterval(() => {}, 100_000)
        |         ^
       4|       })
@@ -156,76 +105,66 @@ test('interval leak in test file', async () => {
   `)
 })
 
-test('promise leak in test file', async () => {
+test('promise', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-      test('leaking promise', () => {
+      test('leak', () => {
         new Promise((resolve) => {})
+      })
+
+      test('nested leaks', () => {
+        new Promise((resolve) => {
+          new Promise((resolve2) => {})
+        })
+      })
+
+      test('not a leak', () => {
+        new Promise((resolve) => resolve())
+        new Promise((resolve, reject) => reject()).catch(() => {})
       })
     `,
   })
 
-  expect.soft(stdout).toContain('Leaks  1 leak')
+  expect.soft(stdout).toContain('Leaks  3 leaks')
 
   expect(stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 3 ⎯⎯⎯⎯⎯⎯⎯⎯
 
     PROMISE leaking in packages/example/test/example.test.ts
       1|
-      2|       test('leaking promise', () => {
+      2|       test('leak', () => {
       3|         new Promise((resolve) => {})
        |         ^
       4|       })
       5|
      ❯ packages/example/test/example.test.ts:3:9
 
-    "
-  `)
-})
-
-test('promise in promise leak in test file', async () => {
-  const { stdout, stderr } = await runInlineTests({
-    'packages/example/test/example.test.ts': `
-      test('leaking nested promises', () => {
-        new Promise((resolve) => {
-          new Promise((resolve2) => {})
-        })
-      })
-    `,
-  })
-
-  expect.soft(stdout).toContain('Leaks  2 leaks')
-
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 2 ⎯⎯⎯⎯⎯⎯⎯⎯
-
     PROMISE leaking in packages/example/test/example.test.ts
-      1|
-      2|       test('leaking nested promises', () => {
-      3|         new Promise((resolve) => {
+      5|
+      6|       test('nested leaks', () => {
+      7|         new Promise((resolve) => {
        |         ^
-      4|           new Promise((resolve2) => {})
-      5|         })
-     ❯ packages/example/test/example.test.ts:3:9
+      8|           new Promise((resolve2) => {})
+      9|         })
+     ❯ packages/example/test/example.test.ts:7:9
 
     PROMISE leaking in packages/example/test/example.test.ts
-      2|       test('leaking nested promises', () => {
-      3|         new Promise((resolve) => {
-      4|           new Promise((resolve2) => {})
+      6|       test('nested leaks', () => {
+      7|         new Promise((resolve) => {
+      8|           new Promise((resolve2) => {})
        |           ^
-      5|         })
-      6|       })
-     ❯ packages/example/test/example.test.ts:4:11
-     ❯ packages/example/test/example.test.ts:3:9
+      9|         })
+     10|       })
+     ❯ packages/example/test/example.test.ts:8:11
+     ❯ packages/example/test/example.test.ts:7:9
 
     "
   `)
 })
 
-test('fs handle leak in test file', async () => {
-  const { stdout, stderr } = await runInlineTests({
+test('fs handle', async () => {
+  const { stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
       import { readFile } from 'node:fs'
 
@@ -233,65 +172,42 @@ test('fs handle leak in test file', async () => {
         readFile(import.meta.filename, () => {});
       })
     `,
+    'packages/example/test/example-2.test.ts': `
+      import { readFile } from 'node:fs'
+
+      test('not a leak', async () => {
+        await new Promise(resolve => readFile(import.meta.filename, () => { resolve() }));
+      })
+    `,
   })
 
-  if (isWindows) {
-    expect.soft(stdout).toContain('Leaks  2 leaks')
-
-    expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 2 ⎯⎯⎯⎯⎯⎯⎯⎯
-
-    FSREQCALLBACK leaking in packages/example/test/example.test.ts
-      3|
-      4|       test('leaking fs handle', () => {
-      5|         readFile(import.meta.filename, () => {});
-       |         ^
-      6|       })
-      7|
-     ❯ packages/example/test/example.test.ts:5:9
-
-    FSREQCALLBACK leaking in packages/example/test/example.test.ts
-      3|
-      4|       test('leaking fs handle', () => {
-      5|         readFile(import.meta.filename, () => {});
-       |         ^
-      6|       })
-      7|
-     ❯ packages/example/test/example.test.ts:5:9
-
-    "
-    `)
-  }
-  else {
-    expect.soft(stdout).toContain('Leaks  1 leak')
-
-    expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
-
-    FSREQCALLBACK leaking in packages/example/test/example.test.ts
-      3|
-      4|       test('leaking fs handle', () => {
-      5|         readFile(import.meta.filename, () => {});
-       |         ^
-      6|       })
-      7|
-     ❯ packages/example/test/example.test.ts:5:9
-
-    "
-  `)
-  }
+  // This might be racy. Sometimes readFile fires two FSREQCALLBACK's, sometimes just one.
+  expect(stderr).toContain(`\
+FSREQCALLBACK leaking in packages/example/test/example.test.ts
+  3|
+  4|       test('leaking fs handle', () => {
+  5|         readFile(import.meta.filename, () => {});
+   |         ^
+  6|       })
+  7|
+ ❯ packages/example/test/example.test.ts:5:9
+`)
 })
 
-test('leaking server', async () => {
+test('http server', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `
-    import { Server } from "http";
+      import { Server } from "http";
 
-      test('leaking tcp socket', async () => {
+      test('leak', async () => {
         const app = new Server();
         await new Promise(resolve => app.listen({ host: "localhost", port: 0 }, resolve));
+      })
+
+      test('not a leak', async () => {
+        const app = new Server();
+        await new Promise(resolve => app.listen({ host: "localhost", port: 0 }, resolve));
+        app.close()
       })
     `,
   })
@@ -303,7 +219,7 @@ test('leaking server', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
 
     TCPSERVERWRAP leaking in packages/example/test/example.test.ts
-      4|       test('leaking tcp socket', async () => {
+      4|       test('leak', async () => {
       5|         const app = new Server();
       6|         await new Promise(resolve => app.listen({ host: "localhost", port:…
        |                                          ^
