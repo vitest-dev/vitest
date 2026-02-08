@@ -1032,7 +1032,7 @@ function formatTitle(template: string, items: any[], idx: number) {
         // TODO: switch to double quotes?
         quote: 'single',
         quoteKeys: false,
-        indent: 0,
+        min: true,
         spacingInner: ' ',
         spacingOuter: ' ',
         printBasicPrototype: false,
@@ -1056,7 +1056,7 @@ function formatTitle(template: string, items: any[], idx: number) {
           stringifyOptions: {
             quote: 'single',
             quoteKeys: false,
-            indent: 0,
+            min: true,
             spacingInner: ' ',
             spacingOuter: ' ',
             printBasicPrototype: false,
