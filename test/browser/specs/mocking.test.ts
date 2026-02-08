@@ -30,6 +30,7 @@ test.each([true/* , false */])('mocking works correctly - isolated %s', async (i
     expect(result.stdout).toReportPassedTest('import-mock.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-do-mock-factory.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-actual-dep.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('space dir/mocked-spaced-dir.test.ts', browser)
   })
 
   expect(result.exitCode).toBe(0)
