@@ -111,7 +111,7 @@ function printBasicValue(
   printFunctionName: boolean,
   escapeRegex: boolean,
   escapeString: boolean,
-  quote: 'single' | 'double',
+  singleQuote: boolean,
 ): string | null {
   if (val === true || val === false) {
     return `${val}`
@@ -132,9 +132,9 @@ function printBasicValue(
     return printBigInt(val)
   }
   if (typeOf === 'string') {
-    const q = quote === 'single' ? '\'' : '"'
+    const q = singleQuote ? '\'' : '"'
     if (escapeString) {
-      const escapePattern = quote === 'single' ? /['\\]/g : /["\\]/g
+      const escapePattern = singleQuote ? /['\\]/g : /["\\]/g
       return `${q}${val.replaceAll(escapePattern, '\\$&')}${q}`
     }
     return `${q}${val}${q}`
@@ -393,7 +393,7 @@ function printer(
     config.printFunctionName,
     config.escapeRegex,
     config.escapeString,
-    config.quote,
+    config.singleQuote,
   )
   if (basicResult !== null) {
     return basicResult
@@ -436,7 +436,7 @@ export const DEFAULT_OPTIONS: Options = {
   printFunctionName: true,
   printShadowRoot: true,
   theme: DEFAULT_THEME,
-  quote: 'double' as const,
+  singleQuote: false,
   quoteKeys: true,
 } satisfies Options
 
@@ -517,7 +517,7 @@ function getConfig(options?: OptionsReceived): Config {
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.spacingInner ?? (options?.min ? ' ' : '\n'),
     spacingOuter: options?.spacingOuter ?? (options?.min ? '' : '\n'),
-    quote: options?.quote ?? DEFAULT_OPTIONS.quote,
+    singleQuote: options?.singleQuote ?? DEFAULT_OPTIONS.singleQuote,
     quoteKeys: options?.quoteKeys ?? DEFAULT_OPTIONS.quoteKeys,
   }
 }
@@ -547,7 +547,7 @@ export function format(val: unknown, options?: OptionsReceived): string {
     getPrintFunctionName(options),
     getEscapeRegex(options),
     getEscapeString(options),
-    options?.quote ?? DEFAULT_OPTIONS.quote,
+    options?.singleQuote ?? DEFAULT_OPTIONS.singleQuote,
   )
   if (basicResult !== null) {
     return basicResult

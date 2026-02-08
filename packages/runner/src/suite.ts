@@ -1029,8 +1029,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       // TODO: respect truncateThreshold?
       return stringify(value, undefined, {
-        // TODO: switch to double quotes?
-        quote: 'single',
+        singleQuote: true,
         quoteKeys: false,
         min: true,
         spacingInner: ' ',
@@ -1054,7 +1053,7 @@ function formatTitle(template: string, items: any[], idx: number) {
         // output += format(match[0], items[i++])
         output += baseFormat([match[0], items[i++]], {
           stringifyOptions: {
-            quote: 'single',
+            singleQuote: true,
             quoteKeys: false,
             min: true,
             spacingInner: ' ',

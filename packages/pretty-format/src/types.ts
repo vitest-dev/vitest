@@ -53,7 +53,7 @@ export interface PrettyFormatOptions {
   plugins?: Plugins
   spacingInner?: string
   spacingOuter?: string
-  quote?: 'single' | 'double'
+  singleQuote?: boolean
   quoteKeys?: boolean
 }
 
@@ -75,7 +75,7 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
-  quote: 'single' | 'double'
+  singleQuote: boolean
   quoteKeys: boolean
 }
 
