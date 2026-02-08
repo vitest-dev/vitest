@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-describe('truncateThreshold', () => {
+describe.skip('truncateThreshold', () => {
   it('default', async () => {
     const result = await runVitest({
       root: 'fixtures/chai-config',

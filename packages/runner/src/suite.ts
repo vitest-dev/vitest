@@ -1035,6 +1035,7 @@ function formatTitle(template: string, items: any[], idx: number) {
         spacingInner: ' ',
         spacingOuter: ' ',
         printBasicPrototype: false,
+        compareKeys: null,
       })
       // return objDisplay(value, {
       //   truncate: runner?.config?.chaiConfig?.truncateThreshold,
@@ -1059,6 +1060,7 @@ function formatTitle(template: string, items: any[], idx: number) {
             spacingInner: ' ',
             spacingOuter: ' ',
             printBasicPrototype: false,
+            compareKeys: null,
           },
         })
       }
