@@ -156,6 +156,74 @@ test('interval leak in test file', async () => {
   `)
 })
 
+test('promise leak in test file', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'packages/example/test/example.test.ts': `
+      test('leaking promise', () => {
+        new Promise((resolve) => {})
+      })
+    `,
+  })
+
+  expect.soft(stdout).toContain('Leaks  1 leak')
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    PROMISE leaking in packages/example/test/example.test.ts
+      1|
+      2|       test('leaking promise', () => {
+      3|         new Promise((resolve) => {})
+       |         ^
+      4|       })
+      5|
+     ❯ packages/example/test/example.test.ts:3:9
+
+    "
+  `)
+})
+
+test('promise in promise leak in test file', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'packages/example/test/example.test.ts': `
+      test('leaking nested promises', () => {
+        new Promise((resolve) => {
+          new Promise((resolve2) => {})
+        })
+      })
+    `,
+  })
+
+  expect.soft(stdout).toContain('Leaks  2 leaks')
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 2 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    PROMISE leaking in packages/example/test/example.test.ts
+      1|
+      2|       test('leaking nested promises', () => {
+      3|         new Promise((resolve) => {
+       |         ^
+      4|           new Promise((resolve2) => {})
+      5|         })
+     ❯ packages/example/test/example.test.ts:3:9
+
+    PROMISE leaking in packages/example/test/example.test.ts
+      2|       test('leaking nested promises', () => {
+      3|         new Promise((resolve) => {
+      4|           new Promise((resolve2) => {})
+       |           ^
+      5|         })
+      6|       })
+     ❯ packages/example/test/example.test.ts:4:11
+     ❯ packages/example/test/example.test.ts:3:9
+
+    "
+  `)
+})
+
 test('fs handle leak in test file', async () => {
   const { stdout, stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `

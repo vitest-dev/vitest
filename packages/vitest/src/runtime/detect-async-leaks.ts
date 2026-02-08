@@ -9,7 +9,6 @@ const IGNORED_TYPES = new Set([
   'DNSCHANNEL',
   'ELDHISTOGRAM',
   'PerformanceObserver',
-  'PROMISE',
   'RANDOMBYTESREQUEST',
   'SIGNREQUEST',
   'TCPWRAP',
@@ -27,7 +26,16 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
         return
       }
 
-      let stack = new Error('VITEST_DETECT_ASYNC_LEAKS').stack || ''
+      let stack = ''
+
+      // VitestModuleEvaluator's async wrapper of node:vm causes out-of-bound stack traces, simply skip it.
+      // Crash fixed in https://github.com/vitejs/vite/pull/21585
+      try {
+        stack = new Error('VITEST_DETECT_ASYNC_LEAKS').stack || ''
+      }
+      catch {
+        return
+      }
 
       if (!stack.includes(testFile)) {
         const trigger = resources.get(triggerAsyncId)
@@ -50,6 +58,11 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
       resources.set(asyncId, { type, stack, projectName, filename: testFile, isActive })
     },
     destroy(asyncId) {
+      if (resources.get(asyncId)?.type !== 'PROMISE') {
+        resources.delete(asyncId)
+      }
+    },
+    promiseResolve(asyncId) {
       resources.delete(asyncId)
     },
   })
