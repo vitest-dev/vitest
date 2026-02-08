@@ -4,18 +4,22 @@ import { preview } from '@vitest/browser-preview'
 import { webdriverio } from '@vitest/browser-webdriverio'
 
 const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
+
 export const providers = {
-  playwright,
+  playwright: (options?: Parameters<typeof playwright>[0]) => playwright(process.env.BROWSER_WS_ENDPOINT
+    ? {
+        ...options,
+        connectOptions: {
+          wsEndpoint: process.env.BROWSER_WS_ENDPOINT,
+          exposeNetwork: '<loopback>',
+        },
+      }
+    : options),
   preview,
   webdriverio,
 }
 
 export const provider = providers[providerName]()
-export const browser = process.env.BROWSER || (provider.name !== 'playwright' ? 'chromium' : 'chrome')
-
-const devInstances: BrowserInstanceOption[] = [
-  { browser },
-]
 
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
@@ -30,8 +34,13 @@ const webdriverioInstances: BrowserInstanceOption[] = [
   { browser: 'firefox' },
 ]
 
-export const instances = process.env.BROWSER
-  ? devInstances
+export const instances: BrowserInstanceOption[] = process.env.BROWSER
+  ? [
+      {
+        browser: process.env.BROWSER as any,
+        headless: process.env.BROWSER === 'safari' ? false : undefined,
+      },
+    ]
   : provider.name === 'playwright'
     ? playwrightInstances
     : webdriverioInstances

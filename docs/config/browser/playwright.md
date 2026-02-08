@@ -71,8 +71,57 @@ Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/gu
 
 These options are directly passed down to `playwright[browser].connect` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-connect).
 
+Use `connectOptions.wsEndpoint` to connect to an existing Playwright server instead of launching browsers locally. This is useful for running browsers in Docker, in CI, or on a remote machine.
+
 ::: warning
 Since this command connects to an existing Playwright server, any `launch` options will be ignored.
+:::
+
+::: details Example: Running a Playwright Server in Docker
+To run browsers in a Docker container (see [Playwright Docker guide](https://playwright.dev/docs/docker#remote-connection)):
+
+Start a Playwright server using Docker Compose:
+
+```yaml [docker-compose.yml]
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.58.1-noble
+    command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677 --host 0.0.0.0"
+    init: true
+    ipc: host
+    user: pwuser
+    ports:
+      - '6677:6677'
+```
+
+```sh
+docker compose up -d
+```
+
+Then configure Vitest to connect to it. The [`exposeNetwork`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-option-expose-network) option lets the containerized browser reach Vitest's dev server on the host:
+
+```ts [vitest.config.ts]
+import { playwright } from '@vitest/browser-playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: playwright({
+        connectOptions: {
+          wsEndpoint: 'ws://127.0.0.1:6677/',
+          exposeNetwork: '<loopback>',
+        },
+      }),
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  },
+})
+```
 :::
 
 ## contextOptions

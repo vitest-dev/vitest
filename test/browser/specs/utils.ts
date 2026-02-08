@@ -2,9 +2,9 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
 import type { RunVitestConfig, TestFsStructure, VitestRunnerCLIOptions } from '../../test-utils'
 import { runInlineTests, runVitest } from '../../test-utils'
-import { browser, instances, provider } from '../settings'
+import { instances, provider } from '../settings'
 
-export { browser, instances, provider } from '../settings'
+export { instances, provider } from '../settings'
 
 export async function runInlineBrowserTests(
   structure: TestFsStructure,
@@ -21,7 +21,7 @@ export async function runInlineBrowserTests(
         enabled: true,
         provider,
         instances,
-        headless: browser !== 'safari',
+        headless: true,
         ...config?.browser,
       } as TestUserConfig['browser'],
     },
@@ -39,10 +39,7 @@ export async function runBrowserTests(
     watch: false,
     reporters: 'none',
     ...config,
-    browser: {
-      headless: browser !== 'safari',
-      ...config?.browser,
-    } as TestUserConfig['browser'],
+    browser: { headless: true, ...config?.browser },
     $viteConfig: viteOverrides,
   }, include, runnerOptions)
 }
