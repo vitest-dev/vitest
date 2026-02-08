@@ -23,12 +23,6 @@ if (inBrowser) {
   import('./pwa')
 }
 
-// Redirect old config hash links to new per-option pages.
-// The first segment of the hash maps to the page, the rest stays as a hash:
-//   /config/#reporters           -> /config/reporters
-//   /config/#coverage-provider   -> /config/coverage#coverage-provider
-//   /config/#browser.enabled     -> /config/browser/enabled
-//   /guide/browser/config#browser.locators-testidattribute -> /config/browser/locators#browser-locators-testidattribute
 function getRedirectPath(url: URL) {
   if (url.pathname === '/api/' || url.pathname === '/api' || url.pathname === '/api/index.html') {
     return '/api/test'
@@ -36,6 +30,10 @@ function getRedirectPath(url: URL) {
   if (!url.hash) {
     return
   }
+
+  // /config/#reporters           -> /config/reporters
+  // /config/#coverage-provider   -> /config/coverage#coverage-provider
+  // /config/#browser.enabled     -> /config/browser/enabled
   if (url.pathname === '/config' || url.pathname === '/config/' || url.pathname === '/config.html') {
     if (url.hash.startsWith('#browser.')) {
       const [page, ...hash] = url.hash.slice('#browser.'.length).toLowerCase().split('-')
@@ -44,6 +42,7 @@ function getRedirectPath(url: URL) {
     const [page, ...hash] = url.hash.slice(1).toLowerCase().split('-')
     return `/config/${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''}`
   }
+  // /guide/browser/config#browser.locators-testidattribute -> /config/browser/locators#browser-locators-testidattribute
   if (url.pathname === '/guide/browser/config' || url.pathname === '/guide/browser/config/' || url.pathname === '/guide/browser/config.html') {
     const [page, ...hash] = url.hash.slice('#browser.'.length).toLowerCase().split('-')
     return `/config/browser/${page}${hash.length ? `#${[page, ...hash].join('-')}` : ''}`
