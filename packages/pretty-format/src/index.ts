@@ -437,6 +437,7 @@ export const DEFAULT_OPTIONS: Options = {
   printShadowRoot: true,
   theme: DEFAULT_THEME,
   quote: 'double' as const,
+  quoteKeys: true,
 } satisfies Options
 
 const EXTRA_OPTIONS = new Set(['spacingInner', 'spacingOuter'])
@@ -517,6 +518,7 @@ function getConfig(options?: OptionsReceived): Config {
     spacingInner: options?.spacingInner ?? (options?.min ? ' ' : '\n'),
     spacingOuter: options?.spacingOuter ?? (options?.min ? '' : '\n'),
     quote: options?.quote ?? DEFAULT_OPTIONS.quote,
+    quoteKeys: options?.quoteKeys ?? DEFAULT_OPTIONS.quoteKeys,
   }
 }
 

@@ -1031,8 +1031,11 @@ function formatTitle(template: string, items: any[], idx: number) {
       return stringify(value, undefined, {
         // TODO: switch to double quotes?
         quote: 'single',
+        quoteKeys: false,
+        indent: 0,
         spacingInner: ' ',
         spacingOuter: ' ',
+        printBasicPrototype: false,
       })
       // return objDisplay(value, {
       //   truncate: runner?.config?.chaiConfig?.truncateThreshold,
@@ -1052,8 +1055,11 @@ function formatTitle(template: string, items: any[], idx: number) {
         output += baseFormat([match[0], items[i++]], {
           stringifyOptions: {
             quote: 'single',
+            quoteKeys: false,
+            indent: 0,
             spacingInner: ' ',
             spacingOuter: ' ',
+            printBasicPrototype: false,
           },
         })
       }

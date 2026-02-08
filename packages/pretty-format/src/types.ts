@@ -54,6 +54,7 @@ export interface PrettyFormatOptions {
   spacingInner?: string
   spacingOuter?: string
   quote?: 'single' | 'double'
+  quoteKeys?: boolean
 }
 
 export type OptionsReceived = PrettyFormatOptions
@@ -75,6 +76,7 @@ export interface Config {
   spacingInner: string
   spacingOuter: string
   quote: 'single' | 'double'
+  quoteKeys: boolean
 }
 
 export type Printer = (
