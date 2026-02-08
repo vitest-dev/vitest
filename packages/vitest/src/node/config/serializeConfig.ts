@@ -96,6 +96,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,
     inspector: globalConfig.inspector,
+    detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
     includeTaskLocation:
       config.includeTaskLocation
