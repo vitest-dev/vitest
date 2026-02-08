@@ -18,7 +18,7 @@ import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
-import { BenchmarkRunner, TestRunner } from 'vitest'
+import { BenchmarkRunner, recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -175,7 +175,10 @@ export function createBrowserRunner(
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
-          task.meta.failScreenshotPath = screenshot
+          await recordArtifact(task, {
+            type: 'internal:failureScreenshot',
+            attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+          } as const)
         }
       }
     }

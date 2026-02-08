@@ -39,7 +39,9 @@ function recordArtifact<Artifact extends TestArtifact>(task: Test, artifact: Art
 
 The `recordArtifact` function records an artifact during test execution and returns it. It expects a [task](/api/advanced/runner#tasks) as the first parameter and an object assignable to [`TestArtifact`](#testartifact) as the second.
 
-This function has to be used within a test, and the test has to still be running. Recording after test completion will throw an error.
+::: info
+Artifacts must be recorded before the task is reported. Any artifacts recorded after that will not be included in the task.
+:::
 
 When an artifact is recorded on a test, it emits an `onTestArtifactRecord` runner event and a [`onTestCaseArtifactRecord` reporter event](/api/advanced/reporters#ontestcaseartifactrecord). To retrieve recorded artifacts from a test case, use the [`artifacts()`](/api/advanced/test-case#artifacts) method.
 

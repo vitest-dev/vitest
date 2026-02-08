@@ -1,14 +1,13 @@
-import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
 import type { Plugin } from 'vitest/config'
 import type { Vitest } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
-import { createReadStream, lstatSync, readFileSync } from 'node:fs'
+import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { basename, dirname, extname, join, resolve } from 'pathe'
+import { basename, dirname, join, resolve } from 'pathe'
 import sirv from 'sirv'
 import { coverageConfigDefaults } from 'vitest/config'
 import {
@@ -97,61 +96,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           )
         }
 
-        const uiEnabled = parentServer.config.browser.ui
-
-        if (uiEnabled) {
-        // eslint-disable-next-line prefer-arrow-callback
-          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const url = new URL(req.url, 'http://localhost')
-            const id = url.searchParams.get('id')
-            if (!id) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const task = parentServer.vitest.state.idMap.get(id)
-            const file = task?.meta.failScreenshotPath
-            if (!file) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            let stat: Stats | undefined
-            try {
-              stat = lstatSync(file)
-            }
-            catch {
-            }
-
-            if (!stat?.isFile()) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const ext = extname(file)
-            const buffer = readFileSync(file)
-            res.setHeader(
-              'Cache-Control',
-              'public,max-age=0,must-revalidate',
-            )
-            res.setHeader('Content-Length', buffer.length)
-            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
-              ? 'image/jpeg'
-              : ext === 'webp'
-                ? 'image/webp'
-                : 'image/png')
-            res.end(buffer)
-          })
-        }
         server.middlewares.use((req, res, next) => {
           // 9000 mega head move
           // Vite always caches optimized dependencies, but users might mock

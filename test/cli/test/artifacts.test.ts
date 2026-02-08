@@ -243,7 +243,7 @@ describe('API', () => {
     `)
   })
 
-  test('cannot record artifacts when the test finished running', async () => {
+  test('can record artifacts even after the test finished running', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.ts': `
         import { recordArtifact } from 'vitest'
@@ -258,7 +258,7 @@ describe('API', () => {
         })
       `,
     }, { globals: true })
-    expect(stderr).toContain('Cannot record a test artifact outside of the test run. The test "finished early" finished running with the "pass" state already.')
+    expect(stderr).toBe('')
   })
 })
 
