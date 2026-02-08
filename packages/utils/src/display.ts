@@ -124,10 +124,14 @@ export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
 interface FormatOptions {
   prettifyObject?: boolean
+  stringifyOptions?: StringifyOptions
 }
 
-function baseFormat(args: unknown[], options: FormatOptions = {}): string {
+export function baseFormat(args: unknown[], options: FormatOptions = {}): string {
   const formatArg = (item: unknown, inspecOptions?: LoupeOptions) => {
+    if (options.stringifyOptions) {
+      return stringify(item, undefined, options.stringifyOptions)
+    }
     if (options.prettifyObject) {
       return stringify(item, undefined, {
         printBasicPrototype: false,
@@ -189,6 +193,7 @@ function baseFormat(args: unknown[], options: FormatOptions = {}): string {
       case '%f':
         return Number.parseFloat(String(args[i++])).toString()
       case '%o':
+        // TODO: respect { showHidden: true, showProxy: true }?
         return formatArg(args[i++], { showHidden: true, showProxy: true })
       case '%O':
         return formatArg(args[i++])

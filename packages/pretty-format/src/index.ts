@@ -111,6 +111,7 @@ function printBasicValue(
   printFunctionName: boolean,
   escapeRegex: boolean,
   escapeString: boolean,
+  quote: 'single' | 'double',
 ): string | null {
   if (val === true || val === false) {
     return `${val}`
@@ -131,10 +132,12 @@ function printBasicValue(
     return printBigInt(val)
   }
   if (typeOf === 'string') {
+    const q = quote === 'single' ? '\'' : '"'
     if (escapeString) {
-      return `"${val.replaceAll(/"|\\/g, '\\$&')}"`
+      const escapePattern = quote === 'single' ? /['\\]/g : /["\\]/g
+      return `${q}${val.replaceAll(escapePattern, '\\$&')}${q}`
     }
-    return `"${val}"`
+    return `${q}${val}${q}`
   }
   if (typeOf === 'function') {
     return printFunction(val, printFunctionName)
@@ -390,6 +393,7 @@ function printer(
     config.printFunctionName,
     config.escapeRegex,
     config.escapeString,
+    config.quote,
   )
   if (basicResult !== null) {
     return basicResult
@@ -432,11 +436,14 @@ export const DEFAULT_OPTIONS: Options = {
   printFunctionName: true,
   printShadowRoot: true,
   theme: DEFAULT_THEME,
+  quote: 'double' as const,
 } satisfies Options
+
+const EXTRA_OPTIONS = new Set(['spacingInner', 'spacingOuter'])
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key) && !EXTRA_OPTIONS.has(key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }
@@ -507,8 +514,9 @@ function getConfig(options?: OptionsReceived): Config {
     printBasicPrototype: options?.printBasicPrototype ?? true,
     printFunctionName: getPrintFunctionName(options),
     printShadowRoot: options?.printShadowRoot ?? true,
-    spacingInner: options?.min ? ' ' : '\n',
-    spacingOuter: options?.min ? '' : '\n',
+    spacingInner: options?.spacingInner ?? (options?.min ? ' ' : '\n'),
+    spacingOuter: options?.spacingOuter ?? (options?.min ? '' : '\n'),
+    quote: options?.quote ?? DEFAULT_OPTIONS.quote,
   }
 }
 
@@ -537,6 +545,7 @@ export function format(val: unknown, options?: OptionsReceived): string {
     getPrintFunctionName(options),
     getEscapeRegex(options),
     getEscapeString(options),
+    options?.quote ?? DEFAULT_OPTIONS.quote,
   )
   if (basicResult !== null) {
     return basicResult

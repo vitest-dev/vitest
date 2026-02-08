@@ -32,7 +32,7 @@ export type CompareKeys = ((a: string, b: string) => number) | null | undefined
 type RequiredOptions = Required<PrettyFormatOptions>
 
 export interface Options
-  extends Omit<RequiredOptions, 'compareKeys' | 'theme'> {
+  extends Omit<RequiredOptions, 'compareKeys' | 'theme' | 'spacingInner' | 'spacingOuter'> {
   compareKeys: CompareKeys
   theme: Theme
 }
@@ -51,6 +51,9 @@ export interface PrettyFormatOptions {
   printShadowRoot?: boolean
   compareKeys?: CompareKeys
   plugins?: Plugins
+  spacingInner?: string
+  spacingOuter?: string
+  quote?: 'single' | 'double'
 }
 
 export type OptionsReceived = PrettyFormatOptions
@@ -71,6 +74,7 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
+  quote: 'single' | 'double'
 }
 
 export type Printer = (
