@@ -1,21 +1,11 @@
-import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
+import type { BrowserCommand } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
-import { playwright } from '@vitest/browser-playwright'
-import { preview } from '@vitest/browser-preview'
-import { webdriverio } from '@vitest/browser-webdriverio'
 import { defineConfig } from 'vitest/config'
+import { instances, provider } from './settings'
 
 const dir = dirname(fileURLToPath(import.meta.url))
-
-const providerName = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER as 'firefox' || (providerName === 'playwright' ? 'chromium' : 'chrome')
-const provider = {
-  playwright,
-  preview,
-  webdriverio,
-}[providerName]
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
@@ -24,21 +14,6 @@ const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPat
 const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
   return util.stripVTControlCharacters(text)
 }
-
-const devInstances: BrowserInstanceOption[] = [
-  { browser },
-]
-
-const playwrightInstances: BrowserInstanceOption[] = [
-  { browser: 'chromium' },
-  { browser: 'firefox' },
-  { browser: 'webkit' },
-]
-
-const webdriverioInstances: BrowserInstanceOption[] = [
-  { browser: 'chrome' },
-  { browser: 'firefox' },
-]
 
 export default defineConfig({
   server: {
@@ -66,12 +41,8 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: false,
-      instances: process.env.BROWSER
-        ? devInstances
-        : providerName === 'playwright'
-          ? playwrightInstances
-          : webdriverioInstances,
-      provider: provider(),
+      instances,
+      provider,
       // isolate: false,
       testerHtmlPath: './custom-tester.html',
       orchestratorScripts: [
