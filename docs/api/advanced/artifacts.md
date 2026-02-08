@@ -21,7 +21,7 @@ Each artifact includes:
 - Optional attachments, either files or inline content associated with the artifact
 - A source code location indicating where the artifact was created
 
-Vitest automatically manages attachment serialization (files are copied to [`attachmentsDir`](/config/#attachmentsdir)) and injects source location metadata, so you can focus on the data you want to record. All artifacts **must** extend from [`TestArtifactBase`](#testartifactbase) and all attachments from [`TestAttachment`](#testattachment) to be correctly handled internally.
+Vitest automatically manages attachment serialization (files are copied to [`attachmentsDir`](/config/attachmentsdir)) and injects source location metadata, so you can focus on the data you want to record. All artifacts **must** extend from [`TestArtifactBase`](#testartifactbase) and all attachments from [`TestAttachment`](#testattachment) to be correctly handled internally.
 
 ## API
 
@@ -63,6 +63,12 @@ export interface TestArtifactBase {
 The `TestArtifactBase` interface is the base for all test artifacts.
 
 Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
+
+::: danger
+When running with [`api.allowWrite`](/config/api#api-allowwrite) or [`browser.api.allowWrite`](/config/browser/api#api-allowwrite) disabled, Vitest empties the `attachments` array on every artifact before reporting it.
+
+If your custom artifact narrows the `attachments` type (e.g. to a tuple), include `| []` in the union so the type reflects what actually happens at runtime.
+:::
 
 ### `TestAttachment`
 
@@ -109,6 +115,7 @@ Here are a few guidelines or best practices to follow:
 - Try using a `Symbol` as the **registry key** to guarantee uniqueness
 - The `type` property should follow the pattern `'package-name:artifact-name'`, **`'internal:'` is a reserved prefix**
 - Use `attachments` to include files or data; extend [`TestAttachment`](#testattachment) for custom metadata
+- If you narrow the `attachments` type (e.g. to a tuple), include `| []` in the union since Vitest may empty the array at runtime (see [`TestArtifactBase`](#testartifactbase))
 - `location` property is automatically injected
 
 ## Custom Artifacts
@@ -127,7 +134,7 @@ interface AccessibilityArtifact extends TestArtifactBase {
   type: 'a11y:report'
   passed: boolean
   wcagLevel: 'A' | 'AA' | 'AAA'
-  attachments: [A11yReportAttachment]
+  attachments: [A11yReportAttachment] | []
 }
 
 const a11yReportKey = Symbol('report')

@@ -779,7 +779,7 @@ test('the number of elements must match exactly', () => {
 
 ## toThrowError
 
-- **Type:** `(received: any) => Awaitable<void>`
+- **Type:** `(expected?: any) => Awaitable<void>`
 
 - **Alias:** `toThrow`
 
@@ -789,7 +789,7 @@ You can provide an optional argument to test that a specific error is thrown:
 
 - `RegExp`: error message matches the pattern
 - `string`: error message includes the substring
-- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
+- any other value: compare with thrown value using deep equality (similar to `toEqual`)
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
@@ -845,6 +845,17 @@ function getAsyncFruitStock() {
 
 test('throws on pineapples', async () => {
   await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
+})
+```
+:::
+
+:::tip
+You can also test non-Error values that are thrown:
+
+```ts
+test('throws non-Error values', () => {
+  expect(() => { throw 42 }).toThrowError(42)
+  expect(() => { throw { message: 'error' } }).toThrowError({ message: 'error' })
 })
 ```
 :::

@@ -7,6 +7,7 @@ import type {
 } from '@vitest/runner'
 import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
+import type { SourceMap } from 'rollup'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
@@ -15,11 +16,13 @@ import type { TestSpecification } from './test-specification'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import convertSourceMap from 'convert-source-map'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
@@ -170,6 +173,18 @@ export class TestRun {
         else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
+            getSourceMap(file) {
+              // This only handles external modules since
+              // source map is already applied for inlined modules.
+              // Module node exists due to Vitest fetch module,
+              // but transformResult should be empty for external modules.
+              const mod = project.vite.moduleGraph.getModuleById(file)
+              if (!mod?.transformResult && existsSync(file)) {
+                const code = readFileSync(file, 'utf-8')
+                const result = extractSourcemapFromFile(code, file)
+                return result
+              }
+            },
           })
         }
       })
@@ -297,4 +312,32 @@ export class TestRun {
 function sanitizeFilePath(s: string): string {
   // eslint-disable-next-line no-control-regex
   return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
+}
+
+// based on vite
+// https://github.com/vitejs/vite/blob/84079a84ad94de4c1ef4f1bdb2ab448ff2c01196/packages/vite/src/node/server/sourcemap.ts#L149
+function extractSourcemapFromFile(
+  code: string,
+  filePath: string,
+): SourceMap | undefined {
+  const map = (
+    convertSourceMap.fromSource(code)
+    || (convertSourceMap.fromMapFileSource(
+      code,
+      createConvertSourceMapReadMap(filePath),
+    ))
+  )?.toObject()
+  return map
+}
+
+function createConvertSourceMapReadMap(originalFileName: string) {
+  return (filename: string) => {
+    // convertSourceMap can detect invalid filename from comments.
+    // fallback to empty source map to avoid errors.
+    const targetPath = path.resolve(path.dirname(originalFileName), filename)
+    if (existsSync(targetPath)) {
+      return readFileSync(targetPath, 'utf-8')
+    }
+    return '{}'
+  }
 }

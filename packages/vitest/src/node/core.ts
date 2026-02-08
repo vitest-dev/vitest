@@ -1392,9 +1392,12 @@ export class Vitest {
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)
         }
+        const teardownErrors: unknown[] = []
         // do teardown before closing the server
         for (const project of teardownProjects.reverse()) {
-          await project._teardownGlobalSetup()
+          await project._teardownGlobalSetup().catch((error) => {
+            teardownErrors.push(error)
+          })
         }
 
         const closePromises: unknown[] = this.projects.map(w => w.close())
@@ -1415,7 +1418,7 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          results.forEach((r) => {
+          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
             if (r.status === 'rejected') {
               this.logger.error('error during close', r.reason)
             }

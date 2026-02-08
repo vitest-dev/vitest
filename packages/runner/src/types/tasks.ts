@@ -453,19 +453,16 @@ interface TestCollectorCallable<C = object> {
   ): void
 }
 
-export interface ChainableContext<API> {
-  [kChainableContext]: {
-    /** @internal */
-    mergeContext: (ctx: Partial<InternalTestContext>) => void
-    /** @internal */
-    setContext: (key: keyof InternalTestContext, value: any) => void
-    /** @internal */
-    withContext: () => API
-    /** @internal */
-    getFixtures: () => TestFixtures
-  }
+export interface InternalChainableContext<API = TestAPI> {
+  /** @internal */
+  mergeContext: (ctx: Partial<InternalTestContext>) => void
+  /** @internal */
+  setContext: (key: keyof InternalTestContext, value: any) => void
+  /** @internal */
+  withContext: () => API
+  /** @internal */
+  getFixtures: () => TestFixtures
 }
-
 type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   TestCollectorCallable<ExtraContext>,
@@ -601,16 +598,25 @@ interface ExtendedAPI<ExtraContext> {
 }
 
 interface Hooks<ExtraContext> {
-  beforeAll: typeof beforeAll
-  afterAll: typeof afterAll
+  /**
+   * Suite-level hooks only receive file/worker scoped fixtures.
+   * Test-scoped fixtures are NOT available in beforeAll/afterAll/aroundAll.
+   */
+  beforeAll: typeof beforeAll<ExtractSuiteContext<ExtraContext>>
+  afterAll: typeof afterAll<ExtractSuiteContext<ExtraContext>>
+  aroundAll: typeof aroundAll<ExtractSuiteContext<ExtraContext>>
+  /**
+   * Test-level hooks receive all fixtures including test-scoped ones.
+   */
   beforeEach: typeof beforeEach<ExtraContext>
   afterEach: typeof afterEach<ExtraContext>
   aroundEach: typeof aroundEach<ExtraContext>
-  aroundAll: typeof aroundAll
 }
 
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
-  & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & ChainableContext<TestAPI<ExtraContext>> & {
+  & ExtendedAPI<ExtraContext> & Hooks<ExtraContext> & {
+    /** @internal */
+    [kChainableContext]: InternalChainableContext<TestAPI>
     /**
      * Extend the test API with custom fixtures.
      *
@@ -881,6 +887,11 @@ export type BuilderFixtureFn<T, Context> = (
   fixture: { onCleanup: OnCleanup },
 ) => T | Promise<T>
 
+export type ExtractSuiteContext<C>
+  = C extends { $__worker?: any } | { $__file?: any } | { $__test?: any }
+    ? ExtractBuilderWorker<C> & ExtractBuilderFile<C>
+    : C
+
 /**
  * Extracts worker-scoped fixtures from a context that includes scope info.
  */
@@ -1057,17 +1068,19 @@ type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   }
 >
 
-export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & ChainableContext<SuiteAPI<ExtraContext>> & {
+export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & {
+  /** @internal */
+  [kChainableContext]: InternalChainableContext<TestAPI>
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
-export interface BeforeAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<unknown>
+export interface BeforeAllListener<ExtraContext = object> {
+  (context: ExtraContext, suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
-export interface AfterAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<unknown>
+export interface AfterAllListener<ExtraContext = object> {
+  (context: ExtraContext, suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
 export interface BeforeEachListener<ExtraContext = object> {
@@ -1092,7 +1105,20 @@ export interface AroundEachListener<ExtraContext = object> {
   ): Awaitable<unknown>
 }
 
-export interface AroundAllListener {
+export interface AroundAllListener<ExtraContext = object> {
+  (
+    runSuite: () => Promise<void>,
+    context: ExtraContext,
+    suite: Readonly<Suite | File>
+  ): Awaitable<unknown>
+}
+
+// Contexts are provided when registered, not when invoked
+export interface RegisteredAllListener {
+  (suite: Readonly<Suite | File>): Awaitable<unknown>
+}
+
+export interface RegisteredAroundAllListener {
   (
     runSuite: () => Promise<void>,
     suite: Readonly<Suite | File>
@@ -1100,12 +1126,13 @@ export interface AroundAllListener {
 }
 
 export interface SuiteHooks<ExtraContext = object> {
-  beforeAll: BeforeAllListener[]
-  afterAll: AfterAllListener[]
+  beforeAll: RegisteredAllListener[]
+  afterAll: RegisteredAllListener[]
+  aroundAll: RegisteredAroundAllListener[]
+
   beforeEach: BeforeEachListener<ExtraContext>[]
   afterEach: AfterEachListener<ExtraContext>[]
   aroundEach: AroundEachListener<ExtraContext>[]
-  aroundAll: AroundAllListener[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -1266,6 +1293,8 @@ export interface TestArtifactLocation extends FileLocation {}
  * Base interface for all test artifacts.
  *
  * Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
+ *
+ * **Important**: when running with [`api.allowWrite`](https://vitest.dev/config/api#api-allowwrite) or [`browser.api.allowWrite`](https://vitest.dev/config/browser/api#api-allowwrite) disabled, Vitest empties the `attachments` array on every artifact before reporting it.
  */
 export interface TestArtifactBase {
   /** File or data attachments associated with this artifact */

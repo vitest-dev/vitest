@@ -98,11 +98,11 @@ receives an object with the following properties:
 
 - `root: string`
 
-  Absolute path to the project's [`root`](/config/#root).
+  Absolute path to the project's [`root`](/config/root).
 
 - `testFileDirectory: string`
 
-  Path to the test file, relative to the project's [`root`](/config/#root).
+  Path to the test file, relative to the project's [`root`](/config/root).
 
 - `testFileName: string`
 
@@ -115,7 +115,7 @@ receives an object with the following properties:
 
 - `attachmentsDir: string`
 
-  The value provided to [`attachmentsDir`](/config/#attachmentsdir), if none is
+  The value provided to [`attachmentsDir`](/config/attachmentsdir), if none is
   provided, its default value.
 
 For example, to group screenshots by browser:

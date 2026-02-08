@@ -60,7 +60,7 @@ test('merge reports', async () => {
          15|   expect(1).toBe(2)
            |             ^
          16| })
-         17| 
+         17|
 
      FAIL  second.test.ts > test 2-1
     AssertionError: expected 1 to be 2 // Object.is equality
@@ -77,7 +77,7 @@ test('merge reports', async () => {
           5|   expect(1).toBe(2)
            |             ^
           6| })
-          7| 
+          7|
     "
   `)
 

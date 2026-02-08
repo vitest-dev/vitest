@@ -94,7 +94,7 @@ function annotate(
 ): Promise<TestAnnotation>
 ```
 
-Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/#reporters).
+Add a [test annotation](/guide/test-annotations) that will be displayed by your [reporter](/config/reporters).
 
 ```ts
 test('annotations API', async ({ annotate }) => {
@@ -109,7 +109,7 @@ An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 - Test times out
 - User manually cancelled the test run with Ctrl+C
 - [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) was called programmatically
-- Another test failed in parallel and the [`bail`](/config/#bail) flag is set
+- Another test failed in parallel and the [`bail`](/config/bail) flag is set
 
 ```ts
 it('stop request when test times out', async ({ signal }) => {
@@ -276,14 +276,6 @@ For test-scoped fixtures (the default), you can omit the options:
 ```ts
 const test = baseTest
   .extend('simple', () => 'value')
-```
-
-Non-function values only support the `injected` option:
-
-```ts
-const test = baseTest
-  .extend('baseUrl', { injected: true }, 'http://localhost:3000')
-  .extend('defaults', { port: 3000, host: 'localhost' })
 ```
 
 #### Accessing Other Fixtures
@@ -504,15 +496,13 @@ Note that you cannot override non-test fixtures inside `describe` blocks:
 
 ```ts
 test.describe('a nested suite', () => {
-  test.override('port', 3000) // throws an error
+  test.override('port', { scope: 'worker' }, 3000) // throws an error
 })
 ```
 
 Consider overriding it on the top level of the module, or by using [`injected`](#default-fixture-injected) option and providing the value in the project config.
 
 Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overriden.
-
-<!-- TODO(v5) should this be addressed? force a new worker if worker fixture is overriden? -->
 :::
 
 #### Test Scope (Default)
@@ -578,7 +568,7 @@ const test = baseTest
 ```
 
 ::: info
-By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way. However, if you disable [isolation](/config/#isolate), then the number of workers is limited by [`maxWorkers`](/config/#maxworkers), and worker-scoped fixtures will be shared across files running in the same worker.
+By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way. However, if you disable [isolation](/config/isolate), then the number of workers is limited by [`maxWorkers`](/config/maxworkers), and worker-scoped fixtures will be shared across files running in the same worker.
 
 When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same way as `scope: 'file'` because each file has its own VM context.
 :::
@@ -650,7 +640,7 @@ This provides the same compile-time safety as the builder pattern, catching scop
 
 ### Default Fixture (Injected)
 
-Since Vitest 3, you can provide different values in different [projects](/guide/projects). To enable this, pass `{ injected: true }` in the options. If the key is not specified in the [project configuration](/config/#provide), the default value will be used.
+Since Vitest 3, you can provide different values in different [projects](/guide/projects). To enable this, pass `{ injected: true }` in the options. If the key is not specified in the [project configuration](/config/provide), the default value will be used.
 
 :::code-group
 ```ts [fixtures.test.ts]
@@ -830,7 +820,7 @@ Note that you cannot introduce new fixtures inside `test.override`. Extend the t
 
 ### Type-Safe Hooks
 
-When using `test.extend`, the extended `test` object provides type-safe `beforeEach` and `afterEach` hooks that are aware of the new context:
+When using `test.extend`, the extended `test` object provides type-safe hooks that are aware of the extended context:
 
 ```ts
 const test = baseTest
@@ -845,3 +835,73 @@ test.afterEach(({ counter }) => {
   console.log('Final count:', counter.value)
 })
 ```
+
+#### Suite-Level Hooks with Fixtures <Version>4.1.0</Version> {#suite-level-hooks}
+
+The extended `test` object also provides [`beforeAll`](/api/hooks#beforeall), [`afterAll`](/api/hooks#afterall), and [`aroundAll`](/api/hooks#aroundall) hooks that can access file-scoped and worker-scoped fixtures:
+
+```ts
+const test = baseTest
+  .extend('config', { scope: 'file' }, () => loadConfig())
+  .extend('database', { scope: 'file' }, async ({ config }, { onCleanup }) => {
+    const db = await createDatabase(config)
+    onCleanup(() => db.close())
+    return db
+  })
+
+// Access file-scoped fixtures in suite-level hooks
+test.aroundAll(async (runSuite, { database }) => {
+  await database.transaction(runSuite)
+})
+
+test.beforeAll(async ({ database }) => {
+  await database.createUsers()
+})
+
+test.afterAll(async ({ database }) => {
+  await database.removeUsers()
+})
+```
+
+::: warning IMPORTANT
+Suite-level hooks (`beforeAll`, `afterAll`, `aroundAll`) **must be called on the `test` object returned from `test.extend()`** to have access to the extended fixtures. Using the global `beforeAll`/`afterAll`/`aroundAll` functions will not have access to your custom fixtures:
+
+```ts
+import { test as baseTest, beforeAll } from 'vitest'
+
+const test = baseTest
+  .extend('database', { scope: 'file' }, async ({}, { onCleanup }) => {
+    const db = await createDatabase()
+    onCleanup(() => db.close())
+    return db
+  })
+
+// ❌ WRONG: Global beforeAll doesn't have access to 'database'
+beforeAll(({ database }) => {
+  // Error: 'database' is undefined
+})
+
+// ✅ CORRECT: Use test.beforeAll to access fixtures
+test.beforeAll(({ database }) => {
+  // 'database' is available
+})
+```
+
+This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
+:::
+
+::: tip
+Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes). Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
+
+```ts
+const test = baseTest
+  .extend('testFixture', () => 'test-scoped')
+  .extend('fileFixture', { scope: 'file' }, () => 'file-scoped')
+
+// ❌ Error: test-scoped fixtures not available in beforeAll
+test.beforeAll(({ testFixture }) => {})
+
+// ✅ Works: file-scoped fixtures are available
+test.beforeAll(({ fileFixture }) => {})
+```
+:::

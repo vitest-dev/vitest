@@ -508,7 +508,7 @@ describe('reporters', () => {
              11|               throw new Error('thrown error')
                |                     ^
              12|             })
-             13|           
+             13|
 
          ❯ basic.test.ts:9:15 notice
            ↳ printed
@@ -549,7 +549,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed
@@ -587,7 +587,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed 1
@@ -602,7 +602,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed 2

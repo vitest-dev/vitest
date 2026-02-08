@@ -165,7 +165,7 @@ Directory to write coverage report to (default: ./coverage)
 - **CLI:** `--coverage.reporter <name>`
 - **Config:** [coverage.reporter](/config/coverage#coverage-reporter)
 
-Coverage reporters to use. Visit [`coverage.reporter`](/config/#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)
+Coverage reporters to use. Visit [`coverage.reporter`](/config/coverage#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)
 
 ### coverage.reportOnFailure
 
@@ -511,7 +511,7 @@ Set the randomization seed. This option will have no effect if `--sequence.shuff
 - **CLI:** `--sequence.hooks <order>`
 - **Config:** [sequence.hooks](/config/sequence#sequence-hooks)
 
-Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/#sequence-hooks) for more information (default: `"parallel"`)
+Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/sequence#sequence-hooks) for more information (default: `"parallel"`)
 
 ### sequence.setupFiles
 

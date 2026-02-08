@@ -148,7 +148,7 @@ test('throws error when runTest is called multiple times', async () => {
           6|         await runTest() // second call should throw
            |               ^
           7|       })
-          8| 
+          8|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -442,7 +442,7 @@ test('aroundEach cleanup error is reported', async () => {
           8|         throw new Error('cleanup error')
            |               ^
           9|       })
-         10| 
+         10|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -758,7 +758,7 @@ test('aroundEach setup phase timeout', async () => {
     AroundHookSetupError: The setup phase of "aroundEach" hook timed out after 100ms.
      ❯ setup-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
-          3| 
+          3|
           4|       aroundEach(async (runTest) => {
            |       ^
           5|         console.log('>> setup start')
@@ -798,7 +798,7 @@ test('aroundEach teardown phase timeout', async () => {
     AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 100ms.
      ❯ teardown-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
-          3| 
+          3|
           4|       aroundEach(async (runTest) => {
            |       ^
           5|         console.log('>> setup')
@@ -879,7 +879,7 @@ test('aroundEach default timeout uses hookTimeout config', async () => {
     AroundHookSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ default-timeout.test.ts:4:7
           2|       import { aroundEach, test } from 'vitest'
-          3| 
+          3|
           4|       aroundEach(async (runTest) => {
            |       ^
           5|         // Setup takes longer than hookTimeout (10ms)
@@ -929,7 +929,7 @@ test('multiple aroundEach hooks with different timeouts', async () => {
      FAIL  multiple-timeouts.test.ts > test
     AroundHookSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-timeouts.test.ts:12:7
-         10| 
+         10|
          11|       // Inner hook with 50ms timeout - this should timeout during set…
          12|       aroundEach(async (runTest) => {
            |       ^
@@ -991,7 +991,7 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
      FAIL  multiple-teardown-timeout.test.ts > test
     AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 10ms.
      ❯ multiple-teardown-timeout.test.ts:12:7
-         10| 
+         10|
          11|       // Inner hook with 50ms timeout - this should timeout during tea…
          12|       aroundEach(async (runTest) => {
            |       ^
@@ -1392,7 +1392,7 @@ test('aroundAll throws error when runSuite is called multiple times', async () =
           6|         await runSuite() // second call should throw
            |               ^
           7|       })
-          8| 
+          8|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1527,7 +1527,7 @@ test('aroundAll setup phase timeout', async () => {
     AroundHookSetupError: The setup phase of "aroundAll" hook timed out after 10ms.
      ❯ timeout.test.ts:4:7
           2|       import { test, aroundAll } from 'vitest'
-          3| 
+          3|
           4|       aroundAll(async (runSuite) => {
            |       ^
           5|         console.log('>> aroundAll setup starting')
@@ -1578,7 +1578,7 @@ test('aroundAll teardown phase timeout', async () => {
     AroundHookTeardownError: The teardown phase of "aroundAll" hook timed out after 10ms.
      ❯ teardown-timeout.test.ts:4:7
           2|       import { test, aroundAll } from 'vitest'
-          3| 
+          3|
           4|       aroundAll(async (runSuite) => {
            |       ^
           5|         console.log('>> aroundAll setup')
@@ -1597,13 +1597,13 @@ test('aroundAll teardown phase timeout', async () => {
   `)
 })
 
-test('aroundAll receives suite as second argument', async () => {
+test('aroundAll receives suite as third argument', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'suite-arg.test.ts': `
       import { test, describe, aroundAll } from 'vitest'
 
       describe('my suite', () => {
-        aroundAll(async (runSuite, suite) => {
+        aroundAll(async (runSuite, {}, suite) => {
           console.log('>> suite name:', suite.name)
           await runSuite()
         })
@@ -1871,12 +1871,12 @@ test('tests are skipped when aroundAll setup fails', async () => {
      FAIL  aroundAll-setup-error.test.ts [ aroundAll-setup-error.test.ts ]
     Error: aroundAll setup error
      ❯ aroundAll-setup-error.test.ts:5:15
-          3| 
+          3|
           4|       aroundAll(async () => {
           5|         throw new Error('aroundAll setup error')
            |               ^
           6|       })
-          7| 
+          7|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

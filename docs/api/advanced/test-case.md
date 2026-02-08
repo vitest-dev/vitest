@@ -79,7 +79,7 @@ Don't try to parse the ID. It can have a minus at the start: `-1223128da3_0_0_0`
 
 ## location
 
-The location in the module where the test was defined. Locations are collected only if [`includeTaskLocation`](/config/#includetasklocation) is enabled in the config. Note that this option is automatically enabled if `--reporter=html`, `--ui` or `--browser` flags are used.
+The location in the module where the test was defined. Locations are collected only if [`includeTaskLocation`](/config/includetasklocation) is enabled in the config. Note that this option is automatically enabled if `--reporter=html`, `--ui` or `--browser` flags are used.
 
 The location of this test will be equal to `{ line: 3, column: 1 }`:
 

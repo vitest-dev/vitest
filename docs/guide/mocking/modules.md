@@ -236,7 +236,7 @@ Vitest supports mocking virtual modules. These modules don't exist on the file s
 
 By default, Vitest will fail transforming files if it cannot find the source of the import. To bypass this, you need to specify it in your config. You can either always redirect the import to a file, or just signal Vite to ignore it and use the `vi.mock` factory to define its exports.
 
-To redirect the import, use [`test.alias`](/config/#alias) config option:
+To redirect the import, use [`test.alias`](/config/alias) config option:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
