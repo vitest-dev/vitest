@@ -136,7 +136,7 @@ expect.addSnapshotSerializer({
 })
 ```
 
-We also support [snapshotSerializers](/config/#snapshotserializers) option to implicitly add custom serializers.
+We also support [snapshotSerializers](/config/snapshotserializers) option to implicitly add custom serializers.
 
 ```ts [path/to/custom-serializer.ts]
 import { SnapshotSerializer } from 'vitest'

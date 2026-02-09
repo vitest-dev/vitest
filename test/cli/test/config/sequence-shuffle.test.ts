@@ -115,3 +115,50 @@ test('shuffle with a known seed', async () => {
     }
   `)
 })
+
+test('should log seed when only shuffle.tests is enabled', async () => {
+  const { stdout } = await runInlineTests({
+    'basic.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+  }, {
+    sequence: {
+      seed: 12345,
+      shuffle: { files: false, tests: true },
+    },
+  })
+
+  expect(stdout).toContain('Running tests with seed "12345"')
+})
+
+test('should log seed when shuffle is true', async () => {
+  const { stdout } = await runInlineTests({
+    'basic.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+  }, {
+    sequence: {
+      seed: 67890,
+      shuffle: true,
+    },
+  })
+
+  expect(stdout).toContain('Running tests with seed "67890"')
+})
+
+test('should not log seed when shuffle is disabled', async () => {
+  const { stdout } = await runInlineTests({
+    'basic.test.js': /* js */ `
+      import { test } from 'vitest'
+      test('example', () => {})
+    `,
+  }, {
+    sequence: {
+      shuffle: false,
+    },
+  })
+
+  expect(stdout).not.toContain('Running tests with seed')
+})

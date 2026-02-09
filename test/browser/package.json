@@ -26,7 +26,8 @@
     "test:browser:preview": "PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
     "test:browser:webdriverio": "PROVIDER=webdriverio vitest",
-    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
+    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html",
+    "docker": "docker compose"
   },
   "devDependencies": {
     "@types/react": "^19.2.10",
@@ -37,7 +38,7 @@
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
-    "playwright": "^1.58.0",
+    "playwright": "^1.58.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "url": "^0.11.4",

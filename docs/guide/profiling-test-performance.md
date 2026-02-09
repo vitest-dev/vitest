@@ -19,7 +19,7 @@ When you run Vitest it reports multiple time metrics of your tests:
 - Setup: Time spent for running the [`setupFiles`](/config/setupfiles) files.
 - Import: Time it took to import your test files and their dependencies. This also includes the time spent collecting all tests. Note that this doesn't include dynamic imports inside of tests.
 - Tests: Time spent for actually running the test cases.
-- Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
+- Environment: Time spent for setting up the test [`environment`](/config/environment), for example JSDOM.
 
 ## Test Runner
 
@@ -57,7 +57,7 @@ See [Profiling | Examples](https://github.com/vitest-dev/vitest/tree/main/exampl
 
 ## Main Thread
 
-Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSetup`](/config/#globalsetup) files.
+Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSetup`](/config/globalsetup) files.
 This is also where your Vite plugins are running.
 
 :::tip
@@ -150,7 +150,7 @@ $ DEBUG=vitest:coverage vitest --run --coverage
 
 This profiling approach is great for detecting large files that are accidentally picked by coverage providers.
 For example if your configuration is accidentally including large built minified Javascript files in code coverage, they should appear in logs.
-In these cases you might want to adjust your [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude) options.
+In these cases you might want to adjust your [`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude) options.
 
 ## Inspecting Profiling Records
 

@@ -1,7 +1,7 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
 
 test('correctly collects a simple test', async () => {
@@ -775,6 +775,28 @@ test('collects tests when test functions are globals', async () => {
   `)
 })
 
+test('remove .name from the function identifiers', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test(Service.name, () => {
+      // ...
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "Service": {
+        "errors": [],
+        "fullName": "Service",
+        "id": "-1732721377_0",
+        "location": "4:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 test('collects tests with tags as a string', async () => {
   const testModule = await collectTests(`
     import { test } from 'vitest'
@@ -1078,6 +1100,7 @@ async function collectTestModule(code: string, options?: CliOptions) {
       ],
     },
   )
+  onTestFinished(() => vitest.close())
   return vitest.experimental_parseSpecification(
     vitest.getRootProject().createSpecification('simple.test.ts'),
   )

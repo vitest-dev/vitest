@@ -484,6 +484,73 @@ describe('jest-expect', () => {
         }).toThrow(Error)
       }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
     })
+
+    it('custom error class', () => {
+      class Error1 extends Error {};
+      class Error2 extends Error {};
+
+      // underlying `toEqual` doesn't require constructor/prototype equality
+      expect(() => {
+        throw new Error1('hi')
+      }).toThrowError(new Error2('hi'))
+      expect(new Error1('hi')).toEqual(new Error2('hi'))
+      expect(new Error1('hi')).not.toStrictEqual(new Error2('hi'))
+    })
+
+    it('non Error instance', () => {
+      // primitives
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 42
+      }).toThrow(42)
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 42
+      }).not.toThrow(43)
+
+      expect(() => {
+        expect(() => {
+        // eslint-disable-next-line no-throw-literal
+          throw 42
+        }).toThrow(43)
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal 43]`)
+
+      // deep equality
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw { foo: 'hello world' }
+      }).toThrow({ foo: expect.stringContaining('hello') })
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw { foo: 'bar' }
+      }).not.toThrow({ foo: expect.stringContaining('hello') })
+
+      expect(() => {
+        expect(() => {
+        // eslint-disable-next-line no-throw-literal
+          throw { foo: 'bar' }
+        }).toThrow({ foo: expect.stringContaining('hello') })
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`)
+    })
+
+    it('error from different realm', async () => {
+      const vm = await import('node:vm')
+      const context: any = {}
+      vm.createContext(context)
+      new vm.Script('fn = () => { throw new TypeError("oops") }; globalObject = this').runInContext(context)
+      const { fn, globalObject } = context
+
+      // constructor
+      expect(fn).toThrow(globalObject.TypeError)
+      expect(fn).not.toThrow(globalObject.ReferenceError)
+      expect(fn).not.toThrow(globalObject.EvalError)
+
+      // instance
+      expect(fn).toThrow(new globalObject.TypeError('oops'))
+      expect(fn).not.toThrow(new globalObject.TypeError('message'))
+      expect(fn).not.toThrow(new globalObject.ReferenceError('oops'))
+      expect(fn).not.toThrow(new globalObject.EvalError('no way'))
+    })
   })
 })
 
@@ -1284,7 +1351,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripVTControlCharacters(error.diff)
+    const diff = stripVTControlCharacters(error.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1297,7 +1364,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripVTControlCharacters(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause!.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1313,7 +1380,7 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff!)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -1337,7 +1404,7 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff!))]
   }
   return expect.unreachable()
 }
@@ -1892,9 +1959,8 @@ it('error equality', () => {
     // different class
     const e1 = new MyError('hello', 'a')
     const e2 = new YourError('hello', 'a')
-    snapshotError(() => expect(e1).toEqual(e2))
-    expect(e1).not.toEqual(e2)
-    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    snapshotError(() => expect(e1).toStrictEqual(e2))
+    expect(e1).toEqual(e2)
     assert.deepEqual(e1, e2)
     nodeAssert.notDeepStrictEqual(e1, e2)
   }

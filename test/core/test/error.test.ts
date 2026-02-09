@@ -64,9 +64,9 @@ test('Can correctly process error where cause leads to an infinite recursion', (
   expect(serialisedError.stack).toBeTypeOf('string')
   expect(serialisedError.message).toBeTypeOf('string')
 
-  expect(serialisedError.cause.name).toBeTypeOf('string')
-  expect(serialisedError.cause.stack).toBeTypeOf('string')
-  expect(serialisedError.cause.message).toBeTypeOf('string')
+  expect(serialisedError.cause?.name).toBeTypeOf('string')
+  expect(serialisedError.cause?.stack).toBeTypeOf('string')
+  expect(serialisedError.cause?.message).toBeTypeOf('string')
 })
 
 test('simple error has message, stack and name', () => {

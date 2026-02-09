@@ -228,9 +228,15 @@ export function parseStacktrace(
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
+
+  // remove assertion helper's internal stacks
+  const helperIndex = stacks.findLastIndex(s => s.method === '__VITEST_HELPER__' || s.method === 'async*__VITEST_HELPER__')
+  if (helperIndex >= 0) {
+    stacks = stacks.slice(helperIndex + 1)
+  }
 
   return stacks.map((stack) => {
     if (options.getUrlId) {
@@ -364,7 +370,7 @@ export class DecodedMap {
     this._decodedMemo = memoizedState()
     this.url = from
     this.resolvedSources = (sources || []).map(s =>
-      resolve(s || '', from),
+      resolve(from, '..', s || ''),
     )
   }
 }

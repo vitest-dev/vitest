@@ -2,9 +2,9 @@ import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
-  AroundAllListener,
   AroundEachListener,
   File,
+  RegisteredAroundAllListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -22,9 +22,9 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
-import { abortContextSignal, getFileContext } from './context'
+import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
+import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, TestFixtures } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
@@ -229,7 +229,7 @@ function getAroundEachHooks(suite: Suite): AroundEachListener[] {
   return hooks
 }
 
-function getAroundAllHooks(suite: Suite): AroundAllListener[] {
+function getAroundAllHooks(suite: Suite): RegisteredAroundAllListener[] {
   return getHooks(suite).aroundAll
 }
 
@@ -767,9 +767,11 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
   result.state = 'fail'
   const errors = Array.isArray(err) ? err : [err]
   for (const e of errors) {
-    const error = processError(e, diffOptions)
+    const errors = e instanceof AggregateError
+      ? e.errors.map(e => processError(e, diffOptions))
+      : [processError(e, diffOptions)]
     result.errors ??= []
-    result.errors.push(error)
+    result.errors.push(...errors)
   }
 }
 
@@ -878,8 +880,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
               await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
             }
             if (suite.file === suite) {
-              const context = getFileContext(suite as File)
-              await callFixtureCleanup(context)
+              const contexts = TestFixtures.getFileContexts(suite.file)
+              await Promise.all(contexts.map(context => callFixtureCleanup(context)))
             }
           }
           catch (e) {
@@ -1008,10 +1010,11 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
-      const context = runner.getWorkerContext?.()
-      if (context) {
-        await callFixtureCleanup(context)
-      }
+      await Promise.all(
+        [...TestFixtures.getWorkerContexts()].map(context => callFixtureCleanup(context)),
+      ).finally(() => {
+        TestFixtures.clearDefinitions()
+      })
     })
     workerRunners.add(runner)
   }

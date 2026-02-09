@@ -117,7 +117,7 @@ function provide<T extends keyof ProvidedContext & string>(
 ): void
 ```
 
-A way to provide custom values to tests in addition to [`config.provide`](/config/#provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
+A way to provide custom values to tests in addition to [`config.provide`](/config/provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
 
 ::: code-group
 ```ts [node.js]
@@ -137,7 +137,7 @@ const value = inject('key')
 The values can be provided dynamically. Provided value in tests will be updated on their next run.
 
 ::: tip
-This method is also available to [global setup files](/config/#globalsetup) for cases where you cannot use the public API:
+This method is also available to [global setup files](/config/globalsetup) for cases where you cannot use the public API:
 
 ```js
 export default function setup({ provide }) {
@@ -179,7 +179,7 @@ function createSpecification(
 ): TestSpecification
 ```
 
-Create a [test specification](/api/advanced/test-specification) that can be used in [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/api/advanced/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/#testnamepattern) is defined, then it will also be applied.
+Create a [test specification](/api/advanced/test-specification) that can be used in [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/api/advanced/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/testnamepattern) is defined, then it will also be applied.
 
 ```ts
 import { createVitest } from 'vitest/node'

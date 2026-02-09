@@ -158,10 +158,10 @@ test('throws an error if no tags are defined in the config, but in the test', as
      FAIL  basic.test.js [ basic.test.js ]
     Error: The Vitest config does't define any "tags", cannot apply "unknown" tag for this test. See: https://vitest.dev/guide/test-tags
      ❯ basic.test.js:2:9
-          1| 
+          1|
           2|         test('test 1', { tags: ['unknown'] }, () => {})
            |         ^
-          3|       
+          3|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -190,10 +190,10 @@ test('throws an error if tag is not defined in the config, but in the test', asy
     Error: The tag "unknown" is not defined in the configuration. Available tags are:
     - known
      ❯ basic.test.js:2:9
-          1| 
+          1|
           2|         test('test 1', { tags: ['unknown'] }, () => {})
            |         ^
-          3|       
+          3|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
