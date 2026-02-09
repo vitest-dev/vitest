@@ -130,7 +130,7 @@ function astParseFile(filepath: string, code: string) {
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(mode)) {
         return
       }
 
