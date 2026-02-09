@@ -183,21 +183,33 @@ exports[`asymmetric matcher error 13`] = `
   "actual": "Array [
   "a",
   "b",
+  "c",
+  "f",
+  "g",
 ]",
   "diff": "- Expected
 + Received
 
 - ArrayContaining [
+-   "d",
+-   "e",
+-   "h",
 + [
-    "a",
--   "c",
-+   "b",
++   "a",
+    "b",
+    "c",
+    "f",
++   "g",
   ]",
   "expected": "ArrayContaining [
-  "a",
+  "d",
   "c",
+  "e",
+  "b",
+  "f",
+  "h",
 ]",
-  "message": "expected [ 'a', 'b' ] to deeply equal ArrayContaining ["a", "c"]",
+  "message": "expected [ 'a', 'b', 'c', 'f', 'g' ] to deeply equal ArrayContaining{…}",
 }
 `;
 
