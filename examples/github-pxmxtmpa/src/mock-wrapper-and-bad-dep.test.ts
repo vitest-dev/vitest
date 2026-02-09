@@ -1,0 +1,12 @@
+import { expect, test, vi } from 'vitest'
+import { hello } from './wrapper.js'
+
+vi.mock('bad-dep', () => ({}))
+
+vi.mock(import('./wrapper.js'), () => {
+  return { hello: () => 'mock-hello' }
+})
+
+test('repro', () => {
+  expect(hello()).toBe('mock-hello')
+})
