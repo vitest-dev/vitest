@@ -14,6 +14,7 @@ export type {
   AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
+  FailureScreenshotArtifact,
   File,
   Fixture,
   FixtureFn,
