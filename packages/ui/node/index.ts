@@ -2,11 +2,9 @@ import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { toArray } from '@vitest/utils/helpers'
-import { basename, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
-import { coverageConfigDefaults } from 'vitest/config'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
@@ -29,19 +27,20 @@ export default (ctx: Vitest): Plugin => {
       handler(server) {
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
-        // 🚨
-        const coverageFolder = resolveCoverageFolder(ctx)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
+        const coveragePath = '/coverage/'
+
+        if (base === coveragePath) {
           throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
+            `The ui base path and the coverage path cannot be the same: ${base}, change uiBase`,
           )
         }
 
-        if (coverageFolder) {
+        // Serve coverage HTML at /coverage if configured
+        const coverageHtmlDir = ctx.config.coverage?.htmlDir
+        if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
+            coveragePath,
+            sirv(coverageHtmlDir, {
               single: true,
               dev: true,
               setHeaders: (res) => {
@@ -126,41 +125,4 @@ export default (ctx: Vitest): Plugin => {
       },
     },
   }
-}
-
-function resolveCoverageFolder(ctx: Vitest) {
-  const options = ctx.config
-  const htmlReporter
-    = options.api?.port && options.coverage?.enabled
-      ? toArray(options.coverage.reporter).find((reporter) => {
-          if (typeof reporter === 'string') {
-            return reporter === 'html'
-          }
-
-          return reporter[0] === 'html'
-        })
-      : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    ctx.config?.root || options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }

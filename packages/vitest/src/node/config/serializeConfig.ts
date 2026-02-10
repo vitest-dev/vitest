@@ -63,6 +63,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
+        htmlDir: coverage.htmlDir,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,

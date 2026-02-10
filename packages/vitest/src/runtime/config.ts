@@ -154,6 +154,11 @@ export interface SerializedCoverageConfig {
   } | undefined
   enabled: boolean
   customProviderModule: string | undefined
+  /**
+   * Resolved directory path for HTML coverage output.
+   * Used by UI to determine if coverage view should be shown.
+   */
+  htmlDir: string | undefined
 }
 
 export type RuntimeConfig = Pick<
