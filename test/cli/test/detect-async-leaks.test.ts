@@ -163,6 +163,20 @@ test('promise', async () => {
   `)
 })
 
+test('fetch', async () => {
+  const { stdout, stderr } = await runInlineTests({
+    'packages/example/test/example.test.ts': `
+      test('not a leak', async () => {
+        await fetch('https://vitest.dev').then(response => response.text())
+      })
+    `,
+  })
+
+  expect.soft(stdout).not.toContain('Leak')
+
+  expect(stderr).toBe('')
+})
+
 test('fs handle', async () => {
   const { stderr } = await runInlineTests({
     'packages/example/test/example.test.ts': `

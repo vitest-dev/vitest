@@ -11,6 +11,7 @@ const IGNORED_TYPES = new Set([
   'PerformanceObserver',
   'RANDOMBYTESREQUEST',
   'SIGNREQUEST',
+  'STREAM_END_OF_STREAM',
   'TCPWRAP',
   'TIMERWRAP',
   'TLSWRAP',
