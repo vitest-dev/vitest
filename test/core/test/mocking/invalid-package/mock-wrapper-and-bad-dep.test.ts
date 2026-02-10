@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest'
 import { hello } from './wrapper.js'
 
-vi.mock('@vitest/test-dep-invalid', () => ({}))
+vi.mock('test-dep-invalid', () => ({}))
 
 vi.mock(import('./wrapper.js'), () => {
   return { hello: () => 'mock-hello' }

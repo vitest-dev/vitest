@@ -252,9 +252,9 @@ export class VitestMocker extends BareModuleMocker {
   public async mockedRequest(url: string, evaluatedNode: EvaluatedModuleNode, callstack: string[]): Promise<any> {
     const mock = this.getDependencyMock(evaluatedNode.id)
 
-    // if (url.includes("vitest/dist") || url.includes(".test.")) {
-    //   return;
-    // }
+    if (url.includes('vitest/dist') || url.includes('.test.')) {
+      return
+    }
     // if (url.includes('test/mocking/invalid-package/')) {
     // // TODO: mock not found for @vitest/test-dep-invalid
     // console.log("🟢 VitestMocker.mockedRequest", { url, mock, evaluatedNode })
@@ -262,9 +262,7 @@ export class VitestMocker extends BareModuleMocker {
     // console.log(this.getMockerRegistry())
     // }
     // TODO: mock not found for @vitest/test-dep-invalid
-    // console.log("🟢 VitestMocker.mockedRequest", { url, mock, evaluatedNode }, this.getMockerRegistry())
-    // TODO: not in registry
-    // console.log(this.getMockerRegistry())
+    // console.log('🟢 VitestMocker.mockedRequest', { url, mock, evaluatedNode }, this.getMockerRegistry())
 
     if (!mock) {
       return

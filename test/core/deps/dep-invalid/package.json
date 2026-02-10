@@ -1,4 +1,4 @@
 {
-  "name": "@vitest/test-dep-invalid",
+  "name": "test-dep-invalid",
   "private": true
 }

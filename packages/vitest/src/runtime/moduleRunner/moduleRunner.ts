@@ -153,10 +153,10 @@ export class VitestModuleRunner
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
-    if (VitestMocker.pendingIds.length) {
-      // console.log("@@@@@@ VitestMocker.pendingIds", VitestMocker.pendingIds)
-      await this.mocker.resolveMocks()
-    }
+    // if (VitestMocker.pendingIds.length) {
+    //   // console.log("@@@@@@ VitestMocker.pendingIds", VitestMocker.pendingIds)
+    //   await this.mocker.resolveMocks()
+    // }
     // Trace: 🟢 VitestModuleRunner.cachedRequest {
     //   url: '@vitest/test-dep-invalid',
     //   ignoreMock: false,
