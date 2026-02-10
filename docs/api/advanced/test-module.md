@@ -132,7 +132,9 @@ This is a Vite's [`DevEnvironment`](https://vite.dev/guide/api-environment) that
 ## toTestSpecification <Version>4.1.0</Version> {#totestspecification}
 
 ```ts
-function toTestSpecification(): TestSpecification
+function toTestSpecification(testCases?: TestCase[]): TestSpecification
 ```
 
 Returns a new [test specification](/api/advanced/test-specification) that can be used to filter or run this specific test module.
+
+It accepts an optional array of test cases that should be filtered.
