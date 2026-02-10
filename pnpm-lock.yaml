@@ -1275,6 +1275,9 @@ importers:
       playwright:
         specifier: 'catalog:'
         version: 1.58.1
+      test-dep-invalid:
+        specifier: link:./deps/dep-invalid
+        version: link:deps/dep-invalid
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4
@@ -1437,9 +1440,6 @@ importers:
       temporal-polyfill:
         specifier: ~0.3.0
         version: 0.3.0
-      test-dep-invalid:
-        specifier: file:./deps/dep-invalid
-        version: file:test/core/deps/dep-invalid
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -9256,9 +9256,6 @@ packages:
     resolution: {integrity: sha512-t/R3R/n0MSwnnazuPpPNVO60LX0SKL45pyl9YlvxIdkH0Of7D5qM2EVe+yASRIlY5pZ73nclYJfNANGWPwFDZw==}
     engines: {node: '>=10'}
     hasBin: true
-
-  test-dep-invalid@file:test/core/deps/dep-invalid:
-    resolution: {directory: test/core/deps/dep-invalid, type: directory}
 
   text-decoder@1.1.1:
     resolution: {integrity: sha512-8zll7REEv4GDD3x4/0pW+ppIxSNs7H1J10IKFZsuOMscumCdM2a+toDGLPA3T+1+fLBql4zbt5z83GEQGGV5VA==}
@@ -18285,8 +18282,6 @@ snapshots:
       acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
       commander: 2.20.3
       source-map-support: 0.5.21
-
-  test-dep-invalid@file:test/core/deps/dep-invalid: {}
 
   text-decoder@1.1.1:
     dependencies:
