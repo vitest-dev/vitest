@@ -288,7 +288,7 @@ export interface BrowserConfigOptions {
   /**
    * Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
    *
-   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/#onunhandlederror) option instead.
+   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/onunhandlederror) option instead.
    *
    * Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
    * @default true
@@ -455,12 +455,12 @@ type ToMatchScreenshotResolvePath = (data: {
   screenshotDirectory: string
   /**
    * Absolute path to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   root: string
   /**
    * Path to the test file, relative to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   testFileDirectory: string
   /**
@@ -474,7 +474,7 @@ type ToMatchScreenshotResolvePath = (data: {
   testName: string
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * {@linkcode https://vitest.dev/config/attachmentsdir|attachmentsDir},
    * if none is provided, its default value.
    */
   attachmentsDir: string
