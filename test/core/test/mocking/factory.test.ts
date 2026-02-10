@@ -44,12 +44,9 @@ vi.mock('axios', () => {
   }
 })
 
-vi.mock('../../src/mocks/log.ts', async (importOriginal) => {
+vi.mock('../../src/mocks/log.ts', async () => {
   // can import the same module inside and does not go into an infinite loop
-  // const log = await import('../../src/mocks/log')
-  // const log = await vi.importActual('../../src/mocks/log')
-  const log: any = await importOriginal()
-  console.log({ log })
+  const log = await import('../../src/mocks/log')
   return {
     default: {
       ...log.default,
@@ -98,7 +95,7 @@ describe('mocking with factory', () => {
     expect(axios.get).toHaveBeenCalledTimes(1)
   })
 
-  test.only('logger extended', () => {
+  test('logger extended', () => {
     expect(logger.warn).toBeTypeOf('function')
     // @ts-expect-error extending module
     expect(logger.info).toBeTypeOf('function')

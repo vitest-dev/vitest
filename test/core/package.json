@@ -35,7 +35,6 @@
     "react": "^19.2.4",
     "react-18": "npm:react@18.3.1",
     "temporal-polyfill": "~0.3.0",
-    "test-dep-invalid": "file:./deps/dep-invalid",
     "tinyrainbow": "catalog:",
     "tinyspy": "^4.0.4",
     "url": "^0.11.4",

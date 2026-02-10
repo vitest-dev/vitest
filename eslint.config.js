@@ -16,7 +16,6 @@ export default antfu(
       '**/*.timestamp-*',
       'test/core/src/self',
       'test/core/test/mocking/already-hoisted.test.ts',
-      'test/core/test/mocking/syntax-error.js',
       'test/cache/cache/.vitest-base/results.json',
       'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
