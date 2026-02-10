@@ -189,6 +189,7 @@ export class BareModuleMocker implements TestModuleMocker {
 
   public getDependencyMock(id: string): MockedModule | undefined {
     const registry = this.getMockerRegistry()
+    // return registry.getById(fixLeadingSlashes(id)) || registry.get(id)
     return registry.getById(fixLeadingSlashes(id))
   }
 
