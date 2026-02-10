@@ -430,6 +430,20 @@ export function resolveConfig(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
     }
+
+    // Resolve htmlDir: find HTML reporter and compute its output directory
+    if (!resolved.coverage.htmlDir) {
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html')
+      if (htmlReporter) {
+        const [, options] = htmlReporter
+        const subdir = options && typeof options === 'object' && 'subdir' in options
+          ? options.subdir
+          : undefined
+        resolved.coverage.htmlDir = typeof subdir === 'string'
+          ? resolve(reportsDirectory, subdir)
+          : reportsDirectory
+      }
+    }
   }
 
   if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {

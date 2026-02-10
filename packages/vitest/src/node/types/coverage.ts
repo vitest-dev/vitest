@@ -122,6 +122,7 @@ export type ResolvedCoverageOptions<T extends CoverageProviderName = CoveragePro
   = CoverageOptions<T>
     & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
       reporter: CoverageReporterWithOptions[]
+      htmlDir?: string
     }
 
 export interface BaseCoverageOptions {
@@ -266,6 +267,19 @@ export interface BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Resolved directory path for HTML coverage output.
+   * Automatically computed from `reportsDirectory` and HTML reporter's `subdir` option.
+   * Can be explicitly set to override the default behavior.
+   *
+   * This path is used by:
+   * - UI dev server to serve coverage at `/coverage`
+   * - HTML reporter to copy coverage into static report output
+   *
+   * @default '<reportsDirectory>' or '<reportsDirectory>/<subdir>' if html reporter has subdir option
+   */
+  htmlDir?: string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
