@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import type { TestArtifactLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
-import { relative } from 'pathe'
 import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
-import { browserState, config } from '~/composables/client'
-import { showAttachmentSource } from '~/composables/codemirror'
+import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
-import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import { getLocationString, openLocation } from '~/composables/location'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
-import VisualRegression from '../artifacts/visual-regression/VisualRegression.vue'
-import IconButton from '../IconButton.vue'
-import Modal from '../Modal.vue'
-import ScreenshotError from './ScreenshotError.vue'
+import Artifacts from '../artifacts/Artifacts.vue'
+import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
@@ -27,27 +22,9 @@ const failed = computed(() => {
   return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
 })
 
-function openLocation(location?: TestArtifactLocation) {
-  return showAttachmentSource(props.test, location)
-}
-
-const {
-  currentTask,
-  showScreenshot,
-  showScreenshotModal,
-  currentScreenshotUrl,
-} = useScreenshot()
-
-function getLocationString(location: TestArtifactLocation) {
-  const root = config.value.root
-  const path = root ? relative(root, location.file) : location.file
-  return `${path}:${location.line}:${location.column}`
-}
-
 const kWellKnownMeta = new Set([
   'benchmark',
   'typecheck',
-  'failScreenshotPath',
 ])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {
@@ -66,24 +43,7 @@ const meta = computed(() => {
         m-2
         rounded
       >
-        <div flex="~ gap-2 items-center">
-          <template v-if="browserState && test.meta?.failScreenshotPath">
-            <IconButton
-              v-tooltip.bottom="'View screenshot error'"
-              class="!op-100"
-              icon="i-carbon:image"
-              title="View screenshot error"
-              @click="showScreenshotModal(test)"
-            />
-            <IconButton
-              v-tooltip.bottom="'Open screenshot error in editor'"
-              class="!op-100"
-              icon="i-carbon:image-reference"
-              title="Open screenshot error in editor"
-              @click="openScreenshot(test)"
-            />
-          </template>
-        </div>
+        <FailureScreenshot :task="test" />
         <div
           v-if="test.result?.htmlError"
           class="scrolls scrolls-rounded task-error"
@@ -142,7 +102,7 @@ const meta = computed(() => {
               title="Open in Editor"
               class="flex gap-1 text-yellow-500/80 cursor-pointer"
               ws-nowrap
-              @click="openLocation(annotation.location)"
+              @click="openLocation(test, annotation.location)"
             >
               {{ getLocationString(annotation.location) }}
             </span>
@@ -166,44 +126,7 @@ const meta = computed(() => {
         <AnnotationAttachmentImage :annotation="annotation" />
       </div>
     </template>
-    <template v-if="test.artifacts.length">
-      <h1 m-2>
-        Test Artifacts
-      </h1>
-      <div
-        v-for="artifact, index of test.artifacts"
-        :key="artifact.type + index"
-        bg="yellow-500/10"
-        text="yellow-500 sm"
-        p="x3 y2"
-        m-2
-        rounded
-        role="note"
-      >
-        <div flex="~ gap-2 items-center justify-between" overflow-hidden>
-          <div>
-            <span
-              v-if="artifact.location && artifact.location.file === test.file.filepath"
-              v-tooltip.bottom="'Open in Editor'"
-              title="Open in Editor"
-              class="flex gap-1 text-yellow-500/80 cursor-pointer"
-              ws-nowrap
-              @click="openLocation(artifact.location)"
-            >
-              {{ getLocationString(artifact.location) }}
-            </span>
-            <span
-              v-else-if="artifact.location && artifact.location.file !== test.file.filepath"
-              class="flex gap-1 text-yellow-500/80"
-              ws-nowrap
-            >
-              {{ getLocationString(artifact.location) }}
-            </span>
-          </div>
-        </div>
-        <VisualRegression v-if="artifact.type === 'internal:toMatchScreenshot' && artifact.kind === 'visual-regression'" :regression="artifact" />
-      </div>
-    </template>
+    <Artifacts :test="test" />
     <template v-if="meta.length">
       <h1 m-2>
         Test Meta
@@ -224,20 +147,6 @@ const meta = computed(() => {
           <pre overflow-auto bg="gray/30" rounded p-2>{{ content }}</pre>
         </template>
       </div>
-    </template>
-    <template v-if="browserState">
-      <Modal v-model="showScreenshot" direction="right">
-        <template v-if="currentTask">
-          <Suspense>
-            <ScreenshotError
-              :file="currentTask.file.filepath"
-              :name="currentTask.name"
-              :url="currentScreenshotUrl"
-              @close="showScreenshot = false"
-            />
-          </Suspense>
-        </template>
-      </Modal>
     </template>
   </div>
 </template>

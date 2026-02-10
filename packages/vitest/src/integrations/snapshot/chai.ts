@@ -1,13 +1,12 @@
 import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
-import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
+import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { createAssertionMessage, recordAsyncExpect, wrapAssertion } from '../../../../expect/src/utils'
 
 let _client: SnapshotClient
 
