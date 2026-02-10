@@ -53,7 +53,18 @@ test('test update', async () => {
     }
   `)
   const resultFiles = readFiles(dstDir)
-  console.log(resultFiles)
+  expect(Object.keys(resultFiles)).toMatchInlineSnapshot(`
+    Array [
+      "__snapshots__/retry-file.test.ts.snap",
+      "__snapshots__/same-title-file.test.js.snap",
+      "inline-concurrent.test.js",
+      "inline.test.js",
+      "retry-file.test.ts",
+      "retry-inline.test.ts",
+      "same-title-file.test.js",
+      "same-title-inline.test.js",
+    ]
+  `)
 
   // re-run without update and files are unchanged
   const result2 = await runVitest({ root: dstDir, update: false })
