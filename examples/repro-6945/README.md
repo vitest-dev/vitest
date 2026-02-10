@@ -21,10 +21,24 @@ pnpm dlx serve examples/repro-6945/html/
 - artifact/attachments
   - `attachmentsDir: ".vitest-attachments"`
 - ui mode / html report iframe url
-  - TODO: how is this currently resolved?
+  - how is this currently resolved?
+    - ui mode working by default 🙂
+    - html report broken 😢
   - at most one coverage iframe view is supported.
     how should we allow configuration?
     - `ui.coverageHtml`?
     - `reporters: [["html", { coverageHtml: "..." }]]`?
+    - `coverage.htmlDir`?
     - infer one from another?
     - default to `coverage`?
+- browser mode
+  - nothing specific
+
+## Ideas
+
+- [ ] copy coverage html output to test html reporter by default
+- [ ] add new option to robustly/explicitly support where to copy from
+- [ ] consolidate vitest test output into single `.vitest-results`
+  - `.vitest-results/attachments` (attachments)
+  - `.vitest-results/coverage/index.html` (coverage html directory)
+  - `.vitest-results/index.html` (UI assets)

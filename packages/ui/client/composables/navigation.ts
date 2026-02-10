@@ -71,6 +71,7 @@ export const panels = reactive({
   },
 })
 
+// 🚨
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.

@@ -29,6 +29,7 @@ export default (ctx: Vitest): Plugin => {
       handler(server) {
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
+        // 🚨
         const coverageFolder = resolveCoverageFolder(ctx)
         const coveragePath = coverageFolder ? coverageFolder[1] : undefined
         if (coveragePath && base === coveragePath) {
