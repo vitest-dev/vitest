@@ -1,10 +1,9 @@
-// import "./other" // TODO: needs at least one non-external import to trigger `mocker.resolveMocks` for externals
 // @ts-expect-error no type
 import * as dep from 'test-dep-invalid'
 import { expect, test, vi } from 'vitest'
 
-vi.mock('test-dep-invalid', () => ({ hi: 'yo' }))
+vi.mock('test-dep-invalid', () => ({ mocked: 'ok' }))
 
 test('repro', () => {
-  expect(dep.hi).toBe('yo')
+  expect(dep).toMatchObject({ mocked: 'ok' })
 })
