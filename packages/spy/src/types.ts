@@ -224,7 +224,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
   /**
    * Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
    *
-   * To automatically call this method before each test, enable the [`clearMocks`](https://vitest.dev/config/#clearmocks) setting in the configuration.
+   * To automatically call this method before each test, enable the [`clearMocks`](https://vitest.dev/config/clearmocks) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockclear
    */
   mockClear(): this
@@ -234,7 +234,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
    * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`. It is useful for completely resetting a mock to its default state.
    *
-   * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/#mockreset) setting in the configuration.
+   * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/mockreset) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockreset
    */
   mockReset(): this

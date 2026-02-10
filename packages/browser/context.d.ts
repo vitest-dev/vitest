@@ -514,7 +514,7 @@ export interface LocatorSelectors {
    */
   getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
-   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/browser/locators#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/api/browser/locators#getbytestid}
    */
   getByTestId: (text: string | RegExp) => Locator
