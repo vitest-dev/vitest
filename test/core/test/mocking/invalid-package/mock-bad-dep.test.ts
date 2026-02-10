@@ -1,3 +1,4 @@
+// import "./other" // TODO: needs at least one non-external import to trigger `mocker.resolveMocks` for externals
 // @ts-expect-error no type
 import * as dep from '@vitest/test-dep-invalid'
 import { expect, test, vi } from 'vitest'

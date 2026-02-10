@@ -100,6 +100,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
         try {
           if (VitestMocker.pendingIds.length) {
+            // console.log("@@@@@@ VitestMocker.pendingIds", VitestMocker.pendingIds)
             await moduleRunner.mocker.resolveMocks()
           }
 
