@@ -3,9 +3,9 @@ import { expect, test, vi } from 'vitest'
 import * as dep from './syntax-error.js'
 
 vi.mock('./syntax-error.js', () => {
-  return { mocked: () => 'ok' }
+  return { mocked: 'ok' }
 })
 
 test('can mock invalid module', () => {
-  expect(dep).toMatchInlineSnapshot()
+  expect(dep).toMatchObject({ mocked: 'ok' })
 })
