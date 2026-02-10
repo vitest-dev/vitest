@@ -68,7 +68,7 @@ test('test update', async () => {
 })
 
 function readFiles(dir: string) {
-  const files = globSync('**', { cwd: dir, ignore: ['**/node_modules/**'],  })
+  const files = globSync('**', { cwd: dir, ignore: ['**/node_modules/**'] })
   return Object.fromEntries(
     files.sort().map(file => [file, fs.readFileSync(join(dir, file), 'utf-8')]),
   )
