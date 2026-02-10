@@ -15,19 +15,19 @@ test('jest-image-snapshot', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    {
+    Object {
       "added": 1,
       "didUpdate": true,
       "failure": false,
       "filesAdded": 1,
       "filesRemoved": 0,
-      "filesRemovedList": [],
+      "filesRemovedList": Array [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
       "total": 1,
       "unchecked": 0,
-      "uncheckedKeysByFile": [],
+      "uncheckedKeysByFile": Array [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -41,19 +41,19 @@ test('jest-image-snapshot', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    {
+    Object {
       "added": 0,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 0,
       "filesRemoved": 0,
-      "filesRemovedList": [],
+      "filesRemovedList": Array [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 1,
       "total": 1,
       "unchecked": 0,
-      "uncheckedKeysByFile": [],
+      "uncheckedKeysByFile": Array [],
       "unmatched": 0,
       "updated": 0,
     }

@@ -4,8 +4,8 @@ import { editFile, runVitest } from '../../test-utils'
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-    {
-      "foo": [
+    Object {
+      "foo": Array [
         "bar",
       ],
     }

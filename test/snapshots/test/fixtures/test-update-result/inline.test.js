@@ -5,8 +5,8 @@ import { describe, expect, test } from 'vitest'
 describe('snapshots are generated in correct order', async () => {
   test('first snapshot', () => {
     expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-      {
-        "foo": [
+      Object {
+        "foo": Array [
           "bar",
         ],
       }
@@ -15,8 +15,8 @@ describe('snapshots are generated in correct order', async () => {
 
   test('second snapshot', () => {
     expect({ foo: ['zed'] }).toMatchInlineSnapshot(`
-      {
-        "foo": [
+      Object {
+        "foo": Array [
           "zed",
         ],
       }
@@ -27,7 +27,7 @@ describe('snapshots are generated in correct order', async () => {
 describe('snapshots with properties', () => {
   test('without snapshot', () => {
     expect({ foo: 'bar' }).toMatchInlineSnapshot({ foo: expect.any(String) }, `
-      {
+      Object {
         "foo": Any<String>,
       }
     `)
@@ -35,9 +35,9 @@ describe('snapshots with properties', () => {
 
   test('with snapshot', () => {
     expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, `
-      {
-        "first": {
-          "second": {
+      Object {
+        "first": Object {
+          "second": Object {
             "foo": Any<String>,
           },
         },
@@ -47,9 +47,9 @@ describe('snapshots with properties', () => {
 
   test('mixed with and without snapshot', () => {
     expect({ first: { second: { foo: 'bar' } } }).toMatchInlineSnapshot({ first: { second: { foo: expect.any(String) } } }, `
-      {
-        "first": {
-          "second": {
+      Object {
+        "first": Object {
+          "second": Object {
             "foo": Any<String>,
           },
         },
@@ -57,9 +57,9 @@ describe('snapshots with properties', () => {
     `)
 
     expect({ first: { second: { foo: 'zed' } } }).toMatchInlineSnapshot(`
-      {
-        "first": {
-          "second": {
+      Object {
+        "first": Object {
+          "second": Object {
             "foo": "zed",
           },
         },

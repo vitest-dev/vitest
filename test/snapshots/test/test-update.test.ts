@@ -15,46 +15,46 @@ test('test update', async () => {
   const result = await runVitest({ root: dstDir, update: true })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    {
-      "inline-concurrent.test.js": {
+    Object {
+      "inline-concurrent.test.js": Object {
         "1st": "passed",
         "2nd": "passed",
         "3rd": "passed",
       },
-      "inline.test.js": {
-        "snapshots are generated in correct order": {
+      "inline.test.js": Object {
+        "snapshots are generated in correct order": Object {
           "first snapshot": "passed",
           "second snapshot": "passed",
         },
-        "snapshots with properties": {
+        "snapshots with properties": Object {
           "mixed with and without snapshot": "passed",
           "with snapshot": "passed",
           "without snapshot": "passed",
         },
       },
-      "retry-file.test.ts": {
+      "retry-file.test.ts": Object {
         "file repeats": "passed",
         "file repeats many": "passed",
         "file retry": "passed",
         "file retry many": "passed",
         "file retry partial": "passed",
       },
-      "retry-inline.test.ts": {
+      "retry-inline.test.ts": Object {
         "inline repeats": "passed",
         "inline retry": "passed",
       },
-      "same-title-file.test.js": {
+      "same-title-file.test.js": Object {
         "same title exist": "passed",
         "same title new": "passed",
       },
-      "same-title-inline.test.js": {
+      "same-title-inline.test.js": Object {
         "same title": "passed",
       },
     }
   `)
   const resultFiles = readFiles(dstDir)
   expect(Object.keys(resultFiles)).toMatchInlineSnapshot(`
-    [
+    Array [
       "__snapshots__/retry-file.test.ts.snap",
       "__snapshots__/same-title-file.test.js.snap",
       "inline-concurrent.test.js",
