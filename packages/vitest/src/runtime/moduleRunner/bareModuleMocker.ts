@@ -158,7 +158,6 @@ export class BareModuleMocker implements TestModuleMocker {
           mock.id,
           mock.importer,
         )
-        // console.trace('🟠 VitestMocker.resolveMocks', { mock, id, url, external })
         if (mock.action === 'unmock') {
           this.unmockPath(id)
         }

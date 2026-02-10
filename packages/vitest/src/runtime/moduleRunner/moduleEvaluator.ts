@@ -99,8 +99,6 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   async runExternalModule(id: string): Promise<any> {
-    // TODO: shouldn't be here? { id: '@vitest/test-dep-invalid' }
-    // console.trace({ id })
     if (id in this.stubs) {
       return this.stubs[id]
     }

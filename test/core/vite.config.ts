@@ -82,7 +82,7 @@ export default defineConfig({
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
-      // './test/setup.ts',
+      './test/setup.ts',
     ],
     server: {
       deps: {

@@ -153,21 +153,6 @@ export class VitestModuleRunner
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
-    // if (VitestMocker.pendingIds.length) {
-    //   // console.log("@@@@@@ VitestMocker.pendingIds", VitestMocker.pendingIds)
-    //   await this.mocker.resolveMocks()
-    // }
-    // Trace: 🟢 VitestModuleRunner.cachedRequest {
-    //   url: '@vitest/test-dep-invalid',
-    //   ignoreMock: false,
-    //   meta: {
-    //     externalize: '@vitest/test-dep-invalid',
-    //     type: 'module',
-    //     url: '@vitest/test-dep-invalid',
-    //     id: '@vitest/test-dep-invalid'
-    //   }
-    // }
-    // console.log("🔵 VitestModuleRunner.cachedRequest", { url, ignoreMock, meta: mod.meta })
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }
@@ -182,7 +167,6 @@ export class VitestModuleRunner
       )
     }
     else {
-      // TODO: this should pick up the mock for @vitest/test-dep-invalid
       mocked = await this.mocker.mockedRequest(url, mod, callstack)
     }
 
