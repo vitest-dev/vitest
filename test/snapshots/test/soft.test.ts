@@ -31,8 +31,8 @@ test('soft', async () => {
   expect(readFileSync(customFile1, 'utf-8')).toMatchInlineSnapshot(`"--file-1--"`)
   expect(readFileSync(customFile2, 'utf-8')).toMatchInlineSnapshot(`"--file-2--"`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "toMatchFileSnapshot": "passed",
         "toMatchSnapshot": "passed",
         "toThrowErrorMatchingSnapshot": "passed",
@@ -153,17 +153,17 @@ test('soft', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "toMatchFileSnapshot": Array [
+    {
+      "basic.test.ts": {
+        "toMatchFileSnapshot": [
           "Snapshot \`toMatchFileSnapshot 1\` mismatched",
           "Snapshot \`toMatchFileSnapshot 2\` mismatched",
         ],
-        "toMatchSnapshot": Array [
+        "toMatchSnapshot": [
           "Snapshot \`toMatchSnapshot 1\` mismatched",
           "Snapshot \`toMatchSnapshot 2\` mismatched",
         ],
-        "toThrowErrorMatchingSnapshot": Array [
+        "toThrowErrorMatchingSnapshot": [
           "Snapshot \`toThrowErrorMatchingSnapshot 1\` mismatched",
           "Snapshot \`toThrowErrorMatchingSnapshot 2\` mismatched",
         ],
@@ -189,8 +189,8 @@ test('soft', async () => {
   expect(readFileSync(customFile1, 'utf-8')).toMatchInlineSnapshot(`"--file-1-edit--"`)
   expect(readFileSync(customFile2, 'utf-8')).toMatchInlineSnapshot(`"--file-2-edit--"`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "toMatchFileSnapshot": "passed",
         "toMatchSnapshot": "passed",
         "toThrowErrorMatchingSnapshot": "passed",

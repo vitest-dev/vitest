@@ -21,19 +21,19 @@ test('same snapshots in single test', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 2,
       "didUpdate": true,
       "failure": false,
       "filesAdded": 1,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -48,19 +48,19 @@ test('same snapshots in single test', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 0,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 0,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 2,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -74,19 +74,19 @@ test('same snapshots in single test', async () => {
     update: true,
   })
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 0,
       "didUpdate": true,
       "failure": false,
       "filesAdded": 0,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 2,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -110,19 +110,19 @@ test('same snapshots in multiple tests', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 2,
       "didUpdate": true,
       "failure": false,
       "filesAdded": 1,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -137,19 +137,19 @@ test('same snapshots in multiple tests', async () => {
   })
   expect(vitest.stderr).toBe('')
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 0,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 0,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 2,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -163,19 +163,19 @@ test('same snapshots in multiple tests', async () => {
     update: true,
   })
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 0,
       "didUpdate": true,
       "failure": false,
       "filesAdded": 0,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 2,
       "total": 2,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -418,12 +418,12 @@ test('test.each/for', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "each.test.ts": Object {
-        "suite hello": Object {
+    {
+      "each.test.ts": {
+        "suite hello": {
           "length": "passed",
         },
-        "suite world": Object {
+        "suite world": {
           "length": "passed",
         },
         "test hello": "passed",
@@ -434,19 +434,19 @@ test('test.each/for', async () => {
     }
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 6,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 1,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
       "total": 6,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -560,51 +560,51 @@ test('test.each/for', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "each.test.ts": Object {
-        "suite hey": Object {
-          "length": Array [
+    {
+      "each.test.ts": {
+        "suite hey": {
+          "length": [
             "Snapshot \`suite hey > length 1\` mismatched",
           ],
         },
-        "suite world": Object {
-          "length": Array [
+        "suite world": {
+          "length": [
             "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
           ],
         },
-        "test hey": Array [
+        "test hey": [
           "Snapshot \`test hey 1\` mismatched",
         ],
-        "test world": Array [
+        "test world": [
           "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
         ],
-        "toThrowErrorMatchingInlineSnapshot hey": Array [
+        "toThrowErrorMatchingInlineSnapshot hey": [
           "Snapshot \`toThrowErrorMatchingInlineSnapshot hey 1\` mismatched",
         ],
-        "toThrowErrorMatchingInlineSnapshot world": Array [
+        "toThrowErrorMatchingInlineSnapshot world": [
           "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
     }
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-      Object {
-        "added": 0,
-        "didUpdate": false,
-        "failure": false,
-        "filesAdded": 0,
-        "filesRemoved": 0,
-        "filesRemovedList": Array [],
-        "filesUnmatched": 1,
-        "filesUpdated": 0,
-        "matched": 0,
-        "total": 3,
-        "unchecked": 0,
-        "uncheckedKeysByFile": Array [],
-        "unmatched": 3,
-        "updated": 0,
-      }
-    `)
+    {
+      "added": 0,
+      "didUpdate": false,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 1,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 3,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 3,
+      "updated": 0,
+    }
+  `)
 
   // fails with update=all
   result = await runVitest({ root, include: [testFile], update: 'all' })
@@ -663,22 +663,22 @@ test('test.each/for', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "each.test.ts": Object {
-        "suite hey": Object {
+    {
+      "each.test.ts": {
+        "suite hey": {
           "length": "passed",
         },
-        "suite world": Object {
-          "length": Array [
+        "suite world": {
+          "length": [
             "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
           ],
         },
         "test hey": "passed",
-        "test world": Array [
+        "test world": [
           "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
         ],
         "toThrowErrorMatchingInlineSnapshot hey": "passed",
-        "toThrowErrorMatchingInlineSnapshot world": Array [
+        "toThrowErrorMatchingInlineSnapshot world": [
           "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
@@ -705,21 +705,21 @@ test('test.each/for', async () => {
     "
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-      Object {
-        "added": 0,
-        "didUpdate": true,
-        "failure": false,
-        "filesAdded": 0,
-        "filesRemoved": 0,
-        "filesRemovedList": Array [],
-        "filesUnmatched": 0,
-        "filesUpdated": 1,
-        "matched": 0,
-        "total": 3,
-        "unchecked": 0,
-        "uncheckedKeysByFile": Array [],
-        "unmatched": 0,
-        "updated": 3,
-      }
-    `)
+    {
+      "added": 0,
+      "didUpdate": true,
+      "failure": false,
+      "filesAdded": 0,
+      "filesRemoved": 0,
+      "filesRemovedList": [],
+      "filesUnmatched": 0,
+      "filesUpdated": 1,
+      "matched": 0,
+      "total": 3,
+      "unchecked": 0,
+      "uncheckedKeysByFile": [],
+      "unmatched": 0,
+      "updated": 3,
+    }
+  `)
 })
