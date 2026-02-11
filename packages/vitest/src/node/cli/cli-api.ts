@@ -28,9 +28,19 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+  /**
+   * Parse files statically instead of running them to collect tests
+   * @experimental
+   */
+  staticParse?: boolean
+  /**
+   * How many tests to process at the same time
+   * @experimental
+   */
+  staticParseConcurrency?: number
 
   /**
-   * Override vite config's configLoader from cli.
+   * Override vite config's configLoader from CLI.
    * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
    * This is only available with **vite version 6.1.0** and above.
    * @experimental
