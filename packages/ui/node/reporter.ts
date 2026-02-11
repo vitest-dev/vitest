@@ -209,4 +209,14 @@ export default class HTMLReporter implements Reporter {
       )}${c.dim(' to see the test results.')}`,
     )
   }
+
+  async onFinishedReportCoverage(): Promise<void> {
+    if (this.ctx.config.coverage.enabled && this.ctx.config.coverage.htmlDir) {
+      const coverageHtmlDir = this.ctx.config.coverage.htmlDir
+      const destCoverageDir = resolve(this.reporterDir, 'coverage')
+      await fs.rm(destCoverageDir, { recursive: true, force: true })
+      await fs.mkdir(destCoverageDir, { recursive: true })
+      await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
+    }
+  }
 }
