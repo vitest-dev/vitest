@@ -501,9 +501,9 @@ If code coverage generation is slow on your project, see [Profiling Test Perform
 
 You can check your coverage report in [Vitest UI](/guide/ui).
 
-Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
-- enable `coverage.enabled=true` in your configuration file or run Vitest with `--coverage.enabled=true` flag
-- add `html` to the `coverage.reporter` list: you can also enable `subdir` option to put coverage report in a subdirectory
+Since the default `coverage.reporter` includes `html`, coverage report is available in Vitest UI when `coverage.enabled` is set to `true` in your configuration file or when running Vitest with `--coverage.enabled=true` flag.
+
+The [`coverage.htmlDir`](/config/coverage#coverage-htmldir) option is automatically inferred from coverage reporters that produce HTML output (`html` and `lcov`). You can override it to point to a custom HTML coverage output directory.
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
