@@ -73,6 +73,7 @@ export const panels = reactive({
 
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
+    // TODO: make it relative to support subpath deployment
     return '/coverage/index.html'
   }
 

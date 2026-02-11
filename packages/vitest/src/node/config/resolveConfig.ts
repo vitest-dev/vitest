@@ -431,8 +431,9 @@ export function resolveConfig(
       )
     }
 
-    // Resolve htmlDir: find HTML reporter and compute its output directory
+    // infer default based on builtin reporter html output (html and lcov)
     if (!resolved.coverage.htmlDir) {
+      // TODO: infer lcov https://github.com/vitest-dev/vitest/issues/6381
       const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html')
       if (htmlReporter) {
         const [, options] = htmlReporter
