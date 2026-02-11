@@ -5,8 +5,7 @@ import { isReport } from '~/constants'
 export function getAttachmentUrl(attachment: TestAttachment): string {
   // html reporter always saves files into /data/ folder
   if (isReport) {
-    // TODO: make it relative to support subpath deployment
-    return `/data/${attachment.path}`
+    return `./data/${attachment.path}`
   }
   const contentType = attachment.contentType ?? 'application/octet-stream'
   if (attachment.path) {
