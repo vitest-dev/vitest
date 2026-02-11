@@ -7,8 +7,8 @@ pnpm -C examples/repro-6945 test --coverage --ui
 # html report
 pnpm -C examples/repro-6945 test --coverage --reporter=html --run
 
-# serve
-pnpm dlx serve examples/repro-6945/html/
+# preview
+pnpm exec vite preview --outDir examples/repro-6945/html/
 
 # TODO: browser mode
 ```

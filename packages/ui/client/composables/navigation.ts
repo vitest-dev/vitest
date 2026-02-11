@@ -71,16 +71,6 @@ export const panels = reactive({
   },
 })
 
-export const coverageUrl = computed(() => {
-  if (coverageEnabled.value) {
-    // TODO: how to make iframe base to be `./coverage/` instead of `./coverage`?
-    // currently coverage assets links are broken.
-    return './coverage/index.html'
-  }
-
-  return undefined
-})
-
 watch(
   testRunState,
   (state) => {
