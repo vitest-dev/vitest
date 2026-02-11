@@ -1,3 +1,4 @@
+import type { BaseCoverageOptions } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { resolveConfig } from 'vitest/node'
@@ -61,4 +62,53 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
 
   expect(vitestConfig.coverage.exclude).toContain('**/custom-exclude/**')
   expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
+})
+
+test.for([
+  {
+    options: {},
+    expected: 'coverage',
+  },
+  {
+    options: { reporter: ['html'] },
+    expected: 'coverage',
+  },
+  {
+    options: { reporter: [['html', {}]] },
+    expected: 'coverage',
+  },
+  {
+    options: { reporter: [['html', { subdir: 'custom-subdir' }]] },
+    expected: 'coverage/custom-subdir',
+  },
+  {
+    options: { reporter: [['html', {}]], reportsDirectory: 'my-coverage' },
+    expected: 'my-coverage',
+  },
+  {
+    options: { reporter: [['html', { subdir: 'custom-subdir' }]], reportsDirectory: 'my-coverage' },
+    expected: 'my-coverage/custom-subdir',
+  },
+  {
+    options: { reporter: ['lcov'] },
+    expected: 'coverage/lcov-report',
+  },
+  {
+    options: { reporter: [['text', {}]] },
+    expected: undefined,
+  },
+  {
+    options: { htmlDir: 'custom-html-dir' },
+    expected: undefined,
+  },
+] satisfies {
+  options: BaseCoverageOptions
+  expected?: string
+}[])('coverage.htmlDir inference: $options', async ({ options, expected }) => {
+  const { vitestConfig } = await resolveConfig({
+    coverage: { enabled: true, ...options },
+  })
+  expect(vitestConfig.coverage.htmlDir).toBe(
+    expected && resolve(vitestConfig.root, expected),
+  )
 })
