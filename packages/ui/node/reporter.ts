@@ -1,6 +1,6 @@
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
 import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
@@ -62,7 +62,6 @@ export default class HTMLReporter implements Reporter {
     this.reporterDir = dirname(htmlFilePath)
     this.htmlFilePath = htmlFilePath
 
-    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
@@ -137,10 +136,12 @@ export default class HTMLReporter implements Reporter {
 
     // copy attachments
     // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
-    const destAttachmentsDir = resolve(this.reporterDir, 'data')
-    await fs.rm(destAttachmentsDir, { recursive: true, force: true })
-    await fs.mkdir(destAttachmentsDir, { recursive: true })
-    await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    if (existsSync(this.ctx.config.attachmentsDir)) {
+      const destAttachmentsDir = resolve(this.reporterDir, 'data')
+      await fs.rm(destAttachmentsDir, { recursive: true, force: true })
+      await fs.mkdir(destAttachmentsDir, { recursive: true })
+      await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    }
 
     this.ctx.logger.log(
       `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
