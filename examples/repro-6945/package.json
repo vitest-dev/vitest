@@ -7,6 +7,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "vitest": "workspace:*"

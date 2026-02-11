@@ -475,6 +475,9 @@ importers:
 
   examples/repro-6945:
     devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       '@vitest/coverage-v8':
         specifier: workspace:*
         version: link:../../packages/coverage-v8

@@ -2,7 +2,7 @@ import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { resolve } from 'pathe'
+import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
@@ -27,20 +27,12 @@ export default (ctx: Vitest): Plugin => {
       handler(server) {
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
-        const coveragePath = '/coverage/'
 
-        // TODO: serve inside base e.g. `/__vitest__/coverage/`
-        if (base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change uiBase`,
-          )
-        }
-
-        // Serve coverage HTML at /coverage if configured
+        // Serve coverage HTML at ./coverage if configured
         const coverageHtmlDir = ctx.config.coverage?.htmlDir
         if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath,
+            join(base, 'coverage'),
             sirv(coverageHtmlDir, {
               single: true,
               dev: true,

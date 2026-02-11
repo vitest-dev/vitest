@@ -61,19 +61,11 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
         )
 
-        // TODO: refactor with packages/ui/node/index.ts
-        const coveragePath = '/coverage/'
-        if (base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change uiBase`,
-          )
-        }
-
-        // Serve coverage HTML at /coverage if configured
+        // Serve coverage HTML at ./coverage if configured
         const coverageHtmlDir = parentServer.vitest.config.coverage?.htmlDir
         if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath,
+            join(base, 'coverage'),
             sirv(coverageHtmlDir, {
               single: true,
               dev: true,

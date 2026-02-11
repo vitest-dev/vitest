@@ -9,6 +9,8 @@ pnpm -C examples/repro-6945 test --coverage --reporter=html --run
 
 # serve
 pnpm dlx serve examples/repro-6945/html/
+
+# TODO: browser mode
 ```
 
 ## Questions
