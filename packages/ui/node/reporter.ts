@@ -45,7 +45,7 @@ export default class HTMLReporter implements Reporter {
   options: HTMLOptions
 
   private reporterDir!: string
-  // private htmlFilePath!: string
+  private htmlFilePath!: string
 
   constructor(options: HTMLOptions) {
     this.options = options
@@ -54,16 +54,15 @@ export default class HTMLReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
     this.start = Date.now()
-    // const htmlFile
-    //   = this.options.outputFile
-    //     || getOutputFile(this.ctx.config)
-    //     || 'html/index.html'
-    // const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
-    // this.reporterDir = dirname(htmlFilePath)
-    this.reporterDir = this.ctx.config.attachmentsDir
-    // this.htmlFilePath = htmlFilePath
+    const htmlFile
+      = this.options.outputFile
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
+    const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
+    this.reporterDir = dirname(htmlFilePath)
+    this.htmlFilePath = htmlFilePath
 
-    // await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
+    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
@@ -123,7 +122,7 @@ export default class HTMLReporter implements Reporter {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
           const filePath = relative(this.reporterDir, metaFile)
           await fs.writeFile(
-            resolve(this.reporterDir, f),
+            this.htmlFilePath,
             html.replace(
               '<!-- !LOAD_METADATA! -->',
               `<script>window.METADATA_PATH="${filePath}"</script>`,
@@ -137,12 +136,11 @@ export default class HTMLReporter implements Reporter {
     )
 
     // copy attachments
-    // TODO: html reporter can take over `attachmentsDir` config so no need to copy?
-    // TODO: or reversing this logic, html reporter assets should be copied into `attachmentsDir`?
-    // const destAttachmentsDir = resolve(this.reporterDir, 'data')
-    // await fs.rm(destAttachmentsDir, { recursive: true, force: true })
-    // await fs.mkdir(destAttachmentsDir, { recursive: true })
-    // await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
+    const destAttachmentsDir = resolve(this.reporterDir, 'data')
+    await fs.rm(destAttachmentsDir, { recursive: true, force: true })
+    await fs.mkdir(destAttachmentsDir, { recursive: true })
+    await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
 
     this.ctx.logger.log(
       `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(

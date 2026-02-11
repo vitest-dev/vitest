@@ -280,11 +280,10 @@ export class TestRun {
       const hash = createHash('sha1').update(currentPath).digest('hex')
       const newPath = resolve(
         project.config.attachmentsDir,
-        'data',
         `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
       )
-      if (!existsSync(project.config.attachmentsDir + '/data')) {
-        await mkdir(project.config.attachmentsDir + '/data', { recursive: true })
+      if (!existsSync(project.config.attachmentsDir)) {
+        await mkdir(project.config.attachmentsDir, { recursive: true })
       }
       await copyFile(currentPath, newPath)
 
