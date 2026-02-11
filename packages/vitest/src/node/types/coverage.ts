@@ -270,14 +270,9 @@ export interface BaseCoverageOptions {
 
   /**
    * Resolved directory path for HTML coverage output.
-   * Automatically computed from `reportsDirectory` and HTML reporter's `subdir` option.
-   * Can be explicitly set to override the default behavior.
-   *
-   * This path is used by:
-   * - UI dev server to serve coverage at `/coverage`
-   * - HTML reporter to copy coverage into static report output
-   *
-   * @default '<reportsDirectory>' or '<reportsDirectory>/<subdir>' if html reporter has subdir option
+   * This path is used to serve coverage in UI mode and HTML reporter.
+   * This is inferred based on builtin reporter html output directory (`html` and `lcov` reporters).
+   * You can explicitly set this option to override with custom coverage reporter output location.
    */
   htmlDir?: string
 }

@@ -149,16 +149,9 @@ export interface SerializedConfig {
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
-  /**
-   * Resolved directory path for HTML coverage output.
-   * Used by UI to determine if coverage view should be shown.
-   */
-  htmlDir: string | undefined
 }
 
 export type RuntimeConfig = Pick<

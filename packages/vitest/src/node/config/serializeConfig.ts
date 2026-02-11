@@ -48,18 +48,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
-      const htmlReporter = coverage.reporter.find(([reporterName]) => reporterName === 'html') as [
-        'html',
-        { subdir?: string },
-      ] | undefined
-      const subdir = htmlReporter && htmlReporter[1]?.subdir
       return {
         reportsDirectory: coverage.reportsDirectory,
         provider: coverage.provider,
         enabled: coverage.enabled,
-        htmlReporter: htmlReporter
-          ? { subdir }
-          : undefined,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
