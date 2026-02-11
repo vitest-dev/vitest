@@ -61,6 +61,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
         )
 
+        // TODO: refactor with packages/ui/node/index.ts
         const coveragePath = '/coverage/'
         if (base === coveragePath) {
           throw new Error(

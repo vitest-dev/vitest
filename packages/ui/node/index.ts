@@ -29,6 +29,7 @@ export default (ctx: Vitest): Plugin => {
         const base = uiOptions.uiBase
         const coveragePath = '/coverage/'
 
+        // TODO: serve inside base e.g. `/__vitest__/coverage/`
         if (base === coveragePath) {
           throw new Error(
             `The ui base path and the coverage path cannot be the same: ${base}, change uiBase`,
