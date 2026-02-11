@@ -473,21 +473,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  examples/repro-6945:
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/coverage-v8':
-        specifier: workspace:*
-        version: link:../../packages/coverage-v8
-      '@vitest/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   examples/typecheck:
     devDependencies:
       '@types/node':
