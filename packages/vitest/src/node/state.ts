@@ -1,5 +1,5 @@
 import type { File, FileSpecification, Task, TaskResultPack } from '@vitest/runner'
-import type { UserConsoleLog } from '../types/general'
+import type { AsyncLeak, UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
@@ -22,6 +22,7 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
+  leakSet: Set<AsyncLeak> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
   transformTime = 0
@@ -82,8 +83,13 @@ export class StateManager {
     }
   }
 
+  catchLeaks(leaks: AsyncLeak[]): void {
+    leaks.forEach(leak => this.leakSet.add(leak))
+  }
+
   clearErrors(): void {
     this.errorsSet.clear()
+    this.leakSet.clear()
   }
 
   getUnhandledErrors(): unknown[] {

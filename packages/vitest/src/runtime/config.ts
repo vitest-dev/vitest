@@ -117,6 +117,7 @@ export interface SerializedConfig {
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
     includeSamples: boolean
