@@ -23,8 +23,6 @@ test.describe('html report', () => {
         reporters: 'html',
         coverage: {
           enabled: true,
-          reportsDirectory: 'html/coverage',
-          reporter: ['html'],
         },
       },
       {},

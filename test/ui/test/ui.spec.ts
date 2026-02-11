@@ -18,7 +18,7 @@ test.describe('ui', () => {
       ui: true,
       open: false,
       api: { port },
-      coverage: { enabled: true, reporter: ['html'] },
+      coverage: { enabled: true },
       reporters: [],
     }, {}, {
       stdout,
