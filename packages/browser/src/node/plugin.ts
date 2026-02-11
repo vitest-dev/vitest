@@ -65,7 +65,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const coverageHtmlDir = parentServer.vitest.config.coverage?.htmlDir
         if (coverageHtmlDir) {
           server.middlewares.use(
-            join(base, 'coverage'),
+            '/__vitest_test__/coverage',
             sirv(coverageHtmlDir, {
               single: true,
               dev: true,
