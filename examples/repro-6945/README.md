@@ -10,7 +10,11 @@ pnpm -C examples/repro-6945 test --coverage --reporter=html --run
 # preview
 pnpm exec vite preview --outDir examples/repro-6945/html/
 
-# TODO: browser mode
+# watch ui (browser mode)
+pnpm -C examples/repro-6945 test --coverage --browser
+
+# html report (browser mode)
+pnpm -C examples/repro-6945 test --coverage --browser --reporter=html --run
 ```
 
 ## Questions
