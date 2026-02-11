@@ -602,6 +602,13 @@ export interface InlineConfig {
   logHeapUsage?: boolean
 
   /**
+   * Detect asynchronous resources leaking from the test file.
+   *
+   * @default false
+   */
+  detectAsyncLeaks?: boolean
+
+  /**
    * Custom environment variables assigned to `process.env` before running tests.
    */
   env?: Partial<NodeJS.ProcessEnv>

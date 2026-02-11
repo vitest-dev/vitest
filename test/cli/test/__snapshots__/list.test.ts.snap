@@ -59,6 +59,16 @@ math.test.ts > failing test
 "
 `;
 
+exports[`correctly outputs all tests with args: "--static-parse" 1`] = `
+"basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
+
 exports[`correctly outputs all tests with args: "--typecheck" 1`] = `
 "type.test-d.ts > 1 plus 1
 basic.test.ts > basic suite > inner suite > some test

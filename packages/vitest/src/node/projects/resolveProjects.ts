@@ -41,6 +41,7 @@ export async function resolveProjects(
   // not all options are allowed to be overridden
   const overridesOptions = [
     'logHeapUsage',
+    'detectAsyncLeaks',
     'allowOnly',
     'sequence',
     'testTimeout',
