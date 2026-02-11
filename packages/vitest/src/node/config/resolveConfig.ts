@@ -433,16 +433,19 @@ export function resolveConfig(
 
     // infer default based on builtin reporter html output (html and lcov)
     if (!resolved.coverage.htmlDir) {
-      // TODO: infer lcov https://github.com/vitest-dev/vitest/issues/6381
       const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html')
       if (htmlReporter) {
         const [, options] = htmlReporter
-        const subdir = options && typeof options === 'object' && 'subdir' in options
+        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
           ? options.subdir
           : undefined
-        resolved.coverage.htmlDir = typeof subdir === 'string'
-          ? resolve(reportsDirectory, subdir)
-          : reportsDirectory
+        resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
+      }
+      else {
+        const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
+        if (lcovReporter) {
+          resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
+        }
       }
     }
   }

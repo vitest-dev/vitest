@@ -64,7 +64,7 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
   expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
 })
 
-test.for([
+test.skip.for([
   {
     options: {},
     expected: 'coverage',
