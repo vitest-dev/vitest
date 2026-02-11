@@ -64,7 +64,7 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
   expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
 })
 
-test.skip.for([
+test.for([
   {
     options: {},
     expected: 'coverage',
@@ -99,13 +99,14 @@ test.skip.for([
   },
   {
     options: { htmlDir: 'custom-html-dir' },
-    expected: undefined,
+    expected: 'custom-html-dir',
   },
 ] satisfies {
   options: BaseCoverageOptions
   expected?: string
 }[])('coverage.htmlDir inference: $options', async ({ options, expected }) => {
   const { vitestConfig } = await resolveConfig({
+    config: false,
     coverage: { enabled: true, ...options },
   })
   expect(vitestConfig.coverage.htmlDir).toBe(

@@ -431,6 +431,13 @@ export function resolveConfig(
       )
     }
 
+    if (resolved.coverage.htmlDir) {
+      resolved.coverage.htmlDir = resolve(
+        resolved.root,
+        resolved.coverage.htmlDir,
+      )
+    }
+
     // infer default based on builtin reporter html output (html and lcov)
     if (!resolved.coverage.htmlDir) {
       const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html')
