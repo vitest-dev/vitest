@@ -1,4 +1,5 @@
 import type { PreviewServer } from 'vite'
+import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
@@ -66,7 +67,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('15 Pass 2 Fail 17 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('16 Pass 2 Fail 18 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -169,6 +170,27 @@ test.describe('html report', () => {
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
       await expect(annotation.getByRole('img')).toHaveAttribute('src', /data\/\w+/)
     })
+
+    await test.step('annotated with body', async () => {
+      const item = page.getByLabel('annotated with body')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('body annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:25:9')
+
+      const downloadPromise = page.waitForEvent('download')
+      await annotation.getByRole('link').click()
+      const download = await downloadPromise
+      expect(download.suggestedFilename()).toBe('body-annotation.md')
+      const downloadPath = await download.path()
+      const content = readFileSync(downloadPath, 'utf-8')
+      expect(content).toBe('Hello **markdown**')
+    })
   })
 
   test('annotations', async ({ page }) => {
@@ -179,16 +201,18 @@ test.describe('html report', () => {
     await page.getByTestId('btn-code').click({ force: true })
 
     const annotations = page.getByRole('note')
-    await expect(annotations).toHaveCount(5)
+    await expect(annotations).toHaveCount(6)
 
     await expect(annotations.first()).toHaveText('notice: hello world')
     await expect(annotations.nth(1)).toHaveText('notice: second annotation')
     await expect(annotations.nth(2)).toHaveText('warning: beware!')
     await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
     await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+    await expect(annotations.nth(5)).toHaveText(/notice: body annotation/)
 
-    await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /data\/\w+/)
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown;base64,/)
   })
 
   test('tags filter', async ({ page }) => {
