@@ -271,8 +271,8 @@ export interface BaseCoverageOptions {
   /**
    * Resolved directory path for HTML coverage output.
    * This path is used to serve coverage in UI mode and HTML reporter.
-   * This is inferred based on builtin reporter html output directory (`html` and `lcov` reporters).
-   * You can explicitly set this option to override with custom coverage reporter output location.
+   * This is inferred based on builtin reporter html output directory (for `html` and `lcov` reporters).
+   * You can set this option for custom coverage repoting location.
    */
   htmlDir?: string
 }
