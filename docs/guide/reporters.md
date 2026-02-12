@@ -592,6 +592,9 @@ All blob reports can be merged into any report by using `--merge-reports` comman
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
 
+Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).
+Make sure to merge [`attachmentsDir`](/config/attachmentsdir) separately alongside blob reports on CI when using this feature.
+
 ::: tip
 Both `--reporter=blob` and `--merge-reports` do not work in watch mode.
 :::

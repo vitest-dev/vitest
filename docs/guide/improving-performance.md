@@ -159,6 +159,15 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
+      - name: Upload attachments to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-attachments-${{ matrix.shardIndex }}
+          path: .vitest-attachments/**
+          include-hidden-files: true
+          retention-days: 1
+
   merge-reports:
     if: ${{ !cancelled() }}
     needs: [tests]
@@ -183,9 +192,18 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
+      - name: Download attachments from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-attachments
+          pattern: blob-attachments-*
+          merge-multiple: true
+
       - name: Merge reports
         run: npx vitest --merge-reports
 ```
+
+If your tests create file-based attachments (for example via `context.annotate` or custom artifacts), upload and restore [`attachmentsDir`](/config/attachmentsdir) in the merge job as shown above.
 
 :::
 
