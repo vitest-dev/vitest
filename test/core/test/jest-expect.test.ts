@@ -115,7 +115,7 @@ describe('jest-expect', () => {
     }).toThrow('')
     expect(() => {
       throw new Error('error')
-    }).not.toThrowError('')
+    }).toThrowError('') // empty string is a substring of any error message
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
