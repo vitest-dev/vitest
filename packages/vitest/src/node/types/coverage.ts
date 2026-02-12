@@ -67,8 +67,6 @@ export interface CoverageProvider {
 export interface ReportContext {
   /** Indicates whether all tests were run. False when only specific tests were run. */
   allTestsRun?: boolean
-  /** Absolute paths for files changed since a given commit/branch. */
-  changedFiles?: string[]
 }
 
 export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
