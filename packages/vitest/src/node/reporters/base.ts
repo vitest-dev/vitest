@@ -1,6 +1,6 @@
 import type { File, Task, TestAnnotation } from '@vitest/runner'
-import type { SerializedError } from '@vitest/utils'
-import type { TestError, UserConsoleLog } from '../../types/general'
+import type { ParsedStack, SerializedError } from '@vitest/utils'
+import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
@@ -521,17 +521,18 @@ export abstract class BaseReporter implements Reporter {
 
   reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
-    this.printLeaksSummary()
+
+    const leakCount = this.printLeaksSummary()
 
     if (this.ctx.config.mode === 'benchmark') {
       this.reportBenchmarkSummary(files)
     }
     else {
-      this.reportTestSummary(files, errors)
+      this.reportTestSummary(files, errors, leakCount)
     }
   }
 
-  reportTestSummary(files: File[], errors: unknown[]): void {
+  reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
     const affectedFiles = [
@@ -575,10 +576,8 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
-    const leaks = this.ctx.state.leakSet.size
-
-    if (leaks) {
-      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leaks} leak${leaks > 1 ? 's' : ''}`)))
+    if (leakCount) {
+      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leakCount} leak${leakCount > 1 ? 's' : ''}`)))
     }
 
     this.log(padSummaryTitle('Start at'), this._timeStart)
@@ -789,21 +788,34 @@ export abstract class BaseReporter implements Reporter {
     const leaks = this.ctx.state.leakSet
 
     if (leaks.size === 0) {
-      return
+      return 0
     }
 
-    this.error(`\n${errorBanner(`Async Leaks ${leaks.size}`)}\n`)
+    const leakWithStacks = new Map<string, { leak: AsyncLeak; stacks: ParsedStack[] }>()
 
+    // Leaks can be duplicate, where type and position are identical
     for (const leak of leaks) {
-      const filename = this.relative(leak.filename)
-
-      this.ctx.logger.error(c.red(`${leak.type} leaking in ${filename}`))
-
       const stacks = parseStacktrace(leak.stack)
 
       if (stacks.length === 0) {
         continue
       }
+
+      const filename = this.relative(leak.filename)
+      const key = `${filename}:${stacks[0].line}:${stacks[0].column}:${leak.type}`
+
+      if (leakWithStacks.has(key)) {
+        continue
+      }
+
+      leakWithStacks.set(key, { leak, stacks })
+    }
+
+    this.error(`\n${errorBanner(`Async Leaks ${leakWithStacks.size}`)}\n`)
+
+    for (const { leak, stacks } of leakWithStacks.values()) {
+      const filename = this.relative(leak.filename)
+      this.ctx.logger.error(c.red(`${leak.type} leaking in ${filename}`))
 
       try {
         const sourceCode = readFileSync(stacks[0].file, 'utf-8')
@@ -828,6 +840,8 @@ export abstract class BaseReporter implements Reporter {
         {},
       )
     }
+
+    return leakWithStacks.size
   }
 
   reportBenchmarkSummary(files: File[]): void {
