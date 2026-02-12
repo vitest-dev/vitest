@@ -8,6 +8,16 @@ interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | '
   element?: string
   mask?: readonly string[]
 }
+
+const SCREENSHOT_STYLES = /* css */`
+  iframe {
+    position: absolute !important;
+    inset: 0  !important;
+    z-index: ${Number.MAX_SAFE_INTEGER} !important;
+    transform: none !important;
+  }
+`
+
 /**
  * Takes a screenshot using the provided browser context and returns a buffer and the expected screenshot path.
  *
@@ -42,6 +52,11 @@ export async function takeScreenshot(
   }
 
   const mask = options.mask?.map(selector => context.iframe.locator(selector))
+  const style = context.project.config.browser.ui
+    ? options.style === undefined
+      ? SCREENSHOT_STYLES
+      : SCREENSHOT_STYLES + options.style
+    : options.style
 
   if (options.element) {
     const { element: selector, ...config } = options
@@ -50,6 +65,7 @@ export async function takeScreenshot(
       ...config,
       mask,
       path: savePath,
+      style,
     })
     return { buffer, path }
   }
@@ -58,6 +74,7 @@ export async function takeScreenshot(
     ...options,
     mask,
     path: savePath,
+    style,
   })
   return { buffer, path }
 }
