@@ -35,6 +35,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
 ]
 
@@ -197,7 +198,10 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
 
   if (method) {
     method = method
-      .replace(/__vite_ssr_import_\d+__\./g, '')
+    // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
       .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 
@@ -224,9 +228,15 @@ export function parseStacktrace(
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
+
+  // remove assertion helper's internal stacks
+  const helperIndex = stacks.findLastIndex(s => s.method === '__VITEST_HELPER__' || s.method === 'async*__VITEST_HELPER__')
+  if (helperIndex >= 0) {
+    stacks = stacks.slice(helperIndex + 1)
+  }
 
   return stacks.map((stack) => {
     if (options.getUrlId) {
@@ -360,7 +370,7 @@ export class DecodedMap {
     this._decodedMemo = memoizedState()
     this.url = from
     this.resolvedSources = (sources || []).map(s =>
-      resolve(s || '', from),
+      resolve(from, '..', s || ''),
     )
   }
 }

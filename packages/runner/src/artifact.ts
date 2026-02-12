@@ -13,12 +13,13 @@ import { findTestFileStackTrace } from './utils/collect'
  *
  * Vitest automatically injects the source location where the artifact was created and manages any attachments you include.
  *
+ * **Note:** artifacts must be recorded before the task is reported. Any artifacts recorded after that will not be included in the task.
+ *
  * @param task - The test task context, typically accessed via `this.task` in custom matchers or `context.task` in tests
  * @param artifact - The artifact to record. Must extend {@linkcode TestArtifactBase}
  *
  * @returns A promise that resolves to the recorded artifact with location injected
  *
- * @throws {Error} If called after the test has finished running
  * @throws {Error} If the test runner doesn't support artifacts
  *
  * @example
@@ -39,10 +40,6 @@ import { findTestFileStackTrace } from './utils/collect'
  */
 export async function recordArtifact<Artifact extends TestArtifact>(task: Test, artifact: Artifact): Promise<Artifact> {
   const runner = getRunner()
-
-  if (task.result && task.result.state !== 'run') {
-    throw new Error(`Cannot record a test artifact outside of the test run. The test "${task.name}" finished running with the "${task.result.state}" state already.`)
-  }
 
   const stack = findTestFileStackTrace(
     task.file.filepath,

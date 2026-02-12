@@ -130,7 +130,7 @@ function astParseFile(filepath: string, code: string) {
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped'].includes(mode)) {
+      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(mode)) {
         return
       }
 
@@ -161,6 +161,10 @@ function astParseFile(filepath: string, code: string) {
       }
       else {
         message = code.slice(messageNode.start, messageNode.end)
+
+        if (message.endsWith('.name')) {
+          message = message.slice(0, -5)
+        }
       }
 
       if (message.startsWith('0,')) {
@@ -168,8 +172,10 @@ function astParseFile(filepath: string, code: string) {
       }
 
       message = message
-        // Vite SSR injects these
-        .replace(/__vite_ssr_import_\d+__\./g, '')
+        // vite 7+
+        .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+        // vite <7
+        .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
         // Vitest module mocker injects these
         .replace(/__vi_import_\d+__\./g, '')
 

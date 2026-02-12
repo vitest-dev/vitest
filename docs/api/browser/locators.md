@@ -7,7 +7,7 @@ outline: [2, 3]
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser#browser-provider), not just playwright.
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
 
 ::: tip
 This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
@@ -830,6 +830,10 @@ This method returns a single element matching the locator's selector or `null` i
 
 If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
+::: danger
+This is an escape hatch for external APIs that do not support locators. Prefer using locator methods instead.
+:::
+
 Consider the following DOM structure:
 
 ```html
@@ -866,8 +870,10 @@ If _no element_ matches the selector, an error is thrown. Consider using [`.quer
 
 If _multiple elements_ match the selector, an error is thrown. Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
-::: tip
-This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/api/browser/assertions):
+::: danger
+This is an escape hatch for external APIs that do not support locators. Prefer using locator methods instead.
+
+It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/api/browser/assertions):
 
 ```ts
 await expect.element(page.getByRole('button')).toBeDisabled()

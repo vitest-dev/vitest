@@ -10,9 +10,9 @@ import { availableProjects, config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
 import { activeFileId, selectedTest } from '~/composables/params'
-import DetailsPanel from '../DetailsPanel.vue'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
+import ResultsPanel from '../ResultsPanel.vue'
 import ExplorerItem from './ExplorerItem.vue'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
@@ -52,7 +52,6 @@ const {
   currentProject,
   currentProjectName,
   clearProject,
-  disableProjectSort,
   clearProjectSort,
   disableClearProjectSort,
   searchMatcher,
@@ -88,7 +87,6 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         grid="~ cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2 gap-y-1"
         items-center
       >
-        <!-- Row 1 -->
         <div class="i-carbon:workspace" flex-shrink-0 />
         <label for="project-select" text-sm>
           Projects
@@ -133,13 +131,19 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
           icon="i-carbon:filter-remove"
           @click.passive="clearProject(true)"
         />
-
-        <!-- Row 2 -->
+      </div>
+      <div
+        p="l3 y2 r2"
+        bg-header
+        border="b-2 base"
+        grid="~ cols-[auto_auto_minmax(0,1fr)_auto] gap-x-2"
+        items-center
+      >
         <div class="i-carbon:arrows-vertical" flex-shrink-0 />
         <label for="project-sort" text-sm>
           Sort by
         </label>
-        <div class="relative flex-1" :class="{ 'op-50 cursor-not-allowed': disableProjectSort }">
+        <div class="relative flex-1">
           <select
             id="project-sort"
             ref="sortProjectRef"
@@ -156,15 +160,20 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             cursor-pointer
             hover:bg-active
             class="outline-none"
-            :disabled="disableProjectSort"
           >
             <option value="default" class="text-base bg-base">
               Default
             </option>
-            <option value="asc" class="text-base bg-base">
+            <option value="duration-desc" class="text-base bg-base">
+              Slowest first
+            </option>
+            <option value="duration-asc" class="text-base bg-base">
+              Fastest first
+            </option>
+            <option v-if="enableProjects" value="asc" class="text-base bg-base">
               Project A-Z
             </option>
-            <option value="desc" class="text-base bg-base">
+            <option v-if="enableProjects" value="desc" class="text-base bg-base">
               Project Z-A
             </option>
           </select>
@@ -236,7 +245,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
-      <DetailsPanel>
+      <ResultsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
             <span text-red5>
@@ -342,7 +351,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
             </template>
           </RecycleScroller>
         </template>
-      </DetailsPanel>
+      </ResultsPanel>
     </div>
   </div>
 </template>

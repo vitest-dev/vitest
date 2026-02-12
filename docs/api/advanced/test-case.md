@@ -79,7 +79,7 @@ Don't try to parse the ID. It can have a minus at the start: `-1223128da3_0_0_0`
 
 ## location
 
-The location in the module where the test was defined. Locations are collected only if [`includeTaskLocation`](/config/#includetasklocation) is enabled in the config. Note that this option is automatically enabled if `--reporter=html`, `--ui` or `--browser` flags are used.
+The location in the module where the test was defined. Locations are collected only if [`includeTaskLocation`](/config/includetasklocation) is enabled in the config. Note that this option is automatically enabled if `--reporter=html`, `--ui` or `--browser` flags are used.
 
 The location of this test will be equal to `{ line: 3, column: 1 }`:
 
@@ -143,7 +143,13 @@ test('the validation works correctly', ({ task }) => {
 })
 ```
 
-If the test did not finish running yet, the meta will be an empty object.
+If the test did not finish running yet, the meta will be an empty object, unless it has static meta:
+
+```ts
+test('the validation works correctly', { meta: { decorated: true } })
+```
+
+Since Vitest 4.1, Vitest inherits [`meta`](/api/advanced/test-suite#meta) property defined on the [suite](/api/advanced/test-suite).
 
 ## result
 

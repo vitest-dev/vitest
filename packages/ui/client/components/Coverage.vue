@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
+import { browserState } from '~/composables/client'
+
 defineProps<{
   src: string
 }>()
@@ -9,6 +12,7 @@ defineProps<{
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <div class="i-carbon:folder-details-reference" />
       <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Coverage</span>
+      <DetailsHeaderButtons v-if="browserState" />
     </div>
     <div flex-auto py-1 bg-white>
       <iframe id="vitest-ui-coverage" :src="src" />

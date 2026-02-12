@@ -509,11 +509,11 @@ export class TestModule extends SuiteImplementation {
   /**
    * Returns a new test specification that can be used to filter or run this specific test module.
    */
-  public toTestSpecification(): TestSpecification {
+  public toTestSpecification(testCases?: TestCase[]): TestSpecification {
     const isTypecheck = this.task.meta.typecheck === true
     return this.project.createSpecification(
       this.moduleId,
-      undefined,
+      testCases?.length ? { testIds: testCases.map(t => t.id) } : undefined,
       isTypecheck ? 'typecheck' : undefined,
     )
   }

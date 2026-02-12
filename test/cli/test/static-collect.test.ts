@@ -1,7 +1,7 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
 
 test('correctly collects a simple test', async () => {
@@ -280,6 +280,57 @@ test('collects nested suites with custom test functions', async () => {
           "location": "5:6",
           "mode": "run",
           "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('ignores test.scoped and test.override', async () => {
+  const testModule = await collectTests(`
+    import { test as base } from 'vitest'
+
+    const test = base.extend({
+      fixture: async ({}, use) => {
+        await use('value')
+      },
+    })
+
+    test.scoped({ fixture: 'value' })
+    test.override({ fixture: 'value' })
+
+    describe('extended tests', () => {
+      test('uses extended test', () => {})
+      test.skip('skips extended test', () => {})
+      test.only('only extended test', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "extended tests": {
+        "only extended test": {
+          "errors": [],
+          "fullName": "extended tests > only extended test",
+          "id": "-1732721377_0_2",
+          "location": "16:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "skips extended test": {
+          "errors": [],
+          "fullName": "extended tests > skips extended test",
+          "id": "-1732721377_0_1",
+          "location": "15:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "uses extended test": {
+          "errors": [],
+          "fullName": "extended tests > uses extended test",
+          "id": "-1732721377_0_0",
+          "location": "14:6",
+          "mode": "skip",
+          "state": "skipped",
         },
       },
     }
@@ -775,6 +826,28 @@ test('collects tests when test functions are globals', async () => {
   `)
 })
 
+test('remove .name from the function identifiers', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    test(Service.name, () => {
+      // ...
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "Service": {
+        "errors": [],
+        "fullName": "Service",
+        "id": "-1732721377_0",
+        "location": "4:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 test('collects tests with tags as a string', async () => {
   const testModule = await collectTests(`
     import { test } from 'vitest'
@@ -1078,6 +1151,7 @@ async function collectTestModule(code: string, options?: CliOptions) {
       ],
     },
   )
+  onTestFinished(() => vitest.close())
   return vitest.experimental_parseSpecification(
     vitest.getRootProject().createSpecification('simple.test.ts'),
   )

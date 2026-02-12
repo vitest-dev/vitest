@@ -520,7 +520,7 @@ if (import.meta.vitest) {
        FAIL  in-source.ts:12:3 > works
       Error: test throws correctly
        ❯ <anonymous> in-source.ts:13:11
-           11| 
+           11|
            12|   test('works', () => {
            13|     throw new Error('test throws correctly')
              |           ^
@@ -566,7 +566,7 @@ test('not reported')
       Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
        ❯ add.js?mock=manual:2:65
        ❯ <anonymous> add.test.js:2:1
-            1| 
+            1|
             2| import { add } from './add.js'
              | ^
             3| vi.mock('./add.js', () => {

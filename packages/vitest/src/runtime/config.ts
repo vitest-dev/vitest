@@ -76,6 +76,10 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
   retry: SerializableRetry
   includeTaskLocation: boolean | undefined
@@ -109,9 +113,11 @@ export interface SerializedConfig {
     }
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
     includeSamples: boolean
@@ -120,8 +126,13 @@ export interface SerializedConfig {
   experimental: {
     fsModuleCache: boolean
     importDurations: {
-      print: boolean
+      print: boolean | 'on-warn'
       limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
     }
     viteModuleRunner: boolean
     nodeLoader: boolean

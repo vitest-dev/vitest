@@ -514,7 +514,7 @@ export interface LocatorSelectors {
    */
   getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
-   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](https://vitest.dev/config/browser/locators#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/api/browser/locators#getbytestid}
    */
   getByTestId: (text: string | RegExp) => Locator
@@ -866,7 +866,6 @@ export const utils: {
   /**
    * Configures default options of `prettyDOM` and `debug` functions.
    * This will also affect `vitest-browser-{framework}` package.
-   * @experimental
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**

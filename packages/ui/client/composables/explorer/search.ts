@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { ProjectSortUIType } from '~/composables/explorer/types'
+import type { SortUIType } from '~/composables/explorer/types'
 import { debouncedWatch } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
@@ -38,8 +38,14 @@ export function useSearch(
 
   const disableClearSearch = computed(() => search.value === '')
   const debouncedSearch = ref(search.value)
-  const disableProjectSort = computed(() => currentProject.value !== ALL_PROJECTS)
-  const disableClearProjectSort = computed(() => disableProjectSort.value || projectSort.value === 'default')
+  const disableClearProjectSort = computed(() => projectSort.value === 'default')
+
+  // Reset project-specific sort when multiple projects are no longer available
+  watch(() => enableProjects.value, (enabled) => {
+    if (!enabled && (projectSort.value === 'asc' || projectSort.value === 'desc')) {
+      projectSort.value = 'default'
+    }
+  })
 
   debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
@@ -90,7 +96,7 @@ export function useSearch(
     skippedValue: boolean,
     onlyTestsValue: boolean,
     projectValue: string,
-    projectSortValue: ProjectSortUIType,
+    projectSortValue: SortUIType,
   ) {
     if (!initialized.value) {
       return
@@ -157,7 +163,6 @@ export function useSearch(
     currentProjectName,
     clearProject,
     projectSort,
-    disableProjectSort,
     clearProjectSort,
     disableClearProjectSort,
   }

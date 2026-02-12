@@ -16,7 +16,7 @@ exports[`should fail > typecheck files 2`] = `
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:15:19
      13|   })
-     14| 
+     14|
      15|   expectTypeOf(1).toBeVoid()
        |                   ^
      16| })"
@@ -37,7 +37,7 @@ exports[`should fail > typecheck files 4`] = `
 " FAIL  fail.test-d.ts > failing test
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
  ❯ fail.test-d.ts:4:33
-      2| 
+      2|
       3| test('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
        |                                 ^
@@ -70,7 +70,7 @@ exports[`should fail > typecheck files 7`] = `
 " FAIL  js-fail.test-d.js > js test fails
 TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
  ❯ js-fail.test-d.js:6:19
-      4| 
+      4|
       5| test('js test fails', () => {
       6|   expectTypeOf(1).toBeArray()
        |                   ^
@@ -81,7 +81,7 @@ exports[`should fail > typecheck files 8`] = `
 " FAIL  node-types.test-d.ts > buffer is not available
 TypeCheckError: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try \`npm i --save-dev @types/node\` and then add 'node' to the types field in your tsconfig.
  ❯ node-types.test-d.ts:4:3
-      2| 
+      2|
       3| test('buffer is not available', () => {
       4|   Buffer.from([])
        |   ^
@@ -92,7 +92,7 @@ exports[`should fail > typecheck files 9`] = `
 " FAIL  only.test-d.ts > failing test
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
  ❯ only.test-d.ts:4:33
-      2| 
+      2|
       3| test.only('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
        |                                 ^
