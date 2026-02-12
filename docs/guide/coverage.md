@@ -499,7 +499,9 @@ If code coverage generation is slow on your project, see [Profiling Test Perform
 
 ## Vitest UI
 
-You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter). This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
+You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+
+This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">

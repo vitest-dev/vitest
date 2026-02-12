@@ -403,3 +403,5 @@ Specifies the module name or path for the custom coverage provider module. See [
 Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
 
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
+
+Note that setting this option does not change where coverage HTML report is generated. Configure the `coverage.reporter` option to change the directory instead.
