@@ -213,4 +213,34 @@ describe.runIf(provider.name === 'playwright')('--watch', () => {
       },
     )
   })
+
+  // tests whether the screenshots are stable in UI and headless mode
+  test(
+    'screenshots match across headless and non-headless UI modes',
+    async () => {
+      const { fs, stderr, vitest } = await runBrowserTests(
+        {
+          [testFilename]: testContent,
+          'utils.ts': utilsContent,
+        },
+        {
+          update: true,
+        },
+      )
+
+      expect(stderr).toMatchInlineSnapshot(`""`)
+
+      // switch to non-headless mode
+      fs.editFile('vitest.config.js', content => content.replace('headless: true,', 'headless: false,'))
+
+      vitest.resetOutput()
+      await vitest.waitForStdout('Test Files  1 passed')
+
+      // switch to UI mode
+      fs.editFile('vitest.config.js', content => content.replace('ui: false,', 'ui: true,'))
+
+      vitest.resetOutput()
+      await vitest.waitForStdout('Test Files  1 passed')
+    },
+  )
 })
