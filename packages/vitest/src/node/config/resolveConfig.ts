@@ -442,9 +442,9 @@ export function resolveConfig(
       )
     }
 
-    // infer default based on builtin reporter html output (html and lcov)
+    // infer default htmlDir based on builtin reporter's html output location
     if (!resolved.coverage.htmlDir) {
-      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html')
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
       if (htmlReporter) {
         const [, options] = htmlReporter
         const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'

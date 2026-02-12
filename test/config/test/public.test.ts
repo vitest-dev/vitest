@@ -78,6 +78,10 @@ test.for([
     expected: 'coverage',
   },
   {
+    options: { reporter: [['html-spa', {}]] },
+    expected: 'coverage',
+  },
+  {
     options: { reporter: [['html', { subdir: 'custom-subdir' }]] },
     expected: 'coverage/custom-subdir',
   },

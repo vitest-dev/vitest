@@ -270,7 +270,7 @@ export interface BaseCoverageOptions {
 
   /**
    * Directory of HTML coverage output to be served in UI mode and HTML reporter.
-   * This is automatically configured for builtin reporter with html output (`html` and `lcov` reporters).
+   * This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters).
    * Use this option to override with custom coverage reporting location.
    */
   htmlDir?: string

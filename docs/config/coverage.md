@@ -397,9 +397,9 @@ Specifies the module name or path for the custom coverage provider module. See [
 ## coverage.htmlDir
 
 - **Type:** `string`
-- **Default:** Automatically inferred from `html` or `lcov` coverage reporters
+- **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
 - **CLI:** `--coverage.htmlDir=<path>`
 
 Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
 
-This is automatically configured when using builtin coverage reporters that produce HTML output (`html` and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
+This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.

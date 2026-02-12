@@ -503,7 +503,7 @@ You can check your coverage report in [Vitest UI](/guide/ui).
 
 Since the default `coverage.reporter` includes `html`, coverage report is available in Vitest UI when `coverage.enabled` is set to `true` in your configuration file or when running Vitest with `--coverage.enabled=true` flag.
 
-The [`coverage.htmlDir`](/config/coverage#coverage-htmldir) option is automatically inferred from coverage reporters that produce HTML output (`html` and `lcov`). You can override it to point to a custom HTML coverage output directory.
+The [`coverage.htmlDir`](/config/coverage#coverage-htmldir) option is automatically inferred from coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). You can override it to point to a custom HTML coverage output directory.
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
