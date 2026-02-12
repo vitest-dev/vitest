@@ -592,6 +592,8 @@ All blob reports can be merged into any report by using `--merge-reports` comman
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
 
+If your tests create file-based attachments, also preserve and restore [`attachmentsDir`](/config/attachmentsdir) alongside blob reports in CI.
+
 ::: tip
 Both `--reporter=blob` and `--merge-reports` do not work in watch mode.
 :::
