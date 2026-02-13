@@ -1062,6 +1062,47 @@ test('aroundEach hook timeouts are independent of each other', async () => {
   `)
 })
 
+test('aroundEach teardown timeout works when runTest error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundEach, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundEach(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            // swallow inner hook failure, then run teardown work
+          }
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundEach(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundEach teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": [
+            "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
 test('aroundEach with AsyncLocalStorage', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'async-local-storage.test.ts': `
@@ -1624,6 +1665,48 @@ test('aroundAll receives suite as third argument', async () => {
     {
       "suite-arg.test.ts": {
         "my suite": {
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('aroundAll teardown timeout works when runSuite error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'caught-inner-suite-error-timeout.test.ts': `
+      import { aroundAll, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundAll(async (runSuite) => {
+          try {
+            await runSuite()
+          }
+          catch {
+            // swallow inner hook failure, then run teardown work
+          }
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundAll(async (runSuite) => {
+          await runSuite()
+          throw new Error('inner aroundAll teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-suite-error-timeout.test.ts": {
+        "suite": {
+          "__suite_errors__": [
+            "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
+          ],
           "test": "passed",
         },
       },

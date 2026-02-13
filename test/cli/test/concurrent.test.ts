@@ -808,3 +808,204 @@ test('neighboring test aroundEach teardown passes when maxConcurrency is high en
     }
   `)
 })
+
+const aroundEachOuterCatchesInnerErrorSource = `
+import { aroundEach, describe, expect, test } from 'vitest'
+
+describe.concurrent('wrapper', () => {
+  aroundEach(async (runTest) => {
+    let runTestError: unknown
+    try {
+      await runTest()
+    }
+    catch (error) {
+      runTestError = error
+    }
+
+    await Promise.resolve()
+
+    if (runTestError) {
+      throw runTestError
+    }
+  })
+
+  aroundEach(async (runTest, context) => {
+    await runTest()
+    if (context.task.name === 'a') {
+      throw new Error('inner aroundEach teardown failure')
+    }
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('aroundEach continues protocol when outer hook catches runTest error', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachOuterCatchesInnerErrorSource,
+  }, {
+    maxConcurrency: 1,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": [
+            "inner aroundEach teardown failure",
+          ],
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundAllOuterCatchesInnerErrorSource = `
+import { aroundAll, describe, expect, test } from 'vitest'
+
+describe.concurrent('suite', () => {
+  aroundAll(async (runSuite) => {
+    let runSuiteError: unknown
+    try {
+      await runSuite()
+    }
+    catch (error) {
+      runSuiteError = error
+    }
+
+    await Promise.resolve()
+
+    if (runSuiteError) {
+      throw runSuiteError
+    }
+  })
+
+  aroundAll(async (runSuite) => {
+    await runSuite()
+    throw new Error('inner aroundAll teardown failure')
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('aroundAll continues protocol when outer hook catches runSuite error', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllOuterCatchesInnerErrorSource,
+  }, {
+    maxConcurrency: 1,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "suite": {
+          "__suite_errors__": [
+            "inner aroundAll teardown failure",
+          ],
+          "a": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundEachCaughtInnerErrorTeardownTimeoutSource = `
+import { aroundEach, describe, expect, test } from 'vitest'
+
+describe.concurrent('wrapper', () => {
+  aroundEach(async (runTest) => {
+    try {
+      await runTest()
+    }
+    catch {
+      // swallow inner failure, then run long teardown logic
+    }
+    await new Promise(resolve => setTimeout(resolve, 200))
+  }, 50)
+
+  aroundEach(async (runTest) => {
+    await runTest()
+    throw new Error('inner aroundEach teardown failure')
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('aroundEach enforces teardown timeout when inner error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachCaughtInnerErrorTeardownTimeoutSource,
+  }, {
+    maxConcurrency: 1,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": [
+            "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+const aroundAllCaughtInnerErrorTeardownTimeoutSource = `
+import { aroundAll, describe, expect, test } from 'vitest'
+
+describe.concurrent('suite', () => {
+  aroundAll(async (runSuite) => {
+    try {
+      await runSuite()
+    }
+    catch {
+      // swallow inner failure, then run long teardown logic
+    }
+    await new Promise(resolve => setTimeout(resolve, 200))
+  }, 50)
+
+  aroundAll(async (runSuite) => {
+    await runSuite()
+    throw new Error('inner aroundAll teardown failure')
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('aroundAll enforces teardown timeout when inner error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllCaughtInnerErrorTeardownTimeoutSource,
+  }, {
+    maxConcurrency: 1,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "suite": {
+          "__suite_errors__": [
+            "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
+          ],
+          "a": "passed",
+        },
+      },
+    }
+  `)
+})
