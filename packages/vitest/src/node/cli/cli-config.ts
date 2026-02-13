@@ -441,6 +441,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   logHeapUsage: {
     description: 'Show the size of heap for each test when running in node',
   },
+  detectAsyncLeaks: {
+    description: 'Detect asynchronous resources leaking from the test file (default: `false`)',
+  },
   allowOnly: {
     description:
       'Allow tests and suites that are marked as only (default: `!process.env.CI`)',
@@ -912,6 +915,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  staticParse: null,
+  staticParseConcurrency: null,
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
@@ -939,6 +944,13 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
+  },
+  staticParse: {
+    description: 'Parse files statically instead of running them to collect tests (default: false)',
+  },
+  staticParseConcurrency: {
+    description: 'How many tests to process at the same time (default: os.availableParallelism())',
+    argument: '<limit>',
   },
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',

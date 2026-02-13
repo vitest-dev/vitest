@@ -1,15 +1,11 @@
-import type { Task, TestAttachment } from '@vitest/runner'
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
 import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
-import crypto from 'node:crypto'
-import { promises as fs } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
+import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
-import mime from 'mime/lite'
-import { dirname, extname, relative, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
@@ -66,7 +62,6 @@ export default class HTMLReporter implements Reporter {
     this.reporterDir = dirname(htmlFilePath)
     this.htmlFilePath = htmlFilePath
 
-    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
@@ -82,30 +77,7 @@ export default class HTMLReporter implements Reporter {
     }
     const promises: Promise<void>[] = []
 
-    const processAttachments = (task: Task) => {
-      if (task.type === 'test') {
-        task.annotations.forEach((annotation) => {
-          const attachment = annotation.attachment
-          if (attachment) {
-            promises.push(this.processAttachment(attachment))
-          }
-        })
-        task.artifacts.forEach((artifact) => {
-          const attachments = artifact.attachments
-          if (attachments) {
-            attachments.forEach((attachment) => {
-              promises.push(this.processAttachment(attachment))
-            })
-          }
-        })
-      }
-      else {
-        task.tasks.forEach(processAttachments)
-      }
-    }
-
     promises.push(...result.files.map(async (file) => {
-      processAttachments(file)
       const projectName = file.projectName || ''
       const resolvedConfig = this.ctx.getProjectByName(projectName).config
       const browser = resolvedConfig.browser.enabled
@@ -130,42 +102,6 @@ export default class HTMLReporter implements Reporter {
 
     await Promise.all(promises)
     await this.writeReport(stringify(result))
-  }
-
-  async processAttachment(attachment: TestAttachment): Promise<void> {
-    if (attachment.path) {
-      // keep external resource as is, but remove body if it's set somehow
-      if (
-        attachment.path.startsWith('http://')
-        || attachment.path.startsWith('https://')
-      ) {
-        attachment.body = undefined
-        return
-      }
-
-      const buffer = await readFile(attachment.path)
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const filename = hash + extname(attachment.path)
-      // move the file into an html directory to make access/publishing UI easier
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
-      return
-    }
-
-    if (attachment.body) {
-      const buffer = typeof attachment.body === 'string'
-        ? Buffer.from(attachment.body, 'base64')
-        : Buffer.from(attachment.body)
-
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
-      const filename = `${hash}.${extension}`
-      // store the file in html directory instead of passing down as a body
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
-    }
   }
 
   async writeReport(report: string): Promise<void> {
@@ -197,6 +133,15 @@ export default class HTMLReporter implements Reporter {
         }
       }),
     )
+
+    // copy attachments
+    // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
+    if (existsSync(this.ctx.config.attachmentsDir)) {
+      const destAttachmentsDir = resolve(this.reporterDir, 'data')
+      await fs.rm(destAttachmentsDir, { recursive: true, force: true })
+      await fs.mkdir(destAttachmentsDir, { recursive: true })
+      await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    }
 
     this.ctx.logger.log(
       `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(

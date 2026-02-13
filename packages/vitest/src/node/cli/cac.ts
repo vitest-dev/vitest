@@ -339,7 +339,13 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       run: true,
     }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
-      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(
+        cliFilters.map(normalize),
+        {
+          staticParse: options.staticParse,
+          staticParseConcurrency: options.staticParseConcurrency,
+        },
+      )
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')

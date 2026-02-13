@@ -655,7 +655,7 @@ export class Vitest {
     await this._testRun.updated(packs, events).catch(noop)
   }
 
-  async collect(filters?: string[]): Promise<TestRunResult> {
+  async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
     return this._traces.$('vitest.collect', async (collectSpan) => {
       const filenamePattern = filters && filters?.length > 0 ? filters : []
       collectSpan.setAttribute('vitest.collect.filters', filenamePattern)
@@ -681,6 +681,13 @@ export class Vitest {
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
         return { testModules: [], unhandledErrors: [] }
+      }
+
+      if (options?.staticParse) {
+        const testModules = await this.experimental_parseSpecifications(files, {
+          concurrency: options.staticParseConcurrency,
+        })
+        return { testModules, unhandledErrors: [] }
       }
 
       return this.collectTests(files)
@@ -1453,7 +1460,7 @@ export class Vitest {
           }
 
           if (!this.reporters.some(r => r instanceof HangingProcessReporter)) {
-            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/reporters')
+            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/guide/reporters.html#hanging-process-reporter')
           }
         }
 
