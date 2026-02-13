@@ -47,7 +47,7 @@ test('deadlocks with insufficient maxConcurrency', async () => {
     'basic.test.ts': deadlockSource,
   }, {
     maxConcurrency: 2,
-    testTimeout: 1000,
+    testTimeout: 500,
   })
 
   // "a" and "b" fill both concurrency slots and wait for `defers[2]`.
@@ -58,11 +58,11 @@ test('deadlocks with insufficient maxConcurrency', async () => {
       "basic.test.ts": {
         "wrapper": {
           "a": [
-            "Test timed out in 1000ms.
+            "Test timed out in 500ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
           ],
           "b": [
-            "Test timed out in 1000ms.
+            "Test timed out in 500ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
           ],
           "c": "passed",
@@ -134,7 +134,7 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
     'basic.test.ts': suiteDeadlockSource,
   }, {
     maxConcurrency: 2,
-    testTimeout: 1000,
+    testTimeout: 500,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -143,11 +143,11 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
         "wrapper": {
           "1st suite": {
             "a": [
-              "Test timed out in 1000ms.
+              "Test timed out in 500ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
             ],
             "b": [
-              "Test timed out in 1000ms.
+              "Test timed out in 500ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
             ],
           },
