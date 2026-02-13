@@ -31,8 +31,18 @@ export default function toHaveTextContent(
 
   const checkingWithEmptyString = textContent !== '' && matcher === ''
 
+  const pass = !checkingWithEmptyString && matches(textContent, matcher)
+
+  // TODO:
+  // - markTrace each matcher failure?
+  // - or globally markTrace based on result.errors on test end?
+  // - or custom logic inside expect.element/poll?
+  // if (!pass == !this.isNot) {
+  //   console.log([pass, this.isNot])
+  // }
+
   return {
-    pass: !checkingWithEmptyString && matches(textContent, matcher),
+    pass,
     message: () => {
       const to = this.isNot ? 'not to' : 'to'
       return getMessage(

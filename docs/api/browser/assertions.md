@@ -46,7 +46,10 @@ interface ExpectPollOptions {
   // Defaults to "expect.poll.interval" config option
   interval?: number
   // Time to retry the assertion for in milliseconds
-  // Defaults to "expect.poll.timeout" config option
+  // Defaults to "expect.poll.timeout" config option.
+  // In Playwright, if no timeout is provided and
+  // browser.providerOptions.actionTimeout is not set,
+  // Vitest caps this timeout by the remaining test timeout.
   timeout?: number
   // The message printed when the assertion fails
   message?: string
@@ -54,7 +57,21 @@ interface ExpectPollOptions {
 ```
 
 ::: tip
-`expect.element` is a shorthand for `expect.poll(() => element)` and works in exactly the same way.
+If you use the Playwright provider, `expect.element` timeout can be capped by
+the remaining test time when `timeout` is omitted and
+[`browser.providerOptions.actionTimeout`](/config/browser/playwright#actiontimeout)
+is not configured. In this case, `expect.poll.timeout` is used as the base
+timeout and capped by the remaining test time.
+
+Using a fixed assertion/action timeout that is lower than `testTimeout` usually
+improves failure reporting: the failing assertion/action is reported directly,
+instead of ending with a generic test timeout.
+:::
+
+::: tip
+`expect.element` is built on top of `expect.poll(() => element)`.
+In Playwright mode, timeout handling can additionally use the remaining test
+time (see note above).
 
 `toHaveTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
 
