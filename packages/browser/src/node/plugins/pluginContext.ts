@@ -67,6 +67,7 @@ async function generateContextFile(
     .filter(command => !command.startsWith('__vitest'))
     .map((command) => {
       if (command === 'markTrace') {
+        // TODO: can we make this no-op on client side when tracing is not active?
         return `    ["${command}"]: (name) => __vitest_browser_runner__.commands.triggerCommand("${command}", [name, new Error('__vitest_mark_trace__').stack]),`
       }
       return `    ["${command}"]: (...args) => __vitest_browser_runner__.commands.triggerCommand("${command}", args),`
