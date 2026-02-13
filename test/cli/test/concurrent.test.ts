@@ -42,42 +42,6 @@ describe.concurrent('wrapper', () => {
 })
 `
 
-const suiteDeadlockSource = `
-import { describe, expect, test } from 'vitest'
-import { createDefer } from '@vitest/utils/helpers'
-
-describe.concurrent('wrapper', () => {
-  const defers = [
-    createDefer<void>(),
-    createDefer<void>(),
-    createDefer<void>(),
-  ]
-
-  describe('1st suite', () => {
-    test('a', async () => {
-      expect(1).toBe(1)
-      defers[0].resolve()
-      await defers[2]
-    })
-
-    test('b', async () => {
-      expect(1).toBe(1)
-      await defers[0]
-      defers[1].resolve()
-      await defers[2]
-    })
-  })
-
-  describe('2nd suite', () => {
-    test('c', async () => {
-      expect(1).toBe(1)
-      await defers[1]
-      defers[2].resolve()
-    })
-  })
-})
-`
-
 test('deadlocks with insufficient maxConcurrency', async () => {
   const { errorTree } = await runInlineTests({
     'basic.test.ts': deadlockSource,
@@ -129,6 +93,42 @@ test('passes when maxConcurrency is high enough', async () => {
   `)
 })
 
+const suiteDeadlockSource = `
+import { describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+describe.concurrent('wrapper', () => {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  describe('1st suite', () => {
+    test('a', async () => {
+      expect(1).toBe(1)
+      defers[0].resolve()
+      await defers[2]
+    })
+
+    test('b', async () => {
+      expect(1).toBe(1)
+      await defers[0]
+      defers[1].resolve()
+      await defers[2]
+    })
+  })
+
+  describe('2nd suite', () => {
+    test('c', async () => {
+      expect(1).toBe(1)
+      await defers[1]
+      defers[2].resolve()
+    })
+  })
+})
+`
+
 test('suite deadlocks with insufficient maxConcurrency', async () => {
   const { errorTree } = await runInlineTests({
     'basic.test.ts': suiteDeadlockSource,
@@ -179,6 +179,314 @@ test('suite passes when maxConcurrency is high enough', async () => {
           "2nd suite": {
             "c": "passed",
           },
+        },
+      },
+    }
+  `)
+})
+
+const beforeAllNeighboringSuitesSource = `
+import { beforeAll, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('s1', () => {
+  beforeAll(async () => {
+    defers[0].resolve()
+    await defers[1]
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+
+describe.concurrent('s2', () => {
+  beforeAll(async () => {
+    await defers[0]
+    defers[1].resolve()
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': beforeAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 1000,
+  })
+
+  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "skipped",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring suite beforeAll passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': beforeAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const afterAllNeighboringSuitesSource = `
+import { afterAll, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('s1', () => {
+  afterAll(async () => {
+    defers[0].resolve()
+    await defers[1]
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+
+describe.concurrent('s2', () => {
+  afterAll(async () => {
+    await defers[0]
+    defers[1].resolve()
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': afterAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 1000,
+  })
+
+  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring suite afterAll passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': afterAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const beforeEachDeadlockSource = `
+import { beforeEach, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+describe.concurrent('wrapper', () => {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  beforeEach(async () => {
+    defers[0].resolve()
+    await defers[2]
+  })
+
+  beforeEach(async () => {
+    await defers[0]
+    defers[1].resolve()
+    await defers[2]
+  })
+
+  beforeEach(async () => {
+    await defers[1]
+    defers[2].resolve()
+  })
+
+  test('t', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': beforeEachDeadlockSource,
+  }, {
+    maxConcurrency: 2,
+    sequence: { hooks: 'parallel' },
+    hookTimeout: 1000,
+  })
+
+  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "t": [
+            "Hook timed out in 1000ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('beforeEach passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': beforeEachDeadlockSource,
+  }, {
+    maxConcurrency: 3,
+    sequence: { hooks: 'parallel' },
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "t": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const afterEachDeadlockSource = `
+import { afterEach, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+describe.concurrent('wrapper', () => {
+  const defers = [
+    createDefer<void>(),
+    createDefer<void>(),
+    createDefer<void>(),
+  ]
+
+  afterEach(async () => {
+    defers[0].resolve()
+    await defers[2]
+  })
+
+  afterEach(async () => {
+    await defers[0]
+    defers[1].resolve()
+    await defers[2]
+  })
+
+  afterEach(async () => {
+    await defers[1]
+    defers[2].resolve()
+  })
+
+  test('t', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('afterEach deadlocks with insufficient maxConcurrency', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': afterEachDeadlockSource,
+  }, {
+    maxConcurrency: 2,
+    sequence: { hooks: 'parallel' },
+    hookTimeout: 1000,
+  })
+
+  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "t": [
+            "Hook timed out in 1000ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('afterEach passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': afterEachDeadlockSource,
+  }, {
+    maxConcurrency: 3,
+    sequence: { hooks: 'parallel' },
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "t": "passed",
         },
       },
     }
