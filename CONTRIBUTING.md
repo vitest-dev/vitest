@@ -67,7 +67,7 @@ And re-run `pnpm install` to link the package.
 Add a `.npmrc` file with following line next to the `package.json`:
 
 ```sh
-VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
+VITEST_MODULE_DIRECTORIES=/node_modules/,/packages/
 ```
 
 ## Pull Request Guidelines
