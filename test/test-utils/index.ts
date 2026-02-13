@@ -1,6 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
@@ -423,7 +423,7 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, context?: TestContext) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (ensureConfig && !hasConfig) {
@@ -436,7 +436,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
-  onTestFinished(() => {
+  (context?.onTestFinished ?? onTestFinished)(() => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
       fs.rmSync(root, { recursive: true, force: true })
     }
@@ -493,9 +493,10 @@ export async function runInlineTests(
   structure: TestFsStructure,
   config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
+  context?: TestContext,
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure)
+  const fs = useFS(root, structure, undefined, context)
   const vitest = await runVitest({
     root,
     ...config,

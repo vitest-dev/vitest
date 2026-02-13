@@ -172,15 +172,18 @@ describe('serial', { concurrent: true }, () => {
       name: 'test-bound extend & local extend',
       test: testBoundLocalExtend,
     },
-  ] as const)('works with $name', async ({ options, test }, { expect }) => {
+  ] as const)('works with $name', async ({ options, test }, context) => {
     const { stdout, stderr } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
+      undefined,
+      context,
     )
 
+    const { expect } = context
     expect(stderr).toBe('')
     expect(stdout.replace(/[\d.]+ms/g, '<time>')).toMatchInlineSnapshot(`
       "TAP version 13
@@ -210,15 +213,18 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'global import',
       test: withConcurrency(globalImport),
     },
-  ] as const)('fails with $name', async ({ options, test }, { expect }) => {
+  ] as const)('fails with $name', async ({ options, test }, context) => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
+      undefined,
+      context,
     )
 
+    const { expect } = context
     expect(
       stdout
         .replace(/[\d.]+m?s/g, '<time>')
