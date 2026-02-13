@@ -786,6 +786,8 @@ function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   })
 }
 
+let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
+
 export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunSuite?.(suite)
 
@@ -829,13 +831,13 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
         try {
           // beforeAll
           try {
-            beforeAllCleanups = await $('suite.beforeAll', () => callSuiteHook(
+            beforeAllCleanups = await $('suite.beforeAll', () => limitMaxConcurrency(() => callSuiteHook(
               suite,
               suite,
               'beforeAll',
               runner,
               [suite],
-            ))
+            )))
           }
           catch (e) {
             failTask(suite.result!, e, runner.config.diffOptions)
@@ -875,9 +877,9 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
         finally {
           // afterAll runs even if beforeAll or suite children fail
           try {
-            await $('suite.afterAll', () => callSuiteHook(suite, suite, 'afterAll', runner, [suite]))
+            await $('suite.afterAll', () => limitMaxConcurrency(() => callSuiteHook(suite, suite, 'afterAll', runner, [suite])))
             if (beforeAllCleanups.length) {
-              await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
+              await $('suite.cleanup', () => limitMaxConcurrency(() => callCleanupHooks(runner, beforeAllCleanups)))
             }
             if (suite.file === suite) {
               const contexts = TestFixtures.getFileContexts(suite.file)
@@ -923,8 +925,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     updateTask('suite-finished', suite, runner)
   }
 }
-
-let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   const $ = runner.trace!
