@@ -9,6 +9,6 @@ outline: deep
 - **Default**: `5`
 - **CLI**: `--max-concurrency=10`, `--maxConcurrency=10`
 
-The maximum number of tests and hooks that can run at the same time.
+The maximum number of tests and hooks that can run at the same time when using `test.concurrent` or `describe.concurrent`.
 
-[`sequence.hooks`](/config/sequence#sequence-hooks) controls hook ordering. With `sequence.hooks: 'parallel'`, hook execution is bounded by this `maxConcurrency` limit.
+The execution order of hooks within a single group is controlled by [`sequence.hooks`](/config/sequence#sequence-hooks). With `sequence.hooks: 'parallel'`, the parallelism is limited by `maxConcurrency`.
