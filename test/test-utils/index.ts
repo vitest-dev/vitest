@@ -8,6 +8,7 @@ import type {
   TestCollection,
   TestModule,
   TestSpecification,
+  TestSuite,
   TestUserConfig,
   Vitest,
 } from 'vitest/node'
@@ -555,16 +556,33 @@ export class StableTestFileOrderSorter {
 }
 
 export function buildErrorTree(testModules: TestModule[]) {
-  return buildTestTree(testModules, (testCase) => {
-    const result = testCase.result()
-    if (result.state === 'failed') {
-      return result.errors.map(e => e.message)
-    }
-    return result.state
-  })
+  return buildTestTree(
+    testModules,
+    (testCase) => {
+      const result = testCase.result()
+      if (result.state === 'failed') {
+        return result.errors.map(e => e.message)
+      }
+      return result.state
+    },
+    (testSuite, suiteChildren) => {
+      const errors = testSuite.errors().map(error => error.message)
+      if (errors.length > 0) {
+        return {
+          ...suiteChildren,
+          __suite_errors__: errors,
+        }
+      }
+      return suiteChildren
+    },
+  )
 }
 
-export function buildTestTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
+export function buildTestTree(
+  testModules: TestModule[],
+  onTestCase?: (result: TestCase) => unknown,
+  onTestSuite?: (testSuite: TestSuite, suiteChildren: Record<string, any>) => unknown,
+) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -574,7 +592,7 @@ export function buildTestTree(testModules: TestModule[], onTestCase?: (result: T
       if (child.type === 'suite') {
         // Recursively walk suite children
         const suiteChildren = walkCollection(child.children)
-        node[child.name] = suiteChildren
+        node[child.name] = onTestSuite ? onTestSuite(child, suiteChildren) : suiteChildren
       }
       else if (child.type === 'test') {
         const result = child.result()

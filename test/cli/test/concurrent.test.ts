@@ -218,18 +218,21 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': beforeAllNeighboringSuitesSource,
   }, {
     maxConcurrency: 1,
     hookTimeout: 1000,
   })
 
-  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "s1": {
+          "__suite_errors__": [
+            "Hook timed out in 1000ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+          ],
           "a": "skipped",
         },
         "s2": {
@@ -295,18 +298,21 @@ describe.concurrent('s2', () => {
 `
 
 test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': afterAllNeighboringSuitesSource,
   }, {
     maxConcurrency: 1,
     hookTimeout: 1000,
   })
 
-  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "s1": {
+          "__suite_errors__": [
+            "Hook timed out in 1000ms.
+    If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
+          ],
           "a": "passed",
         },
         "s2": {
@@ -373,7 +379,7 @@ describe.concurrent('wrapper', () => {
 `
 
 test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': beforeEachDeadlockSource,
   }, {
     maxConcurrency: 2,
@@ -381,7 +387,6 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
     hookTimeout: 1000,
   })
 
-  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
@@ -450,7 +455,7 @@ describe.concurrent('wrapper', () => {
 `
 
 test('afterEach deadlocks with insufficient maxConcurrency', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': afterEachDeadlockSource,
   }, {
     maxConcurrency: 2,
@@ -458,7 +463,6 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
     hookTimeout: 1000,
   })
 
-  expect(stderr.match(/Hook timed out in 1000ms\./g)?.length ?? 0).toBeGreaterThan(0)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
