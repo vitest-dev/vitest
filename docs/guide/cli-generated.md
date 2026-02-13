@@ -767,7 +767,7 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 - **CLI:** `--maxConcurrency <number>`
 - **Config:** [maxConcurrency](/config/maxconcurrency)
 
-Maximum number of concurrent tests in a suite (default: `5`)
+Maximum number of tests and hooks allowed to run concurrently (default: `5`)
 
 ### expect.requireAssertions
 

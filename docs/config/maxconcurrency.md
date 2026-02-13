@@ -9,6 +9,6 @@ outline: deep
 - **Default**: `5`
 - **CLI**: `--max-concurrency=10`, `--maxConcurrency=10`
 
-A number of tests and hooks that are allowed to run at the same time marked with `test.concurrent` and `describe.concurrent`.
+The maximum number of tests and hooks allowed to run at the same time when using `test.concurrent` and `describe.concurrent`.
 
-Test above this limit will be queued to run when available slot appears.
+Tasks above this limit will be queued until a slot becomes available.
