@@ -222,7 +222,7 @@ test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', a
     'basic.test.ts': beforeAllNeighboringSuitesSource,
   }, {
     maxConcurrency: 1,
-    hookTimeout: 1000,
+    hookTimeout: 500,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -230,7 +230,7 @@ test('neighboring suite beforeAll deadlocks with insufficient maxConcurrency', a
       "basic.test.ts": {
         "s1": {
           "__suite_errors__": [
-            "Hook timed out in 1000ms.
+            "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
           "a": "skipped",
@@ -302,7 +302,7 @@ test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', as
     'basic.test.ts': afterAllNeighboringSuitesSource,
   }, {
     maxConcurrency: 1,
-    hookTimeout: 1000,
+    hookTimeout: 500,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -310,7 +310,7 @@ test('neighboring suite afterAll deadlocks with insufficient maxConcurrency', as
       "basic.test.ts": {
         "s1": {
           "__suite_errors__": [
-            "Hook timed out in 1000ms.
+            "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
           "a": "passed",
@@ -384,7 +384,7 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
   }, {
     maxConcurrency: 2,
     sequence: { hooks: 'parallel' },
-    hookTimeout: 1000,
+    hookTimeout: 500,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -392,7 +392,7 @@ test('beforeEach deadlocks with insufficient maxConcurrency', async () => {
       "basic.test.ts": {
         "wrapper": {
           "t": [
-            "Hook timed out in 1000ms.
+            "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
         },
@@ -460,7 +460,7 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
   }, {
     maxConcurrency: 2,
     sequence: { hooks: 'parallel' },
-    hookTimeout: 1000,
+    hookTimeout: 500,
   })
 
   expect(errorTree()).toMatchInlineSnapshot(`
@@ -468,7 +468,7 @@ test('afterEach deadlocks with insufficient maxConcurrency', async () => {
       "basic.test.ts": {
         "wrapper": {
           "t": [
-            "Hook timed out in 1000ms.
+            "Hook timed out in 500ms.
     If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".",
           ],
         },
@@ -491,6 +491,318 @@ test('afterEach passes when maxConcurrency is high enough', async () => {
       "basic.test.ts": {
         "wrapper": {
           "t": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundAllNeighboringSuitesSource = `
+import { aroundAll, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('s1', () => {
+  aroundAll(async (runSuite) => {
+    defers[0].resolve()
+    await defers[1]
+    await runSuite()
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+
+describe.concurrent('s2', () => {
+  aroundAll(async (runSuite) => {
+    await defers[0]
+    defers[1].resolve()
+    await runSuite()
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring suite aroundAll deadlocks with insufficient maxConcurrency', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 500,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "__suite_errors__": [
+            "The setup phase of \"aroundAll\" hook timed out after 500ms.",
+          ],
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring suite aroundAll passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllNeighboringSuitesSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundAllNeighboringSuitesPostSource = `
+import { aroundAll, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('s1', () => {
+  aroundAll(async (runSuite) => {
+    await runSuite()
+    defers[0].resolve()
+    await defers[1]
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+
+describe.concurrent('s2', () => {
+  aroundAll(async (runSuite) => {
+    await runSuite()
+    await defers[0]
+    defers[1].resolve()
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring suite aroundAll teardown deadlocks with insufficient maxConcurrency', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllNeighboringSuitesPostSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 500,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "__suite_errors__": [
+            "The teardown phase of \"aroundAll\" hook timed out after 500ms.",
+          ],
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring suite aroundAll teardown passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllNeighboringSuitesPostSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "a": "passed",
+        },
+        "s2": {
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundEachNeighboringTestsSource = `
+import { aroundEach, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('wrapper', () => {
+  aroundEach(async (runTest, context) => {
+    if (context.task.name === 'a') {
+      defers[0].resolve()
+      await defers[1]
+      await runTest()
+      return
+    }
+
+    await defers[0]
+    defers[1].resolve()
+    await runTest()
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring test aroundEach deadlocks with insufficient maxConcurrency', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachNeighboringTestsSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 500,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": [
+            "The setup phase of \"aroundEach\" hook timed out after 500ms.",
+          ],
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring test aroundEach passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachNeighboringTestsSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": "passed",
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+const aroundEachNeighboringTestsPostSource = `
+import { aroundEach, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const defers = [
+  createDefer<void>(),
+  createDefer<void>(),
+]
+
+describe.concurrent('wrapper', () => {
+  aroundEach(async (runTest, context) => {
+    await runTest()
+
+    if (context.task.name === 'a') {
+      defers[0].resolve()
+      await defers[1]
+      return
+    }
+
+    await defers[0]
+    defers[1].resolve()
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+
+  test('b', () => {
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring test aroundEach teardown deadlocks with insufficient maxConcurrency', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachNeighboringTestsPostSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 500,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": [
+            "The teardown phase of \"aroundEach\" hook timed out after 500ms.",
+          ],
+          "b": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('neighboring test aroundEach teardown passes when maxConcurrency is high enough', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': aroundEachNeighboringTestsPostSource,
+  }, {
+    maxConcurrency: 2,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "wrapper": {
+          "a": "passed",
+          "b": "passed",
         },
       },
     }

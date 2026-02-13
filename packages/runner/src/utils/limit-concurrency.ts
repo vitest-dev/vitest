@@ -1,10 +1,16 @@
 // A compact (code-wise, probably not memory-wise) singly linked list node.
 type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
+export interface ConcurrencyLimiter {
+  <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args): Promise<T>
+  acquire: () => Promise<void>
+  release: () => void
+}
+
 /**
  * Return a function for running multiple async operations with limited concurrency.
  */
-export function limitConcurrency(concurrency: number = Infinity): <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T> {
+export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLimiter {
   // The number of currently active + pending tasks.
   let count = 0
 
@@ -14,8 +20,11 @@ export function limitConcurrency(concurrency: number = Infinity): <Args extends 
   let head: undefined | QueueNode<() => void>
   let tail: undefined | QueueNode<() => void>
 
-  // A bookkeeping function executed whenever a task has been run to completion.
-  const finish = () => {
+  const release = () => {
+    if (count === 0) {
+      return
+    }
+
     count--
 
     // Check if there are further pending tasks in the queue.
@@ -30,11 +39,7 @@ export function limitConcurrency(concurrency: number = Infinity): <Args extends 
     }
   }
 
-  return (func, ...args) => {
-    // Create a promise chain that:
-    //  1. Waits for its turn in the task queue (if necessary).
-    //  2. Runs the task.
-    //  3. Allows the next pending task (if any) to run.
+  const acquire = () => {
     return new Promise<void>((resolve) => {
       if (count++ < concurrency) {
         // No need to queue if fewer than maxConcurrency tasks are running.
@@ -48,10 +53,23 @@ export function limitConcurrency(concurrency: number = Infinity): <Args extends 
         // No other pending tasks, initialize the queue with a new tail and head.
         head = tail = [resolve]
       }
-    }).then(() => {
+    })
+  }
+
+  const limit: ConcurrencyLimiter = (func, ...args) => {
+    // Create a promise chain that:
+    //  1. Waits for its turn in the task queue (if necessary).
+    //  2. Runs the task.
+    //  3. Allows the next pending task (if any) to run.
+    return acquire().then(() => {
       // Running func here ensures that even a non-thenable result or an
       // immediately thrown error gets wrapped into a Promise.
       return func(...args)
-    }).finally(finish)
+    }).finally(release)
   }
+
+  limit.acquire = acquire
+  limit.release = release
+
+  return limit
 }

@@ -308,7 +308,9 @@ async function callAroundHooks<THook extends Function>(
     const stackTraceError = getAroundHookStackTrace(hook)
 
     let useCalled = false
-    let setupTimeout: { promise: Promise<never>; clear: () => void }
+    let setupPermitHeld = false
+    let teardownPermitHeld = false
+    let setupTimeout: { promise: Promise<never>; clear: () => void } | undefined
     let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
@@ -342,66 +344,98 @@ async function callAroundHooks<THook extends Function>(
       resolveUseCalled()
 
       // Setup phase completed - clear setup timer
-      setupTimeout.clear()
+      setupTimeout?.clear()
+      if (setupPermitHeld) {
+        limitMaxConcurrency.release()
+        setupPermitHeld = false
+      }
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1)
+      let innerError: unknown
+      try {
+        await runNextHook(index + 1)
+      }
+      catch (error) {
+        innerError = error
+      }
+
+      await limitMaxConcurrency.acquire()
+      teardownPermitHeld = true
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
+
+      if (innerError) {
+        throw innerError
+      }
     }
 
-    // Start setup timeout
-    setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
+    await limitMaxConcurrency.acquire()
+    setupPermitHeld = true
 
-    // Run the hook in the background
-    ;(async () => {
-      try {
-        await invokeHook(hook, use)
-        if (!useCalled) {
-          throw new AroundHookSetupError(
-            `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
-            + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
-          )
+    try {
+      // Start setup timeout
+      setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
+
+      // Run the hook in the background
+      ;(async () => {
+        try {
+          await invokeHook(hook, use)
+          if (!useCalled) {
+            throw new AroundHookSetupError(
+              `The \`${callbackName}\` callback was not called in the \`${hookName}\` hook. `
+              + `Make sure to call \`${callbackName}\` to run the ${hookName === 'aroundEach' ? 'test' : 'suite'}.`,
+            )
+          }
+          resolveHookComplete()
         }
-        resolveHookComplete()
-      }
-      catch (error) {
-        rejectHookComplete(error as Error)
-      }
-    })()
+        catch (error) {
+          rejectHookComplete(error as Error)
+        }
+      })()
 
-    // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
-    try {
+      // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
+      try {
+        await Promise.race([
+          useCalledPromise,
+          hookCompletePromise,
+          setupTimeout.promise,
+        ])
+      }
+      finally {
+        setupTimeout.clear()
+      }
+
+      // Wait for use() to return (inner hooks complete) OR hook to complete (error during inner hooks)
       await Promise.race([
-        useCalledPromise,
+        useReturnedPromise,
         hookCompletePromise,
-        setupTimeout.promise,
       ])
+
+      // Now teardownTimeout is guaranteed to be set
+      // Wait for hook to complete (teardown) OR teardown timeout
+      try {
+        await Promise.race([
+          hookCompletePromise,
+          teardownTimeout!.promise,
+        ])
+      }
+      finally {
+        teardownTimeout?.clear()
+      }
     }
     finally {
-      setupTimeout.clear()
-    }
-
-    // Wait for use() to return (inner hooks complete) OR hook to complete (error during inner hooks)
-    await Promise.race([
-      useReturnedPromise,
-      hookCompletePromise,
-    ])
-
-    // Now teardownTimeout is guaranteed to be set
-    // Wait for hook to complete (teardown) OR teardown timeout
-    try {
-      await Promise.race([
-        hookCompletePromise,
-        teardownTimeout!.promise,
-      ])
-    }
-    finally {
-      teardownTimeout!.clear()
+      setupTimeout?.clear()
+      teardownTimeout?.clear()
+      if (teardownPermitHeld) {
+        limitMaxConcurrency.release()
+      }
+      else if (setupPermitHeld) {
+        limitMaxConcurrency.release()
+      }
     }
   }
 
