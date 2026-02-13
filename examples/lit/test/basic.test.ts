@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { page } from 'vitest/browser'
+import { commands, page } from 'vitest/browser'
 
 import '../src/my-button.js'
 
 describe('Button with increment', async () => {
-  beforeEach(() => {
+  beforeEach(async (ctx) => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
+    await commands.markTrace('beforeEach / render')
+    ctx.onTestFinished(async (ctx) => {
+      await commands.markTrace(`onTestFinished / ${ctx.task.result.state}`)
+    })
   })
 
   it('should increment the count on each click', async () => {

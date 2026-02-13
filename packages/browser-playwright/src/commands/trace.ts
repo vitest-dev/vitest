@@ -1,3 +1,4 @@
+import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
@@ -53,6 +54,32 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
     context.provider.pendingTraces.delete(path)
     await context.context.tracing.stopChunk({ path })
     return { tracePath: path }
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const markTrace: BrowserCommand<[name: string, stack?: string]> = async (
+  context,
+  name,
+  stack,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    // skip if tracing is not active
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    let location: ParsedStack | undefined
+    if (stack) {
+      const parsedStacks = context.project.browser!.parseStacktrace(stack)
+      location = parsedStacks[0]
+    }
+    // mark trace via group/groupEnd with empty `evaluate` to force snapshot.
+    // TODO: request new tracing API in playwright to add trace point
+    // with arbitrary snapshot, screenshot, etc. options.
+    await context.context.tracing.group(name, { location })
+    await context.page.evaluate(() => 0)
+    await context.context.tracing.groupEnd()
+    return
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
