@@ -269,15 +269,18 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'test-bound extend & local extend',
       test: withConcurrency(testBoundLocalExtend),
     },
-  ])('works with $name', async ({ test }, { expect }) => {
+  ])('works with $name', async ({ test }, context) => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'] },
+      undefined,
+      context,
     )
 
+    const { expect } = context
     expect(stdout.replace(/[\d.]+m?s/g, '<time>')).toMatchInlineSnapshot(`
       "TAP version 13
       1..1
