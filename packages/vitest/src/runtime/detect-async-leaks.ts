@@ -28,14 +28,19 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
       }
 
       let stack = ''
+      const limit = Error.stackTraceLimit
 
       // VitestModuleEvaluator's async wrapper of node:vm causes out-of-bound stack traces, simply skip it.
       // Crash fixed in https://github.com/vitejs/vite/pull/21585
       try {
+        Error.stackTraceLimit = 100
         stack = new Error('VITEST_DETECT_ASYNC_LEAKS').stack || ''
       }
       catch {
         return
+      }
+      finally {
+        Error.stackTraceLimit = limit
       }
 
       if (!stack.includes(testFile)) {
