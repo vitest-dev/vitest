@@ -716,7 +716,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   maxConcurrency: {
-    description: 'Maximum number of concurrent tests and suite lifecycle hooks in a file (default: `5`)',
+    description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
   expect: {

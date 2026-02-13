@@ -11,4 +11,4 @@ outline: deep
 
 The maximum number of tests and hooks that can run at the same time when using `test.concurrent` or `describe.concurrent`.
 
-The execution order of hooks within a single group is controlled by [`sequence.hooks`](/config/sequence#sequence-hooks). With `sequence.hooks: 'parallel'`, the parallelism is limited by `maxConcurrency`.
+The hook execution order within a single group is also controlled by [`sequence.hooks`](/config/sequence#sequence-hooks). With `sequence.hooks: 'parallel'`, the execution is bounded by the same limit of [`maxConcurrency`](/config/maxconcurrency).
