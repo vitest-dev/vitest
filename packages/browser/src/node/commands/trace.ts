@@ -14,5 +14,7 @@ export const markTrace = (async (
   name: string,
   stack?: string,
 ) => {
-  await context.triggerCommand('__vitest_markTrace', name, stack)
+  if (context.provider.name === 'playwright') {
+    await context.triggerCommand('__vitest_markTrace', name, stack)
+  }
 }) as BrowserCommand<[name: string]>
