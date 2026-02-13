@@ -342,13 +342,23 @@ async function callAroundHooks<THook extends Function>(
       setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1)
+      let nextError: { value: unknown } | undefined
+      try {
+        await runNextHook(index + 1)
+      }
+      catch (value) {
+        nextError = { value }
+      }
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
+
+      if (nextError) {
+        throw nextError.value
+      }
     }
 
     // Start setup timeout
@@ -394,11 +404,11 @@ async function callAroundHooks<THook extends Function>(
     try {
       await Promise.race([
         hookCompletePromise,
-        teardownTimeout!.promise,
+        teardownTimeout?.promise,
       ])
     }
     finally {
-      teardownTimeout!.clear()
+      teardownTimeout?.clear()
     }
   }
 
