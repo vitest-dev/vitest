@@ -241,6 +241,7 @@ interface AroundHooksOptions<THook extends Function> {
   hookName: 'aroundEach' | 'aroundAll'
   callbackName: 'runTest()' | 'runSuite()'
   onTimeout?: (error: Error) => void
+  onInnerError?: (error: unknown) => void
   invokeHook: (hook: THook, use: () => Promise<void>) => Awaitable<unknown>
 }
 
@@ -263,7 +264,7 @@ async function callAroundHooks<THook extends Function>(
   runInner: () => Promise<void>,
   options: AroundHooksOptions<THook>,
 ): Promise<void> {
-  const { hooks, hookName, callbackName, onTimeout, invokeHook } = options
+  const { hooks, hookName, callbackName, onTimeout, onInnerError, invokeHook } = options
 
   if (!hooks.length) {
     await runInner()
@@ -369,7 +370,7 @@ async function callAroundHooks<THook extends Function>(
       resolveUseReturned()
 
       if (innerError) {
-        throw innerError
+        onInnerError?.(innerError)
       }
     }
 
@@ -444,12 +445,14 @@ async function callAroundHooks<THook extends Function>(
 
 async function callAroundAllHooks(
   suite: Suite,
+  runner: VitestRunner,
   runSuiteInner: () => Promise<void>,
 ): Promise<void> {
   await callAroundHooks(runSuiteInner, {
     hooks: getAroundAllHooks(suite),
     hookName: 'aroundAll',
     callbackName: 'runSuite()',
+    onInnerError: error => failTask(suite.result!, error, runner.config.diffOptions),
     invokeHook: (hook, use) => hook(use, suite),
   })
 }
@@ -457,6 +460,7 @@ async function callAroundAllHooks(
 async function callAroundEachHooks(
   suite: Suite,
   test: Test,
+  runner: VitestRunner,
   runTest: (fixtureCheckpoint: number) => Promise<void>,
 ): Promise<void> {
   await callAroundHooks(
@@ -468,6 +472,7 @@ async function callAroundEachHooks(
       hooks: getAroundEachHooks(suite),
       hookName: 'aroundEach',
       callbackName: 'runTest()',
+      onInnerError: error => failTask(test.result!, error, runner.config.diffOptions),
       onTimeout: error => abortContextSignal(test.context, error),
       invokeHook: (hook, use) => hook(use, test.context, suite),
     },
@@ -626,7 +631,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
       // but BEFORE the test runs. This allows us to clean up only fixtures created
       // inside runTest while preserving aroundEach fixtures for teardown.
-      await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
+      await callAroundEachHooks(suite, test, runner, async (fixtureCheckpoint) => {
         try {
           await runner.onBeforeTryTask?.(test, {
             retry: retryCount,
@@ -861,7 +866,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     let suiteRan = false
 
     try {
-      await callAroundAllHooks(suite, async () => {
+      await callAroundAllHooks(suite, runner, async () => {
         suiteRan = true
         try {
           // beforeAll

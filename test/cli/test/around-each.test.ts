@@ -920,7 +920,8 @@ test('multiple aroundEach hooks with different timeouts', async () => {
 
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     ">> outer setup
-    >> inner setup start"
+    >> inner setup start
+    >> outer teardown"
   `)
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -982,7 +983,8 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     ">> outer setup
     >> inner setup
     >> test
-    >> inner teardown start"
+    >> inner teardown start
+    >> outer teardown"
   `)
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -1095,7 +1097,53 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
       "caught-inner-error-timeout.test.ts": {
         "suite": {
           "test": [
+            "inner aroundEach teardown failure",
             "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('runTest does not throw when inner aroundEach fails', async () => {
+  const { errorTree } = await runInlineTests({
+    'non-throwing-run-test.test.ts': `
+      import { aroundEach, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundEach(async (runTest) => {
+          let caught = false
+          try {
+            await runTest()
+          }
+          catch {
+            caught = true
+          }
+
+          if (caught) {
+            throw new Error('runTest should not throw')
+          }
+        })
+
+        aroundEach(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundEach teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "non-throwing-run-test.test.ts": {
+        "suite": {
+          "test": [
+            "inner aroundEach teardown failure",
           ],
         },
       },
@@ -1705,7 +1753,54 @@ test('aroundAll teardown timeout works when runSuite error is caught', async () 
       "caught-inner-suite-error-timeout.test.ts": {
         "suite": {
           "__suite_errors__": [
+            "inner aroundAll teardown failure",
             "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
+          ],
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('runSuite does not throw when inner aroundAll fails', async () => {
+  const { errorTree } = await runInlineTests({
+    'non-throwing-run-suite.test.ts': `
+      import { aroundAll, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundAll(async (runSuite) => {
+          let caught = false
+          try {
+            await runSuite()
+          }
+          catch {
+            caught = true
+          }
+
+          if (caught) {
+            throw new Error('runSuite should not throw')
+          }
+        })
+
+        aroundAll(async (runSuite) => {
+          await runSuite()
+          throw new Error('inner aroundAll teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "non-throwing-run-suite.test.ts": {
+        "suite": {
+          "__suite_errors__": [
+            "inner aroundAll teardown failure",
           ],
           "test": "passed",
         },
