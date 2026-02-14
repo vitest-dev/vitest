@@ -77,6 +77,25 @@ export class TestFixtures {
     return this._registrations
   }
 
+  /**
+   * @internal
+   */
+  resolveFixtures(): UserFixtures {
+    const fixtures: UserFixtures = {}
+    const registrations = this._registrations
+
+    for (const [name, fixture] of registrations.entries()) {
+      const options: FixtureOptions = {
+        auto: fixture.auto,
+        scope: fixture.scope,
+        injected: fixture.injected,
+      }
+      fixtures[name] = [fixture.value, options]
+    }
+
+    return fixtures
+  }
+
   override(runner: VitestRunner, userFixtures: UserFixtures): void {
     const { suite: currentSuite, file } = getCurrentSuite()
     const suite = currentSuite || file
