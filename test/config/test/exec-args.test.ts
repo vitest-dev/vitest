@@ -40,7 +40,7 @@ test('should not pass execArgv to workers when not specified in the config', asy
     nodeOptions: {
       cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
       env: {
-        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
         NO_COLOR: '1',
       },
     },
@@ -63,7 +63,7 @@ test('should let allowed args pass to workers', async () => {
     nodeOptions: {
       cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
       env: {
-        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        VITEST_MODULE_DIRECTORIES: '/node_modules/,/packages/',
         NO_COLOR: '1',
       },
     },

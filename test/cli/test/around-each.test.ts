@@ -1892,3 +1892,133 @@ test('tests are skipped when aroundAll setup fails', async () => {
     }
   `)
 })
+
+test('aroundEach teardown timeout works when runTest error is caught', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundEach, afterAll, describe, expect, test } from 'vitest'
+
+      let errorCaught = false
+
+      afterAll(() => {
+        expect(errorCaught).toBe(true)
+      })
+
+      describe('suite', () => {
+        aroundEach(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            errorCaught = true
+          }
+          // this should timeout
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundEach(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundEach teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite > test
+    AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundEach(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": [
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('aroundAll teardown timeout works when runTest error is caught', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundAll, afterAll, describe, expect, test } from 'vitest'
+
+      let errorCaught = false
+
+      afterAll(() => {
+        expect(errorCaught).toBe(true)
+      })
+
+      describe('suite', () => {
+        aroundAll(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            errorCaught = true
+          }
+          // this should timeout
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundAll(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundAll teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite
+    AroundHookTeardownError: The teardown phase of "aroundAll" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundAll(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
