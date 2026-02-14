@@ -30,7 +30,7 @@ describe('locator.and', () => {
     <button title="Testing framework">Vitest</button>
     `
     const locator = page.getByRole('button').and(page.getByTitle('Testing framework'))
-    expect(() => locator.element()).toThrowError(
+    expect(() => locator.element()).toThrow(
       `strict mode violation: getByRole('button').and(getByTitle('Testing framework')) resolved to 2 elements`
     )
   })
@@ -62,7 +62,7 @@ describe('locator.or', () => {
     <a href="https://vitest.dev" title="Testing framework">Vitest</a>
     `
     const locator = page.getByRole('button').or(page.getByTitle('Testing framework'))
-    expect(() => locator.element()).toThrowError(
+    expect(() => locator.element()).toThrow(
       `strict mode violation: getByRole('button').or(getByTitle('Testing framework')) resolved to 2 elements`
     )
   })
@@ -93,7 +93,7 @@ describe('locator.filter', () => {
     expect(locator1.element()).toBe(document.querySelector('button'))
 
     const locator2 = page.getByRole('button').filter({ hasNotText: 'Vitest' })
-    expect(() => locator2.element()).toThrowError(
+    expect(() => locator2.element()).toThrow(
       `Cannot find element with locator: getByRole('button').filter({ hasNotText: 'Vitest' })`
     )
   })
@@ -106,7 +106,7 @@ describe('locator.filter', () => {
     expect(locator1.element()).toBe(document.querySelector('article'))
 
     const locator2 = page.getByRole('article').filter({ hasNotText: 'Vitest' })
-    expect(() => locator2.element()).toThrowError(
+    expect(() => locator2.element()).toThrow(
       `Cannot find element with locator: getByRole('article').filter({ hasNotText: 'Vitest' })`
     )
   })
@@ -123,13 +123,13 @@ describe('locator.filter', () => {
     expect(locator2.element()).toBe(document.querySelector('article'))
 
     const locator3 = page.getByRole('article').filter({ has: page.getByRole('alert') })
-    expect(() => locator3.element()).toThrowError(
+    expect(() => locator3.element()).toThrow(
       `Cannot find element with locator: getByRole('article').filter({ has: getByRole('alert') })`
     )
 
     // locators reversed
     const locator4 = page.getByRole('button').filter({ has: page.getByRole('article') })
-    expect(() => locator4.element()).toThrowError(
+    expect(() => locator4.element()).toThrow(
       `Cannot find element with locator: getByRole('button').filter({ has: getByRole('article') })`
     )
 
@@ -138,7 +138,7 @@ describe('locator.filter', () => {
     <article><div><button>Vitest</button></div></article>
     `
 
-    expect(() => locator1.element()).toThrowError(
+    expect(() => locator1.element()).toThrow(
       `strict mode violation: getByRole('article').filter({ has: getByRole('button') }) resolved to 2 elements`
     )
   })
@@ -152,7 +152,7 @@ describe('locator.filter', () => {
     expect(locator1.element()).toBe(document.querySelector('article'))
 
     const locator2 = page.getByRole('article').filter({ hasNot: page.getByRole('button') })
-    expect(() => locator2.element()).toThrowError(
+    expect(() => locator2.element()).toThrow(
       `Cannot find element with locator: getByRole('article').filter({ hasNot: getByRole('button') })`
     )
   })
