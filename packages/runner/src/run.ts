@@ -390,6 +390,7 @@ async function callAroundHooks<THook extends Function>(
         rejectHookComplete(error as Error)
       }
       finally {
+        setupLimitConcurrencyRelease?.()
         teardownLimitConcurrencyRelease?.()
       }
     })()
