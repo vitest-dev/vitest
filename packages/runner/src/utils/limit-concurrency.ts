@@ -3,8 +3,7 @@ type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
 export interface ConcurrencyLimiter {
   <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args): Promise<T>
-  acquire: () => Promise<void>
-  release: () => void
+  acquire: () => Promise<() => void>
 }
 
 /**
@@ -39,8 +38,8 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
     }
   }
 
-  const acquire = () => {
-    return new Promise<void>((resolve) => {
+  const acquire = async () => {
+    await new Promise<void>((resolve) => {
       if (count++ < concurrency) {
         // No need to queue if fewer than maxConcurrency tasks are running.
         resolve()
@@ -54,6 +53,13 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
         head = tail = [resolve]
       }
     })
+    let released = false
+    return () => {
+      if (!released) {
+        released = true
+        release()
+      }
+    }
   }
 
   const limit: ConcurrencyLimiter = (func, ...args) => {
@@ -69,7 +75,6 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
   }
 
   limit.acquire = acquire
-  limit.release = release
 
   return limit
 }

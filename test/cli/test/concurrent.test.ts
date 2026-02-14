@@ -544,9 +544,9 @@ test('neighboring suite aroundAll deadlocks with insufficient maxConcurrency', a
       "basic.test.ts": {
         "s1": {
           "__suite_errors__": [
-            "The setup phase of \"aroundAll\" hook timed out after 500ms.",
+            "The setup phase of "aroundAll" hook timed out after 500ms.",
           ],
-          "a": "passed",
+          "a": "skipped",
         },
         "s2": {
           "b": "passed",

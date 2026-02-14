@@ -308,10 +308,10 @@ async function callAroundHooks<THook extends Function>(
     const stackTraceError = getAroundHookStackTrace(hook)
 
     let useCalled = false
-    let setupPermitHeld = false
-    let teardownPermitHeld = false
     let setupTimeout: { promise: Promise<never>; clear: () => void } | undefined
     let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
+    let setupLimitConcurrencyRelease: (() => void) | undefined
+    let teardownLimitConcurrencyRelease: (() => void) | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
     let resolveUseCalled!: () => void
@@ -345,10 +345,7 @@ async function callAroundHooks<THook extends Function>(
 
       // Setup phase completed - clear setup timer
       setupTimeout?.clear()
-      if (setupPermitHeld) {
-        limitMaxConcurrency.release()
-        setupPermitHeld = false
-      }
+      setupLimitConcurrencyRelease?.()
 
       // Run inner hooks - don't time this against our teardown timeout
       let innerError: unknown
@@ -359,8 +356,7 @@ async function callAroundHooks<THook extends Function>(
         innerError = error
       }
 
-      await limitMaxConcurrency.acquire()
-      teardownPermitHeld = true
+      teardownLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
@@ -373,8 +369,7 @@ async function callAroundHooks<THook extends Function>(
       }
     }
 
-    await limitMaxConcurrency.acquire()
-    setupPermitHeld = true
+    setupLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
 
     try {
       // Start setup timeout
@@ -395,6 +390,9 @@ async function callAroundHooks<THook extends Function>(
         catch (error) {
           rejectHookComplete(error as Error)
         }
+        finally {
+          teardownLimitConcurrencyRelease?.()
+        }
       })()
 
       // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
@@ -406,6 +404,7 @@ async function callAroundHooks<THook extends Function>(
         ])
       }
       finally {
+        setupLimitConcurrencyRelease?.()
         setupTimeout.clear()
       }
 
@@ -424,19 +423,11 @@ async function callAroundHooks<THook extends Function>(
         ])
       }
       finally {
+        teardownLimitConcurrencyRelease?.()
         teardownTimeout?.clear()
       }
     }
-    finally {
-      setupTimeout?.clear()
-      teardownTimeout?.clear()
-      if (teardownPermitHeld) {
-        limitMaxConcurrency.release()
-      }
-      else if (setupPermitHeld) {
-        limitMaxConcurrency.release()
-      }
-    }
+    finally {}
   }
 
   await runNextHook(0)
