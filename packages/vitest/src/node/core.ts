@@ -608,6 +608,7 @@ export class Vitest {
       }
 
       await this._testRun.start(specifications).catch(noop)
+      await this.coverageProvider?.onTestStart?.()
 
       for (const file of files) {
         await this._reportFileTask(file)
@@ -750,6 +751,7 @@ export class Vitest {
       if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
+          await this.coverageProvider?.onTestStart?.()
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
           await this._testRun.end([], [], coverage)
@@ -881,6 +883,7 @@ export class Vitest {
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
+      await this.coverageProvider?.onTestStart?.()
 
       // previous run
       await this.cancelPromise

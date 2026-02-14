@@ -60,6 +60,7 @@ test('nested coverage options have correct types', async () => {
     --coverage.thresholds.100 25
 
     --coverage.provider v8
+    --coverage.changed HEAD
     --coverage.reporter text
     --coverage.reportsDirectory .\\dist\\coverage
     --coverage.customProviderModule=./folder/coverage.js
@@ -81,6 +82,7 @@ test('nested coverage options have correct types', async () => {
     enabled: true,
     reporter: ['text'],
     provider: 'v8',
+    changed: 'HEAD',
     clean: false,
     cleanOnRerun: true,
     reportsDirectory: 'dist/coverage',
