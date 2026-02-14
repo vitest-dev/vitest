@@ -7,16 +7,6 @@ exports[`should fail async-assertion.test.ts 1`] = `
 AssertionError: expected 'xx' to be 'yy' // Object.is equality"
 `;
 
-exports[`should fail concurrent-suite-deadlock.test.ts 1`] = `
-"Error: Test timed out in 500ms.
-Error: Test timed out in 500ms."
-`;
-
-exports[`should fail concurrent-test-deadlock.test.ts 1`] = `
-"Error: Test timed out in 500ms.
-Error: Test timed out in 500ms."
-`;
-
 exports[`should fail each-timeout.test.ts 1`] = `"Error: Test timed out in 10ms."`;
 
 exports[`should fail empty.test.ts 1`] = `"Error: No test suite found in file <rootDir>/empty.test.ts"`;

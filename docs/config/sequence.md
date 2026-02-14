@@ -145,7 +145,7 @@ Changes the order in which hooks are executed.
 
 - `stack` will order "after" hooks in reverse order, "before" hooks will run in the order they were defined
 - `list` will order all hooks in the order they are defined
-- `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
+- `parallel` runs hooks in a single group in parallel (hooks in parent suites still run before the current suite's hooks). The actual number of simultaneously running hooks is limited by [`maxConcurrency`](/config/maxconcurrency).
 
 ::: tip
 This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is always called in reverse order.
