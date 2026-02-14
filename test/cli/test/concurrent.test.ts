@@ -659,6 +659,69 @@ test('neighboring suite aroundAll teardown passes when maxConcurrency is high en
   `)
 })
 
+const aroundAllSetupTimeoutLateTeardownAcquireSource = `
+import { aroundAll, describe, expect, test } from 'vitest'
+import { createDefer } from '@vitest/utils/helpers'
+
+const unblockS1Setup = createDefer<void>()
+const allowS2TestFinish = createDefer<void>()
+const blockForever = createDefer<void>()
+
+describe.concurrent('s1', () => {
+  aroundAll(async (runSuite) => {
+    await unblockS1Setup
+    await runSuite()
+    allowS2TestFinish.resolve()
+    await blockForever
+  })
+
+  test('a', () => {
+    expect(1).toBe(1)
+  })
+})
+
+describe.concurrent('s2', () => {
+  aroundAll(async (runSuite) => {
+    unblockS1Setup.resolve()
+    await runSuite()
+  })
+
+  test('b', async () => {
+    await allowS2TestFinish
+    expect(1).toBe(1)
+  })
+})
+`
+
+test('neighboring suite aroundAll does not hang when setup times out before late teardown acquire', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': aroundAllSetupTimeoutLateTeardownAcquireSource,
+  }, {
+    maxConcurrency: 1,
+    hookTimeout: 500,
+    testTimeout: 500,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "s1": {
+          "__suite_errors__": [
+            "The setup phase of "aroundAll" hook timed out after 500ms.",
+          ],
+          "a": "passed",
+        },
+        "s2": {
+          "b": [
+            "Test timed out in 500ms.
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+          ],
+        },
+      },
+    }
+  `)
+})
+
 const aroundEachNeighboringTestsSource = `
 import { aroundEach, describe, expect, test } from 'vitest'
 import { createDefer } from '@vitest/utils/helpers'
