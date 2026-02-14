@@ -1041,7 +1041,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
+## toHaveBeenCalledBefore
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -1060,7 +1060,7 @@ test('calls mock1 before mock2', () => {
 })
 ```
 
-## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
+## toHaveBeenCalledAfter
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -1079,7 +1079,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
+## toHaveBeenCalledExactlyOnceWit
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1368,7 +1368,7 @@ test('spy function returns bananas on second call', async () => {
 })
 ```
 
-## called
+## called <Version>4.1.0</Version> {#called}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1391,7 +1391,7 @@ test('spy was called', () => {
 })
 ```
 
-## callCount
+## callCount <Version>4.1.0</Version> {#callcount}
 
 - **Type:** `(count: number) => void`
 
@@ -1411,7 +1411,7 @@ test('spy call count', () => {
 })
 ```
 
-## calledWith
+## calledWith <Version>4.1.0</Version> {#calledwith}
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1431,7 +1431,7 @@ test('spy called with arguments', () => {
 })
 ```
 
-## calledOnce
+## calledOnce <Version>4.1.0</Version> {#calledonce}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1453,7 +1453,7 @@ test('spy called once', () => {
 })
 ```
 
-## calledOnceWith
+## calledOnceWith <Version>4.1.0</Version> {#calledoncewith}
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1471,7 +1471,7 @@ test('spy called once with arguments', () => {
 })
 ```
 
-## calledTwice
+## calledTwice <Version>4.1.0</Version> {#calledtwice}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1494,7 +1494,7 @@ test('spy called twice', () => {
 })
 ```
 
-## calledThrice
+## calledThrice <Version>4.1.0</Version> {#calledthrice}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1518,7 +1518,7 @@ test('spy called thrice', () => {
 })
 ```
 
-## lastCalledWith
+## lastCalledWith <Version>4.1.0</Version> {#lastcalledwith}
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1537,7 +1537,7 @@ test('spy last called with', () => {
 })
 ```
 
-## nthCalledWith
+## nthCalledWith <Version>4.1.0</Version> {#nthcalledwith}
 
 - **Type:** `(n: number, ...args: any[]) => void`
 
@@ -1557,7 +1557,7 @@ test('spy nth called with', () => {
 })
 ```
 
-## returned
+## returned <Version>4.1.0</Version> {#returned}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1579,7 +1579,7 @@ test('spy returned', () => {
 })
 ```
 
-## returnedWith
+## returnedWith <Version>4.1.0</Version> {#returnedwith}
 
 - **Type:** `(value: any) => void`
 
@@ -1601,7 +1601,7 @@ test('spy returned with value', () => {
 })
 ```
 
-## returnedTimes
+## returnedTimes <Version>4.1.0</Version> {#returnedtimes}
 
 - **Type:** `(count: number) => void`
 
@@ -1621,7 +1621,7 @@ test('spy returned times', () => {
 })
 ```
 
-## lastReturnedWith
+## lastReturnedWith <Version>4.1.0</Version> {#lastreturnedwith}
 
 - **Type:** `(value: any) => void`
 
@@ -1642,7 +1642,7 @@ test('spy last returned with', () => {
 })
 ```
 
-## nthReturnedWith
+## nthReturnedWith <Version>4.1.0</Version> {#nthreturnedwith}
 
 - **Type:** `(n: number, value: any) => void`
 
@@ -1665,7 +1665,7 @@ test('spy nth returned with', () => {
 })
 ```
 
-## calledBefore
+## calledBefore <Version>4.1.0</Version> {#calledbefore}
 
 - **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
 
@@ -1685,7 +1685,7 @@ test('spy called before another', () => {
 })
 ```
 
-## calledAfter
+## calledAfter <Version>4.1.0</Version> {#calledafter}
 
 - **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
 
