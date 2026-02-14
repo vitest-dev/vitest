@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-integration-exact-optional-property",
+  "name": "@vitest/test-integration-dts-exact-optional-property",
   "type": "module",
   "private": true,
   "scripts": {
