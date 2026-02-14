@@ -956,7 +956,6 @@ test('aroundEach enforces teardown timeout when inner error is caught', async ()
       "basic.test.ts": {
         "wrapper": {
           "a": [
-            "inner aroundEach teardown failure",
             "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
           ],
         },
@@ -1002,7 +1001,6 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
       "basic.test.ts": {
         "suite": {
           "__suite_errors__": [
-            "inner aroundAll teardown failure",
             "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
           ],
           "a": "passed",

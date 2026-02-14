@@ -158,8 +158,6 @@ Register a callback function that wraps around each test within the current suit
 
 The `runTest()` function runs `beforeEach` hooks, the test itself, fixtures accessed in the test, and `afterEach` hooks. Fixtures that are accessed in the `aroundEach` callback are initialized before `runTest()` is called and are torn down after the aroundEach teardown code completes, allowing you to safely use them in both setup and teardown phases.
 
-`runTest()` does not throw when the wrapped test or inner hooks fail. Failures are still reported through Vitest results.
-
 ::: warning
 You **must** call `runTest()` within your callback. If `runTest()` is not called, the test will fail with an error.
 :::
@@ -269,8 +267,6 @@ function aroundAll(
 Register a callback function that wraps around all tests within the current suite. The callback receives a `runSuite` function that **must** be called to run the suite's tests.
 
 The `runSuite()` function runs all tests in the suite, including `beforeAll`/`afterAll`/`beforeEach`/`afterEach` hooks, `aroundEach` hooks, and fixtures.
-
-`runSuite()` does not throw when wrapped tests or inner hooks fail. Failures are still reported through Vitest results.
 
 ::: warning
 You **must** call `runSuite()` within your callback. If `runSuite()` is not called, the hook will fail with an error and all tests in the suite will be skipped.
