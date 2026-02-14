@@ -79,6 +79,9 @@ test('{ coverage.changed: "HEAD" }', async () => {
       include: [
         'fixtures/src/file-to-change.ts',
         'fixtures/src/new-uncovered-file.ts',
+
+        // Should not show up
+        'fixtures/src/untested-file.ts',
         'fixtures/src/math.ts',
       ],
       reporter: 'json',
@@ -106,6 +109,9 @@ test('{ coverage.changed: "HEAD", excludeAfterRemap: true }', async () => {
       include: [
         'fixtures/src/file-to-change.ts',
         'fixtures/src/new-uncovered-file.ts',
+
+        // Should not show up
+        'fixtures/src/untested-file.ts',
         'fixtures/src/math.ts',
       ],
       reporter: 'json',

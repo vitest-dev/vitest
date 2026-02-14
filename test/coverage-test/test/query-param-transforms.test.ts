@@ -49,7 +49,7 @@ test('query param based transforms are resolved properly', async () => {
   `)
 })
 
-test('query param transforms respect coverage.changed', async () => {
+test.each([{ changed: 'HEAD' }, { coverage: { changed: 'HEAD' } }])('query param transforms respect %s', async (options) => {
   const filePath = resolve('./fixtures/src/query-param-transformed.ts')
   const original = readFileSync(filePath, 'utf8')
 
@@ -59,7 +59,8 @@ test('query param transforms respect coverage.changed', async () => {
   await runVitest({
     config: 'fixtures/configs/vitest.config.query-param-transform.ts',
     include: ['fixtures/test/query-param.test.ts'],
-    coverage: { reporter: 'json', changed: 'HEAD' },
+    ...options,
+    coverage: { reporter: 'json', ...options.coverage },
   })
 
   const coverageMap = await readCoverageMap()

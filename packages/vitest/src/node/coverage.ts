@@ -9,7 +9,7 @@ import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { slash } from '@vitest/utils/helpers'
+import { cleanUrl, slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -17,7 +17,6 @@ import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
 import { resolveCoverageProviderModule } from '../utils/coverage'
-import { GitNotFoundError } from './errors'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -87,7 +86,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
   roots: string[] = []
-  private changedFiles?: Set<string>
+  changedFiles?: string[]
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -144,84 +143,42 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       : [ctx.config.root]
   }
 
-  protected async updateChangedFiles(): Promise<void> {
-    const coverageChanged = this.options.changed
-    if (!coverageChanged) {
-      this.changedFiles = undefined
-      return
-    }
-    const { VitestGit } = await import('./git')
-    const vitestGit = new VitestGit(this.ctx.config.root)
-    const changedFiles = await vitestGit.findChangedFiles({
-      changedSince: coverageChanged,
-    })
-    if (!changedFiles) {
-      process.exitCode = 1
-      throw new GitNotFoundError()
-    }
-    this.changedFiles = new Set(changedFiles.map(file => slash(file)))
-  }
-
-  protected filterChangedFiles(coverageMap: CoverageMap): void {
-    if (!this.changedFiles) {
-      return
-    }
-    coverageMap.filter((filename) => {
-      return this.changedFiles!.has(this.normalizeChangedFilename(filename))
-    })
-  }
-
   /**
    * Check if file matches `coverage.include` but not `coverage.exclude`
    */
   isIncluded(_filename: string, root?: string): boolean {
     const roots = root ? [root] : this.roots
 
-    const filename = slash(_filename)
+    const filename = slash(cleanUrl(_filename))
     const cacheHit = this.globCache.get(filename)
-    let included = cacheHit
-    if (included === undefined) {
-      // File outside project root with default allowExternal
-      if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
-        this.globCache.set(filename, false)
-        return false
-      }
 
-      // By default `coverage.include` matches all files, except "coverage.exclude"
-      const glob = this.options.include || '**'
-
-      included = pm.isMatch(filename, glob, {
-        contains: true,
-        dot: true,
-        ignore: this.options.exclude,
-      })
-
-      this.globCache.set(filename, included)
+    if (cacheHit !== undefined) {
+      return cacheHit
     }
 
-    if (!included) {
+    // File outside project root with default allowExternal
+    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+      this.globCache.set(filename, false)
+
       return false
     }
 
-    if (this.changedFiles && !this.changedFiles.has(this.normalizeChangedFilename(filename))) {
-      return false
+    // By default `coverage.include` matches all files, except "coverage.exclude"
+    const glob = this.options.include || '**'
+
+    let included = pm.isMatch(filename, glob, {
+      contains: true,
+      dot: true,
+      ignore: this.options.exclude,
+    })
+
+    if (included && this.changedFiles) {
+      included = this.changedFiles.includes(filename)
     }
+
+    this.globCache.set(filename, included)
 
     return included
-  }
-
-  private normalizeChangedFilename(filename: string): string {
-    let normalized = filename.split('?')[0]
-    if (normalized.startsWith('file://')) {
-      normalized = fileURLToPath(normalized)
-    }
-    if (normalized.startsWith('/@fs/')) {
-      normalized = normalized.slice(4)
-    }
-    if (normalized.startsWith('/') && /^[a-z]:/i.test(normalized.slice(1))) {
-      normalized = normalized.slice(1)
-    }
-    return slash(normalized)
   }
 
   private async getUntestedFilesByRoot(
@@ -237,20 +194,12 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       onlyFiles: true,
     })
 
-    if (this.changedFiles) {
-      includedFiles = includedFiles.filter(file => this.changedFiles!.has(slash(file)))
-    }
-    else if (this.ctx.config.changed) {
-      const related = this.ctx.config.related || []
-      if (!related.length) {
-        return []
-      }
-      const relatedSet = new Set(related.map(file => slash(file)))
-      includedFiles = includedFiles.filter(file => relatedSet.has(slash(file)))
-    }
-
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
     includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
+
+    if (this.changedFiles) {
+      includedFiles = this.changedFiles.filter(file => includedFiles.includes(file))
+    }
 
     return includedFiles.map(file => slash(path.resolve(root, file)))
   }
@@ -377,6 +326,23 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // Remove empty reports directory, e.g. when only text-reporter is used
     if (readdirSync(this.options.reportsDirectory).length === 0) {
       await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async onTestStart(): Promise<void> {
+    if (this.ctx.config.changed) {
+      this.changedFiles = this.ctx.config.related
+    }
+    else if (this.options.changed) {
+      const { VitestGit } = await import('./git')
+      const vitestGit = new VitestGit(this.ctx.config.root)
+      const changedFiles = await vitestGit.findChangedFiles({ changedSince: this.options.changed })
+
+      this.changedFiles = changedFiles ?? undefined
+    }
+
+    if (this.changedFiles) {
+      this.globCache.clear()
     }
   }
 
