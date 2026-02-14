@@ -1315,6 +1315,15 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/vitest
 
+  test/cli/dts/exact-optional-property:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
   test/cli/dts/fixture-extend:
     devDependencies:
       vitest:
