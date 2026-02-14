@@ -79,10 +79,10 @@ export const coverageUrl = computed(() => {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
     const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
     return htmlReporterSubdir
-      ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
+      ? `${coverage.value!.reportsDirectory.slice(idx + 1)}/${
         htmlReporterSubdir
       }/index.html`
-      : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
+      : `${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
 
   return undefined
