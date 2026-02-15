@@ -4,6 +4,8 @@ import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
+import { writeFileSync } from 'node:fs'
+import { relative } from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { capturePrintError } from '../printError'
@@ -109,6 +111,70 @@ export class GithubActionsReporter implements Reporter {
       })
       this.ctx.logger.log(`\n${formatted}`)
     }
+
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      try {
+        writeFileSync(
+          process.env.GITHUB_STEP_SUMMARY,
+          GithubActionsReporter.#createSummary(testModules),
+          { flag: 'a' },
+        )
+      }
+      catch {
+        this.ctx.logger.warn('Could not write summary to $GITHUB_STEP_SUMMARY')
+      }
+    }
+  }
+
+  static #createSummary(testModules: ReadonlyArray<TestModule>): string {
+    let output = '## Vitest Summary\n'
+
+    let flakyTests = '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
+    const flakyTestsHeaderLength = flakyTests.length
+
+    for (const module of testModules) {
+      let flakyTestsCounter = 0
+      let flakyTestsContent = ''
+
+      for (const test of module.children.allTests()) {
+        const diagnostic = test.diagnostic()
+
+        if (diagnostic?.flaky) {
+          flakyTestsCounter += 1
+
+          const retries = typeof test.options.retry === 'number'
+            ? test.options.retry
+            : (test.options.retry?.count
+              // falling back to `retryCount` as we compute the retry ratio which should be <= 1
+              ?? diagnostic.retryCount)
+          const retriesRatio = diagnostic.retryCount / retries
+
+          const repository = process.env.GITHUB_REPOSITORY
+          const commitHash = process.env.GITHUB_SHA
+          const rootPath = process.env.GITHUB_WORKSPACE
+          const testLocationLine = test.task.location?.line ? `#L${test.task.location.line}` : ''
+
+          const testLink
+            = repository && commitHash && rootPath
+              ? `https://github.com/${repository}/blob/${commitHash}/${relative(rootPath, module.moduleId)}${testLocationLine}`
+              : null
+          const testName = testLink === null ? `\`${test.task.fullTestName}\`` : `[\`${test.task.fullTestName}\`](${testLink})`
+          const retriesText = `passed on retry ${diagnostic.retryCount} out of ${retries}`
+
+          flakyTestsContent += `\n- ${testName} (${retriesRatio > 0.7 ? `**${retriesText}**` : retriesText})`
+        }
+      }
+
+      if (flakyTestsCounter > 0) {
+        flakyTests += `\n##### \`${module.relativeModuleId}\` (${flakyTestsCounter} flaky tests)\n${flakyTestsContent}\n`
+      }
+    }
+
+    if (flakyTests.length > flakyTestsHeaderLength) {
+      output += flakyTests
+    }
+
+    return output
   }
 }
 
