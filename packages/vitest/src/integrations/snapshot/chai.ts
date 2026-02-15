@@ -7,6 +7,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
+import { ariaSnapshotAdapter } from './ariaSnapshot'
 
 let _client: SnapshotClient
 
@@ -161,6 +162,40 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         isInline: true,
         properties,
         inlineSnapshot,
+        error,
+        errorMessage,
+        ...getTestNames(test),
+      })
+    }),
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchAriaSnapshot',
+    wrapAssertion(utils, 'toMatchAriaSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
+      inlineSnapshot?: string,
+      message?: string,
+    ) {
+      utils.flag(this, '_name', 'toMatchAriaSnapshot')
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error('toMatchAriaSnapshot cannot be used with "not"')
+      }
+      const test = getTest('toMatchAriaSnapshot', this)
+      const expected = utils.flag(this, 'object')
+      const error = utils.flag(this, 'error')
+      const errorMessage = utils.flag(this, 'message')
+
+      if (inlineSnapshot) {
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+      }
+
+      getSnapshotClient().assertDomain({
+        received: expected,
+        adapter: ariaSnapshotAdapter,
+        message,
+        inlineSnapshot,
+        isInline: true,
         error,
         errorMessage,
         ...getTestNames(test),

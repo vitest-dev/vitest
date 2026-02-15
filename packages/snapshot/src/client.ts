@@ -1,3 +1,4 @@
+import type { DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -48,6 +49,12 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+}
+
+interface AssertDomainOptions<Options = unknown> extends Omit<AssertOptions, 'received'> {
+  received: unknown
+  adapter: DomainSnapshotAdapter<any, any, Options>
+  adapterOptions?: Options
 }
 
 export interface SnapshotClientOptions {
@@ -168,6 +175,43 @@ export class SnapshotClient {
         rawSnapshot ? expected : expected?.trim(),
       )
     }
+  }
+
+  assertDomain<Options = unknown>(options: AssertDomainOptions<Options>): void {
+    const {
+      received,
+      filepath,
+      name,
+      testId = name,
+      inlineSnapshot,
+      adapter,
+      adapterOptions,
+    } = options
+
+    const context = {
+      filepath,
+      name,
+      testId,
+    }
+
+    const captured = adapter.capture(received, context, adapterOptions)
+    const rendered = adapter.render(captured, context, 'assert', adapterOptions)
+
+    let snapshotInput = rendered
+    if (inlineSnapshot && adapter.match) {
+      const expected = adapter.parseExpected
+        ? adapter.parseExpected(inlineSnapshot, context, adapterOptions)
+        : inlineSnapshot
+      const matchResult = adapter.match(captured, expected, context, adapterOptions)
+      if (matchResult.pass) {
+        snapshotInput = inlineSnapshot
+      }
+    }
+
+    this.assert({
+      ...options,
+      received: snapshotInput,
+    })
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {

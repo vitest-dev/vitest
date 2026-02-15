@@ -90,6 +90,14 @@ declare module '@vitest/expect' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
+
+    /**
+     * Compares a DOM element against an ARIA-oriented inline snapshot.
+     *
+     * @param snapshot - Optional expected ARIA snapshot string.
+     * @param hint - Optional custom error message.
+     */
+    toMatchAriaSnapshot: (snapshot?: string, hint?: string) => void
   }
 }
 
