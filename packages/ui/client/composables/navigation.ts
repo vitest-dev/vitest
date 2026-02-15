@@ -17,7 +17,7 @@ export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (
     coverageConfigured.value
-    && !!coverage.value?.htmlReporter
+    && !!coverage.value?.htmlDir
   )
 })
 export const mainSizes = useLocalStorage<[left: number, right: number]>(
@@ -69,23 +69,6 @@ export const panels = reactive({
     browser: detailSizes.value[0],
     main: detailSizes.value[1],
   },
-})
-
-// TODO
-// For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
-// Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
-export const coverageUrl = computed(() => {
-  if (coverageEnabled.value) {
-    const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
-    const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
-    return htmlReporterSubdir
-      ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
-        htmlReporterSubdir
-      }/index.html`
-      : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
-  }
-
-  return undefined
 })
 
 watch(

@@ -1892,3 +1892,271 @@ test('tests are skipped when aroundAll setup fails', async () => {
     }
   `)
 })
+
+test('aroundEach teardown timeout works when runTest error is caught', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundEach, afterAll, describe, expect, test } from 'vitest'
+
+      let errorCaught = false
+
+      afterAll(() => {
+        expect(errorCaught).toBe(true)
+      })
+
+      describe('suite', () => {
+        aroundEach(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            errorCaught = true
+          }
+          // this should timeout
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundEach(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundEach teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite > test
+    AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundEach(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": [
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('aroundAll teardown timeout works when runTest error is caught', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundAll, afterAll, describe, expect, test } from 'vitest'
+
+      let errorCaught = false
+
+      afterAll(() => {
+        expect(errorCaught).toBe(true)
+      })
+
+      describe('suite', () => {
+        aroundAll(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            errorCaught = true
+          }
+          // this should timeout
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundAll(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundAll teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite
+    AroundHookTeardownError: The teardown phase of "aroundAll" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundAll(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('aroundEach aborts late runTest after setup timeout', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'late-run-test-after-timeout.test.ts': `
+      import { afterAll, aroundEach, test } from 'vitest'
+
+      afterAll(async () => {
+        console.log('>> afterAll 0ms')
+        await new Promise(r => setTimeout(r, 200))
+        console.log('>> afterAll 200ms')
+      })
+
+      aroundEach(async (runTest) => {
+        console.log(">> outer aroundEach setup 0ms")
+        await new Promise(r => setTimeout(r, 100))
+        // this is still executed after timeout error
+        console.log(">> outer aroundEach setup 100ms")
+        // but this shouldn't continue to inner aroundEach or test
+        await runTest()
+        console.log(">> outer aroundEach teardown")
+      }, 10)
+
+      aroundEach(async (runTest) => {
+        console.log('>> inner aroundEach setup')
+        await runTest()
+        console.log('>> inner aroundEach teardown')
+      })
+
+      test('basic', () => {
+        console.log('>> test')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  late-run-test-after-timeout.test.ts > basic
+    AroundHookSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
+     ❯ late-run-test-after-timeout.test.ts:10:7
+          8|       })
+          9|
+         10|       aroundEach(async (runTest) => {
+           |       ^
+         11|         console.log(">> outer aroundEach setup 0ms")
+         12|         await new Promise(r => setTimeout(r, 100))
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer aroundEach setup 0ms
+    >> afterAll 0ms
+    >> outer aroundEach setup 100ms
+    >> afterAll 200ms"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "late-run-test-after-timeout.test.ts": {
+        "basic": [
+          "The setup phase of "aroundEach" hook timed out after 10ms.",
+        ],
+      },
+    }
+  `)
+})
+
+test('aroundAll aborts late runSuite after setup timeout', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'late-run-suite-after-timeout.test.ts': `
+      import { afterAll, aroundAll, describe, test } from 'vitest'
+
+      afterAll(async () => {
+        console.log('>> afterAll 0ms')
+        await new Promise(r => setTimeout(r, 200))
+        console.log('>> afterAll 200ms')
+      })
+
+      describe('timed out suite', () => {
+        aroundAll(async (runSuite) => {
+          console.log('>> outer aroundAll setup 0ms')
+          await new Promise(r => setTimeout(r, 100))
+          // this is still executed after timeout error
+          console.log('>> outer aroundAll setup 100ms')
+          // but this should not continue to inner aroundAll or tests
+          await runSuite()
+          console.log('>> outer aroundAll teardown')
+        }, 10)
+
+        aroundAll(async (runSuite) => {
+          console.log('>> inner aroundAll setup')
+          await runSuite()
+          console.log('>> inner aroundAll teardown')
+        })
+
+        test('basic', () => {
+          console.log('>> test')
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  late-run-suite-after-timeout.test.ts > timed out suite
+    AroundHookSetupError: The setup phase of "aroundAll" hook timed out after 10ms.
+     ❯ late-run-suite-after-timeout.test.ts:11:9
+          9|
+         10|       describe('timed out suite', () => {
+         11|         aroundAll(async (runSuite) => {
+           |         ^
+         12|           console.log('>> outer aroundAll setup 0ms')
+         13|           await new Promise(r => setTimeout(r, 100))
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer aroundAll setup 0ms
+    >> afterAll 0ms
+    >> outer aroundAll setup 100ms
+    >> afterAll 200ms"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "late-run-suite-after-timeout.test.ts": {
+        "timed out suite": {
+          "basic": "skipped",
+        },
+      },
+    }
+  `)
+})

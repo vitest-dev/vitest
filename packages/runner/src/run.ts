@@ -271,12 +271,14 @@ async function callAroundHooks<THook extends Function>(
     timeout: number,
     phase: 'setup' | 'teardown',
     stackTraceError: Error | undefined,
-  ): { promise: Promise<never>; clear: () => void } => {
+  ): { promise: Promise<never>; isTimedOut: () => boolean; clear: () => void } => {
     let timer: ReturnType<typeof setTimeout> | undefined
+    let timedout = false
 
     const promise = new Promise<never>((_, reject) => {
       if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
         timer = setTimeout(() => {
+          timedout = true
           const error = makeAroundHookTimeoutError(hookName, phase, timeout, stackTraceError)
           onTimeout?.(error)
           reject(error)
@@ -292,7 +294,7 @@ async function callAroundHooks<THook extends Function>(
       }
     }
 
-    return { promise, clear }
+    return { promise, clear, isTimedOut: () => timedout }
   }
 
   const runNextHook = async (index: number): Promise<void> => {
@@ -305,8 +307,8 @@ async function callAroundHooks<THook extends Function>(
     const stackTraceError = getAroundHookStackTrace(hook)
 
     let useCalled = false
-    let setupTimeout: { promise: Promise<never>; clear: () => void }
-    let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
+    let setupTimeout: ReturnType<typeof createTimeoutPromise>
+    let teardownTimeout: ReturnType<typeof createTimeoutPromise> | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
     let resolveUseCalled!: () => void
@@ -329,6 +331,14 @@ async function callAroundHooks<THook extends Function>(
     })
 
     const use = async () => {
+      // shouldn't continue to next (runTest/Suite or inner aroundEach/All) when aroundEach/All setup timed out.
+      if (setupTimeout.isTimedOut()) {
+        // we can throw any error to bail out.
+        // this error is not seen by end users since `runNextHook` already rejected with timeout error
+        // and this error is caught by `rejectHookComplete`.
+        throw new Error('__VITEST_INTERNAL_AROUND_HOOK_ABORT__')
+      }
+
       if (useCalled) {
         throw new AroundHookMultipleCallsError(
           `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. `
@@ -342,13 +352,23 @@ async function callAroundHooks<THook extends Function>(
       setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1)
+      let nextError: { value: unknown } | undefined
+      try {
+        await runNextHook(index + 1)
+      }
+      catch (value) {
+        nextError = { value }
+      }
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
+
+      if (nextError) {
+        throw nextError.value
+      }
     }
 
     // Start setup timeout
@@ -394,11 +414,11 @@ async function callAroundHooks<THook extends Function>(
     try {
       await Promise.race([
         hookCompletePromise,
-        teardownTimeout!.promise,
+        teardownTimeout?.promise,
       ])
     }
     finally {
-      teardownTimeout!.clear()
+      teardownTimeout?.clear()
     }
   }
 

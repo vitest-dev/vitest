@@ -12,7 +12,6 @@ import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import { browserState } from '~/composables/client'
 import {
-  coverageUrl,
   coverageVisible,
   detailSizes,
   detailsPanelVisible,
@@ -97,7 +96,6 @@ function allowBrowserEvents() {
           <Coverage
             v-else-if="coverageVisible"
             key="coverage"
-            :src="coverageUrl!"
           />
           <FileDetails v-else key="details" />
         </transition>
@@ -127,7 +125,6 @@ function allowBrowserEvents() {
                   <Coverage
                     v-else-if="coverageVisible"
                     key="coverage"
-                    :src="coverageUrl!"
                   />
                   <FileDetails v-else key="details" />
                 </div>

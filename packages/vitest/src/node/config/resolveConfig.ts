@@ -437,6 +437,31 @@ export function resolveConfig(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
     }
+
+    if (resolved.coverage.htmlDir) {
+      resolved.coverage.htmlDir = resolve(
+        resolved.root,
+        resolved.coverage.htmlDir,
+      )
+    }
+
+    // infer default htmlDir based on builtin reporter's html output location
+    if (!resolved.coverage.htmlDir) {
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
+      if (htmlReporter) {
+        const [, options] = htmlReporter
+        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
+          ? options.subdir
+          : undefined
+        resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
+      }
+      else {
+        const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
+        if (lcovReporter) {
+          resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
+        }
+      }
+    }
   }
 
   if (resolved.coverage.enabled && resolved.coverage.provider === 'custom' && resolved.coverage.customProviderModule) {

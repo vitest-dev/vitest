@@ -150,9 +150,7 @@ export interface SerializedConfig {
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
 }
