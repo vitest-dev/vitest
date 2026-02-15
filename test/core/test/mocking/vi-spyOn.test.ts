@@ -446,7 +446,7 @@ describe('vi.spyOn() settings', () => {
     // foo.bar setter is inherited from Bar, so we can set it
     expect(() => {
       foo.bar = 'baz'
-    }).not.toThrowError()
+    }).not.toThrow()
     expect(foo.bar).toEqual('foo')
   })
 
@@ -474,7 +474,7 @@ describe('vi.spyOn() settings', () => {
     expect(() => {
       // @ts-expect-error bar cannot be overriden
       foo.bar = 'baz'
-    }).toThrowError()
+    }).toThrow()
     expect(foo.bar).toEqual('foo')
   })
 
@@ -542,20 +542,20 @@ describe('vi.spyOn() settings', () => {
 
 describe('vi.spyOn() restoration', () => {
   test('vi.spyOn() cannot spy on undefined or null', () => {
-    expect(() => vi.spyOn(undefined as any, 'test')).toThrowError('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
-    expect(() => vi.spyOn(null as any, 'test')).toThrowError('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(undefined as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(null as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
   })
 
   test('vi.spyOn() cannot spy on a primitive value', () => {
-    expect(() => vi.spyOn('string' as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(0 as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(true as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(1n as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn('string' as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(0 as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(true as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(1n as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
   })
 
   test('vi.spyOn() cannot spy on non-existing property', () => {
-    expect(() => vi.spyOn({} as any, 'never')).toThrowError('The property "never" is not defined on the object.')
+    expect(() => vi.spyOn({} as any, 'never')).toThrow('The property "never" is not defined on the object.')
   })
 
   test('vi.spyOn() restores the original method when .mockRestore() is called', () => {
@@ -708,7 +708,7 @@ describe('vi.spyOn() on Vite SSR', () => {
     expect(() => {
       // @ts-expect-error types recognize it's not a function
       vi.spyOn(module, 'primitive')
-    }).toThrowError('vi.spyOn() can only spy on a function. Received number.')
+    }).toThrow('vi.spyOn() can only spy on a function. Received number.')
   })
 
   test('vi.spyOn() assigns the method on a getter', () => {

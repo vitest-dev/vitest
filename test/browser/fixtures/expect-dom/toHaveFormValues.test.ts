@@ -187,7 +187,7 @@ describe('.toHaveFormValues', () => {
       const form = container.querySelector('form')
       expect(() => {
         expect(form).toHaveFormValues({})
-      }).toThrowError(/must be of the same type/)
+      }).toThrow(/must be of the same type/)
     })
 
     it('detects multiple elements with the same type and name', () => {
@@ -225,10 +225,10 @@ describe('.toHaveFormValues', () => {
       const form = container.querySelector('form')
       expect(() => {
         expect(container).toHaveFormValues(expectedValues)
-      }).toThrowError(/a form or a fieldset/)
+      }).toThrow(/a form or a fieldset/)
       expect(() => {
         expect(form).toHaveFormValues(expectedValues)
-      }).not.toThrowError()
+      }).not.toThrow()
     })
 
     it('matches change in selected value of select', () => {
@@ -254,10 +254,10 @@ describe('.toHaveFormValues', () => {
     it('work as expected', () => {
       expect(() => {
         expect(renderForm()).not.toHaveFormValues(defaultValues)
-      }).toThrowError(/Expected the element not to have form values/)
+      }).toThrow(/Expected the element not to have form values/)
       expect(() => {
         expect(renderForm()).toHaveFormValues({something: 'missing'})
-      }).toThrowError(/Expected the element to have form values/)
+      }).toThrow(/Expected the element to have form values/)
     })
   })
 })

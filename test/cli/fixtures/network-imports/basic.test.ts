@@ -12,7 +12,7 @@ test('network imports', () => {
 
 test('doesn\'t work for http outside localhost', async () => {
   // @ts-expect-error network imports
-  await expect(() => import('http://100.0.0.0/')).rejects.toThrowError(
+  await expect(() => import('http://100.0.0.0/')).rejects.toThrow(
     'import of \'http://100.0.0.0/\' by undefined is not supported: http can only be used to load local resources (use https instead).',
   )
 })

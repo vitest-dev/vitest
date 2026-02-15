@@ -33,37 +33,37 @@ test('.toContainElement positive test cases', () => {
 test('.toContainElement negative test cases', () => {
   expect(() =>
     expect(nonExistantElement).not.toContainElement(child),
-  ).toThrowError()
-  expect(() => expect(parent).toContainElement(grandparent)).toThrowError()
+  ).toThrow()
+  expect(() => expect(parent).toContainElement(grandparent)).toThrow()
   expect(() =>
     expect(nonExistantElement).toContainElement(grandparent),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(grandparent).toContainElement(nonExistantElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(nonExistantElement).toContainElement(nonExistantElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     // @ts-expect-error testing invalid assertion
     expect(nonExistantElement).toContainElement(fakeElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(fakeElement).toContainElement(nonExistantElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(fakeElement).not.toContainElement(nonExistantElement),
-  ).toThrowError()
-  expect(() => expect(fakeElement).toContainElement(grandparent)).toThrowError()
+  ).toThrow()
+  expect(() => expect(fakeElement).toContainElement(grandparent)).toThrow()
     // @ts-expect-error testing invalid assertion
-  expect(() => expect(grandparent).toContainElement(fakeElement)).toThrowError()
+  expect(() => expect(grandparent).toContainElement(fakeElement)).toThrow()
     // @ts-expect-error testing invalid assertion
-  expect(() => expect(fakeElement).toContainElement(fakeElement)).toThrowError()
-  expect(() => expect(grandparent).not.toContainElement(child)).toThrowError()
+  expect(() => expect(fakeElement).toContainElement(fakeElement)).toThrow()
+  expect(() => expect(grandparent).not.toContainElement(child)).toThrow()
   expect(() =>
     expect(grandparent).not.toContainElement(svgElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(grandparent).not.toContainElement(undefined),
-  ).toThrowError()
+  ).toThrow()
 })
