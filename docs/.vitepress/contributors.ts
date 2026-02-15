@@ -63,7 +63,8 @@ const plainTeamMembers: CoreTeam[] = [
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror',
     org: 'NuxtLabs',
-    orgLink: 'https://nuxtlabs.com/',
+org: 'Vercel',
+orgLink: 'https://vercel.com/',
     desc: 'Core team member of Vite & Vue',
   },
   {
