@@ -104,6 +104,10 @@ export function createBrowserRunner(
         '__vitest_startChunkTrace',
         [{ name, title }],
       )
+      // TODO: location?
+      // test.location;
+      // test.file.filepath;
+      // await this.commands.triggerCommand('__vitest_markTrace', ['onBeforeTryTask'])
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
@@ -160,6 +164,9 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
+      if (task.result?.state === 'fail') {
+        await this.commands.triggerCommand('__vitest_markTrace', [`onTaskFinished (fail)`, task.result?.errors?.[0].stack])
+      }
       if (
         this.config.browser.screenshotFailures
         && document.body.clientHeight > 0

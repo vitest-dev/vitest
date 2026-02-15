@@ -42,6 +42,7 @@ export interface BrowserCommands {
     options?: BufferEncoding | (FsOptions & { mode?: number | string }),
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
+  markTrace: (name: string) => Promise<void>
 }
 /**
  * @internal

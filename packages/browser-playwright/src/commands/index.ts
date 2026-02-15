@@ -10,6 +10,7 @@ import { tab } from './tab'
 import {
   annotateTraces,
   deleteTracing,
+  markTrace,
   startChunkTrace,
   startTracing,
   stopChunkTrace,
@@ -39,4 +40,5 @@ export default {
   __vitest_startTracing: startTracing as typeof startTracing,
   __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
   __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
+  __vitest_markTrace: markTrace as typeof markTrace,
 }
