@@ -106,6 +106,7 @@ export {
   beforeEach,
   describe,
   it,
+  mergeTests,
   onTestFailed,
   onTestFinished,
   recordArtifact,

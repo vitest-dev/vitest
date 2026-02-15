@@ -220,7 +220,7 @@ function createDefaultSuite(runner: VitestRunner) {
   if (config.concurrent != null) {
     options.concurrent = config.concurrent
   }
-  const collector = suite('', options, () => {})
+  const collector = suite('', options, () => { })
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -302,7 +302,7 @@ function parseArguments<T extends (...args: any[]) => any>(
 // implementations
 function createSuiteCollector(
   name: string,
-  factory: SuiteFactory = () => {},
+  factory: SuiteFactory = () => { },
   mode: RunMode,
   each?: boolean,
   suiteOptions?: SuiteOptions,
@@ -1091,4 +1091,16 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+export function mergeTests<A, B>(
+  test: TestAPI<A>,
+  testB: TestAPI<B>,
+): TestAPI<A & B> {
+  const ctx = getChainableContext(testB)
+  if (!ctx) {
+    throw new TypeError('Cannot merge tests: extension is not a valid TestAPI')
+  }
+  const fixtures = ctx.getFixtures().resolveFixtures()
+  return test.extend(fixtures as any) as TestAPI<A & B>
 }
