@@ -1,3 +1,4 @@
+import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -48,6 +49,12 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+}
+
+interface AssertDomainOptions<Options = unknown> extends Omit<AssertOptions, 'received'> {
+  received: unknown
+  adapter: DomainSnapshotAdapter<any, any, Options>
+  adapterOptions?: Options
 }
 
 export interface SnapshotClientOptions {
@@ -167,6 +174,69 @@ export class SnapshotClient {
         rawSnapshot ? actual : actual?.trim(),
         rawSnapshot ? expected : expected?.trim(),
       )
+    }
+  }
+
+  assertDomain<Options = unknown>(options: AssertDomainOptions<Options>): void {
+    const {
+      received,
+      filepath,
+      name,
+      testId = name,
+      inlineSnapshot,
+      adapter,
+      adapterOptions,
+    } = options
+
+    const context = {
+      filepath,
+      name,
+      testId,
+    }
+
+    const captured = adapter.capture(received, context, adapterOptions)
+    const rendered = adapter.render(captured, context, 'assert', adapterOptions)
+
+    let snapshotInput = rendered
+    let normalizedInlineSnapshot = inlineSnapshot
+    let domainMatchResult: DomainMatchResult | undefined
+    if (inlineSnapshot && adapter.match) {
+      const expected = adapter.parseExpected
+        ? adapter.parseExpected(inlineSnapshot, context, adapterOptions)
+        : inlineSnapshot
+      domainMatchResult = adapter.match(captured, expected, context, adapterOptions)
+      if (domainMatchResult.expected !== undefined) {
+        normalizedInlineSnapshot = domainMatchResult.expected
+      }
+      if (domainMatchResult.pass) {
+        snapshotInput = normalizedInlineSnapshot ?? inlineSnapshot
+      }
+      else if (domainMatchResult.actual !== undefined) {
+        snapshotInput = domainMatchResult.actual
+      }
+    }
+
+    try {
+      this.assert({
+        ...options,
+        inlineSnapshot: normalizedInlineSnapshot,
+        received: snapshotInput,
+      })
+    }
+    catch (error) {
+      if (domainMatchResult) {
+        const failure = error as Error & { domainMatchResult?: DomainMatchResult }
+        if (!domainMatchResult.pass && domainMatchResult.message) {
+          failure.message = `${failure.message}\n${domainMatchResult.message}`
+        }
+        Object.defineProperty(failure, 'domainMatchResult', {
+          value: domainMatchResult,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        })
+      }
+      throw error
     }
   }
 
