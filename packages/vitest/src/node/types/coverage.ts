@@ -29,9 +29,9 @@ export interface CoverageProvider {
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
 
   /** Callback called when test run starts */
-  onTestStart?: () => void | Promise<void>
+  onTestRunStart?: () => void | Promise<void>
 
-  /** Callback called when test run fails */
+  /** Callback called when test run fails due to test failures */
   onTestFailure?: () => void | Promise<void>
 
   /** Callback to generate final coverage results */

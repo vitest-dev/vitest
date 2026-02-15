@@ -329,7 +329,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
   }
 
-  async onTestStart(): Promise<void> {
+  async onTestRunStart(): Promise<void> {
     if (this.ctx.config.changed) {
       this.changedFiles = this.ctx.config.related
     }
