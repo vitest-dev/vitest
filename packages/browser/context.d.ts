@@ -41,7 +41,7 @@ export interface ScreenshotOptions {
 }
 
 interface StandardScreenshotComparators {
-  pixelmatch: {
+  '@blazediff/core': {
     /**
      * The maximum number of pixels that are allowed to differ between the captured
      * screenshot and the stored reference image.
@@ -134,6 +134,10 @@ interface StandardScreenshotComparators {
      */
     diffMask?: boolean | undefined
   }
+  /**
+   * @deprecated Since v4.1, `"pixelmatch"` is a legacy alias for `"@blazediff/core"` and will be removed in the next major version.
+   */
+  pixelmatch: StandardScreenshotComparators['@blazediff/core']
 }
 
 export interface ScreenshotComparatorRegistry extends StandardScreenshotComparators {}
@@ -151,7 +155,7 @@ export interface ScreenshotMatcherOptions<
    *
    * Must be one of the keys from {@linkcode ScreenshotComparatorRegistry}.
    *
-   * @defaultValue `'pixelmatch'`
+   * @defaultValue `'@blazediff/core'`
    */
   comparatorName?: ComparatorName
   comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]

@@ -698,7 +698,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * // with options
    * await expect.element(getByTestId('button')).toMatchScreenshot({
-   *   comparatorName: 'pixelmatch',
+   *   comparatorName: '@blazediff/core',
    *   comparatorOptions: {
    *     allowedMismatchedPixelRatio: 0.01,
    *   },
@@ -706,7 +706,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * // with both name and options
    * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
-   *   comparatorName: 'pixelmatch',
+   *   comparatorName: '@blazediff/core',
    *   comparatorOptions: {
    *     allowedMismatchedPixelRatio: 0.01,
    *   },
