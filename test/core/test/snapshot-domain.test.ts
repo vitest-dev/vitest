@@ -44,6 +44,10 @@ test('matches domain snapshot with semantic matcher', () => {
   expect('hello 123').toMatchDomainInlineSnapshot('test-domain', '/hello \\d+/')
 })
 
+test('matches domain snapshot file entry', () => {
+  expect('hello 456').toMatchDomainSnapshot('test-domain')
+})
+
 test('throws for unknown domain', () => {
   expect(() => {
     expect('hello').toMatchDomainInlineSnapshot('unknown-domain', 'hello')
