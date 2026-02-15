@@ -62,9 +62,8 @@ const plainTeamMembers: CoreTeam[] = [
     youtube: 'antfu',
     sponsor: 'https://github.com/sponsors/antfu',
     title: 'A fanatical open sourceror',
-    org: 'NuxtLabs',
-org: 'Vercel',
-orgLink: 'https://vercel.com/',
+    org: 'Vercel',
+    orgLink: 'https://vercel.com/',
     desc: 'Core team member of Vite & Vue',
   },
   {
