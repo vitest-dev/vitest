@@ -200,10 +200,27 @@ export class CommonjsExecutor {
     m.exports = JSON.parse(code)
   }
 
+  // The "module-sync" exports condition (added in Node 22.12/20.19 when
+  // require(esm) was unflagged) can resolve to ESM files that our CJS
+  // vm.Script executor cannot handle. We exclude it by passing explicit
+  // CJS conditions to require.resolve (Node 22.12+).
+  // Must be a Set because Node's internal resolver calls conditions.has().
+  // If Node introduces new built-in CJS conditions in the future, this
+  // set may need to be extended.
+  private static cjsConditions = new Set(['node', 'require', 'node-addons'])
+
   public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
+    const resolve = (id: string, options?: { paths?: string[] }) => {
+      return _require.resolve(id, {
+        ...options,
+        // Works on Node 22.12+ where _resolveFilename supports conditions.
+        // Silently ignored on older Node versions.
+        conditions: CommonjsExecutor.cjsConditions,
+      } as any)
+    }
     const require = ((id: string) => {
-      const resolved = _require.resolve(id)
+      const resolved = resolve(id)
       const ext = extname(resolved)
       if (ext === '.node' || isBuiltin(resolved)) {
         return this.requireCoreModule(resolved)
@@ -211,7 +228,8 @@ export class CommonjsExecutor {
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
     }) as NodeJS.Require
-    require.resolve = _require.resolve
+    require.resolve = resolve as NodeJS.RequireResolve
+    require.resolve.paths = _require.resolve.paths
     Object.defineProperty(require, 'extensions', {
       get: () => this.extensions,
       set: () => {},
