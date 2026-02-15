@@ -122,28 +122,185 @@ function prepareSnapString(snap: string, source: string, index: number) {
 }
 
 const toMatchInlineName = 'toMatchInlineSnapshot'
+const toMatchDomainInlineName = 'toMatchDomainInlineSnapshot'
 const toThrowErrorMatchingInlineName = 'toThrowErrorMatchingInlineSnapshot'
 
 // on webkit, the line number is at the end of the method, not at the start
 function getCodeStartingAtIndex(code: string, index: number) {
-  const indexInline = index - toMatchInlineName.length
-  if (code.slice(indexInline, index) === toMatchInlineName) {
-    return {
-      code: code.slice(indexInline),
-      index: indexInline,
+  for (const name of [
+    toMatchDomainInlineName,
+    toMatchInlineName,
+    toThrowErrorMatchingInlineName,
+  ]) {
+    const methodIndex = index - name.length
+    if (methodIndex >= 0 && code.slice(methodIndex, index) === name) {
+      return {
+        code: code.slice(methodIndex),
+        index: methodIndex,
+      }
     }
   }
-  const indexThrowInline = index - toThrowErrorMatchingInlineName.length
-  if (code.slice(index - indexThrowInline, index) === toThrowErrorMatchingInlineName) {
-    return {
-      code: code.slice(index - indexThrowInline),
-      index: index - indexThrowInline,
-    }
-  }
+
   return {
     code: code.slice(index),
     index,
   }
+}
+
+function findTopLevelComma(code: string, start: number, end: number): number {
+  let parenDepth = 0
+  let braceDepth = 0
+  let bracketDepth = 0
+  let inString: '"' | '\'' | '`' | null = null
+  let isEscaped = false
+
+  for (let i = start; i < end; i++) {
+    const ch = code[i]
+    const next = code[i + 1]
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false
+        continue
+      }
+      if (ch === '\\') {
+        isEscaped = true
+        continue
+      }
+      if (ch === inString) {
+        inString = null
+      }
+      continue
+    }
+
+    if (ch === '/' && next === '/') {
+      i += 2
+      while (i < end && !/[\n\r\u2028\u2029]/.test(code[i])) {
+        i++
+      }
+      continue
+    }
+
+    if (ch === '/' && next === '*') {
+      i += 2
+      while (i < end && !(code[i] === '*' && code[i + 1] === '/')) {
+        i++
+      }
+      i++
+      continue
+    }
+
+    if (ch === '"' || ch === '\'' || ch === '`') {
+      inString = ch
+      continue
+    }
+
+    if (ch === '(') {
+      parenDepth++
+      continue
+    }
+    if (ch === ')') {
+      parenDepth--
+      continue
+    }
+    if (ch === '{') {
+      braceDepth++
+      continue
+    }
+    if (ch === '}') {
+      braceDepth--
+      continue
+    }
+    if (ch === '[') {
+      bracketDepth++
+      continue
+    }
+    if (ch === ']') {
+      bracketDepth--
+      continue
+    }
+
+    if (ch === ',' && parenDepth === 0 && braceDepth === 0 && bracketDepth === 0) {
+      return i
+    }
+  }
+
+  return -1
+}
+
+function skipWhitespaceAndComments(code: string, start: number, end: number): number {
+  let index = start
+  while (index < end) {
+    const ch = code[index]
+    const next = code[index + 1]
+
+    if (/\s/.test(ch)) {
+      index++
+      continue
+    }
+
+    if (ch === '/' && next === '/') {
+      index += 2
+      while (index < end && !/[\n\r\u2028\u2029]/.test(code[index])) {
+        index++
+      }
+      continue
+    }
+
+    if (ch === '/' && next === '*') {
+      index += 2
+      while (index < end && !(code[index] === '*' && code[index + 1] === '/')) {
+        index++
+      }
+      index += 2
+      continue
+    }
+
+    break
+  }
+
+  return index
+}
+
+function replaceDomainInlineSnap(
+  code: string,
+  s: MagicString,
+  index: number,
+  newSnap: string,
+): boolean {
+  const codeStartingAtIndex = code.slice(index)
+  const startMatch = /toMatchDomainInlineSnapshot\s*\(/.exec(codeStartingAtIndex)
+  const firstKeywordMatch = /toMatchDomainInlineSnapshot/.exec(codeStartingAtIndex)
+
+  if (!startMatch || startMatch.index !== firstKeywordMatch?.index) {
+    return false
+  }
+
+  const callStart = index + startMatch.index
+  const callEndInSlice = getCallLastIndex(code.slice(callStart))
+  if (callEndInSlice == null) {
+    return false
+  }
+
+  const callEnd = callStart + callEndInSlice
+  const argsStart = callStart + startMatch[0].length
+  const firstArgComma = findTopLevelComma(code, argsStart, callEnd)
+  if (firstArgComma === -1) {
+    return false
+  }
+
+  const secondArgStart = skipWhitespaceAndComments(code, firstArgComma + 1, callEnd)
+  const snapString = prepareSnapString(newSnap, code, index)
+
+  if (secondArgStart >= callEnd) {
+    s.appendLeft(callEnd, `, ${snapString}`)
+    return true
+  }
+
+  const secondArgComma = findTopLevelComma(code, secondArgStart, callEnd)
+  const secondArgEnd = secondArgComma === -1 ? callEnd : secondArgComma
+  s.overwrite(secondArgStart, secondArgEnd, snapString)
+  return true
 }
 
 const startRegex
@@ -155,6 +312,10 @@ export function replaceInlineSnap(
   newSnap: string,
 ): boolean {
   const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex)
+
+  if (replaceDomainInlineSnap(code, s, index, newSnap)) {
+    return true
+  }
 
   const startMatch = startRegex.exec(codeStartingAtIndex)
 

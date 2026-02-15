@@ -1,3 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`matches domain snapshot file entry 1`] = `value:hello 456`;
