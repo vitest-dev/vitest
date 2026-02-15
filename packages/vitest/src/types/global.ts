@@ -1,6 +1,6 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { SnapshotState } from '@vitest/snapshot'
+import type { DomainSnapshotAdapter, SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
@@ -45,6 +45,9 @@ declare module '@vitest/expect' {
     assertions: (expected: number) => void
     hasAssertions: () => void
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
+    addSnapshotDomain: <Captured = unknown, Expected = unknown, Options = unknown>(
+      adapter: DomainSnapshotAdapter<Captured, Expected, Options>,
+    ) => void
   }
 
   interface Assertion<T> {
@@ -91,13 +94,7 @@ declare module '@vitest/expect' {
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
 
-    /**
-     * Compares a DOM element against an ARIA-oriented inline snapshot.
-     *
-     * @param snapshot - Optional expected ARIA snapshot string.
-     * @param hint - Optional custom error message.
-     */
-    toMatchAriaSnapshot: (snapshot?: string, hint?: string) => void
+    toMatchDomainInlineSnapshot: (domain: string, snapshot?: string, hint?: string) => void
   }
 }
 

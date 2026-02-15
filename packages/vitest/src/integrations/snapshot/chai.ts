@@ -3,11 +3,13 @@ import type { Test } from '@vitest/runner'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
+  addDomain,
   addSerializer,
+  getDomain,
+  getDomains,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { ariaSnapshotAdapter } from './ariaSnapshot'
 
 let _client: SnapshotClient
 
@@ -170,29 +172,43 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(
     chai.Assertion.prototype,
-    'toMatchAriaSnapshot',
-    wrapAssertion(utils, 'toMatchAriaSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+    'toMatchDomainInlineSnapshot',
+    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
+      domain: string,
       inlineSnapshot?: string,
       message?: string,
     ) {
-      utils.flag(this, '_name', 'toMatchAriaSnapshot')
+      utils.flag(this, '_name', 'toMatchDomainInlineSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
-        throw new Error('toMatchAriaSnapshot cannot be used with "not"')
+        throw new Error('toMatchDomainInlineSnapshot cannot be used with "not"')
       }
-      const test = getTest('toMatchAriaSnapshot', this)
+      const test = getTest('toMatchDomainInlineSnapshot', this)
       const expected = utils.flag(this, 'object')
       const error = utils.flag(this, 'error')
       const errorMessage = utils.flag(this, 'message')
+
+      if (typeof domain !== 'string' || !domain) {
+        throw new Error('toMatchDomainInlineSnapshot expects a non-empty domain name as the first argument')
+      }
 
       if (inlineSnapshot) {
         inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
       }
 
+      const adapter = getDomain(domain)
+      if (!adapter) {
+        const available = getDomains().map(item => item.name)
+        const suggestion = available.length
+          ? `Available domains: ${available.join(', ')}`
+          : 'No domains registered. Use expect.addSnapshotDomain(adapter) first.'
+        throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
+      }
+
       getSnapshotClient().assertDomain({
         received: expected,
-        adapter: ariaSnapshotAdapter,
+        adapter,
         message,
         inlineSnapshot,
         isInline: true,
@@ -261,4 +277,5 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
+  utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
 }

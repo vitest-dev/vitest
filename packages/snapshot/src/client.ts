@@ -1,4 +1,4 @@
-import type { DomainSnapshotAdapter } from './domain'
+import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -198,20 +198,46 @@ export class SnapshotClient {
     const rendered = adapter.render(captured, context, 'assert', adapterOptions)
 
     let snapshotInput = rendered
+    let normalizedInlineSnapshot = inlineSnapshot
+    let domainMatchResult: DomainMatchResult | undefined
     if (inlineSnapshot && adapter.match) {
       const expected = adapter.parseExpected
         ? adapter.parseExpected(inlineSnapshot, context, adapterOptions)
         : inlineSnapshot
-      const matchResult = adapter.match(captured, expected, context, adapterOptions)
-      if (matchResult.pass) {
-        snapshotInput = inlineSnapshot
+      domainMatchResult = adapter.match(captured, expected, context, adapterOptions)
+      if (domainMatchResult.expected !== undefined) {
+        normalizedInlineSnapshot = domainMatchResult.expected
+      }
+      if (domainMatchResult.pass) {
+        snapshotInput = normalizedInlineSnapshot ?? inlineSnapshot
+      }
+      else if (domainMatchResult.actual !== undefined) {
+        snapshotInput = domainMatchResult.actual
       }
     }
 
-    this.assert({
-      ...options,
-      received: snapshotInput,
-    })
+    try {
+      this.assert({
+        ...options,
+        inlineSnapshot: normalizedInlineSnapshot,
+        received: snapshotInput,
+      })
+    }
+    catch (error) {
+      if (domainMatchResult) {
+        const failure = error as Error & { domainMatchResult?: DomainMatchResult }
+        if (!domainMatchResult.pass && domainMatchResult.message) {
+          failure.message = `${failure.message}\n${domainMatchResult.message}`
+        }
+        Object.defineProperty(failure, 'domainMatchResult', {
+          value: domainMatchResult,
+          enumerable: true,
+          configurable: true,
+          writable: true,
+        })
+      }
+      throw error
+    }
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {

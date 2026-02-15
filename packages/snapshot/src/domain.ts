@@ -4,8 +4,19 @@ export interface DomainSnapshotContext {
   testId: string
 }
 
+export interface DomainSnapshotMismatch {
+  path: string
+  reason: string
+  expected?: string
+  actual?: string
+}
+
 export interface DomainMatchResult {
   pass: boolean
+  message?: string
+  expected?: string
+  actual?: string
+  mismatches?: DomainSnapshotMismatch[]
 }
 
 export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, Options = unknown> {
@@ -32,4 +43,20 @@ export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, O
     context: DomainSnapshotContext,
     options?: Options,
   ) => DomainMatchResult
+}
+
+const domains = new Map<string, DomainSnapshotAdapter<any, any, any>>()
+
+export function addDomain<Captured = unknown, Expected = unknown, Options = unknown>(
+  adapter: DomainSnapshotAdapter<Captured, Expected, Options>,
+): void {
+  domains.set(adapter.name, adapter)
+}
+
+export function getDomain(name: string): DomainSnapshotAdapter<any, any, any> | undefined {
+  return domains.get(name)
+}
+
+export function getDomains(): DomainSnapshotAdapter<any, any, any>[] {
+  return [...domains.values()]
 }

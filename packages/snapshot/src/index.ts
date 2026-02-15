@@ -1,9 +1,11 @@
 export { SnapshotClient } from './client'
+export { addDomain, getDomain, getDomains } from './domain'
 
 export type {
   DomainMatchResult,
   DomainSnapshotAdapter,
   DomainSnapshotContext,
+  DomainSnapshotMismatch,
 } from './domain'
 
 export { stripSnapshotIndentation } from './port/inlineSnapshot'
