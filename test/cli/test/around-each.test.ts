@@ -2090,3 +2090,73 @@ test('aroundEach aborts late runTest after setup timeout', async () => {
     }
   `)
 })
+
+test('aroundAll aborts late runSuite after setup timeout', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'late-run-suite-after-timeout.test.ts': `
+      import { afterAll, aroundAll, describe, test } from 'vitest'
+
+      afterAll(async () => {
+        console.log('>> afterAll 0ms')
+        await new Promise(r => setTimeout(r, 200))
+        console.log('>> afterAll 200ms')
+      })
+
+      describe('timed out suite', () => {
+        aroundAll(async (runSuite) => {
+          console.log('>> outer aroundAll setup 0ms')
+          await new Promise(r => setTimeout(r, 100))
+          // this is still executed after timeout error
+          console.log('>> outer aroundAll setup 100ms')
+          // but this should not continue to inner aroundAll or tests
+          await runSuite()
+          console.log('>> outer aroundAll teardown')
+        }, 10)
+
+        aroundAll(async (runSuite) => {
+          console.log('>> inner aroundAll setup')
+          await runSuite()
+          console.log('>> inner aroundAll teardown')
+        })
+
+        test('basic', () => {
+          console.log('>> test')
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  late-run-suite-after-timeout.test.ts > timed out suite
+    AroundHookSetupError: The setup phase of "aroundAll" hook timed out after 10ms.
+     ❯ late-run-suite-after-timeout.test.ts:11:9
+          9|
+         10|       describe('timed out suite', () => {
+         11|         aroundAll(async (runSuite) => {
+           |         ^
+         12|           console.log('>> outer aroundAll setup 0ms')
+         13|           await new Promise(r => setTimeout(r, 100))
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer aroundAll setup 0ms
+    >> afterAll 0ms
+    >> outer aroundAll setup 100ms
+    >> afterAll 200ms"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "late-run-suite-after-timeout.test.ts": {
+        "timed out suite": {
+          "basic": "skipped",
+        },
+      },
+    }
+  `)
+})
