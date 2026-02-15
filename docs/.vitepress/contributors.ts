@@ -95,7 +95,7 @@ const plainTeamMembers: CoreTeam[] = [
     bluesky: 'https://bsky.app/profile/patak.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
     sponsor: 'https://github.com/sponsors/patak-dev',
-    title: 'Open Source Adventurer',
+    title: 'Independent Open Source Adventurer',
     desc: 'Core team member of Vite & Vue',
   },
   {
