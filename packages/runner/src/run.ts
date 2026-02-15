@@ -333,7 +333,9 @@ async function callAroundHooks<THook extends Function>(
     const use = async () => {
       // shouldn't continue to next (runTest/Suite or inner aroundEach/All) when aroundEach/All setup timed out.
       if (setupTimeout.isTimedOut()) {
-        // we can throw any error to bail out since this is not seen by end users
+        // we can throw any error to bail out.
+        // this error is not seen by end users since `runNextHook` already rejected with timeout error
+        // and this error is caught by `rejectHookComplete`.
         throw new Error('__VITEST_INTERNAL_AROUND_HOOK_ABORT__')
       }
 

@@ -2022,3 +2022,71 @@ test('aroundAll teardown timeout works when runTest error is caught', async () =
     }
   `)
 })
+
+test('aroundEach aborts late runTest after setup timeout', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'late-run-test-after-timeout.test.ts': `
+      import { afterAll, aroundEach, test } from 'vitest'
+
+      afterAll(async () => {
+        console.log('>> afterAll 0ms')
+        await new Promise(r => setTimeout(r, 200))
+        console.log('>> afterAll 200ms')
+      })
+
+      aroundEach(async (runTest) => {
+        console.log(">> outer aroundEach setup 0ms")
+        await new Promise(r => setTimeout(r, 100))
+        // this is still executed after timeout error
+        console.log(">> outer aroundEach setup 100ms")
+        // but this shouldn't continue to inner aroundEach or test
+        await runTest()
+        console.log(">> outer aroundEach teardown")
+      }, 10)
+
+      aroundEach(async (runTest) => {
+        console.log('>> inner aroundEach setup')
+        await runTest()
+        console.log('>> inner aroundEach teardown')
+      })
+
+      test('basic', () => {
+        console.log('>> test')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  late-run-test-after-timeout.test.ts > basic
+    AroundHookSetupError: The setup phase of "aroundEach" hook timed out after 10ms.
+     ❯ late-run-test-after-timeout.test.ts:10:7
+          8|       })
+          9|
+         10|       aroundEach(async (runTest) => {
+           |       ^
+         11|         console.log(">> outer aroundEach setup 0ms")
+         12|         await new Promise(r => setTimeout(r, 100))
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer aroundEach setup 0ms
+    >> afterAll 0ms
+    >> outer aroundEach setup 100ms
+    >> afterAll 200ms"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "late-run-test-after-timeout.test.ts": {
+        "basic": [
+          "The setup phase of "aroundEach" hook timed out after 10ms.",
+        ],
+      },
+    }
+  `)
+})
