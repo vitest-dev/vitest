@@ -354,33 +354,15 @@ export interface UserEvent {
   dragAndDrop: (source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>
 }
 
-export interface UserEventFillOptions {
-  timeout?: number
-}
-export interface UserEventHoverOptions {
-  timeout?: number
-}
-export interface UserEventSelectOptions {
-  timeout?: number
-}
-export interface UserEventClickOptions {
-  timeout?: number
-}
-export interface UserEventClearOptions {
-  timeout?: number
-}
-export interface UserEventDoubleClickOptions {
-  timeout?: number
-}
-export interface UserEventTripleClickOptions {
-  timeout?: number
-}
-export interface UserEventDragAndDropOptions {
-  timeout?: number
-}
-export interface UserEventUploadOptions {
-  timeout?: number
-}
+export interface UserEventFillOptions {}
+export interface UserEventHoverOptions {}
+export interface UserEventSelectOptions {}
+export interface UserEventClickOptions {}
+export interface UserEventClearOptions {}
+export interface UserEventDoubleClickOptions {}
+export interface UserEventTripleClickOptions {}
+export interface UserEventDragAndDropOptions {}
+export interface UserEventUploadOptions {}
 
 /**
  * Base options shared by all wheel event configurations.
@@ -394,7 +376,6 @@ export interface UserEventWheelBaseOptions {
    * Useful for triggering multiple scroll steps in a single call.
    */
   times?: number
-  timeout?: number
 }
 
 /**
@@ -498,9 +479,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
   selected?: boolean
 }
 
-interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {
-  timeout?: number
-}
+interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface LocatorSelectors {
   /**

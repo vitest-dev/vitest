@@ -60,3 +60,39 @@ export class PreviewBrowserProvider implements BrowserProvider {
 
   async close(): Promise<void> {}
 }
+
+declare module 'vitest/browser' {
+  export interface UserEventClickOptions {
+    timeout?: number
+  }
+  export interface UserEventHoverOptions {
+    timeout?: number
+  }
+  export interface UserEventDragAndDropOptions {
+    timeout?: number
+  }
+  export interface UserEventFillOptions {
+    timeout?: number
+  }
+  export interface UserEventSelectOptions {
+    timeout?: number
+  }
+  export interface UserEventClearOptions {
+    timeout?: number
+  }
+  export interface UserEventDoubleClickOptions {
+    timeout?: number
+  }
+  export interface UserEventTripleClickOptions {
+    timeout?: number
+  }
+  export interface UserEventUploadOptions {
+    timeout?: number
+  }
+  export interface UserEventWheelBaseOptions {
+    timeout?: number
+  }
+  export interface LocatorScreenshotOptions {
+    timeout?: number
+  }
+}

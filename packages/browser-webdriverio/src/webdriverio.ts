@@ -288,14 +288,42 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 }
 
 declare module 'vitest/browser' {
-  export interface UserEventClickOptions extends Partial<ClickOptions> {}
-  export interface UserEventHoverOptions extends MoveToOptions {}
-
+  export interface UserEventClickOptions extends Partial<ClickOptions> {
+    timeout?: number
+  }
+  export interface UserEventHoverOptions extends MoveToOptions {
+    timeout?: number
+  }
   export interface UserEventDragAndDropOptions extends DragAndDropOptions {
     sourceX?: number
     sourceY?: number
     targetX?: number
     targetY?: number
+    timeout?: number
+  }
+  export interface UserEventFillOptions {
+    timeout?: number
+  }
+  export interface UserEventSelectOptions {
+    timeout?: number
+  }
+  export interface UserEventClearOptions {
+    timeout?: number
+  }
+  export interface UserEventDoubleClickOptions {
+    timeout?: number
+  }
+  export interface UserEventTripleClickOptions {
+    timeout?: number
+  }
+  export interface UserEventUploadOptions {
+    timeout?: number
+  }
+  export interface UserEventWheelBaseOptions {
+    timeout?: number
+  }
+  export interface LocatorScreenshotOptions {
+    timeout?: number
   }
 }
 
