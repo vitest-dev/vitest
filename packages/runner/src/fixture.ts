@@ -77,14 +77,9 @@ export class TestFixtures {
     return this._registrations
   }
 
-  /**
-   * @internal
-   */
-  resolveFixtures(): UserFixtures {
+  toUserFixtures(): UserFixtures {
     const fixtures: UserFixtures = {}
-    const registrations = this._registrations
-
-    for (const [name, fixture] of registrations.entries()) {
+    for (const [name, fixture] of this._registrations) {
       const options: FixtureOptions = {
         auto: fixture.auto,
         scope: fixture.scope,
@@ -92,7 +87,6 @@ export class TestFixtures {
       }
       fixtures[name] = [fixture.value, options]
     }
-
     return fixtures
   }
 
@@ -213,7 +207,36 @@ export class TestFixtures {
       }
     })
 
-    // validate fixture dependency scopes
+    this.validateFixtureGraph(registrations, errors)
+
+    return registrations
+  }
+
+  merge(other: TestFixtures): TestFixtures {
+    const registrations = new Map(this._registrations)
+    const errors: Error[] = []
+
+    const { suite, file } = getCurrentSuite()
+    const context = suite || file
+    const isTopLevel = !suite || suite.file === suite
+
+    // We need to resolve fixtures from the current context, because test.override
+    // inside the suite only modifies overrides for that suite.
+    const otherRegistrations = context ? other.get(context) : other._registrations
+
+    for (const [name, fixture] of otherRegistrations) {
+      if (!isTopLevel && fixture.scope !== 'test') {
+        errors.push(new FixtureDependencyError(`The "${name}" fixture cannot be defined with a ${fixture.scope} scope inside the describe block. Define it at the top level of the file instead.`))
+      }
+      registrations.set(name, fixture)
+    }
+
+    this.validateFixtureGraph(registrations, errors)
+
+    return new TestFixtures(registrations)
+  }
+
+  private validateFixtureGraph(registrations: FixtureRegistrations, errors: Error[] = []) {
     for (const fixture of registrations.values()) {
       for (const depName of fixture.deps) {
         if (TestFixtures._builtinFixtures.includes(depName)) {
@@ -243,7 +266,6 @@ export class TestFixtures {
     else if (errors.length > 1) {
       throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
     }
-    return registrations
   }
 }
 

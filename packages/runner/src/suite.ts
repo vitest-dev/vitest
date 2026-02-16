@@ -1093,14 +1093,44 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-export function mergeTests<A, B>(
-  test: TestAPI<A>,
-  testB: TestAPI<B>,
-): TestAPI<A & B> {
-  const ctx = getChainableContext(testB)
-  if (!ctx) {
-    throw new TypeError('Cannot merge tests: extension is not a valid TestAPI')
+export function mergeTests<A>(a: TestAPI<A>): TestAPI<A>
+export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<A & B>
+export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<A & B & C>
+export function mergeTests<A, B, C, D>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>): TestAPI<A & B & C & D>
+export function mergeTests<A, B, C, D, E>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>): TestAPI<A & B & C & D & E>
+export function mergeTests<A, B, C, D, E, F>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>, f: TestAPI<F>): TestAPI<A & B & C & D & E & F>
+export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
+  if (tests.length === 0) {
+    throw new TypeError('mergeTests requires at least one test')
   }
-  const fixtures = ctx.getFixtures().resolveFixtures()
-  return test.extend(fixtures as any) as TestAPI<A & B>
+
+  // use the base test as the starting point
+  const [base, ...rest] = tests
+  const baseContext = getChainableContext(base)
+  if (!baseContext || typeof baseContext.getFixtures !== 'function') {
+    throw new TypeError('Cannot merge tests: argument is not a valid test instance')
+  }
+
+  let fixtures = baseContext.getFixtures()
+
+  for (const test of rest) {
+    const ctx = getChainableContext(test)
+    if (!ctx || typeof ctx.getFixtures !== 'function') {
+      throw new TypeError('Cannot merge tests: argument is not a valid test instance')
+    }
+    fixtures = fixtures.merge(ctx.getFixtures())
+  }
+
+  // We call extend({}) to clone the chainable API while preserving internal flags.
+  // The newly created fixtures are immediately replaced via mergeContext.
+  const result = base.extend({})
+  const resultContext = getChainableContext(result)
+
+  if (!resultContext) {
+    throw new TypeError('Cannot merge tests: argument is not a valid test instance')
+  }
+
+  resultContext.mergeContext({ fixtures })
+
+  return result
 }

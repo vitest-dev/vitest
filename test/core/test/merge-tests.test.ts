@@ -61,4 +61,50 @@ describe('mergeTests', () => {
       expect(b).toBe('b')
     })
   })
+
+  describe('variadic merge (A, B, C) overrides correctly', () => {
+    const testA = test.extend({
+      a: 1,
+      shared: 'a',
+    })
+    const testB = test.extend({
+      b: 2,
+      shared: 'b',
+    })
+    const testC = test.extend({
+      c: 3,
+      shared: 'c',
+    })
+
+    const merged = mergeTests(testA, testB, testC)
+
+    merged('inherits all fixtures and overrides from last', ({ a, b, c, shared }) => {
+      expect(a).toBe(1)
+      expect(b).toBe(2)
+      expect(c).toBe(3)
+      expect(shared).toBe('c')
+    })
+  })
+
+  describe('overrides', () => {
+    describe('top-level', () => {
+      const base = test.extend({ a: 1 })
+      base.override({ a: 2 })
+      const merged = mergeTests(base)
+
+      merged('confirms top-level overrides are respected', ({ a }) => {
+        expect(a).toBe(2)
+      })
+    })
+
+    describe('scoped', () => {
+      const base = test.extend({ a: 1 })
+      base.override({ a: 2 })
+      const merged = mergeTests(base)
+
+      merged('confirms scoped overrides are respected', ({ a }) => {
+        expect(a).toBe(2)
+      })
+    })
+  })
 })
