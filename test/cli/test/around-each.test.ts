@@ -1097,7 +1097,8 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
       "caught-inner-error-timeout.test.ts": {
         "suite": {
           "test": [
-            "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
+            "inner aroundEach teardown failure",
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
           ],
         },
       },
@@ -1707,7 +1708,8 @@ test('aroundAll teardown timeout works when runSuite error is caught', async () 
       "caught-inner-suite-error-timeout.test.ts": {
         "suite": {
           "__suite_errors__": [
-            "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
+            "inner aroundAll teardown failure",
+            "The teardown phase of "aroundAll" hook timed out after 50ms.",
           ],
           "test": "passed",
         },
@@ -2126,6 +2128,10 @@ test('aroundAll teardown timeout works when inner fails', async () => {
     {
       "caught-inner-error-timeout.test.ts": {
         "suite": {
+          "__suite_errors__": [
+            "inner aroundAll teardown failure",
+            "The teardown phase of "aroundAll" hook timed out after 50ms.",
+          ],
           "test": "passed",
         },
       },
@@ -2264,6 +2270,9 @@ test('aroundAll aborts late runSuite after setup timeout', async () => {
     {
       "late-run-suite-after-timeout.test.ts": {
         "timed out suite": {
+          "__suite_errors__": [
+            "The setup phase of "aroundAll" hook timed out after 10ms.",
+          ],
           "basic": "skipped",
         },
       },
@@ -2311,7 +2320,7 @@ test('nested aroundEach setup error is not propagated to outer runTest catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-each-setup-error.test.ts:7:17
+     ❯ nested-around-each-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -2438,7 +2447,7 @@ test('nested aroundAll setup error is not propagated to outer runSuite catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-all-setup-error.test.ts:7:17
+     ❯ nested-around-all-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

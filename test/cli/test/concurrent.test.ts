@@ -709,7 +709,7 @@ test('neighboring suite aroundAll does not hang when setup times out before late
           "__suite_errors__": [
             "The setup phase of "aroundAll" hook timed out after 500ms.",
           ],
-          "a": "passed",
+          "a": "skipped",
         },
         "s2": {
           "b": [
@@ -1019,7 +1019,8 @@ test('aroundEach enforces teardown timeout when inner error is caught', async ()
       "basic.test.ts": {
         "wrapper": {
           "a": [
-            "The teardown phase of \"aroundEach\" hook timed out after 50ms.",
+            "inner aroundEach teardown failure",
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
           ],
         },
       },
@@ -1064,7 +1065,8 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
       "basic.test.ts": {
         "suite": {
           "__suite_errors__": [
-            "The teardown phase of \"aroundAll\" hook timed out after 50ms.",
+            "inner aroundAll teardown failure",
+            "The teardown phase of "aroundAll" hook timed out after 50ms.",
           ],
           "a": "passed",
         },
