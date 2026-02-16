@@ -920,7 +920,8 @@ test('multiple aroundEach hooks with different timeouts', async () => {
 
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     ">> outer setup
-    >> inner setup start"
+    >> inner setup start
+    >> outer teardown"
   `)
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -982,7 +983,8 @@ test('multiple aroundEach hooks where inner teardown times out', async () => {
     ">> outer setup
     >> inner setup
     >> test
-    >> inner teardown start"
+    >> inner teardown start
+    >> outer teardown"
   `)
   expect(stderr).toMatchInlineSnapshot(`
     "
@@ -1893,7 +1895,7 @@ test('tests are skipped when aroundAll setup fails', async () => {
   `)
 })
 
-test('aroundEach teardown timeout works when runTest error is caught', async () => {
+test('aroundEach teardown timeout works when inner fails', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'caught-inner-error-timeout.test.ts': `
       import { aroundEach, afterAll, describe, expect, test } from 'vitest'
@@ -1901,7 +1903,7 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
       let errorCaught = false
 
       afterAll(() => {
-        expect(errorCaught).toBe(true)
+        expect(errorCaught).toBe(false)
       })
 
       describe('suite', () => {
@@ -1942,7 +1944,19 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
          12|           try {
          13|             await runTest()
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite > test
+    Error: inner aroundEach teardown failure
+     ❯ caught-inner-error-timeout.test.ts:24:17
+         22|         aroundEach(async (runTest) => {
+         23|           await runTest()
+         24|           throw new Error('inner aroundEach teardown failure')
+           |                 ^
+         25|         })
+         26|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
@@ -1952,6 +1966,7 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
         "suite": {
           "test": [
             "The teardown phase of "aroundEach" hook timed out after 50ms.",
+            "inner aroundEach teardown failure",
           ],
         },
       },
@@ -1959,7 +1974,7 @@ test('aroundEach teardown timeout works when runTest error is caught', async () 
   `)
 })
 
-test('aroundAll teardown timeout works when runTest error is caught', async () => {
+test('aroundAll teardown timeout works when inner fails', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'caught-inner-error-timeout.test.ts': `
       import { aroundAll, afterAll, describe, expect, test } from 'vitest'
@@ -1967,7 +1982,7 @@ test('aroundAll teardown timeout works when runTest error is caught', async () =
       let errorCaught = false
 
       afterAll(() => {
-        expect(errorCaught).toBe(true)
+        expect(errorCaught).toBe(false)
       })
 
       describe('suite', () => {
@@ -2008,7 +2023,19 @@ test('aroundAll teardown timeout works when runTest error is caught', async () =
          12|           try {
          13|             await runTest()
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite
+    Error: inner aroundAll teardown failure
+     ❯ caught-inner-error-timeout.test.ts:24:17
+         22|         aroundAll(async (runTest) => {
+         23|           await runTest()
+         24|           throw new Error('inner aroundAll teardown failure')
+           |                 ^
+         25|         })
+         26|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
@@ -2156,6 +2183,444 @@ test('aroundAll aborts late runSuite after setup timeout', async () => {
         "timed out suite": {
           "basic": "skipped",
         },
+      },
+    }
+  `)
+})
+
+test('nested aroundEach setup error is not propagated to outer runTest catch', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested-around-each-setup-error.test.ts': `
+      import { aroundEach, test } from 'vitest'
+
+      aroundEach(async (runTest) => {
+        console.log('>> outer setup')
+        try {
+          await runTest()
+        }
+        catch (error) {
+          console.log('>> outer caught', String(error))
+        }
+        console.log('>> outer teardown')
+      })
+
+      aroundEach(async (_runTest) => {
+        console.log('>> inner setup')
+        throw new Error('inner aroundEach setup error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  nested-around-each-setup-error.test.ts > repro
+    Error: inner aroundEach setup error
+     ❯ nested-around-each-setup-error.test.ts:17:15
+         15|       aroundEach(async (_runTest) => {
+         16|         console.log('>> inner setup')
+         17|         throw new Error('inner aroundEach setup error')
+           |               ^
+         18|       })
+         19|
+     ❯ nested-around-each-setup-error.test.ts:7:17
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested-around-each-setup-error.test.ts": {
+        "repro": [
+          "inner aroundEach setup error",
+        ],
+      },
+    }
+  `)
+})
+
+test('nested aroundEach teardown error is not propagated to outer runTest catch', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested-around-each-teardown-error.test.ts': `
+      import { aroundEach, test } from 'vitest'
+
+      aroundEach(async (runTest) => {
+        console.log('>> outer setup')
+        try {
+          await runTest()
+        }
+        catch (error) {
+          console.log('>> outer caught', String(error))
+        }
+        console.log('>> outer teardown')
+      })
+
+      aroundEach(async (runTest) => {
+        console.log('>> inner setup')
+        await runTest()
+        console.log('>> inner teardown')
+        throw new Error('inner aroundEach teardown error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  nested-around-each-teardown-error.test.ts > repro
+    Error: inner aroundEach teardown error
+     ❯ nested-around-each-teardown-error.test.ts:19:15
+         17|         await runTest()
+         18|         console.log('>> inner teardown')
+         19|         throw new Error('inner aroundEach teardown error')
+           |               ^
+         20|       })
+         21|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> test body
+    >> inner teardown
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested-around-each-teardown-error.test.ts": {
+        "repro": [
+          "inner aroundEach teardown error",
+        ],
+      },
+    }
+  `)
+})
+
+test('nested aroundAll setup error is not propagated to outer runSuite catch', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested-around-all-setup-error.test.ts': `
+      import { aroundAll, test } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> outer setup')
+        try {
+          await runSuite()
+        }
+        catch (error) {
+          console.log('>> outer caught', String(error))
+        }
+        console.log('>> outer teardown')
+      })
+
+      aroundAll(async (_runSuite) => {
+        console.log('>> inner setup')
+        throw new Error('inner aroundAll setup error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  nested-around-all-setup-error.test.ts [ nested-around-all-setup-error.test.ts ]
+    Error: inner aroundAll setup error
+     ❯ nested-around-all-setup-error.test.ts:17:15
+         15|       aroundAll(async (_runSuite) => {
+         16|         console.log('>> inner setup')
+         17|         throw new Error('inner aroundAll setup error')
+           |               ^
+         18|       })
+         19|
+     ❯ nested-around-all-setup-error.test.ts:7:17
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested-around-all-setup-error.test.ts": {
+        "repro": "skipped",
+      },
+    }
+  `)
+})
+
+test('nested aroundAll teardown error is not propagated to outer runSuite catch', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'nested-around-all-teardown-error.test.ts': `
+      import { aroundAll, test } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> outer setup')
+        try {
+          await runSuite()
+        }
+        catch (error) {
+          console.log('>> outer caught', String(error))
+        }
+        console.log('>> outer teardown')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> inner setup')
+        await runSuite()
+        console.log('>> inner teardown')
+        throw new Error('inner aroundAll teardown error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  nested-around-all-teardown-error.test.ts [ nested-around-all-teardown-error.test.ts ]
+    Error: inner aroundAll teardown error
+     ❯ nested-around-all-teardown-error.test.ts:19:15
+         17|         await runSuite()
+         18|         console.log('>> inner teardown')
+         19|         throw new Error('inner aroundAll teardown error')
+           |               ^
+         20|       })
+         21|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> inner setup
+    >> test body
+    >> inner teardown
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "nested-around-all-teardown-error.test.ts": {
+        "repro": "passed",
+      },
+    }
+  `)
+})
+
+test('three nested aroundEach teardown errors are all reported', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'triple-around-each-teardown-errors.test.ts': `
+      import { aroundEach, test } from 'vitest'
+
+      aroundEach(async (runTest) => {
+        console.log('>> outer setup')
+        await runTest()
+        console.log('>> outer teardown')
+        throw new Error('outer aroundEach teardown error')
+      })
+
+      aroundEach(async (runTest) => {
+        console.log('>> middle setup')
+        await runTest()
+        console.log('>> middle teardown')
+        throw new Error('middle aroundEach teardown error')
+      })
+
+      aroundEach(async (runTest) => {
+        console.log('>> inner setup')
+        await runTest()
+        console.log('>> inner teardown')
+        throw new Error('inner aroundEach teardown error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  triple-around-each-teardown-errors.test.ts > repro
+    Error: outer aroundEach teardown error
+     ❯ triple-around-each-teardown-errors.test.ts:8:15
+          6|         await runTest()
+          7|         console.log('>> outer teardown')
+          8|         throw new Error('outer aroundEach teardown error')
+           |               ^
+          9|       })
+         10|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+     FAIL  triple-around-each-teardown-errors.test.ts > repro
+    Error: inner aroundEach teardown error
+     ❯ triple-around-each-teardown-errors.test.ts:22:15
+         20|         await runTest()
+         21|         console.log('>> inner teardown')
+         22|         throw new Error('inner aroundEach teardown error')
+           |               ^
+         23|       })
+         24|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  triple-around-each-teardown-errors.test.ts > repro
+    Error: middle aroundEach teardown error
+     ❯ triple-around-each-teardown-errors.test.ts:15:15
+         13|         await runTest()
+         14|         console.log('>> middle teardown')
+         15|         throw new Error('middle aroundEach teardown error')
+           |               ^
+         16|       })
+         17|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> middle setup
+    >> inner setup
+    >> test body
+    >> inner teardown
+    >> middle teardown
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "triple-around-each-teardown-errors.test.ts": {
+        "repro": [
+          "outer aroundEach teardown error",
+          "inner aroundEach teardown error",
+          "middle aroundEach teardown error",
+        ],
+      },
+    }
+  `)
+})
+
+test('three nested aroundAll teardown errors are all reported', async () => {
+  const { stdout, stderr, errorTree } = await runInlineTests({
+    'triple-around-all-teardown-errors.test.ts': `
+      import { aroundAll, test } from 'vitest'
+
+      aroundAll(async (runSuite) => {
+        console.log('>> outer setup')
+        await runSuite()
+        console.log('>> outer teardown')
+        throw new Error('outer aroundAll teardown error')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> middle setup')
+        await runSuite()
+        console.log('>> middle teardown')
+        throw new Error('middle aroundAll teardown error')
+      })
+
+      aroundAll(async (runSuite) => {
+        console.log('>> inner setup')
+        await runSuite()
+        console.log('>> inner teardown')
+        throw new Error('inner aroundAll teardown error')
+      })
+
+      test('repro', () => {
+        console.log('>> test body')
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
+    Error: outer aroundAll teardown error
+     ❯ triple-around-all-teardown-errors.test.ts:8:15
+          6|         await runSuite()
+          7|         console.log('>> outer teardown')
+          8|         throw new Error('outer aroundAll teardown error')
+           |               ^
+          9|       })
+         10|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+     FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
+    Error: inner aroundAll teardown error
+     ❯ triple-around-all-teardown-errors.test.ts:22:15
+         20|         await runSuite()
+         21|         console.log('>> inner teardown')
+         22|         throw new Error('inner aroundAll teardown error')
+           |               ^
+         23|       })
+         24|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
+    Error: middle aroundAll teardown error
+     ❯ triple-around-all-teardown-errors.test.ts:15:15
+         13|         await runSuite()
+         14|         console.log('>> middle teardown')
+         15|         throw new Error('middle aroundAll teardown error')
+           |               ^
+         16|       })
+         17|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+    "
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    ">> outer setup
+    >> middle setup
+    >> inner setup
+    >> test body
+    >> inner teardown
+    >> middle teardown
+    >> outer teardown"
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "triple-around-all-teardown-errors.test.ts": {
+        "repro": "passed",
       },
     }
   `)
