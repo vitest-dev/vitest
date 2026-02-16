@@ -1,10 +1,11 @@
 // A compact (code-wise, probably not memory-wise) singly linked list node.
 type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
-export interface ConcurrencyLimiter {
-  <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args): Promise<T>
+export interface ConcurrencyLimiter extends RunWithLimit {
   acquire: () => (() => void) | Promise<() => void>
 }
+
+type RunWithLimit = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T>
 
 /**
  * Return a function for running multiple async operations with limited concurrency.
@@ -19,11 +20,8 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
   let head: undefined | QueueNode<() => void>
   let tail: undefined | QueueNode<() => void>
 
-  const release = () => {
-    if (count === 0) {
-      return
-    }
-
+  // A bookkeeping function executed whenever a task has been run to completion.
+  const finish = () => {
     count--
 
     // Check if there are further pending tasks in the queue.
@@ -40,59 +38,53 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
 
   const acquire = () => {
     let released = false
-    const releaseIfNeeded = () => {
+    const release = () => {
       if (!released) {
         released = true
-        release()
+        finish()
       }
     }
 
     if (count++ < concurrency) {
-      return releaseIfNeeded
+      return release
     }
 
     return new Promise<() => void>((resolve) => {
       if (tail) {
         // There are pending tasks, so append to the queue.
-        tail = tail[1] = [() => resolve(releaseIfNeeded)]
+        tail = tail[1] = [() => resolve(release)]
       }
       else {
         // No other pending tasks, initialize the queue with a new tail and head.
-        head = tail = [() => resolve(releaseIfNeeded)]
+        head = tail = [() => resolve(release)]
       }
     })
   }
 
-  const limit: ConcurrencyLimiter = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => {
-    const runWithRelease = (releaseIfNeeded: () => void): Promise<T> => {
-      let result: PromiseLike<T> | T
+  const runWithLimit: RunWithLimit = (func, ...args) => {
+    const release = acquire()
 
-      try {
-        result = func(...args)
-      }
-      catch (error) {
-        releaseIfNeeded()
-        return Promise.reject(error)
-      }
-
-      if (typeof result === 'object' && result != null && typeof (result as PromiseLike<T>).then === 'function') {
-        return Promise.resolve(result).finally(releaseIfNeeded)
-      }
-
-      releaseIfNeeded()
-      return Promise.resolve(result)
+    if (release instanceof Promise) {
+      return release.then(() => func(...args)).finally(finish)
     }
 
-    const acquired = acquire()
-
-    if (typeof acquired === 'function') {
-      return runWithRelease(acquired)
-    }
-
-    return acquired.then(runWithRelease)
+    return promiseTry(func, ...args).finally(finish)
   }
 
-  limit.acquire = acquire
+  return Object.assign(runWithLimit, { acquire })
+}
 
-  return limit
+// Promise.try ponyfill
+function promiseTry<TArgs extends unknown[], T>(
+  fn: (...args: TArgs) => T | PromiseLike<T>,
+  ...args: TArgs
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    try {
+      resolve(fn(...args))
+    }
+    catch (error) {
+      reject(error)
+    }
+  })
 }

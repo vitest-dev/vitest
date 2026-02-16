@@ -2320,7 +2320,7 @@ test('nested aroundEach setup error is not propagated to outer runTest catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-each-setup-error.test.ts:7:17
+     ❯ nested-around-each-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -2447,7 +2447,7 @@ test('nested aroundAll setup error is not propagated to outer runSuite catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-all-setup-error.test.ts:7:17
+     ❯ nested-around-all-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
