@@ -3,7 +3,7 @@ type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
 export interface ConcurrencyLimiter {
   <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args): Promise<T>
-  acquire: () => Promise<() => void>
+  acquire: () => (() => void) | Promise<() => void>
 }
 
 /**
@@ -38,40 +38,58 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
     }
   }
 
-  const acquire = async () => {
-    await new Promise<void>((resolve) => {
-      if (count++ < concurrency) {
-        // No need to queue if fewer than maxConcurrency tasks are running.
-        resolve()
-      }
-      else if (tail) {
-        // There are pending tasks, so append to the queue.
-        tail = tail[1] = [resolve]
-      }
-      else {
-        // No other pending tasks, initialize the queue with a new tail and head.
-        head = tail = [resolve]
-      }
-    })
+  const acquire = () => {
     let released = false
-    return () => {
+    const releaseIfNeeded = () => {
       if (!released) {
         released = true
         release()
       }
     }
+
+    if (count++ < concurrency) {
+      return releaseIfNeeded
+    }
+
+    return new Promise<() => void>((resolve) => {
+      if (tail) {
+        // There are pending tasks, so append to the queue.
+        tail = tail[1] = [() => resolve(releaseIfNeeded)]
+      }
+      else {
+        // No other pending tasks, initialize the queue with a new tail and head.
+        head = tail = [() => resolve(releaseIfNeeded)]
+      }
+    })
   }
 
-  const limit: ConcurrencyLimiter = (func, ...args) => {
-    // Create a promise chain that:
-    //  1. Waits for its turn in the task queue (if necessary).
-    //  2. Runs the task.
-    //  3. Allows the next pending task (if any) to run.
-    return acquire().then(() => {
-      // Running func here ensures that even a non-thenable result or an
-      // immediately thrown error gets wrapped into a Promise.
-      return func(...args)
-    }).finally(release)
+  const limit: ConcurrencyLimiter = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => {
+    const runWithRelease = (releaseIfNeeded: () => void): Promise<T> => {
+      let result: PromiseLike<T> | T
+
+      try {
+        result = func(...args)
+      }
+      catch (error) {
+        releaseIfNeeded()
+        return Promise.reject(error)
+      }
+
+      if (typeof result === 'object' && result != null && typeof (result as PromiseLike<T>).then === 'function') {
+        return Promise.resolve(result).finally(releaseIfNeeded)
+      }
+
+      releaseIfNeeded()
+      return Promise.resolve(result)
+    }
+
+    const acquired = acquire()
+
+    if (typeof acquired === 'function') {
+      return runWithRelease(acquired)
+    }
+
+    return acquired.then(runWithRelease)
   }
 
   limit.acquire = acquire

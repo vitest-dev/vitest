@@ -362,7 +362,10 @@ async function callAroundHooks<THook extends Function>(
       // Run inner hooks - don't time this against our teardown timeout
       await runNextHook(index + 1).catch(e => hookErrors.push(e))
 
-      teardownLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
+      const teardownAcquire = limitMaxConcurrency.acquire()
+      teardownLimitConcurrencyRelease = teardownAcquire instanceof Promise
+        ? await teardownAcquire
+        : teardownAcquire
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
@@ -371,7 +374,10 @@ async function callAroundHooks<THook extends Function>(
       resolveUseReturned()
     }
 
-    setupLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
+    const setupAcquire = limitMaxConcurrency.acquire()
+    setupLimitConcurrencyRelease = setupAcquire instanceof Promise
+      ? await setupAcquire
+      : setupAcquire
 
     // Start setup timeout
     setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
