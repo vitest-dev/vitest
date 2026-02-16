@@ -1,5 +1,5 @@
 import type { File, Task } from '@vitest/runner'
-import type { FileTreeNode, Filter, FilteredTests, ProjectSortUIType, TreeFilterState, UITaskTreeNode } from './types'
+import type { FileTreeNode, Filter, FilteredTests, SortUIType, TreeFilterState, UITaskTreeNode } from './types'
 import { createTagsFilter } from '@vitest/runner/utils'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, reactive, ref, shallowRef } from 'vue'
@@ -30,7 +30,7 @@ export const treeFilter = useLocalStorage<TreeFilterState>(
     projectSort: undefined,
   },
 )
-export const projectSort = ref<ProjectSortUIType>(treeFilter.value.projectSort || 'default')
+export const projectSort = ref<SortUIType>(treeFilter.value.projectSort || 'default')
 export const currentProject = shallowRef(treeFilter.value?.project || ALL_PROJECTS)
 export const enableProjects = computed(() => availableProjects.value.length > 1)
 export const disableClearProjects = computed(() => currentProject.value === ALL_PROJECTS)
@@ -67,7 +67,7 @@ function createSafeFilter(
     return { matcher: () => true }
   }
   try {
-    return { matcher: createTagsFilter([query], config.value.tags) }
+    return { matcher: createTagsFilter([query], config.value.tags || []) }
   }
   catch (error: any) {
     return { matcher: () => false, error: error.message }

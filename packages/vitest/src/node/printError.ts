@@ -389,14 +389,14 @@ function printErrorMessage(error: TestError, logger: ErrorLogger) {
   }
 }
 
-function printStack(
+export function printStack(
   logger: ErrorLogger,
   project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: (stack: ParsedStack) => void,
-) {
+): void {
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)
@@ -469,10 +469,8 @@ export function generateCodeFrame(
           return ''
         }
 
-        res.push(
-          lineNo(j + 1)
-          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
-        )
+        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent).trimEnd()
+        res.push(lineNo(j + 1) + (truncatedLine ? ' ' + truncatedLine : truncatedLine))
 
         if (j === i) {
           // push underline
@@ -481,12 +479,12 @@ export function generateCodeFrame(
             1,
             end > count ? lineLength - pad : end - start,
           )
-          res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
+          res.push(lineNo() + ' '.repeat(pad + 1) + c.red('^'.repeat(length)))
         }
         else if (j > i) {
           if (end > count) {
             const length = Math.max(1, Math.min(end - count, lineLength))
-            res.push(lineNo() + c.red('^'.repeat(length)))
+            res.push(lineNo() + ' ' + c.red('^'.repeat(length)))
           }
           count += lineLength + 1
         }
@@ -503,5 +501,5 @@ export function generateCodeFrame(
 }
 
 function lineNo(no: number | string = '') {
-  return c.gray(`${String(no).padStart(3, ' ')}| `)
+  return c.gray(`${String(no).padStart(3, ' ')}|`)
 }

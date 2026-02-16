@@ -138,7 +138,7 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 ## Coverage Setup
 
 ::: tip
-All coverage options are listed in [Coverage Config Reference](/config/#coverage).
+All coverage options are listed in [Coverage Config Reference](/config/coverage).
 :::
 
 To test with coverage enabled, you can pass the `--coverage` flag in CLI or set `coverage.enabled` in `vitest.config.ts`:
@@ -167,10 +167,10 @@ export default defineConfig({
 
 ## Including and Excluding Files from Coverage Report
 
-You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
+You can define what files are shown in coverage report by configuring [`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude).
 
 By default Vitest will show only files that were imported during test run.
-To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/#coverage-include) with a pattern that will pick your source files:
+To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/coverage#coverage-include) with a pattern that will pick your source files:
 
 ::: code-group
 ```ts [vitest.config.ts] {6}
@@ -204,7 +204,7 @@ export default defineConfig({
 ```
 :::
 
-To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/#coverage-exclude):
+To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/coverage#coverage-exclude):
 
 ::: code-group
 ```ts [vitest.config.ts] {7}
@@ -499,11 +499,9 @@ If code coverage generation is slow on your project, see [Profiling Test Perform
 
 ## Vitest UI
 
-You can check your coverage report in [Vitest UI](/guide/ui).
+You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
 
-Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
-- enable `coverage.enabled=true` in your configuration file or run Vitest with `--coverage.enabled=true` flag
-- add `html` to the `coverage.reporter` list: you can also enable `subdir` option to put coverage report in a subdirectory
+This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">

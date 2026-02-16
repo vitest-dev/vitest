@@ -4,6 +4,7 @@ import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
+  CliOptions as TestCliOptions,
   TestCollection,
   TestModule,
   TestSpecification,
@@ -30,6 +31,7 @@ globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
+  printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
   mode?: 'test' | 'benchmark'
@@ -37,8 +39,10 @@ export interface VitestRunnerCLIOptions {
 
 export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
-  $cliOptions?: TestUserConfig
+  $cliOptions?: TestCliOptions
 }
+
+const process_ = process
 
 /**
  * The config is assumed to be the config on the fille system, not CLI options
@@ -58,6 +62,18 @@ export async function runVitest(
   // Reset possible previous runs
   process.exitCode = 0
   let exitCode = process.exitCode
+
+  if (runnerOptions.printExitCode) {
+    globalThis.process = new Proxy(process_, {
+      set(target, p, newValue, receiver) {
+        if (p === 'exitCode') {
+          // eslint-disable-next-line no-console
+          console.trace('exitCode was set to', newValue)
+        }
+        return Reflect.set(target, p, newValue, receiver)
+      },
+    })
+  }
 
   // Prevent possible process.exit() calls, e.g. from --browser
   const exit = process.exit
@@ -193,6 +209,9 @@ export async function runVitest(
     cli.stderr += inspect(e)
   }
   finally {
+    if (runnerOptions.printExitCode) {
+      globalThis.process = process_
+    }
     exitCode = process.exitCode
     process.exitCode = 0
 
@@ -362,20 +381,35 @@ export type TestFsStructure = Record<
   | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
 >
 
+export function stripIndent(str: string): string {
+  const normalized = str.replace(/\t/g, '  ')
+  const match = normalized.match(/^[ \t]*(?=\S)/gm)
+  if (!match) {
+    return normalized
+  }
+  const indent = match.filter(m => !!m).reduce((min, line) => Math.min(min, line.length), Infinity)
+  if (indent === 0) {
+    return normalized
+  }
+  return normalized.replace(new RegExp(`^[ ]{${indent}}`, 'gm'), '')
+}
+
 function getGeneratedFileContent(content: TestFsStructure[string]) {
   if (typeof content === 'string') {
     return content
   }
   if (typeof content === 'function') {
-    return `await (${content})()`
+    const code = `await (${stripIndent(String(content))})()`
+    return code
   }
   if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
     const imports = Object.entries(content[1].imports || [])
-    return `
+    const code = `
 ${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
-const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
+const results = await (${stripIndent(String(content[0]))})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
 ${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
     `
+    return code
   }
   if ('test' in content && content.test?.browser?.enabled && content.test?.browser?.provider?.name) {
     const name = content.test.browser.provider.name
@@ -408,6 +442,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     }
   })
   return {
+    root,
     readFile: (file: string): string => {
       const filepath = resolve(root, file)
       if (relative(root, filepath).startsWith('..')) {
@@ -481,21 +516,29 @@ export async function runInlineTests(
   }
 }
 
+const isWindows = process.platform === 'win32'
+
 export function replaceRoot(string: string, root: string) {
   const schemaRoot = root.startsWith('file://') ? root : pathToFileURL(root).toString()
-  if (!root.endsWith('/')) {
-    root += process.platform !== 'win32' ? '?/' : '?\\\\'
+  if (!root.endsWith('/') && !isWindows) {
+    root += '?/'
   }
-  if (process.platform !== 'win32') {
+  if (!isWindows) {
     return string
       .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
       .replace(new RegExp(root, 'g'), '<root>/')
   }
-  const normalizedRoot = root.replaceAll('/', '\\\\')
+  let unixRoot = root.replace(/\\/g, '/')
+  let win32Root = root.replaceAll('/', '\\\\')
+  if (!root.endsWith('/') && !root.endsWith('\\')) {
+    unixRoot += '?/'
+    win32Root += '?\\\\'
+  }
+
   return string
-    .replace(new RegExp(schemaRoot, 'g'), '<urlRoot>')
-    .replace(new RegExp(root, 'g'), '<root>/')
-    .replace(new RegExp(normalizedRoot, 'g'), '<root>/')
+    .replace(new RegExp(schemaRoot, 'gi'), '<urlRoot>')
+    .replace(new RegExp(unixRoot, 'gi'), '<root>/')
+    .replace(new RegExp(win32Root, 'gi'), '<root>/')
 }
 
 export const ts = String.raw
@@ -555,4 +598,18 @@ export function buildTestTree(testModules: TestModule[], onTestCase?: (result: T
   }
 
   return tree
+}
+
+export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
+  const projectTree: Record<string, Record<string, any>> = {}
+
+  for (const testModule of testModules) {
+    const projectName = testModule.project.name
+    projectTree[projectName] = {
+      ...projectTree[projectName],
+      ...buildTestTree([testModule], onTestCase),
+    }
+  }
+
+  return projectTree
 }

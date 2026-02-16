@@ -112,6 +112,9 @@ export function WorkspaceVitestPlugin(
         if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
           vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
         }
+        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
+          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
+        }
 
         return {
           base: '/',
@@ -242,6 +245,7 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project:server',
+      enforce: 'pre',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)

@@ -22,7 +22,6 @@ import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpe
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
-import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
@@ -655,7 +654,7 @@ export class Vitest {
     await this._testRun.updated(packs, events).catch(noop)
   }
 
-  async collect(filters?: string[]): Promise<TestRunResult> {
+  async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
     return this._traces.$('vitest.collect', async (collectSpan) => {
       const filenamePattern = filters && filters?.length > 0 ? filters : []
       collectSpan.setAttribute('vitest.collect.filters', filenamePattern)
@@ -681,6 +680,13 @@ export class Vitest {
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
         return { testModules: [], unhandledErrors: [] }
+      }
+
+      if (options?.staticParse) {
+        const testModules = await this.experimental_parseSpecifications(files, {
+          concurrency: options.staticParseConcurrency,
+        })
+        return { testModules, unhandledErrors: [] }
       }
 
       return this.collectTests(files)
@@ -1372,10 +1378,13 @@ export class Vitest {
 
     if (this.coverageProvider) {
       await this.coverageProvider.reportCoverage(coverage, { allTestsRun })
-      // notify coverage iframe reload
+      // notify builtin ui and html reporter after coverage html is generated
       for (const reporter of this.reporters) {
-        if (reporter instanceof WebSocketReporter) {
-          reporter.onFinishedReportCoverage()
+        if (
+          'onFinishedReportCoverage' in reporter
+          && typeof reporter.onFinishedReportCoverage === 'function'
+        ) {
+          await reporter.onFinishedReportCoverage()
         }
       }
     }
@@ -1392,9 +1401,12 @@ export class Vitest {
         if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)
         }
+        const teardownErrors: unknown[] = []
         // do teardown before closing the server
         for (const project of teardownProjects.reverse()) {
-          await project._teardownGlobalSetup()
+          await project._teardownGlobalSetup().catch((error) => {
+            teardownErrors.push(error)
+          })
         }
 
         const closePromises: unknown[] = this.projects.map(w => w.close())
@@ -1415,7 +1427,7 @@ export class Vitest {
         closePromises.push(...this._onClose.map(fn => fn()))
 
         await Promise.allSettled(closePromises).then((results) => {
-          results.forEach((r) => {
+          [...results, ...teardownErrors.map(r => ({ status: 'rejected', reason: r }))].forEach((r) => {
             if (r.status === 'rejected') {
               this.logger.error('error during close', r.reason)
             }
@@ -1450,7 +1462,7 @@ export class Vitest {
           }
 
           if (!this.reporters.some(r => r instanceof HangingProcessReporter)) {
-            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
+            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/guide/reporters.html#hanging-process-reporter')
           }
         }
 

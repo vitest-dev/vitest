@@ -7,7 +7,7 @@ declare module 'vitest' {
   }
 }
 
-afterAll((suite) => {
+afterAll(({}, suite) => {
   suite.meta.done = true
 })
 

@@ -2,7 +2,7 @@ import type { CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact } 
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type { OTELCarrier } from '../utils/traces'
-import type { AfterSuiteRunMeta, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
+import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
   fetch: (
@@ -17,6 +17,7 @@ export interface RuntimeRPC {
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
+  onAsyncLeaks: (leak: AsyncLeak[]) => void
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void

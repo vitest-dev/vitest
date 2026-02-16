@@ -6,7 +6,6 @@ const helloWorld = () => {
 return joinPath('hello', 'world')
 }
 
-test('Are you mocking me?', () => {
 // note there are NO indents in this file
 // except the next line
 // test pass with spaces, test fails with tab
@@ -15,5 +14,7 @@ return {
 join: vi.fn().mockReturnValue('goodbye world')
 }
 })
+
+test('Are you mocking me?', () => {
 expect(helloWorld()).toBe('goodbye world')
 })

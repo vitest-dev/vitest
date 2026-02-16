@@ -27,7 +27,6 @@ export class TestSpecification {
   public readonly moduleId: string
   /**
    * The current test pool. It's possible to have multiple pools in a single test project with `typecheck.enabled`.
-   * @experimental In later versions, the project will only support a single pool.
    */
   public readonly pool: Pool
   /**

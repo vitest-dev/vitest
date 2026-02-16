@@ -39,60 +39,60 @@ describe('.toContainHTML', () => {
     // negative test cases wrapped in throwError assertions for coverage.
     expect(() =>
       expect(nonExistantElement).not.toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
       expect(nonExistantElement).not.toContainHTML(nonExistantElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
       expect(stringChildElement).not.toContainHTML(fakeElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(svgElement).toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(grandparent).not.toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(parent).not.toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(child).not.toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(child).not.toContainHTML(stringChildElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(child).not.toContainHTML(stringChildElementSelfClosing),
-    ).toThrowError()
-    expect(() => expect(child).toContainHTML(nonExistantString)).toThrowError()
-    expect(() => expect(parent).toContainHTML(nonExistantString)).toThrowError()
+    ).toThrow()
+    expect(() => expect(child).toContainHTML(nonExistantString)).toThrow()
+    expect(() => expect(parent).toContainHTML(nonExistantString)).toThrow()
     expect(() =>
       expect(grandparent).toContainHTML(nonExistantString),
-    ).toThrowError()
+    ).toThrow()
       // @ts-expect-error testing invalid input
-    expect(() => expect(child).toContainHTML(nonExistantElement)).toThrowError()
+    expect(() => expect(child).toContainHTML(nonExistantElement)).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
       expect(parent).toContainHTML(nonExistantElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
       expect(grandparent).toContainHTML(nonExistantElement),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(nonExistantElement).not.toContainHTML(incorrectStringHtml),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(grandparent).not.toContainHTML(incorrectStringHtml),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(child).not.toContainHTML(incorrectStringHtml),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(parent).not.toContainHTML(incorrectStringHtml),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws with an expected text', async () => {

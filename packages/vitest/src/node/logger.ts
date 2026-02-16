@@ -232,7 +232,8 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    if (this.ctx.config.sequence.sequencer === RandomSequencer) {
+    // Log seed if either files (RandomSequencer) or tests are shuffled
+    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
@@ -300,7 +301,7 @@ export class Logger {
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
         type: (err as any).type || 'Unhandled Error',
       })
     })

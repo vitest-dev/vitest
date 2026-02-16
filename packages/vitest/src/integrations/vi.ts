@@ -43,12 +43,12 @@ export interface VitestUtils {
   runOnlyPendingTimersAsync: () => Promise<VitestUtils>
   /**
    * This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired.
-   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimers: () => VitestUtils
   /**
    * This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
-   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimersAsync: () => Promise<VitestUtils>
   /**
@@ -167,6 +167,40 @@ export interface VitestUtils {
    * ```
    */
   waitFor: typeof waitFor
+
+  /**
+   * Wraps a function to create an assertion helper. When an assertion fails inside the helper,
+   * the error stack trace will point to where the helper was called, not inside the helper itself.
+   * Works with both synchronous and asynchronous functions, and supports `expect.soft()`.
+   *
+   * @example
+   * ```ts
+   * const myEqual = vi.defineHelper((x, y) => {
+   *   expect(x).toEqual(y)
+   * })
+   *
+   * test('example', () => {
+   *   myEqual('left', 'right') // Error points to this line
+   * })
+   * ```
+   * Example output:
+   * ```
+   * FAIL  example.test.ts > example
+   * AssertionError: expected 'left' to deeply equal 'right'
+   *
+   * Expected: "right"
+   * Received: "left"
+   *
+   *  ❯ example.test.ts:6:3
+   *       4| test('example', () => {
+   *       5|   myEqual('left', 'right')
+   *        |   ^
+   *       6| })
+   * ```
+   * @param fn The assertion function to wrap
+   * @returns A wrapped function with the same signature
+   */
+  defineHelper: <F extends (...args: any) => any>(fn: F) => F
 
   /**
    * This is similar to [`vi.waitFor`](https://vitest.dev/api/vi#vi-waitfor), but if the callback throws any errors, execution is immediately interrupted and an error message is received.
@@ -576,6 +610,17 @@ function createVitest(): VitestUtils {
     fn,
     waitFor,
     waitUntil,
+    defineHelper: (fn) => {
+      return function __VITEST_HELPER__(...args: any[]): any {
+        const result = fn(...args)
+        if (result && typeof result === 'object' && typeof result.then === 'function') {
+          return (async function __VITEST_HELPER__() {
+            return await result
+          })()
+        }
+        return result
+      } as any
+    },
     hoisted<T>(factory: () => T): T {
       assertTypes(factory, '"vi.hoisted" factory', ['function'])
       return factory()

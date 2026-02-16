@@ -28,9 +28,19 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+  /**
+   * Parse files statically instead of running them to collect tests
+   * @experimental
+   */
+  staticParse?: boolean
+  /**
+   * How many tests to process at the same time
+   * @experimental
+   */
+  staticParseConcurrency?: number
 
   /**
-   * Override vite config's configLoader from cli.
+   * Override vite config's configLoader from CLI.
    * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
    * This is only available with **vite version 6.1.0** and above.
    * @experimental
@@ -106,6 +116,7 @@ export async function startVitest(
     else {
       await ctx.start(cliFilters)
     }
+    return ctx
   }
   catch (e) {
     if (e instanceof FilesNotFoundError) {
@@ -131,14 +142,12 @@ export async function startVitest(
     ctx.logger.error('\n\n')
     return ctx
   }
-
-  if (ctx.shouldKeepServer()) {
-    return ctx
+  finally {
+    if (!ctx?.shouldKeepServer()) {
+      stdinCleanup?.()
+      await ctx.close()
+    }
   }
-
-  stdinCleanup?.()
-  await ctx.close()
-  return ctx
 }
 
 export async function prepareVitest(

@@ -2,13 +2,13 @@
 
 ## Test Isolation
 
-By default Vitest runs every test file in an isolated environment based on the [pool](/config/#pool):
+By default Vitest runs every test file in an isolated environment based on the [pool](/config/pool):
 
 - `threads` pool runs every test file in a separate [`Worker`](https://nodejs.org/api/worker_threads.html#class-worker)
 - `forks` pool runs every test file in a separate [forked child process](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `vmThreads` pool runs every test file in a separate [VM context](https://nodejs.org/api/vm.html#vmcreatecontextcontextobject-options), but it uses workers for parallelism
 
-This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/#isolate) property in the config to `false`.
+This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/isolate) property in the config to `false`.
 
 ::: code-group
 ```bash [CLI]
@@ -34,16 +34,20 @@ export default defineConfig({
   test: {
     projects: [
       {
-        name: 'Isolated',
-        isolate: true, // (default value)
-        exclude: ['**.non-isolated.test.ts'],
+        test: {
+          name: 'Isolated',
+          isolate: true, // (default value)
+          exclude: ['**.non-isolated.test.ts'],
+        },
       },
       {
-        name: 'Non-isolated',
-        isolate: false,
-        include: ['**.non-isolated.test.ts'],
-      }
-    ]
+        test: {
+          name: 'Non-isolated',
+          isolate: false,
+          include: ['**.non-isolated.test.ts'],
+        },
+      },
+    ],
   },
 })
 ```
@@ -52,7 +56,7 @@ export default defineConfig({
 If you are using `vmThreads` pool, you cannot disable isolation. Use `threads` pool instead to improve your tests performance.
 :::
 
-For some projects, it might also be desirable to disable parallelism to improve startup time. To do that, provide `--no-file-parallelism` flag to the CLI or set [`test.fileParallelism`](/config/#fileparallelism) property in the config to `false`.
+For some projects, it might also be desirable to disable parallelism to improve startup time. To do that, provide `--no-file-parallelism` flag to the CLI or set [`test.fileParallelism`](/config/fileparallelism) property in the config to `false`.
 
 ::: code-group
 ```bash [CLI]
@@ -71,7 +75,7 @@ export default defineConfig({
 
 ## Limiting Directory Search
 
-You can limit the working directory when Vitest searches for files using [`test.dir`](/config/#test-dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
+You can limit the working directory when Vitest searches for files using [`test.dir`](/config/dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
 
 ## Pool
 
@@ -155,6 +159,15 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
+      - name: Upload attachments to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-attachments-${{ matrix.shardIndex }}
+          path: .vitest-attachments/**
+          include-hidden-files: true
+          retention-days: 1
+
   merge-reports:
     if: ${{ !cancelled() }}
     needs: [tests]
@@ -179,9 +192,18 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
+      - name: Download attachments from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-attachments
+          pattern: blob-attachments-*
+          merge-multiple: true
+
       - name: Merge reports
         run: npx vitest --merge-reports
 ```
+
+If your tests create file-based attachments (for example via `context.annotate` or custom artifacts), upload and restore [`attachmentsDir`](/config/attachmentsdir) in the merge job as shown above.
 
 :::
 

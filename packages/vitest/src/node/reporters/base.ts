@@ -1,10 +1,11 @@
 import type { File, Task, TestAnnotation } from '@vitest/runner'
-import type { SerializedError } from '@vitest/utils'
-import type { TestError, UserConsoleLog } from '../../types/general'
+import type { ParsedStack, SerializedError } from '@vitest/utils'
+import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
+import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
@@ -14,6 +15,7 @@ import c from 'tinyrainbow'
 import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
+import { generateCodeFrame, printStack } from '../printError'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -520,15 +522,17 @@ export abstract class BaseReporter implements Reporter {
   reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
 
+    const leakCount = this.printLeaksSummary()
+
     if (this.ctx.config.mode === 'benchmark') {
       this.reportBenchmarkSummary(files)
     }
     else {
-      this.reportTestSummary(files, errors)
+      this.reportTestSummary(files, errors, leakCount)
     }
   }
 
-  reportTestSummary(files: File[], errors: unknown[]): void {
+  reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
     const affectedFiles = [
@@ -572,6 +576,10 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
+    if (leakCount) {
+      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leakCount} leak${leakCount > 1 ? 's' : ''}`)))
+    }
+
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, file => file.collectDuration)
@@ -607,14 +615,17 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    if (this.ctx.config.experimental.importDurations.print) {
-      this.printImportsBreakdown()
-    }
+    this.reportImportDurations()
 
     this.log()
   }
 
-  private printImportsBreakdown() {
+  private reportImportDurations() {
+    const { print, failOnDanger, thresholds } = this.ctx.config.experimental.importDurations
+    if (!print && !failOnDanger) {
+      return
+    };
+
     const testModules = this.ctx.state.getTestModules()
 
     interface ImportEntry {
@@ -647,6 +658,18 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
+    const dangerImports = allImports.filter(imp => imp.totalTime >= thresholds.danger)
+    const warnImports = allImports.filter(imp => imp.totalTime >= thresholds.warn)
+    const hasDangerImports = dangerImports.length > 0
+    const hasWarnImports = warnImports.length > 0
+
+    // Determine if we should print
+    const shouldFail = failOnDanger && hasDangerImports
+    const shouldPrint = (print === true) || (print === 'on-warn' && hasWarnImports) || shouldFail
+    if (!shouldPrint) {
+      return
+    }
+
     const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
     const maxTotalTime = sortedImports[0].totalTime
     const limit = this.ctx.config.experimental.importDurations.limit
@@ -657,21 +680,25 @@ export abstract class BaseReporter implements Reporter {
     const slowestImport = sortedImports[0]
 
     this.log()
-    this.log(c.bold('Import Duration Breakdown') + c.dim(` (ordered by Total Time) (Top ${limit})`))
+    this.log(c.bold('Import Duration Breakdown') + c.dim(` (Top ${limit})`))
+    this.log()
+    this.log(c.dim(`${'Module'.padEnd(50)} ${'Self'.padStart(6)} ${'Total'.padStart(6)}`))
 
     // if there are multiple files, it's highly possible that some of them will import the same large file
     // we group them to show the distinction between those files more easily
-    //     Import Duration Breakdown (ordered by Total Time) (Top 10)
-    // .../fields/FieldFile/__tests__/FieldFile.spec.ts   self:    7ms total:  1.01s ████████████████████
-    //  ↳ tests/support/components/index.ts               self:    0ms total:  861ms █████████████████░░░
-    //  ↳ tests/support/components/renderComponent.ts     self:   59ms total:  861ms █████████████████░░░
-    // ...s__/apps/desktop/form-updater.desktop.spec.ts   self:    8ms total:  991ms ████████████████████
-    // ...sts__/apps/mobile/form-updater.mobile.spec.ts   self:   11ms total:  990ms ████████████████████
-    // shared/components/Form/__tests__/Form.spec.ts      self:    5ms total:  988ms ████████████████████
-    //  ↳ tests/support/components/index.ts               self:    0ms total:  935ms ███████████████████░
-    //  ↳ tests/support/components/renderComponent.ts     self:   61ms total:  935ms ███████████████████░
-    // ...ditor/features/link/__test__/LinkForm.spec.ts   self:    7ms total:  972ms ███████████████████░
-    //  ↳ tests/support/components/renderComponent.ts     self:   56ms total:  936ms ███████████████████░
+    //     Import Duration Breakdown (Top 10)
+    //
+    //     Module                                              Self     Total
+    //     .../fields/FieldFile/__tests__/FieldFile.spec.ts     7ms    1.01s  ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     861ms █████████████████░░░
+    //      ↳ tests/support/components/renderComponent.ts      59ms     861ms █████████████████░░░
+    //     ...s__/apps/desktop/form-updater.desktop.spec.ts     8ms     991ms ████████████████████
+    //     ...sts__/apps/mobile/form-updater.mobile.spec.ts    11ms     990ms ████████████████████
+    //     shared/components/Form/__tests__/Form.spec.ts        5ms     988ms ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     935ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      61ms     935ms ███████████████████░
+    //     ...ditor/features/link/__test__/LinkForm.spec.ts     7ms     972ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      56ms     936ms ███████████████████░
 
     const groupedImports = Object.entries(
       groupBy(topImports, i => i.testModule.id),
@@ -688,7 +715,7 @@ export abstract class BaseReporter implements Reporter {
         const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
 
         this.log(
-          `${pathDisplay} ${c.dim('self:')} ${this.importDurationTime(imp.selfTime)} ${c.dim('total:')} ${this.importDurationTime(imp.totalTime)} ${bar}`,
+          `${pathDisplay} ${this.importDurationTime(imp.selfTime)} ${this.importDurationTime(imp.totalTime)}  ${bar}`,
         )
       })
     }
@@ -697,10 +724,20 @@ export abstract class BaseReporter implements Reporter {
     this.log(c.dim('Total imports: ') + allImports.length)
     this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
     this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+
+    // Fail if danger threshold exceeded
+    if (shouldFail) {
+      this.log()
+      this.ctx.logger.error(
+        `ERROR: ${dangerImports.length} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
+      )
+      process.exitCode = 1
+    }
   }
 
   private importDurationTime(duration: number) {
-    const color = duration >= 500 ? c.red : duration >= 100 ? c.yellow : (c: string) => c
+    const { thresholds } = this.ctx.config.experimental.importDurations
+    const color = duration >= thresholds.danger ? c.red : duration >= thresholds.warn ? c.yellow : (c: string) => c
     return color(formatTime(duration).padStart(6))
   }
 
@@ -745,6 +782,66 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.printUnhandledErrors(errors)
       this.error()
     }
+  }
+
+  private printLeaksSummary() {
+    const leaks = this.ctx.state.leakSet
+
+    if (leaks.size === 0) {
+      return 0
+    }
+
+    const leakWithStacks = new Map<string, { leak: AsyncLeak; stacks: ParsedStack[] }>()
+
+    // Leaks can be duplicate, where type and position are identical
+    for (const leak of leaks) {
+      const stacks = parseStacktrace(leak.stack)
+
+      if (stacks.length === 0) {
+        continue
+      }
+
+      const filename = this.relative(leak.filename)
+      const key = `${filename}:${stacks[0].line}:${stacks[0].column}:${leak.type}`
+
+      if (leakWithStacks.has(key)) {
+        continue
+      }
+
+      leakWithStacks.set(key, { leak, stacks })
+    }
+
+    this.error(`\n${errorBanner(`Async Leaks ${leakWithStacks.size}`)}\n`)
+
+    for (const { leak, stacks } of leakWithStacks.values()) {
+      const filename = this.relative(leak.filename)
+      this.ctx.logger.error(c.red(`${leak.type} leaking in ${filename}`))
+
+      try {
+        const sourceCode = readFileSync(stacks[0].file, 'utf-8')
+
+        this.ctx.logger.error(generateCodeFrame(
+          sourceCode.length > 100_000
+            ? sourceCode
+            : this.ctx.logger.highlight(stacks[0].file, sourceCode),
+          undefined,
+          stacks[0],
+        ))
+      }
+      catch {
+        // ignore error, do not produce more detailed message with code frame.
+      }
+
+      printStack(
+        this.ctx.logger,
+        this.ctx.getProjectByName(leak.projectName),
+        stacks,
+        stacks[0],
+        {},
+      )
+    }
+
+    return leakWithStacks.size
   }
 
   reportBenchmarkSummary(files: File[]): void {
@@ -828,7 +925,19 @@ export abstract class BaseReporter implements Reporter {
         )
       }
 
-      const screenshotPaths = tasks.map(t => t.meta?.failScreenshotPath).filter(screenshot => screenshot != null)
+      const screenshotPaths = tasks.reduce<string[]>((paths, t) => {
+        if (t.type === 'test') {
+          for (const artifact of t.artifacts) {
+            if (artifact.type === 'internal:failureScreenshot') {
+              if (artifact.attachments.length) {
+                paths.push(artifact.attachments[0].originalPath)
+              }
+            }
+          }
+        }
+
+        return paths
+      }, [])
 
       this.ctx.logger.printError(error, {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),

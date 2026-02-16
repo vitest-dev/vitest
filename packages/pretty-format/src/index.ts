@@ -30,7 +30,7 @@ import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
 
-export { createDOMElementFilter } from './plugins/DOMElementFilter'
+export { createDOMElementFilter } from './plugins/DOMElement'
 
 const toString = Object.prototype.toString
 const toISOString = Date.prototype.toISOString

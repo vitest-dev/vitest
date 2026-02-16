@@ -1,16 +1,13 @@
-import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
 import type { Plugin } from 'vitest/config'
-import type { Vitest } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
-import { createReadStream, lstatSync, readFileSync } from 'node:fs'
+import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { basename, dirname, extname, join, resolve } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import { coverageConfigDefaults } from 'vitest/config'
 import {
   isFileServingAllowed,
   isValidApiRequest,
@@ -64,18 +61,12 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(parentServer.vitest)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
-          )
-        }
-
-        if (coverageFolder) {
+        // Serve coverage HTML at ./coverage if configured
+        const coverageHtmlDir = parentServer.vitest.config.coverage?.htmlDir
+        if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
+            '/__vitest_test__/coverage',
+            sirv(coverageHtmlDir, {
               single: true,
               dev: true,
               setHeaders: (res) => {
@@ -97,61 +88,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           )
         }
 
-        const uiEnabled = parentServer.config.browser.ui
-
-        if (uiEnabled) {
-        // eslint-disable-next-line prefer-arrow-callback
-          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const url = new URL(req.url, 'http://localhost')
-            const id = url.searchParams.get('id')
-            if (!id) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const task = parentServer.vitest.state.idMap.get(id)
-            const file = task?.meta.failScreenshotPath
-            if (!file) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            let stat: Stats | undefined
-            try {
-              stat = lstatSync(file)
-            }
-            catch {
-            }
-
-            if (!stat?.isFile()) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const ext = extname(file)
-            const buffer = readFileSync(file)
-            res.setHeader(
-              'Cache-Control',
-              'public,max-age=0,must-revalidate',
-            )
-            res.setHeader('Content-Length', buffer.length)
-            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
-              ? 'image/jpeg'
-              : ext === 'webp'
-                ? 'image/webp'
-                : 'image/png')
-            res.end(buffer)
-          })
-        }
         server.middlewares.use((req, res, next) => {
           // 9000 mega head move
           // Vite always caches optimized dependencies, but users might mock
@@ -658,43 +594,6 @@ function getRequire() {
     _require = createRequire(import.meta.url)
   }
   return _require
-}
-
-function resolveCoverageFolder(vitest: Vitest) {
-  const options = vitest.config
-  const coverageOptions = vitest._coverageOptions
-  const htmlReporter = coverageOptions?.enabled
-    ? toArray(options.coverage.reporter).find((reporter) => {
-        if (typeof reporter === 'string') {
-          return reporter === 'html'
-        }
-
-        return reporter[0] === 'html'
-      })
-    : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    options.root || process.cwd(),
-    coverageOptions.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }
 
 const postfixRE = /[?#].*$/

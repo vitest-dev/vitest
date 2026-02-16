@@ -2,9 +2,9 @@ import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
-  AroundAllListener,
   AroundEachListener,
   File,
+  RegisteredAroundAllListener,
   SequenceHooks,
   Suite,
   SuiteHooks,
@@ -22,9 +22,9 @@ import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
-import { abortContextSignal, getFileContext } from './context'
+import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
-import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount } from './fixture'
+import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, TestFixtures } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
@@ -229,7 +229,7 @@ function getAroundEachHooks(suite: Suite): AroundEachListener[] {
   return hooks
 }
 
-function getAroundAllHooks(suite: Suite): AroundAllListener[] {
+function getAroundAllHooks(suite: Suite): RegisteredAroundAllListener[] {
   return getHooks(suite).aroundAll
 }
 
@@ -267,16 +267,20 @@ async function callAroundHooks<THook extends Function>(
     return
   }
 
+  const hookErrors: unknown[] = []
+
   const createTimeoutPromise = (
     timeout: number,
     phase: 'setup' | 'teardown',
     stackTraceError: Error | undefined,
-  ): { promise: Promise<never>; clear: () => void } => {
+  ): { promise: Promise<never>; isTimedOut: () => boolean; clear: () => void } => {
     let timer: ReturnType<typeof setTimeout> | undefined
+    let timedout = false
 
     const promise = new Promise<never>((_, reject) => {
       if (timeout > 0 && timeout !== Number.POSITIVE_INFINITY) {
         timer = setTimeout(() => {
+          timedout = true
           const error = makeAroundHookTimeoutError(hookName, phase, timeout, stackTraceError)
           onTimeout?.(error)
           reject(error)
@@ -292,7 +296,7 @@ async function callAroundHooks<THook extends Function>(
       }
     }
 
-    return { promise, clear }
+    return { promise, clear, isTimedOut: () => timedout }
   }
 
   const runNextHook = async (index: number): Promise<void> => {
@@ -305,8 +309,8 @@ async function callAroundHooks<THook extends Function>(
     const stackTraceError = getAroundHookStackTrace(hook)
 
     let useCalled = false
-    let setupTimeout: { promise: Promise<never>; clear: () => void }
-    let teardownTimeout: { promise: Promise<never>; clear: () => void } | undefined
+    let setupTimeout: ReturnType<typeof createTimeoutPromise>
+    let teardownTimeout: ReturnType<typeof createTimeoutPromise> | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
     let resolveUseCalled!: () => void
@@ -329,6 +333,14 @@ async function callAroundHooks<THook extends Function>(
     })
 
     const use = async () => {
+      // shouldn't continue to next (runTest/Suite or inner aroundEach/All) when aroundEach/All setup timed out.
+      if (setupTimeout.isTimedOut()) {
+        // we can throw any error to bail out.
+        // this error is not seen by end users since `runNextHook` already rejected with timeout error
+        // and this error is caught by `rejectHookComplete`.
+        throw new Error('__VITEST_INTERNAL_AROUND_HOOK_ABORT__')
+      }
+
       if (useCalled) {
         throw new AroundHookMultipleCallsError(
           `The \`${callbackName}\` callback was called multiple times in the \`${hookName}\` hook. `
@@ -342,7 +354,7 @@ async function callAroundHooks<THook extends Function>(
       setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1)
+      await runNextHook(index + 1).catch(e => hookErrors.push(e))
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
@@ -394,15 +406,19 @@ async function callAroundHooks<THook extends Function>(
     try {
       await Promise.race([
         hookCompletePromise,
-        teardownTimeout!.promise,
+        teardownTimeout?.promise,
       ])
     }
     finally {
-      teardownTimeout!.clear()
+      teardownTimeout?.clear()
     }
   }
 
-  await runNextHook(0)
+  await runNextHook(0).catch(e => hookErrors.push(e))
+
+  if (hookErrors.length > 0) {
+    throw hookErrors
+  }
 }
 
 async function callAroundAllHooks(
@@ -767,9 +783,11 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
   result.state = 'fail'
   const errors = Array.isArray(err) ? err : [err]
   for (const e of errors) {
-    const error = processError(e, diffOptions)
+    const errors = e instanceof AggregateError
+      ? e.errors.map(e => processError(e, diffOptions))
+      : [processError(e, diffOptions)]
     result.errors ??= []
-    result.errors.push(error)
+    result.errors.push(...errors)
   }
 }
 
@@ -878,8 +896,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
               await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
             }
             if (suite.file === suite) {
-              const context = getFileContext(suite as File)
-              await callFixtureCleanup(context)
+              const contexts = TestFixtures.getFileContexts(suite.file)
+              await Promise.all(contexts.map(context => callFixtureCleanup(context)))
             }
           }
           catch (e) {
@@ -1008,10 +1026,11 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
-      const context = runner.getWorkerContext?.()
-      if (context) {
-        await callFixtureCleanup(context)
-      }
+      await Promise.all(
+        [...TestFixtures.getWorkerContexts()].map(context => callFixtureCleanup(context)),
+      ).finally(() => {
+        TestFixtures.clearDefinitions()
+      })
     })
     workerRunners.add(runner)
   }

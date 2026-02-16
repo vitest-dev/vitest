@@ -1,5 +1,5 @@
 import type { TestProject } from '../project'
-import type { SerializedConfig } from '../types/config'
+import type { ApiConfig, SerializedConfig } from '../types/config'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -32,6 +32,12 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    api: ((api: ApiConfig | undefined) => {
+      return {
+        allowExec: api?.allowExec,
+        allowWrite: api?.allowWrite,
+      }
+    })(project.isBrowserEnabled() ? config.browser.api : config.api),
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
@@ -42,21 +48,14 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
-      const htmlReporter = coverage.reporter.find(([reporterName]) => reporterName === 'html') as [
-        'html',
-        { subdir?: string },
-      ] | undefined
-      const subdir = htmlReporter && htmlReporter[1]?.subdir
       return {
         reportsDirectory: coverage.reportsDirectory,
         provider: coverage.provider,
         enabled: coverage.enabled,
-        htmlReporter: htmlReporter
-          ? { subdir }
-          : undefined,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
+        htmlDir: coverage.htmlDir,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
@@ -90,6 +89,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,
     inspector: globalConfig.inspector,
+    detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
     includeTaskLocation:
       config.includeTaskLocation
@@ -106,6 +106,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         isolate: browser.isolate,
         fileParallelism: browser.fileParallelism,
         ui: browser.ui,
+        detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
         locators: {

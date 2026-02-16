@@ -77,13 +77,20 @@ export interface Filter {
 }
 
 export type ProjectSortType = 'asc' | 'desc'
-export type ProjectSortUIType = ProjectSortType | 'default'
+export type DurationSortType = 'duration-asc' | 'duration-desc'
+export type SortType = ProjectSortType | DurationSortType
+export type SortUIType = SortType | 'default'
+
+/**
+ * @deprecated Use `SortUIType` instead
+ */
+export type ProjectSortUIType = SortUIType
 
 export interface TreeFilterState extends Filter {
   search: string
   expandAll?: boolean
   project?: string
-  projectSort?: ProjectSortType
+  projectSort?: SortType
 }
 
 export interface CollectorInfo {

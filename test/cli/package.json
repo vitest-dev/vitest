@@ -29,6 +29,7 @@
     "flatted": "catalog:",
     "obug": "^2.1.1",
     "playwright": "catalog:",
+    "test-dep-invalid": "link:./deps/dep-invalid",
     "tinyspy": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "^1.5.9",

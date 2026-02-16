@@ -28,7 +28,7 @@ const plugins = [
   nodeResolve(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 

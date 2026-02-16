@@ -16,6 +16,7 @@ import {
   arrayBufferEquality,
   generateToBeMessage,
   getObjectSubset,
+  isError,
   iterableEquality,
   equals as jestEquals,
   sparseArrayEquality,
@@ -632,7 +633,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
   })
   def(
-    ['toHaveBeenNthCalledWith', 'nthCalledWith'],
+    'toHaveBeenNthCalledWith',
     function (times: number, ...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
@@ -656,7 +657,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     },
   )
   def(
-    ['toHaveBeenLastCalledWith', 'lastCalledWith'],
+    'toHaveBeenLastCalledWith',
     function (...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
@@ -808,7 +809,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (expected instanceof Error) {
+      if (isError(expected)) {
         const equal = jestEquals(thrown, expected, [
           ...customTesters,
           iterableEquality,
@@ -837,8 +838,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      throw new Error(
-        `"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`,
+      const equal = jestEquals(thrown, expected, [
+        ...customTesters,
+        iterableEquality,
+      ])
+      return this.assert(
+        equal,
+        'expected a thrown value to equal #{exp}',
+        'expected a thrown value not to equal #{exp}',
+        expected,
+        thrown,
       )
     },
   )
@@ -975,7 +984,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         action: 'resolve',
       },
       {
-        name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
+        name: 'toHaveLastReturnedWith',
         condition: (spy, value) => {
           const result = spy.mock.results.at(-1)
           return Boolean(
@@ -1018,7 +1027,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         action: 'resolve',
       },
       {
-        name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
+        name: 'toHaveNthReturnedWith',
         condition: (spy, index, value) => {
           const result = spy.mock.results[index - 1]
           return (

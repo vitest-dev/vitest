@@ -22,10 +22,10 @@ import type {
 export interface VitestRunnerConfig {
   root: string
   setupFiles: string[]
-  name?: string
+  name: string | undefined
   passWithNoTests: boolean
-  testNamePattern?: RegExp
-  allowOnly?: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -33,17 +33,17 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  chaiConfig?: {
+  chaiConfig: {
     truncateThreshold?: number
-  }
+  } | undefined
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
   retry: SerializableRetry
-  includeTaskLocation?: boolean
+  includeTaskLocation: boolean | undefined
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
-  tagsFilter?: string[]
+  tagsFilter: string[] | undefined
   strictTags: boolean
 }
 
@@ -139,7 +139,7 @@ export interface VitestRunner {
     options: { retry: number; repeats: number },
   ) => unknown
   /**
-   * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
+   * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
    * All `after` hooks were also called by this point.
    */
   onAfterRetryTask?: (
@@ -224,10 +224,6 @@ export interface VitestRunner {
    */
   viteEnvironment?: string
 
-  /**
-   * Return the worker context for fixtures specified with `scope: 'worker'`
-   */
-  getWorkerContext?: () => Record<string, unknown>
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
   // eslint-disable-next-line ts/method-signature-style

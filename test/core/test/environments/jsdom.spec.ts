@@ -24,21 +24,21 @@ test('fetch, Request, Response, and BroadcastChannel are available', () => {
 })
 
 test('Fetch API accepts other APIs', async () => {
-  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrowError()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrowError()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrowError()
-  expect.soft(() => new Request(new URL('https://localhost'))).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrow()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrow()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrow()
+  expect.soft(() => new Request(new URL('https://localhost'))).not.toThrow()
 
   const request = new Request('http://localhost')
   expect.soft(request.headers).toBeInstanceOf(Headers)
 
   expect.soft(
     () => new Request('http://localhost', { method: 'POST', body: new URLSearchParams([['key', 'value']]) }),
-  ).not.toThrowError()
+  ).not.toThrow()
 
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrow()
 
   const clone = request.clone()
   expect.soft(clone).toBeInstanceOf(Request)
@@ -65,7 +65,7 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element', async () => {
@@ -89,7 +89,7 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element with a submitter', async () => {
@@ -120,7 +120,7 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   // https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData#exceptions
@@ -131,7 +131,7 @@ describe('FormData', () => {
     submitter.type = 'button'
     form.append(submitter)
 
-    expect(() => new FormData(form, submitter)).toThrowError(
+    expect(() => new FormData(form, submitter)).toThrow(
       new TypeError('The specified element is not a submit button'),
     )
   })
@@ -286,7 +286,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex flex-col flex-row"
       Received: "flex flex-col""
     `)
@@ -297,7 +297,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex-col"
       Received: "flex flex-col""
     `)

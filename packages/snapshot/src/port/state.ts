@@ -17,7 +17,7 @@ import type {
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
-import { parseErrorStacktrace } from '../../../utils/src/source-map'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 
@@ -166,6 +166,15 @@ export default class SnapshotState {
     )
     if (promiseIndex !== -1) {
       return stacks[promiseIndex + 3]
+    }
+
+    // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
+    // to specify a custom stack offset
+    for (let i = 0; i < stacks.length; i++) {
+      const match = stacks[i].method.match(/__INLINE_SNAPSHOT_OFFSET_(\d+)__/)
+      if (match) {
+        return stacks[i + Number(match[1])] ?? null
+      }
     }
 
     // inline snapshot function is called __INLINE_SNAPSHOT__

@@ -1,5 +1,5 @@
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 import { StableTestFileOrderSorter } from '../../test-utils'
 
@@ -21,6 +21,7 @@ test('cancels previous run before starting new one', async () => {
       },
     }],
   })
+  onTestFinished(() => vitest.close())
 
   for (let i = 0; i <= 4; i++) {
     await vitest.start()

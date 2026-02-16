@@ -40,12 +40,12 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 
 Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
 
-## pool <Badge type="warning">experimental</Badge> {#pool}
+## pool {#pool}
 
-The [`pool`](/config/#pool) in which the test module will run.
+The [`pool`](/config/pool) in which the test module will run.
 
 ::: danger
-It's possible to have multiple pools in a single test project with [`typecheck.enabled`](/config/#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In later versions, the project will only support a single pool.
+It's possible to have multiple pools in a single test project with [`typecheck.enabled`](/config/typecheck#typecheck-enabled). This means it's possible to have several specifications with the same `moduleId` but different `pool`. In later versions, the project will only support a single pool.
 :::
 
 ## testLines

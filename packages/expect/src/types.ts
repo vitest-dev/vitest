@@ -8,7 +8,6 @@
 
 import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
-import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -441,6 +440,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalledTimes(2);
+   * @deprecated Use `toHaveBeenCalledTimes` instead
    */
   toBeCalledTimes: (times: number) => void
 
@@ -462,6 +462,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalled();
+   * @deprecated Use `toHaveBeenCalled` instead
    */
   toBeCalled: () => void
 
@@ -482,6 +483,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalledWith('arg1', 42);
+   * @deprecated Use `toHaveBeenCalledWith` instead
    */
   toBeCalledWith: <E extends any[]>(...args: E) => void
 
@@ -496,16 +498,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveBeenNthCalledWith: <E extends any[]>(n: number, ...args: E) => void
 
   /**
-   * Ensure that a mock function is called with specific arguments on an Nth call.
-   *
-   * Alias for `expect.toHaveBeenNthCalledWith`.
-   *
-   * @example
-   * expect(mockFunc).nthCalledWith(2, 'secondArg');
-   */
-  nthCalledWith: <E extends any[]>(nthCall: number, ...args: E) => void
-
-  /**
    * If you have a mock function, you can use `.toHaveBeenLastCalledWith`
    * to test what arguments it was last called with.
    *
@@ -517,17 +509,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveBeenLastCalledWith: <E extends any[]>(...args: E) => void
 
   /**
-   * If you have a mock function, you can use `.lastCalledWith`
-   * to test what arguments it was last called with.
-   *
-   * Alias for `expect.toHaveBeenLastCalledWith`.
-   *
-   * @example
-   * expect(mockFunc).lastCalledWith('lastArg');
-   */
-  lastCalledWith: <E extends any[]>(...args: E) => void
-
-  /**
    * Used to test that a function throws when it is called.
    *
    * Also under the alias `expect.toThrowError`.
@@ -535,8 +516,9 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrow('Error message');
    * expect(() => parseJSON('invalid')).toThrow(SyntaxError);
+   * expect(() => { throw 42 }).toThrow(42);
    */
-  toThrow: (expected?: string | Constructable | RegExp | Error) => void
+  toThrow: (expected?: any) => void
 
   /**
    * Used to test that a function throws when it is called.
@@ -546,8 +528,10 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrowError('Error message');
    * expect(() => parseJSON('invalid')).toThrowError(SyntaxError);
+   * expect(() => { throw 42 }).toThrowError(42);
+   * @deprecated Use `toThrow` instead
    */
-  toThrowError: (expected?: string | Constructable | RegExp | Error) => void
+  toThrowError: (expected?: any) => void
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time
@@ -556,6 +540,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturn();
+   * @deprecated Use `toHaveReturned` instead
    */
   toReturn: () => void
 
@@ -577,6 +562,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturnTimes(3);
+   * @deprecated Use `toHaveReturnedTimes` instead
    */
   toReturnTimes: (times: number) => void
 
@@ -598,6 +584,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturnWith('returnValue');
+   * @deprecated Use `toHaveReturnedWith` instead
    */
   toReturnWith: <E>(value: E) => void
 
@@ -624,18 +611,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveLastReturnedWith: <E>(value: E) => void
 
   /**
-   * Use to test the specific value that a mock function last returned.
-   * If the last call to the mock function threw an error, then this matcher will fail
-   * no matter what value you provided as the expected return value.
-   *
-   * Alias for `expect.toHaveLastReturnedWith`.
-   *
-   * @example
-   * expect(mockFunc).lastReturnedWith('lastValue');
-   */
-  lastReturnedWith: <E>(value: E) => void
-
-  /**
    * Use to test the specific value that a mock function returned for the nth call.
    * If the nth call to the mock function threw an error, then this matcher will fail
    * no matter what value you provided as the expected return value.
@@ -646,18 +621,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toHaveNthReturnedWith(2, 'nthValue');
    */
   toHaveNthReturnedWith: <E>(nthCall: number, value: E) => void
-
-  /**
-   * Use to test the specific value that a mock function returned for the nth call.
-   * If the nth call to the mock function threw an error, then this matcher will fail
-   * no matter what value you provided as the expected return value.
-   *
-   * Alias for `expect.toHaveNthReturnedWith`.
-   *
-   * @example
-   * expect(mockFunc).nthReturnedWith(2, 'nthValue');
-   */
-  nthReturnedWith: <E>(nthCall: number, value: E) => void
 }
 
 type VitestAssertion<A, T> = {
