@@ -62,29 +62,24 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
   }
 
   const runWithLimit: RunWithLimit = (func, ...args) => {
-    const release = acquire()
-
-    if (release instanceof Promise) {
-      return release.then(() => func(...args)).finally(finish)
+    function run(release: () => void) {
+      try {
+        const result = func(...args)
+        if (result instanceof Promise) {
+          return result.finally(release)
+        }
+        release()
+        return Promise.resolve(result)
+      }
+      catch (error) {
+        release()
+        return Promise.reject(error)
+      }
     }
 
-    return promiseTry(func, ...args).finally(finish)
+    const release = acquire()
+    return release instanceof Promise ? release.then(run) : run(release)
   }
 
   return Object.assign(runWithLimit, { acquire })
-}
-
-// Promise.try ponyfill
-function promiseTry<TArgs extends unknown[], T>(
-  fn: (...args: TArgs) => T | PromiseLike<T>,
-  ...args: TArgs
-): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    try {
-      resolve(fn(...args))
-    }
-    catch (error) {
-      reject(error)
-    }
-  })
 }
