@@ -42,6 +42,11 @@ export {
 __INTERNAL._asLocator = asLocator
 
 const now = Date.now
+const waitForIntervals = [0, 20, 50, 100, 100, 500]
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -301,35 +306,27 @@ export abstract class Locator {
   } = {}): Promise<HTMLElement | SVGElement> {
     const options = processTimeoutOptions(options_)
     const timeout = options?.timeout
-    const intervals = [0, 20, 50, 100, 100, 500]
     const startTime = now()
     let intervalIndex = 0
-    return new Promise((resolve, reject) => {
-      const check = () => {
-        const elements = this.elements()
-        if (elements.length === 1) {
-          resolve(elements[0])
-          return
-        }
-        const elapsed = now() - startTime
-        const isLastCall = timeout != null && elapsed >= timeout
-        if (isLastCall) {
-          if (elements.length > 1) {
-            reject(createStrictModeViolationError(this._pwSelector || this.selector, elements))
-          }
-          else {
-            reject(utils.getElementError(this._pwSelector || this.selector, this._container || document.body))
-          }
-          return
-        }
-        const interval = intervals[Math.min(intervalIndex++, intervals.length - 1)]
-        const nextInterval = timeout != null
-          ? Math.min(interval, timeout - elapsed)
-          : interval
-        setTimeout(check, nextInterval)
+    while (true) {
+      const elements = this.elements()
+      if (elements.length === 1) {
+        return elements[0]
       }
-      check()
-    })
+      const elapsed = now() - startTime
+      const isLastCall = timeout != null && elapsed >= timeout
+      if (isLastCall) {
+        if (elements.length > 1) {
+          throw createStrictModeViolationError(this._pwSelector || this.selector, elements)
+        }
+        throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
+      }
+      const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
+      const nextInterval = timeout != null
+        ? Math.min(interval, timeout - elapsed)
+        : interval
+      await sleep(nextInterval)
+    }
   }
 
   protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {

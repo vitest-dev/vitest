@@ -47,17 +47,17 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override async click(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.click(processClickOptions(options))
   }
 
   public override async dblClick(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.dblClick(processClickOptions(options))
   }
 
   public override async tripleClick(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.tripleClick(processClickOptions(options))
   }
 
@@ -65,48 +65,48 @@ class WebdriverIOLocator extends Locator {
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
-    const element = await this.waitForElement()
+    const element = await this.waitForElement(options)
     const values = getWebdriverioSelectOptions(element, value)
     return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
   }
 
   public override async hover(options?: UserEventHoverOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.hover(processHoverOptions(options))
   }
 
   public override async unhover(options?: UserEventHoverOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.unhover(options)
   }
 
   public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.dropTo(target, processDragAndDropOptions(options))
   }
 
   public override async wheel(options: UserEventWheelOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.wheel(options)
   }
 
   public override async clear(options?: UserEventClearOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.clear(options)
   }
 
   public override async fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.fill(text, options)
   }
 
   public override async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.upload(files, options)
   }
 
   public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
-    await this.waitForElement()
+    await this.waitForElement(options)
     return super.screenshot(options)
   }
 
