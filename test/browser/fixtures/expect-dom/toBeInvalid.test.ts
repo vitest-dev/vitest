@@ -37,17 +37,17 @@ describe('.toBeInvalid', () => {
     // negative test cases wrapped in throwError assertions for coverage.
     expect(() =>
       expect(queryByTestId('no-aria-invalid')).toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid')).not.toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-value')).not.toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-false')).toBeInvalid(),
-    ).toThrowError()
-    expect(() => expect(invalidInputNode).not.toBeInvalid()).toThrowError()
+    ).toThrow()
+    expect(() => expect(invalidInputNode).not.toBeInvalid()).toThrow()
   })
 
   test('handles <form/>', () => {
@@ -61,8 +61,8 @@ describe('.toBeInvalid', () => {
     expect(invalidFormNode).toBeInvalid()
 
     // negative test cases wrapped in throwError assertions for coverage.
-    expect(() => expect(queryByTestId('valid')).toBeInvalid()).toThrowError()
-    expect(() => expect(invalidFormNode).not.toBeInvalid()).toThrowError()
+    expect(() => expect(queryByTestId('valid')).toBeInvalid()).toThrow()
+    expect(() => expect(invalidFormNode).not.toBeInvalid()).toThrow()
   })
 
   test('handles any element', () => {
@@ -82,19 +82,19 @@ describe('.toBeInvalid', () => {
     expect(queryByTestId('aria-invalid-false')).not.toBeInvalid()
 
     // negative test cases wrapped in throwError assertions for coverage.
-    expect(() => expect(queryByTestId('valid')).toBeInvalid()).toThrowError()
+    expect(() => expect(queryByTestId('valid')).toBeInvalid()).toThrow()
     expect(() =>
       expect(queryByTestId('no-aria-invalid')).toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid')).not.toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-value')).not.toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-false')).toBeInvalid(),
-    ).toThrowError()
+    ).toThrow()
   })
 })
 
@@ -118,17 +118,17 @@ describe('.toBeValid', () => {
     // negative test cases wrapped in throwError assertions for coverage.
     expect(() =>
       expect(queryByTestId('no-aria-invalid')).not.toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid')).toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-value')).toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-false')).not.toBeValid(),
-    ).toThrowError()
-    expect(() => expect(invalidInputNode).toBeValid()).toThrowError()
+    ).toThrow()
+    expect(() => expect(invalidInputNode).toBeValid()).toThrow()
   })
 
   test('handles <form/>', () => {
@@ -142,8 +142,8 @@ describe('.toBeValid', () => {
     expect(invalidFormNode).not.toBeValid()
 
     // negative test cases wrapped in throwError assertions for coverage.
-    expect(() => expect(queryByTestId('valid')).not.toBeValid()).toThrowError()
-    expect(() => expect(invalidFormNode).toBeValid()).toThrowError()
+    expect(() => expect(queryByTestId('valid')).not.toBeValid()).toThrow()
+    expect(() => expect(invalidFormNode).toBeValid()).toThrow()
   })
 
   test('handles any element', () => {
@@ -163,18 +163,18 @@ describe('.toBeValid', () => {
     expect(queryByTestId('aria-invalid-false')).toBeValid()
 
     // negative test cases wrapped in throwError assertions for coverage.
-    expect(() => expect(queryByTestId('valid')).not.toBeValid()).toThrowError()
+    expect(() => expect(queryByTestId('valid')).not.toBeValid()).toThrow()
     expect(() =>
       expect(queryByTestId('no-aria-invalid')).not.toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid')).toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-value')).toBeValid(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('aria-invalid-false')).not.toBeValid(),
-    ).toThrowError()
+    ).toThrow()
   })
 })

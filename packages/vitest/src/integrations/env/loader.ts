@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
-import { ModuleRunner } from 'vite/module-runner'
+import { EvaluatedModules, ModuleRunner } from 'vite/module-runner'
 import { VitestTransport } from '../../runtime/moduleRunner/moduleTransport'
 import { environments } from './index'
 
@@ -24,6 +24,7 @@ export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRun
   if (!cachedLoader || cachedLoader.isClosed()) {
     _loaders.delete(root)
 
+    const evaluatedModules = new EvaluatedModules()
     const moduleRunner = new ModuleRunner({
       hmr: false,
       sourcemapInterceptor: 'prepareStackTrace',
@@ -46,7 +47,7 @@ export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRun
         async resolveId(id, importer) {
           return rpc.resolve(id, importer, '__vitest__')
         },
-      }),
+      }, evaluatedModules, new WeakMap()),
     })
     _loaders.set(root, moduleRunner)
   }

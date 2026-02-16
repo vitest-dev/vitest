@@ -15,7 +15,7 @@ test('enableCoverage() collects coverage after being called', async () => {
     },
   })
 
-  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrow(/no such file/)
 
   await ctx!.enableCoverage()
   expect(ctx!.coverageProvider).toBeTruthy()
@@ -29,7 +29,7 @@ test('enableCoverage() collects coverage after being called', async () => {
 test('enableCoverage() invalidates circular modules', async () => {
   await cleanupCoverageJson()
 
-  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrow(/no such file/)
 
   // Simulating user actions in the VSCode Vitest extension:
   // 1. User clicks "Run Test with Coverage" to generate coverage files normally
@@ -82,6 +82,6 @@ test('disableCoverage() stops collecting coverage going forward', async () => {
 
   await ctx!.rerunFiles()
 
-  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrowError(/no such file/)
+  await expect(readCoverageMap(), 'coverage map should not be on the disk').rejects.toThrow(/no such file/)
   expect(ctx!.coverageProvider).toBeNull()
 })

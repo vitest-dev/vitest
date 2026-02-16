@@ -560,7 +560,7 @@ expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
 expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
 ```
 
-To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+To test if something was thrown, use [`toThrow`](#tothrow) assertion.
 :::
 
 ## toStrictEqual
@@ -777,13 +777,13 @@ test('the number of elements must match exactly', () => {
 })
 ```
 
-## toThrowError
+## toThrow
 
 - **Type:** `(expected?: any) => Awaitable<void>`
 
-- **Alias:** `toThrow`
+- **Alias:** `toThrowError` <Deprecated />
 
-`toThrowError` asserts if a function throws an error when it is called.
+`toThrow` asserts if a function throws an error when it is called.
 
 You can provide an optional argument to test that a specific error is thrown:
 
@@ -798,7 +798,7 @@ This does not apply for async calls as [rejects](#rejects) correctly unwraps the
 ```ts
 test('expect rejects toThrow', async ({ expect }) => {
   const promise = Promise.reject(new Error('Test'))
-  await expect(promise).rejects.toThrowError()
+  await expect(promise).rejects.toThrow()
 })
 ```
 :::
@@ -818,18 +818,18 @@ function getFruitStock(type: string) {
 
 test('throws on pineapples', () => {
   // Test that the error message says "stock" somewhere: these are equivalent
-  expect(() => getFruitStock('pineapples')).toThrowError(/stock/)
-  expect(() => getFruitStock('pineapples')).toThrowError('stock')
+  expect(() => getFruitStock('pineapples')).toThrow(/stock/)
+  expect(() => getFruitStock('pineapples')).toThrow('stock')
 
   // Test the exact error message
-  expect(() => getFruitStock('pineapples')).toThrowError(
+  expect(() => getFruitStock('pineapples')).toThrow(
     /^Pineapples are not in stock$/,
   )
 
-  expect(() => getFruitStock('pineapples')).toThrowError(
+  expect(() => getFruitStock('pineapples')).toThrow(
     new Error('Pineapples are not in stock'),
   )
-  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+  expect(() => getFruitStock('pineapples')).toThrow(expect.objectContaining({
     message: 'Pineapples are not in stock',
   }))
 })
@@ -844,7 +844,7 @@ function getAsyncFruitStock() {
 }
 
 test('throws on pineapples', async () => {
-  await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
+  await expect(() => getAsyncFruitStock()).rejects.toThrow('empty')
 })
 ```
 :::
@@ -854,8 +854,8 @@ You can also test non-Error values that are thrown:
 
 ```ts
 test('throws non-Error values', () => {
-  expect(() => { throw 42 }).toThrowError(42)
-  expect(() => { throw { message: 'error' } }).toThrowError({ message: 'error' })
+  expect(() => { throw 42 }).toThrow(42)
+  expect(() => { throw { message: 'error' } }).toThrow({ message: 'error' })
 })
 ```
 :::
@@ -956,13 +956,13 @@ Note that since file system operation is async, you need to use `await` with `to
 
 - **Type:** `(hint?: string) => void`
 
-The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
+The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrow`](#tothrow).
 
 ## toThrowErrorMatchingInlineSnapshot
 
 - **Type:** `(snapshot?: string, hint?: string) => void`
 
-The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
+The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
 ## toHaveBeenCalled
 
@@ -1041,7 +1041,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
+## toHaveBeenCalledBefore
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -1060,7 +1060,7 @@ test('calls mock1 before mock2', () => {
 })
 ```
 
-## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
+## toHaveBeenCalledAfter
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -1079,7 +1079,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
+## toHaveBeenCalledExactlyOnceWit
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1368,7 +1368,7 @@ test('spy function returns bananas on second call', async () => {
 })
 ```
 
-## called
+## called <Version>4.1.0</Version> {#called}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1391,7 +1391,7 @@ test('spy was called', () => {
 })
 ```
 
-## callCount
+## callCount <Version>4.1.0</Version> {#callcount}
 
 - **Type:** `(count: number) => void`
 
@@ -1411,7 +1411,7 @@ test('spy call count', () => {
 })
 ```
 
-## calledWith
+## calledWith <Version>4.1.0</Version> {#calledwith}
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1431,7 +1431,7 @@ test('spy called with arguments', () => {
 })
 ```
 
-## calledOnce
+## calledOnce <Version>4.1.0</Version> {#calledonce}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1453,7 +1453,7 @@ test('spy called once', () => {
 })
 ```
 
-## calledOnceWith
+## calledOnceWith <Version>4.1.0</Version> {#calledoncewith}
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1471,7 +1471,7 @@ test('spy called once with arguments', () => {
 })
 ```
 
-## calledTwice
+## calledTwice <Version>4.1.0</Version> {#calledtwice}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1494,7 +1494,7 @@ test('spy called twice', () => {
 })
 ```
 
-## calledThrice
+## calledThrice <Version>4.1.0</Version> {#calledthrice}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1557,7 +1557,7 @@ test('spy nth called with', () => {
 })
 ```
 
-## returned
+## returned <Version>4.1.0</Version> {#returned}
 
 - **Type:** `Assertion` (property, not a method)
 
@@ -1579,7 +1579,7 @@ test('spy returned', () => {
 })
 ```
 
-## returnedWith
+## returnedWith <Version>4.1.0</Version> {#returnedwith}
 
 - **Type:** `(value: any) => void`
 
@@ -1601,7 +1601,7 @@ test('spy returned with value', () => {
 })
 ```
 
-## returnedTimes
+## returnedTimes <Version>4.1.0</Version> {#returnedtimes}
 
 - **Type:** `(count: number) => void`
 
@@ -1665,7 +1665,7 @@ test('spy nth returned with', () => {
 })
 ```
 
-## calledBefore
+## calledBefore <Version>4.1.0</Version> {#calledbefore}
 
 - **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
 
@@ -1685,7 +1685,7 @@ test('spy called before another', () => {
 })
 ```
 
-## calledAfter
+## calledAfter <Version>4.1.0</Version> {#calledafter}
 
 - **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
 

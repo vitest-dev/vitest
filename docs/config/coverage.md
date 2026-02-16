@@ -89,8 +89,6 @@ Vitest will delete this directory before running tests if `coverage.clean` is en
 
 Directory to write coverage report to.
 
-To preview the coverage report in the output of [HTML reporter](/guide/reporters.html#html-reporter), this option must be set as a sub-directory of the html report directory (for example `./html/coverage`).
-
 ## coverage.reporter
 
 - **Type:** `string | string[] | [string, {}][]`
@@ -395,3 +393,15 @@ Concurrency limit used when processing the coverage results.
 - **CLI:** `--coverage.customProviderModule=<path or module name>`
 
 Specifies the module name or path for the custom coverage provider module. See [Guide - Custom Coverage Provider](/guide/coverage#custom-coverage-provider) for more information.
+
+## coverage.htmlDir
+
+- **Type:** `string`
+- **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
+- **CLI:** `--coverage.htmlDir=<path>`
+
+Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+
+This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
+
+Note that setting this option does not change where coverage HTML report is generated. Configure the `coverage.reporter` option to change the directory instead.
