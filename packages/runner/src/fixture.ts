@@ -21,6 +21,7 @@ export class TestFixtures {
   private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
   private _registrations: FixtureRegistrations
+  private _parent?: TestFixtures
 
   private static _definitions: TestFixtures[] = []
   private static _builtinFixtures: string[] = [
@@ -50,10 +51,13 @@ export class TestFixtures {
 
   constructor(
     registrations?: FixtureRegistrations,
-    suiteContexts?: WeakMap<Suite | symbol, Record<string, unknown>>,
+    parent?: TestFixtures,
   ) {
     this._registrations = registrations ?? new Map()
-    this._suiteContexts = suiteContexts ?? new WeakMap()
+    this._parent = parent
+    // If we have a parent, we don't share context to avoid leakage (e.g. sibling tests)
+    // Dependencies will be resolved via delegation or fresh instantiation
+    this._suiteContexts = new WeakMap()
     TestFixtures._definitions.push(this)
   }
 
@@ -61,17 +65,25 @@ export class TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
-    return new TestFixtures(registrations, this._suiteContexts)
+    return new TestFixtures(registrations, this)
   }
 
   get(suite: Suite): FixtureRegistrations {
     let currentSuite: Suite | undefined = suite
     while (currentSuite) {
-      const overrides = this._overrides.get(currentSuite)
-      // return the closest override
-      if (overrides) {
-        return overrides
+      if (this._overrides.has(currentSuite)) {
+        return this._overrides.get(currentSuite)!
       }
+
+      // If parent has specific overrides for this suite (or its hierarchy returned an override)
+      // we must respect them, but merge with our own registrations (which contain extensions)
+      if (this._parent) {
+        const parentRegs = this._parent.get(suite)
+        if (parentRegs !== this._parent._registrations) {
+          return new Map([...this._registrations, ...parentRegs])
+        }
+      }
+
       if (currentSuite === currentSuite.file) {
         break
       }
