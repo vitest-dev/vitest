@@ -447,8 +447,8 @@ const myMockFn = vi
   .mockThrowOnce(new Error('first call error'))
   .mockThrowOnce('second call error')
 
-expect(() => myMockFn()).toThrowError('first call error')
-expect(() => myMockFn()).toThrowError('second call error')
+expect(() => myMockFn()).toThrow('first call error')
+expect(() => myMockFn()).toThrow('second call error')
 expect(myMockFn()).toEqual('default')
 ```
 
