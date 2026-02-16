@@ -64,35 +64,46 @@ export class PreviewBrowserProvider implements BrowserProvider {
 declare module 'vitest/browser' {
   export interface UserEventClickOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventHoverOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventDragAndDropOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventFillOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventSelectOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventClearOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventDoubleClickOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventTripleClickOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventUploadOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface UserEventWheelBaseOptions {
     timeout?: number
+    strict?: boolean
   }
   export interface LocatorScreenshotOptions {
     timeout?: number
+    strict?: boolean
   }
 }

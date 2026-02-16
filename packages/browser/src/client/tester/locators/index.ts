@@ -302,15 +302,20 @@ export abstract class Locator {
 
   // TODO: make public at one point?
   protected async waitForElement(options_: {
+    strict?: boolean
     timeout?: number
   } = {}): Promise<HTMLElement | SVGElement> {
     const options = processTimeoutOptions(options_)
     const timeout = options?.timeout
+    const strict = options?.strict ?? true
     const startTime = now()
     let intervalIndex = 0
     while (true) {
       const elements = this.elements()
       if (elements.length === 1) {
+        return elements[0]
+      }
+      if (!strict && elements.length > 1) {
         return elements[0]
       }
       const elapsed = now() - startTime
