@@ -48,9 +48,12 @@ export class TestFixtures {
     return TestFixtures._definitions.map(f => f.getFileContext(file))
   }
 
-  constructor(registrations?: FixtureRegistrations) {
+  constructor(
+    registrations?: FixtureRegistrations,
+    suiteContexts?: WeakMap<Suite | symbol, Record<string, unknown>>,
+  ) {
     this._registrations = registrations ?? new Map()
-    this._suiteContexts = new WeakMap()
+    this._suiteContexts = suiteContexts ?? new WeakMap()
     TestFixtures._definitions.push(this)
   }
 
@@ -58,7 +61,7 @@ export class TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
-    return new TestFixtures(registrations)
+    return new TestFixtures(registrations, this._suiteContexts)
   }
 
   get(suite: Suite): FixtureRegistrations {
@@ -74,6 +77,7 @@ export class TestFixtures {
       }
       currentSuite = currentSuite.suite || currentSuite.file
     }
+
     return this._registrations
   }
 
@@ -179,6 +183,10 @@ export class TestFixtures {
         }
       }
 
+      if (!options) {
+        throw new Error('Fixture options are not defined. This should not happen.')
+      }
+
       if (options.scope && !TestFixtures._fixtureScopes.includes(options.scope)) {
         errors.push(new FixtureDependencyError(`The "${name}" fixture has unknown scope "${options.scope}".`))
       }
@@ -210,30 +218,6 @@ export class TestFixtures {
     this.validateFixtureGraph(registrations, errors)
 
     return registrations
-  }
-
-  merge(other: TestFixtures): TestFixtures {
-    const registrations = new Map(this._registrations)
-    const errors: Error[] = []
-
-    const { suite, file } = getCurrentSuite()
-    const context = suite || file
-    const isTopLevel = !suite || suite.file === suite
-
-    // We need to resolve fixtures from the current context, because test.override
-    // inside the suite only modifies overrides for that suite.
-    const otherRegistrations = context ? other.get(context) : other._registrations
-
-    for (const [name, fixture] of otherRegistrations) {
-      if (!isTopLevel && fixture.scope !== 'test') {
-        errors.push(new FixtureDependencyError(`The "${name}" fixture cannot be defined with a ${fixture.scope} scope inside the describe block. Define it at the top level of the file instead.`))
-      }
-      registrations.set(name, fixture)
-    }
-
-    this.validateFixtureGraph(registrations, errors)
-
-    return new TestFixtures(registrations)
   }
 
   private validateFixtureGraph(registrations: FixtureRegistrations, errors: Error[] = []) {

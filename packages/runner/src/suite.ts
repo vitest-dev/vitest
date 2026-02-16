@@ -1104,33 +1104,21 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
     throw new TypeError('mergeTests requires at least one test')
   }
 
-  // use the base test as the starting point
-  const [base, ...rest] = tests
-  const baseContext = getChainableContext(base)
-  if (!baseContext || typeof baseContext.getFixtures !== 'function') {
-    throw new TypeError('Cannot merge tests: argument is not a valid test instance')
-  }
+  // Use the first test as the base
+  let [currentTest, ...rest] = tests
 
-  let fixtures = baseContext.getFixtures()
-
-  for (const test of rest) {
-    const ctx = getChainableContext(test)
-    if (!ctx || typeof ctx.getFixtures !== 'function') {
+  for (const nextTest of rest) {
+    const nextContext = getChainableContext(nextTest)
+    if (!nextContext || typeof nextContext.getFixtures !== 'function') {
       throw new TypeError('Cannot merge tests: argument is not a valid test instance')
     }
-    fixtures = fixtures.merge(ctx.getFixtures())
+
+    // Extract fixtures from the next test and extend the current test
+    // This behaves exactly like currentTest.extend(nextFixtures)
+    // Existing overrides on currentTest are dropped/reset by .extend(), which is the intended simplified behavior.
+    const fixtures = nextContext.getFixtures().toUserFixtures()
+    currentTest = currentTest.extend(fixtures as any)
   }
 
-  // We call extend({}) to clone the chainable API while preserving internal flags.
-  // The newly created fixtures are immediately replaced via mergeContext.
-  const result = base.extend({})
-  const resultContext = getChainableContext(result)
-
-  if (!resultContext) {
-    throw new TypeError('Cannot merge tests: argument is not a valid test instance')
-  }
-
-  resultContext.mergeContext({ fixtures })
-
-  return result
+  return currentTest
 }
