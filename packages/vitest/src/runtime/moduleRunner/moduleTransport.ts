@@ -38,12 +38,12 @@ export class VitestTransport implements ModuleRunnerTransport {
       if (cause instanceof EnvironmentTeardownError) {
         const [id, importer] = data as Parameters<FetchFunction>
         let message = `Cannot load '${id}'${importer ? ` imported from ${importer}` : ''} after the environment was torn down. `
-          + `This is not a bug in Vitest, your test code leaves pending dynamic imports.`
+          + `This is not a bug in Vitest.`
 
-        const moduleNode = this.evaluatedModules.getModuleByUrl(id)
+        const moduleNode = importer ? this.evaluatedModules.getModuleById(importer) : undefined
         const callstack = moduleNode ? this.callstacks.get(moduleNode) : undefined
         if (callstack) {
-          message += ` The last recorded callstack:\n- ${[...callstack].reverse().join('\n- ')}`
+          message += ` The last recorded callstack:\n- ${[...callstack, importer, id].reverse().join('\n- ')}`
         }
         const error = new EnvironmentTeardownError(message)
         if (cause.stack) {
