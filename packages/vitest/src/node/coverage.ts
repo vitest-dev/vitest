@@ -330,15 +330,15 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   }
 
   async onTestRunStart(): Promise<void> {
-    if (this.ctx.config.changed) {
-      this.changedFiles = this.ctx.config.related
-    }
-    else if (this.options.changed) {
+    if (this.options.changed) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.ctx.config.root)
       const changedFiles = await vitestGit.findChangedFiles({ changedSince: this.options.changed })
 
       this.changedFiles = changedFiles ?? undefined
+    }
+    else if (this.ctx.config.changed) {
+      this.changedFiles = this.ctx.config.related
     }
 
     if (this.changedFiles) {
