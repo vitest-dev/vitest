@@ -1,5 +1,6 @@
-import type { FetchFunction, ModuleRunnerTransport } from 'vite/module-runner'
+import type { EvaluatedModuleNode, EvaluatedModules, FetchFunction, ModuleRunnerTransport } from 'vite/module-runner'
 import type { ResolveFunctionResult } from '../../types/general'
+import { EnvironmentTeardownError } from '../utils'
 
 export interface VitestTransportOptions {
   fetchModule: FetchFunction
@@ -7,7 +8,11 @@ export interface VitestTransportOptions {
 }
 
 export class VitestTransport implements ModuleRunnerTransport {
-  constructor(private options: VitestTransportOptions) {}
+  constructor(
+    private options: VitestTransportOptions,
+    private evaluatedModules: EvaluatedModules,
+    private callstacks: WeakMap<EvaluatedModuleNode, string[]>,
+  ) {}
 
   async invoke(event: any): Promise<{ result: any } | { error: any }> {
     if (event.type !== 'custom') {
@@ -29,8 +34,24 @@ export class VitestTransport implements ModuleRunnerTransport {
       const result = await this.options.fetchModule(...data as Parameters<FetchFunction>)
       return { result }
     }
-    catch (error) {
-      return { error }
+    catch (cause) {
+      if (cause instanceof EnvironmentTeardownError) {
+        const [id, importer] = data as Parameters<FetchFunction>
+        let message = `Cannot load '${id}'${importer ? ` imported from ${importer}` : ''} after the environment was torn down. `
+          + `This is not a bug in Vitest, your test code leaves pending dynamic imports.`
+
+        const moduleNode = this.evaluatedModules.getModuleByUrl(id)
+        const callstack = moduleNode ? this.callstacks.get(moduleNode) : undefined
+        if (callstack) {
+          message += ` The last recorded callstack:\n- ${[...callstack].reverse().join('\n- ')}`
+        }
+        const error = new EnvironmentTeardownError(message)
+        if (cause.stack) {
+          error.stack = cause.stack.replace(cause.message, error.message)
+        }
+        return { error }
+      }
+      return { error: cause }
     }
   }
 }
