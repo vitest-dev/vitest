@@ -149,31 +149,45 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     const roots = root ? [root] : this.roots
 
     const filename = slash(_filename)
-    const cacheHit = this.globCache.get(filename)
+    const cacheKey = root ? `${root}::${filename}` : filename
+    const cacheHit = this.globCache.get(cacheKey)
 
     if (cacheHit !== undefined) {
       return cacheHit
     }
 
-    // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
-      this.globCache.set(filename, false)
+    const includeGlobs = this.options.include || '**'
+    const excludes = this.options.exclude
 
-      return false
+    for (const projectRoot of roots) {
+      const relativePath = slash(relative(projectRoot, filename))
+      const isExternal = relativePath.startsWith('..') || path.isAbsolute(relativePath)
+
+      if (this.options.allowExternal === false && isExternal) {
+        continue
+      }
+
+      const matchTarget = isExternal ? filename : relativePath
+
+      if (pm.isMatch(matchTarget, excludes, { dot: true })) {
+        continue
+      }
+
+      if (!isExternal) {
+        const absoluteExcludes = excludes.filter(pattern => path.isAbsolute(pattern))
+        if (absoluteExcludes.length > 0 && pm.isMatch(filename, absoluteExcludes, { dot: true })) {
+          continue
+        }
+      }
+
+      if (pm.isMatch(matchTarget, includeGlobs, { dot: true, contains: true })) {
+        this.globCache.set(cacheKey, true)
+        return true
+      }
     }
 
-    // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
-
-    const included = pm.isMatch(filename, glob, {
-      contains: true,
-      dot: true,
-      ignore: this.options.exclude,
-    })
-
-    this.globCache.set(filename, included)
-
-    return included
+    this.globCache.set(cacheKey, false)
+    return false
   }
 
   private async getUntestedFilesByRoot(
