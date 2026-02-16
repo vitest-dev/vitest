@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { sep } from 'node:path'
 import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
@@ -58,5 +59,45 @@ describe(GithubActionsReporter, () => {
       "
     `)
     expect(stderr).toBe('')
+  })
+
+  // summary gets written in $GITHUB_STEP_SUMMARY
+  it.runIf(process.env.GITHUB_STEP_SUMMARY !== undefined)('creates summary', async () => {
+    const { stdout, stderr } = await runVitest(
+      {
+        reporters: new GithubActionsReporter(),
+        root: './fixtures/reporters/github-actions',
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(stdout).toBe('')
+
+    const summary = await readFile(process.env.GITHUB_STEP_SUMMARY!, 'utf8')
+
+    expect(
+      summary.replace(/https:\/\/github.com\/[\w-]+\/[\w-]+\/blob\/\w+/g, '<repository>'),
+    ).toMatchInlineSnapshot(`
+      "## Vitest Test Report
+
+      ### Flaky Tests
+
+      These tests passed only after one or more retries, indicating potential instability.
+
+      ##### \`flaky/math.spec.ts\` (5 flaky tests)
+
+      - [\`should multiply numbers correctly\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 5 out of 5**)
+      - [\`should handle edge cases\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+      - [\`should validate input properly\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+      - [\`should divide numbers correctly\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 2 out of 5)
+      - [\`should subtract numbers correctly\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 1 out of 5)
+
+      ##### \`flaky/network.spec.ts\` (3 flaky tests)
+
+      - [\`network > should handle network timeouts gracefully\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (**passed on retry 4 out of 4**)
+      - [\`network > should fetch user data from API\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 2 out of 3)
+      - [\`network > should retry failed requests\`](<repository>/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 1 out of 3)
+      "
+    `)
   })
 })
