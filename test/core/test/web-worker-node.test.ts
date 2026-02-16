@@ -245,9 +245,9 @@ it('throws syntax error if no arguments are provided', () => {
   const worker = new MyWorker()
 
   // @ts-expect-error requires at least one argument
-  expect(() => worker.postMessage()).toThrowError(SyntaxError)
-  expect(() => worker.postMessage(undefined)).not.toThrowError()
-  expect(() => worker.postMessage(null)).not.toThrowError()
+  expect(() => worker.postMessage()).toThrow(SyntaxError)
+  expect(() => worker.postMessage(undefined)).not.toThrow()
+  expect(() => worker.postMessage(null)).not.toThrow()
 })
 
 function sendEventMessage(worker: SharedWorker, msg: any) {

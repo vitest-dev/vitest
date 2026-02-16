@@ -146,7 +146,7 @@ describe.each([
     ])
     await expect(async () => {
       await config(rawConfig.options)
-    }).rejects.toThrowError(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
+    }).rejects.toThrow(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
   })
 })
 
