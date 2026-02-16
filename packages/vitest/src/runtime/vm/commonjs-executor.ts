@@ -205,9 +205,32 @@ export class CommonjsExecutor {
   // vm.Script executor cannot handle. We exclude it by passing explicit
   // CJS conditions to require.resolve (Node 22.12+).
   // Must be a Set because Node's internal resolver calls conditions.has().
-  // If Node introduces new built-in CJS conditions in the future, this
-  // set may need to be extended.
-  private static cjsConditions = new Set(['node', 'require', 'node-addons'])
+  // User-specified --conditions/-C flags are respected, except module-sync.
+  private static cjsConditions: Set<string> | undefined
+  private static getCjsConditions(): Set<string> {
+    if (CommonjsExecutor.cjsConditions) {
+      return CommonjsExecutor.cjsConditions
+    }
+    const conditions = ['node', 'require', 'node-addons']
+    const args = [
+      ...process.execArgv,
+      ...(process.env.NODE_OPTIONS?.split(/\s+/) ?? []),
+    ]
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i]
+      const eqMatch = arg.match(/^(?:--conditions|-C)=(.+)$/)
+      if (eqMatch) {
+        conditions.push(eqMatch[1])
+      }
+      else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
+        conditions.push(args[++i])
+      }
+    }
+    CommonjsExecutor.cjsConditions = new Set(
+      conditions.filter(c => c !== 'module-sync'),
+    )
+    return CommonjsExecutor.cjsConditions
+  }
 
   public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
@@ -216,7 +239,7 @@ export class CommonjsExecutor {
         ...options,
         // Works on Node 22.12+ where _resolveFilename supports conditions.
         // Silently ignored on older Node versions.
-        conditions: CommonjsExecutor.cjsConditions,
+        conditions: CommonjsExecutor.getCjsConditions(),
       } as any)
     }
     const require = ((id: string) => {
