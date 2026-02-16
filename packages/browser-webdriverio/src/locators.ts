@@ -30,6 +30,13 @@ class WebdriverIOLocator extends Locator {
     super()
   }
 
+  // This exists to avoid calling `this.elements` in `this.selector`'s getter in interactive actions
+  private withElement(element: Element) {
+    const pwSelector = selectorEngine.generateSelectorSimple(element)
+    const cssSelector = convertElementToCssSelector(element)
+    return new ElementWebdriverIOLocator(cssSelector, pwSelector, element)
+  }
+
   override get selector(): string {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
@@ -47,18 +54,18 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override async click(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.click(processClickOptions(options))
+    const element = await this.waitForElement(options)
+    return this.withElement(element).click(processClickOptions(options))
   }
 
   public override async dblClick(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.dblClick(processClickOptions(options))
+    const element = await this.waitForElement(options)
+    return this.withElement(element).dblClick(processClickOptions(options))
   }
 
   public override async tripleClick(options?: UserEventClickOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.tripleClick(processClickOptions(options))
+    const element = await this.waitForElement(options)
+    return this.withElement(element).tripleClick(processClickOptions(options))
   }
 
   public async selectOptions(
@@ -67,47 +74,59 @@ class WebdriverIOLocator extends Locator {
   ): Promise<void> {
     const element = await this.waitForElement(options)
     const values = getWebdriverioSelectOptions(element, value)
-    return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
+    return this.triggerCommand(
+      '__vitest_selectOptions',
+      convertElementToCssSelector(element),
+      values,
+      options,
+    )
   }
 
   public override async hover(options?: UserEventHoverOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.hover(processHoverOptions(options))
-  }
-
-  public override async unhover(options?: UserEventHoverOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.unhover(options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).hover(processHoverOptions(options))
   }
 
   public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.dropTo(target, processDragAndDropOptions(options))
+    const [element, targetElement] = await Promise.all([
+      this.waitForElement(options),
+      // @ts-expect-error protected API
+      target.waitForElement({
+        timeout: options?.timeout,
+        strict: options?.strict,
+      }),
+    ])
+    return this.triggerCommand<void>(
+      '__vitest_dragAndDrop',
+      convertElementToCssSelector(element),
+      convertElementToCssSelector(targetElement),
+      processDragAndDropOptions(options),
+    )
   }
 
   public override async wheel(options: UserEventWheelOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.wheel(options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).wheel(options)
   }
 
   public override async clear(options?: UserEventClearOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.clear(options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).clear(options)
   }
 
   public override async fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.fill(text, options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).fill(text, options)
   }
 
   public override async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    await this.waitForElement(options)
-    return super.upload(files, options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).upload(files, options)
   }
 
   public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
-    await this.waitForElement(options)
-    return super.screenshot(options)
+    const element = await this.waitForElement(options)
+    return this.withElement(element).screenshot(options)
   }
 
   protected locator(selector: string) {
@@ -116,6 +135,28 @@ class WebdriverIOLocator extends Locator {
 
   protected elementLocator(element: Element) {
     return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
+  }
+}
+
+class ElementWebdriverIOLocator extends Locator {
+  constructor(
+    private _cssSelector: string,
+    protected _pwSelector: string,
+    protected _container: Element,
+  ) {
+    super()
+  }
+
+  override get selector() {
+    return this._cssSelector
+  }
+
+  protected locator(_selector: string): Locator {
+    throw new Error(`should not be called`)
+  }
+
+  protected elementLocator(_element: Element): Locator {
+    throw new Error(`should not be called`)
   }
 }
 

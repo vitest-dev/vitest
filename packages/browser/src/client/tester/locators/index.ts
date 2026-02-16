@@ -24,7 +24,7 @@ import {
   Ivya,
 } from 'ivya'
 import { page, server, utils } from 'vitest/browser'
-import { __INTERNAL } from 'vitest/internal/browser'
+import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
 import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 
@@ -45,7 +45,7 @@ const now = Date.now
 const waitForIntervals = [0, 20, 50, 100, 100, 500]
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise(resolve => getSafeTimers().setTimeout(resolve, ms))
 }
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
@@ -146,7 +146,12 @@ export abstract class Locator {
         base64: bas64String.slice(bas64String.indexOf(',') + 1),
       }
     })
-    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
+    return this.triggerCommand<void>(
+      '__vitest_upload',
+      this.selector,
+      await Promise.all(filesPromise),
+      options,
+    )
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {

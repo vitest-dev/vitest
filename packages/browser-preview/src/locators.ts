@@ -1,4 +1,12 @@
-import type { UserEventClearOptions, UserEventClickOptions, UserEventFillOptions, UserEventHoverOptions, UserEventSelectOptions, UserEventUploadOptions, UserEventWheelOptions } from 'vitest/browser'
+import type {
+  UserEventClearOptions,
+  UserEventClickOptions,
+  UserEventFillOptions,
+  UserEventHoverOptions,
+  UserEventSelectOptions,
+  UserEventUploadOptions,
+  UserEventWheelOptions,
+} from 'vitest/browser'
 import {
   convertElementToCssSelector,
   getByAltTextSelector,
