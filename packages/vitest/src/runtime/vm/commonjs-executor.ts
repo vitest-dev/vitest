@@ -200,35 +200,14 @@ export class CommonjsExecutor {
     m.exports = JSON.parse(code)
   }
 
-  // The "module-sync" exports condition (added in Node 22.12/20.19 when
-  // require(esm) was unflagged) can resolve to ESM files that our CJS
-  // vm.Script executor cannot handle. We exclude it by passing explicit
-  // CJS conditions to require.resolve (Node 22.12+).
-  // Must be a Set because Node's internal resolver calls conditions.has().
-  // User-specified --conditions/-C flags are respected, except module-sync.
   private static cjsConditions: Set<string> | undefined
   private static getCjsConditions(): Set<string> {
-    if (CommonjsExecutor.cjsConditions) {
-      return CommonjsExecutor.cjsConditions
+    if (!CommonjsExecutor.cjsConditions) {
+      CommonjsExecutor.cjsConditions = parseCjsConditions(
+        process.execArgv,
+        process.env.NODE_OPTIONS,
+      )
     }
-    const conditions = ['node', 'require', 'node-addons']
-    const args = [
-      ...process.execArgv,
-      ...(process.env.NODE_OPTIONS?.split(/\s+/) ?? []),
-    ]
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i]
-      const eqMatch = arg.match(/^(?:--conditions|-C)=(.+)$/)
-      if (eqMatch) {
-        conditions.push(eqMatch[1])
-      }
-      else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
-        conditions.push(args[++i])
-      }
-    }
-    CommonjsExecutor.cjsConditions = new Set(
-      conditions.filter(c => c !== 'module-sync'),
-    )
     return CommonjsExecutor.cjsConditions
   }
 
@@ -421,4 +400,32 @@ export class CommonjsExecutor {
     // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
+}
+
+// The "module-sync" exports condition (added in Node 22.12/20.19 when
+// require(esm) was unflagged) can resolve to ESM files that our CJS
+// vm.Script executor cannot handle. We exclude it by passing explicit
+// CJS conditions to require.resolve (Node 22.12+).
+// Must be a Set because Node's internal resolver calls conditions.has().
+// User-specified --conditions/-C flags are respected, except module-sync.
+export function parseCjsConditions(
+  execArgv: string[],
+  nodeOptions?: string,
+): Set<string> {
+  const conditions = ['node', 'require', 'node-addons']
+  const args = [
+    ...execArgv,
+    ...(nodeOptions?.split(/\s+/) ?? []),
+  ]
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    const eqMatch = arg.match(/^(?:--conditions|-C)=(.+)$/)
+    if (eqMatch) {
+      conditions.push(eqMatch[1])
+    }
+    else if ((arg === '--conditions' || arg === '-C') && i + 1 < args.length) {
+      conditions.push(args[++i])
+    }
+  }
+  return new Set(conditions.filter(c => c !== 'module-sync'))
 }
