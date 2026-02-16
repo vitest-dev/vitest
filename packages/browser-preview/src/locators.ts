@@ -26,40 +26,49 @@ class PreviewLocator extends Locator {
     return selectors.join(', ')
   }
 
-  click(): Promise<void> {
-    return userEvent.click(this.element())
+  async click(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.click(element)
   }
 
-  dblClick(): Promise<void> {
-    return userEvent.dblClick(this.element())
+  async dblClick(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.dblClick(element)
   }
 
-  tripleClick(): Promise<void> {
-    return userEvent.tripleClick(this.element())
+  async tripleClick(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.tripleClick(element)
   }
 
-  hover(): Promise<void> {
-    return userEvent.hover(this.element())
+  async hover(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.hover(element)
   }
 
-  unhover(): Promise<void> {
-    return userEvent.unhover(this.element())
+  async unhover(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.unhover(element)
   }
 
   async fill(text: string): Promise<void> {
-    return userEvent.fill(this.element(), text)
+    const element = await this.waitForElement()
+    return userEvent.fill(element, text)
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
-    return userEvent.upload(this.element(), file)
+    const element = await this.waitForElement()
+    return userEvent.upload(element, file)
   }
 
-  selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    return userEvent.selectOptions(this.element(), options)
+  async selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.selectOptions(element, options)
   }
 
-  clear(): Promise<void> {
-    return userEvent.clear(this.element())
+  async clear(): Promise<void> {
+    const element = await this.waitForElement()
+    return userEvent.clear(element)
   }
 
   protected locator(selector: string) {

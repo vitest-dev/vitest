@@ -2,8 +2,6 @@ import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
-const provider = getBrowserState().provider
-
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
   if (!element || !(element instanceof Element)) {
@@ -142,12 +140,10 @@ export class CommandsManager {
 
 const now = Date.now
 
-export function processTimeoutOptions<T extends { timeout?: number }>(options_?: T): T | undefined {
+export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (
     // if timeout is set, keep it
     (options_ && options_.timeout != null)
-    // timeout can only be set for playwright commands
-    || provider !== 'playwright'
   ) {
     return options_
   }

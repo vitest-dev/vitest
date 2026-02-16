@@ -1,8 +1,13 @@
 import type {
+  LocatorScreenshotOptions,
+  UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
+  UserEventFillOptions,
   UserEventHoverOptions,
   UserEventSelectOptions,
+  UserEventUploadOptions,
+  UserEventWheelOptions,
 } from 'vitest/browser'
 import {
   convertElementToCssSelector,
@@ -41,32 +46,68 @@ class WebdriverIOLocator extends Locator {
     return (hasShadowRoot ? '>>>' : '') + newSelectors.join(', ')
   }
 
-  public override click(options?: UserEventClickOptions): Promise<void> {
+  public override async click(options?: UserEventClickOptions): Promise<void> {
+    await this.waitForElement()
     return super.click(processClickOptions(options))
   }
 
-  public override dblClick(options?: UserEventClickOptions): Promise<void> {
+  public override async dblClick(options?: UserEventClickOptions): Promise<void> {
+    await this.waitForElement()
     return super.dblClick(processClickOptions(options))
   }
 
-  public override tripleClick(options?: UserEventClickOptions): Promise<void> {
+  public override async tripleClick(options?: UserEventClickOptions): Promise<void> {
+    await this.waitForElement()
     return super.tripleClick(processClickOptions(options))
   }
 
-  public selectOptions(
+  public async selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
-    const values = getWebdriverioSelectOptions(this.element(), value)
+    const element = await this.waitForElement()
+    const values = getWebdriverioSelectOptions(element, value)
     return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
   }
 
-  public override hover(options?: UserEventHoverOptions): Promise<void> {
+  public override async hover(options?: UserEventHoverOptions): Promise<void> {
+    await this.waitForElement()
     return super.hover(processHoverOptions(options))
   }
 
-  public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+  public override async unhover(options?: UserEventHoverOptions): Promise<void> {
+    await this.waitForElement()
+    return super.unhover(options)
+  }
+
+  public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+    await this.waitForElement()
     return super.dropTo(target, processDragAndDropOptions(options))
+  }
+
+  public override async wheel(options: UserEventWheelOptions): Promise<void> {
+    await this.waitForElement()
+    return super.wheel(options)
+  }
+
+  public override async clear(options?: UserEventClearOptions): Promise<void> {
+    await this.waitForElement()
+    return super.clear(options)
+  }
+
+  public override async fill(text: string, options?: UserEventFillOptions): Promise<void> {
+    await this.waitForElement()
+    return super.fill(text, options)
+  }
+
+  public override async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+    await this.waitForElement()
+    return super.upload(files, options)
+  }
+
+  public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
+    await this.waitForElement()
+    return super.screenshot(options)
   }
 
   protected locator(selector: string) {

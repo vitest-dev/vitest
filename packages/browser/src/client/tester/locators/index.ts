@@ -26,7 +26,7 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState } from '../../utils'
-import { escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from '../tester-utils'
+import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
 export {
@@ -40,6 +40,8 @@ export {
 } from 'ivya'
 
 __INTERNAL._asLocator = asLocator
+
+const now = Date.now
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -293,6 +295,43 @@ export abstract class Locator {
     return this.selector
   }
 
+  // TODO: make public at one point?
+  protected async waitForElement(options_: {
+    timeout?: number
+  } = {}): Promise<HTMLElement | SVGElement> {
+    const options = processTimeoutOptions(options_)
+    const timeout = options?.timeout
+    const intervals = [0, 20, 50, 100, 100, 500]
+    const startTime = now()
+    let intervalIndex = 0
+    return new Promise((resolve, reject) => {
+      const check = () => {
+        const elements = this.elements()
+        if (elements.length === 1) {
+          resolve(elements[0])
+          return
+        }
+        const elapsed = now() - startTime
+        const isLastCall = timeout != null && elapsed >= timeout
+        if (isLastCall) {
+          if (elements.length > 1) {
+            reject(createStrictModeViolationError(this._pwSelector || this.selector, elements))
+          }
+          else {
+            reject(utils.getElementError(this._pwSelector || this.selector, this._container || document.body))
+          }
+          return
+        }
+        const interval = intervals[Math.min(intervalIndex++, intervals.length - 1)]
+        const nextInterval = timeout != null
+          ? Math.min(interval, timeout - elapsed)
+          : interval
+        setTimeout(check, nextInterval)
+      }
+      check()
+    })
+  }
+
   protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
     const commands = getBrowserState().commands
     return ensureAwaited(error => commands.triggerCommand<T>(
@@ -301,4 +340,24 @@ export abstract class Locator {
       error,
     ))
   }
+}
+
+function createStrictModeViolationError(
+  selector: string,
+  matches: Element[],
+) {
+  const infos = matches.slice(0, 10).map(m => ({
+    preview: selectorEngine.previewNode(m),
+    selector: selectorEngine.generateSelectorSimple(m),
+  }))
+  const lines = infos.map(
+    (info, i) =>
+      `\n    ${i + 1}) ${info.preview} aka ${asLocator('javascript', info.selector)}`,
+  )
+  if (infos.length < matches.length) {
+    lines.push('\n    ...')
+  }
+  return new Error(
+    `strict mode violation: ${asLocator('javascript', selector)} resolved to ${matches.length} elements:${lines.join('')}\n`,
+  )
 }
