@@ -122,6 +122,7 @@ export type ResolvedCoverageOptions<T extends CoverageProviderName = CoveragePro
   = CoverageOptions<T>
     & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
       reporter: CoverageReporterWithOptions[]
+      htmlDir?: string
     }
 
 export interface BaseCoverageOptions {
@@ -266,6 +267,13 @@ export interface BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Directory of HTML coverage output to be served in UI mode and HTML reporter.
+   * This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters).
+   * Use this option to override with custom coverage reporting location.
+   */
+  htmlDir?: string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
