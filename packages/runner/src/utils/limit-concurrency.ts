@@ -1,11 +1,11 @@
 // A compact (code-wise, probably not memory-wise) singly linked list node.
 type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
-export interface ConcurrencyLimiter extends RunWithLimit {
+export interface ConcurrencyLimiter extends ConcurrencyLimiterFn {
   acquire: () => (() => void) | Promise<() => void>
 }
 
-type RunWithLimit = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T>
+type ConcurrencyLimiterFn = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T>
 
 /**
  * Return a function for running multiple async operations with limited concurrency.
@@ -61,7 +61,7 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
     })
   }
 
-  const runWithLimit: RunWithLimit = (func, ...args) => {
+  const limiterFn: ConcurrencyLimiterFn = (func, ...args) => {
     function run(release: () => void) {
       try {
         const result = func(...args)
@@ -81,5 +81,5 @@ export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLim
     return release instanceof Promise ? release.then(run) : run(release)
   }
 
-  return Object.assign(runWithLimit, { acquire })
+  return Object.assign(limiterFn, { acquire })
 }

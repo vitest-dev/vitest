@@ -18,6 +18,7 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
+import type { ConcurrencyLimiter } from './utils/limit-concurrency'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
@@ -35,7 +36,7 @@ import { hasFailed, hasTests } from './utils/tasks'
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
-let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
+let limitMaxConcurrency: ConcurrencyLimiter
 
 /**
  * Normalizes retry configuration to extract individual values.
