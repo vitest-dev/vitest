@@ -267,10 +267,7 @@ async function callAroundHooks<THook extends Function>(
     return
   }
 
-  const deferredErrors: unknown[] = []
-  const captureDeferredError = (error: unknown) => {
-    deferredErrors.push(error)
-  }
+  const hookErrors: unknown[] = []
 
   const createTimeoutPromise = (
     timeout: number,
@@ -357,7 +354,7 @@ async function callAroundHooks<THook extends Function>(
       setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
-      await runNextHook(index + 1).catch(captureDeferredError)
+      await runNextHook(index + 1).catch(e => hookErrors.push(e))
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
@@ -417,23 +414,10 @@ async function callAroundHooks<THook extends Function>(
     }
   }
 
-  let topLevelError: unknown
-  try {
-    await runNextHook(0)
-  }
-  catch (error) {
-    topLevelError = error
-  }
+  await runNextHook(0).catch(e => hookErrors.push(e))
 
-  if (topLevelError !== undefined) {
-    deferredErrors.unshift(topLevelError)
-  }
-
-  if (deferredErrors.length === 1) {
-    throw deferredErrors[0]
-  }
-  if (deferredErrors.length > 1) {
-    throw new AggregateError(deferredErrors, `Multiple errors occurred in nested ${hookName} hooks`)
+  if (hookErrors.length > 0) {
+    throw hookErrors
   }
 }
 

@@ -1935,18 +1935,6 @@ test('aroundEach teardown timeout works when inner fails', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  caught-inner-error-timeout.test.ts > suite > test
-    AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 50ms.
-     ❯ caught-inner-error-timeout.test.ts:11:9
-          9|
-         10|       describe('suite', () => {
-         11|         aroundEach(async (runTest) => {
-           |         ^
-         12|           try {
-         13|             await runTest()
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-     FAIL  caught-inner-error-timeout.test.ts > suite > test
     Error: inner aroundEach teardown failure
      ❯ caught-inner-error-timeout.test.ts:24:17
          22|         aroundEach(async (runTest) => {
@@ -1955,6 +1943,18 @@ test('aroundEach teardown timeout works when inner fails', async () => {
            |                 ^
          25|         })
          26|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite > test
+    AroundHookTeardownError: The teardown phase of "aroundEach" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundEach(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
@@ -1965,8 +1965,8 @@ test('aroundEach teardown timeout works when inner fails', async () => {
       "caught-inner-error-timeout.test.ts": {
         "suite": {
           "test": [
-            "The teardown phase of "aroundEach" hook timed out after 50ms.",
             "inner aroundEach teardown failure",
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
           ],
         },
       },
@@ -2014,18 +2014,6 @@ test('aroundAll teardown timeout works when inner fails', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  caught-inner-error-timeout.test.ts > suite
-    AroundHookTeardownError: The teardown phase of "aroundAll" hook timed out after 50ms.
-     ❯ caught-inner-error-timeout.test.ts:11:9
-          9|
-         10|       describe('suite', () => {
-         11|         aroundAll(async (runTest) => {
-           |         ^
-         12|           try {
-         13|             await runTest()
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-     FAIL  caught-inner-error-timeout.test.ts > suite
     Error: inner aroundAll teardown failure
      ❯ caught-inner-error-timeout.test.ts:24:17
          22|         aroundAll(async (runTest) => {
@@ -2034,6 +2022,18 @@ test('aroundAll teardown timeout works when inner fails', async () => {
            |                 ^
          25|         })
          26|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  caught-inner-error-timeout.test.ts > suite
+    AroundHookTeardownError: The teardown phase of "aroundAll" hook timed out after 50ms.
+     ❯ caught-inner-error-timeout.test.ts:11:9
+          9|
+         10|       describe('suite', () => {
+         11|         aroundAll(async (runTest) => {
+           |         ^
+         12|           try {
+         13|             await runTest()
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
@@ -2475,18 +2475,6 @@ test('three nested aroundEach teardown errors are all reported', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  triple-around-each-teardown-errors.test.ts > repro
-    Error: outer aroundEach teardown error
-     ❯ triple-around-each-teardown-errors.test.ts:8:15
-          6|         await runTest()
-          7|         console.log('>> outer teardown')
-          8|         throw new Error('outer aroundEach teardown error')
-           |               ^
-          9|       })
-         10|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
-
-     FAIL  triple-around-each-teardown-errors.test.ts > repro
     Error: inner aroundEach teardown error
      ❯ triple-around-each-teardown-errors.test.ts:22:15
          20|         await runTest()
@@ -2496,7 +2484,7 @@ test('three nested aroundEach teardown errors are all reported', async () => {
          23|       })
          24|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
      FAIL  triple-around-each-teardown-errors.test.ts > repro
     Error: middle aroundEach teardown error
@@ -2507,6 +2495,18 @@ test('three nested aroundEach teardown errors are all reported', async () => {
            |               ^
          16|       })
          17|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  triple-around-each-teardown-errors.test.ts > repro
+    Error: outer aroundEach teardown error
+     ❯ triple-around-each-teardown-errors.test.ts:8:15
+          6|         await runTest()
+          7|         console.log('>> outer teardown')
+          8|         throw new Error('outer aroundEach teardown error')
+           |               ^
+          9|       })
+         10|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
@@ -2525,9 +2525,9 @@ test('three nested aroundEach teardown errors are all reported', async () => {
     {
       "triple-around-each-teardown-errors.test.ts": {
         "repro": [
-          "outer aroundEach teardown error",
           "inner aroundEach teardown error",
           "middle aroundEach teardown error",
+          "outer aroundEach teardown error",
         ],
       },
     }
@@ -2571,18 +2571,6 @@ test('three nested aroundAll teardown errors are all reported', async () => {
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
-    Error: outer aroundAll teardown error
-     ❯ triple-around-all-teardown-errors.test.ts:8:15
-          6|         await runSuite()
-          7|         console.log('>> outer teardown')
-          8|         throw new Error('outer aroundAll teardown error')
-           |               ^
-          9|       })
-         10|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
-
-     FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
     Error: inner aroundAll teardown error
      ❯ triple-around-all-teardown-errors.test.ts:22:15
          20|         await runSuite()
@@ -2592,7 +2580,7 @@ test('three nested aroundAll teardown errors are all reported', async () => {
          23|       })
          24|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
      FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
     Error: middle aroundAll teardown error
@@ -2603,6 +2591,18 @@ test('three nested aroundAll teardown errors are all reported', async () => {
            |               ^
          16|       })
          17|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  triple-around-all-teardown-errors.test.ts [ triple-around-all-teardown-errors.test.ts ]
+    Error: outer aroundAll teardown error
+     ❯ triple-around-all-teardown-errors.test.ts:8:15
+          6|         await runSuite()
+          7|         console.log('>> outer teardown')
+          8|         throw new Error('outer aroundAll teardown error')
+           |               ^
+          9|       })
+         10|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
