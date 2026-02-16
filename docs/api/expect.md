@@ -1518,7 +1518,7 @@ test('spy called thrice', () => {
 })
 ```
 
-## lastCalledWith <Version>4.1.0</Version> {#lastcalledwith}
+## lastCalledWith
 
 - **Type:** `(...args: any[]) => void`
 
@@ -1537,7 +1537,7 @@ test('spy last called with', () => {
 })
 ```
 
-## nthCalledWith <Version>4.1.0</Version> {#nthcalledwith}
+## nthCalledWith
 
 - **Type:** `(n: number, ...args: any[]) => void`
 
@@ -1621,7 +1621,7 @@ test('spy returned times', () => {
 })
 ```
 
-## lastReturnedWith <Version>4.1.0</Version> {#lastreturnedwith}
+## lastReturnedWith
 
 - **Type:** `(value: any) => void`
 
@@ -1642,7 +1642,7 @@ test('spy last returned with', () => {
 })
 ```
 
-## nthReturnedWith <Version>4.1.0</Version> {#nthreturnedwith}
+## nthReturnedWith
 
 - **Type:** `(n: number, value: any) => void`
 
