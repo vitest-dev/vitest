@@ -140,6 +140,20 @@ export function createMockInstance(options: MockInstanceOption = {}): Mock<Proce
     })
   }
 
+  mock.mockThrow = function mockThrow(value) {
+    // eslint-disable-next-line prefer-arrow-callback
+    return mock.mockImplementation(function () {
+      throw value
+    })
+  }
+
+  mock.mockThrowOnce = function mockThrowOnce(value) {
+    // eslint-disable-next-line prefer-arrow-callback
+    return mock.mockImplementationOnce(function () {
+      throw value
+    })
+  }
+
   mock.mockResolvedValue = function mockResolvedValue(value) {
     return mock.mockImplementation(function () {
       if (new.target) {

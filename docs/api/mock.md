@@ -418,6 +418,40 @@ const myMockFn = vi
 console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 ```
 
+## mockThrow <Version>4.1.0</Version> {#mockthrow}
+
+```ts
+function mockThrow(value: unknown): Mock<T>
+```
+
+Accepts a value that will be thrown whenever the mock function is called.
+
+```ts
+const myMockFn = vi.fn()
+myMockFn.mockThrow(new Error('error message'))
+myMockFn() // throws Error<'error message'>
+```
+
+## mockThrowOnce <Version>4.1.0</Version> {#mockthrowonce}
+
+```ts
+function mockThrowOnce(value: unknown): Mock<T>
+```
+
+Accepts a value that will be thrown during the next function call. If chained, every consecutive call will throw the specified value.
+
+```ts
+const myMockFn = vi
+  .fn()
+  .mockReturnValue('default')
+  .mockThrowOnce(new Error('first call error'))
+  .mockThrowOnce('second call error')
+
+expect(() => myMockFn()).toThrow('first call error')
+expect(() => myMockFn()).toThrow('second call error')
+expect(myMockFn()).toEqual('default')
+```
+
 ## mock.calls
 
 ```ts

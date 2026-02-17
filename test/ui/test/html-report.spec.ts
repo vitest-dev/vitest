@@ -6,7 +6,7 @@ import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
 const port = 9001
-const pageUrl = `http://localhost:${port}/`
+const pageUrl = `http://localhost:${port}/custom/base/`
 
 test.describe('html report', () => {
   let previewServer: PreviewServer
@@ -24,8 +24,6 @@ test.describe('html report', () => {
         reporters: 'html',
         coverage: {
           enabled: true,
-          reportsDirectory: 'html/coverage',
-          reporter: ['html'],
         },
       },
       {},
@@ -37,27 +35,14 @@ test.describe('html report', () => {
 
     // run vite preview server
     previewServer = await preview({
+      base: '/custom/base/',
       build: { outDir: 'html' },
       preview: { port, strictPort: true },
     })
   })
 
   test.afterAll(async () => {
-    await new Promise<void>((resolve, reject) => {
-      // if there is no preview server, `startVitest` failed already
-      if (!previewServer) {
-        resolve()
-        return
-      }
-      previewServer.httpServer.close((err) => {
-        if (err) {
-          reject(err)
-        }
-        else {
-          resolve()
-        }
-      })
-    })
+    await previewServer?.close()
   })
 
   test('basic', async ({ page }) => {
@@ -168,7 +153,9 @@ test.describe('html report', () => {
       await expect(annotation).toContainText('notice')
       await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-      await expect(annotation.getByRole('img')).toHaveAttribute('src', /data\/\w+/)
+      const img = annotation.getByRole('img')
+      await expect(img).toHaveAttribute('src', /data\/\w+/)
+      await expect(img).not.toHaveJSProperty('naturalWidth', 0)
     })
 
     await test.step('annotated with body', async () => {
@@ -246,7 +233,9 @@ test.describe('html report', () => {
       await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
       await expect(artifact.getByRole('tablist')).toHaveText('Reference')
       await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /data\/\w+\.png/)
-      await expect(artifact.getByRole('tabpanel').getByRole('img')).toHaveAttribute('src', /data\/\w+\.png/)
+      const vrImg = artifact.getByRole('tabpanel').getByRole('img')
+      await expect(vrImg).toHaveAttribute('src', /data\/\w+\.png/)
+      await expect(vrImg).not.toHaveJSProperty('naturalWidth', 0)
     })
   })
 })

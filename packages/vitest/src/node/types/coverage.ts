@@ -28,7 +28,10 @@ export interface CoverageProvider {
   /** Called with coverage results after a single test file has been run */
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
 
-  /** Callback called when test run fails */
+  /** Callback called when test run starts */
+  onTestRunStart?: () => void | Promise<void>
+
+  /** Callback called when test run fails due to test failures */
   onTestFailure?: () => void | Promise<void>
 
   /** Callback to generate final coverage results */
@@ -122,6 +125,7 @@ export type ResolvedCoverageOptions<T extends CoverageProviderName = CoveragePro
   = CoverageOptions<T>
     & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
       reporter: CoverageReporterWithOptions[]
+      htmlDir?: string
     }
 
 export interface BaseCoverageOptions {
@@ -266,6 +270,21 @@ export interface BaseCoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Directory of HTML coverage output to be served in UI mode and HTML reporter.
+   * This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters).
+   * Use this option to override with custom coverage reporting location.
+   */
+  htmlDir?: string
+
+  /**
+   * Collect coverage only for files changed since a specified commit or branch.
+   * Inherits the default value from `test.changed`.
+   *
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
@@ -273,7 +292,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
 export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
-  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues | 'changed'> {
   /** Name of the module or path to a file to load the custom provider from */
   customProviderModule: string
 }

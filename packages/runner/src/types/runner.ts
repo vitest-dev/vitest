@@ -22,10 +22,10 @@ import type {
 export interface VitestRunnerConfig {
   root: string
   setupFiles: string[]
-  name?: string
+  name: string | undefined
   passWithNoTests: boolean
-  testNamePattern?: RegExp
-  allowOnly?: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -33,17 +33,17 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  chaiConfig?: {
+  chaiConfig: {
     truncateThreshold?: number
-  }
+  } | undefined
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
   retry: SerializableRetry
-  includeTaskLocation?: boolean
+  includeTaskLocation: boolean | undefined
   diffOptions?: DiffOptions
   tags: TestTagDefinition[]
-  tagsFilter?: string[]
+  tagsFilter: string[] | undefined
   strictTags: boolean
 }
 

@@ -27,7 +27,7 @@ test('non US keys', async () => {
   } else if (server.provider === 'webdriverio') {
     await expect(() =>
       userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   } else {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
@@ -43,7 +43,7 @@ test('non US keys', async () => {
     } else {
       await expect(() =>
         userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-      ).rejects.toThrowError()
+      ).rejects.toThrow()
     }
   } else {
     await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
