@@ -344,6 +344,16 @@ export const page: BrowserPage = {
       error,
     ))
   },
+  markTrace(options) {
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_markTrace',
+      [{
+        name: options.name,
+        stack: error?.stack,
+      }],
+      error,
+    ))
+  },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)
   },

@@ -31,11 +31,6 @@ export interface FsOptions {
   flag?: string | number
 }
 
-export interface MarkTraceOptions {
-  name: string
-  locator?: { selector: string }
-}
-
 export interface BrowserCommands {
   readFile: (
     path: string,
@@ -47,7 +42,6 @@ export interface BrowserCommands {
     options?: BufferEncoding | (FsOptions & { mode?: number | string }),
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
-  markTrace: (options: MarkTraceOptions) => Promise<void>
 }
 /**
  * @internal

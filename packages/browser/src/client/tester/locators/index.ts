@@ -180,6 +180,18 @@ export abstract class Locator {
     })
   }
 
+  public markTrace(options: { name: string }): Promise<void> {
+    return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
+      '__vitest_markTrace',
+      [{
+        name: options.name,
+        selector: this.selector,
+        stack: error?.stack,
+      }],
+      error,
+    ))
+  }
+
   protected abstract locator(selector: string): Locator
   protected abstract elementLocator(element: Element): Locator
 

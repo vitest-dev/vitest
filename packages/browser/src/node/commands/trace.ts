@@ -15,7 +15,7 @@ declare module 'vitest/browser' {
   }
 }
 
-export const markTrace = (async (
+export const _markTrace = (async (
   context: BrowserCommandContext,
   payload: { name: string; selector?: string; stack?: string },
 ) => {

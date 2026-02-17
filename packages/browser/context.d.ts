@@ -628,6 +628,12 @@ export interface Locator extends LocatorSelectors {
   screenshot(options?: LocatorScreenshotOptions): Promise<string>
 
   /**
+   * Add a trace marker for this locator.
+   * Works best with providers that support tracing.
+   */
+  markTrace(options: { name: string }): Promise<void>
+
+  /**
    * Returns an element matching the selector.
    *
    * - If multiple elements match the selector, an error is thrown.
@@ -776,6 +782,11 @@ export interface BrowserPage extends LocatorSelectors {
     path: string
     base64: string
   }>
+  /**
+   * Add a trace marker.
+   * Works best with providers that support tracing.
+   */
+  markTrace(options: { name: string }): Promise<void>
   /**
    * Extend default `page` object with custom methods.
    */
