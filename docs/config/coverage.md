@@ -405,3 +405,12 @@ Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HT
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
 
 Note that setting this option does not change where coverage HTML report is generated. Configure the `coverage.reporter` option to change the directory instead.
+
+## coverage.changed
+
+- **Type:** `boolean | string`
+- **Default:** `false` (inherits from `test.changed`)
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.changed`, `--coverage.changed=<commit/branch>`
+
+Collect coverage only for files changed since a specified commit or branch. When set to `true`, it uses staged and unstaged changes.
