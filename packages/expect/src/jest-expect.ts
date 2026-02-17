@@ -1113,7 +1113,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                 _error.cause = err
                 throw _error
               },
-            ).then(undefined, (err: any) => {
+            ).catch((err: any) => {
               if (isError(err) && error.stack) {
                 err.stack = error.stack.replace(
                   error.message,
@@ -1188,7 +1188,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                 utils.flag(this, 'object', err)
                 return result.call(this, ...args)
               },
-            ).then(undefined, (err: any) => {
+            ).catch((err: any) => {
               if (isError(err) && error.stack) {
                 err.stack = error.stack.replace(
                   error.message,
