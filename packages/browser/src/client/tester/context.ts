@@ -102,7 +102,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     // testing-library user-event
     async type(element, text, options) {
       return ensureAwaited(async (error) => {
-        const selector = convertToSelector(element)
+        const selector = await convertToSelector(element)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
           [
@@ -326,9 +326,10 @@ export const page: BrowserPage = {
     const normalizedOptions = 'mask' in options
       ? {
           ...options,
-          mask: (options.mask as Array<Element | Locator>).map(convertToSelector),
+          mask: await Promise.all((options.mask as Array<Element | Locator>).map(convertToSelector)),
         }
       : options
+    const element = options.element ? await convertToSelector(options.element) : undefined
 
     return ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
@@ -336,9 +337,7 @@ export const page: BrowserPage = {
         name,
         processTimeoutOptions({
           ...normalizedOptions,
-          element: options.element
-            ? convertToSelector(options.element)
-            : undefined,
+          element,
         } as any /** TODO */),
       ],
       error,

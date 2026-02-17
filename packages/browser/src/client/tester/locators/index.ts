@@ -320,15 +320,15 @@ export abstract class Locator {
       if (elements.length === 1) {
         return elements[0]
       }
-      if (!strict && elements.length > 1) {
+      if (elements.length > 1) {
+        if (strict) {
+          throw createStrictModeViolationError(this._pwSelector || this.selector, elements)
+        }
         return elements[0]
       }
       const elapsed = now() - startTime
       const isLastCall = timeout != null && elapsed >= timeout
       if (isLastCall) {
-        if (elements.length > 1) {
-          throw createStrictModeViolationError(this._pwSelector || this.selector, elements)
-        }
         throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]

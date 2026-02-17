@@ -301,8 +301,6 @@ declare module 'vitest/browser' {
     sourceY?: number
     targetX?: number
     targetY?: number
-    timeout?: number
-    strict?: boolean
   }
   export interface UserEventFillOptions {
     timeout?: number
@@ -321,10 +319,6 @@ declare module 'vitest/browser' {
     strict?: boolean
   }
   export interface UserEventTripleClickOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventUploadOptions {
     timeout?: number
     strict?: boolean
   }

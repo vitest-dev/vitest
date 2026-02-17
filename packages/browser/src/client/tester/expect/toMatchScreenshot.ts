@@ -40,14 +40,21 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : `${this.currentTestName} ${counter.current}`
 
+  const [element, ...mask] = await Promise.all([
+    convertToSelector(actual),
+    ...options.screenshotOptions && 'mask' in options.screenshotOptions
+      ? (options.screenshotOptions.mask as Array<Element | Locator>)
+          .map(convertToSelector)
+      : [],
+  ])
+
   const normalizedOptions: Omit<ScreenshotMatcherArguments[2], 'element'> = (
     options.screenshotOptions && 'mask' in options.screenshotOptions
       ? {
           ...options,
           screenshotOptions: {
             ...options.screenshotOptions,
-            mask: (options.screenshotOptions.mask as Array<Element | Locator>)
-              .map(convertToSelector),
+            mask,
           },
         }
       // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
@@ -60,7 +67,7 @@ export default async function toMatchScreenshot(
       name,
       this.currentTestName,
       {
-        element: convertToSelector(actual),
+        element,
         ...normalizedOptions,
       },
     ] satisfies ScreenshotMatcherArguments,

@@ -205,7 +205,10 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
   return `${JSON.stringify(text)}${exact ? 's' : 'i'}`
 }
 
-export function convertToSelector(elementOrLocator: Element | Locator): string {
+const provider = getBrowserState().provider
+const kElementLocator = Symbol.for('$$vitest:locator-resolved')
+
+export async function convertToSelector(elementOrLocator: Element | Locator): Promise<string> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
@@ -213,7 +216,12 @@ export function convertToSelector(elementOrLocator: Element | Locator): string {
     return convertElementToCssSelector(elementOrLocator)
   }
   if (isLocator(elementOrLocator)) {
-    return elementOrLocator.selector
+    if (provider === 'playwright' || kElementLocator in elementOrLocator) {
+      return elementOrLocator.selector
+    }
+    // @ts-expect-error private method
+    const element = await elementOrLocator.waitForElement()
+    return convertElementToCssSelector(element)
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }

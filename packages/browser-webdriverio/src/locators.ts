@@ -6,7 +6,6 @@ import type {
   UserEventFillOptions,
   UserEventHoverOptions,
   UserEventSelectOptions,
-  UserEventUploadOptions,
   UserEventWheelOptions,
 } from 'vitest/browser'
 import {
@@ -88,20 +87,8 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    const [element, targetElement] = await Promise.all([
-      this.waitForElement(options),
-      // @ts-expect-error protected API
-      target.waitForElement({
-        timeout: options?.timeout,
-        strict: options?.strict,
-      }),
-    ])
-    return this.triggerCommand<void>(
-      '__vitest_dragAndDrop',
-      convertElementToCssSelector(element),
-      convertElementToCssSelector(targetElement),
-      processDragAndDropOptions(options),
-    )
+    // playwright doesn't enforce a single element, it selects the first found one
+    return super.dropTo(target, processDragAndDropOptions(options))
   }
 
   public override async wheel(options: UserEventWheelOptions): Promise<void> {
@@ -119,15 +106,13 @@ class WebdriverIOLocator extends Locator {
     return this.withElement(element).fill(text, options)
   }
 
-  public override async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).upload(files, options)
-  }
-
   public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
     const element = await this.waitForElement(options)
     return this.withElement(element).screenshot(options)
   }
+
+  // playwright doesn't enforce a single element in upload
+  // public override async upload(): Promise<void>
 
   protected locator(selector: string) {
     return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`, this._container)
@@ -138,7 +123,11 @@ class WebdriverIOLocator extends Locator {
   }
 }
 
+const kElementLocator = Symbol.for('$$vitest:locator-resolved')
+
 class ElementWebdriverIOLocator extends Locator {
+  public [kElementLocator] = true
+
   constructor(
     private _cssSelector: string,
     protected _pwSelector: string,

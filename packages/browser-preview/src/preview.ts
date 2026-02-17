@@ -70,10 +70,6 @@ declare module 'vitest/browser' {
     timeout?: number
     strict?: boolean
   }
-  export interface UserEventDragAndDropOptions {
-    timeout?: number
-    strict?: boolean
-  }
   export interface UserEventFillOptions {
     timeout?: number
     strict?: boolean
