@@ -77,7 +77,9 @@ export const markTrace: BrowserCommand<[name: string, stack?: string]> = async (
     // TODO: request new tracing API in playwright to add trace point
     // with arbitrary snapshot, screenshot, etc. options.
     await context.context.tracing.group(name, { location })
-    await context.page.evaluate(() => 0)
+    try {
+      await context.page.evaluate(() => 0)
+    } catch {}
     await context.context.tracing.groupEnd()
     return
   }

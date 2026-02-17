@@ -12,8 +12,8 @@ describe('Button with increment', async () => {
   it('should increment the count on each click', async () => {
     await page.getByRole('button').click()
 
-    await expect.element(page.getByRole('button')).toHaveTextContent('2')
-    // await expect.element(page.getByRole('button'), { timeout: 3000 }).toHaveTextContent('3')
+    // await expect.element(page.getByRole('button')).toHaveTextContent('2')
+    await expect.element(page.getByRole('button'), { timeout: 3000 }).toHaveTextContent('3')
   })
 
   it('should show name props', async () => {
