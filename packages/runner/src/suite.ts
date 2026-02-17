@@ -615,11 +615,11 @@ function createSuite() {
       options.shuffle = shuffle
     }
 
-    let mode: RunMode = (this.only ?? options.only)
+    let mode: RunMode = (this.only || options.only)
       ? 'only'
-      : (this.skip ?? options.skip)
+      : (this.skip || options.skip)
           ? 'skip'
-          : (this.todo ?? options.todo)
+          : (this.todo || options.todo)
               ? 'todo'
               : 'run'
 

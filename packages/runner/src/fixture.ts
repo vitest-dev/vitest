@@ -17,10 +17,10 @@ export interface TestFixtureItem extends FixtureOptions {
 export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
-const kPropsSymbol = Symbol('$vitest:fixture-props')
+const kPropsSymbol = Symbol('vitest:fixture-props')
 
 interface FixturePropsOptions {
-  original?: Function
+  original: any
   index?: number
 }
 
