@@ -284,7 +284,6 @@ test('server uses correct port', ({ config, server }) => {
 })
 ```
 
-
 ## mergeTests <Version>4.1.0</Version>
 
 `mergeTests` utility allows you to merge multiple `TestAPI` instances into a single one. This is useful when you have separate fixture definitions that you want to combine.
