@@ -165,7 +165,10 @@ export function createBrowserRunner(
 
     onTaskFinished = async (task: Task) => {
       if (task.result?.state === 'fail') {
-        await this.commands.triggerCommand('__vitest_markTrace', [`onTaskFinished (fail)`, task.result?.errors?.[0].stack])
+        await this.commands.triggerCommand('__vitest_markTrace', [{
+          name: 'onTaskFinished (fail)',
+          stack: task.result?.errors?.[0].stack,
+        }])
       }
       if (
         this.config.browser.screenshotFailures

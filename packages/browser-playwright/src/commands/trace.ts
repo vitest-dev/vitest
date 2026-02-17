@@ -58,28 +58,41 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-export const markTrace: BrowserCommand<[name: string, stack?: string]> = async (
+export const markTrace: BrowserCommand<[payload: { name: string; selector?: string; stack?: string }]> = async (
   context,
-  name,
-  stack,
+  payload,
 ) => {
   if (isPlaywrightProvider(context.provider)) {
     // skip if tracing is not active
     if (!context.provider.tracingContexts.has(context.sessionId)) {
       return
     }
+    const { name, selector, stack } = payload
     let location: ParsedStack | undefined
     if (stack) {
       const parsedStacks = context.project.browser!.parseStacktrace(stack)
       location = parsedStacks[0]
     }
-    // mark trace via group/groupEnd with empty `evaluate` to force snapshot.
-    // TODO: request new tracing API in playwright to add trace point
-    // with arbitrary snapshot, screenshot, etc. options.
+    // mark trace via group/groupEnd with dummy calls to force snapshot.
     await context.context.tracing.group(name, { location })
     try {
-      await context.page.evaluate(() => 0)
-    } catch {}
+      if (selector) {
+        const locator = context.iframe.locator(selector) as any
+        if (typeof locator._expect === 'function') {
+          await locator._expect('to.be.attached', {
+            isNot: false,
+            timeout: 1,
+          })
+        }
+        else {
+          await context.page.evaluate(() => 0)
+        }
+      }
+      else {
+        await context.page.evaluate(() => 0)
+      }
+    }
+    catch {}
     await context.context.tracing.groupEnd()
     return
   }

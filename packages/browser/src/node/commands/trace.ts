@@ -1,20 +1,25 @@
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 
+interface MarkTracePayload {
+  name: string
+  stack?: string
+  selector?: string
+}
+
 declare module 'vitest/browser' {
   interface BrowserCommands {
     /**
      * @internal
      */
-    __vitest_markTrace: (name: string, stack?: string) => Promise<void>
+    __vitest_markTrace: (payload: MarkTracePayload) => Promise<void>
   }
 }
 
 export const markTrace = (async (
   context: BrowserCommandContext,
-  name: string,
-  stack?: string,
+  payload: { name: string; selector?: string; stack?: string },
 ) => {
   if (context.provider.name === 'playwright') {
-    await context.triggerCommand('__vitest_markTrace', name, stack)
+    await context.triggerCommand('__vitest_markTrace', payload)
   }
-}) as BrowserCommand<[name: string]>
+}) as BrowserCommand<[payload: { name: string; selector?: string; stack?: string }]>
