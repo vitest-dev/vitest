@@ -234,7 +234,7 @@ test('maxConcurrency is parsed correctly', () => {
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
-  expect(() => getCLIOptions('--cache.dir=./cache')).toThrowError('--cache.dir is deprecated')
+  expect(() => getCLIOptions('--cache.dir=./cache')).toThrow('--cache.dir is deprecated')
 })
 
 test('shuffle is parsed correctly', () => {
@@ -446,7 +446,7 @@ test('public parseCLI works correctly', () => {
 
   expect(() => {
     parseCLI('node --test --coverage --browser --typecheck')
-  }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
+  }).toThrow(`Expected "vitest" as the first argument, received "node"`)
 
   expect(parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
     filter: [],

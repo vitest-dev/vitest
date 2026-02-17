@@ -69,7 +69,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('input-checked')).not.toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when input checkbox is not checked but expected to be', () => {
@@ -79,7 +79,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('input-empty')).toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="checkbox" is checked but expected not to be', () => {
@@ -89,7 +89,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-checkbox-checked')).not.toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="checkbox" is not checked but expected to be', () => {
@@ -99,7 +99,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-checkbox-unchecked')).toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when radio input is checked but expected not to be', () => {
@@ -109,7 +109,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('input-radio-checked')).not.toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when input radio is not checked but expected to be', () => {
@@ -119,7 +119,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('input-radio-unchecked')).toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="radio" is checked but expected not to be', () => {
@@ -129,7 +129,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-radio-checked')).not.toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="radio" is not checked but expected to be', () => {
@@ -139,7 +139,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-checkbox-unchecked')).toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="switch" is checked but expected not to be', () => {
@@ -149,7 +149,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-switch-checked')).not.toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="switch" is not checked but expected to be', () => {
@@ -159,7 +159,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-switch-unchecked')).toBeChecked(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('throws when element with role="checkbox" has an invalid aria-checked attribute', () => {
@@ -169,7 +169,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-checkbox-invalid')).toBeChecked(),
-    ).toThrowError(
+    ).toThrow(
       /only inputs with .* a valid aria-checked attribute can be used/,
     )
   })
@@ -181,7 +181,7 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-radio-invalid')).toBeChecked(),
-    ).toThrowError(
+    ).toThrow(
       /only inputs with .* a valid aria-checked attribute can be used/,
     )
   })
@@ -193,14 +193,14 @@ describe('.toBeChecked', () => {
 
     expect(() =>
       expect(queryByTestId('aria-switch-invalid')).toBeChecked(),
-    ).toThrowError(
+    ).toThrow(
       /only inputs with .* a valid aria-checked attribute can be used/,
     )
   })
 
   test('throws when the element is not an input', () => {
     const {queryByTestId} = render(`<select data-testid="select"></select>`)
-    expect(() => expect(queryByTestId('select')).toBeChecked()).toThrowError(
+    expect(() => expect(queryByTestId('select')).toBeChecked()).toThrow(
       /only inputs with type="checkbox" or type="radio" or elements with.* role="checkbox".* role="menuitemcheckbox".* role="option".* role="radio".* role="switch".* role="menuitemradio".* role="treeitem" .* can be used/,
     )
   })

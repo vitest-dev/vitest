@@ -6,6 +6,7 @@ import { setupInspect } from './inspector'
 import * as listeners from './listeners'
 import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
 import { onCancel, rpcDone } from './rpc'
+import { EnvironmentTeardownError } from './utils'
 
 const resolvingModules = new Set<string>()
 
@@ -21,7 +22,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
       await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
-        reject(new Error(`[vitest-worker]: Closing rpc while "${method}" was pending`))
+        reject(new EnvironmentTeardownError(`[vitest-worker]: Closing rpc while "${method}" was pending`))
       }))
     })
 

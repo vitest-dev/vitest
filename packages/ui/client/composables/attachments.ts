@@ -8,7 +8,7 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
   if (attachment.path) {
     if (isReport) {
       // html reporter copies attachments to /data/ folder
-      return `/data/${basename(attachment.path)}`
+      return `./data/${basename(attachment.path)}`
     }
     return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
   }
