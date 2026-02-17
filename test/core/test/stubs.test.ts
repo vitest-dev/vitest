@@ -50,7 +50,7 @@ describe('stubbing globals', () => {
     expect(globalThis.__defined__).toBe('false')
     vi.unstubAllGlobals()
     expect('__defined__' in globalThis).toBe(false)
-    expect(() => __defined__).toThrowError(ReferenceError)
+    expect(() => __defined__).toThrow(ReferenceError)
     expect(globalThis.__defined__).toBeUndefined()
   })
 

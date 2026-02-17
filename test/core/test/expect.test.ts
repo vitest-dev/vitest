@@ -302,6 +302,7 @@ describe('recursive custom equality tester', () => {
 
     expect(mockFn).toHaveReturnedWith([person1, person2])
     expect(mockFn).toHaveLastReturnedWith([person1, person2])
+    expect(mockFn).to.have.lastReturnedWith([person1, person2])
     expect(mockFn).toHaveNthReturnedWith(1, [person1, person2])
   })
 })

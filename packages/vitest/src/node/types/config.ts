@@ -486,7 +486,7 @@ export interface InlineConfig {
   coverage?: CoverageOptions
 
   /**
-   * run test names with the specified pattern
+   * Run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
 

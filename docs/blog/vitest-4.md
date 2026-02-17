@@ -260,7 +260,7 @@ expect(animal.bark()).toBeUndefined()
 
 Vitest 4 introduces a new asymmetric matcher called `expect.schemaMatching`. It accepts a [Standard Schema v1](https://standardschema.dev/) object and validates values against it, passing the assertion when the value conforms to the schema.
 
-As a reminder, asymmetric matchers can be used in all `expect` matchers that check equality, including `toEqual`, `toStrictEqual`, `toMatchObject`, `toContainEqual`, `toThrowError`, `toHaveBeenCalledWith`, `toHaveReturnedWith` and `toHaveBeenResolvedWith`.
+As a reminder, asymmetric matchers can be used in all `expect` matchers that check equality, including `toEqual`, `toStrictEqual`, `toMatchObject`, `toContainEqual`, `toThrow`, `toHaveBeenCalledWith`, `toHaveReturnedWith` and `toHaveBeenResolvedWith`.
 
 ```ts
 import { expect, test } from 'vitest'
