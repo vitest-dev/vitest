@@ -10,6 +10,7 @@ import type {
 } from 'vitest/browser'
 import {
   convertElementToCssSelector,
+  ensureAwaited,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -30,10 +31,17 @@ class WebdriverIOLocator extends Locator {
   }
 
   // This exists to avoid calling `this.elements` in `this.selector`'s getter in interactive actions
-  private withElement(element: Element) {
+  private withElement(element: Element, error: Error | undefined) {
     const pwSelector = selectorEngine.generateSelectorSimple(element)
     const cssSelector = convertElementToCssSelector(element)
-    return new ElementWebdriverIOLocator(cssSelector, pwSelector, element)
+    return new ElementWebdriverIOLocator(cssSelector, error, pwSelector, element)
+  }
+
+  private withError<T>(error: Error | undefined, fn: () => T): T {
+    this._errorSource = error
+    const result = fn()
+    this._errorSource = undefined
+    return result
   }
 
   override get selector(): string {
@@ -52,38 +60,48 @@ class WebdriverIOLocator extends Locator {
     return (hasShadowRoot ? '>>>' : '') + newSelectors.join(', ')
   }
 
-  public override async click(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).click(processClickOptions(options))
+  public override click(options?: UserEventClickOptions): Promise<void> {
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).click(processClickOptions(options))
+    })
   }
 
   public override async dblClick(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).dblClick(processClickOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).dblClick(processClickOptions(options))
+    })
   }
 
   public override async tripleClick(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).tripleClick(processClickOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).tripleClick(processClickOptions(options))
+    })
   }
 
   public async selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
-    const element = await this.waitForElement(options)
-    const values = getWebdriverioSelectOptions(element, value)
-    return this.triggerCommand(
-      '__vitest_selectOptions',
-      convertElementToCssSelector(element),
-      values,
-      options,
-    )
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      const values = getWebdriverioSelectOptions(element, value)
+      return this.withError(error, () => this.triggerCommand<void>(
+        '__vitest_selectOptions',
+        convertElementToCssSelector(element),
+        values,
+        options,
+      ))
+    })
   }
 
   public override async hover(options?: UserEventHoverOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).hover(processHoverOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).hover(processHoverOptions(options))
+    })
   }
 
   public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
@@ -92,23 +110,31 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override async wheel(options: UserEventWheelOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).wheel(options)
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).wheel(options)
+    })
   }
 
   public override async clear(options?: UserEventClearOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).clear(options)
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).clear(options)
+    })
   }
 
   public override async fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).fill(text, options)
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).fill(text, options)
+    })
   }
 
   public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
-    const element = await this.waitForElement(options)
-    return this.withElement(element).screenshot(options)
+    return ensureAwaited(async (error) => {
+      const element = await this.waitForElement(options)
+      return this.withElement(element, error).screenshot(options)
+    })
   }
 
   // playwright doesn't enforce a single element in upload
@@ -130,6 +156,7 @@ class ElementWebdriverIOLocator extends Locator {
 
   constructor(
     private _cssSelector: string,
+    protected _errorSource: Error | undefined,
     protected _pwSelector: string,
     protected _container: Element,
   ) {

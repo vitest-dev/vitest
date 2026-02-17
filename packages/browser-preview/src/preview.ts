@@ -1,3 +1,4 @@
+import type { SelectorOptions } from 'vitest/browser'
 import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest/node'
 import { nextTick } from 'node:process'
 import { defineBrowserProvider } from '@vitest/browser'
@@ -62,44 +63,14 @@ export class PreviewBrowserProvider implements BrowserProvider {
 }
 
 declare module 'vitest/browser' {
-  export interface UserEventClickOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventHoverOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventFillOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventSelectOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventClearOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventDoubleClickOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventTripleClickOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventUploadOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface UserEventWheelBaseOptions {
-    timeout?: number
-    strict?: boolean
-  }
-  export interface LocatorScreenshotOptions {
-    timeout?: number
-    strict?: boolean
-  }
+  export interface UserEventClickOptions extends SelectorOptions {}
+  export interface UserEventHoverOptions extends SelectorOptions {}
+  export interface UserEventFillOptions extends SelectorOptions {}
+  export interface UserEventSelectOptions extends SelectorOptions {}
+  export interface UserEventClearOptions extends SelectorOptions {}
+  export interface UserEventDoubleClickOptions extends SelectorOptions {}
+  export interface UserEventTripleClickOptions extends SelectorOptions {}
+  export interface UserEventUploadOptions extends SelectorOptions {}
+  export interface UserEventWheelBaseOptions extends SelectorOptions {}
+  export interface LocatorScreenshotOptions extends SelectorOptions {}
 }
