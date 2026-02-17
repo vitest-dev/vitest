@@ -65,7 +65,9 @@ async function generateContextFile(
 
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
-    .map(command => `    ["${command}"]: (...args) => __vitest_browser_runner__.commands.triggerCommand("${command}", args),`)
+    .map((command) => {
+      return `    ["${command}"]: (...args) => __vitest_browser_runner__.commands.triggerCommand("${command}", args),`
+    })
     .join('\n')
 
   const userEventNonProviderImport = await getUserEventImport(
