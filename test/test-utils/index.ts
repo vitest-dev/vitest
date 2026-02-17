@@ -424,7 +424,7 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, context?: TestContext) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, task?: TestContext['task']) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (ensureConfig && !hasConfig) {
@@ -437,7 +437,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
-  (context?.onTestFinished ?? onTestFinished)(() => {
+  (task?.context.onTestFinished ?? onTestFinished)(() => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
       fs.rmSync(root, { recursive: true, force: true })
     }
@@ -494,10 +494,10 @@ export async function runInlineTests(
   structure: TestFsStructure,
   config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
-  context?: TestContext,
+  task?: TestContext['task'],
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure, undefined, context)
+  const fs = useFS(root, structure, undefined, task)
   const vitest = await runVitest({
     root,
     ...config,
