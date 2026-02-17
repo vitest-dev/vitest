@@ -1098,7 +1098,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = obj.then(
+            const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
                 return result.call(this, ...args)
@@ -1170,7 +1170,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = wrapper.then(
+            const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(
                   `promise resolved "${utils.inspect(
