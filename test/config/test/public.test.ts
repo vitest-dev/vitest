@@ -117,3 +117,23 @@ test.for([
     expected && resolve(vitestConfig.root, expected),
   )
 })
+
+test('coverage.changed inherits from test.changed but can be overridden', async () => {
+  const { vitestConfig: inherited } = await resolveConfig({
+    changed: 'HEAD',
+    coverage: {
+      reporter: 'json',
+    },
+  })
+
+  expect(inherited.coverage.changed).toBe('HEAD')
+
+  const { vitestConfig: overridden } = await resolveConfig({
+    changed: 'HEAD',
+    coverage: {
+      changed: false,
+    },
+  })
+
+  expect(overridden.coverage.changed).toBe(false)
+})
