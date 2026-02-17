@@ -6,14 +6,15 @@ import '../src/my-button.js'
 describe('Button with increment', async () => {
   beforeEach(async () => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
-    await commands.markTrace('render')
+    await commands.markTrace({ name: 'render', locator: page.getByRole('buttonn') })
+    await commands.markTrace({ name: 'heading', locator: page.getByRole('heading') })
   })
 
   it('should increment the count on each click', async () => {
     await page.getByRole('button').click()
 
-    // await expect.element(page.getByRole('button')).toHaveTextContent('2')
-    await expect.element(page.getByRole('button'), { timeout: 3000 }).toHaveTextContent('3')
+    await expect.element(page.getByRole('button')).toHaveTextContent('2')
+    // await expect.element(page.getByRole('button'), { timeout: 3000 }).toHaveTextContent('3')
   })
 
   it('should show name props', async () => {
