@@ -81,16 +81,12 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
       const trace = this.config.browser.trace
       const test = args[0]
-      if (trace === 'off') {
-        return
-      }
       const { retry, repeats } = args[1]
-      if (trace === 'on-all-retries' && retry === 0) {
+      if (!shouldTraceAttempt(trace, retry)) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
-      }
+      getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
       if (retry) {
         title += ` (retry x${retry})`
@@ -112,25 +108,25 @@ export function createBrowserRunner(
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
       const trace = this.config.browser.trace
-      if (trace === 'off') {
+      if (!shouldTraceAttempt(trace, retry)) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
-      if (trace === 'on-all-retries' && retry === 0) {
-        return
+      try {
+        const name = getTraceName(test, retry, repeats)
+        if (!this.traces.has(test.id)) {
+          this.traces.set(test.id, [])
+        }
+        const traces = this.traces.get(test.id)!
+        const { tracePath } = await this.commands.triggerCommand(
+          '__vitest_stopChunkTrace',
+          [{ name }],
+        ) as { tracePath: string }
+        traces.push(tracePath)
       }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
+      finally {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
       }
-      const name = getTraceName(test, retry, repeats)
-      if (!this.traces.has(test.id)) {
-        this.traces.set(test.id, [])
-      }
-      const traces = this.traces.get(test.id)!
-      const { tracePath } = await this.commands.triggerCommand(
-        '__vitest_stopChunkTrace',
-        [{ name }],
-      ) as { tracePath: string }
-      traces.push(tracePath)
     }
 
     onAfterRunTask = async (task: Test) => {
@@ -164,7 +160,7 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (task.result?.state === 'fail') {
+      if (task.result?.state === 'fail' && getBrowserState().activeTraceTaskIds.has(task.id)) {
         await this.commands.triggerCommand('__vitest_markTrace', [{
           name: 'onTaskFinished (fail)',
           stack: task.result?.errors?.[0].stack,
@@ -412,6 +408,12 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
+}
+
+function shouldTraceAttempt(trace: SerializedConfig['browser']['trace'], retry: number): boolean {
+  return trace !== 'off'
+    && !(trace === 'on-all-retries' && retry === 0)
+    && !(trace === 'on-first-retry' && retry !== 1)
 }
 
 function getTraceName(task: Task, retryCount: number, repeatsCount: number) {

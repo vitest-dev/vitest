@@ -108,6 +108,7 @@ const iframeId = url.searchParams.get('iframeId')!
 
 const commands = new CommandsManager()
 getBrowserState().commands = commands
+getBrowserState().activeTraceTaskIds = new Set()
 getBrowserState().iframeId = iframeId
 
 let contextSwitched = false

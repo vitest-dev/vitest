@@ -25,7 +25,7 @@ import {
 } from 'ivya'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState } from '../../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from '../tester-utils'
 
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
@@ -181,6 +181,10 @@ export abstract class Locator {
   }
 
   public markTrace(options: { name: string }): Promise<void> {
+    const currentTest = getWorkerState().current
+    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+      return Promise.resolve()
+    }
     return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
       '__vitest_markTrace',
       [{

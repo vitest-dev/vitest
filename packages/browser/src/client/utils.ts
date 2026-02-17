@@ -83,6 +83,7 @@ export interface BrowserRunnerState {
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  activeTraceTaskIds: Set<string>
   traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {

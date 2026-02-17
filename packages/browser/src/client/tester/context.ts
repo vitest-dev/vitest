@@ -345,6 +345,10 @@ export const page: BrowserPage = {
     ))
   },
   markTrace(options) {
+    const currentTest = getWorkerState().current
+    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+      return Promise.resolve()
+    }
     return ensureAwaited(error => triggerCommand(
       '__vitest_markTrace',
       [{
