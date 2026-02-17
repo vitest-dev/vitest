@@ -100,18 +100,16 @@ export function createBrowserRunner(
         '__vitest_startChunkTrace',
         [{ name, title }],
       )
-      // TODO: location?
-      // test.location;
-      // test.file.filepath;
-      // await this.commands.triggerCommand('__vitest_markTrace', ['onBeforeTryTask'])
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
-      const trace = this.config.browser.trace
-      if (!shouldTraceAttempt(trace, retry)) {
-        getBrowserState().activeTraceTaskIds.delete(test.id)
+      if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
         return
       }
+      await this.commands.triggerCommand('__vitest_markTrace', [{
+        name: `onAfterRetryTask [${test.result?.state}]`,
+        stack: test.result?.errors?.[0].stack,
+      }])
       try {
         const name = getTraceName(test, retry, repeats)
         if (!this.traces.has(test.id)) {
@@ -160,12 +158,6 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (task.result?.state === 'fail' && getBrowserState().activeTraceTaskIds.has(task.id)) {
-        await this.commands.triggerCommand('__vitest_markTrace', [{
-          name: 'onTaskFinished (fail)',
-          stack: task.result?.errors?.[0].stack,
-        }])
-      }
       if (
         this.config.browser.screenshotFailures
         && document.body.clientHeight > 0
