@@ -97,17 +97,18 @@ describe('mergeTests', () => {
       })
     })
 
-    describe('overrides are preserved (top-level/mutation)', () => {
+    describe('overrides are dropped during merge (extend semantics)', () => {
       const base = test.extend({ a: 1 })
       base.override({ a: 2 })
       const other = test.extend({ b: 3 })
       const merged = mergeTests(base, other)
 
-      merged('overrides are preserved', ({ a, b }) => {
-        expect(a).toBe(2)
+      merged('overrides are reset like extend()', ({ a, b }) => {
+        expect(a).toBe(1)
         expect(b).toBe(3)
       })
     })
+
     describe('scoped (identity)', () => {
       const base = test.extend({ a: 1 })
       base.override({ a: 2 })

@@ -18,9 +18,10 @@ export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
 export class TestFixtures {
-  private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
+  private _suiteContexts: WeakMap<Suite | symbol, Record<string, unknown>>
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
   private _registrations: FixtureRegistrations
+  private _parent?: TestFixtures
 
   private static _definitions: TestFixtures[] = []
   private static _builtinFixtures: string[] = [
@@ -50,28 +51,72 @@ export class TestFixtures {
 
   constructor(
     registrations?: FixtureRegistrations,
+    parent?: TestFixtures,
   ) {
     this._registrations = registrations ?? new Map()
-    // We don't share context to avoid leakage (e.g. sibling tests)
+    this._parent = parent
+
+    // isolation fix: do NOT share contexts with parent
     this._suiteContexts = new WeakMap()
+
     TestFixtures._definitions.push(this)
   }
 
   extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
-    return new TestFixtures(registrations)
+    const registrations = this.parseUserFixtures(
+      runner,
+      userFixtures,
+      isTopLevel,
+    )
+
+    return new TestFixtures(registrations, this)
   }
 
   get(suite: Suite): FixtureRegistrations {
-    // If we have an override for this specific suite, use it
-    if (this._overrides.has(suite)) {
-      return this._overrides.get(suite)!
+    let currentSuite: Suite | undefined = suite
+
+    while (currentSuite) {
+      const overrides = this._overrides.get(currentSuite)
+      if (overrides) {
+        return overrides
+      }
+
+      if (currentSuite === currentSuite.file) {
+        break
+      }
+
+      currentSuite = currentSuite.suite || currentSuite.file
     }
 
-    // Otherwise return our own registrations (which include merged fixtures from extend)
+    if (this._parent) {
+      return this._parent.get(suite)
+    }
+
     return this._registrations
+  }
+
+  override(runner: VitestRunner, userFixtures: UserFixtures): void {
+    const { suite: currentSuite, file } = getCurrentSuite()
+    const suite = currentSuite || file
+    const isTopLevel = !currentSuite || currentSuite.file === currentSuite
+
+    const suiteRegistrations = new Map(this.get(suite))
+
+    const registrations = this.parseUserFixtures(
+      runner,
+      userFixtures,
+      isTopLevel,
+      suiteRegistrations,
+    )
+
+    if (isTopLevel) {
+      this._registrations = registrations
+    }
+    else {
+      this._overrides.set(suite, registrations)
+    }
   }
 
   toUserFixtures(): UserFixtures {
@@ -87,24 +132,6 @@ export class TestFixtures {
     return fixtures
   }
 
-  override(runner: VitestRunner, userFixtures: UserFixtures): void {
-    const { suite: currentSuite, file } = getCurrentSuite()
-    const suite = currentSuite || file
-    const isTopLevel = !currentSuite || currentSuite.file === currentSuite
-    // Create a copy of the closest parent's registrations to avoid modifying them
-    // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
-    const suiteRegistrations = new Map(this.get(suite))
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
-    // If defined in top-level, just override all registrations
-    // We don't support overriding suite-level fixtures anyway (it will throw an error)
-    if (isTopLevel) {
-      this._registrations = registrations
-    }
-    else {
-      this._overrides.set(suite, registrations)
-    }
-  }
-
   getFileContext(file: File): Record<string, any> {
     if (!this._suiteContexts.has(file)) {
       this._suiteContexts.set(file, Object.create(null))
@@ -114,7 +141,10 @@ export class TestFixtures {
 
   getWorkerContext(): Record<string, any> {
     if (!this._suiteContexts.has(TestFixtures._workerContextSymbol)) {
-      this._suiteContexts.set(TestFixtures._workerContextSymbol, Object.create(null))
+      this._suiteContexts.set(
+        TestFixtures._workerContextSymbol,
+        Object.create(null),
+      )
     }
     return this._suiteContexts.get(TestFixtures._workerContextSymbol)!
   }
