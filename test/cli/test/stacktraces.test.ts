@@ -1,7 +1,7 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
@@ -187,6 +187,126 @@ it('custom helper with captureStackTrace', async () => {
           "expected 3 to be 4 // Object.is equality",
         ],
         "sync": [
+          "expected 3 to be 4 // Object.is equality",
+        ],
+      },
+    }
+  `)
+})
+
+it('resolves/rejects', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'repro.test.ts': `
+      import { test, expect } from 'vitest'
+
+      test('resolves: resolved promise with mismatched value', async () => {
+        await expect(Promise.resolve(3)).resolves.toBe(4)
+      })
+
+      test('rejects: rejected promise with mismatched value', async () => {
+        await expect(Promise.reject(3)).rejects.toBe(4)
+      })
+
+      test('rejects: resolves when rejection expected', async () => {
+        await expect(Promise.resolve(3)).rejects.toBe(4)
+      })
+
+      test('resolves: rejects when resolve expected', async () => {
+        await expect(Promise.reject(3)).resolves.toBe(4)
+      })
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  repro.test.ts > resolves: resolved promise with mismatched value
+    AssertionError: expected 3 to be 4 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 4
+    + 3
+
+     ❯ repro.test.ts:5:40
+          3|
+          4|       test('resolves: resolved promise with mismatched value', async (…
+          5|         await expect(Promise.resolve(3)).resolves.toBe(4)
+           |                                        ^
+          6|       })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+     FAIL  repro.test.ts > rejects: rejected promise with mismatched value
+    AssertionError: expected 3 to be 4 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 4
+    + 3
+
+     ❯ repro.test.ts:9:39
+          7|
+          8|       test('rejects: rejected promise with mismatched value', async ()…
+          9|         await expect(Promise.reject(3)).rejects.toBe(4)
+           |                                       ^
+         10|       })
+         11|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+     FAIL  repro.test.ts > rejects: resolves when rejection expected
+    AssertionError: promise resolved "3" instead of rejecting
+
+    - Expected:
+    Error {
+      "message": "rejected promise",
+    }
+
+    + Received:
+    3
+
+     ❯ repro.test.ts:13:40
+         11|
+         12|       test('rejects: resolves when rejection expected', async () => {
+         13|         await expect(Promise.resolve(3)).rejects.toBe(4)
+           |                                        ^
+         14|       })
+         15|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+     FAIL  repro.test.ts > resolves: rejects when resolve expected
+    AssertionError: promise rejected "3" instead of resolving
+     ❯ repro.test.ts:17:39
+         15|
+         16|       test('resolves: rejects when resolve expected', async () => {
+         17|         await expect(Promise.reject(3)).resolves.toBe(4)
+           |                                       ^
+         18|       })
+         19|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro.test.ts": {
+        "rejects: rejected promise with mismatched value": [
+          "expected 3 to be 4 // Object.is equality",
+        ],
+        "rejects: resolves when rejection expected": [
+          "promise resolved "3" instead of rejecting",
+        ],
+        "resolves: rejects when resolve expected": [
+          "promise rejected "3" instead of resolving",
+        ],
+        "resolves: resolved promise with mismatched value": [
           "expected 3 to be 4 // Object.is equality",
         ],
       },
