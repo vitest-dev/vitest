@@ -935,6 +935,61 @@ page.getByText('Hello').elements() // ✅ [HTMLElement, HTMLElement]
 page.getByText('Hello USA').elements() // ✅ []
 ```
 
+### waitForElement <Version>4.1.0</Version> {#waitforelement}
+
+```ts
+function waitForElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
+```
+
+::: danger WARNING
+This is an escape hatch for library authors and 3d-party APIs that do not support locators directly. If you are interacting with the element, use [builtin methods](#methods) instead.
+:::
+
+This method returns an element matching the locator. Unlike [`.element()`](#element), this method will wait and retry until a matching element appears in the DOM, using increasing intervals (0, 20, 50, 100, 100, 500ms).
+
+If _no element_ is found before the timeout, an error is thrown. By default, the timeout matches the test timeout.
+
+If _multiple elements_ match the selector and `strict` is `true` (the default), an error is thrown immediately without retrying. Set `strict` to `false` to return the first matching element instead.
+
+It accepts options:
+
+- `timeout: number` - How long to wait in milliseconds until a single element is found. By default, this has the same timeout as the test.
+- `strict: boolean` - When `true` (default), throws an error if multiple elements match the locator. When `false`, returns the first matching element.
+
+Consider the following DOM structure:
+
+```html
+<div>Hello <span>World</span></div>
+<div>Hello Germany</div>
+<div>Hello</div>
+```
+
+These locators will resolve successfully:
+
+```ts
+await page.getByText('Hello World').waitForElement() // ✅ HTMLDivElement
+await page.getByText('World').waitForElement() // ✅ HTMLSpanElement
+await page.getByText('Hello Germany').waitForElement() // ✅ HTMLDivElement
+```
+
+These locators will throw an error:
+
+```ts
+// multiple elements match, strict mode rejects
+await page.getByText('Hello').waitForElement() // ❌
+await page.getByText(/^Hello/).waitForElement() // ❌
+
+// no matching element before timeout
+await page.getByText('Hello USA').waitForElement() // ❌
+```
+
+Using `strict: false` to allow multiple matches:
+
+```ts
+// returns the first matching element instead of throwing
+await page.getByText('Hello').waitForElement({ strict: false }) // ✅ HTMLDivElement
+```
+
 ### all
 
 ```ts

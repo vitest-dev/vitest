@@ -522,6 +522,22 @@ export interface LocatorSelectors {
 
 export interface FrameLocator extends LocatorSelectors {}
 
+export interface SelectorOptions {
+  /**
+   * How long to wait until a single element is found. By default, this has the same timeout as the test.
+   *
+   * Vitest will try to find the element in ever increasing intervals: 0, 20, 50, 100, 100, 500.
+   */
+  timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
+}
+
 export interface Locator extends LocatorSelectors {
   /**
    * Selector string that will be used to locate the element by the browser provider.
@@ -689,6 +705,19 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
   filter(options: LocatorOptions): Locator
+  /**
+   * Returns the HTML element matching the locator.
+   * This method will wait until only a single element appears in the DOM, but
+   * the strictness can be configured with options.
+   *
+   * **WARNING:**
+   *
+   * This is an escape hatch for library authors and 3d-party APIs that do not support locators directly.
+   * If you are interacting with the element, use builtin methods instead.
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/locators#waitForElement}
+   */
+  waitForElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
 }
 
 export interface UserEventTabOptions {

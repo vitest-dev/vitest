@@ -21,6 +21,7 @@ import {
   getIframeScale,
   Locator,
   selectorEngine,
+  triggerCommandWithTrace,
 } from '@vitest/browser/locators'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
@@ -35,13 +36,6 @@ class WebdriverIOLocator extends Locator {
     const pwSelector = selectorEngine.generateSelectorSimple(element)
     const cssSelector = convertElementToCssSelector(element)
     return new ElementWebdriverIOLocator(cssSelector, error, pwSelector, element)
-  }
-
-  private withError<T>(error: Error | undefined, fn: () => T): T {
-    this._errorSource = error
-    const result = fn()
-    this._errorSource = undefined
-    return result
   }
 
   override get selector(): string {
@@ -88,12 +82,11 @@ class WebdriverIOLocator extends Locator {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       const values = getWebdriverioSelectOptions(element, value)
-      return this.withError(error, () => this.triggerCommand<void>(
-        '__vitest_selectOptions',
-        convertElementToCssSelector(element),
-        values,
-        options,
-      ))
+      return triggerCommandWithTrace<void>({
+        name: '__vitest_selectOptions',
+        arguments: [convertElementToCssSelector(element), values, options],
+        errorSource: error,
+      })
     })
   }
 

@@ -128,7 +128,6 @@ export class CommandsManager {
       () =>
         rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
           // rethrow an error to keep the stack trace in browser
-          // const clientError = new Error(err.message)
           clientError.message = err.message
           clientError.name = err.name
           clientError.stack = clientError.stack?.replace(clientError.message, err.message)
@@ -219,7 +218,6 @@ export async function convertToSelector(elementOrLocator: Element | Locator): Pr
     if (provider === 'playwright' || kElementLocator in elementOrLocator) {
       return elementOrLocator.selector
     }
-    // @ts-expect-error private method
     const element = await elementOrLocator.waitForElement()
     return convertElementToCssSelector(element)
   }
