@@ -62,7 +62,7 @@ function numberToCurrency(value: number | string) {
 describe('numberToCurrency', () => {
   describe('given an invalid number', () => {
     test('composed of non-numbers to throw error', () => {
-      expect(() => numberToCurrency('abc')).toThrowError()
+      expect(() => numberToCurrency('abc')).toThrow()
     })
   })
 
