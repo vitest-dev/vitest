@@ -9,7 +9,7 @@ import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { slash, startsWithPathPrefix } from '@vitest/utils/helpers'
+import { cleanUrl, slash, startsWithPathPrefix } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -86,6 +86,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
   roots: string[] = []
+  changedFiles?: string[]
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -148,7 +149,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   isIncluded(_filename: string, root?: string): boolean {
     const roots = root ? [root] : this.roots
 
-    const filename = slash(_filename)
+    const filename = slash(cleanUrl(_filename))
     const cacheHit = this.globCache.get(filename)
 
     if (cacheHit !== undefined) {
@@ -165,11 +166,15 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    const included = pm.isMatch(filename, glob, {
+    let included = pm.isMatch(filename, glob, {
       contains: true,
       dot: true,
       ignore: this.options.exclude,
     })
+
+    if (included && this.changedFiles) {
+      included = this.changedFiles.includes(filename)
+    }
 
     this.globCache.set(filename, included)
 
@@ -192,8 +197,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
     includedFiles = includedFiles.filter(file => this.isIncluded(file, root))
 
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file => includedFiles.includes(file))
+    if (this.changedFiles) {
+      includedFiles = this.changedFiles.filter(file => includedFiles.includes(file))
     }
 
     return includedFiles.map(file => slash(path.resolve(root, file)))
@@ -321,6 +326,23 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     // Remove empty reports directory, e.g. when only text-reporter is used
     if (readdirSync(this.options.reportsDirectory).length === 0) {
       await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async onTestRunStart(): Promise<void> {
+    if (this.options.changed) {
+      const { VitestGit } = await import('./git')
+      const vitestGit = new VitestGit(this.ctx.config.root)
+      const changedFiles = await vitestGit.findChangedFiles({ changedSince: this.options.changed })
+
+      this.changedFiles = changedFiles ?? undefined
+    }
+    else if (this.ctx.config.changed) {
+      this.changedFiles = this.ctx.config.related
+    }
+
+    if (this.changedFiles) {
+      this.globCache.clear()
     }
   }
 

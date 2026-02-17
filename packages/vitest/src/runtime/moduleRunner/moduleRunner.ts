@@ -49,11 +49,13 @@ export class VitestModuleRunner
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
   private _otel: Traces
+  private _callstacks: WeakMap<EvaluatedModuleNode, string[]>
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
-    const transport = new VitestTransport(options.transport)
     const evaluatedModules = options.evaluatedModules
+    const callstacks = new WeakMap<EvaluatedModuleNode, string[]>()
+    const transport = new VitestTransport(options.transport, evaluatedModules, callstacks)
     super(
       {
         transport,
@@ -64,6 +66,7 @@ export class VitestModuleRunner
       },
       options.evaluator,
     )
+    this._callstacks = callstacks
     this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
@@ -153,6 +156,9 @@ export class VitestModuleRunner
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
+    // Track for a better error message if dynamic import is not resolved properly
+    this._callstacks.set(mod, callstack)
+
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }

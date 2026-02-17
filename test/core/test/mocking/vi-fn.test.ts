@@ -519,6 +519,88 @@ describe('vi.fn() implementations', () => {
     expect(mock()).toBe(undefined)
   })
 
+  test('vi.fn() with mockThrow', async () => {
+    const mock = vi.fn()
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn(class) with mockThrow', async () => {
+    const Mock = vi.fn(class {})
+    Mock.mockThrow(new Error('error'))
+    expect(() => new Mock()).toThrow('error')
+    expect(() => new Mock()).toThrow('error')
+    expect(() => new Mock()).toThrow('error')
+    Mock.mockReset()
+    expect(new Mock()).toBeInstanceOf(Mock)
+  })
+
+  test('vi.fn() with mockThrow overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrow overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrowOnce', async () => {
+    const mock = vi.fn()
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(undefined)
+    mock.mockThrowOnce(new Error('error'))
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn(class) with mockThrowOnce', async () => {
+    const Mock = vi.fn(class {})
+    Mock.mockThrowOnce(new Error('error'))
+    expect(() => new Mock()).toThrow('error')
+    expect(new Mock()).toBeInstanceOf(Mock)
+    expect(new Mock()).toBeInstanceOf(Mock)
+    Mock.mockThrowOnce(new Error('error'))
+    Mock.mockReset()
+    expect(new Mock()).toBeInstanceOf(Mock)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
   test('vi.fn() with mockResolvedValue', async () => {
     const mock = vi.fn()
     mock.mockResolvedValue(42)

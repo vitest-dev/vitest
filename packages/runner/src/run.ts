@@ -267,6 +267,8 @@ async function callAroundHooks<THook extends Function>(
     return
   }
 
+  const hookErrors: unknown[] = []
+
   const createTimeoutPromise = (
     timeout: number,
     phase: 'setup' | 'teardown',
@@ -352,23 +354,13 @@ async function callAroundHooks<THook extends Function>(
       setupTimeout.clear()
 
       // Run inner hooks - don't time this against our teardown timeout
-      let nextError: { value: unknown } | undefined
-      try {
-        await runNextHook(index + 1)
-      }
-      catch (value) {
-        nextError = { value }
-      }
+      await runNextHook(index + 1).catch(e => hookErrors.push(e))
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
-
-      if (nextError) {
-        throw nextError.value
-      }
     }
 
     // Start setup timeout
@@ -422,7 +414,11 @@ async function callAroundHooks<THook extends Function>(
     }
   }
 
-  await runNextHook(0)
+  await runNextHook(0).catch(e => hookErrors.push(e))
+
+  if (hookErrors.length > 0) {
+    throw hookErrors
+  }
 }
 
 async function callAroundAllHooks(
