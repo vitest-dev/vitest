@@ -1098,7 +1098,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = obj.then(
+            const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
                 return result.call(this, ...args)
@@ -1111,13 +1111,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                   { showDiff: false },
                 ) as Error
                 _error.cause = err
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
@@ -1166,7 +1170,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = wrapper.then(
+            const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(
                   `promise resolved "${utils.inspect(
@@ -1178,17 +1182,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                     actual: value,
                   },
                 ) as any
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
               (err: any) => {
                 utils.flag(this, 'object', err)
                 return result.call(this, ...args)
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
