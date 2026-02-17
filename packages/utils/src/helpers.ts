@@ -95,6 +95,17 @@ export function withTrailingSlash(path: string): string {
   return path
 }
 
+/**
+ * Check if `filepath` starts with `prefix` at a path boundary (`/`),
+ * avoiding false positives like `/packages/pkg-a` matching `/packages/pkg-a-utils`.
+ * Also handles Windows paths where filenames may have a leading `/` before the root.
+ */
+export function startsWithPathPrefix(filepath: string, prefix: string): boolean {
+  // On Windows, filenames may start with "/" while roots don't
+  const path = filepath.startsWith('/') && !prefix.startsWith('/') ? filepath.slice(1) : filepath
+  return path.startsWith(prefix) && (path.length === prefix.length || path[prefix.length] === '/')
+}
+
 export function filterOutComments(s: string): string {
   const result: string[] = []
   let commentState: 'none' | 'singleline' | 'multiline' = 'none'

@@ -1,5 +1,5 @@
 import { objDisplay } from '@vitest/utils/display'
-import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
+import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, startsWithPathPrefix, toArray } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
@@ -306,6 +306,22 @@ describe('isNegativeNaN', () => {
   ${Number.NEGATIVE_INFINITY} | ${false}
   `('isNegativeNaN($value) -> $expected', ({ value, expected }) => {
     expect(isNegativeNaN(value)).toBe(expected)
+  })
+})
+
+describe('startsWithPathPrefix', () => {
+  test.each`
+    filepath                                    | prefix                          | expected
+    ${'/workspace/packages/pkg-a/src/index.ts'} | ${'/workspace/packages/pkg-a'}  | ${true}
+    ${'/workspace/packages/pkg-a'}              | ${'/workspace/packages/pkg-a'}  | ${true}
+    ${'/workspace/packages/pkg-a-utils/src/index.ts'} | ${'/workspace/packages/pkg-a'} | ${false}
+    ${'/workspace/packages/pkg-a-utils'}        | ${'/workspace/packages/pkg-a'}  | ${false}
+    ${'/@fs/some/path'}                         | ${'/@fs'}                       | ${true}
+    ${'/@fs-extra/path'}                        | ${'/@fs'}                       | ${false}
+    ${'/C:/workspace/pkg-a/src/index.ts'}       | ${'C:/workspace/pkg-a'}         | ${true}
+    ${'/C:/workspace/pkg-a-utils/src/index.ts'} | ${'C:/workspace/pkg-a'}         | ${false}
+  `('startsWithPathPrefix($filepath, $prefix) -> $expected', ({ filepath, prefix, expected }) => {
+    expect(startsWithPathPrefix(filepath, prefix)).toBe(expected)
   })
 })
 

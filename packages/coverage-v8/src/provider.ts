@@ -6,6 +6,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import { startsWithPathPrefix } from '@vitest/utils/helpers'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -397,7 +398,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
-        else if (result.url.startsWith(project.config.root)) {
+        else if (startsWithPathPrefix(result.url, project.config.root)) {
           result.url = `${FILE_PROTOCOL}${result.url}`
         }
         else {
@@ -472,7 +473,7 @@ function findLongestFunctionLength(functions: Profiler.FunctionCoverage[]) {
 }
 
 function removeStartsWith(filepath: string, start: string) {
-  if (filepath.startsWith(start)) {
+  if (startsWithPathPrefix(filepath, start)) {
     return filepath.slice(start.length)
   }
 

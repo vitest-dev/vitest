@@ -9,7 +9,7 @@ import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { slash } from '@vitest/utils/helpers'
+import { slash, startsWithPathPrefix } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -688,8 +688,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       for (const project of projects) {
         const root = project.config.root
 
-        // On Windows root doesn't start with "/" while filenames do
-        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
+        // startsWithPathPrefix handles Windows where filenames may have a leading "/"
+        if (!startsWithPathPrefix(filename, root)) {
           continue
         }
 
