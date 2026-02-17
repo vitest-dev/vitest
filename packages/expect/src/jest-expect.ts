@@ -1111,13 +1111,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                   { showDiff: false },
                 ) as Error
                 _error.cause = err
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
-            )
+            ).then(undefined, (err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
@@ -1178,17 +1182,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                     actual: value,
                   },
                 ) as any
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
               (err: any) => {
                 utils.flag(this, 'object', err)
                 return result.call(this, ...args)
               },
-            )
+            ).then(undefined, (err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
