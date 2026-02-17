@@ -1,9 +1,13 @@
 import { pathToFileURL } from 'node:url'
 
-export function createTerminalLink(text: string, file: string): string {
+export interface TerminalLinkOptions {
+  isTTY: boolean
+  isCI: boolean
+}
+
+export function createTerminalLink(text: string, file: string, options: TerminalLinkOptions): string {
   // Graceful fallback for non-TTY or CI
-  // Also check VITEST_FORCE_TTY to allow explicit disabling
-  if (!process.stdout?.isTTY || process.env.CI || process.env.VITEST_FORCE_TTY === 'false') {
+  if (!options.isTTY || options.isCI) {
     return text
   }
 
