@@ -20,7 +20,7 @@ export type FixtureRegistrations = Map<string, TestFixtureItem>
 const kPropsSymbol = Symbol('$vitest:fixture-props')
 
 interface FixturePropsOptions {
-  original?: (...args: any[]) => any
+  original?: Function
   index?: number
 }
 
