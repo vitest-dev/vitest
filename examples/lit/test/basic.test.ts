@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { commands, page } from 'vitest/browser'
+import { page } from 'vitest/browser'
 
 import '../src/my-button.js'
 
 describe('Button with increment', async () => {
   beforeEach(async () => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
-    await commands.markTrace({ name: 'render', locator: page.getByRole('buttonn') })
-    await commands.markTrace({ name: 'heading', locator: page.getByRole('heading') })
+    await page.getByRole('button').markTrace({ name: 'render' })
+    await page.getByRole('heading').markTrace({ name: 'heading' })
   })
 
   it('should increment the count on each click', async () => {
+    await page.markTrace({ name: 'test-start' })
     await page.getByRole('button').click()
 
     await expect.element(page.getByRole('button')).toHaveTextContent('2')
