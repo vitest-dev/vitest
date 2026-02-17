@@ -82,7 +82,10 @@ export function createBrowserRunner(
       const trace = this.config.browser.trace
       const test = args[0]
       const { retry, repeats } = args[1]
-      if (!shouldTraceAttempt(trace, retry)) {
+      const shouldTrace = trace !== 'off'
+        && !(trace === 'on-all-retries' && retry === 0)
+        && !(trace === 'on-first-retry' && retry !== 1)
+      if (!shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
@@ -110,21 +113,16 @@ export function createBrowserRunner(
         name: `onAfterRetryTask [${test.result?.state}]`,
         stack: test.result?.errors?.[0].stack,
       }])
-      try {
-        const name = getTraceName(test, retry, repeats)
-        if (!this.traces.has(test.id)) {
-          this.traces.set(test.id, [])
-        }
-        const traces = this.traces.get(test.id)!
-        const { tracePath } = await this.commands.triggerCommand(
-          '__vitest_stopChunkTrace',
-          [{ name }],
-        ) as { tracePath: string }
-        traces.push(tracePath)
+      const name = getTraceName(test, retry, repeats)
+      if (!this.traces.has(test.id)) {
+        this.traces.set(test.id, [])
       }
-      finally {
-        getBrowserState().activeTraceTaskIds.delete(test.id)
-      }
+      const traces = this.traces.get(test.id)!
+      const { tracePath } = await this.commands.triggerCommand(
+        '__vitest_stopChunkTrace',
+        [{ name }],
+      ) as { tracePath: string }
+      traces.push(tracePath)
     }
 
     onAfterRunTask = async (task: Test) => {
@@ -400,12 +398,6 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
-}
-
-function shouldTraceAttempt(trace: SerializedConfig['browser']['trace'], retry: number): boolean {
-  return trace !== 'off'
-    && !(trace === 'on-all-retries' && retry === 0)
-    && !(trace === 'on-first-retry' && retry !== 1)
 }
 
 function getTraceName(task: Task, retryCount: number, repeatsCount: number) {
