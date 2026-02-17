@@ -12,13 +12,13 @@ import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
+import { isCI } from '../utils/env'
 import {
   defaultStackIgnorePatterns,
   lineSplitRE,
   parseErrorStacktrace,
   positionToOffset,
 } from '../utils/source-map'
-import { isCI } from '../utils/env'
 import { F_POINTER } from './reporters/renderers/figures'
 import { divider, errorBanner, truncateString } from './reporters/renderers/utils'
 import { createTerminalLink } from './reporters/terminalLink'
@@ -145,21 +145,21 @@ function printErrorInner(
       ? error.stacks[0]
       : stacks.find((stack) => {
         // we are checking that this module was processed by us at one point
-        try {
-          const environments = [
-            ...Object.values(project._vite?.environments || {}),
-            ...Object.values(project.browser?.vite.environments || {}),
-          ]
-          const hasResult = environments.some((environment) => {
-            const modules = environment.moduleGraph.getModulesByFile(stack.file)
-            return [...modules?.values() || []].some(module => !!module.transformResult)
-          })
-          return hasResult && existsSync(stack.file)
-        }
-        catch {
-          return false
-        }
-      })
+          try {
+            const environments = [
+              ...Object.values(project._vite?.environments || {}),
+              ...Object.values(project.browser?.vite.environments || {}),
+            ]
+            const hasResult = environments.some((environment) => {
+              const modules = environment.moduleGraph.getModulesByFile(stack.file)
+              return [...modules?.values() || []].some(module => !!module.transformResult)
+            })
+            return hasResult && existsSync(stack.file)
+          }
+          catch {
+            return false
+          }
+        })
 
   if (type) {
     printErrorType(type, project.vitest)
