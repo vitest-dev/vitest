@@ -17,6 +17,13 @@ export interface TestFixtureItem extends FixtureOptions {
 export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
+const kPropsSymbol = Symbol('$vitest:fixture-props')
+
+interface FixturePropsOptions {
+  original?: (...args: any[]) => any
+  index?: number
+}
+
 export class TestFixtures {
   private _suiteContexts: WeakMap<Suite | symbol, Record<string, unknown>>
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
@@ -65,71 +72,113 @@ export class TestFixtures {
   extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
-    const registrations = this.parseUserFixtures(
-      runner,
-      userFixtures,
-      isTopLevel,
-    )
-
+    // Pass empty map to avoid copying parent registrations
+    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, new Map())
     return new TestFixtures(registrations, this)
   }
 
   get(suite: Suite): FixtureRegistrations {
     let currentSuite: Suite | undefined = suite
-
     while (currentSuite) {
-      const overrides = this._overrides.get(currentSuite)
-      if (overrides) {
-        return overrides
+      if (this._overrides.has(currentSuite)) {
+        return this._overrides.get(currentSuite)!
       }
 
       if (currentSuite === currentSuite.file) {
         break
       }
-
       currentSuite = currentSuite.suite || currentSuite.file
     }
 
     if (this._parent) {
-      return this._parent.get(suite)
+      return new Map([...this._parent.getPureRegistrations(), ...this._registrations])
     }
 
     return this._registrations
+  }
+
+  private getPureRegistrations(): FixtureRegistrations {
+    if (this._parent) {
+      return new Map([...this._parent.getPureRegistrations(), ...this._registrations])
+    }
+    return this._registrations
+  }
+
+  isAncestor(fixture: TestFixtures): boolean {
+    let current: TestFixtures | undefined = this as TestFixtures
+    while (current) {
+      if (current === fixture) {
+        return true
+      }
+      current = current._parent
+    }
+    return false
+  }
+
+  resolveFixture(name: string): TestFixtureItem | undefined {
+    if (this._registrations.has(name)) {
+      return this._registrations.get(name)
+    }
+    if (this._parent) {
+      return this._parent.resolveFixture(name)
+    }
+    return undefined
+  }
+
+  toUserFixtures(ignore?: TestFixtures): UserFixtures {
+    const fixtures: UserFixtures = {}
+    const registrations = new Map<string, TestFixtureItem>()
+    let current: TestFixtures | undefined = this as TestFixtures
+
+    while (current) {
+      if (ignore && ignore.isAncestor(current)) {
+        break
+      }
+
+      for (const [name, fixture] of current._registrations) {
+        if (registrations.has(name)) {
+          continue
+        }
+        // If the fixture is just a copy from the parent, we skip it
+        // We will encounter it again when traversing up (unless it's a common ancestor)
+        if (current._parent) {
+          const parentFixture = current._parent.resolveFixture(name)
+          if (parentFixture === fixture) {
+            continue
+          }
+        }
+        registrations.set(name, fixture)
+      }
+      current = current._parent
+    }
+
+    for (const [name, fixture] of registrations) {
+      const options: FixtureOptions = {
+        auto: fixture.auto,
+        scope: fixture.scope,
+        injected: fixture.injected,
+      }
+      let value = fixture.value
+      // Unwrap the fixture if it was wrapped by another mergeTests call
+      if (typeof value === 'function' && kPropsSymbol in value) {
+        const props = value[kPropsSymbol] as FixturePropsOptions
+        if (props.original) {
+          value = props.original
+        }
+      }
+      fixtures[name] = [value, options]
+    }
+    return fixtures
   }
 
   override(runner: VitestRunner, userFixtures: UserFixtures): void {
     const { suite: currentSuite, file } = getCurrentSuite()
     const suite = currentSuite || file
     const isTopLevel = !currentSuite || currentSuite.file === currentSuite
-
     const suiteRegistrations = new Map(this.get(suite))
+    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
 
-    const registrations = this.parseUserFixtures(
-      runner,
-      userFixtures,
-      isTopLevel,
-      suiteRegistrations,
-    )
-
-    if (isTopLevel) {
-      this._registrations = registrations
-    }
-    else {
-      this._overrides.set(suite, registrations)
-    }
-  }
-
-  toUserFixtures(): UserFixtures {
-    const fixtures: UserFixtures = {}
-    for (const [name, fixture] of this._registrations) {
-      const options: FixtureOptions = {
-        auto: fixture.auto,
-        scope: fixture.scope,
-        injected: fixture.injected,
-      }
-      fixtures[name] = [fixture.value, options]
-    }
-    return fixtures
+    this._overrides.set(suite, registrations)
   }
 
   getFileContext(file: File): Record<string, any> {
@@ -182,7 +231,8 @@ export class TestFixtures {
         value = fn
       }
 
-      const parent = registrations.get(name)
+      // Check against current registrations mask or parent
+      const parent = registrations.get(name) || this._registrations.get(name) || (this._parent ? this._parent.resolveFixture(name) : undefined)
       if (parent && options) {
         if (parent.scope !== options.scope) {
           errors.push(new FixtureDependencyError(`The "${name}" fixture was already registered with a "${options.scope}" scope.`))
@@ -250,7 +300,7 @@ export class TestFixtures {
           continue
         }
 
-        const dep = registrations.get(depName)
+        const dep = registrations.get(depName) || this.resolveFixture(depName)
         if (!dep) {
           errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
           continue
@@ -457,7 +507,7 @@ function isFixtureFunction(value: unknown): value is FixtureFn<any, any, any> {
   return typeof value === 'function'
 }
 
-function resolveTestFixtureValue(
+async function resolveTestFixtureValue(
   fixture: TestFixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
@@ -466,11 +516,12 @@ function resolveTestFixtureValue(
     return fixture.value
   }
 
-  return resolveFixtureFunction(
+  const value = await resolveFixtureFunction(
     fixture.value,
     context,
     cleanupFnArray,
   )
+  return value
 }
 
 const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<unknown>>()
@@ -606,13 +657,6 @@ function validateSuiteHook(fn: Function, hook: string, error: Error | undefined)
       console.warn(stack)
     }
   }
-}
-
-const kPropsSymbol = Symbol('$vitest:fixture-props')
-
-interface FixturePropsOptions {
-  index?: number
-  original?: Function
 }
 
 export function configureProps(fn: Function, options: FixturePropsOptions): void {

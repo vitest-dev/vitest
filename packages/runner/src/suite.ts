@@ -1116,6 +1116,10 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
     // Extract fixtures from the next test and extend the current test
     // This behaves exactly like currentTest.extend(nextFixtures)
     // Existing overrides on currentTest are dropped/reset by .extend(), which is the intended simplified behavior.
+    const currentContext = getChainableContext(currentTest)
+    if (!currentContext) {
+      throw new TypeError('Cannot merge tests: base test is not a valid test instance')
+    }
     const fixtures = nextContext.getFixtures().toUserFixtures()
     currentTest = currentTest.extend(fixtures as any)
   }
