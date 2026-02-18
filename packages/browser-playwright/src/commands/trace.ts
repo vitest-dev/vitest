@@ -15,8 +15,7 @@ export const startTracing: BrowserCommand<[]> = async ({ context, project, provi
     await context.tracing.start({
       screenshots: options.screenshots ?? true,
       snapshots: options.snapshots ?? true,
-      // currently, PW shows sources in private methods
-      sources: false,
+      sources: options.sources ?? true,
     }).catch(() => {
       provider.tracingContexts.delete(sessionId)
     })
