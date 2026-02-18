@@ -22,7 +22,6 @@ import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpe
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
-import { WebSocketReporter } from '../api/setup'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
@@ -608,6 +607,7 @@ export class Vitest {
       }
 
       await this._testRun.start(specifications).catch(noop)
+      await this.coverageProvider?.onTestRunStart?.()
 
       for (const file of files) {
         await this._reportFileTask(file)
@@ -750,6 +750,7 @@ export class Vitest {
       if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
+          await this.coverageProvider?.onTestRunStart?.()
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
           await this._testRun.end([], [], coverage)
@@ -881,6 +882,7 @@ export class Vitest {
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
+      await this.coverageProvider?.onTestRunStart?.()
 
       // previous run
       await this.cancelPromise
@@ -1379,10 +1381,13 @@ export class Vitest {
 
     if (this.coverageProvider) {
       await this.coverageProvider.reportCoverage(coverage, { allTestsRun })
-      // notify coverage iframe reload
+      // notify builtin ui and html reporter after coverage html is generated
       for (const reporter of this.reporters) {
-        if (reporter instanceof WebSocketReporter) {
-          reporter.onFinishedReportCoverage()
+        if (
+          'onFinishedReportCoverage' in reporter
+          && typeof reporter.onFinishedReportCoverage === 'function'
+        ) {
+          await reporter.onFinishedReportCoverage()
         }
       }
     }
@@ -1460,7 +1465,7 @@ export class Vitest {
           }
 
           if (!this.reporters.some(r => r instanceof HangingProcessReporter)) {
-            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/reporters')
+            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/guide/reporters.html#hanging-process-reporter')
           }
         }
 

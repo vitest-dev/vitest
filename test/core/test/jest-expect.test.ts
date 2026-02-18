@@ -115,7 +115,7 @@ describe('jest-expect', () => {
     }).toThrow('')
     expect(() => {
       throw new Error('error')
-    }).toThrowError('') // empty string is a substring of any error message
+    }).toThrow('') // empty string is a substring of any error message
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -300,11 +300,11 @@ describe('jest-expect', () => {
       one: expect.toBeDividedBy(1),
       two: expect.not.toBeDividedBy(5),
     })
-    expect(() => expect(2).toBeDividedBy(5)).toThrowError()
+    expect(() => expect(2).toBeDividedBy(5)).toThrow()
 
-    expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
-    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
-    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+    expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
 
     expect(expect).toBeJestCompatible()
   })
@@ -367,7 +367,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('some-unknown-property')
-    }).toThrowError()
+    }).toThrow()
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
@@ -492,7 +492,7 @@ describe('jest-expect', () => {
       // underlying `toEqual` doesn't require constructor/prototype equality
       expect(() => {
         throw new Error1('hi')
-      }).toThrowError(new Error2('hi'))
+      }).toThrow(new Error2('hi'))
       expect(new Error1('hi')).toEqual(new Error2('hi'))
       expect(new Error1('hi')).not.toStrictEqual(new Error2('hi'))
     })
@@ -1105,7 +1105,7 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow()
     }
 
-    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
   })
 
   it('resolves throws jest', async () => {
@@ -1113,7 +1113,7 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
     }
 
-    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
@@ -1940,7 +1940,7 @@ it('error equality', () => {
     snapshotError(() =>
       expect(() => {
         throw e1
-      }).toThrowError(e2),
+      }).toThrow(e2),
     )
   }
 
@@ -1976,7 +1976,7 @@ it('error equality', () => {
 
     expect(() => {
       throw e1
-    }).toThrowError(e2)
+    }).toThrow(e2)
   }
 
   {

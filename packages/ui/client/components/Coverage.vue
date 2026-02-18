@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import { browserState } from '~/composables/client'
-
-defineProps<{
-  src: string
-}>()
 </script>
 
 <template>
@@ -15,7 +11,7 @@ defineProps<{
       <DetailsHeaderButtons v-if="browserState" />
     </div>
     <div flex-auto py-1 bg-white>
-      <iframe id="vitest-ui-coverage" :src="src" />
+      <iframe id="vitest-ui-coverage" src="./coverage/index.html" />
     </div>
   </div>
 </template>

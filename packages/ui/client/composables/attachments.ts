@@ -1,14 +1,15 @@
 import type { TestAttachment } from '@vitest/runner'
 import mime from 'mime/lite'
+import { basename } from 'pathe'
 import { isReport } from '~/constants'
 
 export function getAttachmentUrl(attachment: TestAttachment): string {
-  // html reporter always saves files into /data/ folder
-  if (isReport) {
-    return `/data/${attachment.path}`
-  }
   const contentType = attachment.contentType ?? 'application/octet-stream'
   if (attachment.path) {
+    if (isReport) {
+      // html reporter copies attachments to /data/ folder
+      return `./data/${basename(attachment.path)}`
+    }
     return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
   }
   // attachment.body is always a string outside of the test frame

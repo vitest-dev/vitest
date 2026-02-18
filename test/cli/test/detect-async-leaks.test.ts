@@ -170,11 +170,46 @@ test('fetch', async () => {
         await fetch('https://vitest.dev').then(response => response.text())
       })
     `,
+
+    'packages/example/test/example-2.test.ts': `
+      import { createServer } from "node:http";
+
+      let setConnected = () => {}
+      let waitConnection = new Promise(resolve => (setConnected = resolve))
+
+      beforeAll(async () => {
+        const server = createServer((_, res) => {
+          setConnected();
+          setTimeout(() => res.end("Hello after 10 seconds!"), 10_000).unref();
+        });
+        await new Promise((resolve) => server.listen(5179, resolve));
+        return () => server.close();
+      });
+
+      test("is a leak", async () => {
+        fetch('http://localhost:5179');
+        await waitConnection;
+      });
+    `,
   })
 
-  expect.soft(stdout).not.toContain('Leak')
+  expect.soft(stdout).toContain('Leaks  1 leak')
 
-  expect(stderr).toBe('')
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Async Leaks 1 ⎯⎯⎯⎯⎯⎯⎯⎯
+
+    PROMISE leaking in packages/example/test/example-2.test.ts
+     15|
+     16|       test("is a leak", async () => {
+     17|         fetch('http://localhost:5179');
+       |         ^
+     18|         await waitConnection;
+     19|       });
+     ❯ packages/example/test/example-2.test.ts:17:9
+
+    "
+  `)
 })
 
 test('fs handle', async () => {

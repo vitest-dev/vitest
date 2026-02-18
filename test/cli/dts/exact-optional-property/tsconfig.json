@@ -1,0 +1,16 @@
+{
+  "extends": ["../_shared/tsconfig.patch.json"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  }
+}
