@@ -1,6 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
@@ -8,6 +8,7 @@ import type {
   TestCollection,
   TestModule,
   TestSpecification,
+  TestSuite,
   TestUserConfig,
   Vitest,
 } from 'vitest/node'
@@ -423,7 +424,7 @@ export default config
   return `export default ${JSON.stringify(content)}`
 }
 
-export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true) {
+export function useFS<T extends TestFsStructure>(root: string, structure: T, ensureConfig = true, task?: TestContext['task']) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (ensureConfig && !hasConfig) {
@@ -436,7 +437,7 @@ export function useFS<T extends TestFsStructure>(root: string, structure: T, ens
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
-  onTestFinished(() => {
+  (task?.context.onTestFinished ?? onTestFinished)(() => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
       fs.rmSync(root, { recursive: true, force: true })
     }
@@ -493,9 +494,10 @@ export async function runInlineTests(
   structure: TestFsStructure,
   config?: RunVitestConfig,
   options?: VitestRunnerCLIOptions,
+  task?: TestContext['task'],
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
-  const fs = useFS(root, structure)
+  const fs = useFS(root, structure, undefined, task)
   const vitest = await runVitest({
     root,
     ...config,
@@ -554,16 +556,33 @@ export class StableTestFileOrderSorter {
 }
 
 export function buildErrorTree(testModules: TestModule[]) {
-  return buildTestTree(testModules, (testCase) => {
-    const result = testCase.result()
-    if (result.state === 'failed') {
-      return result.errors.map(e => e.message)
-    }
-    return result.state
-  })
+  return buildTestTree(
+    testModules,
+    (testCase) => {
+      const result = testCase.result()
+      if (result.state === 'failed') {
+        return result.errors.map(e => e.message)
+      }
+      return result.state
+    },
+    (testSuite, suiteChildren) => {
+      const errors = testSuite.errors().map(error => error.message)
+      if (errors.length > 0) {
+        return {
+          ...suiteChildren,
+          __suite_errors__: errors,
+        }
+      }
+      return suiteChildren
+    },
+  )
 }
 
-export function buildTestTree(testModules: TestModule[], onTestCase?: (result: TestCase) => unknown) {
+export function buildTestTree(
+  testModules: TestModule[],
+  onTestCase?: (result: TestCase) => unknown,
+  onTestSuite?: (testSuite: TestSuite, suiteChildren: Record<string, any>) => unknown,
+) {
   type TestTree = Record<string, any>
 
   function walkCollection(collection: TestCollection): TestTree {
@@ -573,7 +592,7 @@ export function buildTestTree(testModules: TestModule[], onTestCase?: (result: T
       if (child.type === 'suite') {
         // Recursively walk suite children
         const suiteChildren = walkCollection(child.children)
-        node[child.name] = suiteChildren
+        node[child.name] = onTestSuite ? onTestSuite(child, suiteChildren) : suiteChildren
       }
       else if (child.type === 'test') {
         const result = child.result()
