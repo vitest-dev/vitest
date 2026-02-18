@@ -306,6 +306,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
           },
         },
       },
+      changed: {
+        description:
+          'Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.',
+        argument: '<commit/branch>',
+        transform(value) {
+          if (value === 'true' || value === 'yes' || value === true) {
+            return true
+          }
+          if (value === 'false' || value === 'no' || value === false) {
+            return false
+          }
+          return value
+        },
+      },
     },
   },
   mode: {

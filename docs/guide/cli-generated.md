@@ -278,6 +278,13 @@ High and low watermarks for branches in the format of `<high>,<low>`
 
 High and low watermarks for functions in the format of `<high>,<low>`
 
+### coverage.changed
+
+- **CLI:** `--coverage.changed <commit/branch>`
+- **Config:** [coverage.changed](/config/coverage#coverage-changed)
+
+Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.
+
 ### mode
 
 - **CLI:** `--mode <name>`
