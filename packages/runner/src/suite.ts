@@ -220,7 +220,7 @@ function createDefaultSuite(runner: VitestRunner) {
   if (config.concurrent != null) {
     options.concurrent = config.concurrent
   }
-  const collector = suite('', options, () => { })
+  const collector = suite('', options, () => {})
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -302,7 +302,7 @@ function parseArguments<T extends (...args: any[]) => any>(
 // implementations
 function createSuiteCollector(
   name: string,
-  factory: SuiteFactory = () => { },
+  factory: SuiteFactory = () => {},
   mode: RunMode,
   each?: boolean,
   suiteOptions?: SuiteOptions,
@@ -615,11 +615,11 @@ function createSuite() {
       options.shuffle = shuffle
     }
 
-    let mode: RunMode = (this.only || options.only)
+    let mode: RunMode = (this.only ?? options.only)
       ? 'only'
-      : (this.skip || options.skip)
+      : (this.skip ?? options.skip)
           ? 'skip'
-          : (this.todo || options.todo)
+          : (this.todo ?? options.todo)
               ? 'todo'
               : 'run'
 
@@ -1093,6 +1093,11 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
+/**
+ * Merges multiple test instances into a single test instance.
+ * All fixtures from the provided tests will be available in the returned test.
+ * If multiple tests define the same fixture name, the last one wins.
+ */
 export function mergeTests<A>(a: TestAPI<A>): TestAPI<A>
 export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<A & B>
 export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<A & B & C>
@@ -1110,17 +1115,16 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
   for (const nextTest of rest) {
     const nextContext = getChainableContext(nextTest)
     if (!nextContext || typeof nextContext.getFixtures !== 'function') {
-      throw new TypeError('Cannot merge tests: argument is not a valid test instance')
+      throw new TypeError('mergeTests requires extended test instances created via test.extend()')
     }
 
     // Extract fixtures from the next test and extend the current test
     // This behaves exactly like currentTest.extend(nextFixtures)
-    // Existing overrides on currentTest are dropped/reset by .extend(), which is the intended simplified behavior.
     const currentContext = getChainableContext(currentTest)
     if (!currentContext) {
       throw new TypeError('Cannot merge tests: base test is not a valid test instance')
     }
-    const fixtures = nextContext.getFixtures().toUserFixtures()
+    const fixtures = nextContext.getFixtures()
     currentTest = currentTest.extend(fixtures as any)
   }
 
