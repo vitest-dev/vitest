@@ -576,8 +576,8 @@ function validateSuiteHook(fn: Function, hook: string, error: Error | undefined)
 const kPropsSymbol = Symbol('$vitest:fixture-props')
 
 interface FixturePropsOptions {
-  original: any
   index?: number
+  original?: Function
 }
 
 export function configureProps(fn: Function, options: FixturePropsOptions): void {
