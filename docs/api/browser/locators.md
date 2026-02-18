@@ -938,11 +938,13 @@ page.getByText('Hello USA').elements() // ✅ []
 ### waitForElement <Version>4.1.0</Version> {#waitforelement}
 
 ```ts
-function waitForElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
+function waitForElement(
+  options?: SelectorOptions
+): Promise<HTMLElement | SVGElement>
 ```
 
 ::: danger WARNING
-This is an escape hatch for library authors and 3d-party APIs that do not support locators directly. If you are interacting with the element, use [builtin methods](#methods) instead.
+This is an escape hatch for library authors and 3d-party APIs that do not support locators directly. If you are interacting with the element, use other [builtin methods](#methods) instead.
 :::
 
 This method returns an element matching the locator. Unlike [`.element()`](#element), this method will wait and retry until a matching element appears in the DOM, using increasing intervals (0, 20, 50, 100, 100, 500ms).
@@ -953,7 +955,7 @@ If _multiple elements_ match the selector and `strict` is `true` (the default), 
 
 It accepts options:
 
-- `timeout: number` - How long to wait in milliseconds until a single element is found. By default, this has the same timeout as the test.
+- `timeout: number` - How long to wait in milliseconds until at least one element is found. By default, this shares timeout with the test.
 - `strict: boolean` - When `true` (default), throws an error if multiple elements match the locator. When `false`, returns the first matching element.
 
 Consider the following DOM structure:

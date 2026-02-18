@@ -715,7 +715,7 @@ export interface Locator extends LocatorSelectors {
    * This is an escape hatch for library authors and 3d-party APIs that do not support locators directly.
    * If you are interacting with the element, use builtin methods instead.
    * @since 4.1.0
-   * @see {@link https://vitest.dev/api/browser/locators#waitForElement}
+   * @see {@link https://vitest.dev/api/browser/locators#waitforelement}
    */
   waitForElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
 }

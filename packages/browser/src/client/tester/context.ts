@@ -323,13 +323,16 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
+    const [element, ...mask] = await Promise.all([
+      options.element ? convertToSelector(options.element) : undefined,
+      ...('mask' in options
+        ? (options.mask as Array<Element | Locator>).map(convertToSelector)
+        : []),
+    ])
+
     const normalizedOptions = 'mask' in options
-      ? {
-          ...options,
-          mask: await Promise.all((options.mask as Array<Element | Locator>).map(convertToSelector)),
-        }
+      ? { ...options, mask }
       : options
-    const element = options.element ? await convertToSelector(options.element) : undefined
 
     return ensureAwaited(error => triggerCommand(
       '__vitest_screenshot',
