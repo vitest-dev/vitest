@@ -18,6 +18,7 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
+import type { ConcurrencyLimiter } from './utils/limit-concurrency'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
@@ -35,6 +36,7 @@ import { hasFailed, hasTests } from './utils/tasks'
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
+let limitMaxConcurrency: ConcurrencyLimiter
 
 /**
  * Normalizes retry configuration to extract individual values.
@@ -141,7 +143,7 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => fn(test.context)))
+      await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
     }
     catch (e) {
       failTask(test.result!, e, runner.config.diffOptions)
@@ -150,7 +152,7 @@ async function callTestHooks(
   else {
     for (const fn of hooks) {
       try {
-        await fn(test.context)
+        await limitMaxConcurrency(() => fn(test.context))
       }
       catch (e) {
         failTask(test.result!, e, runner.config.diffOptions)
@@ -188,11 +190,13 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return getBeforeHookCleanupCallback(
-      hook,
-      await hook(...args),
-      name === 'beforeEach' ? args[0] as TestContext : undefined,
-    )
+    return limitMaxConcurrency(async () => {
+      return getBeforeHookCleanupCallback(
+        hook,
+        await hook(...args),
+        name === 'beforeEach' ? args[0] as TestContext : undefined,
+      )
+    })
   }
 
   if (sequence === 'parallel') {
@@ -311,6 +315,8 @@ async function callAroundHooks<THook extends Function>(
     let useCalled = false
     let setupTimeout: ReturnType<typeof createTimeoutPromise>
     let teardownTimeout: ReturnType<typeof createTimeoutPromise> | undefined
+    let setupLimitConcurrencyRelease: (() => void) | undefined
+    let teardownLimitConcurrencyRelease: (() => void) | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
     let resolveUseCalled!: () => void
@@ -352,9 +358,12 @@ async function callAroundHooks<THook extends Function>(
 
       // Setup phase completed - clear setup timer
       setupTimeout.clear()
+      setupLimitConcurrencyRelease?.()
 
       // Run inner hooks - don't time this against our teardown timeout
       await runNextHook(index + 1).catch(e => hookErrors.push(e))
+
+      teardownLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
 
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
@@ -362,6 +371,8 @@ async function callAroundHooks<THook extends Function>(
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
     }
+
+    setupLimitConcurrencyRelease = await limitMaxConcurrency.acquire()
 
     // Start setup timeout
     setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
@@ -381,6 +392,10 @@ async function callAroundHooks<THook extends Function>(
       catch (error) {
         rejectHookComplete(error as Error)
       }
+      finally {
+        setupLimitConcurrencyRelease?.()
+        teardownLimitConcurrencyRelease?.()
+      }
     })()
 
     // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
@@ -392,6 +407,7 @@ async function callAroundHooks<THook extends Function>(
       ])
     }
     finally {
+      setupLimitConcurrencyRelease?.()
       setupTimeout.clear()
     }
 
@@ -410,6 +426,7 @@ async function callAroundHooks<THook extends Function>(
       ])
     }
     finally {
+      teardownLimitConcurrencyRelease?.()
       teardownTimeout?.clear()
     }
   }
@@ -524,7 +541,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
         if (typeof fn !== 'function') {
           return
         }
-        await fn()
+        await limitMaxConcurrency(() => fn())
       }),
     )
   }
@@ -533,7 +550,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
       if (typeof fn !== 'function') {
         continue
       }
-      await fn()
+      await limitMaxConcurrency(() => fn())
     }
   }
 }
@@ -623,7 +640,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           ))
 
           if (runner.runTask) {
-            await $('test.callback', () => runner.runTask!(test))
+            await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
           }
           else {
             const fn = getFn(test)
@@ -632,7 +649,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
                 'Test function is not found. Did you add it using `setFn`?',
               )
             }
-            await $('test.callback', () => fn())
+            await $('test.callback', () => limitMaxConcurrency(() => fn()))
           }
 
           await runner.onAfterTryTask?.(test, {
@@ -940,12 +957,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   }
 }
 
-let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
-
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   const $ = runner.trace!
   if (c.type === 'test') {
-    return limitMaxConcurrency(() => $(
+    return $(
       'run.test',
       {
         'vitest.test.id': c.id,
@@ -957,7 +972,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.column.number': c.location?.column,
       },
       () => runTest(c, runner),
-    ))
+    )
   }
   else if (c.type === 'suite') {
     return $(
