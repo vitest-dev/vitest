@@ -116,6 +116,9 @@ describe('jest-expect', () => {
     expect(() => {
       throw new Error('error')
     }).toThrow('') // empty string is a substring of any error message
+    expect(() => {
+      throw new Error('error')
+    }).not.toThrow(/^$/) // use regex to explicitly test non-empty error message
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
