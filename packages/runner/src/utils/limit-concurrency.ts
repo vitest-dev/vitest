@@ -1,10 +1,16 @@
 // A compact (code-wise, probably not memory-wise) singly linked list node.
 type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
+export interface ConcurrencyLimiter extends ConcurrencyLimiterFn {
+  acquire: () => (() => void) | Promise<() => void>
+}
+
+type ConcurrencyLimiterFn = <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T>
+
 /**
  * Return a function for running multiple async operations with limited concurrency.
  */
-export function limitConcurrency(concurrency: number = Infinity): <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T> {
+export function limitConcurrency(concurrency: number = Infinity): ConcurrencyLimiter {
   // The number of currently active + pending tasks.
   let count = 0
 
@@ -30,28 +36,50 @@ export function limitConcurrency(concurrency: number = Infinity): <Args extends 
     }
   }
 
-  return (func, ...args) => {
-    // Create a promise chain that:
-    //  1. Waits for its turn in the task queue (if necessary).
-    //  2. Runs the task.
-    //  3. Allows the next pending task (if any) to run.
-    return new Promise<void>((resolve) => {
-      if (count++ < concurrency) {
-        // No need to queue if fewer than maxConcurrency tasks are running.
-        resolve()
+  const acquire = () => {
+    let released = false
+    const release = () => {
+      if (!released) {
+        released = true
+        finish()
       }
-      else if (tail) {
+    }
+
+    if (count++ < concurrency) {
+      return release
+    }
+
+    return new Promise<() => void>((resolve) => {
+      if (tail) {
         // There are pending tasks, so append to the queue.
-        tail = tail[1] = [resolve]
+        tail = tail[1] = [() => resolve(release)]
       }
       else {
         // No other pending tasks, initialize the queue with a new tail and head.
-        head = tail = [resolve]
+        head = tail = [() => resolve(release)]
       }
-    }).then(() => {
-      // Running func here ensures that even a non-thenable result or an
-      // immediately thrown error gets wrapped into a Promise.
-      return func(...args)
-    }).finally(finish)
+    })
   }
+
+  const limiterFn: ConcurrencyLimiterFn = (func, ...args) => {
+    function run(release: () => void) {
+      try {
+        const result = func(...args)
+        if (result instanceof Promise) {
+          return result.finally(release)
+        }
+        release()
+        return Promise.resolve(result)
+      }
+      catch (error) {
+        release()
+        return Promise.reject(error)
+      }
+    }
+
+    const release = acquire()
+    return release instanceof Promise ? release.then(run) : run(release)
+  }
+
+  return Object.assign(limiterFn, { acquire })
 }
