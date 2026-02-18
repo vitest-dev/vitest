@@ -61,21 +61,21 @@ class WebdriverIOLocator extends Locator {
     })
   }
 
-  public override async dblClick(options?: UserEventClickOptions): Promise<void> {
+  public override dblClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).dblClick(processClickOptions(options))
     })
   }
 
-  public override async tripleClick(options?: UserEventClickOptions): Promise<void> {
+  public override tripleClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).tripleClick(processClickOptions(options))
     })
   }
 
-  public async selectOptions(
+  public selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
@@ -90,40 +90,40 @@ class WebdriverIOLocator extends Locator {
     })
   }
 
-  public override async hover(options?: UserEventHoverOptions): Promise<void> {
+  public override hover(options?: UserEventHoverOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).hover(processHoverOptions(options))
     })
   }
 
-  public override async dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+  public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
     // playwright doesn't enforce a single element, it selects the first found one
     return super.dropTo(target, processDragAndDropOptions(options))
   }
 
-  public override async wheel(options: UserEventWheelOptions): Promise<void> {
+  public override wheel(options: UserEventWheelOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).wheel(options)
     })
   }
 
-  public override async clear(options?: UserEventClearOptions): Promise<void> {
+  public override clear(options?: UserEventClearOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).clear(options)
     })
   }
 
-  public override async fill(text: string, options?: UserEventFillOptions): Promise<void> {
+  public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).fill(text, options)
     })
   }
 
-  public override async screenshot(options?: LocatorScreenshotOptions): Promise<any> {
+  public override screenshot(options?: LocatorScreenshotOptions): Promise<any> {
     return ensureAwaited(async (error) => {
       const element = await this.waitForElement(options)
       return this.withElement(element, error).screenshot(options)
