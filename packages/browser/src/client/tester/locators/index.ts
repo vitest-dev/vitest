@@ -180,7 +180,7 @@ export abstract class Locator {
     })
   }
 
-  public markTrace(options: { name: string }): Promise<void> {
+  public mark(name: string): Promise<void> {
     const currentTest = getWorkerState().current
     if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
       return Promise.resolve()
@@ -188,7 +188,7 @@ export abstract class Locator {
     return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
       '__vitest_markTrace',
       [{
-        name: options.name,
+        name,
         selector: this.selector,
         stack: error?.stack,
       }],

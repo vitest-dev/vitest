@@ -6,12 +6,12 @@ import '../src/my-button.js'
 describe('Button with increment', async () => {
   beforeEach(async () => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
-    await page.getByRole('button').markTrace({ name: 'render' })
-    await page.getByRole('heading').markTrace({ name: 'heading' })
+    await page.getByRole('button').mark('render')
+    await page.getByRole('heading').mark('heading')
   })
 
   it('should increment the count on each click', async () => {
-    await page.markTrace({ name: 'test-start' })
+    await page.mark('test-start')
     await page.getByRole('button').click()
 
     await expect.element(page.getByRole('button')).toHaveTextContent('2')

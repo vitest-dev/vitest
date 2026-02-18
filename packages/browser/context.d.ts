@@ -631,7 +631,7 @@ export interface Locator extends LocatorSelectors {
    * Add a trace marker for this locator.
    * Works best with providers that support tracing.
    */
-  markTrace(options: { name: string }): Promise<void>
+  mark(name: string): Promise<void>
 
   /**
    * Returns an element matching the selector.
@@ -786,7 +786,7 @@ export interface BrowserPage extends LocatorSelectors {
    * Add a trace marker.
    * Works best with providers that support tracing.
    */
-  markTrace(options: { name: string }): Promise<void>
+  mark(name: string): Promise<void>
   /**
    * Extend default `page` object with custom methods.
    */

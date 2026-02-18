@@ -344,7 +344,7 @@ export const page: BrowserPage = {
       error,
     ))
   },
-  markTrace(options) {
+  mark(name) {
     const currentTest = getWorkerState().current
     if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
       return Promise.resolve()
@@ -352,7 +352,7 @@ export const page: BrowserPage = {
     return ensureAwaited(error => triggerCommand(
       '__vitest_markTrace',
       [{
-        name: options.name,
+        name,
         stack: error?.stack,
       }],
       error,
