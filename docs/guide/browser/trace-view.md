@@ -57,6 +57,22 @@ export default defineConfig({
 
 The traces are available in reporters as [annotations](/guide/test-annotations). For example, in the HTML reporter, you can find the link to the trace file in the test details.
 
+## Trace markers
+
+You can add explicit named markers to make the trace timeline easier to read:
+
+```ts
+import { page } from 'vitest/browser'
+
+document.body.innerHTML = `
+  <button type="button">Sign in</button>
+`
+
+await page.getByRole('button', { name: 'Sign in' }).mark('sign in button rendered')
+```
+
+Both `page.mark(name)` and `locator.mark(name)` are available.
+
 ## Preview
 
 To open the trace file, you can use the Playwright Trace Viewer. Run the following command in your terminal:
@@ -71,4 +87,8 @@ Alternatively, you can open the Trace Viewer in your browser at https://trace.pl
 
 ## Limitations
 
-At the moment, Vitest cannot populate the "Sources" tab in the Trace Viewer. This means that while you can see the actions and screenshots captured during the test, you won't be able to view the source code of your tests directly within the Trace Viewer. You will need to refer back to your code editor to see the test implementation.
+Trace Viewer source linking is currently partially supported.
+
+Regular Playwright action events (for example `locator.click()`) might not include source entries, while marker-backed events do. `page.mark(name)`, `locator.mark(name)`, and automatic markers from `expect.element(...)` include callsite metadata and are the most reliable way to correlate trace steps with test source.
+
+Non-browser assertions (for example `expect(value).toBe(...)`) don't interact with the browser and won't create browser trace markers.

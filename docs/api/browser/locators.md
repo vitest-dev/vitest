@@ -820,6 +820,28 @@ Note that `screenshot` will always return a base64 string if `save` is set to `f
 The `path` is also ignored in that case.
 :::
 
+### mark
+
+```ts
+function mark(name: string): Promise<void>
+```
+
+Adds a named marker to the trace timeline and uses the current locator as marker context.
+
+```ts
+import { page } from 'vitest/browser'
+
+const submitButton = page.getByRole('button', { name: 'Submit' })
+
+await submitButton.mark('before submit')
+await submitButton.click()
+await submitButton.mark('after submit')
+```
+
+::: tip
+This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
+:::
+
 ### query
 
 ```ts

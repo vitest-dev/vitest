@@ -80,6 +80,10 @@ export const page: {
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
   /**
+   * Add a trace marker when browser tracing is enabled.
+   */
+  mark(name: string): Promise<void>
+  /**
    * Extend default `page` object with custom methods.
    */
   extend(methods: Partial<BrowserPage>): BrowserPage
@@ -114,6 +118,26 @@ The `getBy*` API is explained at [Locators API](/api/browser/locators).
 ::: warning WARNING <Version>3.2.0</Version>
 Note that `screenshot` will always return a base64 string if `save` is set to `false`.
 The `path` is also ignored in that case.
+:::
+
+### mark
+
+```ts
+function mark(name: string): Promise<void>
+```
+
+Adds a named marker to the trace timeline for the current test.
+
+```ts
+import { page } from 'vitest/browser'
+
+await page.mark('before submit')
+await page.getByRole('button', { name: 'Submit' }).click()
+await page.mark('after submit')
+```
+
+::: tip
+This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
 :::
 
 ### frameLocator
