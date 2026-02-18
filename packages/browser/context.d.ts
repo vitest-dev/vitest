@@ -629,6 +629,7 @@ export interface Locator extends LocatorSelectors {
 
   /**
    * Add a trace marker for this locator when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/locators#mark}
    */
   mark(name: string): Promise<void>
 
@@ -783,6 +784,7 @@ export interface BrowserPage extends LocatorSelectors {
   }>
   /**
    * Add a trace marker when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/context#mark}
    */
   mark(name: string): Promise<void>
   /**
