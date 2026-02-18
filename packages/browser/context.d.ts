@@ -629,7 +629,6 @@ export interface Locator extends LocatorSelectors {
 
   /**
    * Add a trace marker for this locator.
-   * Works best with providers that support tracing.
    */
   mark(name: string): Promise<void>
 
@@ -784,7 +783,6 @@ export interface BrowserPage extends LocatorSelectors {
   }>
   /**
    * Add a trace marker.
-   * Works best with providers that support tracing.
    */
   mark(name: string): Promise<void>
   /**
