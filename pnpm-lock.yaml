@@ -42,6 +42,9 @@ catalogs:
     '@types/ws':
       specifier: ^8.18.1
       version: 8.18.1
+    '@types/yauzl':
+      specifier: ^2.10.3
+      version: 2.10.3
     '@unocss/reset':
       specifier: ^66.6.0
       version: 66.6.0
@@ -132,6 +135,9 @@ catalogs:
     ws:
       specifier: ^8.19.0
       version: 8.19.0
+    yauzl:
+      specifier: ^3.2.0
+      version: 3.2.0
 
 overrides:
   '@types/node': 24.10.9
@@ -1176,6 +1182,9 @@ importers:
       '@types/react':
         specifier: ^19.2.10
         version: 19.2.10
+      '@types/yauzl':
+        specifier: 'catalog:'
+        version: 2.10.3
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.1.4
         version: 2.1.4(vite@7.1.5(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
@@ -1218,6 +1227,9 @@ importers:
       ws:
         specifier: 'catalog:'
         version: 8.19.0
+      yauzl:
+        specifier: 'catalog:'
+        version: 3.2.0
 
   test/cli:
     devDependencies:
@@ -10108,6 +10120,10 @@ packages:
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
+  yauzl@3.2.0:
+    resolution: {integrity: sha512-Ow9nuGZE+qp1u4JIPvg+uCiUr7xGQWdff7JQSk5VGYTAZMDe2q8lxJ10ygv10qmSj031Ty/6FNJpLO4o1Sgc+w==}
+    engines: {node: '>=12'}
+
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
@@ -13069,7 +13085,6 @@ snapshots:
   '@types/yauzl@2.10.3':
     dependencies:
       '@types/node': 24.10.9
-    optional: true
 
   '@typescript-eslint/eslint-plugin@8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
@@ -19319,6 +19334,11 @@ snapshots:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
+
+  yauzl@3.2.0:
+    dependencies:
+      buffer-crc32: 0.2.13
+      pend: 1.2.0
 
   yocto-queue@0.1.0: {}
 

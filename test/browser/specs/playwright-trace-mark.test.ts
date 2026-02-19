@@ -1,25 +1,11 @@
 import { readdirSync, rmSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
-import { dirname, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import { afterEach, describe, expect, test } from 'vitest'
+import * as yauzl from 'yauzl'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
-
-interface ZipFileType {
-  entries: () => Promise<string[]>
-  read: (entryPath: string) => Promise<Buffer>
-  close: () => void
-}
-
-const require = createRequire(import.meta.url)
-const playwrightEntry = require.resolve('playwright')
-const zipFileEntry = resolve(
-  dirname(playwrightEntry),
-  '../playwright-core/lib/server/utils/zipFile.js',
-)
-const { ZipFile } = require(zipFileEntry) as { ZipFile: new (fileName: string) => ZipFileType }
 
 const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-mark/__traces__')
 const basicTestTracesFolder = resolve(tracesFolder, 'basic.test.ts')
@@ -242,5 +228,71 @@ async function readTraceZip(zipPath: string): Promise<{ entries: string[]; event
   }
   finally {
     zipFile.close()
+  }
+}
+
+// https://github.com/microsoft/playwright/blob/cd36dab6ecc7f4b3adeec333e55f9ac03711a9b1/packages/playwright-core/src/server/utils/zipFile.ts#L21
+class ZipFile {
+  private readonly fileName: string
+  private zipFile?: yauzl.ZipFile
+  private readonly openedPromise: Promise<void>
+  private readonly entriesMap = new Map<string, yauzl.Entry>()
+
+  constructor(fileName: string) {
+    this.fileName = fileName
+    this.openedPromise = this.open()
+  }
+
+  private async open(): Promise<void> {
+    this.zipFile = await new Promise<yauzl.ZipFile>((resolve, reject) => {
+      yauzl.open(this.fileName, { lazyEntries: true, autoClose: false }, (error, zipFile) => {
+        if (error || !zipFile) {
+          reject(error || new Error(`Cannot open zip: ${this.fileName}`))
+          return
+        }
+        resolve(zipFile)
+      })
+    })
+
+    await new Promise<void>((resolve, reject) => {
+      this.zipFile!.readEntry()
+      this.zipFile!.on('entry', (entry) => {
+        this.entriesMap.set(entry.fileName, entry)
+        this.zipFile!.readEntry()
+      })
+      this.zipFile!.on('end', resolve)
+      this.zipFile!.on('error', reject)
+    })
+  }
+
+  async entries(): Promise<string[]> {
+    await this.openedPromise
+    return [...this.entriesMap.keys()]
+  }
+
+  async read(entryPath: string): Promise<Buffer> {
+    await this.openedPromise
+    const entry = this.entriesMap.get(entryPath)
+    if (!entry || !this.zipFile) {
+      throw new Error(`${entryPath} not found in file ${this.fileName}`)
+    }
+
+    return await new Promise((resolve, reject) => {
+      this.zipFile!.openReadStream(entry, (error, stream) => {
+        if (error || !stream) {
+          reject(error || new Error(`Cannot read ${entryPath} from file ${this.fileName}`))
+          return
+        }
+
+        const buffers: Buffer[] = []
+        stream.on('data', data => buffers.push(data))
+        stream.on('error', reject)
+        stream.on('end', () => resolve(Buffer.concat(buffers)))
+      })
+    })
+  }
+
+  close(): void {
+    this.zipFile?.close()
   }
 }
