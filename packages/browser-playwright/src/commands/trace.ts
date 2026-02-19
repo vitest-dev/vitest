@@ -68,11 +68,7 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: stri
       return
     }
     const { name, selector, stack } = payload
-    let location: ParsedStack | undefined
-    if (stack) {
-      const parsedStacks = context.project.browser!.parseStacktrace(stack)
-      location = parsedStacks[0]
-    }
+    const location = parseLocation(context, stack)
     // mark trace via group/groupEnd with dummy calls to force snapshot.
     await context.context.tracing.group(name, { location })
     try {
@@ -97,6 +93,43 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: stri
     return
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const groupTraceStart: BrowserCommand<[payload: { name: string; stack?: string }]> = async (
+  context,
+  payload,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    const { name, stack } = payload
+    const location = parseLocation(context, stack)
+    await context.context.tracing.group(name, { location })
+    return
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const groupTraceEnd: BrowserCommand<[]> = async (
+  context,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    await context.context.tracing.groupEnd()
+    return
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+function parseLocation(context: BrowserCommandContext, stack?: string): ParsedStack | undefined {
+  if (!stack) {
+    return
+  }
+  const parsedStacks = context.project.browser!.parseStacktrace(stack)
+  return parsedStacks[0]
 }
 
 function resolveTracesPath({ testPath, project }: BrowserCommandContext, name: string) {

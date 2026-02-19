@@ -204,15 +204,29 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         if (traceFile.includes('click')) {
           expect(events).toEqual(
             expect.arrayContaining([
+              // vitest command group (with source)
+              expect.objectContaining({
+                method: 'tracingGroup',
+                title: '__vitest_click',
+              }),
+              // playwright action (without source)
               expect.objectContaining({
                 method: 'click',
                 params: expect.objectContaining({
-                  selector:
-                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                  selector: expect.stringContaining(`internal:describe="getByRole('button')`),
                 }),
               }),
             ]),
           )
+          const markerEvent = events.find(e => e.title === '__vitest_click')
+          const formattedFrame = formatStack(markerEvent)
+          if (name === 'webkit') {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:17"`)
+          }
+          else {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
+          }
+          return
         }
 
         if (traceFile.includes('helper')) {

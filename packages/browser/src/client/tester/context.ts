@@ -345,19 +345,67 @@ export const page: BrowserPage = {
       error,
     ))
   },
-  mark(name: string, options?: MarkOptions) {
+  mark<T>(
+    name: string,
+    bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
+    options?: MarkOptions,
+  ): any {
     const currentTest = getWorkerState().current
-    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+
+    if (typeof bodyOrOptions === 'function') {
+      return ensureAwaited(async (error) => {
+        if (hasActiveTrace) {
+          await triggerCommand(
+            '__vitest_groupTraceStart',
+            [{
+              name,
+              stack: options?.stack ?? error?.stack,
+            }],
+            error,
+          )
+        }
+        try {
+          return await bodyOrOptions()
+        }
+        finally {
+          if (hasActiveTrace) {
+            await triggerCommand('__vitest_groupTraceEnd', [], error)
+          }
+        }
+      })
+    }
+
+    if (!hasActiveTrace) {
       return Promise.resolve()
     }
+
     return ensureAwaited(error => triggerCommand(
       '__vitest_markTrace',
       [{
         name,
-        stack: options?.stack ?? error?.stack,
+        stack: bodyOrOptions?.stack ?? error?.stack,
       }],
       error,
     ))
+  },
+  markGroup<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T> {
+    return ensureAwaited(async (error) => {
+      await triggerCommand(
+        '__vitest_groupTraceStart',
+        [{
+          name,
+          stack: options?.stack ?? error?.stack,
+        }],
+        error,
+      )
+      try {
+        return await body()
+      }
+      finally {
+        await triggerCommand('__vitest_groupTraceEnd', [], error)
+      }
+    })
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)

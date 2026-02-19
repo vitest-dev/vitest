@@ -5,8 +5,10 @@ import '../src/my-button.js'
 
 describe('Button with increment', async () => {
   beforeEach(async () => {
-    document.body.innerHTML = '<my-button name="World"></my-button>'
-    await page.getByRole('button').mark('render')
+    await page.mark('render', async () => {
+      document.body.innerHTML = '<my-button name="World"></my-button>'
+      await page.getByRole('button').mark('render button')
+    })
     await page.getByRole('heading').mark('heading')
   })
 
