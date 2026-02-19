@@ -68,6 +68,15 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         expect.stringContaining('page-mark'),
       ])
 
+      function formatStack(event: any) {
+        return event.stack
+          ?.map(
+            (frame: any) =>
+              `${path.relative(ctx.config.root, frame.file)}:${frame.line}:${frame.column}`,
+          )
+          .join('\n')
+      }
+
       for (const traceFile of traceFiles) {
         const zipPath = resolve(basicTestTracesFolder, traceFile)
         const parsed = await readTraceZip(zipPath)
@@ -89,25 +98,13 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const frame = events.find(e => e.title === 'button rendered - locator')?.stack?.[0]
-          frame.file = path.relative(ctx.config.root, frame.file)
+          const markerEvent = events.find(e => e.title === 'button rendered - locator')
+          const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 38,
-                "file": "basic.test.ts",
-                "line": 10,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:38"`)
           }
           else {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 33,
-                "file": "basic.test.ts",
-                "line": 10,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:10:33"`)
           }
         }
 
@@ -123,25 +120,13 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const frame = events.find(e => e.title === 'button rendered - page')?.stack?.[0]
-          frame.file = path.relative(ctx.config.root, frame.file)
+          const markerEvent = events.find(e => e.title === 'button rendered - page')
+          const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 18,
-                "file": "basic.test.ts",
-                "line": 15,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:18"`)
           }
           else {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 13,
-                "file": "basic.test.ts",
-                "line": 15,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:15:13"`)
           }
         }
 
@@ -161,26 +146,13 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const frame = events.find(e => e.title === 'expect.element().toHaveTextContent')
-            ?.stack?.[0]
-          frame.file = path.relative(ctx.config.root, frame.file)
+          const markerEvent = events.find(e => e.title === 'expect.element().toHaveTextContent')
+          const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 23,
-                "file": "basic.test.ts",
-                "line": 20,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:23"`)
           }
           else {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 15,
-                "file": "basic.test.ts",
-                "line": 20,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:15"`)
           }
         }
 
@@ -204,49 +176,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const frame = events.find(e => e.title === 'expect.element().toHaveTextContent [ERROR]')
-            ?.stack?.[0]
-          frame.file = path.relative(ctx.config.root, frame.file)
+          const markerEvent = events.find(e => e.title === 'expect.element().toHaveTextContent [ERROR]')
+          const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 23,
-                "file": "basic.test.ts",
-                "line": 26,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:23"`)
           }
           else {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 15,
-                "file": "basic.test.ts",
-                "line": 26,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:15"`)
           }
         }
 
         if (traceFile.includes('failure')) {
-          const frame = events.find(e => e.title === 'onAfterRetryTask [fail]')?.stack?.[0]
-          frame.file = path.relative(ctx.config.root, frame.file)
+          const markerEvent = events.find(e => e.title === 'onAfterRetryTask [fail]')
+          const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 18,
-                "file": "basic.test.ts",
-                "line": 31,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:18"`)
           }
           else {
-            expect(frame).toMatchInlineSnapshot(`
-              {
-                "column": 8,
-                "file": "basic.test.ts",
-                "line": 31,
-              }
-            `)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:8"`)
           }
         }
 
