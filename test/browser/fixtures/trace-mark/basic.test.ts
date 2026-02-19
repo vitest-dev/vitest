@@ -7,12 +7,12 @@ beforeEach(() => {
 
 test("locator.mark", async () => {
   document.body.innerHTML = "<button>Hello</button>";
-  await page.getByRole("button").mark("button rendered");
+  await page.getByRole("button").mark("button rendered - locator");
 });
 
 test("page.mark", async () => {
   document.body.innerHTML = "<button>Hello</button>";
-  await page.mark("button rendered");
+  await page.mark("button rendered - page");
 });
 
 test("expect.element pass", async () => {
@@ -29,4 +29,9 @@ test("expect.element fail", async () => {
 test("failure", async () => {
   document.body.innerHTML = "<button>Hello</button>";
   throw new Error("Test failure");
+});
+
+test("click", async () => {
+  document.body.innerHTML = "<button>Hello</button>";
+  await page.getByRole("button").click();
 });
