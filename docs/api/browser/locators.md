@@ -944,7 +944,7 @@ function waitForElement(
 ```
 
 ::: danger WARNING
-This is an escape hatch for library authors and 3d-party APIs that do not support locators directly. If you are interacting with the element, use other [builtin methods](#methods) instead.
+This is an escape hatch for cases where you need the raw DOM element — for example, to pass it to a third-party library like FormKit that doesn't accept Vitest locators. If you are interacting with the element yourself, use other [builtin methods](#methods) instead.
 :::
 
 This method returns an element matching the locator. Unlike [`.element()`](#element), this method will wait and retry until a matching element appears in the DOM, using increasing intervals (0, 20, 50, 100, 100, 500ms).
