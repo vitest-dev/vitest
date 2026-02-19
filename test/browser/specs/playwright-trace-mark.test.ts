@@ -50,6 +50,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
             "failure": [
               "Test failure",
             ],
+            "helper": "passed",
             "locator.mark": "passed",
             "page.mark": "passed",
           },
@@ -64,6 +65,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         expect.stringContaining('expect-element-fail'),
         expect.stringContaining('expect-element-pass'),
         expect.stringContaining('failure'),
+        expect.stringContaining('helper'),
         expect.stringContaining('locator-mark'),
         expect.stringContaining('page-mark'),
       ])
@@ -108,7 +110,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           }
         }
 
-        if (traceFile.includes('page-mark')) {
+        if (traceFile.includes('page-mark') && !traceFile.includes('custom-stack')) {
           expect(events).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -209,6 +211,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
+        }
+
+        if (traceFile.includes('helper')) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                title: 'render helper',
+              }),
+            ]),
+          )
+          const markerEvent = events.find(e => e.title === 'render helper')
+          const formattedFrame = formatStack(markerEvent)
+          if (name === 'webkit') {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:17"`)
+          }
+          else {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:8"`)
+          }
         }
       }
     }

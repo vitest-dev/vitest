@@ -1,4 +1,4 @@
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import { page } from "vitest/browser";
 
 beforeEach(() => {
@@ -34,4 +34,13 @@ test("failure", async () => {
 test("click", async () => {
   document.body.innerHTML = "<button>Hello</button>";
   await page.getByRole("button").click();
+});
+
+const myRender = vi.defineHelper(async (content: string) => {
+  document.body.innerHTML = content;
+  await  page.elementLocator(document.body).mark("render helper");
+});
+
+test("helper", async () => {
+  await myRender("<button>Hello</button>");
 });
