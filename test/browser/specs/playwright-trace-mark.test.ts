@@ -53,6 +53,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
             "helper": "passed",
             "locator.mark": "passed",
             "page.mark": "passed",
+            "stack": "passed",
           },
         }
       `)
@@ -60,7 +61,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
       const traceFiles = readdirSync(basicTestTracesFolder)
         .filter(file => file.startsWith(`${name}-`) && file.endsWith('.trace.zip'))
         .sort()
-      expect(traceFiles).toEqual([
+      expect.soft(traceFiles).toEqual([
         expect.stringContaining('click'),
         expect.stringContaining('expect-element-fail'),
         expect.stringContaining('expect-element-pass'),
@@ -68,6 +69,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         expect.stringContaining('helper'),
         expect.stringContaining('locator-mark'),
         expect.stringContaining('page-mark'),
+        expect.stringContaining('stack'),
       ])
 
       function formatStack(event: any) {
@@ -228,6 +230,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           }
           else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:8"`)
+          }
+        }
+
+        if (traceFile.includes('stack')) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                title: 'button rendered - stack',
+              }),
+            ]),
+          )
+          const markerEvent = events.find(e => e.title === 'button rendered - stack')
+          const formattedFrame = formatStack(markerEvent)
+          if (name === 'webkit') {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:26"`)
+          }
+          else {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:16"`)
           }
         }
       }

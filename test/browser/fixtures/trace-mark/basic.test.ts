@@ -44,3 +44,9 @@ const myRender = vi.defineHelper(async (content: string) => {
 test("helper", async () => {
   await myRender("<button>Hello</button>");
 });
+
+test("stack", async () => {
+  document.body.innerHTML = "<button>Hello</button>";
+  const error = new Error("Custom error for stack trace");
+  await page.getByRole("button").mark("button rendered - stack", { stack: error.stack });
+});

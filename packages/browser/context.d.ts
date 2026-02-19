@@ -40,6 +40,14 @@ export interface ScreenshotOptions {
   save?: boolean
 }
 
+export interface MarkOptions {
+  /**
+   * Optional stack string used to resolve marker location.
+   * Useful for wrapper libraries that need to forward the end-user callsite.
+   */
+  stack?: string
+}
+
 interface StandardScreenshotComparators {
   pixelmatch: {
     /**
@@ -631,7 +639,7 @@ export interface Locator extends LocatorSelectors {
    * Add a trace marker for this locator when browser tracing is enabled.
    * @see {@link https://vitest.dev/api/browser/locators#mark}
    */
-  mark(name: string): Promise<void>
+  mark(name: string, options?: MarkOptions): Promise<void>
 
   /**
    * Returns an element matching the selector.
@@ -786,7 +794,7 @@ export interface BrowserPage extends LocatorSelectors {
    * Add a trace marker when browser tracing is enabled.
    * @see {@link https://vitest.dev/api/browser/context#mark}
    */
-  mark(name: string): Promise<void>
+  mark(name: string, options?: MarkOptions): Promise<void>
   /**
    * Extend default `page` object with custom methods.
    */

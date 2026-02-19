@@ -3,6 +3,7 @@ import type {
   LocatorByRoleOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
+  MarkOptions,
   UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
@@ -180,7 +181,7 @@ export abstract class Locator {
     })
   }
 
-  public mark(name: string): Promise<void> {
+  public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
     if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
       return Promise.resolve()
@@ -190,7 +191,7 @@ export abstract class Locator {
       [{
         name,
         selector: this.selector,
-        stack: error?.stack,
+        stack: options?.stack ?? error?.stack,
       }],
       error,
     ))

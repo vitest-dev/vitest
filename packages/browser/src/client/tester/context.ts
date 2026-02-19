@@ -8,6 +8,7 @@ import type {
   BrowserPage,
   Locator,
   LocatorSelectors,
+  MarkOptions,
   UserEvent,
   UserEventWheelOptions,
 } from 'vitest/browser'
@@ -344,7 +345,7 @@ export const page: BrowserPage = {
       error,
     ))
   },
-  mark(name) {
+  mark(name: string, options?: MarkOptions) {
     const currentTest = getWorkerState().current
     if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
       return Promise.resolve()
@@ -353,7 +354,7 @@ export const page: BrowserPage = {
       '__vitest_markTrace',
       [{
         name,
-        stack: error?.stack,
+        stack: options?.stack ?? error?.stack,
       }],
       error,
     ))
