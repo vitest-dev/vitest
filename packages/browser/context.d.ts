@@ -801,11 +801,6 @@ export interface BrowserPage extends LocatorSelectors {
    */
   mark<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
   /**
-   * Group multiple operations into a named trace group when browser tracing is enabled.
-   * @see {@link https://vitest.dev/api/browser/context#markgroup}
-   */
-  markGroup<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
-  /**
    * Extend default `page` object with custom methods.
    */
   extend(methods: Partial<BrowserPage>): BrowserPage

@@ -389,24 +389,6 @@ export const page: BrowserPage = {
       error,
     ))
   },
-  markGroup<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T> {
-    return ensureAwaited(async (error) => {
-      await triggerCommand(
-        '__vitest_groupTraceStart',
-        [{
-          name,
-          stack: options?.stack ?? error?.stack,
-        }],
-        error,
-      )
-      try {
-        return await body()
-      }
-      finally {
-        await triggerCommand('__vitest_groupTraceEnd', [], error)
-      }
-    })
-  },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)
   },
