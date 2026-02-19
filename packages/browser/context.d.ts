@@ -21,7 +21,10 @@ export interface CDPSession {
   // methods are defined by the provider type augmentation
 }
 
-export interface ScreenshotOptions {
+export interface ScreenshotOptions extends SelectorOptions {
+  /**
+   * The HTML element to screeshot.
+   */
   element?: Element | Locator
   /**
    * Path relative to the current test file.
@@ -168,6 +171,13 @@ export interface ScreenshotMatcherOptions<
    * @default 5000
    */
   timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
 }
 
 export interface UserEvent {
@@ -724,7 +734,7 @@ export interface UserEventTabOptions {
   shift?: boolean
 }
 
-export interface UserEventTypeOptions {
+export interface UserEventTypeOptions extends SelectorOptions {
   skipClick?: boolean
   skipAutoClose?: boolean
 }

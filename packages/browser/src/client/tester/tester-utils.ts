@@ -1,4 +1,4 @@
-import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
+import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
 
@@ -207,7 +207,7 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
 const provider = getBrowserState().provider
 const kElementLocator = Symbol.for('$$vitest:locator-resolved')
 
-export async function convertToSelector(elementOrLocator: Element | Locator): Promise<string> {
+export async function convertToSelector(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<string> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
@@ -218,7 +218,7 @@ export async function convertToSelector(elementOrLocator: Element | Locator): Pr
     if (provider === 'playwright' || kElementLocator in elementOrLocator) {
       return elementOrLocator.selector
     }
-    const element = await elementOrLocator.waitForElement()
+    const element = await elementOrLocator.waitForElement(options)
     return convertElementToCssSelector(element)
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')

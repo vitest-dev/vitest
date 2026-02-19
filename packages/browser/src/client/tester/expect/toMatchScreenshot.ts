@@ -41,10 +41,10 @@ export default async function toMatchScreenshot(
     : `${this.currentTestName} ${counter.current}`
 
   const [element, ...mask] = await Promise.all([
-    convertToSelector(actual),
+    convertToSelector(actual, options),
     ...options.screenshotOptions && 'mask' in options.screenshotOptions
       ? (options.screenshotOptions.mask as Array<Element | Locator>)
-          .map(convertToSelector)
+          .map(m => convertToSelector(m, options))
       : [],
   ])
 
@@ -58,7 +58,7 @@ export default async function toMatchScreenshot(
           },
         }
       // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
-      : options as any
+      : options
   )
 
   const result = await getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(

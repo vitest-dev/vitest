@@ -102,7 +102,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     // testing-library user-event
     async type(element, text, options) {
       return ensureAwaited(async (error) => {
-        const selector = await convertToSelector(element)
+        const selector = await convertToSelector(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
           [
@@ -324,9 +324,9 @@ export const page: BrowserPage = {
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
     const [element, ...mask] = await Promise.all([
-      options.element ? convertToSelector(options.element) : undefined,
+      options.element ? convertToSelector(options.element, options) : undefined,
       ...('mask' in options
-        ? (options.mask as Array<Element | Locator>).map(convertToSelector)
+        ? (options.mask as Array<Element | Locator>).map(el => convertToSelector(el, options))
         : []),
     ])
 

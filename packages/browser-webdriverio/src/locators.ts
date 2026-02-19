@@ -98,7 +98,8 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
-    // playwright doesn't enforce a single element, it selects the first found one
+    // playwright doesn't enforce a single element, it selects the first one,
+    // so we just follow the behavior
     return super.dropTo(target, processDragAndDropOptions(options))
   }
 
