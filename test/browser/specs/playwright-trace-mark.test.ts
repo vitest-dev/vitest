@@ -52,6 +52,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
             ],
             "helper": "passed",
             "locator.mark": "passed",
+            "mark group": "passed",
             "page.mark": "passed",
             "stack": "passed",
           },
@@ -68,6 +69,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         expect.stringContaining('failure'),
         expect.stringContaining('helper'),
         expect.stringContaining('locator-mark'),
+        expect.stringContaining('mark-group'),
         expect.stringContaining('page-mark'),
         expect.stringContaining('stack'),
       ])
@@ -96,8 +98,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               expect.objectContaining({
                 method: 'expect',
                 params: expect.objectContaining({
-                  selector:
-                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                  selector: expect.stringContaining(`internal:describe="getByRole('button')`),
                 }),
               }),
             ]),
@@ -144,8 +145,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               expect.objectContaining({
                 method: 'expect',
                 params: expect.objectContaining({
-                  selector:
-                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                  selector: expect.stringContaining(`internal:describe="getByRole('button')`),
                 }),
               }),
             ]),
@@ -174,8 +174,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               expect.objectContaining({
                 method: 'expect',
                 params: expect.objectContaining({
-                  selector:
-                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                  selector: expect.stringContaining(`internal:describe="getByRole('button')`),
                 }),
               }),
             ]),
@@ -221,12 +220,11 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === '__vitest_click')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:45:17"`)
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
           }
           else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
           }
-          return
         }
 
         if (traceFile.includes('helper')) {
@@ -262,6 +260,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           }
           else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:50:16"`)
+          }
+        }
+
+        if (traceFile.includes('mark-group')) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                title: 'render group',
+              }),
+            ]),
+          )
+          const markerEvent = events.find(e => e.title === 'render group')
+          const formattedFrame = formatStack(markerEvent)
+          if (name === 'webkit') {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:18"`)
+          }
+          else {
+            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:55:13"`)
           }
         }
       }

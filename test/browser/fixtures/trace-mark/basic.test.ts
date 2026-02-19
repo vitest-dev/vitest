@@ -50,3 +50,9 @@ test("stack", async () => {
   const error = new Error("Custom error for stack trace");
   await page.getByRole("button").mark("button rendered - stack", { stack: error.stack });
 });
+
+test("mark group", async () => {
+  await page.mark("render group", async () => {
+    document.body.innerHTML = "<button>Hello</button>";
+  })
+});
