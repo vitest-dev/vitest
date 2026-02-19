@@ -73,6 +73,32 @@ await page.getByRole('button', { name: 'Sign in' }).mark('sign in button rendere
 
 Both `page.mark(name)` and `locator.mark(name)` are available.
 
+You can also group multiple operations under one marker with `page.mark(name, callback)`:
+
+```ts
+await page.mark('sign in flow', async () => {
+  await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
+  await page.getByRole('textbox', { name: 'Password' }).fill('secret')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+})
+```
+
+You can also wrap reusable helpers with [`vi.defineHelper()`](/api/vi#vi-defineHelper) so trace entries point to where the helper is called, not its internals:
+
+```ts
+import { vi } from 'vitest'
+import { page } from 'vitest/browser'
+
+const myRender = vi.defineHelper(async (content: string) => {
+  document.body.innerHTML = content
+  await page.elementLocator(document.body).mark('render helper')
+})
+
+test('renders content', async () => {
+  await myRender('<button>Hello</button>') // trace points to this line
+})
+```
+
 ## Preview
 
 To open the trace file, you can use the Playwright Trace Viewer. Run the following command in your terminal:
@@ -85,10 +111,15 @@ This will start the Trace Viewer and load the specified trace file.
 
 Alternatively, you can open the Trace Viewer in your browser at https://trace.playwright.dev and upload the trace file there.
 
-## Limitations
+## Source Location
 
-Trace Viewer source linking is currently partially supported.
+When you open a trace, you'll notice that Vitest groups browser interactions and links them back to the exact line in your test that triggered them. This happens automatically for:
 
-Regular Playwright action events (for example `locator.click()`) might not include source entries, while marker-backed events do. `page.mark(name)`, `locator.mark(name)`, and automatic markers from `expect.element(...)` include callsite metadata and are the most reliable way to correlate trace steps with test source.
+- `expect.element(...)` assertions
+- Interactive actions like `click`, `fill`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
 
-Non-browser assertions (for example `expect(value).toBe(...)`) don't interact with the browser and won't create browser trace markers.
+Under the hood, Playwright still records its own low-level action events as usual. Vitest wraps them with source-location groups so you can jump straight from the trace timeline to the relevant line in your test.
+
+Keep in mind that plain assertions like `expect(value).toBe(...)` run in Node, not the browser, so they won't show up in the trace.
+
+For anything not covered automatically, you can use `page.mark()` or `locator.mark()` to add your own trace groups — see [Trace markers](#trace-markers) above.
