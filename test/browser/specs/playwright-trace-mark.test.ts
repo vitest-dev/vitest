@@ -119,7 +119,7 @@ describe.runIf(provider.name === "playwright")("playwright trace marks", () => {
               }),
             ]),
           );
-          const frame = events.find(e => e.title === 'button rendered - locator')?.stack?.[0];
+          const frame = events.find((e) => e.title === "button rendered - locator")?.stack?.[0];
           frame.file = path.relative(ctx.config.root, frame.file);
           expect(frame).toMatchInlineSnapshot(`
             {
@@ -130,57 +130,114 @@ describe.runIf(provider.name === "playwright")("playwright trace marks", () => {
           `);
         }
 
-        // if (traceFile.includes("page-mark")) {
-        //   const marker = events.find((event) => event.title === "button rendered");
-        //   expect(marker).toBeDefined();
-        //   expect(["tracingGroup", "tracingMark"]).toContain(marker!.method);
-        //   expect(hasAfterEvent(events, marker!.callId)).toBe(true);
-        //   expect(hasTestFileStack(marker!, "trace-mark/basic.test.ts")).toBe(true);
-        // }
+        if (traceFile.includes("page-mark")) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                method: "tracingGroup",
+                title: "button rendered - page",
+              }),
+              expect.objectContaining({
+                method: "evaluateExpression",
+              }),
+            ]),
+          );
+          const frame = events.find((e) => e.title === "button rendered - page")?.stack?.[0];
+          frame.file = path.relative(ctx.config.root, frame.file);
+          expect(frame).toMatchInlineSnapshot(`
+            {
+              "column": 13,
+              "file": "basic.test.ts",
+              "line": 15,
+            }
+          `);
+        }
 
-        // if (traceFile.includes("expect-element-pass")) {
-        //   const marker = events.find((event) => {
-        //     return event.title?.startsWith("expect.element().toHaveTextContent");
-        //   });
-        //   expect(marker).toBeDefined();
-        //   expect(marker!.title).not.toContain("[ERROR]");
-        //   expect(hasAfterEvent(events, marker!.callId)).toBe(true);
-        //   expect(hasTestFileStack(marker!, "trace-mark/basic.test.ts")).toBe(true);
-        // }
-        // if (traceFile.includes("expect-element-fail")) {
-        //   const marker = events.find((event) => {
-        //     return (
-        //       event.title?.startsWith("expect.element().toHaveTextContent") &&
-        //       event.title.includes("[ERROR]")
-        //     );
-        //   });
-        //   expect(marker).toBeDefined();
-        //   expect(hasAfterEvent(events, marker!.callId)).toBe(true);
-        //   expect(hasTestFileStack(marker!, "trace-mark/basic.test.ts")).toBe(true);
+        if (traceFile.includes("expect-element-pass")) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                method: "tracingGroup",
+                title: "expect.element().toHaveTextContent",
+              }),
+              expect.objectContaining({
+                method: "expect",
+                params: expect.objectContaining({
+                  selector:
+                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                }),
+              }),
+            ]),
+          );
+          const frame = events.find((e) => e.title === "expect.element().toHaveTextContent")
+            ?.stack?.[0];
+          frame.file = path.relative(ctx.config.root, frame.file);
+          expect(frame).toMatchInlineSnapshot(`
+            {
+              "column": 15,
+              "file": "basic.test.ts",
+              "line": 20,
+            }
+          `);
+        }
 
-        //   const explicitMark = events.find((event) => event.title === "button rendered");
-        //   expect(explicitMark).toBeDefined();
-        // }
+        if (traceFile.includes("expect-element-fail")) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                method: "tracingGroup",
+                title: "button rendered",
+              }),
+              expect.objectContaining({
+                method: "tracingGroup",
+                title: "expect.element().toHaveTextContent [ERROR]",
+              }),
+              expect.objectContaining({
+                method: "expect",
+                params: expect.objectContaining({
+                  selector:
+                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                }),
+              }),
+            ]),
+          );
+          const frame = events.find((e) => e.title === "expect.element().toHaveTextContent [ERROR]")
+            ?.stack?.[0];
+          frame.file = path.relative(ctx.config.root, frame.file);
+          expect(frame).toMatchInlineSnapshot(`
+            {
+              "column": 15,
+              "file": "basic.test.ts",
+              "line": 26,
+            }
+          `);
+        }
 
-        // if (traceFile.includes("failure")) {
-        //   const userMarkers = events.filter((event) => {
-        //     return (
-        //       event.title === "button rendered" ||
-        //       event.title?.startsWith("expect.element().toHaveTextContent")
-        //     );
-        //   });
-        //   expect(userMarkers).toEqual([]);
-        // }
+        if (traceFile.includes("failure")) {
+          const frame = events.find((e) => e.title === "onAfterRetryTask [fail]")?.stack?.[0];
+          frame.file = path.relative(ctx.config.root, frame.file);
+          expect(frame).toMatchInlineSnapshot(`
+            {
+              "column": 8,
+              "file": "basic.test.ts",
+              "line": 31,
+            }
+          `);
+        }
 
-        // if (traceFile.includes("click")) {
-        //   const userMarkers = events.filter((event) => {
-        //     return (
-        //       event.title === "button rendered" ||
-        //       event.title?.startsWith("expect.element().toHaveTextContent")
-        //     );
-        //   });
-        //   expect(userMarkers).toEqual([]);
-        // }
+        if (traceFile.includes("click")) {
+          expect(events).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                method: "click",
+                params: expect.objectContaining({
+                  selector:
+                    '[data-vitest="true"] >> internal:control=enter-frame >> internal:role=button',
+                }),
+              }),
+            ]),
+          );
+        }
       }
     }
   });
@@ -202,15 +259,3 @@ async function readTraceZip(zipPath: string): Promise<{ entries: string[]; event
     zipFile.close();
   }
 }
-
-// function hasAfterEvent(events: TraceEvent[], callId: string): boolean {
-//   return events.some((event): event is TraceAfterEvent => {
-//     return event.type === "after" && event.callId === callId;
-//   });
-// }
-
-// function hasTestFileStack(event: TraceBeforeEvent, fileSuffix: string): boolean {
-//   return (event.stack || []).some((frame) => {
-//     return frame.file.replaceAll("\\", "/").endsWith(fileSuffix);
-//   });
-// }
