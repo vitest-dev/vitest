@@ -91,13 +91,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const frame = events.find(e => e.title === 'button rendered - locator')?.stack?.[0]
           frame.file = path.relative(ctx.config.root, frame.file)
-          expect(frame).toMatchInlineSnapshot(`
-            {
-              "column": 33,
-              "file": "basic.test.ts",
-              "line": 10,
-            }
-          `)
+          if (name === 'webkit') {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 38,
+                "file": "basic.test.ts",
+                "line": 10,
+              }
+            `)
+          }
+          else {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 33,
+                "file": "basic.test.ts",
+                "line": 10,
+              }
+            `)
+          }
         }
 
         if (traceFile.includes('page-mark')) {
@@ -114,13 +125,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           )
           const frame = events.find(e => e.title === 'button rendered - page')?.stack?.[0]
           frame.file = path.relative(ctx.config.root, frame.file)
-          expect(frame).toMatchInlineSnapshot(`
-            {
-              "column": 13,
-              "file": "basic.test.ts",
-              "line": 15,
-            }
-          `)
+          if (name === 'webkit') {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 18,
+                "file": "basic.test.ts",
+                "line": 15,
+              }
+            `)
+          }
+          else {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 13,
+                "file": "basic.test.ts",
+                "line": 15,
+              }
+            `)
+          }
         }
 
         if (traceFile.includes('expect-element-pass')) {
@@ -142,13 +164,24 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const frame = events.find(e => e.title === 'expect.element().toHaveTextContent')
             ?.stack?.[0]
           frame.file = path.relative(ctx.config.root, frame.file)
-          expect(frame).toMatchInlineSnapshot(`
-            {
-              "column": 15,
-              "file": "basic.test.ts",
-              "line": 20,
-            }
-          `)
+          if (name === 'webkit') {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 23,
+                "file": "basic.test.ts",
+                "line": 20,
+              }
+            `)
+          }
+          else {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 15,
+                "file": "basic.test.ts",
+                "line": 20,
+              }
+            `)
+          }
         }
 
         if (traceFile.includes('expect-element-fail')) {
@@ -174,25 +207,47 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const frame = events.find(e => e.title === 'expect.element().toHaveTextContent [ERROR]')
             ?.stack?.[0]
           frame.file = path.relative(ctx.config.root, frame.file)
-          expect(frame).toMatchInlineSnapshot(`
-            {
-              "column": 15,
-              "file": "basic.test.ts",
-              "line": 26,
-            }
-          `)
+          if (name === 'webkit') {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 23,
+                "file": "basic.test.ts",
+                "line": 26,
+              }
+            `)
+          }
+          else {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 15,
+                "file": "basic.test.ts",
+                "line": 26,
+              }
+            `)
+          }
         }
 
         if (traceFile.includes('failure')) {
           const frame = events.find(e => e.title === 'onAfterRetryTask [fail]')?.stack?.[0]
           frame.file = path.relative(ctx.config.root, frame.file)
-          expect(frame).toMatchInlineSnapshot(`
-            {
-              "column": 8,
-              "file": "basic.test.ts",
-              "line": 31,
-            }
-          `)
+          if (name === 'webkit') {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 18,
+                "file": "basic.test.ts",
+                "line": 31,
+              }
+            `)
+          }
+          else {
+            expect(frame).toMatchInlineSnapshot(`
+              {
+                "column": 8,
+                "file": "basic.test.ts",
+                "line": 31,
+              }
+            `)
+          }
         }
 
         if (traceFile.includes('click')) {
