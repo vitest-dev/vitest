@@ -47,7 +47,8 @@ const now = Date.now
 const waitForIntervals = [0, 20, 50, 100, 100, 500]
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => getSafeTimers().setTimeout(resolve, ms))
+  const { setTimeout } = getSafeTimers()
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
