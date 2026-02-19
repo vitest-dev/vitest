@@ -34,7 +34,7 @@ test('locator.waitForElement fails if it cannot find the element', async () => {
   // Normally it would be 5:
   // Immidiate, 0 (next tick), 20, 50, 100
   // But on CI it can be less because resources are limited
-  expect(elementsSpy.mock.calls).toBeGreaterThanOrEqual(3)
+  expect(elementsSpy.mock.calls.length).toBeGreaterThanOrEqual(3)
 })
 
 test('locator.waitForElement fails if there are multiple elements by default', async () => {
