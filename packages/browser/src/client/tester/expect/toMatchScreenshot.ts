@@ -58,7 +58,7 @@ export default async function toMatchScreenshot(
           },
         }
       // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
-      : options
+      : options as any
   )
 
   const result = await getBrowserState().commands.triggerCommand<ScreenshotMatcherOutput>(

@@ -160,7 +160,7 @@ export interface ScreenshotMatcherOptions<
   comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
   screenshotOptions?: Omit<
     ScreenshotOptions,
-    'element' | 'base64' | 'path' | 'save' | 'type'
+    'element' | 'base64' | 'path' | 'save' | 'type' | 'strict' | 'timeout'
   >
   /**
    * Time to wait until a stable screenshot is found.

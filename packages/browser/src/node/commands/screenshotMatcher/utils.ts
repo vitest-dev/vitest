@@ -1,3 +1,6 @@
+// Note: this augments `screenshotOptions` types
+import type {} from '@vitest/browser-playwright'
+
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
@@ -29,6 +32,7 @@ const defaultOptions = {
     scale: 'device',
   },
   timeout: 5_000,
+  strict: true,
   resolveDiffPath: ({
     arg,
     ext,
