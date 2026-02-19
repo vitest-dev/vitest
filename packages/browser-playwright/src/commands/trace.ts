@@ -3,6 +3,7 @@ import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vit
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
   if (isPlaywrightProvider(provider)) {
@@ -76,7 +77,7 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: stri
     await context.context.tracing.group(name, { location })
     try {
       if (selector) {
-        const locator = context.iframe.locator(selector) as any
+        const locator = getDescribedLocator(context, selector) as any
         if (typeof locator._expect === 'function') {
           await locator._expect('to.be.attached', {
             isNot: false,

@@ -1,5 +1,6 @@
 import type { Locator } from 'vitest/browser'
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
+import { asLocator } from 'ivya'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
   ConvertUserEventParameters<Parameters<T>>
@@ -14,4 +15,14 @@ export function defineBrowserCommand<T extends unknown[]>(
   fn: BrowserCommand<T>,
 ): BrowserCommand<T> {
   return fn
+}
+
+export function getDescribedLocator(
+  context: BrowserCommandContext,
+  selector: string,
+): ReturnType<BrowserCommandContext['iframe']['locator']> {
+  const locator = context.iframe.locator(selector)
+  return typeof locator.describe === 'function'
+    ? locator.describe(asLocator('javascript', selector))
+    : locator
 }

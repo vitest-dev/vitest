@@ -566,6 +566,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../mocker
+      ivya:
+        specifier: ^1.7.1
+        version: 1.7.1
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
