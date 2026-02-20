@@ -169,20 +169,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       const playwright = await import('playwright')
 
-      if (this.options.connectOptions) {
-        if (this.options.launchOptions) {
-          this.project.vitest.logger.warn(
-            c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
-          Ignoring ${c.bold(c.italic(c.yellow('launch')))} options and using ${c.bold(c.italic(c.yellow('connect')))} mode.
-          You probably want to remove one of the two options and keep only the one you want to use.`),
-          )
-        }
-        const browser = await playwright[this.browserName].connect(this.options.connectOptions.wsEndpoint, this.options.connectOptions)
-        this.browser = browser
-        this.browserPromise = null
-        return this.browser
-      }
-
       const launchOptions: LaunchOptions = {
         ...this.options.launchOptions,
         headless: options.headless,
@@ -216,6 +202,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+
+      if (this.options.connectOptions) {
+        const { wsEndpoint, ...connectOptions } = this.options.connectOptions
+        const endpoint = new URL(wsEndpoint)
+        endpoint.searchParams.set('launch-options', JSON.stringify(launchOptions))
+        const browser = await playwright[this.browserName].connect(
+          endpoint.toString(),
+          connectOptions,
+        )
+        this.browser = browser
+        this.browserPromise = null
+        return this.browser
+      }
+
       let persistentContextOption = this.options.persistentContext
       if (persistentContextOption && openBrowserOptions.parallel) {
         persistentContextOption = false

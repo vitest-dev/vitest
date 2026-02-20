@@ -32,7 +32,7 @@ test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', 
   expect(exitCode).toBe(0)
 })
 
-test.runIf(provider.name === 'playwright')('[playwright] warns if both connect and launch mode are configured', async () => {
+test.runIf(provider.name === 'playwright').skip('[playwright] warns if both connect and launch mode are configured', async () => {
   const browserServer = await chromium.launchServer()
   const wsEndpoint = browserServer.wsEndpoint()
 

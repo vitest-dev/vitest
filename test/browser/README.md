@@ -2,8 +2,6 @@
 
 ## Using docker playwright
 
-Some test suites don't support running it remotely (`fixtures/inspect` and `fixtures/insecure-context`).
-
 ```sh
 # Start playwright browser server
 pnpm docker up -d

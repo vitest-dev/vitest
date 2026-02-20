@@ -74,7 +74,9 @@ These options are directly passed down to `playwright[browser].connect` command.
 Use `connectOptions.wsEndpoint` to connect to an existing Playwright server instead of launching browsers locally. This is useful for running browsers in Docker, in CI, or on a remote machine.
 
 ::: warning
-Since this command connects to an existing Playwright server, any `launch` options will be ignored.
+
+Vitest forwards `launchOptions` to Playwright server via the `launch-options` query parameter on the `wsEndpoint`. This works only if the remote Playwright server supports `launch-options`, for example when using the `playwright run-server` CLI.
+
 :::
 
 ::: details Example: Running a Playwright Server in Docker
