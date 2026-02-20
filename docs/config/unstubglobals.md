@@ -19,3 +19,7 @@ export default defineConfig({
   },
 })
 ```
+
+::: warning
+Be aware that this option may cause problems with async concurrent tests. If enabled, the completion of one test will restore all global values that were changed with `vi.stubGlobal`, including those currently being used by other tests in progress.
+:::
