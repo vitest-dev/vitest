@@ -49,6 +49,12 @@ test('obsolete snapshot fails with update:none', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "src/test1.test.ts": Object {
+        "__module_errors__": Array [
+          "Obsolete snapshots found when no snapshot update is expected.
+    · foo 1
+    · fuu 1
+    ",
+        ],
         "bar": "passed",
         "foo": "passed",
         "fuu": "passed",
