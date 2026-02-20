@@ -575,6 +575,16 @@ export function buildErrorTree(testModules: TestModule[]) {
       }
       return suiteChildren
     },
+    (testModule, moduleChildren) => {
+      const errors = testModule.errors().map(error => error.message)
+      if (errors.length > 0) {
+        return {
+          ...moduleChildren,
+          __module_errors__: errors,
+        }
+      }
+      return moduleChildren
+    },
   )
 }
 
@@ -582,6 +592,7 @@ export function buildTestTree(
   testModules: TestModule[],
   onTestCase?: (result: TestCase) => unknown,
   onTestSuite?: (testSuite: TestSuite, suiteChildren: Record<string, any>) => unknown,
+  onTestModule?: (testModule: TestModule, moduleChildren: Record<string, any>) => unknown,
 ) {
   type TestTree = Record<string, any>
 
@@ -613,7 +624,8 @@ export function buildTestTree(
   for (const module of testModules) {
     // Use relative module ID for cleaner output
     const key = module.relativeModuleId
-    tree[key] = walkCollection(module.children)
+    const moduleChildren = walkCollection(module.children)
+    tree[key] = onTestModule ? onTestModule(module, moduleChildren) : moduleChildren
   }
 
   return tree

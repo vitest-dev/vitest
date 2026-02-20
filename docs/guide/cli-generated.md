@@ -16,7 +16,7 @@ Path to config file
 - **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot (accepts boolean, "new" or "all")
+Update snapshot (accepts boolean, "new", "all" or "none")
 
 ### watch
 
