@@ -204,21 +204,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
 
       if (this.options.connectOptions) {
-        const { wsEndpoint, headers, ...connectOptions } = this.options.connectOptions
-        const customLaunchHeader = headers?.['x-playwright-launch-options']
-        if (customLaunchHeader != null) {
+        let { wsEndpoint, headers = {}, ...connectOptions } = this.options.connectOptions
+        if ('x-playwright-launch-options' in headers) {
           this.project.vitest.logger.warn(
             c.yellow(
               'Detected "x-playwright-launch-options" in connectOptions.headers. Provider config launchOptions is ignored.',
             ),
           )
         }
+        else {
+          headers = { ...headers, 'x-playwright-launch-options': JSON.stringify(launchOptions) }
+        }
         this.browser = await playwright[this.browserName].connect(wsEndpoint, {
           ...connectOptions,
-          headers: {
-            ...headers,
-            'x-playwright-launch-options': customLaunchHeader ?? JSON.stringify(launchOptions),
-          },
+          headers,
         })
         this.browserPromise = null
         return this.browser
