@@ -41,6 +41,7 @@
     "playwright": "^1.58.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "tinyexec": "catalog:",
     "url": "^0.11.4",
     "vitest": "workspace:*",
     "vitest-browser-react": "^2.0.5",
