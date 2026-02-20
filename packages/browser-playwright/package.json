@@ -56,7 +56,6 @@
   "dependencies": {
     "@vitest/browser": "workspace:*",
     "@vitest/mocker": "workspace:*",
-    "ivya": "^1.7.1",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {

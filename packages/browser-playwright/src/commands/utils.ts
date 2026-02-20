@@ -1,6 +1,6 @@
 import type { Locator } from 'vitest/browser'
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
-import { asLocator } from 'ivya'
+import { asLocator } from '@vitest/browser'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
   ConvertUserEventParameters<Parameters<T>>
