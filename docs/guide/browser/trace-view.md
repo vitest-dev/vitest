@@ -123,3 +123,9 @@ Under the hood, Playwright still records its own low-level action events as usua
 Keep in mind that plain assertions like `expect(value).toBe(...)` run in Node, not the browser, so they won't show up in the trace.
 
 For anything not covered automatically, you can use `page.mark()` or `locator.mark()` to add your own trace groups — see [Trace markers](#trace-markers) above.
+
+::: warning
+
+Currently a source view of a trace can be only displayed properly when viewing it on the machine generated a trace with `playwright show-trace` CLI. This is expected to be fixed soon (see https://github.com/microsoft/playwright/pull/39307).
+
+:::
