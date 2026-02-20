@@ -13,6 +13,7 @@ test('CI behavior', async () => {
     nodeOptions: {
       env: {
         CI: 'true',
+        GITHUB_ACTIONS: 'true',
       },
     },
   }, '--root', root)
@@ -41,6 +42,7 @@ test('CI behavior', async () => {
       nodeOptions: {
         env: {
           CI: '',
+          GITHUB_ACTIONS: '',
         },
       },
     },
