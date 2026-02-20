@@ -21,3 +21,7 @@ export default defineConfig({
   },
 })
 ```
+
+::: warning
+Be aware that this option may cause problems with async concurrent tests. If enabled, the completion of one test will restore the implementation for all spies, including those currently being used by other tests in progress.
+:::
