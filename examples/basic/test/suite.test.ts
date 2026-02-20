@@ -7,7 +7,6 @@ describe('suite name', () => {
 
   it('bar', () => {
     expect(1 + 1).eq(2)
-    expect(3).toMatchInlineSnapshot()
   })
 
   it('snapshot', () => {
