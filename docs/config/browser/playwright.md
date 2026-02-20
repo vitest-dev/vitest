@@ -75,7 +75,7 @@ Use `connectOptions.wsEndpoint` to connect to an existing Playwright server inst
 
 ::: warning
 
-Vitest forwards `launchOptions` to Playwright server via the `launch-options` query parameter on the `wsEndpoint`. This works only if the remote Playwright server supports `launch-options`, for example when using the `playwright run-server` CLI.
+Vitest forwards `launchOptions` to Playwright server via the `x-playwright-launch-options` header. This works only if the remote Playwright server supports this header, for example when using the `playwright run-server` CLI.
 
 :::
 
