@@ -40,6 +40,7 @@ export interface UITaskTreeNode extends TaskTreeNode {
   indent: number
   state?: TaskState
   duration?: number
+  slow?: boolean
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
@@ -73,6 +74,7 @@ export interface Filter {
   failed: boolean
   success: boolean
   skipped: boolean
+  slow: boolean
   onlyTests: boolean
 }
 

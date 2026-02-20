@@ -62,13 +62,21 @@ const filterHeaderClass = ref<string>('grid-col-span-2')
 
 const testExplorerRef = ref<HTMLElement | undefined>()
 useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
-  if (contentRect.width < 420) {
+  if (contentRect.width < 220) {
+    filterClass.value = 'grid-cols-1'
+    filterHeaderClass.value = 'grid-col-span-1'
+  }
+  else if (contentRect.width < 340) {
     filterClass.value = 'grid-cols-2'
     filterHeaderClass.value = 'grid-col-span-2'
   }
+  else if (contentRect.width < 540) {
+    filterClass.value = 'grid-cols-3'
+    filterHeaderClass.value = 'grid-col-span-3'
+  }
   else {
-    filterClass.value = 'grid-cols-4'
-    filterHeaderClass.value = 'grid-col-span-4'
+    filterClass.value = 'grid-cols-5'
+    filterHeaderClass.value = 'grid-col-span-5'
   }
 })
 </script>
@@ -242,6 +250,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <FilterStatus v-model="filter.success" label="Pass" />
         <FilterStatus v-model="filter.skipped" label="Skip" />
         <FilterStatus v-model="filter.onlyTests" label="Only Tests" />
+        <FilterStatus v-model="filter.slow" label="Slow" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
@@ -343,6 +352,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
                 :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
                 :duration="item.duration"
+                :slow="item.slow === true"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
                 :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"

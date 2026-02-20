@@ -73,6 +73,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       },
     )
@@ -127,6 +128,7 @@ export class ExplorerTree {
             failed: filter.failed,
             success: filter.success,
             skipped: filter.skipped,
+            slow: filter.slow,
             onlyTests: filter.onlyTests,
           },
           end ? this.executionTime : performance.now() - this.startTime,
@@ -143,6 +145,7 @@ export class ExplorerTree {
           failed: filter.failed,
           success: filter.success,
           skipped: filter.skipped,
+          slow: filter.slow,
           onlyTests: filter.onlyTests,
         },
         end ? this.executionTime : performance.now() - this.startTime,
@@ -160,6 +163,7 @@ export class ExplorerTree {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
+      slow: filter.slow,
       onlyTests: filter.onlyTests,
     })
   }
@@ -176,6 +180,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -193,6 +198,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -204,6 +210,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })

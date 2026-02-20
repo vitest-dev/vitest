@@ -41,6 +41,7 @@ export function runLoadFiles(
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
+    slow: filter.slow,
     onlyTests: filter.onlyTests,
   })
 }

@@ -20,6 +20,7 @@ const {
   indent,
   name,
   duration,
+  slow,
   current,
   opened,
   expandable,
@@ -35,6 +36,7 @@ const {
   indent: number
   typecheck?: boolean
   duration?: number
+  slow?: boolean
   state?: TaskState
   current: boolean
   type: TaskTreeNodeType
@@ -220,7 +222,12 @@ const tagsBgGradient = computed(() => {
         </span>
         <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />
       </span>
-      <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
+      <span
+        v-if="typeof duration === 'number'"
+        text="xs"
+        :class="slow ? 'text-yellow5 op80' : 'op20'"
+        style="white-space: nowrap"
+      >
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
