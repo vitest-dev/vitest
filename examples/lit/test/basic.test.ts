@@ -9,11 +9,9 @@ describe('Button with increment', async () => {
       document.body.innerHTML = '<my-button name="World"></my-button>'
       await page.getByRole('button').mark('render button')
     })
-    await page.getByRole('heading').mark('heading')
   })
 
   it('should increment the count on each click', async () => {
-    await page.mark('test-start')
     await page.getByRole('button').click()
 
     await expect.element(page.getByRole('button')).toHaveTextContent('2')

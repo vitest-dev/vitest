@@ -17,6 +17,10 @@ export function defineBrowserCommand<T extends unknown[]>(
   return fn
 }
 
+// strip iframe locator part from the trace description e.g.
+// - locator('[data-vitest="true"]').contentFrame().getByRole('button')
+//     ⇓
+// - getByRole('button')
 export function getDescribedLocator(
   context: BrowserCommandContext,
   selector: string,
