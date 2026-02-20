@@ -1,11 +1,16 @@
 import type {
+  LocatorScreenshotOptions,
+  UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
+  UserEventFillOptions,
   UserEventHoverOptions,
   UserEventSelectOptions,
+  UserEventWheelOptions,
 } from 'vitest/browser'
 import {
   convertElementToCssSelector,
+  ensureAwaited,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -16,6 +21,7 @@ import {
   getIframeScale,
   Locator,
   selectorEngine,
+  triggerCommandWithTrace,
 } from '@vitest/browser/locators'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL } from 'vitest/internal/browser'
@@ -23,6 +29,13 @@ import { __INTERNAL } from 'vitest/internal/browser'
 class WebdriverIOLocator extends Locator {
   constructor(protected _pwSelector: string, protected _container?: Element) {
     super()
+  }
+
+  // This exists to avoid calling `this.elements` in `this.selector`'s getter in interactive actions
+  private withElement(element: Element, error: Error | undefined) {
+    const pwSelector = selectorEngine.generateSelectorSimple(element)
+    const cssSelector = convertElementToCssSelector(element)
+    return new ElementWebdriverIOLocator(cssSelector, error, pwSelector, element)
   }
 
   override get selector(): string {
@@ -42,32 +55,84 @@ class WebdriverIOLocator extends Locator {
   }
 
   public override click(options?: UserEventClickOptions): Promise<void> {
-    return super.click(processClickOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).click(processClickOptions(options))
+    })
   }
 
   public override dblClick(options?: UserEventClickOptions): Promise<void> {
-    return super.dblClick(processClickOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).dblClick(processClickOptions(options))
+    })
   }
 
   public override tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return super.tripleClick(processClickOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).tripleClick(processClickOptions(options))
+    })
   }
 
   public selectOptions(
     value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void> {
-    const values = getWebdriverioSelectOptions(this.element(), value)
-    return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      const values = getWebdriverioSelectOptions(element, value)
+      return triggerCommandWithTrace<void>({
+        name: '__vitest_selectOptions',
+        arguments: [convertElementToCssSelector(element), values, options],
+        errorSource: error,
+      })
+    })
   }
 
   public override hover(options?: UserEventHoverOptions): Promise<void> {
-    return super.hover(processHoverOptions(options))
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).hover(processHoverOptions(options))
+    })
   }
 
   public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+    // playwright doesn't enforce a single element, it selects the first one,
+    // so we just follow the behavior
     return super.dropTo(target, processDragAndDropOptions(options))
   }
+
+  public override wheel(options: UserEventWheelOptions): Promise<void> {
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).wheel(options)
+    })
+  }
+
+  public override clear(options?: UserEventClearOptions): Promise<void> {
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).clear(options)
+    })
+  }
+
+  public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).fill(text, options)
+    })
+  }
+
+  public override screenshot(options?: LocatorScreenshotOptions): Promise<any> {
+    return ensureAwaited(async (error) => {
+      const element = await this.findElement(options)
+      return this.withElement(element, error).screenshot(options)
+    })
+  }
+
+  // playwright doesn't enforce a single element in upload
+  // public override async upload(): Promise<void>
 
   protected locator(selector: string) {
     return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`, this._container)
@@ -75,6 +140,33 @@ class WebdriverIOLocator extends Locator {
 
   protected elementLocator(element: Element) {
     return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
+  }
+}
+
+const kElementLocator = Symbol.for('$$vitest:locator-resolved')
+
+class ElementWebdriverIOLocator extends Locator {
+  public [kElementLocator] = true
+
+  constructor(
+    private _cssSelector: string,
+    protected _errorSource: Error | undefined,
+    protected _pwSelector: string,
+    protected _container: Element,
+  ) {
+    super()
+  }
+
+  override get selector() {
+    return this._cssSelector
+  }
+
+  protected locator(_selector: string): Locator {
+    throw new Error(`should not be called`)
+  }
+
+  protected elementLocator(_element: Element): Locator {
+    throw new Error(`should not be called`)
   }
 }
 

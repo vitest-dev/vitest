@@ -1,8 +1,6 @@
-import type { Locator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
+import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
-
-const provider = getBrowserState().provider
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -130,7 +128,6 @@ export class CommandsManager {
       () =>
         rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
           // rethrow an error to keep the stack trace in browser
-          // const clientError = new Error(err.message)
           clientError.message = err.message
           clientError.name = err.name
           clientError.stack = clientError.stack?.replace(clientError.message, err.message)
@@ -142,12 +139,10 @@ export class CommandsManager {
 
 const now = Date.now
 
-export function processTimeoutOptions<T extends { timeout?: number }>(options_?: T): T | undefined {
+export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (
     // if timeout is set, keep it
     (options_ && options_.timeout != null)
-    // timeout can only be set for playwright commands
-    || provider !== 'playwright'
   ) {
     return options_
   }
@@ -209,7 +204,10 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
   return `${JSON.stringify(text)}${exact ? 's' : 'i'}`
 }
 
-export function convertToSelector(elementOrLocator: Element | Locator): string {
+const provider = getBrowserState().provider
+const kElementLocator = Symbol.for('$$vitest:locator-resolved')
+
+export async function convertToSelector(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<string> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
@@ -217,7 +215,11 @@ export function convertToSelector(elementOrLocator: Element | Locator): string {
     return convertElementToCssSelector(elementOrLocator)
   }
   if (isLocator(elementOrLocator)) {
-    return elementOrLocator.selector
+    if (provider === 'playwright' || kElementLocator in elementOrLocator) {
+      return elementOrLocator.selector
+    }
+    const element = await elementOrLocator.findElement(options)
+    return convertElementToCssSelector(element)
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
