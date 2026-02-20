@@ -86,6 +86,9 @@ it('registers a metadata', (ctx) => {
   ctx.task.meta.key = 'value'
 })
 
+it('should not show up as pending test when finished (#9689)', { retry: 1, repeats: 1 }, () => {})
+
+
 declare module 'vitest' {
   interface TaskMeta {
     key?: string
