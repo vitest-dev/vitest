@@ -64,10 +64,10 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
+    "@blazediff/core": "1.9.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "pixelmatch": "7.1.0",
     "pngjs": "^7.0.0",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",

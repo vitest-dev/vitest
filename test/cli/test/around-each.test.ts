@@ -1064,6 +1064,48 @@ test('aroundEach hook timeouts are independent of each other', async () => {
   `)
 })
 
+test('aroundEach teardown timeout works when runTest error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'caught-inner-error-timeout.test.ts': `
+      import { aroundEach, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundEach(async (runTest) => {
+          try {
+            await runTest()
+          }
+          catch {
+            // swallow inner hook failure, then run teardown work
+          }
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundEach(async (runTest) => {
+          await runTest()
+          throw new Error('inner aroundEach teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-error-timeout.test.ts": {
+        "suite": {
+          "test": [
+            "inner aroundEach teardown failure",
+            "The teardown phase of "aroundEach" hook timed out after 50ms.",
+          ],
+        },
+      },
+    }
+  `)
+})
+
 test('aroundEach with AsyncLocalStorage', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'async-local-storage.test.ts': `
@@ -1633,6 +1675,49 @@ test('aroundAll receives suite as third argument', async () => {
   `)
 })
 
+test('aroundAll teardown timeout works when runSuite error is caught', async () => {
+  const { errorTree } = await runInlineTests({
+    'caught-inner-suite-error-timeout.test.ts': `
+      import { aroundAll, describe, expect, test } from 'vitest'
+
+      describe('suite', () => {
+        aroundAll(async (runSuite) => {
+          try {
+            await runSuite()
+          }
+          catch {
+            // swallow inner hook failure, then run teardown work
+          }
+          await new Promise(resolve => setTimeout(resolve, 200))
+        }, 50)
+
+        aroundAll(async (runSuite) => {
+          await runSuite()
+          throw new Error('inner aroundAll teardown failure')
+        })
+
+        test('test', () => {
+          expect(1).toBe(1)
+        })
+      })
+    `,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "caught-inner-suite-error-timeout.test.ts": {
+        "suite": {
+          "__suite_errors__": [
+            "inner aroundAll teardown failure",
+            "The teardown phase of "aroundAll" hook timed out after 50ms.",
+          ],
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
 test('aroundAll with server start/stop pattern', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'server.test.ts': `
@@ -2043,6 +2128,10 @@ test('aroundAll teardown timeout works when inner fails', async () => {
     {
       "caught-inner-error-timeout.test.ts": {
         "suite": {
+          "__suite_errors__": [
+            "inner aroundAll teardown failure",
+            "The teardown phase of "aroundAll" hook timed out after 50ms.",
+          ],
           "test": "passed",
         },
       },
@@ -2181,6 +2270,9 @@ test('aroundAll aborts late runSuite after setup timeout', async () => {
     {
       "late-run-suite-after-timeout.test.ts": {
         "timed out suite": {
+          "__suite_errors__": [
+            "The setup phase of "aroundAll" hook timed out after 10ms.",
+          ],
           "basic": "skipped",
         },
       },
@@ -2228,7 +2320,7 @@ test('nested aroundEach setup error is not propagated to outer runTest catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-each-setup-error.test.ts:7:17
+     ❯ nested-around-each-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -2355,7 +2447,7 @@ test('nested aroundAll setup error is not propagated to outer runSuite catch', a
            |               ^
          18|       })
          19|
-     ❯ nested-around-all-setup-error.test.ts:7:17
+     ❯ nested-around-all-setup-error.test.ts:7:11
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
