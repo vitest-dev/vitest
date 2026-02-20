@@ -380,7 +380,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  update?: boolean | 'all' | 'new'
+  update?: boolean | 'all' | 'new' | 'none'
 
   /**
    * Watch mode

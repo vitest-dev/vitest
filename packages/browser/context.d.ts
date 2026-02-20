@@ -21,7 +21,10 @@ export interface CDPSession {
   // methods are defined by the provider type augmentation
 }
 
-export interface ScreenshotOptions {
+export interface ScreenshotOptions extends SelectorOptions {
+  /**
+   * The HTML element to screeshot.
+   */
   element?: Element | Locator
   /**
    * Path relative to the current test file.
@@ -157,7 +160,7 @@ export interface ScreenshotMatcherOptions<
   comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
   screenshotOptions?: Omit<
     ScreenshotOptions,
-    'element' | 'base64' | 'path' | 'save' | 'type'
+    'element' | 'base64' | 'path' | 'save' | 'type' | 'strict' | 'timeout'
   >
   /**
    * Time to wait until a stable screenshot is found.
@@ -168,6 +171,13 @@ export interface ScreenshotMatcherOptions<
    * @default 5000
    */
   timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
 }
 
 export interface UserEvent {
@@ -522,6 +532,22 @@ export interface LocatorSelectors {
 
 export interface FrameLocator extends LocatorSelectors {}
 
+export interface SelectorOptions {
+  /**
+   * How long to wait until a single element is found. By default, this has the same timeout as the test.
+   *
+   * Vitest will try to find the element in ever increasing intervals: 0, 20, 50, 100, 100, 500.
+   */
+  timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
+}
+
 export interface Locator extends LocatorSelectors {
   /**
    * Selector string that will be used to locate the element by the browser provider.
@@ -689,13 +715,27 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
   filter(options: LocatorOptions): Locator
+  /**
+   * This method returns an element matching the locator.
+   * Unlike [`.element()`](https://vitest.dev/api/browser/locators#element),
+   * this method will wait and retry until a matching element appears in the DOM,
+   * using increasing intervals (0, 20, 50, 100, 100, 500ms).
+   *
+   * **WARNING:**
+   *
+   * This is an escape hatch for library authors and 3d-party APIs that do not support locators directly.
+   * If you are interacting with the element, use builtin methods instead.
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/locators#findelement}
+   */
+  findElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
 }
 
 export interface UserEventTabOptions {
   shift?: boolean
 }
 
-export interface UserEventTypeOptions {
+export interface UserEventTypeOptions extends SelectorOptions {
   skipClick?: boolean
   skipAutoClose?: boolean
 }

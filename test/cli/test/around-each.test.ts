@@ -1463,6 +1463,9 @@ test('aroundAll throws error when runSuite is not called', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "no-run.test.ts": {
+        "__module_errors__": [
+          "The \`runSuite()\` callback was not called in the \`aroundAll\` hook. Make sure to call \`runSuite()\` to run the suite.",
+        ],
         "test": "skipped",
       },
     }
@@ -1584,6 +1587,9 @@ test('aroundAll setup phase timeout', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "timeout.test.ts": {
+        "__module_errors__": [
+          "The setup phase of "aroundAll" hook timed out after 10ms.",
+        ],
         "test": "skipped",
       },
     }
@@ -1635,6 +1641,9 @@ test('aroundAll teardown phase timeout', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "teardown-timeout.test.ts": {
+        "__module_errors__": [
+          "The teardown phase of "aroundAll" hook timed out after 10ms.",
+        ],
         "test": "passed",
       },
     }
@@ -1974,6 +1983,9 @@ test('tests are skipped when aroundAll setup fails', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "aroundAll-setup-error.test.ts": {
+        "__module_errors__": [
+          "aroundAll setup error",
+        ],
         "test should be skipped": "skipped",
       },
     }
@@ -2461,6 +2473,9 @@ test('nested aroundAll setup error is not propagated to outer runSuite catch', a
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "nested-around-all-setup-error.test.ts": {
+        "__module_errors__": [
+          "inner aroundAll setup error",
+        ],
         "repro": "skipped",
       },
     }
@@ -2524,6 +2539,9 @@ test('nested aroundAll teardown error is not propagated to outer runSuite catch'
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "nested-around-all-teardown-error.test.ts": {
+        "__module_errors__": [
+          "inner aroundAll teardown error",
+        ],
         "repro": "passed",
       },
     }
@@ -2712,6 +2730,11 @@ test('three nested aroundAll teardown errors are all reported', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "triple-around-all-teardown-errors.test.ts": {
+        "__module_errors__": [
+          "inner aroundAll teardown error",
+          "middle aroundAll teardown error",
+          "outer aroundAll teardown error",
+        ],
         "repro": "passed",
       },
     }
