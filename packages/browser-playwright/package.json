@@ -59,7 +59,7 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "playwright": "^1.58.1",
+    "playwright": "^1.58.2",
     "vitest": "workspace:*"
   }
 }

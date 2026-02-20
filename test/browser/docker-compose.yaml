@@ -1,6 +1,6 @@
 services:
   playwright:
-    image: mcr.microsoft.com/playwright:v1.58.1-noble
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
     command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677 --host 0.0.0.0"
     init: true
     ipc: host
