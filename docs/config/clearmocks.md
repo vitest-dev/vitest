@@ -23,5 +23,5 @@ export default defineConfig({
 ```
 
 ::: warning
-Do not use this option with async concurrent tests. If enabled, the completion of one test will clear the mock history for all mocks, including those currently being used by other tests in progress.
+Be aware that this option may cause problems with async concurrent tests. If enabled, the completion of one test will clear the mock history for all mocks, including those currently being used by other tests in progress.
 :::
