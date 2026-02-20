@@ -1235,7 +1235,7 @@ function ordinalOf(i: number) {
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
   if (spy.mock.calls.length) {
     msg += c.gray(
-      `\n\nReceived: \n\n${spy.mock.calls
+      `\n\nReceived:\n\n${spy.mock.calls
         .map((callArg, i) => {
           let methodCall = c.bold(
             `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
@@ -1272,7 +1272,7 @@ function formatReturns(
 ) {
   if (results.length) {
     msg += c.gray(
-      `\n\nReceived: \n\n${results
+      `\n\nReceived:\n\n${results
         .map((callReturn, i) => {
           let methodCall = c.bold(
             `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,

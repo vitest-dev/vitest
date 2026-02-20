@@ -264,12 +264,12 @@ it('resolves/rejects', async () => {
        FAIL  repro.test.ts > rejects: resolves when rejection expected
       AssertionError: promise resolved "3" instead of rejecting
 
-      - Expected: 
+      - Expected:
       Error {
         "message": "rejected promise",
       }
 
-      + Received: 
+      + Received:
       3
 
        ❯ repro.test.ts:13:41
@@ -343,12 +343,12 @@ it('resolves/rejects', async () => {
      FAIL  repro.test.ts > rejects: resolves when rejection expected
     AssertionError: promise resolved "3" instead of rejecting
 
-    - Expected: 
+    - Expected:
     Error {
       "message": "rejected promise",
     }
 
-    + Received: 
+    + Received:
     3
 
      ❯ repro.test.ts:13:40
