@@ -84,7 +84,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    description: 'Update snapshot (accepts boolean, "new", "all" or "none")',
     argument: '[type]',
   },
   watch: {
