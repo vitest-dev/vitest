@@ -67,7 +67,7 @@ test('test update', async () => {
   `)
 
   // re-run without update and files are unchanged
-  const result2 = await runVitest({ root: dstDir, update: false })
+  const result2 = await runVitest({ root: dstDir, update: 'none' })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect(result2.errorTree()).toEqual(result.errorTree())
   expect(readFiles(dstDir)).toEqual(resultFiles)
