@@ -935,10 +935,10 @@ page.getByText('Hello').elements() // ✅ [HTMLElement, HTMLElement]
 page.getByText('Hello USA').elements() // ✅ []
 ```
 
-### waitForElement <Version>4.1.0</Version> {#waitforelement}
+### findElement <Version>4.1.0</Version> {#findelement}
 
 ```ts
-function waitForElement(
+function findElement(
   options?: SelectorOptions
 ): Promise<HTMLElement | SVGElement>
 ```
@@ -969,27 +969,27 @@ Consider the following DOM structure:
 These locators will resolve successfully:
 
 ```ts
-await page.getByText('Hello World').waitForElement() // ✅ HTMLDivElement
-await page.getByText('World').waitForElement() // ✅ HTMLSpanElement
-await page.getByText('Hello Germany').waitForElement() // ✅ HTMLDivElement
+await page.getByText('Hello World').findElement() // ✅ HTMLDivElement
+await page.getByText('World').findElement() // ✅ HTMLSpanElement
+await page.getByText('Hello Germany').findElement() // ✅ HTMLDivElement
 ```
 
 These locators will throw an error:
 
 ```ts
 // multiple elements match, strict mode rejects
-await page.getByText('Hello').waitForElement() // ❌
-await page.getByText(/^Hello/).waitForElement() // ❌
+await page.getByText('Hello').findElement() // ❌
+await page.getByText(/^Hello/).findElement() // ❌
 
 // no matching element before timeout
-await page.getByText('Hello USA').waitForElement() // ❌
+await page.getByText('Hello USA').findElement() // ❌
 ```
 
 Using `strict: false` to allow multiple matches:
 
 ```ts
 // returns the first matching element instead of throwing
-await page.getByText('Hello').waitForElement({ strict: false }) // ✅ HTMLDivElement
+await page.getByText('Hello').findElement({ strict: false }) // ✅ HTMLDivElement
 ```
 
 ### all

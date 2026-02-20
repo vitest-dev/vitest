@@ -5,31 +5,31 @@ beforeEach(() => {
   document.body.innerHTML = ''
 })
 
-test('locator.waitForElement can find the element if it exists', async () => {
+test('locator.findElement can find the element if it exists', async () => {
   const button = createButton()
 
-  const element = await page.getByRole('button').waitForElement()
+  const element = await page.getByRole('button').findElement()
   expect(element).toBeInTheDocument()
   expect(button).toBe(element)
 })
 
-test('locator.waitForElement can find the element if it appears', async () => {
+test('locator.findElement can find the element if it appears', async () => {
   let button: HTMLButtonElement
 
   setTimeout(() => {
     button = createButton()
   }, 50)
 
-  const element = await page.getByRole('button').waitForElement()
+  const element = await page.getByRole('button').findElement()
   expect(element).toBeInTheDocument()
   expect(button).toBe(element)
 })
 
-test('locator.waitForElement fails if it cannot find the element', async () => {
+test('locator.findElement fails if it cannot find the element', async () => {
   const locator = page.getByRole('button')
   const elementsSpy = vi.spyOn(locator, 'elements')
   await expect(() => {
-    return locator.waitForElement({ timeout: 100 })
+    return locator.findElement({ timeout: 100 })
   }).rejects.toThrow('Cannot find element with locator: getByRole(\'button\')')
   // Normally it would be 5:
   // Immidiate, 0 (next tick), 20, 50, 100
@@ -37,12 +37,12 @@ test('locator.waitForElement fails if it cannot find the element', async () => {
   expect(elementsSpy.mock.calls.length).toBeGreaterThanOrEqual(3)
 })
 
-test('locator.waitForElement fails if there are multiple elements by default', async () => {
+test('locator.findElement fails if there are multiple elements by default', async () => {
   createButton()
   createButton()
 
   await expect(
-    () => page.getByRole('button').waitForElement(),
+    () => page.getByRole('button').findElement(),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
@@ -51,12 +51,12 @@ test('locator.waitForElement fails if there are multiple elements by default', a
   `)
 })
 
-test('locator.waitForElement fails if there are multiple elements if strict mode is specified', async () => {
+test('locator.findElement fails if there are multiple elements if strict mode is specified', async () => {
   createButton()
   createButton()
 
   await expect(
-    () => page.getByRole('button').waitForElement({ strict: true }),
+    () => page.getByRole('button').findElement({ strict: true }),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
@@ -65,14 +65,14 @@ test('locator.waitForElement fails if there are multiple elements if strict mode
   `)
 })
 
-test('locator.waitForElement fails if multiple elements appear later with strict mode', async () => {
+test('locator.findElement fails if multiple elements appear later with strict mode', async () => {
   setTimeout(() => {
     createButton()
     createButton()
   }, 50)
 
   await expect(
-    () => page.getByRole('button').waitForElement(),
+    () => page.getByRole('button').findElement(),
   ).rejects.toThrowErrorMatchingInlineSnapshot(`
     [Error: strict mode violation: getByRole('button') resolved to 2 elements:
         1) <button></button> aka getByRole('button').first()
@@ -81,16 +81,16 @@ test('locator.waitForElement fails if multiple elements appear later with strict
   `)
 })
 
-test('locator.waitForElement returns the first button if strict is disabled', async () => {
+test('locator.findElement returns the first button if strict is disabled', async () => {
   const button = createButton()
   createButton()
 
-  const element = await page.getByRole('button').waitForElement({ strict: false })
+  const element = await page.getByRole('button').findElement({ strict: false })
   expect(element).toBeInTheDocument()
   expect(button).toBe(element)
 })
 
-test('locator.waitForElement returns the first button if strict is disabled after element appears', async () => {
+test('locator.findElement returns the first button if strict is disabled after element appears', async () => {
   let button: HTMLButtonElement
 
   setTimeout(() => {
@@ -98,7 +98,7 @@ test('locator.waitForElement returns the first button if strict is disabled afte
     createButton()
   }, 50)
 
-  const element = await page.getByRole('button').waitForElement({ strict: false })
+  const element = await page.getByRole('button').findElement({ strict: false })
   expect(element).toBeInTheDocument()
   expect(button).toBe(element)
 })

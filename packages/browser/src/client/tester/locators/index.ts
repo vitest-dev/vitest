@@ -314,7 +314,7 @@ export abstract class Locator {
     return this.selector
   }
 
-  public async waitForElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {
+  public async findElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {
     const options = processTimeoutOptions(options_)
     const timeout = options?.timeout
     const strict = options?.strict ?? true

@@ -36,42 +36,42 @@ class PreviewLocator extends Locator {
   }
 
   async click(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.click(element)
   }
 
   async dblClick(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.dblClick(element)
   }
 
   async tripleClick(options?: UserEventClickOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.tripleClick(element)
   }
 
   async hover(options?: UserEventHoverOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.hover(element)
   }
 
   async unhover(options?: UserEventHoverOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.unhover(element)
   }
 
   async fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.fill(element, text)
   }
 
   async upload(file: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.upload(element, file)
   }
 
   async wheel(options: UserEventWheelOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.wheel(element, options)
   }
 
@@ -79,12 +79,12 @@ class PreviewLocator extends Locator {
     options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[],
     settings?: UserEventSelectOptions,
   ): Promise<void> {
-    const element = await this.waitForElement(settings)
+    const element = await this.findElement(settings)
     return userEvent.selectOptions(element, options)
   }
 
   async clear(options?: UserEventClearOptions): Promise<void> {
-    const element = await this.waitForElement(options)
+    const element = await this.findElement(options)
     return userEvent.clear(element)
   }
 

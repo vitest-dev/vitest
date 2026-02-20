@@ -218,7 +218,7 @@ export async function convertToSelector(elementOrLocator: Element | Locator, opt
     if (provider === 'playwright' || kElementLocator in elementOrLocator) {
       return elementOrLocator.selector
     }
-    const element = await elementOrLocator.waitForElement(options)
+    const element = await elementOrLocator.findElement(options)
     return convertElementToCssSelector(element)
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')

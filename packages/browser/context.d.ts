@@ -716,18 +716,19 @@ export interface Locator extends LocatorSelectors {
    */
   filter(options: LocatorOptions): Locator
   /**
-   * Returns the HTML element matching the locator.
-   * This method will wait until only a single element appears in the DOM, but
-   * the strictness can be configured with options.
+   * This method returns an element matching the locator.
+   * Unlike [`.element()`](https://vitest.dev/api/browser/locators#element),
+   * this method will wait and retry until a matching element appears in the DOM,
+   * using increasing intervals (0, 20, 50, 100, 100, 500ms).
    *
    * **WARNING:**
    *
    * This is an escape hatch for library authors and 3d-party APIs that do not support locators directly.
    * If you are interacting with the element, use builtin methods instead.
    * @since 4.1.0
-   * @see {@link https://vitest.dev/api/browser/locators#waitforelement}
+   * @see {@link https://vitest.dev/api/browser/locators#findelement}
    */
-  waitForElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
+  findElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
 }
 
 export interface UserEventTabOptions {

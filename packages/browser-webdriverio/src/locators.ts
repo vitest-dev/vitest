@@ -56,21 +56,21 @@ class WebdriverIOLocator extends Locator {
 
   public override click(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).click(processClickOptions(options))
     })
   }
 
   public override dblClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).dblClick(processClickOptions(options))
     })
   }
 
   public override tripleClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).tripleClick(processClickOptions(options))
     })
   }
@@ -80,7 +80,7 @@ class WebdriverIOLocator extends Locator {
     options?: UserEventSelectOptions,
   ): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       const values = getWebdriverioSelectOptions(element, value)
       return triggerCommandWithTrace<void>({
         name: '__vitest_selectOptions',
@@ -92,7 +92,7 @@ class WebdriverIOLocator extends Locator {
 
   public override hover(options?: UserEventHoverOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).hover(processHoverOptions(options))
     })
   }
@@ -105,28 +105,28 @@ class WebdriverIOLocator extends Locator {
 
   public override wheel(options: UserEventWheelOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).wheel(options)
     })
   }
 
   public override clear(options?: UserEventClearOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).clear(options)
     })
   }
 
   public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).fill(text, options)
     })
   }
 
   public override screenshot(options?: LocatorScreenshotOptions): Promise<any> {
     return ensureAwaited(async (error) => {
-      const element = await this.waitForElement(options)
+      const element = await this.findElement(options)
       return this.withElement(element, error).screenshot(options)
     })
   }
