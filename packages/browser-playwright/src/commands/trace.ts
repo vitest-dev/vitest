@@ -64,12 +64,15 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: stri
 ) => {
   if (isPlaywrightProvider(context.provider)) {
     // skip if tracing is not active
+    // this is only safe guard and this isn't expected to happen since
+    // runner already checks if tracing is active before sending this command
     if (!context.provider.tracingContexts.has(context.sessionId)) {
       return
     }
     const { name, selector, stack } = payload
     const location = parseLocation(context, stack)
     // mark trace via group/groupEnd with dummy calls to force snapshot.
+    // https://github.com/microsoft/playwright/issues/39308
     await context.context.tracing.group(name, { location })
     try {
       if (selector) {
@@ -77,7 +80,7 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: stri
         if (typeof locator._expect === 'function') {
           await locator._expect('to.be.attached', {
             isNot: false,
-            timeout: 1,
+            timeout: 1, // don't wait when element doesn't exist
           })
         }
         else {
