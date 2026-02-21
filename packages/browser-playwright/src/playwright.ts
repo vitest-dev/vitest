@@ -190,7 +190,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
           this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chrome only allows remote debugging on localhost.`)
         }
-        this.project.vitest.logger.log(`Debugger listening on ws://localhost:${port}`)
+        this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers
