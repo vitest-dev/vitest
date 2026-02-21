@@ -34,7 +34,7 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
 }
 
 export function isSlowTestTask(task: Task) {
-  if (task.type !== 'test') {
+  if (!isTestCase(task)) {
     return false
   }
 
@@ -43,8 +43,8 @@ export function isSlowTestTask(task: Task) {
     return false
   }
 
-  const treshold = config.value.slowTestThreshold
-  return typeof treshold === 'number' && duration > treshold
+  const threshold = config.value.slowTestThreshold
+  return typeof threshold === 'number' && duration > threshold
 }
 
 export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {

@@ -405,7 +405,7 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
-    if (!filter || testMatcher(t, search, filter)) {
+    if (!filter || testMatcher(t, search, filter, false)) {
       data.total++
       if (isSlowTestTask(t)) {
         data.slow++
