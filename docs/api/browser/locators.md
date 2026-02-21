@@ -959,6 +959,63 @@ page.getByText('Hello').elements() // ✅ [HTMLElement, HTMLElement]
 page.getByText('Hello USA').elements() // ✅ []
 ```
 
+### findElement <Version>4.1.0</Version> {#findelement}
+
+```ts
+function findElement(
+  options?: SelectorOptions
+): Promise<HTMLElement | SVGElement>
+```
+
+::: danger WARNING
+This is an escape hatch for cases where you need the raw DOM element — for example, to pass it to a third-party library like FormKit that doesn't accept Vitest locators. If you are interacting with the element yourself, use other [builtin methods](#methods) instead.
+:::
+
+This method returns an element matching the locator. Unlike [`.element()`](#element), this method will wait and retry until a matching element appears in the DOM, using increasing intervals (0, 20, 50, 100, 100, 500ms).
+
+If _no element_ is found before the timeout, an error is thrown. By default, the timeout matches the test timeout.
+
+If _multiple elements_ match the selector and `strict` is `true` (the default), an error is thrown immediately without retrying. Set `strict` to `false` to return the first matching element instead.
+
+It accepts options:
+
+- `timeout: number` - How long to wait in milliseconds until at least one element is found. By default, this shares timeout with the test.
+- `strict: boolean` - When `true` (default), throws an error if multiple elements match the locator. When `false`, returns the first matching element.
+
+Consider the following DOM structure:
+
+```html
+<div>Hello <span>World</span></div>
+<div>Hello Germany</div>
+<div>Hello</div>
+```
+
+These locators will resolve successfully:
+
+```ts
+await page.getByText('Hello World').findElement() // ✅ HTMLDivElement
+await page.getByText('World').findElement() // ✅ HTMLSpanElement
+await page.getByText('Hello Germany').findElement() // ✅ HTMLDivElement
+```
+
+These locators will throw an error:
+
+```ts
+// multiple elements match, strict mode rejects
+await page.getByText('Hello').findElement() // ❌
+await page.getByText(/^Hello/).findElement() // ❌
+
+// no matching element before timeout
+await page.getByText('Hello USA').findElement() // ❌
+```
+
+Using `strict: false` to allow multiple matches:
+
+```ts
+// returns the first matching element instead of throwing
+await page.getByText('Hello').findElement({ strict: false }) // ✅ HTMLDivElement
+```
+
 ### all
 
 ```ts

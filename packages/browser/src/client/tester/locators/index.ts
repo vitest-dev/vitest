@@ -4,6 +4,7 @@ import type {
   LocatorOptions,
   LocatorScreenshotOptions,
   MarkOptions,
+  SelectorOptions,
   UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
@@ -25,10 +26,11 @@ import {
   Ivya,
 } from 'ivya'
 import { page, server, utils } from 'vitest/browser'
-import { __INTERNAL } from 'vitest/internal/browser'
+import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
-import { escapeForTextSelector, isLocator, resolveUserEventWheelOptions } from '../tester-utils'
+import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 
+export { ensureAwaited } from '../../utils'
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
 export {
   getByAltTextSelector,
@@ -41,6 +43,14 @@ export {
 } from 'ivya'
 
 __INTERNAL._asLocator = asLocator
+
+const now = Date.now
+const waitForIntervals = [0, 20, 50, 100, 100, 500]
+
+function sleep(ms: number): Promise<void> {
+  const { setTimeout } = getSafeTimers()
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
@@ -66,6 +76,7 @@ export abstract class Locator {
   private _parsedSelector: ParsedSelector | undefined
   protected _container?: Element | undefined
   protected _pwSelector?: string | undefined
+  protected _errorSource?: Error
 
   constructor() {
     Object.defineProperty(this, kLocator, {
@@ -89,8 +100,12 @@ export abstract class Locator {
   }
 
   public wheel(options: UserEventWheelOptions): Promise<void> {
-    return ensureAwaited<void>(async () => {
-      await this.triggerCommand<void>('__vitest_wheel', this.selector, resolveUserEventWheelOptions(options))
+    return ensureAwaited<void>(async (error) => {
+      await getBrowserState().commands.triggerCommand<void>(
+        '__vitest_wheel',
+        [this.selector, resolveUserEventWheelOptions(options)],
+        error,
+      )
 
       const browser = getBrowserState().config.browser.name
 
@@ -122,25 +137,31 @@ export abstract class Locator {
   }
 
   public async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
-    const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
-      if (typeof file === 'string') {
-        return file
-      }
-      const bas64String = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
-        reader.readAsDataURL(file)
-      })
+    return ensureAwaited(async (error) => {
+      const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
+        if (typeof file === 'string') {
+          return file
+        }
+        const bas64String = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
+          reader.readAsDataURL(file)
+        })
 
-      return {
-        name: file.name,
-        mimeType: file.type,
-        // strip prefix `data:[<media-type>][;base64],`
-        base64: bas64String.slice(bas64String.indexOf(',') + 1),
-      }
+        return {
+          name: file.name,
+          mimeType: file.type,
+          // strip prefix `data:[<media-type>][;base64],`
+          base64: bas64String.slice(bas64String.indexOf(',') + 1),
+        }
+      })
+      return getBrowserState().commands.triggerCommand<void>(
+        '__vitest_upload',
+        [this.selector, await Promise.all(filesPromise), options],
+        error,
+      )
     })
-    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
@@ -310,12 +331,82 @@ export abstract class Locator {
     return this.selector
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
-    const commands = getBrowserState().commands
-    return ensureAwaited(error => commands.triggerCommand<T>(
-      command,
-      args,
-      error,
-    ))
+  public async findElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {
+    const options = processTimeoutOptions(options_)
+    const timeout = options?.timeout
+    const strict = options?.strict ?? true
+    const startTime = now()
+    let intervalIndex = 0
+    while (true) {
+      const elements = this.elements()
+      if (elements.length === 1) {
+        return elements[0]
+      }
+      if (elements.length > 1) {
+        if (strict) {
+          throw createStrictModeViolationError(this._pwSelector || this.selector, elements)
+        }
+        return elements[0]
+      }
+      const elapsed = now() - startTime
+      const isLastCall = timeout != null && elapsed >= timeout
+      if (isLastCall) {
+        throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
+      }
+      const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
+      const nextInterval = timeout != null
+        ? Math.min(interval, timeout - elapsed)
+        : interval
+      await sleep(nextInterval)
+    }
   }
+
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+    if (this._errorSource) {
+      return triggerCommandWithTrace<T>({
+        name: command,
+        arguments: args,
+        errorSource: this._errorSource,
+      })
+    }
+    return ensureAwaited(error => triggerCommandWithTrace<T>({
+      name: command,
+      arguments: args,
+      errorSource: error,
+    }))
+  }
+}
+
+export function triggerCommandWithTrace<T>(
+  options: {
+    name: string
+    arguments: unknown[]
+    errorSource?: Error | undefined
+  },
+): Promise<T> {
+  return getBrowserState().commands.triggerCommand<T>(
+    options.name,
+    options.arguments,
+    options.errorSource,
+  )
+}
+
+function createStrictModeViolationError(
+  selector: string,
+  matches: Element[],
+) {
+  const infos = matches.slice(0, 10).map(m => ({
+    preview: selectorEngine.previewNode(m),
+    selector: selectorEngine.generateSelectorSimple(m),
+  }))
+  const lines = infos.map(
+    (info, i) =>
+      `\n    ${i + 1}) ${info.preview} aka ${asLocator('javascript', info.selector)}`,
+  )
+  if (infos.length < matches.length) {
+    lines.push('\n    ...')
+  }
+  return new Error(
+    `strict mode violation: ${asLocator('javascript', selector)} resolved to ${matches.length} elements:${lines.join('')}\n`,
+  )
 }

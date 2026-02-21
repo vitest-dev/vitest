@@ -535,7 +535,7 @@ describe('Standard Schema', () => {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
-          "- Expected: 
+          "- Expected:
           SchemaMatching {
             "issues": [
               {
@@ -544,7 +544,7 @@ describe('Standard Schema', () => {
             ],
           }
 
-          + Received: 
+          + Received:
           123"
         `)
       }
@@ -673,10 +673,10 @@ describe('Standard Schema', () => {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
-          "- Expected: 
+          "- Expected:
           SchemaMatching
 
-          + Received: 
+          + Received:
           "hello""
         `)
       }

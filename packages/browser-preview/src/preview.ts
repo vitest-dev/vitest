@@ -1,3 +1,4 @@
+import type { SelectorOptions } from 'vitest/browser'
 import type { BrowserProvider, BrowserProviderOption, TestProject } from 'vitest/node'
 import { nextTick } from 'node:process'
 import { defineBrowserProvider } from '@vitest/browser'
@@ -59,4 +60,17 @@ export class PreviewBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {}
+}
+
+declare module 'vitest/browser' {
+  export interface UserEventClickOptions extends SelectorOptions {}
+  export interface UserEventHoverOptions extends SelectorOptions {}
+  export interface UserEventFillOptions extends SelectorOptions {}
+  export interface UserEventSelectOptions extends SelectorOptions {}
+  export interface UserEventClearOptions extends SelectorOptions {}
+  export interface UserEventDoubleClickOptions extends SelectorOptions {}
+  export interface UserEventTripleClickOptions extends SelectorOptions {}
+  export interface UserEventUploadOptions extends SelectorOptions {}
+  export interface UserEventWheelBaseOptions extends SelectorOptions {}
+  export interface LocatorScreenshotOptions extends SelectorOptions {}
 }

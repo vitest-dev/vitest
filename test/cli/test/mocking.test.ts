@@ -43,26 +43,14 @@ test('spy is not called here', () => {
 })
 
 test('invalid packages', async () => {
-  const { results, errorTree } = await runVitest({
+  const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
   })
-  const testModuleErrors = Object.fromEntries(
-    results.map(testModule => [
-      testModule.relativeModuleId,
-      testModule.errors().map(e => e.message),
-    ]),
-  )
 
   // requires Vite 8 for relaxed import analysis validataion
   // https://github.com/vitejs/vite/pull/21601
   if (rolldownVersion) {
-    expect(testModuleErrors).toMatchInlineSnapshot(`
-      {
-        "mock-bad-dep.test.ts": [],
-        "mock-wrapper-and-bad-dep.test.ts": [],
-        "mock-wrapper.test.ts": [],
-      }
-    `)
+    expect(stderr).toMatchInlineSnapshot(`""`)
     expect(errorTree()).toMatchInlineSnapshot(`
       {
         "mock-bad-dep.test.ts": {
@@ -78,32 +66,31 @@ test('invalid packages', async () => {
     `)
   }
   else {
-    expect(testModuleErrors).toMatchInlineSnapshot(`
+    expect(errorTree()).toMatchInlineSnapshot(`
       {
-        "mock-bad-dep.test.ts": [
-          "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
-        ],
-        "mock-wrapper-and-bad-dep.test.ts": [
-          "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
-        ],
-        "mock-wrapper.test.ts": [
-          "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
-        ],
+        "mock-bad-dep.test.ts": {
+          "__module_errors__": [
+            "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
+          ],
+        },
+        "mock-wrapper-and-bad-dep.test.ts": {
+          "__module_errors__": [
+            "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
+          ],
+        },
+        "mock-wrapper.test.ts": {
+          "__module_errors__": [
+            "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
+          ],
+        },
       }
     `)
-    expect(errorTree()).toMatchInlineSnapshot(`
-        {
-          "mock-bad-dep.test.ts": {},
-          "mock-wrapper-and-bad-dep.test.ts": {},
-          "mock-wrapper.test.ts": {},
-        }
-      `)
   }
 })
 
 test('mocking modules with syntax error', async () => {
   // TODO: manual mocked module still gets transformed so this is not supported yet.
-  const { errorTree, results } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     './syntax-error.js': `syntax error`,
     './basic.test.js': /* ts */ `
 import * as dep from './syntax-error.js'
@@ -118,38 +105,31 @@ test('can mock invalid module', () => {
     `,
   })
 
-  const testModuleErrors = Object.fromEntries(
-    results.map(testModule => [
-      testModule.relativeModuleId,
-      testModule.errors().map(e => e.message),
-    ]),
-  )
   if (rolldownVersion) {
-    expect(testModuleErrors).toMatchInlineSnapshot(`
+    expect(errorTree()).toMatchInlineSnapshot(`
       {
-        "basic.test.js": [
-          "Parse failure: Parse failed with 1 error:
+        "basic.test.js": {
+          "__module_errors__": [
+            "Parse failure: Parse failed with 1 error:
       Expected a semicolon or an implicit semicolon after a statement, but found none
       1: syntax error
                ^
       At file: /syntax-error.js:1:6",
-        ],
+          ],
+        },
       }
     `)
   }
   else {
-    expect(testModuleErrors).toMatchInlineSnapshot(`
+    expect(errorTree()).toMatchInlineSnapshot(`
       {
-        "basic.test.js": [
-          "Parse failure: Expected ';', '}' or <eof>
+        "basic.test.js": {
+          "__module_errors__": [
+            "Parse failure: Expected ';', '}' or <eof>
       At file: /syntax-error.js:1:7",
-        ],
+          ],
+        },
       }
     `)
   }
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.js": {},
-    }
-  `)
 })
