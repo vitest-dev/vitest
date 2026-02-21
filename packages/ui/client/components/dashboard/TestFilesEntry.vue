@@ -2,6 +2,7 @@
 import { unhandledErrors } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import ErrorEntry from './ErrorEntry.vue'
+import DashboardEntry from "~/components/dashboard/DashboardEntry.vue";
 </script>
 
 <template>
@@ -27,6 +28,16 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>Pass</div>
       <div class="number">
         {{ explorerTree.summary.filesSuccess }}
+      </div>
+    </template>
+
+    <template v-if="explorerTree.summary.filesSkipped">
+      <div i-carbon:redo rotate-90 />
+      <div>
+        Skip
+      </div>
+      <div class="number" text-purple-700 dark:text-purple-400>
+        {{ explorerTree.summary.filesSkipped }}
       </div>
     </template>
 
