@@ -50,7 +50,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsExpectedFail"
-      text-cyan5
+      text-cyan-700 dark:text-cyan-500
       data-testid="expected-fail-entry"
     >
       <template #header>
@@ -62,7 +62,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsSkipped"
-      op50
+      text-purple-700 dark:text-purple-400
       data-testid="skipped-entry"
       cursor-pointer
       hover="op80"
