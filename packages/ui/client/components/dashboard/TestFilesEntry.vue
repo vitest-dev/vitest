@@ -2,7 +2,6 @@
 import { unhandledErrors } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import ErrorEntry from './ErrorEntry.vue'
-import DashboardEntry from "~/components/dashboard/DashboardEntry.vue";
 </script>
 
 <template>
