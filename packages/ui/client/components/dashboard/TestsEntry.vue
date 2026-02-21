@@ -76,21 +76,6 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       </template>
     </DashboardEntry>
     <DashboardEntry
-      v-if="explorerTree.summary.testsSlow"
-      text-yellow-700 dark:text-yellow-500
-      data-testid="slow-entry"
-      cursor-pointer
-      hover="op80"
-      @click="toggleFilter('slow')"
-    >
-      <template #header>
-        Slow
-      </template>
-      <template #body>
-        {{ explorerTree.summary.testsSlow }}
-      </template>
-    </DashboardEntry>
-    <DashboardEntry
       v-if="explorerTree.summary.testsTodo"
       op50
       data-testid="todo-entry"
@@ -114,6 +99,21 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       </template>
       <template #body>
         {{ explorerTree.summary.totalTests }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry
+      v-if="explorerTree.summary.testsSlow"
+      text-yellow-700 dark:text-yellow-500
+      data-testid="slow-entry"
+      cursor-pointer
+      hover="op80"
+      @click="toggleFilter('slow')"
+    >
+      <template #header>
+        Slow
+      </template>
+      <template #body>
+        {{ explorerTree.summary.testsSlow }}
       </template>
     </DashboardEntry>
   </div>
