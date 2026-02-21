@@ -3,11 +3,12 @@ import { explorerTree } from '~/composables/explorer'
 import { filter } from '~/composables/explorer/state'
 import DashboardEntry from './DashboardEntry.vue'
 
-function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
+function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total') {
   // Reset all filters first
   filter.success = false
   filter.failed = false
   filter.skipped = false
+  filter.slow = false
 
   if (type === 'total') {
     return
@@ -72,6 +73,21 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
       </template>
       <template #body>
         {{ explorerTree.summary.testsSkipped }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry
+      v-if="explorerTree.summary.testsSlow"
+      text-yellow5
+      data-testid="slow-entry"
+      cursor-pointer
+      hover="op80"
+      @click="toggleFilter('slow')"
+    >
+      <template #header>
+        Slow
+      </template>
+      <template #body>
+        {{ explorerTree.summary.testsSlow }}
       </template>
     </DashboardEntry>
     <DashboardEntry
