@@ -1,6 +1,5 @@
 import type { Task } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
 import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
@@ -11,8 +10,8 @@ import {
   isTestNode,
 } from '~/composables/explorer/utils'
 
-export function testMatcher(task: Task, search: SearchMatcher, filter: Filter, filterSlow = true) {
-  return task ? matchTask(task, search, filter, filterSlow) : false
+export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
+  return task ? matchTask(task, search, filter) : false
 }
 /**
  * Filter child nodes using search, filter and only tests.
@@ -220,11 +219,13 @@ function* filterParents(
   }
 }
 
-function matchState(task: Task, filter: Filter, filterSlow = true) {
-  if (filterSlow && filter.slow) {
-    if (isTestCase(task)) {
+function matchState(task: Task, filter: Filter) {
+  if (filter.slow) {
+    if (task.type === 'test') {
       const threshold = config.value.slowTestThreshold
-      return typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold
+      if (typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold) {
+        return true
+      }
     }
   }
 
@@ -250,11 +251,10 @@ function matchTask(
   task: Task,
   search: SearchMatcher,
   filter: Filter,
-  filterSlow = true,
 ) {
   // search and filter will apply together
   if (search(task)) {
-    const hasStatusFilter = filter.success || filter.failed || filter.skipped || (filterSlow && filter.slow)
+    const hasStatusFilter = filter.success || filter.failed || filter.skipped || filter.slow
     if (hasStatusFilter) {
       if (matchState(task, filter)) {
         return true
