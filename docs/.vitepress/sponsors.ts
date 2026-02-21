@@ -57,6 +57,11 @@ export const sponsors: SponsorTier[] = [
         url: 'https://www.liminity.se/',
         img: '/liminity.svg',
       },
+      {
+        name: 'Aerius Ventilation',
+        url: 'https://aerius.se/',
+        img: '/aerius.png',
+      },
     ],
   },
 ]
