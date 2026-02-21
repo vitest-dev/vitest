@@ -820,7 +820,9 @@ Note that you cannot introduce new fixtures inside `test.override`. Extend the t
 
 ### Merging Test Contexts <Version>4.1.0</Version> {#merging-test-contexts}
 
-Vitest allows you to merge test contexts from multiple sources using the `mergeTests` utility. This is useful when you have separate test extensions (e.g., one for database, one for network) and want to combine them into a single test API.
+Vitest allows you to merge test contexts from multiple sources using the `mergeTests` utility. This is useful when you have separate test extensions (e.g., one for database, one for network, and one for UI) and want to combine them into a single test API.
+
+`mergeTests` is variadic and accepts any number of test instances. Calling `mergeTests(testA, testB, testC)` is equivalent to calling `testA.extend(fixturesFromB).extend(fixturesFromC)`.
 
 ```ts
 import { test as base, mergeTests } from 'vitest'
@@ -849,7 +851,7 @@ test('uses both db and server', ({ db, server }) => {
 })
 ```
 
-`mergeTests(testA, testB)` creates a new `TestAPI` that includes fixtures from both `testA` and `testB`. If both tests define the same fixture, the fixture from `testB` overrides the one from `testA`.
+If multiple tests define the same fixture name, the one from the later test (further to the right in the arguments) overrides the earlier one.
 
 ### Type-Safe Hooks
 

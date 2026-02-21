@@ -70,10 +70,6 @@ export class TestFixtures {
     return new TestFixtures(registrations)
   }
 
-  getFixtures(): TestFixtures {
-    return this
-  }
-
   get(suite: Suite): FixtureRegistrations {
     let currentSuite: Suite | undefined = suite
     while (currentSuite) {
