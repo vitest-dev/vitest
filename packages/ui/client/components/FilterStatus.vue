@@ -42,6 +42,8 @@ function toggle() {
 <style>
 .checkbox:focus-within {
   outline: none;
+  border-color: initial;
+  /* don't add outline-none here => uno will add 2px to the outline */
   @apply focus-base border-b-1 !mb-none;
 }
 </style>
