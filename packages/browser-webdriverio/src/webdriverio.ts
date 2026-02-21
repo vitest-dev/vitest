@@ -221,9 +221,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const host = inspector.host || '127.0.0.1'
 
       args.push(`--remote-debugging-port=${port}`)
-      args.push(`--remote-debugging-address=${host}`)
 
-      this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+        this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chrome only allows remote debugging on localhost.`)
+      }
+      this.project.vitest.logger.log(`Debugger listening on ws://localhost:${port}`)
 
       capabilities[key] ??= {}
       capabilities[key]!.args = args
