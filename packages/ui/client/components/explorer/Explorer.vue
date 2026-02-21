@@ -28,6 +28,14 @@ const emit = defineEmits<{
 }>()
 
 const includeTaskLocation = computed(() => config.value.includeTaskLocation)
+const slowTime = computed(() => {
+  const threshold = config.value.slowTestThreshold
+  if (typeof threshold === 'number') {
+    return ` (>${threshold}ms)`
+  }
+
+  return ''
+})
 
 const searchBox = ref<HTMLInputElement | undefined>()
 const selectProjectRef = ref<HTMLSelectElement | undefined>()
@@ -250,25 +258,25 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <FilterStatus v-model="filter.success" label="Pass" />
         <FilterStatus v-model="filter.skipped" label="Skip" />
         <FilterStatus v-model="filter.onlyTests" label="Only Tests" />
-        <FilterStatus v-model="filter.slow" label="Slow" />
+        <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
       <ResultsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
-            <span text-red5>
+            <span text-red-700 dark:text-red-500>
               FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
-            <span text-yellow5>
+            <span text-yellow-700 dark:text-yellow-500>
               RUNNING ({{ testsTotal.running }})
             </span>
-            <span text-green5>
+            <span text-green-700 dark:text-green-500>
               PASS ({{ testsTotal.success }})
             </span>
             <span>/</span>
-            <span class="text-purple5:50">
+            <span class="text-purple-700 dark:text-purple-400">
               SKIP ({{ filter.onlyTests ? testsTotal.skipped : '--' }})
             </span>
           </div>

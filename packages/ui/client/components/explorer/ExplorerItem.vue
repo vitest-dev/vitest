@@ -214,18 +214,18 @@ const tagsBgGradient = computed(() => {
       <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
-    <div flex items-end gap-2 overflow-hidden>
+    <div flex items-baseline gap-2 overflow-hidden>
       <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span text-sm truncate font-light>
         <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-2 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
           {{ projectName }}
         </span>
-        <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />
+        <span :class="state === 'fail' ? 'text-red-700 dark:text-red-500' : undefined" v-html="highlighted" />
       </span>
       <span
         v-if="typeof duration === 'number'"
         text="xs"
-        :class="slow ? 'text-yellow5 op80' : 'op20'"
+        :class="slow ? 'text-yellow-700 dark:text-yellow-500' : 'op20'"
         style="white-space: nowrap"
       >
         {{ duration > 0 ? duration : '< 1' }}ms
@@ -283,7 +283,7 @@ const tagsBgGradient = computed(() => {
         data-testid="btn-run-test"
         :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
-        text-green5
+        text-green-700 dark:text-green-500
         :disabled="config.api?.allowExec === false"
         @click.prevent.stop="onRun(task)"
       />

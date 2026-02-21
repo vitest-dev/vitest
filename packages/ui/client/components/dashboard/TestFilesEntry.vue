@@ -35,7 +35,7 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>
         Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
@@ -45,7 +45,7 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>
         Snapshot Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
@@ -55,7 +55,7 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>
         Errors
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ unhandledErrors.length }}
       </div>
     </template>

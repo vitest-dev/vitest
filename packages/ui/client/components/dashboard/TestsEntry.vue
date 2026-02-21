@@ -21,7 +21,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
 <template>
   <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
     <DashboardEntry
-      text-green5
+      text-green-700 dark:text-green-500
       data-testid="pass-entry"
       cursor-pointer
       hover="op80"
@@ -35,7 +35,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
       </template>
     </DashboardEntry>
     <DashboardEntry
-      :class="{ 'text-red5': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
+      :class="{ 'text-red-700 dark:text-red-500': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
       data-testid="fail-entry"
       cursor-pointer
       hover="op80"
@@ -77,7 +77,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsSlow"
-      text-yellow5
+      text-yellow-700 dark:text-yellow-500
       data-testid="slow-entry"
       cursor-pointer
       hover="op80"
