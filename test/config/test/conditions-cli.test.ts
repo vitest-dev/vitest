@@ -102,3 +102,64 @@ test('conditions (inline indirect)', async () => {
 
   expect(stderr).toBe('')
 })
+
+test('project resolve.conditions', async () => {
+  const { stderr, errorProjectTree } = await runVitest({
+    root: 'fixtures/conditions-projects',
+  })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  |project-a| basic.test.js > conditions
+    AssertionError: expected { inline: false, …(6) } to deeply equal { inline: false, …(6) }
+
+    - Expected
+    + Received
+
+    @@ -1,13 +1,13 @@
+      {
+    -   "conditionCustom": true,
+    +   "conditionCustom": false,
+        "conditionDevelopment": true,
+        "conditionModule": false,
+        "conditionNode": true,
+        "conditionProduction": false,
+        "indirect": {
+    -     "conditionCustom": true,
+    +     "conditionCustom": false,
+          "conditionDevelopment": true,
+          "conditionModule": false,
+          "conditionNode": true,
+          "conditionProductioin": false,
+        },
+
+     ❯ basic.test.js:22:6
+         20|     conditionProduction,
+         21|     indirect,
+         22|   }).toEqual({
+           |      ^
+         23|     inline: false,
+         24|     conditionCustom: true,
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorProjectTree()).toMatchInlineSnapshot(`
+    {
+      "project-a": {
+        "basic.test.js": {
+          "conditions": [
+            "expected { inline: false, …(6) } to deeply equal { inline: false, …(6) }",
+          ],
+        },
+      },
+      "project-b": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+    }
+  `)
+})

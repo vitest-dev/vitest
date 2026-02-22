@@ -243,6 +243,9 @@ export async function runVitest(
     errorTree() {
       return buildErrorTree(ctx?.state.getTestModules() || [])
     },
+    errorProjectTree() {
+      return buildErrorProjectTree(ctx?.state.getTestModules() || [])
+    },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
     },
@@ -639,6 +642,20 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
     projectTree[projectName] = {
       ...projectTree[projectName],
       ...buildTestTree([testModule], onTestCase),
+    }
+  }
+
+  return projectTree
+}
+
+export function buildErrorProjectTree(testModules: TestModule[]) {
+  const projectTree: Record<string, Record<string, any>> = {}
+
+  for (const testModule of testModules) {
+    const projectName = testModule.project.name
+    projectTree[projectName] = {
+      ...projectTree[projectName],
+      ...buildErrorTree([testModule]),
     }
   }
 
