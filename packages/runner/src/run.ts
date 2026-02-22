@@ -658,12 +658,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           })
 
           if (test.result!.state !== 'fail') {
-            if (!test.repeats) {
-              test.result!.state = 'pass'
-            }
-            else if (test.repeats && retry === retryCount) {
-              test.result!.state = 'pass'
-            }
+            test.result!.state = 'pass'
           }
         }
         catch (e) {
