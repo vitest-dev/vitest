@@ -16,7 +16,7 @@ function toggle() {
 
 <template>
   <label
-    class="font-light text-sm checkbox flex items-center py-1 w-full gap-y-1 mb-1px"
+    class="font-light text-sm checkbox w-fit flex items-center py-1 gap-y-1 mb-1px overflow-hidden"
     :class="disabled ? 'cursor-not-allowed op50' : 'cursor-pointer'"
     v-bind="$attrs"
     @click.prevent="toggle"
@@ -35,7 +35,7 @@ function toggle() {
       :disabled="disabled"
       sr-only
     >
-    <span flex-1 ms-2 select-none whitespace-nowrap>{{ label }}</span>
+    <span flex-1 ms-2 select-none whitespace-nowrap truncate>{{ label }}</span>
   </label>
 </template>
 

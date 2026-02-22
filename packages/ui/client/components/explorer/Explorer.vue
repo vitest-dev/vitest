@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
-import { useResizeObserver } from '@vueuse/core'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 
@@ -64,33 +63,10 @@ const {
   disableClearProjectSort,
   searchMatcher,
 } = useSearch(searchBox, selectProjectRef, sortProjectRef)
-
-const filterClass = ref<string>('grid-cols-2')
-const filterHeaderClass = ref<string>('grid-col-span-2')
-
-const testExplorerRef = ref<HTMLElement | undefined>()
-useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
-  if (contentRect.width < 220) {
-    filterClass.value = 'grid-cols-1'
-    filterHeaderClass.value = 'grid-col-span-1'
-  }
-  else if (contentRect.width < 340) {
-    filterClass.value = 'grid-cols-2'
-    filterHeaderClass.value = 'grid-col-span-2'
-  }
-  else if (contentRect.width < 540) {
-    filterClass.value = 'grid-cols-3'
-    filterHeaderClass.value = 'grid-col-span-3'
-  }
-  else {
-    filterClass.value = 'grid-cols-5'
-    filterHeaderClass.value = 'grid-col-span-5'
-  }
-})
 </script>
 
 <template>
-  <div ref="testExplorerRef" h="full" flex="~ col">
+  <div h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
@@ -238,18 +214,17 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         items-center
         bg-header
         border="b-2 base"
-        grid="~ items-center gap-x-2 rows-[auto_auto]"
-        :class="filterClass"
+        flex="~ wrap gap-x-4 justify-between"
       >
-        <div :class="filterHeaderClass" flex="~ gap-2 items-center">
-          <div aria-hidden="true" class="i-carbon:filter" />
+        <div min-w-full flex="~ gap-2 items-center">
+          <div aria-hidden="true" class="i-carbon:filter" flex-shrink-0 />
           <div flex-grow-1 text-sm>
             Filter
           </div>
           <IconButton
             v-tooltip.bottom="'Clear Filter'"
             :disabled="disableFilter"
-            title="Clear search"
+            title="Clear filter"
             icon="i-carbon:filter-remove"
             @click.passive="clearFilter(false)"
           />
