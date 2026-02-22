@@ -117,7 +117,7 @@ test('project resolve.conditions', async () => {
     - Expected
     + Received
 
-    @@ -1,13 +1,13 @@
+    @@ -1,7 +1,7 @@
       {
     -   "conditionCustom": true,
     +   "conditionCustom": false,
@@ -126,13 +126,6 @@ test('project resolve.conditions', async () => {
         "conditionNode": true,
         "conditionProduction": false,
         "indirect": {
-    -     "conditionCustom": true,
-    +     "conditionCustom": false,
-          "conditionDevelopment": true,
-          "conditionModule": false,
-          "conditionNode": true,
-          "conditionProductioin": false,
-        },
 
      ❯ basic.test.js:22:6
          20|     conditionProduction,
