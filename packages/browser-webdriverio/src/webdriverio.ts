@@ -269,7 +269,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async getCDPSession(_sessionId: string): Promise<CDPSession> {
     return {
-      send: (method: string, params: any) => {
+      send: (method, params) => {
         if (!this.browser) {
           throw new Error(`The environment was torn down.`)
         }

@@ -3,18 +3,13 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
-import type { BrowserCommands } from 'vitest/browser'
+import type { BrowserCommands, CDPSession } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
-export interface CDPSession {
-  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
-  on: (event: string, listener: (...args: unknown[]) => void) => void
-  once: (event: string, listener: (...args: unknown[]) => void) => void
-  off: (event: string, listener: (...args: unknown[]) => void) => void
-}
+export type { CDPSession }
 
 export interface BrowserModuleMocker {
   register: (sessionId: string, module: MockedModule) => Promise<void>

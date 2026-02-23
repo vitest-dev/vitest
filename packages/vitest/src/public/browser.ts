@@ -43,6 +43,11 @@ export interface BrowserCommands {
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
 }
+
+export interface CDPSession {
+  // methods are defined by the provider type augmentation
+}
+
 /**
  * @internal
  */

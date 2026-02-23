@@ -529,18 +529,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
-      async send(method: string, params: any) {
-        const result = await cdp.send(method as 'DOM.querySelector', params)
-        return result as unknown
+      send(method, params) {
+        return cdp.send(method, params)
       },
-      on(event: string, listener: (...args: any[]) => void) {
-        cdp.on(event as 'Accessibility.loadComplete', listener)
+      on(event, listener) {
+        return cdp.on(event, listener)
       },
-      off(event: string, listener: (...args: any[]) => void) {
-        cdp.off(event as 'Accessibility.loadComplete', listener)
+      off(event, listener) {
+        return cdp.off(event, listener)
       },
-      once(event: string, listener: (...args: any[]) => void) {
-        cdp.once(event as 'Accessibility.loadComplete', listener)
+      once(event, listener) {
+        return cdp.once(event, listener)
       },
     }
   }
@@ -638,7 +637,7 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 // Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
-type PWCDPSession = PlaywrightCDPSession
+type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once'>
 
 declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
