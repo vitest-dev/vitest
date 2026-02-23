@@ -10,6 +10,7 @@ import { getFullName, getTasks } from '@vitest/runner/utils'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 import { capturePrintError } from '../printError'
+import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {
   onWritePath?: (path: string) => string
@@ -371,33 +372,33 @@ function mdLink(text: string, url: string | null): string {
 }
 
 function renderStats(stats: SummaryData['stats']): string {
-  let output = '\n'
+  const total = stats.failed + stats.skipped + stats.passed
+
+  let output = '\n### Summary\n\n'
 
   if (stats.failed > 0) {
-    output += `**❌ ${stats.failed} failed**`
-  }
-
-  if (output.length > 1) {
-    output += ' | '
-  }
-
-  output += `**✅ ${stats.passed} passed**`
-
-  if (stats.expectedFail) {
-    output += ` | ${stats.expectedFail} expected fail`
+    output += `❌ **${stats.failed} ${noun(stats.failed, 'failure', 'failures')}** · `
   }
 
   if (stats.skipped > 0) {
-    output += ` | ${stats.skipped} skipped`
+    output += `⚠️ **${stats.skipped} ${noun(stats.skipped, 'skip', 'skips')}** · `
+  }
+
+  output += `✅ **${stats.passed} ${noun(stats.passed, 'pass', 'passes')}** · ${total} total\n`
+
+  const secondaryInfo: string[] = []
+
+  if (stats.expectedFail > 0) {
+    secondaryInfo.push(`${stats.expectedFail} expected ${noun(stats.expectedFail, 'failure', 'failures')}`)
   }
 
   if (stats.todo > 0) {
-    output += ` | ${stats.todo} todo`
+    secondaryInfo.push(`${stats.todo} ${noun(stats.todo, 'todo', 'todos')}`)
   }
 
-  const total = stats.failed + stats.passed + stats.expectedFail + stats.skipped + stats.todo
-
-  output += ` | ${total} total\n`
+  if (secondaryInfo.length > 0) {
+    output += `${secondaryInfo.join(' · ')} · ${stats.expectedFail + stats.todo} total\n`
+  }
 
   return output
 }

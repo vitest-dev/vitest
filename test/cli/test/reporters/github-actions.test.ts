@@ -94,7 +94,10 @@ describe(GithubActionsReporter, () => {
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
 
-        **❌ 1 failed** | **✅ 9 passed** | 1 expected fail | 1 skipped | 1 todo | 13 total
+        ### Summary
+
+        ❌ **1 failure** · ⚠️ **1 skip** · ✅ **9 passes** · 11 total
+        1 expected failure · 1 todo · 2 total
 
         ### Flaky Tests
 
@@ -177,7 +180,10 @@ describe(GithubActionsReporter, () => {
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
 
-        **❌ 1 failed** | **✅ 9 passed** | 1 expected fail | 1 skipped | 1 todo | 13 total
+        ### Summary
+
+        ❌ **1 failure** · ⚠️ **1 skip** · ✅ **9 passes** · 11 total
+        1 expected failure · 1 todo · 2 total
 
         ### Flaky Tests
 
