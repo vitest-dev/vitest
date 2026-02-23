@@ -7,6 +7,13 @@ outline: deep
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
+::: warning Prerequisites
+Vitest 4.0 requires **Vite >= 6.0.0** and **Node.js >= 20.0.0**. Before proceeding
+with any other migration steps, ensure your environment meets these requirements.
+Running Vitest 4.0 on older versions of Vite or Node.js is not supported and may
+result in unexpected errors.
+:::
+
 ### V8 Code Coverage Major Changes
 
 Vitest's V8 code coverage provider is now using more accurate coverage result remapping logic.
