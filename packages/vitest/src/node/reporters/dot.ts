@@ -45,6 +45,7 @@ export class DotReporter extends BaseReporter {
 
   onWatcherRerun(files: string[], trigger?: string): void {
     this.tests.clear()
+    this.finishedTests.clear()
     this.renderer?.start()
     super.onWatcherRerun(files, trigger)
   }
@@ -111,7 +112,7 @@ export class DotReporter extends BaseReporter {
       return
     }
 
-    const finishedTests = Array.from(this.tests).filter(entry => entry[1] !== 'pending')
+    const finishedTests = Array.from(this.tests).filter(([id]) => this.finishedTests.has(id))
 
     if (finishedTests.length < columns) {
       return
@@ -178,14 +179,18 @@ function formatTests(states: TestCaseState[]): string {
       continue
     }
 
-    output += currentIcon.color(currentIcon.char.repeat(count))
+    if (count > 0) {
+      output += currentIcon.color(currentIcon.char.repeat(count))
+    }
 
     // Start tracking new group
     count = 1
     currentIcon = icon
   }
 
-  output += currentIcon.color(currentIcon.char.repeat(count))
+  if (count > 0) {
+    output += currentIcon.color(currentIcon.char.repeat(count))
+  }
 
   return output
 }
