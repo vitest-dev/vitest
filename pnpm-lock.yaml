@@ -959,6 +959,9 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
+      convert-source-map:
+        specifier: ^2.0.0
+        version: 2.0.0
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -966,6 +969,9 @@ importers:
       '@jridgewell/trace-mapping':
         specifier: 'catalog:'
         version: 0.3.31
+      '@types/convert-source-map':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1069,9 +1075,6 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 15.0.0
         version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
-      '@types/convert-source-map':
-        specifier: ^2.0.3
-        version: 2.0.3
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1108,9 +1111,6 @@ importers:
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
-      convert-source-map:
-        specifier: ^2.0.0
-        version: 2.0.0
       empathic:
         specifier: ^2.0.0
         version: 2.0.0
