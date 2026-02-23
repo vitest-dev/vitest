@@ -17,7 +17,7 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export type { CDPSession };
+export { CDPSession };
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
