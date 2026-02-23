@@ -22,7 +22,7 @@ export interface GithubActionsReporterOptions {
    *
    * When enabled, a markdown summary of test results is written to the path specified by `outputPath`.
    */
-  summary?: {
+  jobSummary?: {
     /**
      * Whether to generate the summary.
      *
@@ -65,17 +65,17 @@ export interface GithubActionsReporterOptions {
   }
 }
 
-type SummaryOptions = NonNullable<GithubActionsReporterOptions['summary']>
+type SummaryOptions = NonNullable<GithubActionsReporterOptions['jobSummary']>
 
 interface ResolvedOptions extends Required<GithubActionsReporterOptions> {
   // only `enabled` is required as the other values can be `undefined` as they're env variables
-  summary: Required<Pick<SummaryOptions, 'enabled'>> & Omit<SummaryOptions, 'enabled'>
+  jobSummary: Required<Pick<SummaryOptions, 'enabled'>> & Omit<SummaryOptions, 'enabled'>
 }
 
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
   displayAnnotations: true,
-  summary: {
+  jobSummary: {
     enabled: true,
     outputPath: process.env.GITHUB_STEP_SUMMARY,
     fileLinks: {
@@ -178,13 +178,13 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
 
-    if (this.options.summary.enabled === true && this.options.summary.outputPath) {
-      const summary = renderSummary(collectSummaryData(testModules), this.options.summary.fileLinks)
+    if (this.options.jobSummary.enabled === true && this.options.jobSummary.outputPath) {
+      const summary = renderSummary(collectSummaryData(testModules), this.options.jobSummary.fileLinks)
 
       if (summary !== null) {
         try {
           writeFileSync(
-            this.options.summary.outputPath,
+            this.options.jobSummary.outputPath,
             summary,
             { flag: 'a' },
           )

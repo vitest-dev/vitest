@@ -77,7 +77,7 @@ describe(GithubActionsReporter, () => {
 
       await runVitest({
         reporters: new GithubActionsReporter({
-          summary: {
+          jobSummary: {
             outputPath,
             fileLinks: {
               commitHash: 'aaa',
@@ -124,7 +124,7 @@ describe(GithubActionsReporter, () => {
 
       await runVitest({
         reporters: new GithubActionsReporter({
-          summary: {
+          jobSummary: {
             outputPath,
             ...options,
             fileLinks: {
@@ -159,7 +159,7 @@ describe(GithubActionsReporter, () => {
 
       await runVitest({
         reporters: new GithubActionsReporter({
-          summary: {
+          jobSummary: {
             outputPath,
             fileLinks: {
               commitHash: 'aaa',
