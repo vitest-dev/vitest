@@ -6,12 +6,13 @@ import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
-import { existsSync, promises as fs, readFileSync } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map-node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join, resolve } from 'pathe'
+import { dirname, join } from 'pathe'
 import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -244,17 +245,12 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
           const result = mod?.transformResult
-          // this can happen for bundled dependencies in node_modules/.vite
+          // handle non-inline source map such as pre-bundled deps in node_modules/.vite
           if (result && !result.map) {
-            const sourceMapUrl = retrieveSourceMapURL(result.code)
-            if (!sourceMapUrl) {
-              return null
-            }
-            const filepathDir = dirname(id)
-            const sourceMapPath = resolve(filepathDir, sourceMapUrl)
             try {
-              const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
-              return map
+              const filePath = id.split('?')[0]
+              const extracted = extractSourcemapFromFile(result.code, filePath)
+              return extracted?.map
             }
             catch {
               return null
@@ -408,21 +404,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     return { rpc, offCancel }
   }
-}
-
-function retrieveSourceMapURL(source: string): string | null {
-  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-  // keep executing the search to find the *last* sourceMappingURL to avoid
-  // picking up sourceMappingURLs from comments, strings, etc.
-  let lastMatch, match
-  // eslint-disable-next-line no-cond-assign
-  while ((match = re.exec(source))) {
-    lastMatch = match
-  }
-  if (!lastMatch) {
-    return null
-  }
-  return lastMatch[1]
 }
 
 // Serialization support utils.
