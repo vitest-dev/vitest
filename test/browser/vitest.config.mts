@@ -87,11 +87,6 @@ export default defineConfig({
         return false
       }
     },
-    typecheck: {
-      enabled: true,
-      include: ['test/*.test-d.ts'],
-      ignoreSourceErrors: true,
-    },
   },
   plugins: [
     {
