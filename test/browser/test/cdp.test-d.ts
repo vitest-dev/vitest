@@ -1,14 +1,11 @@
 import type { PlaywrightBrowserProvider } from '@vitest/browser-playwright'
-import type { WebdriverBrowserProvider } from '@vitest/browser-webdriverio'
 import type { cdp } from 'vitest/browser'
 import { expectTypeOf, test } from 'vitest'
 import { } from 'vitest/config'
 
 test('client and server side cdps', () => {
-  type PlaywrightServerSide = Awaited<ReturnType<InstanceType<typeof PlaywrightBrowserProvider>['getCDPSession']>>
-  type WebdriverServerSide = Awaited<ReturnType<InstanceType<typeof WebdriverBrowserProvider>['getCDPSession']>>
-
-  type CDP = ReturnType<typeof cdp> & PlaywrightServerSide & WebdriverServerSide
+  type ServerSideCDP = Awaited<ReturnType<InstanceType<typeof PlaywrightBrowserProvider>['getCDPSession']>>
+  type CDP = ReturnType<typeof cdp> & ServerSideCDP
 
   expectTypeOf<CDP>().toHaveProperty('on')
   expectTypeOf<CDP>().toHaveProperty('off')
