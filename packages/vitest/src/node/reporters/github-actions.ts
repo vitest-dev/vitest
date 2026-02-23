@@ -7,6 +7,7 @@ import type { TestCase, TestModule } from './reported-tasks'
 import { writeFileSync } from 'node:fs'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
+import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 import { capturePrintError } from '../printError'
 
@@ -16,14 +17,81 @@ export interface GithubActionsReporterOptions {
    * @default true
    */
   displayAnnotations?: boolean
+  /**
+   * Configuration for the GitHub Actions Job Summary.
+   *
+   * When enabled, a markdown summary of test results is written to the path specified by `outputPath`.
+   */
+  summary?: {
+    /**
+     * Whether to generate the summary.
+     *
+     * @default true
+     */
+    enabled?: boolean
+    /**
+     * File path to write the summary to.
+     *
+     * @default process.env.GITHUB_STEP_SUMMARY
+     */
+    outputPath?: string | undefined
+    /**
+     * Configuration for generating permalink URLs to source files in the GitHub repository.
+     *
+     * When all three values are available (either from this config or the defaults picked from environment variables), test names in the summary will link to the relevant source lines.
+     */
+    fileLinks?: {
+      /**
+       * The GitHub repository in `owner/repo` format.
+       *
+       * @default process.env.GITHUB_REPOSITORY
+       */
+      repository?: string | undefined
+      /**
+       * The commit SHA to use in permalink URLs.
+       *
+       * @default process.env.GITHUB_SHA
+       */
+      commitHash?: string | undefined
+      /**
+       * The absolute path to the root of the repository on disk.
+       *
+       * This value is used to compute relative file paths for the permalink URLs.
+       *
+       * @default process.env.GITHUB_WORKSPACE
+       */
+      workspacePath?: string | undefined
+    }
+  }
+}
+
+type SummaryOptions = NonNullable<GithubActionsReporterOptions['summary']>
+
+interface ResolvedOptions extends Required<GithubActionsReporterOptions> {
+  // only `enabled` is required as the other values can be `undefined` as they're env variables
+  summary: Required<Pick<SummaryOptions, 'enabled'>> & Omit<SummaryOptions, 'enabled'>
+}
+
+const defaultOptions: ResolvedOptions = {
+  onWritePath: defaultOnWritePath,
+  displayAnnotations: true,
+  summary: {
+    enabled: true,
+    outputPath: process.env.GITHUB_STEP_SUMMARY,
+    fileLinks: {
+      repository: process.env.GITHUB_REPOSITORY,
+      commitHash: process.env.GITHUB_SHA,
+      workspacePath: process.env.GITHUB_WORKSPACE,
+    },
+  },
 }
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
-  options: GithubActionsReporterOptions
+  options: ResolvedOptions
 
   constructor(options: GithubActionsReporterOptions = {}) {
-    this.options = options
+    this.options = deepMerge(Object.create(null), defaultOptions, options)
   }
 
   onInit(ctx: Vitest): void {
@@ -90,8 +158,6 @@ export class GithubActionsReporter implements Reporter {
       }
     }
 
-    const onWritePath = this.options.onWritePath ?? defaultOnWritePath
-
     // format errors via `printError`
     for (const { project, title, error, file } of projectErrors) {
       const result = capturePrintError(error, this.ctx, { project, task: file })
@@ -102,7 +168,7 @@ export class GithubActionsReporter implements Reporter {
       const formatted = formatMessage({
         command: 'error',
         properties: {
-          file: onWritePath(stack.file),
+          file: this.options.onWritePath(stack.file),
           title,
           line: String(stack.line),
           column: String(stack.column),
@@ -112,19 +178,19 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
 
-    if (process.env.GITHUB_STEP_SUMMARY) {
-      const summary = renderSummary(collectSummaryData(testModules))
+    if (this.options.summary.enabled === true && this.options.summary.outputPath) {
+      const summary = renderSummary(collectSummaryData(testModules), this.options.summary.fileLinks)
 
       if (summary !== null) {
         try {
           writeFileSync(
-            process.env.GITHUB_STEP_SUMMARY,
+            this.options.summary.outputPath,
             summary,
             { flag: 'a' },
           )
         }
         catch (error) {
-          this.ctx.logger.warn('Could not write summary to $GITHUB_STEP_SUMMARY', error)
+          this.ctx.logger.warn('Could not write summary to `options.summary.outputPath`', error)
         }
       }
     }
@@ -245,16 +311,16 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData
   return summaryData
 }
 
-function createGitHubFileLinkCreator(): (path: string, line?: number) => string | null {
-  const repository = process.env.GITHUB_REPOSITORY
-  const commitHash = process.env.GITHUB_SHA
-  const rootPath = process.env.GITHUB_WORKSPACE
+function createGitHubFileLinkCreator(fileLinks: SummaryOptions['fileLinks']): (path: string, line?: number) => string | null {
+  const repository = fileLinks?.repository
+  const commitHash = fileLinks?.commitHash
+  const workspacePath = fileLinks?.workspacePath
 
-  if (repository !== undefined && commitHash !== undefined && rootPath !== undefined) {
+  if (repository !== undefined && commitHash !== undefined && workspacePath !== undefined) {
     return (path, line) => {
       const lineFragment = line !== undefined ? `#L${line}` : ''
 
-      return `https://github.com/${repository}/blob/${commitHash}/${relative(rootPath, path)}${lineFragment}`
+      return `https://github.com/${repository}/blob/${commitHash}/${relative(workspacePath, path)}${lineFragment}`
     }
   }
 
@@ -267,8 +333,8 @@ function mdLink(text: string, url: string | null): string {
 
 const SUMMARY_HEADER = '## Vitest Test Report\n'
 
-function renderSummary(summaryData: SummaryData): string | null {
-  const fileLinkCreator = createGitHubFileLinkCreator()
+function renderSummary(summaryData: SummaryData, fileLinks: SummaryOptions['fileLinks']): string | null {
+  const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
   let summary = SUMMARY_HEADER
 
