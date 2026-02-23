@@ -75,7 +75,7 @@ describe(GithubActionsReporter, () => {
 
       const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
 
-      const { stdout, stderr } = await runVitest({
+      await runVitest({
         reporters: new GithubActionsReporter({
           summary: {
             outputPath,
@@ -89,13 +89,12 @@ describe(GithubActionsReporter, () => {
         root: './fixtures/reporters/github-actions',
       })
 
-      expect(stderr).toBe('')
-      expect(stdout).toBe('')
-
       const summary = await readFile(outputPath, 'utf8')
 
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
+
+        **❌ 1 failed** | **✅ 9 passed** | 1 expected fail | 1 skipped | 1 todo | 13 total
 
         ### Flaky Tests
 
@@ -123,7 +122,7 @@ describe(GithubActionsReporter, () => {
 
       const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
 
-      const { stdout, stderr } = await runVitest({
+      await runVitest({
         reporters: new GithubActionsReporter({
           summary: {
             outputPath,
@@ -137,9 +136,6 @@ describe(GithubActionsReporter, () => {
         }),
         root: './fixtures/reporters/github-actions',
       })
-
-      expect(stderr).toBe('')
-      expect(stdout).toBe('')
 
       const summary = await access(outputPath).then(() => true).catch(() => false)
 
@@ -161,7 +157,7 @@ describe(GithubActionsReporter, () => {
 
       const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
 
-      const { stdout, stderr } = await runVitest({
+      await runVitest({
         reporters: new GithubActionsReporter({
           summary: {
             outputPath,
@@ -176,13 +172,12 @@ describe(GithubActionsReporter, () => {
         root: './fixtures/reporters/github-actions',
       })
 
-      expect(stderr).toBe('')
-      expect(stdout).toBe('')
-
       const summary = await readFile(outputPath, 'utf8')
 
       expect(summary).toMatchInlineSnapshot(`
         "## Vitest Test Report
+
+        **❌ 1 failed** | **✅ 9 passed** | 1 expected fail | 1 skipped | 1 todo | 13 total
 
         ### Flaky Tests
 

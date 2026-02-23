@@ -252,6 +252,7 @@ function escapeProperty(s: string): string {
 }
 
 interface SummaryData {
+  stats: Record<'failed' | 'passed' | 'expectedFail' | 'skipped' | 'todo', number>
   flakyTests: Array<{
     path: {
       relative: string
@@ -270,7 +271,16 @@ interface SummaryData {
 }
 
 function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData {
-  const summaryData: SummaryData = { flakyTests: [] }
+  const summaryData: SummaryData = {
+    stats: {
+      failed: 0,
+      passed: 0,
+      expectedFail: 0,
+      skipped: 0,
+      todo: 0,
+    },
+    flakyTests: [],
+  }
 
   for (const module of testModules) {
     const flakyTests: SummaryData['flakyTests'][number] = {
@@ -279,6 +289,35 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData
     }
 
     for (const test of module.children.allTests()) {
+      switch (test.task.mode) {
+        case 'skip': {
+          summaryData.stats.skipped += 1
+          break
+        }
+        case 'todo': {
+          summaryData.stats.todo += 1
+          break
+        }
+        default: {
+          switch (test.task.result?.state) {
+            case 'fail': {
+              summaryData.stats.failed += 1
+              break
+            }
+            case 'pass': {
+              if (test.task.fails) {
+                summaryData.stats.expectedFail += 1
+              }
+              else {
+                summaryData.stats.passed += 1
+              }
+
+              break
+            }
+          }
+        }
+      }
+
       const diagnostic = test.diagnostic()
 
       if (diagnostic?.flaky) {
@@ -331,12 +370,44 @@ function mdLink(text: string, url: string | null): string {
   return url === null ? text : `[${text}](${url})`
 }
 
+function renderStats(stats: SummaryData['stats']): string {
+  let output = '\n'
+
+  if (stats.failed > 0) {
+    output += `**❌ ${stats.failed} failed**`
+  }
+
+  if (output.length > 1) {
+    output += ' | '
+  }
+
+  output += `**✅ ${stats.passed} passed**`
+
+  if (stats.expectedFail) {
+    output += ` | ${stats.expectedFail} expected fail`
+  }
+
+  if (stats.skipped > 0) {
+    output += ` | ${stats.skipped} skipped`
+  }
+
+  if (stats.todo > 0) {
+    output += ` | ${stats.todo} todo`
+  }
+
+  const total = stats.failed + stats.passed + stats.expectedFail + stats.skipped + stats.todo
+
+  output += ` | ${total} total\n`
+
+  return output
+}
+
 const SUMMARY_HEADER = '## Vitest Test Report\n'
 
 function renderSummary(summaryData: SummaryData, fileLinks: SummaryOptions['fileLinks']): string | null {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
-  let summary = SUMMARY_HEADER
+  let summary = `${SUMMARY_HEADER}${renderStats(summaryData.stats)}`
 
   if (summaryData.flakyTests.length > 0) {
     summary += '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
@@ -352,10 +423,6 @@ function renderSummary(summaryData: SummaryData, fileLinks: SummaryOptions['file
 
       summary += '\n'
     }
-  }
-
-  if (summary === SUMMARY_HEADER) {
-    return null
   }
 
   if (!summary.endsWith('\n')) {

@@ -23,3 +23,17 @@ test('should handle edge cases', { retry: 5 }, ({ expect, task }) => {
 test('should validate input properly', { retry: 5 }, ({ expect, task }) => {
   expect(task.result?.retryCount).toBe(4)
 })
+
+test.todo('should compute percentages')
+
+test.skip('should divide by zero', ({ expect }) => {
+  expect.unreachable()
+})
+
+test.fails('should work with linear equations', ({ expect }) => {
+  expect(true).toBe(false)
+})
+
+test('should compute square root of negative numbers', ({ expect }) => {
+  expect.unreachable()
+})
