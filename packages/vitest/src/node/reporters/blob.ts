@@ -335,7 +335,7 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
 
   Object.entries(moduleGraphData).forEach(([projectName, projectData]) => {
     decoded[projectName] = {}
-    const inlineNodeSet = new Set(projectData.inlined)
+    const inlinedSet = new Set(projectData.inlined)
     const edgeMap = new Map<number, number[]>()
 
     projectData.edges.forEach(([from, to]) => {
@@ -348,53 +348,41 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
       }
     })
 
-    const decodeModuleGraph = (root: number): ModuleGraphData => {
+    const decodeFileModuleGraph = (rootId: number): ModuleGraphData => {
       const graph: ModuleGraphData['graph'] = {}
-      const inlined: string[] = []
-      const externalized: string[] = []
       const visitedInlined = new Set<number>()
       const visitedExternal = new Set<number>()
 
-      const walkInline = (index: number) => {
-        if (visitedInlined.has(index) || !inlineNodeSet.has(index)) {
+      const visitInlinedModule = (idIndex: number) => {
+        if (visitedInlined.has(idIndex) || !inlinedSet.has(idIndex)) {
           return
         }
-        visitedInlined.add(index)
+        visitedInlined.add(idIndex)
 
-        const id = projectData.idTable[index]!
-        inlined.push(id)
-
-        const deps = edgeMap.get(index) || []
-        const graphDeps: string[] = []
-
-        deps.forEach((depIndex) => {
-          const depId = projectData.idTable[depIndex]!
-
-          graphDeps.push(depId)
-          if (inlineNodeSet.has(depIndex)) {
-            walkInline(depIndex)
+        const deps = edgeMap.get(idIndex) || []
+        deps.forEach((dep) => {
+          if (inlinedSet.has(dep)) {
+            visitInlinedModule(dep)
           }
-          else if (!visitedExternal.has(depIndex)) {
-            visitedExternal.add(depIndex)
-            externalized.push(depId)
+          else {
+            visitedExternal.add(dep)
           }
         })
-
-        graph[id] = graphDeps
+        graph[projectData.idTable[idIndex]!] = deps.map(dep => projectData.idTable[dep]!)
       }
 
-      walkInline(root)
+      visitInlinedModule(rootId)
 
       return {
         graph,
-        externalized,
-        inlined,
+        externalized: [...visitedExternal].map(index => projectData.idTable[index]!),
+        inlined: [...visitedInlined].map(index => projectData.idTable[index]!),
       }
     }
 
     projectData.testFiles.forEach((filepathIndex) => {
       const filepath = projectData.idTable[filepathIndex]!
-      decoded[projectName][filepath] = decodeModuleGraph(filepathIndex)
+      decoded[projectName][filepath] = decodeFileModuleGraph(filepathIndex)
     })
   })
 
