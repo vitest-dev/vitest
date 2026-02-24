@@ -260,9 +260,14 @@ interface SerializedModuleGraphByProject {
   [projectName: string]: SerializedProjectModuleGraphData
 }
 
+// The goal is to avoid O(testFiles * graphSize) payload growth.
+// Instead of serializing full ModuleGraphData for each test file, we:
+// 1) store one deduped path table per project (`paths`),
+// 2) store one shared project graph (`graph.nodes` + `graph.edges`), and
+// 3) store test file roots as path indexes (`files`).
+// On merge read, each file-level ModuleGraphData is reconstructed by
+// traversing the shared graph from that file's root index.
 interface SerializedProjectModuleGraphData {
-  // Store the project graph once and keep only per-test roots
-  // to avoid duplicating nodes/edges for every test file.
   paths: string[]
   graph: {
     nodes: number[]
