@@ -1,4 +1,4 @@
-import path from 'node:path'
+import path from 'pathe'
 import { expect, test } from 'vitest'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
