@@ -70,7 +70,6 @@ export class BlobReporter implements Reporter {
       },
     )
 
-    // TODO: optimize ModuleGraphData.graph by index-encoding
     const moduleGraphData: Record<string, Record<string, ModuleGraphData>> = {}
     await Promise.all(
       files.map(async (file) => {
@@ -97,7 +96,7 @@ export class BlobReporter implements Reporter {
       modules,
       coverage,
       executionTime,
-      moduleGraphData,
+      encodeModuleGraphData(moduleGraphData),
     ] satisfies MergeReport
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
@@ -206,7 +205,8 @@ export async function readBlobs(
     if (!blob.moduleGraphData) {
       return
     }
-    Object.entries(blob.moduleGraphData).forEach(([projectName, graph]) => {
+    const decodedModuleGraphData = decodeModuleGraphData(blob.moduleGraphData)
+    Object.entries(decodedModuleGraphData).forEach(([projectName, graph]) => {
       moduleGraphData[projectName] ??= {}
       Object.assign(moduleGraphData[projectName], graph)
     })
@@ -236,8 +236,109 @@ type MergeReport = [
   modules: MergeReportModuleKeys[],
   coverage: unknown,
   executionTime: number,
-  moduleGraphData: Record<string, Record<string, ModuleGraphData>>,
+  moduleGraphData: SerializedModuleGraphByProject,
 ]
+
+type SerializedModuleGraphByProject = Record<string, Record<string, SerializedModuleGraphData>>
+
+interface SerializedModuleGraphData {
+  paths: string[]
+  graph: {
+    nodes: number[]
+    edges: [from: number, to: number][]
+  }
+  inlined: number[]
+  externalized: number[]
+}
+
+function encodeModuleGraphData(moduleGraphData: Record<string, Record<string, ModuleGraphData>>): SerializedModuleGraphByProject {
+  const encoded: SerializedModuleGraphByProject = {}
+
+  Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
+    encoded[projectName] = {}
+    Object.entries(projectGraph).forEach(([filepath, graphData]) => {
+      encoded[projectName][filepath] = encodeModuleGraph(graphData)
+    })
+  })
+
+  return encoded
+}
+
+function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject): Record<string, Record<string, ModuleGraphData>> {
+  const decoded: Record<string, Record<string, ModuleGraphData>> = {}
+
+  Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
+    decoded[projectName] = {}
+    Object.entries(projectGraph).forEach(([filepath, graphData]) => {
+      decoded[projectName][filepath] = decodeModuleGraph(graphData)
+    })
+  })
+
+  return decoded
+}
+
+function encodeModuleGraph(graphData: ModuleGraphData): SerializedModuleGraphData {
+  const pathMap = new Map<string, number>()
+  const paths: string[] = []
+  const graphNodes: number[] = []
+  const edges: [number, number][] = []
+
+  const getPathIndex = (id: string) => {
+    const existing = pathMap.get(id)
+    if (existing != null) {
+      return existing
+    }
+    const next = paths.length
+    pathMap.set(id, next)
+    paths.push(id)
+    return next
+  }
+
+  Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
+    const from = getPathIndex(moduleId)
+    graphNodes.push(from)
+    deps.forEach((depId) => {
+      edges.push([from, getPathIndex(depId)])
+    })
+  })
+
+  return {
+    paths,
+    graph: {
+      nodes: graphNodes,
+      edges,
+    },
+    inlined: graphData.inlined.map(getPathIndex),
+    externalized: graphData.externalized.map(getPathIndex),
+  }
+}
+
+function decodeModuleGraph(graphData: SerializedModuleGraphData): ModuleGraphData {
+  const graph: ModuleGraphData['graph'] = {}
+  const { nodes, edges } = graphData.graph
+
+  nodes.forEach((index) => {
+    const id = graphData.paths[index]
+    if (id != null) {
+      graph[id] = []
+    }
+  })
+
+  edges.forEach(([from, to]) => {
+    const fromId = graphData.paths[from]
+    const toId = graphData.paths[to]
+    if (fromId == null || toId == null || !graph[fromId]) {
+      return
+    }
+    graph[fromId].push(toId)
+  })
+
+  return {
+    graph,
+    externalized: graphData.externalized.map(index => graphData.paths[index]).filter((id): id is string => id != null),
+    inlined: graphData.inlined.map(index => graphData.paths[index]).filter((id): id is string => id != null),
+  }
+}
 
 type SerializedModuleNode = [
   id: string,
