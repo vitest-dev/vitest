@@ -254,7 +254,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], [], undefined, 1500 * index],
+      [version, [file], [], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
