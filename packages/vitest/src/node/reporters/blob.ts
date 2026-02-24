@@ -257,70 +257,78 @@ interface ModuleGraphDataByProject {
 }
 
 interface SerializedModuleGraphByProject {
-  paths: string[]
-  data: {
-    [projectName: string]: {
-      [testFilePathIndex: string]: SerializedModuleGraphData
-    }
-  }
+  [projectName: string]: SerializedProjectModuleGraphData
 }
 
-interface SerializedModuleGraphData {
+interface SerializedProjectModuleGraphData {
+  // Store the project graph once and keep only per-test roots
+  // to avoid duplicating nodes/edges for every test file.
+  paths: string[]
   graph: {
     nodes: number[]
     edges: [from: number, to: number][]
   }
-  inlined: number[]
-  externalized: number[]
+  files: {
+    [testFilePathIndex: string]: number[]
+  }
 }
 
 function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
-  const paths: string[] = []
-  const pathMap = new Map<string, number>()
-  const encoded: SerializedModuleGraphByProject = {
-    paths,
-    data: {},
-  }
-
-  const getPathIndex = (id: string) => {
-    const existing = pathMap.get(id)
-    if (existing != null) {
-      return existing
-    }
-    const next = paths.length
-    pathMap.set(id, next)
-    paths.push(id)
-    return next
-  }
-
-  const encodeModuleGraph = (graphData: ModuleGraphData): SerializedModuleGraphData => {
-    const graphNodes: number[] = []
-    const edges: [number, number][] = []
-
-    Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
-      const from = getPathIndex(moduleId)
-      graphNodes.push(from)
-      deps.forEach((depId) => {
-        edges.push([from, getPathIndex(depId)])
-      })
-    })
-
-    return {
-      graph: {
-        nodes: graphNodes,
-        edges,
-      },
-      inlined: graphData.inlined.map(getPathIndex),
-      externalized: graphData.externalized.map(getPathIndex),
-    }
-  }
+  const encoded: SerializedModuleGraphByProject = {}
 
   Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
-    encoded.data[projectName] = {}
+    const paths: string[] = []
+    const pathMap = new Map<string, number>()
+    const nodeSet = new Set<number>()
+    const edgeSet = new Set<string>()
+
+    const getPathIndex = (id: string) => {
+      const existing = pathMap.get(id)
+      if (existing != null) {
+        return existing
+      }
+      const next = paths.length
+      pathMap.set(id, next)
+      paths.push(id)
+      return next
+    }
+
+    const encodeModuleGraph = (graphData: ModuleGraphData): number[] => {
+      const rootPath = graphData.inlined.find(path => path in graphData.graph)
+        ?? graphData.inlined[0]!
+      return [getPathIndex(rootPath)]
+    }
+
+    const projectData: SerializedProjectModuleGraphData = {
+      paths,
+      graph: {
+        nodes: [],
+        edges: [],
+      },
+      files: {},
+    }
+
     Object.entries(projectGraph).forEach(([filepath, graphData]) => {
       const filepathIndex = getPathIndex(filepath)
-      encoded.data[projectName][filepathIndex] = encodeModuleGraph(graphData)
+
+      Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
+        const from = getPathIndex(moduleId)
+        nodeSet.add(from)
+        deps.forEach((depId) => {
+          const to = getPathIndex(depId)
+          const edgeKey = `${from}:${to}`
+          if (!edgeSet.has(edgeKey)) {
+            edgeSet.add(edgeKey)
+            projectData.graph.edges.push([from, to])
+          }
+        })
+      })
+
+      projectData.files[filepathIndex] = encodeModuleGraph(graphData)
     })
+
+    projectData.graph.nodes = [...nodeSet]
+    encoded[projectName] = projectData
   })
 
   return encoded
@@ -329,37 +337,71 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
 function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject): ModuleGraphDataByProject {
   const decoded: ModuleGraphDataByProject = {}
 
-  const decodeModuleGraph = (graphData: SerializedModuleGraphData): ModuleGraphData => {
-    const graph: ModuleGraphData['graph'] = {}
-    const { nodes, edges } = graphData.graph
-
-    nodes.forEach((index) => {
-      const id = moduleGraphData.paths[index]
-      if (id != null) {
-        graph[id] = []
-      }
-    })
-
-    edges.forEach(([from, to]) => {
-      const fromId = moduleGraphData.paths[from]
-      const toId = moduleGraphData.paths[to]
-      if (fromId == null || toId == null || !graph[fromId]) {
-        return
-      }
-      graph[fromId].push(toId)
-    })
-
-    return {
-      graph,
-      externalized: graphData.externalized.map(index => moduleGraphData.paths[index]).filter((id): id is string => id != null),
-      inlined: graphData.inlined.map(index => moduleGraphData.paths[index]).filter((id): id is string => id != null),
-    }
-  }
-
-  Object.entries(moduleGraphData.data).forEach(([projectName, projectGraph]) => {
+  Object.entries(moduleGraphData).forEach(([projectName, projectData]) => {
     decoded[projectName] = {}
-    Object.entries(projectGraph).forEach(([filepathIndex, graphData]) => {
-      const filepath = moduleGraphData.paths[Number(filepathIndex)]
+    const inlineNodeSet = new Set(projectData.graph.nodes)
+    const edgeMap = new Map<number, number[]>()
+
+    projectData.graph.edges.forEach(([from, to]) => {
+      const deps = edgeMap.get(from)
+      if (deps) {
+        deps.push(to)
+      }
+      else {
+        edgeMap.set(from, [to])
+      }
+    })
+
+    const decodeModuleGraph = (roots: number[]): ModuleGraphData => {
+      const graph: ModuleGraphData['graph'] = {}
+      const inlined: string[] = []
+      const externalized: string[] = []
+      const visitedInlined = new Set<number>()
+      const visitedExternal = new Set<number>()
+
+      const walkInline = (index: number) => {
+        if (visitedInlined.has(index) || !inlineNodeSet.has(index)) {
+          return
+        }
+        visitedInlined.add(index)
+
+        const id = projectData.paths[index]!
+        inlined.push(id)
+
+        const deps = edgeMap.get(index) || []
+        const graphDeps: string[] = []
+
+        deps.forEach((depIndex) => {
+          const depId = projectData.paths[depIndex]!
+
+          graphDeps.push(depId)
+          if (inlineNodeSet.has(depIndex)) {
+            walkInline(depIndex)
+          }
+          else if (!visitedExternal.has(depIndex)) {
+            visitedExternal.add(depIndex)
+            externalized.push(depId)
+          }
+        })
+
+        graph[id] = graphDeps
+      }
+
+      roots.forEach((rootIndex) => {
+        if (inlineNodeSet.has(rootIndex)) {
+          walkInline(rootIndex)
+        }
+      })
+
+      return {
+        graph,
+        externalized,
+        inlined,
+      }
+    }
+
+    Object.entries(projectData.files).forEach(([filepathIndex, graphData]) => {
+      const filepath = projectData.paths[Number(filepathIndex)]!
       decoded[projectName][filepath] = decodeModuleGraph(graphData)
     })
   })

@@ -254,7 +254,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], [], undefined, 1500 * index, { paths: [], data: {} }],
+      [version, [file], [], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
@@ -296,15 +296,41 @@ test('module graph available', async () => {
       "": {
         "<root>/basic.test.ts": {
           "graph": {
-            "<root>/util.ts": [],
+            "<root>/sub/subject.ts": [],
+            "<root>/sub/format.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
             "<root>/basic.test.ts": [
+              "<root>/sub/format.ts",
               "<root>/util.ts"
             ]
           },
           "externalized": [],
           "inlined": [
             "<root>/basic.test.ts",
+            "<root>/sub/format.ts",
+            "<root>/sub/subject.ts",
             "<root>/util.ts"
+          ]
+        },
+        "<root>/second.test.ts": {
+          "graph": {
+            "<root>/sub/subject.ts": [],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/second.test.ts": [
+              "<root>/util.ts"
+            ]
+          },
+          "externalized": [],
+          "inlined": [
+            "<root>/second.test.ts",
+            "<root>/util.ts",
+            "<root>/sub/subject.ts"
           ]
         }
       }
