@@ -262,69 +262,65 @@ interface SerializedModuleGraphByProject {
 
 // The goal is to avoid O(testFiles * graphSize) payload growth.
 // Instead of serializing full ModuleGraphData for each test file, we:
-// 1) store one deduped path table per project (`paths`),
-// 2) store one shared project graph (`graph.nodes` + `graph.edges`), and
-// 3) store test file roots as path indexes (`files`).
+// 1) store one deduped module id table per project (`idTable`),
+// 2) store shared inlined nodes and dependency edges (`inlined` + `edges`), and
+// 3) store test file roots as id indexes (`testFiles`).
 // On merge read, each file-level ModuleGraphData is reconstructed by
 // traversing the shared graph from that file's root index.
 interface SerializedProjectModuleGraphData {
-  paths: string[]
-  graph: {
-    nodes: number[]
-    edges: [from: number, to: number][]
-  }
-  files: number[]
+  idTable: string[]
+  inlined: number[]
+  edges: [from: number, to: number][]
+  testFiles: number[]
 }
 
 function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
   const encoded: SerializedModuleGraphByProject = {}
 
   Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
-    const paths: string[] = []
-    const pathMap = new Map<string, number>()
+    const idTable: string[] = []
+    const idMap = new Map<string, number>()
     const nodeSet = new Set<number>()
     const edgeSet = new Set<string>()
 
-    const getPathIndex = (id: string) => {
-      const existing = pathMap.get(id)
+    const getIdIndex = (id: string) => {
+      const existing = idMap.get(id)
       if (existing != null) {
         return existing
       }
-      const next = paths.length
-      pathMap.set(id, next)
-      paths.push(id)
+      const next = idTable.length
+      idMap.set(id, next)
+      idTable.push(id)
       return next
     }
 
     const projectData: SerializedProjectModuleGraphData = {
-      paths,
-      graph: {
-        nodes: [],
-        edges: [],
-      },
-      files: [],
+      idTable,
+      inlined: [],
+      edges: [],
+      testFiles: [],
     }
 
     Object.entries(projectGraph).forEach(([filepath, graphData]) => {
-      const filepathIndex = getPathIndex(filepath)
+      const filepathIndex = getIdIndex(filepath)
 
       Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
-        const from = getPathIndex(moduleId)
+        const from = getIdIndex(moduleId)
         nodeSet.add(from)
         deps.forEach((depId) => {
-          const to = getPathIndex(depId)
+          const to = getIdIndex(depId)
           const edgeKey = `${from}:${to}`
           if (!edgeSet.has(edgeKey)) {
             edgeSet.add(edgeKey)
-            projectData.graph.edges.push([from, to])
+            projectData.edges.push([from, to])
           }
         })
       })
 
-      projectData.files.push(filepathIndex)
+      projectData.testFiles.push(filepathIndex)
     })
 
-    projectData.graph.nodes = [...nodeSet]
+    projectData.inlined = [...nodeSet]
     encoded[projectName] = projectData
   })
 
@@ -336,10 +332,10 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
 
   Object.entries(moduleGraphData).forEach(([projectName, projectData]) => {
     decoded[projectName] = {}
-    const inlineNodeSet = new Set(projectData.graph.nodes)
+    const inlineNodeSet = new Set(projectData.inlined)
     const edgeMap = new Map<number, number[]>()
 
-    projectData.graph.edges.forEach(([from, to]) => {
+    projectData.edges.forEach(([from, to]) => {
       const deps = edgeMap.get(from)
       if (deps) {
         deps.push(to)
@@ -362,14 +358,14 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
         }
         visitedInlined.add(index)
 
-        const id = projectData.paths[index]!
+        const id = projectData.idTable[index]!
         inlined.push(id)
 
         const deps = edgeMap.get(index) || []
         const graphDeps: string[] = []
 
         deps.forEach((depIndex) => {
-          const depId = projectData.paths[depIndex]!
+          const depId = projectData.idTable[depIndex]!
 
           graphDeps.push(depId)
           if (inlineNodeSet.has(depIndex)) {
@@ -393,8 +389,8 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
       }
     }
 
-    projectData.files.forEach((filepathIndex) => {
-      const filepath = projectData.paths[filepathIndex]!
+    projectData.testFiles.forEach((filepathIndex) => {
+      const filepath = projectData.idTable[filepathIndex]!
       decoded[projectName][filepath] = decodeModuleGraph(filepathIndex)
     })
   })
