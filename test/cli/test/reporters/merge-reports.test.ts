@@ -250,20 +250,24 @@ test('throws reporter errors when merging reports', async () => {
     reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
   })
 
+  let onTestRunEndCalled = false
   const { stderr, exitCode } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
     reporters: [
       {
         onTestRunStart() {
-          throw new Error('boom reporter')
+          throw new Error('broken reporter')
+        },
+        onTestRunEnd() {
+          onTestRunEndCalled = true
         },
       },
     ],
   })
-
+  expect(stderr).toContain(`Error: broken reporter`)
+  expect(onTestRunEndCalled).toBe(false)
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Error: boom reporter')
 })
 
 test('total and merged execution times are shown', async () => {
