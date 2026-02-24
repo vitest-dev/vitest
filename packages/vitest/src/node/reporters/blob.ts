@@ -268,9 +268,7 @@ interface SerializedProjectModuleGraphData {
     nodes: number[]
     edges: [from: number, to: number][]
   }
-  files: {
-    [testFilePathIndex: string]: number[]
-  }
+  files: number[]
 }
 
 function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
@@ -293,19 +291,13 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
       return next
     }
 
-    const encodeModuleGraph = (graphData: ModuleGraphData): number[] => {
-      const rootPath = graphData.inlined.find(path => path in graphData.graph)
-        ?? graphData.inlined[0]!
-      return [getPathIndex(rootPath)]
-    }
-
     const projectData: SerializedProjectModuleGraphData = {
       paths,
       graph: {
         nodes: [],
         edges: [],
       },
-      files: {},
+      files: [],
     }
 
     Object.entries(projectGraph).forEach(([filepath, graphData]) => {
@@ -324,7 +316,7 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
         })
       })
 
-      projectData.files[filepathIndex] = encodeModuleGraph(graphData)
+      projectData.files.push(filepathIndex)
     })
 
     projectData.graph.nodes = [...nodeSet]
@@ -400,9 +392,9 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
       }
     }
 
-    Object.entries(projectData.files).forEach(([filepathIndex, graphData]) => {
-      const filepath = projectData.paths[Number(filepathIndex)]!
-      decoded[projectName][filepath] = decodeModuleGraph(graphData)
+    projectData.files.forEach((filepathIndex) => {
+      const filepath = projectData.paths[filepathIndex]!
+      decoded[projectName][filepath] = decodeModuleGraph([filepathIndex])
     })
   })
 
