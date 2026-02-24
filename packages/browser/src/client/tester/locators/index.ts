@@ -135,7 +135,7 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  public async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+  public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
         if (typeof file === 'string') {
