@@ -243,6 +243,29 @@ test('merge reports', async () => {
   `)
 })
 
+test('throws reporter errors when merging reports', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
+  })
+
+  const { stderr, exitCode } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    reporters: [
+      {
+        onTestRunStart() {
+          throw new Error('boom reporter')
+        },
+      },
+    ],
+  })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Error: boom reporter')
+})
+
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
