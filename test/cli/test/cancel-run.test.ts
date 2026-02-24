@@ -7,7 +7,7 @@ import { createVitest, registerConsoleShortcuts } from 'vitest/node'
 
 const CTRL_C = '\x03'
 
-test('can force cancel a run via CLI', { timeout: 5_000 }, async () => {
+test('can force cancel a run via CLI', async () => {
   const onExit = vi.fn<never>()
   const exit = process.exit
   onTestFinished(() => {
