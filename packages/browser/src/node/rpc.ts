@@ -247,14 +247,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           const result = mod?.transformResult
           // handle non-inline source map such as pre-bundled deps in node_modules/.vite
           if (result && !result.map) {
-            try {
-              const filePath = id.split('?')[0]
-              const extracted = extractSourcemapFromFile(result.code, filePath)
-              return extracted?.map
-            }
-            catch {
-              return null
-            }
+            const filePath = id.split('?')[0]
+            const extracted = extractSourcemapFromFile(result.code, filePath)
+            return extracted?.map
           }
           return result?.map
         },

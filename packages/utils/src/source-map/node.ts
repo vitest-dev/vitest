@@ -3,7 +3,6 @@ import path from 'node:path'
 import convertSourceMap from 'convert-source-map'
 
 interface ExtractedSourceMap {
-  code: string
   map: any
 }
 
@@ -20,13 +19,7 @@ export function extractSourcemapFromFile(
       createConvertSourceMapReadMap(filePath),
     )
   )?.toObject()
-
-  if (map) {
-    return {
-      code: code.replace(convertSourceMap.mapFileCommentRegex, ''),
-      map,
-    }
-  }
+  return map ? { map } : undefined
 }
 
 function createConvertSourceMapReadMap(originalFileName: string) {

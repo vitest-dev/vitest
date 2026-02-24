@@ -65,16 +65,10 @@ export class ParentBrowserProject {
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
         // handle non-inline source map such as pre-bundled deps in node_modules/.vite
         if (result && !result.map) {
-          try {
-            const filePath = id.split('?')[0]
-            const extracted = extractSourcemapFromFile(result.code, filePath)
-            this.sourceMapCache.set(id, extracted?.map)
-            return extracted?.map
-          }
-          catch {
-            this.sourceMapCache.set(id, null)
-            return null
-          }
+          const filePath = id.split('?')[0]
+          const extracted = extractSourcemapFromFile(result.code, filePath)
+          this.sourceMapCache.set(id, extracted?.map)
+          return extracted?.map
         }
 
         this.sourceMapCache.set(id, result?.map)
