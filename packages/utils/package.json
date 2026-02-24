@@ -56,9 +56,9 @@
       "types": "./dist/source-map.d.ts",
       "default": "./dist/source-map.js"
     },
-    "./source-map-node": {
-      "types": "./dist/source-map-node.d.ts",
-      "default": "./dist/source-map-node.js"
+    "./source-map/node": {
+      "types": "./dist/source-map/node.d.ts",
+      "default": "./dist/source-map/node.js"
     },
     "./serialize": {
       "types": "./dist/serialize.d.ts",
@@ -73,6 +73,9 @@
     "*": {
       "source-map": [
         "dist/source-map.d.ts"
+      ],
+      "source-map/node": [
+        "dist/source-map/node.d.ts"
       ]
     }
   },

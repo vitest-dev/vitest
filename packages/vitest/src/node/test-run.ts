@@ -20,7 +20,7 @@ import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
-import { extractSourcemapFromFile } from '@vitest/utils/source-map-node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 

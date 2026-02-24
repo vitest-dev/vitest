@@ -13,7 +13,7 @@ import type {
 import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
-import { extractSourcemapFromFile } from '@vitest/utils/source-map-node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'

@@ -15,7 +15,7 @@ const entries = {
   'diff': 'src/diff/index.ts',
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
-  'source-map-node': 'src/source-map-node.ts',
+  'source-map/node': 'src/source-map/node.ts',
   'types': 'src/types.ts',
   'constants': 'src/constants.ts',
   'offset': 'src/offset.ts',
