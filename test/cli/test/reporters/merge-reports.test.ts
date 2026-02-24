@@ -246,8 +246,7 @@ test('merge reports', async () => {
 test('throws reporter errors when merging reports', async () => {
   await runVitest({
     root: './fixtures/reporters/merge-reports',
-    include: ['first.test.ts'],
-    reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
+    reporters: ['blob'],
   })
 
   let onTestRunEndCalled = false
