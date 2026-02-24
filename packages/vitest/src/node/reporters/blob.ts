@@ -239,6 +239,17 @@ type MergeReport = [
   moduleGraphData: SerializedModuleGraphByProject,
 ]
 
+type SerializedModuleNode = [
+  id: string,
+  file: string,
+  url: string,
+]
+
+type MergeReportModuleKeys = [
+  projectName: string,
+  modules: SerializedModuleNode[],
+]
+
 type SerializedModuleGraphByProject = Record<string, Record<string, SerializedModuleGraphData>>
 
 interface SerializedModuleGraphData {
@@ -339,14 +350,3 @@ function decodeModuleGraph(graphData: SerializedModuleGraphData): ModuleGraphDat
     inlined: graphData.inlined.map(index => graphData.paths[index]).filter((id): id is string => id != null),
   }
 }
-
-type SerializedModuleNode = [
-  id: string,
-  file: string,
-  url: string,
-]
-
-type MergeReportModuleKeys = [
-  projectName: string,
-  modules: SerializedModuleNode[],
-]
