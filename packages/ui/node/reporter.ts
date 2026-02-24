@@ -73,7 +73,7 @@ export default class HTMLReporter implements Reporter {
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       projects: this.ctx.projects.map(p => p.name),
-      moduleGraph: blobs ? blobs.moduleGraphData : {},
+      moduleGraph: blobs?.moduleGraphData ?? {},
       sources: {},
     }
     const promises: Promise<void>[] = []
