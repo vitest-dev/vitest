@@ -250,10 +250,22 @@ type MergeReportModuleKeys = [
   modules: SerializedModuleNode[],
 ]
 
-type SerializedModuleGraphByProject = Record<string, Record<string, SerializedModuleGraphData>>
+interface ModuleGraphDataByProject {
+  [projectName: string]: {
+    [testFilePath: string]: ModuleGraphData
+  }
+}
+
+interface SerializedModuleGraphByProject {
+  paths: string[]
+  data: {
+    [projectName: string]: {
+      [testFilePathIndex: string]: SerializedModuleGraphData
+    }
+  }
+}
 
 interface SerializedModuleGraphData {
-  paths: string[]
   graph: {
     nodes: number[]
     edges: [from: number, to: number][]
@@ -262,37 +274,13 @@ interface SerializedModuleGraphData {
   externalized: number[]
 }
 
-function encodeModuleGraphData(moduleGraphData: Record<string, Record<string, ModuleGraphData>>): SerializedModuleGraphByProject {
-  const encoded: SerializedModuleGraphByProject = {}
-
-  Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
-    encoded[projectName] = {}
-    Object.entries(projectGraph).forEach(([filepath, graphData]) => {
-      encoded[projectName][filepath] = encodeModuleGraph(graphData)
-    })
-  })
-
-  return encoded
-}
-
-function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject): Record<string, Record<string, ModuleGraphData>> {
-  const decoded: Record<string, Record<string, ModuleGraphData>> = {}
-
-  Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
-    decoded[projectName] = {}
-    Object.entries(projectGraph).forEach(([filepath, graphData]) => {
-      decoded[projectName][filepath] = decodeModuleGraph(graphData)
-    })
-  })
-
-  return decoded
-}
-
-function encodeModuleGraph(graphData: ModuleGraphData): SerializedModuleGraphData {
-  const pathMap = new Map<string, number>()
+function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
   const paths: string[] = []
-  const graphNodes: number[] = []
-  const edges: [number, number][] = []
+  const pathMap = new Map<string, number>()
+  const encoded: SerializedModuleGraphByProject = {
+    paths,
+    data: {},
+  }
 
   const getPathIndex = (id: string) => {
     const existing = pathMap.get(id)
@@ -305,48 +293,76 @@ function encodeModuleGraph(graphData: ModuleGraphData): SerializedModuleGraphDat
     return next
   }
 
-  Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
-    const from = getPathIndex(moduleId)
-    graphNodes.push(from)
-    deps.forEach((depId) => {
-      edges.push([from, getPathIndex(depId)])
+  const encodeModuleGraph = (graphData: ModuleGraphData): SerializedModuleGraphData => {
+    const graphNodes: number[] = []
+    const edges: [number, number][] = []
+
+    Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
+      const from = getPathIndex(moduleId)
+      graphNodes.push(from)
+      deps.forEach((depId) => {
+        edges.push([from, getPathIndex(depId)])
+      })
+    })
+
+    return {
+      graph: {
+        nodes: graphNodes,
+        edges,
+      },
+      inlined: graphData.inlined.map(getPathIndex),
+      externalized: graphData.externalized.map(getPathIndex),
+    }
+  }
+
+  Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
+    encoded.data[projectName] = {}
+    Object.entries(projectGraph).forEach(([filepath, graphData]) => {
+      const filepathIndex = getPathIndex(filepath)
+      encoded.data[projectName][filepathIndex] = encodeModuleGraph(graphData)
     })
   })
 
-  return {
-    paths,
-    graph: {
-      nodes: graphNodes,
-      edges,
-    },
-    inlined: graphData.inlined.map(getPathIndex),
-    externalized: graphData.externalized.map(getPathIndex),
-  }
+  return encoded
 }
 
-function decodeModuleGraph(graphData: SerializedModuleGraphData): ModuleGraphData {
-  const graph: ModuleGraphData['graph'] = {}
-  const { nodes, edges } = graphData.graph
+function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject): ModuleGraphDataByProject {
+  const decoded: ModuleGraphDataByProject = {}
 
-  nodes.forEach((index) => {
-    const id = graphData.paths[index]
-    if (id != null) {
-      graph[id] = []
+  const decodeModuleGraph = (graphData: SerializedModuleGraphData): ModuleGraphData => {
+    const graph: ModuleGraphData['graph'] = {}
+    const { nodes, edges } = graphData.graph
+
+    nodes.forEach((index) => {
+      const id = moduleGraphData.paths[index]
+      if (id != null) {
+        graph[id] = []
+      }
+    })
+
+    edges.forEach(([from, to]) => {
+      const fromId = moduleGraphData.paths[from]
+      const toId = moduleGraphData.paths[to]
+      if (fromId == null || toId == null || !graph[fromId]) {
+        return
+      }
+      graph[fromId].push(toId)
+    })
+
+    return {
+      graph,
+      externalized: graphData.externalized.map(index => moduleGraphData.paths[index]).filter((id): id is string => id != null),
+      inlined: graphData.inlined.map(index => moduleGraphData.paths[index]).filter((id): id is string => id != null),
     }
-  })
-
-  edges.forEach(([from, to]) => {
-    const fromId = graphData.paths[from]
-    const toId = graphData.paths[to]
-    if (fromId == null || toId == null || !graph[fromId]) {
-      return
-    }
-    graph[fromId].push(toId)
-  })
-
-  return {
-    graph,
-    externalized: graphData.externalized.map(index => graphData.paths[index]).filter((id): id is string => id != null),
-    inlined: graphData.inlined.map(index => graphData.paths[index]).filter((id): id is string => id != null),
   }
+
+  Object.entries(moduleGraphData.data).forEach(([projectName, projectGraph]) => {
+    decoded[projectName] = {}
+    Object.entries(projectGraph).forEach(([filepathIndex, graphData]) => {
+      const filepath = moduleGraphData.paths[Number(filepathIndex)]
+      decoded[projectName][filepath] = decodeModuleGraph(graphData)
+    })
+  })
+
+  return decoded
 }
