@@ -272,6 +272,59 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
+test('module graph available', async () => {
+  const root = resolve('./fixtures/reporters/merge-reports-module-graph')
+  const reportsDir = resolve(root, '.vitest-reports')
+  rmSync(reportsDir, { force: true, recursive: true })
+
+  // generate blob
+  await runVitest({
+    root,
+    reporters: ['blob'],
+  })
+
+  // test restored blob has module graph
+  const { stderr, ctx } = await runVitest({
+    root,
+    mergeReports: reportsDir,
+  })
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(ctx)
+  const moduleGraphJson = JSON.stringify(ctx.state.blobs?.moduleGraphData, null, 2).replaceAll(ctx.config.root, '<root>')
+  expect(moduleGraphJson).toMatchInlineSnapshot(`
+    "{
+      "": {
+        "<root>/basic.test.ts": {
+          "graph": {
+            "<root>/util.ts": [],
+            "<root>/basic.test.ts": [
+              "<root>/util.ts"
+            ]
+          },
+          "externalized": [],
+          "inlined": [
+            "<root>/basic.test.ts",
+            "<root>/util.ts"
+          ]
+        }
+      }
+    }"
+  `)
+
+  // also check html reporter doesn't crash
+  const result = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest-reports'),
+    reporters: ['html'],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.stdout).toMatchInlineSnapshot(`
+    " HTML  Report is generated
+           You can run npx vite preview --outDir html to see the test results.
+    "
+  `)
+})
+
 function trimReporterOutput(report: string) {
   const rows = report
     .replace(/\d+ms/g, '<time>')
