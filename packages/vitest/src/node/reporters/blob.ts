@@ -269,9 +269,9 @@ interface SerializedModuleGraphByProject {
 // traversing the shared graph from that file's root index.
 interface SerializedProjectModuleGraphData {
   idTable: string[]
+  testFiles: number[]
   inlined: number[]
   edges: [from: number, to: number][]
-  testFiles: number[]
 }
 
 function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
@@ -280,7 +280,7 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
   Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
     const idTable: string[] = []
     const idMap = new Map<string, number>()
-    const nodeSet = new Set<number>()
+    const inlinedSet = new Set<number>()
     const edgeSet = new Set<string>()
 
     const getIdIndex = (id: string) => {
@@ -304,9 +304,14 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
     Object.entries(projectGraph).forEach(([filepath, graphData]) => {
       const filepathIndex = getIdIndex(filepath)
 
+      projectData.testFiles.push(filepathIndex)
+
+      graphData.inlined.forEach((moduleId) => {
+        inlinedSet.add(getIdIndex(moduleId))
+      })
+
       Object.entries(graphData.graph).forEach(([moduleId, deps]) => {
         const from = getIdIndex(moduleId)
-        nodeSet.add(from)
         deps.forEach((depId) => {
           const to = getIdIndex(depId)
           const edgeKey = `${from}:${to}`
@@ -316,11 +321,9 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
           }
         })
       })
-
-      projectData.testFiles.push(filepathIndex)
     })
 
-    projectData.inlined = [...nodeSet]
+    projectData.inlined = [...inlinedSet]
     encoded[projectName] = projectData
   })
 
