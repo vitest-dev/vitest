@@ -1209,6 +1209,9 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
+      test-dep-error:
+        specifier: file:./deps/test-dep-error
+        version: file:test/browser/deps/test-dep-error
       tinyexec:
         specifier: 'catalog:'
         version: 1.0.2
@@ -9376,6 +9379,9 @@ packages:
 
   test-dep-conditions@file:test/config/deps/test-dep-conditions:
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+
+  test-dep-error@file:test/browser/deps/test-dep-error:
+    resolution: {directory: test/browser/deps/test-dep-error, type: directory}
 
   text-decoder@1.1.1:
     resolution: {integrity: sha512-8zll7REEv4GDD3x4/0pW+ppIxSNs7H1J10IKFZsuOMscumCdM2a+toDGLPA3T+1+fLBql4zbt5z83GEQGGV5VA==}
@@ -18518,6 +18524,8 @@ snapshots:
   test-dep-conditions@file:test/config/deps/test-dep-conditions:
     dependencies:
       test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
+
+  test-dep-error@file:test/browser/deps/test-dep-error: {}
 
   text-decoder@1.1.1:
     dependencies:

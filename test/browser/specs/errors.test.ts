@@ -1,4 +1,6 @@
+import path from 'node:path'
 import { expect, test } from 'vitest'
+import { buildTestProjectTree } from '../../test-utils'
 import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('prints correct unhandled error stack', async () => {
@@ -135,4 +137,64 @@ test('cannot use fs commands if write is disabled', async () => {
   expect(stderr).toContain(
     'Cannot record attachments ("/artifact-attachment.txt") because file writing is disabled, removing attachments from artifact "my-custom".',
   )
+})
+
+test('prints source-mapped stack for optimized dependency', async () => {
+  const { results, ctx } = await runBrowserTests({
+    root: './fixtures/error-in-dep',
+  })
+
+  const projectTree = buildTestProjectTree(results, (testCase) => {
+    const result = testCase.result()
+    return result.errors.map((e) => {
+      const stacks = e.stacks.map((s) => {
+        const normalizedFile = path
+          .relative(ctx.config.root, s.file)
+          .replace(
+            /node_modules[\\/]\.pnpm[\\/][^\\/\n]+[\\/]node_modules[\\/]/g,
+            'node_modules/.pnpm/<normalized>/node_modules/',
+          )
+        return `${s.method} at ${normalizedFile}:${s.line}:${s.column}`
+      })
+      return ({ message: e.message, stacks })
+    })
+  })
+  expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
+
+  for (const [name, tree] of Object.entries(projectTree)) {
+    if (name === 'webkit') {
+      expect(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "fail": [
+              {
+                "message": "this is test dependency error",
+                "stacks": [
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
+                  " at basic.test.ts:5:16",
+                ],
+              },
+            ],
+          },
+        }
+      `)
+    }
+    else {
+      expect(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "fail": [
+              {
+                "message": "this is test dependency error",
+                "stacks": [
+                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:8",
+                  " at basic.test.ts:5:2",
+                ],
+              },
+            ],
+          },
+        }
+      `)
+    }
+  }
 })
