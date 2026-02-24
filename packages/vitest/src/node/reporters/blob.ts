@@ -226,7 +226,7 @@ export interface MergedBlobs {
   errors: unknown[]
   coverages: unknown[]
   executionTimes: number[]
-  moduleGraphData?: Record<string, Record<string, ModuleGraphData>>
+  moduleGraphData: Record<string, Record<string, ModuleGraphData>>
 }
 
 type MergeReport = [
@@ -236,7 +236,7 @@ type MergeReport = [
   modules: MergeReportModuleKeys[],
   coverage: unknown,
   executionTime: number,
-  moduleGraphData?: Record<string, Record<string, ModuleGraphData>>,
+  moduleGraphData: Record<string, Record<string, ModuleGraphData>>,
 ]
 
 type SerializedModuleNode = [

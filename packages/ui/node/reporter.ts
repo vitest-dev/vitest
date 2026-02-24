@@ -66,28 +66,31 @@ export default class HTMLReporter implements Reporter {
   }
 
   async onTestRunEnd(): Promise<void> {
+    const blobs = this.ctx.state.blobs
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       projects: this.ctx.projects.map(p => p.name),
-      moduleGraph: {},
+      moduleGraph: blobs ? blobs.moduleGraphData : {},
       sources: {},
     }
     const promises: Promise<void>[] = []
 
     promises.push(...result.files.map(async (file) => {
-      const projectName = file.projectName || ''
-      const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-        this.ctx,
-        projectName,
-        file.filepath,
-        browser,
-      )
+      if (!blobs) {
+        const projectName = file.projectName || ''
+        const resolvedConfig = this.ctx.getProjectByName(projectName).config
+        const browser = resolvedConfig.browser.enabled
+        result.moduleGraph[projectName] ??= {}
+        result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
+          this.ctx,
+          projectName,
+          file.filepath,
+          browser,
+        )
+      }
       if (!result.sources[file.filepath]) {
         try {
           result.sources[file.filepath] = await fs.readFile(file.filepath, {
