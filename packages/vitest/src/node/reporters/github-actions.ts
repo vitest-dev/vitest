@@ -372,32 +372,40 @@ function mdLink(text: string, url: string | null): string {
 }
 
 function renderStats(stats: SummaryData['stats']): string {
-  const total = stats.failed + stats.skipped + stats.passed
+  const primaryInfoTotal = stats.failed + stats.passed + stats.expectedFail
+  const secondaryInfoTotal = stats.skipped + stats.todo
 
-  let output = '\n### Summary\n\n'
-
-  if (stats.failed > 0) {
-    output += `❌ **${stats.failed} ${noun(stats.failed, 'failure', 'failures')}** · `
-  }
-
-  if (stats.skipped > 0) {
-    output += `⚠️ **${stats.skipped} ${noun(stats.skipped, 'skip', 'skips')}** · `
-  }
-
-  output += `✅ **${stats.passed} ${noun(stats.passed, 'pass', 'passes')}** · ${total} total\n`
-
+  const primaryInfo: string[] = []
   const secondaryInfo: string[] = []
 
+  if (stats.failed > 0) {
+    primaryInfo.push(`❌ **${stats.failed} ${noun(stats.failed, 'failure', 'failures')}**`)
+  }
+
+  if (stats.passed > 0) {
+    primaryInfo.push(`✅ **${stats.passed} ${noun(stats.passed, 'pass', 'passes')}**`)
+  }
+
   if (stats.expectedFail > 0) {
-    secondaryInfo.push(`${stats.expectedFail} expected ${noun(stats.expectedFail, 'failure', 'failures')}`)
+    primaryInfo.push(`🔵 **${stats.expectedFail} expected ${noun(stats.expectedFail, 'failure', 'failures')}**`)
+  }
+
+  primaryInfo.push(`${primaryInfoTotal} total`)
+
+  if (stats.skipped > 0) {
+    secondaryInfo.push(`${stats.skipped} ${noun(stats.skipped, 'skip', 'skips')}`)
   }
 
   if (stats.todo > 0) {
     secondaryInfo.push(`${stats.todo} ${noun(stats.todo, 'todo', 'todos')}`)
   }
 
+  let output = `\n### Summary\n\n- **Test Results**: ${primaryInfo.join(' · ')}\n`
+
   if (secondaryInfo.length > 0) {
-    output += `${secondaryInfo.join(' · ')} · ${stats.expectedFail + stats.todo} total\n`
+    secondaryInfo.push(`${secondaryInfoTotal} total`)
+
+    output += `- **Other**: ${secondaryInfo.join(' · ')}\n`
   }
 
   return output
