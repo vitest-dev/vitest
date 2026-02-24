@@ -267,6 +267,9 @@ interface SerializedModuleGraphByProject {
 // 3) store test file roots as id indexes (`testFiles`).
 // On merge read, each file-level ModuleGraphData is reconstructed by
 // traversing the shared graph from that file's root index.
+// Assumption: test files within the same project share the same
+// inlined/externalized classification. This can diverge when one project
+// effectively mixes multiple runtime environments (for example node/jsdom).
 interface SerializedProjectModuleGraphData {
   idTable: string[]
   testFiles: number[]
