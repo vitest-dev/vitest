@@ -1353,9 +1353,6 @@ importers:
       '@vitest/browser-webdriverio':
         specifier: workspace:*
         version: link:../../packages/browser-webdriverio
-      '@vitest/test-dep-conditions':
-        specifier: file:./deps/test-dep-conditions
-        version: file:test/config/deps/test-dep-conditions
       '@vitest/test-dep-optimizer-external':
         specifier: file:./deps/optimizer/external
         version: file:test/config/deps/optimizer/external
@@ -1371,6 +1368,9 @@ importers:
       ssr-no-external-dep:
         specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
         version: file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep
+      test-dep-conditions:
+        specifier: file:./deps/test-dep-conditions
+        version: file:test/config/deps/test-dep-conditions
       tinyexec:
         specifier: ^1.0.2
         version: 1.0.2
@@ -5144,12 +5144,6 @@ packages:
 
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs':
     resolution: {directory: test/core/deps/dep-cjs, type: directory}
-
-  '@vitest/test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect':
-    resolution: {directory: test/config/deps/test-dep-conditions-indirect, type: directory}
-
-  '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
-    resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
 
   '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs':
     resolution: {directory: test/core/deps/dep-nested-cjs, type: directory}
@@ -9377,6 +9371,12 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect:
+    resolution: {directory: test/config/deps/test-dep-conditions-indirect, type: directory}
+
+  test-dep-conditions@file:test/config/deps/test-dep-conditions:
+    resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+
   text-decoder@1.1.1:
     resolution: {integrity: sha512-8zll7REEv4GDD3x4/0pW+ppIxSNs7H1J10IKFZsuOMscumCdM2a+toDGLPA3T+1+fLBql4zbt5z83GEQGGV5VA==}
 
@@ -13496,12 +13496,6 @@ snapshots:
       - supports-color
 
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs': {}
-
-  '@vitest/test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect': {}
-
-  '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
-    dependencies:
-      '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
 
   '@vitest/test-dep-nested-cjs@file:test/core/deps/dep-nested-cjs': {}
 
@@ -18518,6 +18512,12 @@ snapshots:
       acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
       commander: 2.20.3
       source-map-support: 0.5.21
+
+  test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect: {}
+
+  test-dep-conditions@file:test/config/deps/test-dep-conditions:
+    dependencies:
+      test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
 
   text-decoder@1.1.1:
     dependencies:
