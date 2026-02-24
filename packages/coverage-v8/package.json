@@ -70,6 +70,7 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@vitest/browser": "workspace:*",
+    "@vitest/browser-playwright": "workspace:*",
     "pathe": "catalog:",
     "vitest": "workspace:*"
   }

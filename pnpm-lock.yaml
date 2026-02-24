@@ -712,6 +712,9 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../browser-playwright
       pathe:
         specifier: 'catalog:'
         version: 2.0.3

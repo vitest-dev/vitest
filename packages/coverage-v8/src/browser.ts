@@ -1,3 +1,4 @@
+import type {} from '@vitest/browser-playwright'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
 import { cdp } from 'vitest/browser'
