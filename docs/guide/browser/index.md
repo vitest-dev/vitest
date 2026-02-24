@@ -402,7 +402,7 @@ Community packages are available for other frameworks:
 
 - [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
 - [`vitest-browser-preact`](https://github.com/JoviDeCroock/vitest-browser-preact) to render [preact](https://preactjs.com) components
-- [`vitest-browser-qwik`](https://github.com/kunai-consulting/vitest-browser-qwik) to render [qwik](https://qwik.dev) components
+- [`vitest-browser-qwik`](https://github.com/QwikDev/vitest-browser-qwik) to render [qwik](https://qwik.dev) components
 
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
