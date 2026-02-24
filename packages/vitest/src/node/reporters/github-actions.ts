@@ -23,55 +23,52 @@ export interface GithubActionsReporterOptions {
    *
    * When enabled, a markdown summary of test results is written to the path specified by `outputPath`.
    */
-  jobSummary?: {
+  jobSummary?: Partial<JobSummaryOptions>
+}
+
+interface JobSummaryOptions {
+  /**
+   * Whether to generate the summary.
+   *
+   * @default true
+   */
+  enabled: boolean
+  /**
+   * File path to write the summary to.
+   *
+   * @default process.env.GITHUB_STEP_SUMMARY
+   */
+  outputPath: string | undefined
+  /**
+   * Configuration for generating permalink URLs to source files in the GitHub repository.
+   *
+   * When all three values are available (either from this config or the defaults picked from environment variables), test names in the summary will link to the relevant source lines.
+   */
+  fileLinks: {
     /**
-     * Whether to generate the summary.
+     * The GitHub repository in `owner/repo` format.
      *
-     * @default true
+     * @default process.env.GITHUB_REPOSITORY
      */
-    enabled?: boolean
+    repository?: string | undefined
     /**
-     * File path to write the summary to.
+     * The commit SHA to use in permalink URLs.
      *
-     * @default process.env.GITHUB_STEP_SUMMARY
+     * @default process.env.GITHUB_SHA
      */
-    outputPath?: string | undefined
+    commitHash?: string | undefined
     /**
-     * Configuration for generating permalink URLs to source files in the GitHub repository.
+     * The absolute path to the root of the repository on disk.
      *
-     * When all three values are available (either from this config or the defaults picked from environment variables), test names in the summary will link to the relevant source lines.
+     * This value is used to compute relative file paths for the permalink URLs.
+     *
+     * @default process.env.GITHUB_WORKSPACE
      */
-    fileLinks?: {
-      /**
-       * The GitHub repository in `owner/repo` format.
-       *
-       * @default process.env.GITHUB_REPOSITORY
-       */
-      repository?: string | undefined
-      /**
-       * The commit SHA to use in permalink URLs.
-       *
-       * @default process.env.GITHUB_SHA
-       */
-      commitHash?: string | undefined
-      /**
-       * The absolute path to the root of the repository on disk.
-       *
-       * This value is used to compute relative file paths for the permalink URLs.
-       *
-       * @default process.env.GITHUB_WORKSPACE
-       */
-      workspacePath?: string | undefined
-    }
+    workspacePath?: string | undefined
   }
 }
 
-type SummaryOptions = NonNullable<GithubActionsReporterOptions['jobSummary']>
-
-interface ResolvedOptions extends Required<GithubActionsReporterOptions> {
-  // only `enabled` is required as the other values can be `undefined` as they're env variables
-  jobSummary: Required<Pick<SummaryOptions, 'enabled'>> & Omit<SummaryOptions, 'enabled'>
-}
+type ResolvedOptions = Required<GithubActionsReporterOptions>
 
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
@@ -182,17 +179,15 @@ export class GithubActionsReporter implements Reporter {
     if (this.options.jobSummary.enabled === true && this.options.jobSummary.outputPath) {
       const summary = renderSummary(collectSummaryData(testModules), this.options.jobSummary.fileLinks)
 
-      if (summary !== null) {
-        try {
-          writeFileSync(
-            this.options.jobSummary.outputPath,
-            summary,
-            { flag: 'a' },
-          )
-        }
-        catch (error) {
-          this.ctx.logger.warn('Could not write summary to `options.summary.outputPath`', error)
-        }
+      try {
+        writeFileSync(
+          this.options.jobSummary.outputPath,
+          summary,
+          { flag: 'a' },
+        )
+      }
+      catch (error) {
+        this.ctx.logger.warn('Could not write summary to `options.summary.outputPath`', error)
       }
     }
   }
@@ -351,7 +346,7 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData
   return summaryData
 }
 
-function createGitHubFileLinkCreator(fileLinks: SummaryOptions['fileLinks']): (path: string, line?: number) => string | null {
+function createGitHubFileLinkCreator(fileLinks?: JobSummaryOptions['fileLinks']): (path: string, line?: number) => string | null {
   const repository = fileLinks?.repository
   const commitHash = fileLinks?.commitHash
   const workspacePath = fileLinks?.workspacePath
@@ -413,7 +408,7 @@ function renderStats(stats: SummaryData['stats']): string {
 
 const SUMMARY_HEADER = '## Vitest Test Report\n'
 
-function renderSummary(summaryData: SummaryData, fileLinks: SummaryOptions['fileLinks']): string | null {
+function renderSummary(summaryData: SummaryData, fileLinks?: JobSummaryOptions['fileLinks']): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
   let summary = `${SUMMARY_HEADER}${renderStats(summaryData.stats)}`
