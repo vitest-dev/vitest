@@ -349,7 +349,7 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
       }
     })
 
-    const decodeModuleGraph = (roots: number[]): ModuleGraphData => {
+    const decodeModuleGraph = (root: number): ModuleGraphData => {
       const graph: ModuleGraphData['graph'] = {}
       const inlined: string[] = []
       const externalized: string[] = []
@@ -384,11 +384,7 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
         graph[id] = graphDeps
       }
 
-      roots.forEach((rootIndex) => {
-        if (inlineNodeSet.has(rootIndex)) {
-          walkInline(rootIndex)
-        }
-      })
+      walkInline(root)
 
       return {
         graph,
@@ -399,7 +395,7 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
 
     projectData.files.forEach((filepathIndex) => {
       const filepath = projectData.paths[filepathIndex]!
-      decoded[projectName][filepath] = decodeModuleGraph([filepathIndex])
+      decoded[projectName][filepath] = decodeModuleGraph(filepathIndex)
     })
   })
 
