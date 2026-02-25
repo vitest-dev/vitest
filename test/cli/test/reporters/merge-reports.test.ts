@@ -1,4 +1,5 @@
 import type { File, Test } from '@vitest/runner/types'
+import type { Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { runVitest } from '#test-utils'
@@ -278,31 +279,34 @@ test('module graph available', async () => {
   const reportsDir = resolve(root, '.vitest-reports')
   rmSync(reportsDir, { force: true, recursive: true })
 
+  async function getModuleGraphs(ctx: Vitest) {
+    const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+    const moduleGraphs = Object.fromEntries(
+      await Promise.all(
+        files.map(async (file) => {
+          const projectName = file.projectName || ''
+          const project = ctx.getProjectByName(projectName)
+          const graph = await getModuleGraph(
+            ctx,
+            projectName,
+            file.filepath,
+            project.config.browser.enabled,
+          )
+          return [file.filepath, graph] as const
+        }),
+      ),
+    )
+    return JSON.stringify(moduleGraphs, null, 2).replaceAll(ctx.config.root, '<root>')
+  }
+
   // generate blob
-  await runVitest({
+  const result1 = await runVitest({
     root,
     reporters: ['blob'],
   })
-
-  // test restored blob has module graph
-  const { stderr, ctx } = await runVitest({
-    root,
-    mergeReports: reportsDir,
-  })
-  expect(stderr).toMatchInlineSnapshot(`""`)
-
-  expect.assert(ctx)
-  const files = ctx.state.getFiles().map(file => file.filepath).sort()
-  const moduleGraphs = Object.fromEntries(
-    await Promise.all(
-      files.map(async (file) => {
-        const graph = await getModuleGraph(ctx, '', file)
-        return [file, graph]
-      }),
-    ),
-  )
-  const moduleGraphJson = JSON.stringify(moduleGraphs, null, 2).replaceAll(ctx.config.root, '<root>')
-  expect(moduleGraphJson).toMatchInlineSnapshot(`
+  expect.assert(result1.ctx)
+  const generatedModuleGraphJson = await getModuleGraphs(result1.ctx)
+  expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
     "{
       "<root>/basic.test.ts": {
         "graph": {
@@ -345,6 +349,16 @@ test('module graph available', async () => {
       }
     }"
   `)
+
+  // test restored blob has module graph
+  const { stderr, ctx } = await runVitest({
+    root,
+    mergeReports: reportsDir,
+  })
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(ctx)
+  const restoredModuleGraphJson = await getModuleGraphs(ctx)
+  expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   // also check html reporter doesn't crash
   const result = await runVitest({
