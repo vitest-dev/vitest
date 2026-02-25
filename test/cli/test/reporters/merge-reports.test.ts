@@ -300,12 +300,12 @@ test('module graph available', async () => {
   }
 
   // generate blob
-  const result1 = await runVitest({
+  const result = await runVitest({
     root,
     reporters: ['blob'],
   })
-  expect.assert(result1.ctx)
-  const generatedModuleGraphJson = await getModuleGraphs(result1.ctx)
+  expect.assert(result.ctx)
+  const generatedModuleGraphJson = await getModuleGraphs(result.ctx)
   expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
     "{
       "<root>/basic.test.ts": {
@@ -351,23 +351,23 @@ test('module graph available', async () => {
   `)
 
   // test restored blob has module graph
-  const { stderr, ctx } = await runVitest({
+  const result2 = await runVitest({
     root,
     mergeReports: reportsDir,
   })
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect.assert(ctx)
-  const restoredModuleGraphJson = await getModuleGraphs(ctx)
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(result2.ctx)
+  const restoredModuleGraphJson = await getModuleGraphs(result2.ctx)
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   // also check html reporter doesn't crash
-  const result = await runVitest({
+  const result3 = await runVitest({
     root,
     mergeReports: resolve(root, '.vitest-reports'),
     reporters: ['html'],
   })
-  expect(result.stderr).toMatchInlineSnapshot(`""`)
-  expect(result.stdout).toMatchInlineSnapshot(`
+  expect(result3.stderr).toMatchInlineSnapshot(`""`)
+  expect(result3.stdout).toMatchInlineSnapshot(`
     " HTML  Report is generated
            You can run npx vite preview --outDir html to see the test results.
     "
