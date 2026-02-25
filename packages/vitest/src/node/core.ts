@@ -18,7 +18,7 @@ import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
@@ -635,8 +635,10 @@ export class Vitest {
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
-    await this._testRun.enqueued(project, file)
-    await this._testRun.collected(project, [file])
+    // TODO: for now, silence errors from test runtime rpc reporter events simulation
+    // to align with normal test run behavior.
+    await this._testRun.enqueued(project, file).catch(noop)
+    await this._testRun.collected(project, [file]).catch(noop)
 
     const logs: UserConsoleLog[] = []
 
@@ -649,10 +651,10 @@ export class Vitest {
     logs.sort((log1, log2) => log1.time - log2.time)
 
     for (const log of logs) {
-      await this._testRun.log(log)
+      await this._testRun.log(log).catch(noop)
     }
 
-    await this._testRun.updated(packs, events)
+    await this._testRun.updated(packs, events).catch(noop)
   }
 
   async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
