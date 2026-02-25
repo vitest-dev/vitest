@@ -8,6 +8,7 @@ import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import { writeBlob } from 'vitest/src/node/reporters/blob.js'
 import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph'
+import { playwright } from '@vitest/browser-playwright'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -299,6 +300,8 @@ test('module graph available', async () => {
     return JSON.stringify(moduleGraphs, null, 2)
       .replaceAll(ctx.config.root, '<root>')
       .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
+      .replace(/<node_modules>\/\.vite\/vitest\/[a-f0-9]{40}\/deps\/([^"?]+)/g, '<optimized-deps>/$1')
+      .replace(/\?v=[a-f0-9]+/g, '?v=<hash>')
   }
 
   // generate blob
@@ -370,6 +373,145 @@ test('module graph available', async () => {
     root,
     mergeReports: resolve(root, '.vitest-reports'),
     reporters: ['html'],
+  })
+  expect(result3.stderr).toMatchInlineSnapshot(`""`)
+  expect(result3.stdout).toMatchInlineSnapshot(`
+    " HTML  Report is generated
+           You can run npx vite preview --outDir html to see the test results.
+    "
+  `)
+})
+
+
+
+test('module graph available', async () => {
+  const root = resolve('./fixtures/reporters/merge-reports-module-graph')
+  const reportsDir = resolve(root, '.vitest-reports')
+  rmSync(reportsDir, { force: true, recursive: true })
+
+  async function getSerializedModuleGraph(ctx: Vitest) {
+    const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+    const moduleGraphs = Object.fromEntries(
+      await Promise.all(
+        files.map(async (file) => {
+          const projectName = file.projectName || ''
+          const project = ctx.getProjectByName(projectName)
+          const graph = await getModuleGraph(
+            ctx,
+            projectName,
+            file.filepath,
+            project.config.browser.enabled,
+          )
+          return [file.filepath, graph] as const
+        }),
+      ),
+    )
+    return JSON.stringify(moduleGraphs, null, 2)
+      .replaceAll(ctx.config.root, '<root>')
+      .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
+      .replace(/<node_modules>\/\.vite\/vitest\/[a-f0-9]*\/deps\/([^"?]+)/g, '<optimized-deps>/$1')
+      .replace(/\?v=[a-f0-9]+/g, '?v=<hash>')
+  }
+
+  // generate blob
+  const result = await runVitest({
+    root,
+    reporters: ['blob'],
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        }
+      ],
+      headless: true,
+    }
+  })
+  expect.assert(result.ctx)
+  const generatedModuleGraphJson = await getSerializedModuleGraph(result.ctx)
+  expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
+    "{
+      "<root>/basic.test.ts": {
+        "graph": {
+          "<root>/sub/subject.ts": [],
+          "<root>/sub/format.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/util.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/basic.test.ts": [
+            "<root>/sub/format.ts",
+            "<root>/util.ts"
+          ]
+        },
+        "externalized": [],
+        "inlined": [
+          "<root>/basic.test.ts",
+          "<root>/sub/format.ts",
+          "<root>/sub/subject.ts",
+          "<root>/util.ts"
+        ]
+      },
+      "<root>/second.test.ts": {
+        "graph": {
+          "<root>/sub/subject.ts": [],
+          "<root>/util.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/second.test.ts": [
+            "<root>/util.ts",
+            "<optimized-deps>/obug.js"
+          ]
+        },
+        "externalized": [
+          "<optimized-deps>/obug.js?v=<hash>"
+        ],
+        "inlined": [
+          "<root>/second.test.ts",
+          "<root>/util.ts",
+          "<root>/sub/subject.ts"
+        ]
+      }
+    }"
+  `)
+
+  // test restored blob has module graph
+  const result2 = await runVitest({
+    root,
+    mergeReports: reportsDir,
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        }
+      ],
+      headless: true,
+    }
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(result2.ctx)
+  const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
+  expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
+
+  // also check html reporter doesn't crash
+  const result3 = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest-reports'),
+    reporters: ['html'],
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        }
+      ],
+      headless: true,
+    }
   })
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
   expect(result3.stdout).toMatchInlineSnapshot(`
