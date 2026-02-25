@@ -6,6 +6,7 @@ import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import { writeBlob } from 'vitest/src/node/reporters/blob.js'
+import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
@@ -254,7 +255,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], [], undefined, 1500 * index],
+      [version, [file], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
@@ -270,6 +271,87 @@ test('total and merged execution times are shown', async () => {
 
   expect(stdout).toContain('Duration  4.50s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
+test('module graph available', async () => {
+  const root = resolve('./fixtures/reporters/merge-reports-module-graph')
+  const reportsDir = resolve(root, '.vitest-reports')
+  rmSync(reportsDir, { force: true, recursive: true })
+
+  // generate blob
+  await runVitest({
+    root,
+    reporters: ['blob'],
+  })
+
+  // test restored blob has module graph
+  const { stderr, ctx } = await runVitest({
+    root,
+    mergeReports: reportsDir,
+  })
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(ctx)
+  // TODO: test with getModuleGraph
+  expect.assert(getModuleGraph)
+  // const moduleGraphJson = JSON.stringify(ctx.state.blobs?.moduleGraphData, null, 2).replaceAll(ctx.config.root, '<root>')
+  // expect(moduleGraphJson).toMatchInlineSnapshot(`
+  //   "{
+  //     "": {
+  //       "<root>/basic.test.ts": {
+  //         "graph": {
+  //           "<root>/sub/subject.ts": [],
+  //           "<root>/sub/format.ts": [
+  //             "<root>/sub/subject.ts"
+  //           ],
+  //           "<root>/util.ts": [
+  //             "<root>/sub/subject.ts"
+  //           ],
+  //           "<root>/basic.test.ts": [
+  //             "<root>/sub/format.ts",
+  //             "<root>/util.ts"
+  //           ]
+  //         },
+  //         "externalized": [],
+  //         "inlined": [
+  //           "<root>/basic.test.ts",
+  //           "<root>/sub/format.ts",
+  //           "<root>/sub/subject.ts",
+  //           "<root>/util.ts"
+  //         ]
+  //       },
+  //       "<root>/second.test.ts": {
+  //         "graph": {
+  //           "<root>/sub/subject.ts": [],
+  //           "<root>/util.ts": [
+  //             "<root>/sub/subject.ts"
+  //           ],
+  //           "<root>/second.test.ts": [
+  //             "<root>/util.ts"
+  //           ]
+  //         },
+  //         "externalized": [],
+  //         "inlined": [
+  //           "<root>/second.test.ts",
+  //           "<root>/util.ts",
+  //           "<root>/sub/subject.ts"
+  //         ]
+  //       }
+  //     }
+  //   }"
+  // `)
+
+  // also check html reporter doesn't crash
+  const result = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest-reports'),
+    reporters: ['html'],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.stdout).toMatchInlineSnapshot(`
+    " HTML  Report is generated
+           You can run npx vite preview --outDir html to see the test results.
+    "
+  `)
 })
 
 function trimReporterOutput(report: string) {

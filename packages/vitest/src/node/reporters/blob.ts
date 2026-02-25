@@ -286,7 +286,7 @@ type MergeReport = [
   environmentModules: MergeReportEnvironmentModules,
 ]
 
-type MergeReportEnvironmentModules = {
+interface MergeReportEnvironmentModules {
   [projectName: string]: {
     [environmentName: string]: {
       idTable: string[]
