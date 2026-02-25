@@ -256,7 +256,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}],
+      [version, [file], [], undefined, 1500 * index, {}, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
@@ -279,8 +279,8 @@ test('module graph available', async () => {
   const reportsDir = resolve(root, '.vitest-reports')
   rmSync(reportsDir, { force: true, recursive: true })
 
-  async function getModuleGraphs(ctx: Vitest) {
-    const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+  async function getSerializedModuleGraph(ctx: Vitest) {
+    const files = ctx.state.getFiles().slice().sort()
     const moduleGraphs = Object.fromEntries(
       await Promise.all(
         files.map(async (file) => {
@@ -296,7 +296,9 @@ test('module graph available', async () => {
         }),
       ),
     )
-    return JSON.stringify(moduleGraphs, null, 2).replaceAll(ctx.config.root, '<root>')
+    return JSON.stringify(moduleGraphs, null, 2)
+      .replaceAll(ctx.config.root, '<root>')
+      .replace(/"\/[^"\n]*\/node_modules\//g, '"<node_modules>/')
   }
 
   // generate blob
@@ -305,7 +307,7 @@ test('module graph available', async () => {
     reporters: ['blob'],
   })
   expect.assert(result.ctx)
-  const generatedModuleGraphJson = await getModuleGraphs(result.ctx)
+  const generatedModuleGraphJson = await getSerializedModuleGraph(result.ctx)
   expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
     "{
       "<root>/basic.test.ts": {
@@ -337,10 +339,13 @@ test('module graph available', async () => {
             "<root>/sub/subject.ts"
           ],
           "<root>/second.test.ts": [
-            "<root>/util.ts"
+            "<root>/util.ts",
+            "<node_modules>/obug/dist/node.js"
           ]
         },
-        "externalized": [],
+        "externalized": [
+          "<node_modules>/obug/dist/node.js"
+        ],
         "inlined": [
           "<root>/second.test.ts",
           "<root>/util.ts",
@@ -357,7 +362,7 @@ test('module graph available', async () => {
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect.assert(result2.ctx)
-  const restoredModuleGraphJson = await getModuleGraphs(result2.ctx)
+  const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
   expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
 
   // also check html reporter doesn't crash
