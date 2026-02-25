@@ -290,55 +290,61 @@ test('module graph available', async () => {
     mergeReports: reportsDir,
   })
   expect(stderr).toMatchInlineSnapshot(`""`)
+
   expect.assert(ctx)
-  // TODO: test with getModuleGraph
-  expect.assert(getModuleGraph)
-  // const moduleGraphJson = JSON.stringify(ctx.state.blobs?.moduleGraphData, null, 2).replaceAll(ctx.config.root, '<root>')
-  // expect(moduleGraphJson).toMatchInlineSnapshot(`
-  //   "{
-  //     "": {
-  //       "<root>/basic.test.ts": {
-  //         "graph": {
-  //           "<root>/sub/subject.ts": [],
-  //           "<root>/sub/format.ts": [
-  //             "<root>/sub/subject.ts"
-  //           ],
-  //           "<root>/util.ts": [
-  //             "<root>/sub/subject.ts"
-  //           ],
-  //           "<root>/basic.test.ts": [
-  //             "<root>/sub/format.ts",
-  //             "<root>/util.ts"
-  //           ]
-  //         },
-  //         "externalized": [],
-  //         "inlined": [
-  //           "<root>/basic.test.ts",
-  //           "<root>/sub/format.ts",
-  //           "<root>/sub/subject.ts",
-  //           "<root>/util.ts"
-  //         ]
-  //       },
-  //       "<root>/second.test.ts": {
-  //         "graph": {
-  //           "<root>/sub/subject.ts": [],
-  //           "<root>/util.ts": [
-  //             "<root>/sub/subject.ts"
-  //           ],
-  //           "<root>/second.test.ts": [
-  //             "<root>/util.ts"
-  //           ]
-  //         },
-  //         "externalized": [],
-  //         "inlined": [
-  //           "<root>/second.test.ts",
-  //           "<root>/util.ts",
-  //           "<root>/sub/subject.ts"
-  //         ]
-  //       }
-  //     }
-  //   }"
-  // `)
+  const files = ctx.state.getFiles().map(file => file.filepath).sort()
+  const moduleGraphs = Object.fromEntries(
+    await Promise.all(
+      files.map(async (file) => {
+        const graph = await getModuleGraph(ctx, '', file)
+        return [file, graph]
+      }),
+    ),
+  )
+  const moduleGraphJson = JSON.stringify(moduleGraphs, null, 2).replaceAll(ctx.config.root, '<root>')
+  expect(moduleGraphJson).toMatchInlineSnapshot(`
+    "{
+      "<root>/basic.test.ts": {
+        "graph": {
+          "<root>/sub/subject.ts": [],
+          "<root>/sub/format.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/util.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/basic.test.ts": [
+            "<root>/sub/format.ts",
+            "<root>/util.ts"
+          ]
+        },
+        "externalized": [],
+        "inlined": [
+          "<root>/basic.test.ts",
+          "<root>/sub/format.ts",
+          "<root>/sub/subject.ts",
+          "<root>/util.ts"
+        ]
+      },
+      "<root>/second.test.ts": {
+        "graph": {
+          "<root>/sub/subject.ts": [],
+          "<root>/util.ts": [
+            "<root>/sub/subject.ts"
+          ],
+          "<root>/second.test.ts": [
+            "<root>/util.ts"
+          ]
+        },
+        "externalized": [],
+        "inlined": [
+          "<root>/second.test.ts",
+          "<root>/util.ts",
+          "<root>/sub/subject.ts"
+        ]
+      }
+    }"
+  `)
 
   // also check html reporter doesn't crash
   const result = await runVitest({
