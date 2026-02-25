@@ -157,8 +157,7 @@ export async function readBlobs(
     )
   }
 
-  // Restore per-environment module graphs so merge mode can reuse
-  // the same module graph based flows as regular test runs.
+  // Restore module graph
   const projects = Object.fromEntries(
     projectsArray.map(p => [p.name, p]),
   )
@@ -304,13 +303,11 @@ function deserializeEnvironmentModuleGraph(
     const moduleId = serialized.idTable[id]
     const filePath = serialized.idTable[file]
     const urlPath = serialized.idTable[url]
-    if (!moduleId || !filePath || !urlPath) {
-      return
-    }
     const moduleNode = environment.moduleGraph.createFileOnlyEntry(filePath)
     moduleNode.url = urlPath
     moduleNode.id = moduleId
     moduleNode.transformResult = {
+      // print error checks that transformResult is set
       code: ' ',
       map: null,
     }
@@ -320,22 +317,10 @@ function deserializeEnvironmentModuleGraph(
 
   serialized.modules.forEach(([id, _file, _url, importedIds]) => {
     const moduleId = serialized.idTable[id]
-    if (!moduleId) {
-      return
-    }
-    const moduleNode = nodesById.get(moduleId)
-    if (!moduleNode) {
-      return
-    }
+    const moduleNode = nodesById.get(moduleId)!
     importedIds.forEach((importedIdIndex) => {
       const importedId = serialized.idTable[importedIdIndex]
-      if (!importedId) {
-        return
-      }
-      const importedNode = nodesById.get(importedId)
-      if (!importedNode) {
-        return
-      }
+      const importedNode = nodesById.get(importedId)!
       moduleNode.importedModules.add(importedNode)
       importedNode.importers.add(moduleNode)
     })
