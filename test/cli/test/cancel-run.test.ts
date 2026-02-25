@@ -51,7 +51,7 @@ test('can force cancel a run via CLI', async () => {
 
 test('cancelling test run stops test execution immediately', async () => {
   const onTestRunEnd = createDefer<readonly TestModule[]>()
-  const onTestCaseReady = createDefer<void>()
+  const onSlowTestRunning = createDefer<void>()
   const onTestCaseHooks: string[] = []
 
   const vitest = await createVitest('test', {
@@ -67,7 +67,7 @@ test('cancelling test run stops test execution immediately', async () => {
       },
       onTestCaseAnnotate: (_, annotation) => {
         if (annotation.message === 'Running long test, do the cancelling now!') {
-          onTestCaseReady.resolve()
+          onSlowTestRunning.resolve()
         }
       },
       onTestRunEnd(testModules) {
@@ -79,7 +79,7 @@ test('cancelling test run stops test execution immediately', async () => {
 
   const promise = vitest.start()
 
-  await onTestCaseReady
+  await onSlowTestRunning
   await vitest.cancelCurrentRun('keyboard-input')
 
   const testModules = await onTestRunEnd
@@ -87,12 +87,12 @@ test('cancelling test run stops test execution immediately', async () => {
 
   expect(testModules).toHaveLength(1)
 
-  const tests = Array.from(testModules[0].children.allTests().map(test => ({
+  const tests = Array.from(testModules[0].children.allTests()).map(test => ({
     name: test.name,
     status: test.result().state,
     note: (test.result() as any).note,
     afterEachRun: (test.meta() as any).afterEachDone === true,
-  })))
+  }))
 
   expect(tests).toMatchInlineSnapshot(`
     [
