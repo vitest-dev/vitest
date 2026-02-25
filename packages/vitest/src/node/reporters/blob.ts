@@ -182,18 +182,14 @@ export async function readBlobs(
 
       Object.entries(modulesByProject.environments).forEach(([environmentName, moduleGraph]) => {
         const environment = project.vite.environments[environmentName]
-        restoreAndWireEnvironmentModuleGraph(environment, moduleGraph)
+        deserializeEnvironmentModuleGraph(environment, moduleGraph)
       })
 
       const browserModuleGraph = modulesByProject.browser
-      if (!browserModuleGraph) {
-        return
+      if (browserModuleGraph) {
+        const browserEnvironment = project.browser!.vite.environments.client
+        deserializeEnvironmentModuleGraph(browserEnvironment, browserModuleGraph)
       }
-      const browserEnvironment = project.browser?.vite.environments.client
-      if (!browserEnvironment) {
-        throw new Error(`Cannot find browser environment for project "${projectName}" while restoring module graph in merge mode`)
-      }
-      restoreAndWireEnvironmentModuleGraph(browserEnvironment, browserModuleGraph)
     })
   })
 
@@ -298,7 +294,7 @@ function serializeEnvironmentModuleGraph(
   }
 }
 
-function restoreAndWireEnvironmentModuleGraph(
+function deserializeEnvironmentModuleGraph(
   environment: DevEnvironment,
   serialized: SerializedEnvironmentModuleGraph,
 ): void {
