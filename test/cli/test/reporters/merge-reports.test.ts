@@ -298,7 +298,7 @@ test('module graph available', async () => {
     )
     return JSON.stringify(moduleGraphs, null, 2)
       .replaceAll(ctx.config.root, '<root>')
-      .replace(/"\/[^"\n]*\/node_modules\//g, '"<node_modules>/')
+      .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
   }
 
   // generate blob
