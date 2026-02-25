@@ -26,7 +26,8 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toContain(`reporter error: onTestRunStart`)
+    expect(result.stderr).toContain('reporter error: onTestRunStart')
+    expect(result.errorTree()).toMatchInlineSnapshot(`{}`)
     expect(onTestRunEndCalled).toBe(false)
     expect(result.exitCode).toBe(1)
   })
@@ -52,33 +53,22 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toContain(`reporter error: onTestRunStart`)
+    expect(result.stderr).toContain('reporter error: onTestRunStart')
+    expect(result.errorTree()).toMatchInlineSnapshot(`{}`)
     expect(onTestRunEndCalled).toBe(false)
     expect(result.exitCode).toBe(1)
   })
 
-  test.skip('aligns normal run with merge reports for onTestRunStart', async () => {
-    // let normalHookCalled = false
-    // let normalOnTestRunEndCalled = false
-
-    // const normalReporter: Reporter = {
-    //   onTestRunStart() {
-    //     normalHookCalled = true
-    //     throw new Error('reporter boom: onTestRunStart')
-    //   },
-    //   onTestRunEnd() {
-    //     normalOnTestRunEndCalled = true
-    //   },
-    // }
-
-    // normal run behavior
+  test('onTestModuleCollected in normal run', async () => {
+    let didThrow = false
     let onTestRunEndCalled = false
     const result = await runVitest({
       root,
       reporters: [
         {
-          onTestRunStart() {
-            throw new Error('reporter error: onTestRunStart')
+          onTestModuleCollected() {
+            didThrow = true
+            throw new Error('reporter error: onTestModuleCollected')
           },
           onTestRunEnd() {
             onTestRunEndCalled = true
@@ -86,187 +76,113 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toContain(`reporter error: onTestRunStart`)
-    expect(onTestRunEndCalled).toBe(false)
-    expect(result.exitCode).toBe(1)
-
-    // const normal = {
-    //   exitCode: normalExitCode,
-    //   thrown: normalThrown,
-    //   hookCalled: normalHookCalled,
-    //   onTestRunEndCalled: normalOnTestRunEndCalled,
-    //   stderrHasReporterError: /reporter boom:/.test(normalStderr),
-    // }
-
-    // generate blob
-    await runVitest({
-      config: false,
-      root,
-      reporters: [['blob', { outputFile: './.vitest-reports/blob.json' }]],
-    })
-
-    // let mergedHookCalled = false
-    // let mergedOnTestRunEndCalled = false
-
-    // const mergedReporter: Reporter = {
-    //   onTestRunEnd() {
-    //     mergedOnTestRunEndCalled = true
-    //   },
-    //   onTestRunStart() {
-    //     mergedHookCalled = true
-    //     throw new Error('reporter boom: onTestRunStart')
-    //   },
-    // }
-
-    // const { exitCode: mergedExitCode, stderr: mergedStderr, thrown: mergedThrown } = await runVitest({
-    //   config: false,
-    //   root,
-    //   mergeReports: reportsDir,
-    //   reporters: [mergedReporter],
-    // })
-
-    // const merged = {
-    //   exitCode: mergedExitCode,
-    //   thrown: mergedThrown,
-    //   hookCalled: mergedHookCalled,
-    //   onTestRunEndCalled: mergedOnTestRunEndCalled,
-    //   stderrHasReporterError: /reporter boom:/.test(mergedStderr),
-    // }
-
-    // expect(normal).toEqual(merged)
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      }
+    `)
+    expect(didThrow).toBe(true)
+    expect(onTestRunEndCalled).toBe(true)
+    expect(result.exitCode).toBe(0)
   })
 
-  // test('aligns normal run with merge reports for onTestModuleCollected', async () => {
-  //   rmSync(reportsDir, { force: true, recursive: true })
+  test('onTestModuleCollected in --merge-reports', async () => {
+    await runVitest({
+      root,
+      reporters: ['blob'],
+    })
 
-  //   let normalHookCalled = false
-  //   let normalOnTestRunEndCalled = false
+    let onTestRunEndCalled = false
+    const result = await runVitest({
+      root,
+      mergeReports: reportsDir,
+      reporters: [
+        {
+          onTestModuleCollected() {
+            throw new Error('reporter error: onTestModuleCollected')
+          },
+          onTestRunEnd() {
+            onTestRunEndCalled = true
+          },
+        },
+      ],
+    })
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      }
+    `)
+    expect(onTestRunEndCalled).toBe(true)
+    expect(result.exitCode).toBe(0)
+  })
 
-  //   const normalReporter: Reporter = {
-  //     onTestRunEnd() {
-  //       normalOnTestRunEndCalled = true
-  //     },
-  //     onTestModuleCollected() {
-  //       normalHookCalled = true
-  //       throw new Error('reporter boom: onTestModuleCollected')
-  //     },
-  //   }
+  test('onUserConsoleLog in normal run', async () => {
+    let onTestRunEndCalled = false
+    const result = await runVitest({
+      root,
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            if (log.content.includes('trigger-reporter-error')) {
+              throw new Error('reporter error: onUserConsoleLog')
+            }
+          },
+          onTestRunEnd() {
+            onTestRunEndCalled = true
+          },
+        },
+      ],
+    })
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      }
+    `)
+    expect(onTestRunEndCalled).toBe(true)
+    expect(result.exitCode).toBe(0)
+  })
 
-  //   const { exitCode: normalExitCode, stderr: normalStderr, thrown: normalThrown } = await runVitest({
-  //     config: false,
-  //     root,
-  //     reporters: [normalReporter],
-  //   })
+  test('onUserConsoleLog in --merge-reports', async () => {
+    await runVitest({
+      root,
+      reporters: ['blob'],
+    })
 
-  //   const normal = {
-  //     exitCode: normalExitCode,
-  //     thrown: normalThrown,
-  //     hookCalled: normalHookCalled,
-  //     onTestRunEndCalled: normalOnTestRunEndCalled,
-  //     stderrHasReporterError: /reporter boom:/.test(normalStderr),
-  //   }
-
-  //   await runVitest({
-  //     config: false,
-  //     root,
-  //     reporters: [['blob', { outputFile: './.vitest-reports/blob.json' }]],
-  //   })
-
-  //   let mergedHookCalled = false
-  //   let mergedOnTestRunEndCalled = false
-
-  //   const mergedReporter: Reporter = {
-  //     onTestRunEnd() {
-  //       mergedOnTestRunEndCalled = true
-  //     },
-  //     onTestModuleCollected() {
-  //       mergedHookCalled = true
-  //       throw new Error('reporter boom: onTestModuleCollected')
-  //     },
-  //   }
-
-  //   const { exitCode: mergedExitCode, stderr: mergedStderr, thrown: mergedThrown } = await runVitest({
-  //     config: false,
-  //     root,
-  //     mergeReports: reportsDir,
-  //     reporters: [mergedReporter],
-  //   })
-
-  //   const merged = {
-  //     exitCode: mergedExitCode,
-  //     thrown: mergedThrown,
-  //     hookCalled: mergedHookCalled,
-  //     onTestRunEndCalled: mergedOnTestRunEndCalled,
-  //     stderrHasReporterError: /reporter boom:/.test(mergedStderr),
-  //   }
-
-  //   expect(normal).toEqual(merged)
-  // })
-
-  // test('aligns normal run with merge reports for onUserConsoleLog', async () => {
-  //   rmSync(reportsDir, { force: true, recursive: true })
-
-  //   let normalHookCalled = false
-  //   let normalOnTestRunEndCalled = false
-
-  //   const normalReporter: Reporter = {
-  //     onTestRunEnd() {
-  //       normalOnTestRunEndCalled = true
-  //     },
-  //     onUserConsoleLog() {
-  //       normalHookCalled = true
-  //       throw new Error('reporter boom: onUserConsoleLog')
-  //     },
-  //   }
-
-  //   const { exitCode: normalExitCode, stderr: normalStderr, thrown: normalThrown } = await runVitest({
-  //     config: false,
-  //     root,
-  //     reporters: [normalReporter],
-  //   })
-
-  //   const normal = {
-  //     exitCode: normalExitCode,
-  //     thrown: normalThrown,
-  //     hookCalled: normalHookCalled,
-  //     onTestRunEndCalled: normalOnTestRunEndCalled,
-  //     stderrHasReporterError: /reporter boom:/.test(normalStderr),
-  //   }
-
-  //   await runVitest({
-  //     config: false,
-  //     root,
-  //     reporters: [['blob', { outputFile: './.vitest-reports/blob.json' }]],
-  //   })
-
-  //   let mergedHookCalled = false
-  //   let mergedOnTestRunEndCalled = false
-
-  //   const mergedReporter: Reporter = {
-  //     onTestRunEnd() {
-  //       mergedOnTestRunEndCalled = true
-  //     },
-  //     onUserConsoleLog() {
-  //       mergedHookCalled = true
-  //       throw new Error('reporter boom: onUserConsoleLog')
-  //     },
-  //   }
-
-  //   const { exitCode: mergedExitCode, stderr: mergedStderr, thrown: mergedThrown } = await runVitest({
-  //     config: false,
-  //     root,
-  //     mergeReports: reportsDir,
-  //     reporters: [mergedReporter],
-  //   })
-
-  //   const merged = {
-  //     exitCode: mergedExitCode,
-  //     thrown: mergedThrown,
-  //     hookCalled: mergedHookCalled,
-  //     onTestRunEndCalled: mergedOnTestRunEndCalled,
-  //     stderrHasReporterError: /reporter boom:/.test(mergedStderr),
-  //   }
-
-  //   expect(normal).toEqual(merged)
-  // })
+    let onTestRunEndCalled = false
+    const result = await runVitest({
+      root,
+      mergeReports: reportsDir,
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            if (log.content.includes('trigger-reporter-error')) {
+              throw new Error('reporter error: onUserConsoleLog')
+            }
+          },
+          onTestRunEnd() {
+            onTestRunEndCalled = true
+          },
+        },
+      ],
+    })
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      }
+    `)
+    expect(onTestRunEndCalled).toBe(true)
+    expect(result.exitCode).toBe(0)
+  })
 })

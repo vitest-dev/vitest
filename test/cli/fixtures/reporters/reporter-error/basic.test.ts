@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-test('reports a passing test', () => {
-  console.log('reporter-error-log')
+test('basic', () => {
+  console.log('trigger-reporter-error')
   expect(1).toBe(1)
 })
