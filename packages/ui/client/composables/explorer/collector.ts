@@ -20,6 +20,7 @@ import {
   createOrUpdateNodeTask,
   createOrUpdateSuiteTask,
   isRunningTestNode,
+  isSlowTestTask,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
 import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
@@ -41,6 +42,7 @@ export function runLoadFiles(
     failed: filter.failed,
     success: filter.success,
     skipped: filter.skipped,
+    slow: filter.slow,
     onlyTests: filter.onlyTests,
   })
 }
@@ -294,6 +296,7 @@ export function resetCollectorInfo(summary: CollectorInfo) {
   summary.testsSkipped = 0
   summary.testsTodo = 0
   summary.testsExpectedFail = 0
+  summary.testsSlow = 0
   summary.totalTests = 0
   summary.failedSnapshotEnabled = false
 }
@@ -321,6 +324,7 @@ function collectData(
     testsSkipped: 0,
     testsTodo: 0,
     testsExpectedFail: 0,
+    testsSlow: 0,
     totalTests: 0,
     failedSnapshot: false,
     failedSnapshotEnabled: false,
@@ -356,6 +360,7 @@ function collectData(
       ignored,
       todo,
       expectedFail,
+      slow,
     } = collectTests(f)
 
     data.totalTests += total
@@ -364,6 +369,7 @@ function collectData(
     data.testsSkipped += skipped
     data.testsTodo += todo
     data.testsExpectedFail += expectedFail
+    data.testsSlow += slow
     data.testsIgnore += ignored
   }
 
@@ -379,6 +385,7 @@ function collectData(
   summary.testsSuccess = data.testsSuccess
   summary.testsTodo = data.testsTodo
   summary.testsExpectedFail = data.testsExpectedFail
+  summary.testsSlow = data.testsSlow
   summary.testsIgnore = data.testsIgnore
   summary.testsSkipped = data.testsSkipped
   summary.totalTests = data.totalTests
@@ -394,11 +401,15 @@ function collectTests(file: File, search: SearchMatcher = () => true, filter?: F
     ignored: 0,
     todo: 0,
     expectedFail: 0,
+    slow: 0,
   } satisfies CollectFilteredTests
 
   for (const t of testsCollector(file)) {
     if (!filter || testMatcher(t, search, filter)) {
       data.total++
+      if (isSlowTestTask(t)) {
+        data.slow++
+      }
       if (t.result?.state === 'fail') {
         data.failed++
       }
