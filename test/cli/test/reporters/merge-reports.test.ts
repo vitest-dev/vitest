@@ -256,7 +256,7 @@ test('total and merged execution times are shown', async () => {
     file.tasks.push(createTest('some test', file))
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}, {}],
+      [version, [file], [], undefined, 1500 * index, {}],
       resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
     )
   }
@@ -280,7 +280,7 @@ test('module graph available', async () => {
   rmSync(reportsDir, { force: true, recursive: true })
 
   async function getSerializedModuleGraph(ctx: Vitest) {
-    const files = ctx.state.getFiles().slice().sort()
+    const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
     const moduleGraphs = Object.fromEntries(
       await Promise.all(
         files.map(async (file) => {
