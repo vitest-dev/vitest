@@ -163,6 +163,12 @@ export async function readBlobs(
     projectsArray.map(p => [p.name, p]),
   )
 
+  for (const project of projectsArray) {
+    if (project.isBrowserEnabled()) {
+      await project._initBrowserServer()
+    }
+  }
+
   blobs.forEach((blob) => {
     Object.entries(blob.environmentModules).forEach(([projectName, modulesByProject]) => {
       const project = projects[projectName]
@@ -183,16 +189,11 @@ export async function readBlobs(
       if (!browserModuleGraph) {
         return
       }
-
-      // TODO: how to restore project.browser?
       const browserEnvironment = project.browser?.vite.environments.client
-      const fallbackEnvironment = project.vite.environments.client
-      const targetEnvironment = browserEnvironment || fallbackEnvironment
-      if (!targetEnvironment) {
-        return
+      if (!browserEnvironment) {
+        throw new Error(`Cannot find browser environment for project "${projectName}" while restoring module graph in merge mode`)
       }
-
-      restoreAndWireEnvironmentModuleGraph(targetEnvironment, browserModuleGraph)
+      restoreAndWireEnvironmentModuleGraph(browserEnvironment, browserModuleGraph)
     })
   })
 
