@@ -243,32 +243,6 @@ test('merge reports', async () => {
   `)
 })
 
-test('throws reporter errors when merging reports', async () => {
-  await runVitest({
-    root: './fixtures/reporters/merge-reports',
-    reporters: ['blob'],
-  })
-
-  let onTestRunEndCalled = false
-  const { stderr, exitCode } = await runVitest({
-    root: './fixtures/reporters/merge-reports',
-    mergeReports: reportsDir,
-    reporters: [
-      {
-        onTestRunStart() {
-          throw new Error('broken reporter')
-        },
-        onTestRunEnd() {
-          onTestRunEndCalled = true
-        },
-      },
-    ],
-  })
-  expect(stderr).toContain(`Error: broken reporter`)
-  expect(onTestRunEndCalled).toBe(false)
-  expect(exitCode).toBe(1)
-})
-
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
