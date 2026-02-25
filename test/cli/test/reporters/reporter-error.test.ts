@@ -95,6 +95,7 @@ describe('reporter errors', () => {
       reporters: ['blob'],
     })
 
+    let didThrow = false
     let onTestRunEndCalled = false
     const result = await runVitest({
       root,
@@ -102,6 +103,7 @@ describe('reporter errors', () => {
       reporters: [
         {
           onTestModuleCollected() {
+            didThrow = true
             throw new Error('reporter error: onTestModuleCollected')
           },
           onTestRunEnd() {
@@ -118,11 +120,13 @@ describe('reporter errors', () => {
         },
       }
     `)
+    expect(didThrow).toBe(true)
     expect(onTestRunEndCalled).toBe(true)
     expect(result.exitCode).toBe(0)
   })
 
   test('onUserConsoleLog in normal run', async () => {
+    let didThrow = false
     let onTestRunEndCalled = false
     const result = await runVitest({
       root,
@@ -130,6 +134,7 @@ describe('reporter errors', () => {
         {
           onUserConsoleLog(log) {
             if (log.content.includes('trigger-reporter-error')) {
+              didThrow = true
               throw new Error('reporter error: onUserConsoleLog')
             }
           },
@@ -147,6 +152,7 @@ describe('reporter errors', () => {
         },
       }
     `)
+    expect(didThrow).toBe(true)
     expect(onTestRunEndCalled).toBe(true)
     expect(result.exitCode).toBe(0)
   })
@@ -157,6 +163,7 @@ describe('reporter errors', () => {
       reporters: ['blob'],
     })
 
+    let didThrow = false
     let onTestRunEndCalled = false
     const result = await runVitest({
       root,
@@ -165,6 +172,7 @@ describe('reporter errors', () => {
         {
           onUserConsoleLog(log) {
             if (log.content.includes('trigger-reporter-error')) {
+              didThrow = true
               throw new Error('reporter error: onUserConsoleLog')
             }
           },
@@ -182,6 +190,7 @@ describe('reporter errors', () => {
         },
       }
     `)
+    expect(didThrow).toBe(true)
     expect(onTestRunEndCalled).toBe(true)
     expect(result.exitCode).toBe(0)
   })
