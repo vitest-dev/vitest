@@ -825,7 +825,7 @@ function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: st
     if (!t.result || t.result.state === 'run') {
       t.mode = 'skip'
       t.result = { ...t.result, state: 'skip', note }
-      updateTask('test-finished', t, runner)
+      updateTask('test-cancel', t, runner)
     }
 
     if (t.type === 'suite') {

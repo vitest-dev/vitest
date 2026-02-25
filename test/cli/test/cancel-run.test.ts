@@ -52,11 +52,19 @@ test('can force cancel a run via CLI', async () => {
 test('cancelling test run stops test execution immediately', async () => {
   const onTestRunEnd = createDefer<readonly TestModule[]>()
   const onTestCaseReady = createDefer<void>()
+  const onTestCaseHooks: string[] = []
 
   const vitest = await createVitest('test', {
     root: 'fixtures/cancel-run',
     include: ['blocked-test-cases.test.ts'],
     reporters: [{
+      onTestCaseReady(testCase) {
+        onTestCaseHooks.push(`onTestCaseReady ${testCase.name}`)
+      },
+      onTestCaseResult(testCase) {
+        onTestCaseHooks.push(`onTestCaseResult ${testCase.name}`)
+        onTestCaseHooks.push('') // padding
+      },
       onTestCaseAnnotate: (_, annotation) => {
         if (annotation.message === 'Running long test, do the cancelling now!') {
           onTestCaseReady.resolve()
@@ -124,6 +132,29 @@ test('cancelling test run stops test execution immediately', async () => {
         "note": "The test run was aborted by the user.",
         "status": "skipped",
       },
+    ]
+  `)
+
+  expect(onTestCaseHooks).toMatchInlineSnapshot(`
+    [
+      "onTestCaseReady one",
+      "onTestCaseResult one",
+      "",
+      "onTestCaseReady two",
+      "onTestCaseResult two",
+      "",
+      "onTestCaseReady this test starts and gets cancelled, its after each should be called",
+      "onTestCaseResult this test starts and gets cancelled, its after each should be called",
+      "",
+      "onTestCaseReady third, no after each expected",
+      "onTestCaseResult third, no after each expected",
+      "",
+      "onTestCaseReady fourth, no after each expected",
+      "onTestCaseResult fourth, no after each expected",
+      "",
+      "onTestCaseReady fifth, no after each expected",
+      "onTestCaseResult fifth, no after each expected",
+      "",
     ]
   `)
 })
