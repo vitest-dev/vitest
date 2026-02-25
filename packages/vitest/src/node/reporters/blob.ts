@@ -96,7 +96,7 @@ export class BlobReporter implements Reporter {
       modules,
       coverage,
       executionTime,
-      encodeModuleGraphData(moduleGraphData),
+      encodeModuleGraphData(this.ctx, moduleGraphData),
     ] satisfies MergeReport
 
     const reportFile = resolve(this.ctx.config.root, outputFile)
@@ -273,11 +273,15 @@ interface SerializedModuleGraphByProject {
 interface SerializedProjectModuleGraphData {
   idTable: string[]
   testFiles: number[]
+  setupFiles: number[]
   inlined: number[]
   edges: [from: number, to: number][]
 }
 
-function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): SerializedModuleGraphByProject {
+function encodeModuleGraphData(
+  ctx: Vitest,
+  moduleGraphData: ModuleGraphDataByProject,
+): SerializedModuleGraphByProject {
   const encoded: SerializedModuleGraphByProject = {}
 
   Object.entries(moduleGraphData).forEach(([projectName, projectGraph]) => {
@@ -302,6 +306,7 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
       inlined: [],
       edges: [],
       testFiles: [],
+      setupFiles: [],
     }
 
     Object.entries(projectGraph).forEach(([filepath, graphData]) => {
@@ -325,6 +330,8 @@ function encodeModuleGraphData(moduleGraphData: ModuleGraphDataByProject): Seria
         })
       })
     })
+    const setupFiles = ctx.getProjectByName(projectName).config.setupFiles
+    projectData.setupFiles = setupFiles.map(getIdIndex)
 
     projectData.inlined = [...inlinedSet]
     encoded[projectName] = projectData
@@ -375,6 +382,9 @@ function decodeModuleGraphData(moduleGraphData: SerializedModuleGraphByProject):
       }
 
       visitInlinedModule(rootId)
+      projectData.setupFiles.forEach((setupId) => {
+        visitInlinedModule(setupId)
+      })
 
       return {
         graph,
