@@ -5,6 +5,8 @@ outline: deep
 
 # Migration Guide
 
+[Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
