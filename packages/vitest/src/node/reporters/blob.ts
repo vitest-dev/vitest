@@ -297,10 +297,10 @@ function serializeEnvironmentModuleGraph(
   }
 }
 
-function restoreEnvironmentModuleGraph(
+function restoreAndWireEnvironmentModuleGraph(
   environment: DevEnvironment,
   serialized: SerializedEnvironmentModuleGraph,
-): Map<string, EnvironmentModuleNode> {
+): void {
   const nodesById = new Map<string, EnvironmentModuleNode>()
 
   serialized.modules.forEach(([id, file, url]) => {
@@ -321,23 +321,6 @@ function restoreEnvironmentModuleGraph(
     nodesById.set(moduleId, moduleNode)
   })
 
-  return nodesById
-}
-
-function restoreAndWireEnvironmentModuleGraph(
-  environment: DevEnvironment,
-  serialized: SerializedEnvironmentModuleGraph,
-): void {
-  wireEnvironmentModuleGraph(
-    restoreEnvironmentModuleGraph(environment, serialized),
-    serialized,
-  )
-}
-
-function wireEnvironmentModuleGraph(
-  nodesById: Map<string, EnvironmentModuleNode>,
-  serialized: SerializedEnvironmentModuleGraph,
-): void {
   serialized.modules.forEach(([id, _file, _url, importedIds]) => {
     const moduleId = serialized.idTable[id]
     if (!moduleId) {
