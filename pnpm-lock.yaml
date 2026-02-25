@@ -959,6 +959,9 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
+      convert-source-map:
+        specifier: ^2.0.0
+        version: 2.0.0
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.0.3
@@ -966,6 +969,9 @@ importers:
       '@jridgewell/trace-mapping':
         specifier: 'catalog:'
         version: 0.3.31
+      '@types/convert-source-map':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1069,9 +1075,6 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 15.0.0
         version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
-      '@types/convert-source-map':
-        specifier: ^2.0.3
-        version: 2.0.3
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1108,9 +1111,6 @@ importers:
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
-      convert-source-map:
-        specifier: ^2.0.0
-        version: 2.0.0
       empathic:
         specifier: ^2.0.0
         version: 2.0.0
@@ -1209,6 +1209,9 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
+      test-dep-error:
+        specifier: file:./deps/test-dep-error
+        version: file:test/browser/deps/test-dep-error
       tinyexec:
         specifier: 'catalog:'
         version: 1.0.2
@@ -9384,6 +9387,9 @@ packages:
 
   test-dep-conditions@file:test/config/deps/test-dep-conditions:
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+
+  test-dep-error@file:test/browser/deps/test-dep-error:
+    resolution: {directory: test/browser/deps/test-dep-error, type: directory}
 
   text-decoder@1.1.1:
     resolution: {integrity: sha512-8zll7REEv4GDD3x4/0pW+ppIxSNs7H1J10IKFZsuOMscumCdM2a+toDGLPA3T+1+fLBql4zbt5z83GEQGGV5VA==}
@@ -18543,6 +18549,8 @@ snapshots:
   test-dep-conditions@file:test/config/deps/test-dep-conditions:
     dependencies:
       test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
+
+  test-dep-error@file:test/browser/deps/test-dep-error: {}
 
   text-decoder@1.1.1:
     dependencies:
