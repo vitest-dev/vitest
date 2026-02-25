@@ -18,7 +18,7 @@ export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
 export class TestFixtures {
-  private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
+  private _suiteContexts: WeakMap<Suite | { type: 'worker' }, /* context object */ Record<string, unknown>>
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
   private _registrations: FixtureRegistrations
 
@@ -34,7 +34,7 @@ export class TestFixtures {
 
   private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']
   private static _fixtureScopes: string[] = ['test', 'file', 'worker']
-  private static _workerContextSymbol = Symbol('workerContext')
+  private static _workerContextSuite = { type: 'worker' } as const
 
   static clearDefinitions(): void {
     TestFixtures._definitions.length = 0
@@ -103,10 +103,10 @@ export class TestFixtures {
   }
 
   getWorkerContext(): Record<string, any> {
-    if (!this._suiteContexts.has(TestFixtures._workerContextSymbol)) {
-      this._suiteContexts.set(TestFixtures._workerContextSymbol, Object.create(null))
+    if (!this._suiteContexts.has(TestFixtures._workerContextSuite)) {
+      this._suiteContexts.set(TestFixtures._workerContextSuite, Object.create(null))
     }
-    return this._suiteContexts.get(TestFixtures._workerContextSymbol)!
+    return this._suiteContexts.get(TestFixtures._workerContextSuite)!
   }
 
   private parseUserFixtures(
