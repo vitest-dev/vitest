@@ -4,8 +4,11 @@ import type {
 } from '@testing-library/user-event'
 import type { RunnerTask } from 'vitest'
 import type {
+  BrowserHttpMethod,
   BrowserLocators,
   BrowserPage,
+  BrowserResponseResolver,
+  BrowserRouteMatch,
   Locator,
   LocatorSelectors,
   UserEvent,
@@ -16,6 +19,7 @@ import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
+import { registerHttpResolver } from '../http-resolver'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
 
@@ -26,8 +30,44 @@ const provider = __vitest_browser_runner__.provider
 const sessionId = getBrowserState().sessionId
 const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
+const HTTP_METHODS: BrowserHttpMethod[] = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+]
+
+type SerializedRouteMatcher
+  = | { type: 'string'; value: string }
+    | { type: 'regexp'; value: string; flags: string }
+
+function serializeRouteMatcher(match: BrowserRouteMatch): SerializedRouteMatcher {
+  if (typeof match === 'string') {
+    return { type: 'string', value: match }
+  }
+  if (match instanceof RegExp) {
+    return { type: 'regexp', value: match.source, flags: match.flags }
+  }
+  throw new TypeError('Only string or RegExp matchers are supported for page.route().')
+}
+
 function triggerCommand<T>(command: string, args: any[], error?: Error) {
   return getBrowserState().commands.triggerCommand<T>(command, args, error)
+}
+
+function createHttpHandler(method: BrowserHttpMethod) {
+  return async (match: BrowserRouteMatch, resolver: BrowserResponseResolver) => {
+    const resolverId = registerHttpResolver(resolver)
+    await triggerCommand('__vitest_http', [
+      method,
+      serializeRouteMatcher(match),
+      resolverId,
+      getBrowserState().testerId,
+    ])
+  }
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
@@ -379,6 +419,11 @@ export const page: BrowserPage = {
     }
     return page
   },
+  http: HTTP_METHODS.reduce((handlers, method) => {
+    const name = method.toLowerCase() as Lowercase<BrowserHttpMethod>
+    handlers[name] = createHttpHandler(method)
+    return handlers
+  }, {} as BrowserPage['http']),
 }
 
 function convertToLocator(element: Element | Locator): Locator {
