@@ -25,6 +25,7 @@ test('decorators generated metadata is ignored', async ({ onTestFinished }) => {
   expect.soft(lineCoverage['12']).toBe(0)
 
   if (rolldownVersion) {
+    // Test OXC decorator support
     vi.stubEnv('TEST_OXC_DECORATOR', 'true')
     onTestFinished(() => {
       vi.unstubAllEnvs()
@@ -41,7 +42,7 @@ test('decorators generated metadata is ignored', async ({ onTestFinished }) => {
     const lineCoverage = fileCoverage.getLineCoverage()
     const branchCoverage = fileCoverage.getBranchCoverageByLine()
 
-    expect.soft(lineCoverage['4']).toBeUndefined()
+    expect.soft(lineCoverage['4']).toBe(1) // this is different from SWC. This is fine since the whole line is covered.
     expect.soft(branchCoverage['4']).toBeUndefined()
 
     // Covered branch should be marked correctly
