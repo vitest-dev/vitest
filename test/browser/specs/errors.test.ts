@@ -1,5 +1,6 @@
 import path from 'pathe'
 import { expect, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
@@ -163,21 +164,40 @@ test('prints source-mapped stack for optimized dependency', async () => {
 
   for (const [name, tree] of Object.entries(projectTree)) {
     if (name === 'webkit') {
-      expect(tree).toMatchInlineSnapshot(`
-        {
-          "basic.test.ts": {
-            "fail": [
-              {
-                "message": "this is test dependency error",
-                "stacks": [
-                  "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
-                  " at basic.test.ts:5:16",
-                ],
-              },
-            ],
-          },
-        }
-      `)
+      if (rolldownVersion) {
+        expect(tree).toMatchInlineSnapshot(`
+          {
+            "basic.test.ts": {
+              "fail": [
+                {
+                  "message": "this is test dependency error",
+                  "stacks": [
+                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
+                    " at basic.test.ts:5:2",
+                  ],
+                },
+              ],
+            },
+          }
+        `)
+      }
+      else {
+        expect(tree).toMatchInlineSnapshot(`
+          {
+            "basic.test.ts": {
+              "fail": [
+                {
+                  "message": "this is test dependency error",
+                  "stacks": [
+                    "throwDepError at ../../../../node_modules/.pnpm/<normalized>/node_modules/test-dep-error/index.js:2:18",
+                    " at basic.test.ts:5:16",
+                  ],
+                },
+              ],
+            },
+          }
+        `)
+      }
     }
     else {
       expect(tree).toMatchInlineSnapshot(`
