@@ -11,6 +11,11 @@ export const sponsors: SponsorTier[] = [
         img: '/nuxtlabs.svg',
       },
       {
+        name: 'Chromatic',
+        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+        img: '/chromatic.svg',
+      },
+      {
         name: 'Zammad',
         url: 'https://zammad.com',
         img: '/zammad.svg',
@@ -21,11 +26,7 @@ export const sponsors: SponsorTier[] = [
     tier: 'Platinum Sponsors',
     size: 'big',
     items: [
-      {
-        name: 'Chromatic',
-        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
-        img: '/chromatic.svg',
-      },
+
       {
         name: 'Bolt',
         url: 'https://bolt.new',
