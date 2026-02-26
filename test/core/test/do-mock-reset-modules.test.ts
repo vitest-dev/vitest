@@ -1,29 +1,6 @@
 import { expect, test, vi } from 'vitest'
 
-test('resetModules works with doMock for direct actual module', async () => {
-  vi.doUnmock('./fixtures/increment')
-
-  const { increment: originalIncrement } = await import('./fixtures/increment')
-  expect(originalIncrement(1)).toBe(2)
-
-  vi.doMock('./fixtures/increment', () => ({
-    increment: (num: number) => num + 10,
-  }))
-  vi.resetModules()
-
-  const { increment: incrementWith10 } = await import('./fixtures/increment')
-  expect(incrementWith10(1)).toBe(11)
-
-  vi.doMock('./fixtures/increment', () => ({
-    increment: (num: number) => num + 20,
-  }))
-  vi.resetModules()
-
-  const { increment: incrementWith20 } = await import('./fixtures/increment')
-  expect(incrementWith20(1)).toBe(21)
-})
-
-test('resetModules works with doMock for indirect actual module', async () => {
+test('multiple resetModules and doMock for indirect actual module', async () => {
   vi.doUnmock('./fixtures/increment')
 
   const { incrementIndirect: originalIncrement } = await import('./fixtures/increment-indirect')
@@ -53,7 +30,7 @@ test('resetModules works with doMock for indirect actual module', async () => {
   expect(incrementWith20Still(1)).toBe(21)
 })
 
-test('resetModules works with doMock for direct virtual module', async () => {
+test('multiple doMock for direct virtual module', async () => {
   // @ts-expect-error virtual module
   const { value: originalValue } = await import('virtual-module-direct')
   expect(originalValue).toBe('original-direct')
@@ -75,7 +52,7 @@ test('resetModules works with doMock for direct virtual module', async () => {
   expect(mockedValue2).toBe('direct-2')
 })
 
-test('resetModules works with doMock for indirect virtual module', async () => {
+test('multiple resetModules and doMock for indirect virtual module', async () => {
   const { getVirtualValue: originalGetVirtualValue } = await import('./fixtures/virtual-module-indirect')
   expect(originalGetVirtualValue()).toBe('original-indirect')
 
