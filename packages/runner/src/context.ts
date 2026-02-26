@@ -109,6 +109,31 @@ export function withTimeout<T extends (...args: any[]) => any>(
   }) as T
 }
 
+export function withCancel<T extends (...args: any[]) => any>(
+  fn: T,
+  signal: AbortSignal,
+): T {
+  return (function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
+    return new Promise((resolve, reject) => {
+      signal.addEventListener('abort', () => reject(signal.reason))
+
+      try {
+        const result = fn(...args) as PromiseLike<unknown>
+
+        if (typeof result === 'object' && result != null && typeof result.then === 'function') {
+          result.then(resolve, reject)
+        }
+        else {
+          resolve(result)
+        }
+      }
+      catch (error) {
+        reject(error)
+      }
+    })
+  }) as T
+}
+
 const abortControllers = new WeakMap<TestContext, AbortController>()
 
 export function abortIfTimeout([context]: [TestContext?], error: Error): void {
