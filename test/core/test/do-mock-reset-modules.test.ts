@@ -61,13 +61,11 @@ test('resetModules works with doMock for direct virtual module', async () => {
   vi.doMock('virtual-module-direct', () => ({
     value: 'direct-1',
   }))
-  vi.resetModules()
 
   // @ts-expect-error virtual module
   const { value: mockedValue1 } = await import('virtual-module-direct')
   expect(mockedValue1).toBe('direct-1')
 
-  vi.resetModules()
   vi.doMock('virtual-module-direct', () => ({
     value: 'direct-2',
   }))

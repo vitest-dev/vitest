@@ -234,6 +234,10 @@ export class BareModuleMocker implements TestModuleMocker {
     factory: MockFactory | undefined,
   ): void {
     const registry = this.getMockerRegistry()
+    // if (id.includes('virtual-module-direct')) {
+    //   console.log('[mockPath]', { id, url, external, mockType })
+    //   console.log(registry)
+    // }
 
     if (mockType === 'manual') {
       registry.register('manual', originalId, id, url, factory!)
