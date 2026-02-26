@@ -30,12 +30,22 @@ import ErrorEntry from './ErrorEntry.vue'
       </div>
     </template>
 
+    <template v-if="explorerTree.summary.filesSkipped">
+      <div i-carbon:redo rotate-90 />
+      <div>
+        Skip
+      </div>
+      <div class="number" text-purple-700 dark:text-purple-400>
+        {{ explorerTree.summary.filesSkipped }}
+      </div>
+    </template>
+
     <template v-if="explorerTree.summary.filesFailed">
       <div i-carbon-close />
       <div>
         Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
@@ -45,7 +55,7 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>
         Snapshot Fail
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
@@ -55,7 +65,7 @@ import ErrorEntry from './ErrorEntry.vue'
       <div>
         Errors
       </div>
-      <div class="number" text-red5>
+      <div class="number" text-red-700 dark:text-red-500>
         {{ unhandledErrors.length }}
       </div>
     </template>
