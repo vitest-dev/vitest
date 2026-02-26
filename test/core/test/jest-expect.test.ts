@@ -1820,6 +1820,51 @@ it('toHaveProperty error diff', () => {
   `)
 })
 
+it('toEqual error diff (with undefined)', () => {
+  const obj1 = {
+    foo: 'bar',
+    qux: 'qux',
+  }
+
+  const obj2 = {
+    foo: 'bar',
+    extra: undefined,
+    qux: 'qux2',
+  }
+
+  const snapshot1 = getError(() => expect(obj1).toEqual(obj2))
+  const snapshot2 = getError(() => expect(obj2).toEqual(obj1))
+
+  expect(snapshot1).not.toContain('-   "extra": undefined,')
+  expect(snapshot1).toMatchInlineSnapshot(`
+    [
+      "expected { foo: 'bar', qux: 'qux' } to deeply equal { foo: 'bar', extra: undefined, …(1) }",
+      "- Expected
+    + Received
+
+      {
+        "foo": "bar",
+    -   "qux": "qux2",
+    +   "qux": "qux",
+      }",
+    ]
+  `)
+  expect(snapshot2).not.toContain('-   "extra": undefined,')
+  expect(snapshot2).toMatchInlineSnapshot(`
+    [
+      "expected { foo: 'bar', extra: undefined, …(1) } to deeply equal { foo: 'bar', qux: 'qux' }",
+      "- Expected
+    + Received
+
+      {
+        "foo": "bar",
+    -   "qux": "qux",
+    +   "qux": "qux2",
+      }",
+    ]
+  `)
+})
+
 function snapshotError(f: () => unknown) {
   try {
     f()
