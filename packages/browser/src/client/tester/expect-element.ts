@@ -20,7 +20,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     const isNot = chai.util.flag(this, 'negate') as boolean
     const name = chai.util.flag(this, '_name') as string
     // special case for `toBeInTheDocument` matcher
-    if (isNot && name === 'toBeInTheDocument') {
+    if (isNot && (name === 'toBeInTheDocument' || name === 'toBeVisible')) {
       return elementOrLocator.query()
     }
     if (name === 'toHaveLength') {
