@@ -44,6 +44,13 @@ test('resetModules works with doMock for indirect actual module', async () => {
 
   const { incrementIndirect: incrementWith20 } = await import('./fixtures/increment-indirect')
   expect(incrementWith20(1)).toBe(21)
+
+  vi.doMock('./fixtures/increment', () => ({
+    increment: (num: number) => num + 30,
+  }))
+
+  const { incrementIndirect: incrementWith20Still } = await import('./fixtures/increment-indirect')
+  expect(incrementWith20Still(1)).toBe(21)
 })
 
 test('resetModules works with doMock for direct virtual module', async () => {
