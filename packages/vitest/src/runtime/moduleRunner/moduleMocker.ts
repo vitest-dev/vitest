@@ -67,12 +67,6 @@ export class VitestMocker extends BareModuleMocker {
   protected invalidateModuleById(id: string): void {
     const mockId = this.getMockPath(id)
     const node = this.evaluatedModules.getModuleById(mockId)
-    // console.log("[invalidateModuleById]", { id, mockId, node })
-    // console.log({
-    //   "virtual-module-direct": this.evaluatedModules.idToModuleMap.get("virtual-module-direct"),
-    //   "/@id/virtual-module-direct": this.evaluatedModules.idToModuleMap.get("/@id/virtual-module-direct"),
-    //   "mock:/@id/virtual-module-direct": this.evaluatedModules.idToModuleMap.get("mock:/@id/virtual-module-direct"),
-    // })
     if (node) {
       this.evaluatedModules.invalidateModule(node)
       node.mockedExports = undefined

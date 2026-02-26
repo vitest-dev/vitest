@@ -137,9 +137,6 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             options,
             otelCarrier,
           )
-          // if (id.includes('virtual-module-direct')) {
-          //   console.log("[fetchModule]", result)
-          // }
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
             return { code, ...result }
