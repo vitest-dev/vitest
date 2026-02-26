@@ -77,6 +77,20 @@ export default defineConfig({
 
 You can limit the working directory when Vitest searches for files using [`test.dir`](/config/dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
 
+## Caching Between Reruns
+
+In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. By enabling [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache), Vitest persists this cache to the file system so it can be reused across reruns.
+
+This improvement is most noticeable when rerunning a small number of tests that depend on a large module graph. For full test suites, parallelization already mitigates the cost because other tests populate the in-memory cache while earlier tests are still running. For example, running one test file with a huge module graph (>900 modules):
+
+```shell
+# the first run
+Duration  8.75s (transform 4.02s, setup 629ms, import 5.52s, tests 2.52s, environment 0ms, prepare 3ms)
+
+# the second run
+Duration  5.90s (transform 842ms, setup 543ms, import 2.35s, tests 2.94s, environment 0ms, prepare 3ms)
+```
+
 ## Pool
 
 By default Vitest runs tests in `pool: 'forks'`. While `'forks'` pool is better for compatibility issues ([hanging process](/guide/common-errors.html#failed-to-terminate-worker) and [segfaults](/guide/common-errors.html#segfaults-and-native-code-errors)), it may be slightly slower than `pool: 'threads'` in larger projects.
