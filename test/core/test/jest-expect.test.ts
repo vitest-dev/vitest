@@ -1877,7 +1877,7 @@ it('asymmetric matcher error', () => {
 
   // more builtins
   snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.objectContaining({ k: 'v', k3: 'v3' })))
-  snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
+  snapshotError(() => expect(['a', 'b', 'c', 'f', 'g']).toEqual(expect.arrayContaining(['d', 'c', 'e', 'b', 'f', 'h'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
   snapshotError(() => expect('foo').toEqual(expect.toBeOneOf(['bar', 'baz'])))
