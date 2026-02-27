@@ -190,6 +190,7 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   if (file.startsWith('file://')) {
     file = file.slice(7)
   }
+  file = decodeUTF8Mojibake(file)
 
   // normalize Windows path (\ -> /)
   file = file.startsWith('node:') || file.startsWith('internal:')
@@ -210,6 +211,28 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
     file,
     line: Number.parseInt(lineNumber),
     column: Number.parseInt(columnNumber),
+  }
+}
+
+function decodeUTF8Mojibake(path: string): string {
+  if (!/[\u0080-\u009F]/.test(path)) {
+    return path
+  }
+
+  const bytes = new Uint8Array(path.length)
+  for (let i = 0; i < path.length; i++) {
+    const code = path.charCodeAt(i)
+    if (code > 0xFF) {
+      return path
+    }
+    bytes[i] = code
+  }
+
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  }
+  catch {
+    return path
   }
 }
 

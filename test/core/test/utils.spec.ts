@@ -1,6 +1,6 @@
 import { objDisplay } from '@vitest/utils/display'
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
-import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
+import { parseSingleFFOrSafariStack, parseSingleV8Stack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
@@ -276,6 +276,48 @@ describe('objectAttr', () => {
     ${{ func }}                   | ${'func'}       | ${func}
   `('objectAttr($value, $path) -> $expected', ({ value, path, expected }) => {
     expect(objectAttr(value, path)).toEqual(expected)
+  })
+})
+
+describe('parseSingleV8Stack', () => {
+  test('decodes UTF-8 mojibake in file names', () => {
+    const mojibake = String.fromCharCode(0xF0, 0x9F, 0x91, 0x8D)
+    const frame = parseSingleV8Stack(`    at /tmp/repro-${mojibake}.test.ts:4:13`)
+
+    expect(frame).toMatchInlineSnapshot(`
+      {
+        "column": 13,
+        "file": "/tmp/repro-👍.test.ts",
+        "line": 4,
+        "method": "",
+      }
+    `)
+  })
+
+  test('keeps regular unicode file names intact', () => {
+    const frame = parseSingleV8Stack('    at /tmp/repro-café.test.ts:4:13')
+
+    expect(frame).toMatchInlineSnapshot(`
+      {
+        "column": 13,
+        "file": "/tmp/repro-café.test.ts",
+        "line": 4,
+        "method": "",
+      }
+    `)
+  })
+
+  test('keeps standard stack frames unchanged', () => {
+    const frame = parseSingleV8Stack('    at Object.run (/tmp/repro-basic.test.ts:2:3)')
+
+    expect(frame).toMatchInlineSnapshot(`
+      {
+        "column": 3,
+        "file": "/tmp/repro-basic.test.ts",
+        "line": 2,
+        "method": "Object.run",
+      }
+    `)
   })
 })
 
