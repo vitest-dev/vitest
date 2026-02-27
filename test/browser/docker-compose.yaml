@@ -15,7 +15,7 @@ services:
   # Run it by:
   #   pnpm run docker up playwright-host
   playwright-host:
-    image: mcr.microsoft.com/playwright:v1.58.1-noble
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
     command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677"
     init: true
     ipc: host

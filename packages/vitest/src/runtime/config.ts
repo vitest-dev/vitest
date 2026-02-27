@@ -145,6 +145,7 @@ export interface SerializedConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+  slowTestThreshold: number | undefined
 }
 
 export interface SerializedCoverageConfig {

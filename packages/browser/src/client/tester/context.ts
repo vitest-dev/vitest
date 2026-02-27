@@ -52,10 +52,10 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     setup() {
       return createUserEvent()
     },
-    async cleanup() {
+    cleanup() {
       // avoid cleanup rpc call if there is nothing to cleanup
       if (!keyboard.unreleased.length) {
-        return
+        return Promise.resolve()
       }
       return ensureAwaited(async (error) => {
         await triggerCommand('__vitest_cleanup', [keyboard], error)
@@ -101,7 +101,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
 
     // testing-library user-event
-    async type(element, text, options) {
+    type(element, text, options) {
       return ensureAwaited(async (error) => {
         const selector = await convertToSelector(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
@@ -119,7 +119,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     tab(options = {}) {
       return ensureAwaited(error => triggerCommand('__vitest_tab', [options], error))
     },
-    async keyboard(text) {
+    keyboard(text) {
       return ensureAwaited(async (error) => {
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_keyboard',
@@ -129,14 +129,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard.unreleased = unreleased
       })
     },
-    async copy() {
-      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    copy() {
+      return userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
     },
-    async cut() {
-      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    cut() {
+      return userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
     },
-    async paste() {
-      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
+    paste() {
+      return userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
     },
   }
   return userEvent

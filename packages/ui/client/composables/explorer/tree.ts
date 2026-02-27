@@ -51,6 +51,7 @@ export class ExplorerTree {
       testsSkipped: 0,
       testsTodo: 0,
       testsExpectedFail: 0,
+      testsSlow: 0,
       totalTests: 0,
       failedSnapshot: false,
       failedSnapshotEnabled: false,
@@ -73,6 +74,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       },
     )
@@ -127,6 +129,7 @@ export class ExplorerTree {
             failed: filter.failed,
             success: filter.success,
             skipped: filter.skipped,
+            slow: filter.slow,
             onlyTests: filter.onlyTests,
           },
           end ? this.executionTime : performance.now() - this.startTime,
@@ -143,6 +146,7 @@ export class ExplorerTree {
           failed: filter.failed,
           success: filter.success,
           skipped: filter.skipped,
+          slow: filter.slow,
           onlyTests: filter.onlyTests,
         },
         end ? this.executionTime : performance.now() - this.startTime,
@@ -160,6 +164,7 @@ export class ExplorerTree {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
+      slow: filter.slow,
       onlyTests: filter.onlyTests,
     })
   }
@@ -176,6 +181,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -193,6 +199,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -204,6 +211,7 @@ export class ExplorerTree {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })

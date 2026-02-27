@@ -208,7 +208,7 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
-  expect.assertions(15)
+  expect.assertions(29)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
     reporters: [
@@ -252,12 +252,26 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   expect(stderr).toMatch(/failing.test.ts:19:(27|36)/)
   expect(stderr).toMatch(/failing.test.ts:20:(27|33)/)
   expect(stderr).toMatch(/failing.test.ts:21:(27|39)/)
+  expect(stderr).toMatch(/failing.test.ts:22:(12|17)/)
+  expect(stderr).toMatch(/failing.test.ts:23:(12|21)/)
+  expect(stderr).toMatch(/failing.test.ts:24:(12|17)/)
+  expect(stderr).toMatch(/failing.test.ts:25:(12|16)/)
+  expect(stderr).toMatch(/failing.test.ts:26:(12|18)/)
+  expect(stderr).toMatch(/failing.test.ts:27:(12|16)/)
+  expect(stderr).toMatch(/failing.test.ts:28:(12|24)/)
+  expect(stderr).toMatch(/failing.test.ts:29:(12|17)/)
+  expect(stderr).toMatch(/failing.test.ts:30:(12|19)/)
+  expect(stderr).toMatch(/failing.test.ts:31:(12|20)/)
+  expect(stderr).toMatch(/failing.test.ts:32:(12|18)/)
+  expect(stderr).toMatch(/failing.test.ts:33:(12|18)/)
+  expect(stderr).toMatch(/failing.test.ts:34:(12|26)/)
+  expect(stderr).toMatch(/failing.test.ts:35:(12|18)/)
 
   expect(stderr).toMatch(/bundled-lib\/src\/b.js:2:(9|19)/)
   expect(stderr).toMatch(/bundled-lib\/src\/index.js:5:(16|18)/)
 
   // index() is called from a bundled file
-  expect(stderr).toMatch(/failing.test.ts:25:(2|8)/)
+  expect(stderr).toMatch(/failing.test.ts:39:(2|8)/)
 })
 
 test('user-event', async () => {
