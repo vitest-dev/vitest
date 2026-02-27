@@ -10,6 +10,7 @@ import type { BrowserProvider } from '../types/browser'
 import crypto from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import * as nodeos from 'node:os'
+import { limitConcurrency } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils/helpers'
 import { stringify } from 'flatted'
 import { createDebugger } from '../../utils/debugger'
@@ -93,34 +94,43 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       groupedFiles.set(project, files)
     }
 
+    const firstProject = groupedFiles.keys().next().value
+    const runWithProjectLimit = limitConcurrency(
+      firstProject ? getProjectConcurrency(firstProject) : 1,
+    )
+
     let isCancelled = false
     vitest.onCancel(() => {
       isCancelled = true
     })
 
-    const initialisedPools = await Promise.all([...groupedFiles.entries()].map(async ([project, files]) => {
-      await project._initBrowserProvider()
+    const initialisedPools = await Promise.all(
+      [...groupedFiles.entries()].map(([project, files]) =>
+        runWithProjectLimit(async () => {
+          await project._initBrowserProvider()
 
-      if (!project.browser) {
-        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-      }
+          if (!project.browser) {
+            throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+          }
 
-      if (isCancelled) {
-        return
-      }
+          if (isCancelled) {
+            return
+          }
 
-      debug?.('provider is ready for %s project', project.name)
+          debug?.('provider is ready for %s project', project.name)
 
-      const pool = ensurePool(project)
-      vitest.state.clearFiles(project, files.map(f => f.filepath))
-      providers.add(project.browser!.provider)
+          const pool = ensurePool(project)
+          vitest.state.clearFiles(project, files.map(f => f.filepath))
+          providers.add(project.browser!.provider)
 
-      return {
-        pool,
-        provider: project.browser!.provider,
-        runTests: () => pool.runTests(method, files),
-      }
-    }))
+          return {
+            pool,
+            provider: project.browser!.provider,
+            runTests: () => pool.runTests(method, files),
+          }
+        }),
+      ),
+    )
 
     if (isCancelled) {
       return
@@ -143,7 +153,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       }
     }
 
-    await Promise.all(parallelPools.map(runTests => runTests()))
+    await Promise.all(parallelPools.map(runTests => runWithProjectLimit(runTests)))
 
     for (const runTests of nonParallelPools) {
       if (isCancelled) {
@@ -152,6 +162,22 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
       await runTests()
     }
+  }
+
+  function getProjectConcurrency(project: TestProject) {
+    if (project.config.maxWorkers) {
+      return project.config.maxWorkers
+    }
+
+    if (project.vitest.config.maxWorkers) {
+      return project.vitest.config.maxWorkers
+    }
+
+    if (project.vitest.config.watch) {
+      return Math.max(Math.floor(numCpus / 2), 1)
+    }
+
+    return Math.max(numCpus - 1, 1)
   }
 
   function getThreadsCount(project: TestProject) {
