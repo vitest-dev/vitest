@@ -38,6 +38,15 @@ interface BrowserRunnerOptions {
 
 export const browserHashMap: Map<string, string> = new Map()
 
+function getStableBrowserHash(filepath: string): string {
+  let hash = 0
+  for (let i = 0; i < filepath.length; i++) {
+    hash = (hash << 5) - hash + filepath.charCodeAt(i)
+    hash |= 0
+  }
+  return `${hash >>> 0}`
+}
+
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
@@ -289,8 +298,15 @@ export function createBrowserRunner(
     importFile = async (filepath: string, mode: 'collect' | 'setup') => {
       let hash = this.hashMap.get(filepath)
 
-      // if the mode is setup, we need to re-evaluate the setup file on each test run
-      if (mode === 'setup' || !hash) {
+      // setup files must be re-evaluated between files in non-isolated mode
+      const forceSetupReload = mode === 'setup' && this.config.browser.isolate === false
+      if (!hash) {
+        hash = mode === 'setup' && !forceSetupReload
+          ? getStableBrowserHash(filepath)
+          : Date.now().toString()
+        this.hashMap.set(filepath, hash)
+      }
+      else if (forceSetupReload) {
         hash = Date.now().toString()
         this.hashMap.set(filepath, hash)
       }
