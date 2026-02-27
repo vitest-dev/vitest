@@ -7,7 +7,7 @@ import base from "./vitest.config";
 export default mergeConfig(
   base,
   defineConfig({
-    plugins: [DecoratorsPlugin()],
+    plugins: process.env.TEST_OXC_DECORATOR ? [] : [DecoratorsPlugin()],
     test: {},
   })
 );
