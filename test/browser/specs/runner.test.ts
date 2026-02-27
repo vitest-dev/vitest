@@ -4,9 +4,98 @@ import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { buildTestTree } from '../../test-utils'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 function noop() {}
+
+function createSetupHashFixture() {
+  return {
+    'setup.ts': `
+      const sessionId = new URL(location.href).searchParams.get('sessionId') || 'unknown'
+      const hash = new URL(import.meta.url).searchParams.get('browserv') || 'missing'
+      console.log(\`SETUP_HASH \${sessionId} \${hash}\`)
+    `,
+    'a.test.ts': `
+      import { expect, test } from 'vitest'
+
+      const sessionId = new URL(location.href).searchParams.get('sessionId') || 'unknown'
+      const hash = new URL(import.meta.url).searchParams.get('browserv') || 'missing'
+      console.log(\`SPEC_HASH \${sessionId} a.test.ts \${hash}\`)
+
+      test('a', () => {
+        expect(true).toBe(true)
+      })
+    `,
+    'b.test.ts': `
+      import { expect, test } from 'vitest'
+
+      const sessionId = new URL(location.href).searchParams.get('sessionId') || 'unknown'
+      const hash = new URL(import.meta.url).searchParams.get('browserv') || 'missing'
+      console.log(\`SPEC_HASH \${sessionId} b.test.ts \${hash}\`)
+
+      test('b', () => {
+        expect(true).toBe(true)
+      })
+    `,
+  }
+}
+
+function createIsolatedSetupExecutionFixture() {
+  return {
+    'setup.ts': `
+      ;(globalThis as any).__setupRuns = ((globalThis as any).__setupRuns || 0) + 1
+    `,
+    'a.test.ts': `
+      import { expect, test } from 'vitest'
+
+      test('setup runs in isolated context', () => {
+        expect((globalThis as any).__setupRuns).toBe(1)
+      })
+    `,
+    'b.test.ts': `
+      import { expect, test } from 'vitest'
+
+      test('setup runs in isolated context for second file', () => {
+        expect((globalThis as any).__setupRuns).toBe(1)
+      })
+    `,
+  }
+}
+
+async function runSetupHashFixture(isolate: boolean) {
+  const logs: string[] = []
+  const result = await runInlineBrowserTests(createSetupHashFixture(), {
+    setupFiles: ['./setup.ts'],
+    isolate,
+    reporters: [
+      {
+        onUserConsoleLog(log) {
+          logs.push(log.content.trim())
+        },
+      },
+    ],
+  })
+  return {
+    ...result,
+    logs,
+  }
+}
+
+function collectSetupHashes(logs: string[]) {
+  const hashes = new Map<string, Set<string>>()
+  for (const line of logs) {
+    const match = /^SETUP_HASH (\S+) (\S+)$/.exec(line)
+    if (!match) {
+      continue
+    }
+    const [, sessionId, hash] = match
+    if (!hashes.has(sessionId)) {
+      hashes.set(sessionId, new Set())
+    }
+    hashes.get(sessionId)!.add(hash)
+  }
+  return hashes
+}
 
 describe('running browser tests', async () => {
   let stderr: string
@@ -340,6 +429,38 @@ test('in-source tests run correctly when filtered', async () => {
   // there is only one file with one test inside
   expect(stdout).toContain(`Test Files  ${instances.length} passed`)
   expect(stdout).toContain(`Tests  ${instances.length} passed`)
+})
+
+test('reuses setupFiles browser hash in isolated mode', async () => {
+  const { exitCode, stderr, logs } = await runSetupHashFixture(true)
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+
+  const setupHashes = collectSetupHashes(logs)
+  expect(setupHashes.size).toBeGreaterThan(0)
+  expect([...setupHashes.values()].every(hashes => hashes.size === 1)).toBe(true)
+})
+
+test('refreshes setupFiles browser hash when isolate is false', async () => {
+  const { exitCode, stderr, logs } = await runSetupHashFixture(false)
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+
+  const setupHashes = collectSetupHashes(logs)
+  expect(setupHashes.size).toBeGreaterThan(0)
+  expect([...setupHashes.values()].every(hashes => hashes.size > 1)).toBe(true)
+})
+
+test('setupFiles still execute for each file in isolated mode', async () => {
+  const { exitCode, stderr } = await runInlineBrowserTests(createIsolatedSetupExecutionFixture(), {
+    setupFiles: ['./setup.ts'],
+    isolate: true,
+  })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
 })
 
 test('re-evaluate setupFiles on each test run even when isolate is false', async () => {
