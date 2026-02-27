@@ -101,6 +101,23 @@ ${indent}}\`)
     `)
   })
 
+  it('replaceInlineSnap with comment between method and parentheses', async () => {
+    const code = `
+  expect(0).toMatchInlineSnapshot
+    // This comment breaks snapshot updates
+    ()
+  `
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, 0, '"0"')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+        expect(0).toMatchInlineSnapshot
+          // This comment breaks snapshot updates
+          (\`"0"\`)
+        "
+    `)
+  })
+
   it('replaceInlineSnap(object) comments', async () => {
     const code = `
   expect({}).toMatchInlineSnapshot(
