@@ -6,9 +6,9 @@ export const sponsors: SponsorTier[] = [
     size: 'big',
     items: [
       {
-        name: 'NuxtLabs',
-        url: 'https://nuxtlabs.com',
-        img: '/nuxtlabs.svg',
+        name: 'Vercel',
+        url: 'https://vercel.com',
+        img: '/vercel.svg',
       },
       {
         name: 'Chromatic',
