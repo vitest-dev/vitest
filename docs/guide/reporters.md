@@ -537,7 +537,7 @@ to provide annotations for test failures. This reporter is automatically enabled
 <img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
 <img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
 
-If you configure non-default reporters, you need to explicitly add `github-actions`.
+If you configure reporters, you need to explicitly add `github-actions`.
 
 ```ts
 export default defineConfig({
