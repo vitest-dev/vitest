@@ -55,7 +55,7 @@ describe.for([
 
     await (testType === 'userEvent' ? userEvent.wheel(selector, options) : selector.wheel(options))
 
-    expect(wheel).toHaveBeenCalledOnce()
+    await expect.poll(() => wheel).toHaveBeenCalledOnce()
     expect(wheel.mock.calls[0][0].deltaX).toBe(deltaX)
     expect(wheel.mock.calls[0][0].deltaY).toBe(deltaY)
   })
@@ -75,7 +75,7 @@ describe.for([
 
     await (testType === 'userEvent' ? userEvent.wheel(selector, options) : selector.wheel(options))
 
-    expect(wheel).toHaveBeenCalledTimes(5)
+    await expect.poll(() => wheel).toHaveBeenCalledTimes(5)
 
     for (const call of wheel.mock.calls) {
       expect(call[0].deltaX).toBe(0)
