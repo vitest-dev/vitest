@@ -289,8 +289,11 @@ function createCompatUtils(window: DOMWindow): CompatUtils {
     makeCompatFormData(formData: FormData) {
       const nodeFormData = new NodeFormData_()
       formData.forEach((value, key) => {
-        if (value instanceof window.Blob) {
-          nodeFormData.append(key, utils.makeCompatBlob(value as any) as any)
+        if (value instanceof window.File) {
+          nodeFormData.append(key, utils.makeCompatBlob(value), value.name)
+        }
+        else if (value as any instanceof window.Blob) {
+          nodeFormData.append(key, utils.makeCompatBlob(value as any))
         }
         else {
           nodeFormData.append(key, value)
