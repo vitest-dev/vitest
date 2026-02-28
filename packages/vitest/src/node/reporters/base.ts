@@ -512,6 +512,12 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onServerRestart(reason?: string): void {
+    // File watchers can emit restart events before reporters receive `onInit`.
+    // In that window, there is no logger context available yet.
+    if (!this.ctx?.logger) {
+      return
+    }
+
     this.log(c.bold(c.magenta(
       reason === 'config'
         ? '\nRestarting due to config changes...'
