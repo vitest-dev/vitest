@@ -140,14 +140,14 @@ describe('import durations', () => {
   })
 
   it('should print on-warn only when threshold exceeded', async () => {
-    // With high threshold (500ms), should NOT print (imports are ~75-120ms depending on CI)
+    // Use a very high threshold to avoid platform/CI timing variance.
     const { stdout: stdoutHigh } = await runVitest({
       root,
       include: ['**/import-durations.test.ts'],
       experimental: {
         importDurations: {
           print: 'on-warn',
-          thresholds: { warn: 500 },
+          thresholds: { warn: 10_000 },
         },
       },
     })

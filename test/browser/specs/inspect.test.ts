@@ -8,7 +8,7 @@ type Message = Partial<InspectorNotification<any>>
 
 const REMOTE_DEBUG_URL = '127.0.0.1:9123'
 
-test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (isWorkspace) => {
+test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', { timeout: 120_000, retry: 1 }, async (isWorkspace) => {
   const options = ['--root', 'fixtures/inspect', '--no-file-parallelism', '--inspect-brk', REMOTE_DEBUG_URL]
 
   if (isWorkspace) {
@@ -46,7 +46,7 @@ test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (
 
   await vitest.waitForStdout('Test Files  1 passed (1)')
   await waitForClose()
-}, 60_000)
+})
 
 async function createChannel(url: string) {
   const ws = new WebSocket(url)

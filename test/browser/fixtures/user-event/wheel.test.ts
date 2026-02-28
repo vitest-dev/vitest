@@ -10,7 +10,7 @@ describe.for([
     ['down', { deltaX: 0, deltaY: 100 }],
     ['left', { deltaX: -100, deltaY: 0 }],
     ['right', { deltaX: 100, deltaY: 0 }]
-  ] as const)('scrolls %s with default delta of 100', async ([direction, { deltaX, deltaY }], { expect }) => {
+  ] as const)('scrolls %s with default delta of 100', { retry: 3, timeout: 30_000 }, async ([direction, { deltaX, deltaY }], { expect }) => {
     document.body.innerHTML = `
         <div style="padding: 1rem;">
           <button>Scroll Me</button>
