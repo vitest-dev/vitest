@@ -1447,7 +1447,7 @@ export class Vitest {
    * @param force If true, the process will exit immediately after closing the projects.
    */
   public async exit(force = false): Promise<void> {
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
 
@@ -1474,6 +1474,7 @@ export class Vitest {
     }, this.config.teardownTimeout).unref()
 
     await this.close()
+    clearTimeout(timeout)
     if (force) {
       process.exit()
     }
