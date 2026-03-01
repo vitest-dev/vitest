@@ -46,8 +46,12 @@ export interface TestModuleMocker {
   importMock(rawId: string, importer: string): Promise<any>
   mockObject(
     object: Record<string | symbol, any>,
-    mockExports?: Record<string | symbol, any>,
-    behavior?: 'automock' | 'autospy',
+    moduleType?: 'automock' | 'autospy',
+  ): Record<string | symbol, any>
+  mockObject(
+    object: Record<string | symbol, any>,
+    mockExports: Record<string | symbol, any> | undefined,
+    moduleType?: 'automock' | 'autospy',
   ): Record<string | symbol, any>
   getMockContext(): ModuleMockContext
   reset(): void

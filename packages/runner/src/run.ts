@@ -792,6 +792,12 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
     return
   }
 
+  if (err instanceof TestRunAbortError) {
+    result.state = 'skip'
+    result.note = err.message
+    return
+  }
+
   result.state = 'fail'
   const errors = Array.isArray(err) ? err : [err]
   for (const e of errors) {
@@ -810,6 +816,20 @@ function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
     updateTask('test-finished', t, runner)
     if (t.type === 'suite') {
       markTasksAsSkipped(t, runner)
+    }
+  })
+}
+
+function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: string) {
+  suite.tasks.forEach((t) => {
+    if (!t.result || t.result.state === 'run') {
+      t.mode = 'skip'
+      t.result = { ...t.result, state: 'skip', note }
+      updateTask('test-cancel', t, runner)
+    }
+
+    if (t.type === 'suite') {
+      markPendingTasksAsSkipped(t, runner, note)
     }
   })
 }
@@ -1028,8 +1048,10 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   runner.cancel = (reason) => {
     // We intentionally create only one error since there is only one test run that can be cancelled
     const error = new TestRunAbortError('The test run was aborted by the user.', reason)
-    getRunningTests().forEach(test =>
-      abortContextSignal(test.context, error),
+    getRunningTests().forEach((test) => {
+      abortContextSignal(test.context, error)
+      markPendingTasksAsSkipped(test.file, runner, error.message)
+    },
     )
     return cancel?.(reason)
   }

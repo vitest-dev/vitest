@@ -6,14 +6,14 @@ export const sponsors: SponsorTier[] = [
     size: 'big',
     items: [
       {
-        name: 'NuxtLabs',
-        url: 'https://nuxtlabs.com',
-        img: '/nuxtlabs.svg',
+        name: 'Vercel',
+        url: 'https://vercel.com',
+        img: '/vercel.svg',
       },
       {
-        name: 'Bolt',
-        url: 'https://bolt.new',
-        img: '/bolt.svg',
+        name: 'Chromatic',
+        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+        img: '/chromatic.svg',
       },
       {
         name: 'Zammad',
@@ -26,10 +26,11 @@ export const sponsors: SponsorTier[] = [
     tier: 'Platinum Sponsors',
     size: 'big',
     items: [
+
       {
-        name: 'Chromatic',
-        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
-        img: '/chromatic.svg',
+        name: 'Bolt',
+        url: 'https://bolt.new',
+        img: '/bolt.svg',
       },
     ],
   },
