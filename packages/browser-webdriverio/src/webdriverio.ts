@@ -269,7 +269,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async getCDPSession(_sessionId: string): Promise<CDPSession> {
     return {
-      send: (method: string, params: any) => {
+      send: (method, params) => {
         if (!this.browser) {
           throw new Error(`The environment was torn down.`)
         }
@@ -277,9 +277,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
           return Promise.reject(new Error(`Failed to execute "${method}" command.`, { cause: error }))
         })
       },
+      // @ts-expect-error -- intentionally untyped
       on: () => {
         throw new Error(`webdriverio provider doesn't support cdp.on()`)
       },
+
       once: () => {
         throw new Error(`webdriverio provider doesn't support cdp.once()`)
       },
@@ -308,6 +310,10 @@ declare module 'vitest/browser' {
   export interface LocatorScreenshotOptions extends SelectorOptions {}
 }
 
+interface WebdriverCDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+}
+
 declare module 'vitest/node' {
   export interface BrowserCommandContext {
     browser: WebdriverIO.Browser
@@ -325,4 +331,6 @@ declare module 'vitest/node' {
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
+
+  export interface CDPSession extends WebdriverCDPSession {}
 }

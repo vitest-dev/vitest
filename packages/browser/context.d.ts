@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
+import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -17,9 +17,7 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export interface CDPSession {
-  // methods are defined by the provider type augmentation
-}
+export { CDPSession };
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
@@ -489,7 +487,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
   selected?: boolean
 }
 
-interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
+export interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface LocatorSelectors {
   /**
