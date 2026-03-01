@@ -221,7 +221,7 @@ function createDefaultSuite(runner: VitestRunner) {
   if (config.concurrent != null) {
     options.concurrent = config.concurrent
   }
-  const collector = suite('', options, () => {})
+  const collector = suite('', options, () => { })
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -303,7 +303,7 @@ function parseArguments<T extends (...args: any[]) => any>(
 // implementations
 function createSuiteCollector(
   name: string,
-  factory: SuiteFactory = () => {},
+  factory: SuiteFactory = () => { },
   mode: RunMode,
   each?: boolean,
   suiteOptions?: SuiteOptions,
@@ -1092,4 +1092,53 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+/**
+ * Composes multiple extended test instances into a single TestAPI.
+ *
+ * Behavior:
+ * - Later fixtures override earlier ones (same semantics as `extend`)
+ * - Original test instances are NOT mutated
+ * - Dependency resolution is delegated entirely to the existing fixture system
+ * - No new validation logic is introduced
+ *
+ * This function intentionally reuses the existing extension pipeline
+ * to preserve fixture graph integrity and scope semantics.
+ *
+ * @example
+ * const test = mergeTests(dbTest, serverTest, uiTest)
+ */
+export function mergeTests<A>(a: TestAPI<A>): TestAPI<A>
+export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<A & B>
+export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<A & B & C>
+export function mergeTests<A, B, C, D>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>): TestAPI<A & B & C & D>
+export function mergeTests<A, B, C, D, E>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>): TestAPI<A & B & C & D & E>
+export function mergeTests<A, B, C, D, E, F>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>, f: TestAPI<F>): TestAPI<A & B & C & D & E & F>
+export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
+  if (tests.length === 0) {
+    throw new TypeError('mergeTests requires at least one test')
+  }
+
+  let [currentTest, ...rest] = tests
+
+  for (const nextTest of rest) {
+    const nextContext = getChainableContext(nextTest)
+    if (!nextContext || typeof nextContext.getFixtures !== 'function') {
+      throw new TypeError(
+        'mergeTests requires extended test instances created via test.extend()',
+      )
+    }
+
+    const currentContext = getChainableContext(currentTest)
+    if (!currentContext) {
+      throw new TypeError(
+        'Cannot merge tests: base test is not a valid test instance',
+      )
+    }
+
+    currentTest = currentTest.extend(nextContext.getFixtures() as any)
+  }
+
+  return currentTest
 }

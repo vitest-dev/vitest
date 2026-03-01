@@ -818,6 +818,41 @@ Note that you cannot introduce new fixtures inside `test.override`. Extend the t
 `test.scoped` is deprecated in favor of `test.override`. The `test.scoped` API still works but will be removed in a future version.
 :::
 
+### Merging Test Contexts <Version>4.1.0</Version> {#merging-test-contexts}
+
+Vitest allows you to merge test contexts from multiple sources using the `mergeTests` utility. This is useful when you have separate test extensions (e.g., one for database, one for network, and one for UI) and want to combine them into a single test API.
+
+`mergeTests` is variadic and accepts any number of test instances. Calling `mergeTests(testA, testB, testC)` is equivalent to calling `testA.extend(fixturesFromB).extend(fixturesFromC)`.
+
+```ts
+import { test as base, mergeTests } from 'vitest'
+
+const dbTest = base.extend({
+  db: async ({}, use) => {
+    // ... setup db
+    await use(db)
+    // ... teardown db
+  }
+})
+
+const serverTest = base.extend({
+  server: async ({}, use) => {
+    // ... setup server
+    await use(server)
+    // ... teardown server
+  }
+})
+
+// Combined test has both `db` and `server` fixtures
+const test = mergeTests(dbTest, serverTest)
+
+test('uses both db and server', ({ db, server }) => {
+  // ...
+})
+```
+
+If multiple tests define the same fixture name, the one from the later test (further to the right in the arguments) overrides the earlier one.
+
 ### Type-Safe Hooks
 
 When using `test.extend`, the extended `test` object provides type-safe hooks that are aware of the extended context:

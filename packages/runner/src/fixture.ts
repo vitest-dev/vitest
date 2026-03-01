@@ -54,9 +54,18 @@ export class TestFixtures {
     TestFixtures._definitions.push(this)
   }
 
-  extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
+  extend(runner: VitestRunner, userFixtures: UserFixtures | TestFixtures): TestFixtures {
     const { suite } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
+
+    if (userFixtures instanceof TestFixtures) {
+      const registrations = new Map(this._registrations)
+      for (const [name, item] of userFixtures._registrations) {
+        registrations.set(name, item)
+      }
+      return new TestFixtures(registrations)
+    }
+
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
     return new TestFixtures(registrations)
   }
