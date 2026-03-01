@@ -214,7 +214,9 @@ export function printObjectProperties(
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
-      const name = printer(key, config, indentationNext, depth, refs)
+      const name = !config.quoteKeys && typeof key === 'string' && /^[a-z_$][\w$]*$/i.test(key)
+        ? key
+        : printer(key, config, indentationNext, depth, refs)
       const value = printer(val[key], config, indentationNext, depth, refs)
 
       result += `${indentationNext + name}: ${value}`

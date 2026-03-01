@@ -18,7 +18,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
+import { baseFormat, formatRegExp, stringify } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1028,9 +1028,19 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      // TODO: respect truncateThreshold?
+      return stringify(value, undefined, {
+        singleQuote: true,
+        quoteKeys: false,
+        min: true,
+        spacingInner: ' ',
+        spacingOuter: ' ',
+        printBasicPrototype: false,
+        compareKeys: null,
       })
+      // return objDisplay(value, {
+      //   truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      // })
     })
   }
 
@@ -1042,7 +1052,18 @@ function formatTitle(template: string, items: any[], idx: number) {
     // format "%"
     (match) => {
       if (i < count) {
-        output += format(match[0], items[i++])
+        // output += format(match[0], items[i++])
+        output += baseFormat([match[0], items[i++]], {
+          stringifyOptions: {
+            singleQuote: true,
+            quoteKeys: false,
+            min: true,
+            spacingInner: ' ',
+            spacingOuter: ' ',
+            printBasicPrototype: false,
+            compareKeys: null,
+          },
+        })
       }
       else {
         output += match[0]
