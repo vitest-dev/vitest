@@ -57,6 +57,48 @@ export default defineConfig({
 
 The traces are available in reporters as [annotations](/guide/test-annotations). For example, in the HTML reporter, you can find the link to the trace file in the test details.
 
+## Trace markers
+
+You can add explicit named markers to make the trace timeline easier to read:
+
+```ts
+import { page } from 'vitest/browser'
+
+document.body.innerHTML = `
+  <button type="button">Sign in</button>
+`
+
+await page.getByRole('button', { name: 'Sign in' }).mark('sign in button rendered')
+```
+
+Both `page.mark(name)` and `locator.mark(name)` are available.
+
+You can also group multiple operations under one marker with `page.mark(name, callback)`:
+
+```ts
+await page.mark('sign in flow', async () => {
+  await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
+  await page.getByRole('textbox', { name: 'Password' }).fill('secret')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+})
+```
+
+You can also wrap reusable helpers with [`vi.defineHelper()`](/api/vi#vi-defineHelper) so trace entries point to where the helper is called, not its internals:
+
+```ts
+import { vi } from 'vitest'
+import { page } from 'vitest/browser'
+
+const myRender = vi.defineHelper(async (content: string) => {
+  document.body.innerHTML = content
+  await page.elementLocator(document.body).mark('render helper')
+})
+
+test('renders content', async () => {
+  await myRender('<button>Hello</button>') // trace points to this line
+})
+```
+
 ## Preview
 
 To open the trace file, you can use the Playwright Trace Viewer. Run the following command in your terminal:
@@ -69,6 +111,21 @@ This will start the Trace Viewer and load the specified trace file.
 
 Alternatively, you can open the Trace Viewer in your browser at https://trace.playwright.dev and upload the trace file there.
 
-## Limitations
+## Source Location
 
-At the moment, Vitest cannot populate the "Sources" tab in the Trace Viewer. This means that while you can see the actions and screenshots captured during the test, you won't be able to view the source code of your tests directly within the Trace Viewer. You will need to refer back to your code editor to see the test implementation.
+When you open a trace, you'll notice that Vitest groups browser interactions and links them back to the exact line in your test that triggered them. This happens automatically for:
+
+- `expect.element(...)` assertions
+- Interactive actions like `click`, `fill`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
+
+Under the hood, Playwright still records its own low-level action events as usual. Vitest wraps them with source-location groups so you can jump straight from the trace timeline to the relevant line in your test.
+
+Keep in mind that plain assertions like `expect(value).toBe(...)` run in Node, not the browser, so they won't show up in the trace.
+
+For anything not covered automatically, you can use `page.mark()` or `locator.mark()` to add your own trace groups — see [Trace markers](#trace-markers) above.
+
+::: warning
+
+Currently a source view of a trace can be only displayed properly when viewing it on the machine generated a trace with `playwright show-trace` CLI. This is expected to be fixed soon (see https://github.com/microsoft/playwright/pull/39307).
+
+:::

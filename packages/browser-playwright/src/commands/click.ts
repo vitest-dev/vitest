@@ -1,13 +1,13 @@
 import type { UserEvent } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
+import { getDescribedLocator } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
   selector,
   options = {},
 ) => {
-  const tester = context.iframe
-  await tester.locator(selector).click(options)
+  await getDescribedLocator(context, selector).click(options)
 }
 
 export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
@@ -15,8 +15,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   selector,
   options = {},
 ) => {
-  const tester = context.iframe
-  await tester.locator(selector).dblclick(options)
+  await getDescribedLocator(context, selector).dblclick(options)
 }
 
 export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
@@ -24,8 +23,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   selector,
   options = {},
 ) => {
-  const tester = context.iframe
-  await tester.locator(selector).click({
+  await getDescribedLocator(context, selector).click({
     ...options,
     clickCount: 3,
   })

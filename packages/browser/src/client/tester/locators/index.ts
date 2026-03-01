@@ -3,6 +3,7 @@ import type {
   LocatorByRoleOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
+  MarkOptions,
   SelectorOptions,
   UserEventClearOptions,
   UserEventClickOptions,
@@ -26,7 +27,7 @@ import {
 } from 'ivya'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState } from '../../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 
 export { ensureAwaited } from '../../utils'
@@ -199,6 +200,22 @@ export abstract class Locator {
       ...options,
       element: this,
     })
+  }
+
+  public mark(name: string, options?: MarkOptions): Promise<void> {
+    const currentTest = getWorkerState().current
+    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+      return Promise.resolve()
+    }
+    return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
+      '__vitest_markTrace',
+      [{
+        name,
+        selector: this.selector,
+        stack: options?.stack ?? error?.stack,
+      }],
+      error,
+    ))
   }
 
   protected abstract locator(selector: string): Locator

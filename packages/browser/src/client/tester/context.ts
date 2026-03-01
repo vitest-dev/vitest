@@ -8,6 +8,7 @@ import type {
   BrowserPage,
   Locator,
   LocatorSelectors,
+  MarkOptions,
   UserEvent,
   UserEventWheelOptions,
 } from 'vitest/browser'
@@ -343,6 +344,50 @@ export const page: BrowserPage = {
           element,
         } as any /** TODO */),
       ],
+      error,
+    ))
+  },
+  mark<T>(
+    name: string,
+    bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
+    options?: MarkOptions,
+  ): any {
+    const currentTest = getWorkerState().current
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+
+    if (typeof bodyOrOptions === 'function') {
+      return ensureAwaited(async (error) => {
+        if (hasActiveTrace) {
+          await triggerCommand(
+            '__vitest_groupTraceStart',
+            [{
+              name,
+              stack: options?.stack ?? error?.stack,
+            }],
+            error,
+          )
+        }
+        try {
+          return await bodyOrOptions()
+        }
+        finally {
+          if (hasActiveTrace) {
+            await triggerCommand('__vitest_groupTraceEnd', [], error)
+          }
+        }
+      })
+    }
+
+    if (!hasActiveTrace) {
+      return Promise.resolve()
+    }
+
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_markTrace',
+      [{
+        name,
+        stack: bodyOrOptions?.stack ?? error?.stack,
+      }],
       error,
     ))
   },

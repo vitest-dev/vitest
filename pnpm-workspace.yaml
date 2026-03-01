@@ -58,6 +58,7 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
+  '@types/yauzl': ^2.10.3
   '@unocss/reset': ^66.6.0
   '@vitejs/plugin-vue': ^6.0.4
   '@vueuse/core': ^14.2.1
@@ -89,6 +90,7 @@ catalog:
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.29
   ws: ^8.19.0
+  yauzl: ^3.2.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'
   - '@swc/core'
