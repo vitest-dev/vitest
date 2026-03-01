@@ -158,14 +158,14 @@ function createErrorElement(e: TestError) {
   const div = document.createElement('div')
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
-  pre.className = 'c-red-600 dark:c-red-400'
+  pre.className = 'c-red-700 dark:c-red-400'
   pre.textContent = `${' '.repeat(stack.column)}^ ${e.name}: ${
     e?.message || ''
   }`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className
-    = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
+    = 'i-carbon-launch c-red-700 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
   span.tabIndex = 0
   span.ariaLabel = 'Open in Editor'
   createTooltip(

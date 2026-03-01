@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.1.0-beta.4",
+  "version": "4.1.0-beta.5",
   "private": true,
   "packageManager": "pnpm@10.30.2",
   "description": "Next generation testing framework powered by Vite",
@@ -35,6 +35,7 @@
     "ui:build": "vite build packages/ui",
     "ui:dev": "npm -C packages/ui run dev:client",
     "ui:test": "npm -C packages/ui run test:run",
+    "override-rolldown": "yq -i '.overrides.vite = \"npm:vite@beta\"' pnpm-workspace.yaml",
     "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },

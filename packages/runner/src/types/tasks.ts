@@ -259,6 +259,7 @@ export type TaskUpdateEvent
     | 'test-prepare'
     | 'test-finished'
     | 'test-retried'
+    | 'test-cancel'
     | 'suite-prepare'
     | 'suite-finished'
     | 'before-hook-start'
