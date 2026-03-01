@@ -635,9 +635,9 @@ export class Vitest {
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
-    // TODO: for now, silence errors from test runtime rpc reporter events simulation
+    // TODO: for now, silence errors of `onUserConsoleLog` and `onCollected`
     // to align with normal test run behavior.
-    await this._testRun.enqueued(project, file).catch(noop)
+    await this._testRun.enqueued(project, file)
     await this._testRun.collected(project, [file]).catch(noop)
 
     const logs: UserConsoleLog[] = []
@@ -654,7 +654,7 @@ export class Vitest {
       await this._testRun.log(log).catch(noop)
     }
 
-    await this._testRun.updated(packs, events).catch(noop)
+    await this._testRun.updated(packs, events)
   }
 
   async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
