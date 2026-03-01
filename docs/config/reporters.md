@@ -14,7 +14,7 @@ interface UserConfig {
 type ConfigReporter = string | Reporter | [string, object?]
 ```
 
-- **Default:** [`'default'`](/guide/reporters#default-reporter)
+- **Default:** [`'default'`](/guide/reporters#default-reporter) (or [[`'default'`](/guide/reporters#default-reporter), [`'github-actions'`](/guide/reporters#github-actions-reporter)] when `process.env.GITHUB_ACTIONS === 'true'`)
 - **CLI:**
   - `--reporter=tap` for a single reporter
   - `--reporter=verbose --reporter=github-actions` for multiple reporters
