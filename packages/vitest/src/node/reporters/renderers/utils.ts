@@ -284,3 +284,14 @@ export function truncateString(text: string, maxLength: number): string {
 function capitalize<T extends string>(text: T) {
   return `${text[0].toUpperCase()}${text.slice(1)}` as Capitalize<T>
 }
+
+/**
+ * Returns the singular or plural form of a word based on the count.
+ */
+export function noun(count: number, singular: string, plural: string): string {
+  if (count === 1) {
+    return singular
+  }
+
+  return plural
+}
