@@ -18,7 +18,7 @@ import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
@@ -638,12 +638,12 @@ export class Vitest {
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
-    // TODO: for now, silence errors of `onUserConsoleLog` and `onCollected`
-    // to align with normal test run behavior.
     await this._testRun.enqueued(project, file).catch((error) => {
       this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
     })
-    await this._testRun.collected(project, [file]).catch(noop)
+    await this._testRun.collected(project, [file]).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
 
     const logs: UserConsoleLog[] = []
 
@@ -656,7 +656,9 @@ export class Vitest {
     logs.sort((log1, log2) => log1.time - log2.time)
 
     for (const log of logs) {
-      await this._testRun.log(log).catch(noop)
+      await this._testRun.log(log).catch((error) => {
+        this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+      })
     }
 
     await this._testRun.updated(packs, events).catch((error) => {

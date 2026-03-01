@@ -137,7 +137,6 @@ describe('reporter errors', () => {
     `)
   })
 
-  // TODO: don't silence onTestModuleCollected errors
   test('onTestModuleCollected in normal run', async () => {
     let didThrow = false
     let onTestRunEndCalled = false
@@ -155,9 +154,11 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onTestModuleCollected",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
@@ -166,7 +167,7 @@ describe('reporter errors', () => {
     expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
-        "exitCode": 0,
+        "exitCode": 1,
         "onTestRunEndCalled": true,
       }
     `)
@@ -195,9 +196,11 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onTestModuleCollected",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
@@ -206,7 +209,7 @@ describe('reporter errors', () => {
     expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
-        "exitCode": 0,
+        "exitCode": 1,
         "onTestRunEndCalled": true,
       }
     `)
@@ -290,7 +293,6 @@ describe('reporter errors', () => {
     `)
   })
 
-  // TODO: don't silence onUserConsoleLog errors
   test('onUserConsoleLog in normal run', async () => {
     let didThrow = false
     let onTestRunEndCalled = false
@@ -310,9 +312,11 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onUserConsoleLog",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
@@ -321,7 +325,7 @@ describe('reporter errors', () => {
     expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
-        "exitCode": 0,
+        "exitCode": 1,
         "onTestRunEndCalled": true,
       }
     `)
@@ -352,9 +356,11 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onUserConsoleLog",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
@@ -363,7 +369,7 @@ describe('reporter errors', () => {
     expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
-        "exitCode": 0,
+        "exitCode": 1,
         "onTestRunEndCalled": true,
       }
     `)
