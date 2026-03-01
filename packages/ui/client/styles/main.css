@@ -215,3 +215,25 @@ html.dark {
 .codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {
   cursor: wait !important;
 }
+
+@property --viewport-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --viewport-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+/*
+  Firefox can't resolve relative units like `cqw` directly inside `atan2()`
+  Registering as a typed `<length>` property forces Firefox to resolve the unit to an absolute pixel value at computed-value time, before it reaches the function
+*/
+@property --container-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
