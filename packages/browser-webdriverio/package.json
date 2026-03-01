@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser-webdriverio",
   "type": "module",
-  "version": "4.1.0-beta.4",
+  "version": "4.1.0-beta.5",
   "description": "Browser running for Vitest using webdriverio",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -58,7 +58,7 @@
     "@vitest/browser": "workspace:*"
   },
   "devDependencies": {
-    "@wdio/types": "^9.23.3",
+    "@wdio/types": "^9.24.0",
     "vitest": "workspace:*",
     "webdriverio": "^9.20.0"
   }

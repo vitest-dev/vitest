@@ -16,7 +16,7 @@ Path to config file
 - **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot (accepts boolean, "new" or "all")
+Update snapshot (accepts boolean, "new", "all" or "none")
 
 ### watch
 
@@ -781,7 +781,7 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 - **CLI:** `--maxConcurrency <number>`
 - **Config:** [maxConcurrency](/config/maxconcurrency)
 
-Maximum number of concurrent tests in a suite (default: `5`)
+Maximum number of concurrent tests and suites during test file execution (default: `5`)
 
 ### expect.requireAssertions
 

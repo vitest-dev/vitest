@@ -11,7 +11,7 @@ export default defineConfig({
     {
       name: 'example',
       resolveId(source) {
-        if (source === 'virtual-module') {
+        if (source === 'virtual-module' || source === 'virtual-module-direct' || source === 'virtual-module-indirect') {
           return source
         }
       },
@@ -19,6 +19,16 @@ export default defineConfig({
         if (id === 'virtual-module') {
           return `
             export const value = 'original';
+          `
+        }
+        if (id === 'virtual-module-direct') {
+          return `
+            export const value = 'original-direct';
+          `
+        }
+        if (id === 'virtual-module-indirect') {
+          return `
+            export const value = 'original-indirect';
           `
         }
       },

@@ -3,11 +3,12 @@ import { explorerTree } from '~/composables/explorer'
 import { filter } from '~/composables/explorer/state'
 import DashboardEntry from './DashboardEntry.vue'
 
-function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
+function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total') {
   // Reset all filters first
   filter.success = false
   filter.failed = false
   filter.skipped = false
+  filter.slow = false
 
   if (type === 'total') {
     return
@@ -20,7 +21,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
 <template>
   <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
     <DashboardEntry
-      text-green5
+      text-green-700 dark:text-green-500
       data-testid="pass-entry"
       cursor-pointer
       hover="op80"
@@ -34,7 +35,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
       </template>
     </DashboardEntry>
     <DashboardEntry
-      :class="{ 'text-red5': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
+      :class="{ 'text-red-700 dark:text-red-500': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
       data-testid="fail-entry"
       cursor-pointer
       hover="op80"
@@ -49,7 +50,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsExpectedFail"
-      text-cyan5
+      text-cyan-700 dark:text-cyan-500
       data-testid="expected-fail-entry"
     >
       <template #header>
@@ -61,7 +62,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
     </DashboardEntry>
     <DashboardEntry
       v-if="explorerTree.summary.testsSkipped"
-      op50
+      text-purple-700 dark:text-purple-400
       data-testid="skipped-entry"
       cursor-pointer
       hover="op80"
@@ -98,6 +99,21 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'total') {
       </template>
       <template #body>
         {{ explorerTree.summary.totalTests }}
+      </template>
+    </DashboardEntry>
+    <DashboardEntry
+      v-if="explorerTree.summary.testsSlow"
+      text-yellow-700 dark:text-yellow-500
+      data-testid="slow-entry"
+      cursor-pointer
+      hover="op80"
+      @click="toggleFilter('slow')"
+    >
+      <template #header>
+        Slow
+      </template>
+      <template #body>
+        {{ explorerTree.summary.testsSlow }}
       </template>
     </DashboardEntry>
   </div>

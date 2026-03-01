@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser-playwright",
   "type": "module",
-  "version": "4.1.0-beta.4",
+  "version": "4.1.0-beta.5",
   "description": "Browser running for Vitest using playwright",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -59,7 +59,7 @@
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "playwright": "^1.58.1",
+    "playwright": "^1.58.2",
     "vitest": "workspace:*"
   }
 }

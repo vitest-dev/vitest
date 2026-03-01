@@ -17,7 +17,7 @@ export function test() {}
       __esModule: true,
       ["test"]: test,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     export {
       __vitest_mocked_0__ as test,
@@ -37,7 +37,7 @@ export class Test {}
       __esModule: true,
       ["Test"]: Test,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["Test"]
     export {
       __vitest_mocked_0__ as Test,
@@ -57,7 +57,7 @@ export default class Test {}
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -75,7 +75,7 @@ export default function test() {}
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -93,7 +93,7 @@ export default someVariable
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -111,7 +111,7 @@ export default 'test'
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -129,7 +129,7 @@ export default null
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -149,7 +149,7 @@ export default test
       __esModule: true,
       ["__vitest_default"]: __vitest_default,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_default"]
     export {
       __vitest_mocked_0__ as default,
@@ -175,7 +175,7 @@ export const test3 = function test4() {}
       ["test2"]: test2,
       ["test3"]: test3,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["test2"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["test3"]
@@ -203,7 +203,7 @@ export const [...rest2] = []
       ["rest"]: rest,
       ["rest2"]: rest2,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["rest"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["rest2"]
@@ -230,7 +230,7 @@ export const test = 2, test2 = 3, test4 = () => {}, test5 = function() {};
       ["test4"]: test4,
       ["test5"]: test5,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["test2"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["test4"]
@@ -263,7 +263,7 @@ export const { ...rest2 } = {}
       ["alias"]: alias,
       ["rest2"]: rest2,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["rest"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["alias"]
@@ -293,7 +293,7 @@ it('correctly parses export specifiers', () => {
       ["test"]: test,
       ["test"]: test,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["test"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["test"]
@@ -324,7 +324,7 @@ export { testing as name4 } from './another-module'
       ["__vitest_imported_2__"]: __vitest_imported_2__,
       ["__vitest_imported_3__"]: __vitest_imported_3__,
     }
-    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, undefined, "automock")
+    const __vitest_mocked_module__ = globalThis["__vitest_mocker__"].mockObject(__vitest_current_es_module__, "automock")
     const __vitest_mocked_0__ = __vitest_mocked_module__["__vitest_imported_0__"]
     const __vitest_mocked_1__ = __vitest_mocked_module__["__vitest_imported_1__"]
     const __vitest_mocked_2__ = __vitest_mocked_module__["__vitest_imported_2__"]

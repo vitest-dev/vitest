@@ -84,7 +84,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    description: 'Update snapshot (accepts boolean, "new", "all" or "none")',
     argument: '[type]',
   },
   watch: {
@@ -733,7 +733,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   maxConcurrency: {
-    description: 'Maximum number of concurrent tests in a suite (default: `5`)',
+    description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
   expect: {

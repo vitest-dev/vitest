@@ -198,9 +198,27 @@ export class BareModuleMocker implements TestModuleMocker {
 
   public mockObject(
     object: Record<string | symbol, any>,
-    mockExports: Record<string | symbol, any> = {},
-    behavior: 'automock' | 'autospy' = 'automock',
+    moduleType?: 'automock' | 'autospy',
+  ): Record<string | symbol, any>
+  public mockObject(
+    object: Record<string | symbol, any>,
+    mockExports: Record<string | symbol, any> | undefined,
+    moduleType?: 'automock' | 'autospy',
+  ): Record<string | symbol, any>
+  public mockObject(
+    object: Record<string | symbol, any>,
+    mockExportsOrModuleType?: Record<string | symbol, any> | 'automock' | 'autospy',
+    moduleType?: 'automock' | 'autospy',
   ): Record<string | symbol, any> {
+    let mockExports: Record<string | symbol, any> | undefined
+    if (mockExportsOrModuleType === 'automock' || mockExportsOrModuleType === 'autospy') {
+      moduleType = mockExportsOrModuleType
+      mockExports = undefined
+    }
+    else {
+      mockExports = mockExportsOrModuleType
+    }
+    moduleType ??= 'automock'
     const createMockInstance = this.spyModule?.createMockInstance
     if (!createMockInstance) {
       throw this.createError(
@@ -211,7 +229,7 @@ export class BareModuleMocker implements TestModuleMocker {
       {
         globalConstructors: this.primitives,
         createMockInstance,
-        type: behavior,
+        type: moduleType,
       },
       object,
       mockExports,

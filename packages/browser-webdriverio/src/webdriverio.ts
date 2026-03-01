@@ -3,6 +3,7 @@ import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
+  SelectorOptions,
 } from 'vitest/browser'
 import type {
   BrowserCommand,
@@ -220,9 +221,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const host = inspector.host || '127.0.0.1'
 
       args.push(`--remote-debugging-port=${port}`)
-      args.push(`--remote-debugging-address=${host}`)
 
-      this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+        this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chrome only allows remote debugging on localhost.`)
+      }
+      this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
 
       capabilities[key] ??= {}
       capabilities[key]!.args = args
@@ -288,15 +291,21 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 }
 
 declare module 'vitest/browser' {
-  export interface UserEventClickOptions extends Partial<ClickOptions> {}
-  export interface UserEventHoverOptions extends MoveToOptions {}
-
+  export interface UserEventClickOptions extends Partial<ClickOptions>, SelectorOptions {}
+  export interface UserEventHoverOptions extends MoveToOptions, SelectorOptions {}
   export interface UserEventDragAndDropOptions extends DragAndDropOptions {
     sourceX?: number
     sourceY?: number
     targetX?: number
     targetY?: number
   }
+  export interface UserEventFillOptions extends SelectorOptions {}
+  export interface UserEventSelectOptions extends SelectorOptions {}
+  export interface UserEventClearOptions extends SelectorOptions {}
+  export interface UserEventDoubleClickOptions extends SelectorOptions {}
+  export interface UserEventTripleClickOptions extends SelectorOptions {}
+  export interface UserEventWheelBaseOptions extends SelectorOptions {}
+  export interface LocatorScreenshotOptions extends SelectorOptions {}
 }
 
 declare module 'vitest/node' {

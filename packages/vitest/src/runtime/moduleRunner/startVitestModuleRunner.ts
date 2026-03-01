@@ -108,8 +108,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             return {
               code: '',
               file: null,
-              id,
-              url: id,
+              id: resolvedMock.id,
+              url: resolvedMock.url,
               invalidate: false,
               mockedModule: resolvedMock,
             }

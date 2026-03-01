@@ -566,7 +566,7 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
         ? UPDATE_SNAPSHOT
         : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,

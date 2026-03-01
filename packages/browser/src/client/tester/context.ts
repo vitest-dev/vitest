@@ -51,10 +51,10 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     setup() {
       return createUserEvent()
     },
-    async cleanup() {
+    cleanup() {
       // avoid cleanup rpc call if there is nothing to cleanup
       if (!keyboard.unreleased.length) {
-        return
+        return Promise.resolve()
       }
       return ensureAwaited(async (error) => {
         await triggerCommand('__vitest_cleanup', [keyboard], error)
@@ -100,9 +100,9 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
 
     // testing-library user-event
-    async type(element, text, options) {
+    type(element, text, options) {
       return ensureAwaited(async (error) => {
-        const selector = convertToSelector(element)
+        const selector = await convertToSelector(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
           [
@@ -118,7 +118,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     tab(options = {}) {
       return ensureAwaited(error => triggerCommand('__vitest_tab', [options], error))
     },
-    async keyboard(text) {
+    keyboard(text) {
       return ensureAwaited(async (error) => {
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_keyboard',
@@ -128,14 +128,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard.unreleased = unreleased
       })
     },
-    async copy() {
-      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    copy() {
+      return userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
     },
-    async cut() {
-      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    cut() {
+      return userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
     },
-    async paste() {
-      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
+    paste() {
+      return userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
     },
   }
   return userEvent
@@ -323,11 +323,15 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
+    const [element, ...mask] = await Promise.all([
+      options.element ? convertToSelector(options.element, options) : undefined,
+      ...('mask' in options
+        ? (options.mask as Array<Element | Locator>).map(el => convertToSelector(el, options))
+        : []),
+    ])
+
     const normalizedOptions = 'mask' in options
-      ? {
-          ...options,
-          mask: (options.mask as Array<Element | Locator>).map(convertToSelector),
-        }
+      ? { ...options, mask }
       : options
 
     return ensureAwaited(error => triggerCommand(
@@ -336,9 +340,7 @@ export const page: BrowserPage = {
         name,
         processTimeoutOptions({
           ...normalizedOptions,
-          element: options.element
-            ? convertToSelector(options.element)
-            : undefined,
+          element,
         } as any /** TODO */),
       ],
       error,

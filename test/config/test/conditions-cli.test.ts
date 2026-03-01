@@ -82,7 +82,7 @@ test('conditions (inline direct)', async () => {
     root: 'fixtures/conditions',
     server: {
       deps: {
-        inline: ['@vitest/test-dep-conditions'],
+        inline: ['test-dep-conditions'],
       },
     },
   })
@@ -95,10 +95,31 @@ test('conditions (inline indirect)', async () => {
     root: 'fixtures/conditions',
     server: {
       deps: {
-        inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
+        inline: ['test-dep-conditions', 'test-dep-conditions-indirect'],
       },
     },
   })
 
   expect(stderr).toBe('')
+})
+
+test('project resolve.conditions', async () => {
+  const { stderr, errorProjectTree } = await runVitest({
+    root: 'fixtures/conditions-projects',
+  })
+  expect(stderr).toBe('')
+  expect(errorProjectTree()).toMatchInlineSnapshot(`
+    {
+      "project-a": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+      "project-b": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+    }
+  `)
 })
