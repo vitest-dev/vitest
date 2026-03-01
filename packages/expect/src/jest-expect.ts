@@ -748,8 +748,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         || typeof expected === 'undefined'
         || expected instanceof RegExp
       ) {
-        // Fixes the issue related to `chai` <https://github.com/vitest-dev/vitest/issues/6618>
-        return this.throws(expected === '' ? /^$/ : expected)
+        return this.throws(expected)
       }
 
       const obj = this._obj
