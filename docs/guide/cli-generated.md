@@ -16,7 +16,7 @@ Path to config file
 - **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot (accepts boolean, "new" or "all")
+Update snapshot (accepts boolean, "new", "all" or "none")
 
 ### watch
 
@@ -278,6 +278,13 @@ High and low watermarks for branches in the format of `<high>,<low>`
 
 High and low watermarks for functions in the format of `<high>,<low>`
 
+### coverage.changed
+
+- **CLI:** `--coverage.changed <commit/branch>`
+- **Config:** [coverage.changed](/config/coverage#coverage-changed)
+
+Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.
+
 ### mode
 
 - **CLI:** `--mode <name>`
@@ -463,6 +470,13 @@ Pass when no tests are found
 - **Config:** [logHeapUsage](/config/logheapusage)
 
 Show the size of heap for each test when running in node
+
+### detectAsyncLeaks
+
+- **CLI:** `--detectAsyncLeaks`
+- **Config:** [detectAsyncLeaks](/config/detectasyncleaks)
+
+Detect asynchronous resources leaking from the test file (default: `false`)
 
 ### allowOnly
 
@@ -767,7 +781,7 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 - **CLI:** `--maxConcurrency <number>`
 - **Config:** [maxConcurrency](/config/maxconcurrency)
 
-Maximum number of concurrent tests in a suite (default: `5`)
+Maximum number of concurrent tests and suites during test file execution (default: `5`)
 
 ### expect.requireAssertions
 

@@ -380,7 +380,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  update?: boolean | 'all' | 'new'
+  update?: boolean | 'all' | 'new' | 'none'
 
   /**
    * Watch mode
@@ -397,10 +397,10 @@ export interface InlineConfig {
   root?: string
 
   /**
-   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * Custom reporter for output. Can contain one or more built-in reporter names, reporter instances,
    * and/or paths to custom reporters.
    *
-   * @default []
+   * @default ['default'] (or ['default', 'github-actions'] when `process.env.GITHUB_ACTIONS === 'true'`)
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>
@@ -486,7 +486,7 @@ export interface InlineConfig {
   coverage?: CoverageOptions
 
   /**
-   * run test names with the specified pattern
+   * Run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
 
@@ -600,6 +600,13 @@ export interface InlineConfig {
    * Show heap usage after each test. Useful for debugging memory leaks.
    */
   logHeapUsage?: boolean
+
+  /**
+   * Detect asynchronous resources leaking from the test file.
+   *
+   * @default false
+   */
+  detectAsyncLeaks?: boolean
 
   /**
    * Custom environment variables assigned to `process.env` before running tests.

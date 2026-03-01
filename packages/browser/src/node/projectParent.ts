@@ -11,10 +11,10 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
-import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
-import { dirname, join, resolve } from 'pathe'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
+import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
 import { distRoot } from './constants'
@@ -61,19 +61,17 @@ export class ParentBrowserProject {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
         }
+
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
-        // this can happen for bundled dependencies in node_modules/.vite
+        // handle non-inline source map such as pre-bundled deps in node_modules/.vite
         if (result && !result.map) {
-          const sourceMapUrl = this.retrieveSourceMapURL(result.code)
-          if (!sourceMapUrl) {
-            return null
-          }
-          const filepathDir = dirname(id)
-          const sourceMapPath = resolve(filepathDir, sourceMapUrl)
-          const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
-          this.sourceMapCache.set(id, map)
-          return map
+          const filePath = id.split('?')[0]
+          const extracted = extractSourcemapFromFile(result.code, filePath)
+          this.sourceMapCache.set(id, extracted?.map)
+          return extracted?.map
         }
+
+        this.sourceMapCache.set(id, result?.map)
         return result?.map
       },
       getUrlId: (id) => {
@@ -261,21 +259,5 @@ export class ParentBrowserProject {
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
     return { sessionId, testFile: decodedTestFile }
-  }
-
-  private retrieveSourceMapURL(source: string): string | null {
-    const re
-      = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-    // Keep executing the search to find the *last* sourceMappingURL to avoid
-    // picking up sourceMappingURLs from comments, strings, etc.
-    let lastMatch, match
-    // eslint-disable-next-line no-cond-assign
-    while ((match = re.exec(source))) {
-      lastMatch = match
-    }
-    if (!lastMatch) {
-      return null
-    }
-    return lastMatch[1]
   }
 }

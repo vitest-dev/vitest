@@ -302,6 +302,7 @@ describe('recursive custom equality tester', () => {
 
     expect(mockFn).toHaveReturnedWith([person1, person2])
     expect(mockFn).toHaveLastReturnedWith([person1, person2])
+    expect(mockFn).to.have.lastReturnedWith([person1, person2])
     expect(mockFn).toHaveNthReturnedWith(1, [person1, person2])
   })
 })
@@ -534,7 +535,7 @@ describe('Standard Schema', () => {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
-          "- Expected: 
+          "- Expected:
           SchemaMatching {
             "issues": [
               {
@@ -543,7 +544,7 @@ describe('Standard Schema', () => {
             ],
           }
 
-          + Received: 
+          + Received:
           123"
         `)
       }
@@ -672,10 +673,10 @@ describe('Standard Schema', () => {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
         expect(diff).toMatchInlineSnapshot(`
-          "- Expected: 
+          "- Expected:
           SchemaMatching
 
-          + Received: 
+          + Received:
           "hello""
         `)
       }

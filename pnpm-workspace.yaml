@@ -60,8 +60,8 @@ catalog:
   '@types/ws': ^8.18.1
   '@unocss/reset': ^66.6.0
   '@vitejs/plugin-vue': ^6.0.4
-  '@vueuse/core': ^14.2.0
-  acorn-walk: ^8.3.4
+  '@vueuse/core': ^14.2.1
+  acorn-walk: ^8.3.5
   birpc: ^4.0.0
   cac: ^6.7.14
   chai: ^6.2.2
@@ -71,14 +71,15 @@ catalog:
   istanbul-lib-source-maps: ^5.0.6
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
-  magicast: ^0.5.1
-  msw: ^2.12.7
+  magicast: ^0.5.2
+  msw: ^2.12.10
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.58.1
+  playwright: ^1.58.2
   sirv: ^3.0.2
   std-env: ^3.10.0
   strip-literal: ^3.1.0
+  tinyexec: ^1.0.2
   tinyglobby: ^0.2.15
   tinyhighlight: ^0.3.2
   tinyrainbow: ^3.0.3
@@ -86,7 +87,7 @@ catalog:
   typescript: ^5.9.3
   unocss: ^66.6.0
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.27
+  vue: ^3.5.29
   ws: ^8.19.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'

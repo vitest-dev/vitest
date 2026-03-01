@@ -13,11 +13,11 @@ test('vi.fn() calls implementation if it was passed down', () => {
 
 test('vi.fn().mock cannot be overriden', () => {
   const mock = vi.fn()
-  expect(() => mock.mock = {} as any).toThrowError()
+  expect(() => mock.mock = {} as any).toThrow()
   expect(() => {
     // @ts-expect-error mock is not optional
     delete mock.mock
-  }).toThrowError()
+  }).toThrow()
 })
 
 describe('vi.fn() copies static properties', () => {
@@ -425,7 +425,7 @@ describe('vi.fn() implementations', () => {
       throw new Error('hello world')
     })
 
-    expect(() => mock()).toThrowError('hello world')
+    expect(() => mock()).toThrow('hello world')
     expect(mock.mock.results).toEqual([
       { type: 'throw', value: new Error('hello world') },
     ])
@@ -436,7 +436,7 @@ describe('vi.fn() implementations', () => {
       throw new Error('hello world')
     })
 
-    expect(() => mock()).toThrowError('hello world')
+    expect(() => mock()).toThrow('hello world')
     expect(mock.mock.results).toEqual([
       { type: 'throw', value: new Error('hello world') },
     ])
@@ -513,6 +513,88 @@ describe('vi.fn() implementations', () => {
     const mock = vi.fn().mockImplementation(() => 42)
     mock.mockReturnValueOnce(100)
     expect(mock()).toBe(100)
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrow', async () => {
+    const mock = vi.fn()
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn(class) with mockThrow', async () => {
+    const Mock = vi.fn(class {})
+    Mock.mockThrow(new Error('error'))
+    expect(() => new Mock()).toThrow('error')
+    expect(() => new Mock()).toThrow('error')
+    expect(() => new Mock()).toThrow('error')
+    Mock.mockReset()
+    expect(new Mock()).toBeInstanceOf(Mock)
+  })
+
+  test('vi.fn() with mockThrow overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrow overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrow(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    expect(() => mock()).toThrow('error')
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn() with mockThrowOnce', async () => {
+    const mock = vi.fn()
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(mock()).toBe(undefined)
+    expect(mock()).toBe(undefined)
+    mock.mockThrowOnce(new Error('error'))
+    mock.mockReset()
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.fn(class) with mockThrowOnce', async () => {
+    const Mock = vi.fn(class {})
+    Mock.mockThrowOnce(new Error('error'))
+    expect(() => new Mock()).toThrow('error')
+    expect(new Mock()).toBeInstanceOf(Mock)
+    expect(new Mock()).toBeInstanceOf(Mock)
+    Mock.mockThrowOnce(new Error('error'))
+    Mock.mockReset()
+    expect(new Mock()).toBeInstanceOf(Mock)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding original mock', async () => {
+    const mock = vi.fn(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
+    expect(mock()).toBe(42)
+    expect(mock()).toBe(42)
+    mock.mockReset()
+    expect(mock()).toBe(42)
+  })
+
+  test('vi.fn() with mockThrowOnce overriding another mock', async () => {
+    const mock = vi.fn().mockImplementation(() => 42)
+    mock.mockThrowOnce(new Error('error'))
+    expect(() => mock()).toThrow('error')
     expect(mock()).toBe(42)
     expect(mock()).toBe(42)
     mock.mockReset()
@@ -675,7 +757,7 @@ describe('vi.fn() implementations', () => {
     const log = vi.spyOn(console, 'warn')
     onTestFinished(() => log.mockRestore())
     const Mock = vi.fn(() => {})
-    expect(() => new Mock()).toThrowError()
+    expect(() => new Mock()).toThrow()
     expect(log).toHaveBeenCalledWith(
       `[vitest] The vi.fn() mock did not use 'function' or 'class' in its implementation, see https://vitest.dev/api/vi#vi-spyon for examples.`,
     )
@@ -684,7 +766,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() throws an error if new is not called on a class', () => {
     const Mock = vi.fn(class _Mock {})
     // @ts-expect-error value is not callable
-    expect(() => Mock()).toThrowError(
+    expect(() => Mock()).toThrow(
       `Class constructor _Mock cannot be invoked without 'new'`,
     )
   })
@@ -720,7 +802,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockReturnValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValue(42)
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockReturnValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })
@@ -728,7 +810,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockReturnValueOnce throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValueOnce(42)
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockReturnValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })
@@ -736,7 +818,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockResolvedValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockResolvedValue(42)
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockResolvedValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })
@@ -744,7 +826,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockResolvedValueOnce throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockResolvedValueOnce(42)
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockResolvedValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })
@@ -752,7 +834,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockRejectedValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockRejectedValue(new Error('test'))
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockRejectedValue` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })
@@ -760,7 +842,7 @@ describe('vi.fn() implementations', () => {
   test('vi.fn() with mockRejectedValueOnce throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockRejectedValueOnce(new Error('test'))
-    expect(() => new Mock()).toThrowError(
+    expect(() => new Mock()).toThrow(
       'Cannot use `mockRejectedValueOnce` when called with `new`. Use `mockImplementation` with a `class` keyword instead.',
     )
   })

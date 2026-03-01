@@ -26,10 +26,11 @@
     "test:browser:preview": "PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
     "test:browser:webdriverio": "PROVIDER=webdriverio vitest",
-    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
+    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html",
+    "docker": "docker compose"
   },
   "devDependencies": {
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.14",
     "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitest/browser": "workspace:*",
     "@vitest/browser-playwright": "workspace:*",
@@ -37,9 +38,11 @@
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
-    "playwright": "^1.58.1",
+    "playwright": "^1.58.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "test-dep-error": "file:./deps/test-dep-error",
+    "tinyexec": "catalog:",
     "url": "^0.11.4",
     "vitest": "workspace:*",
     "vitest-browser-react": "^2.0.5",

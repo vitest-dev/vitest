@@ -8,7 +8,7 @@ import type {
   UITaskTreeNode,
 } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
-import { client } from '~/composables/client'
+import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
@@ -31,6 +31,20 @@ export function isSuiteNode(node: UITaskTreeNode): node is SuiteTreeNode {
 
 export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | SuiteTreeNode {
   return node.type === 'file' || node.type === 'suite'
+}
+
+export function isSlowTestTask(task: Task) {
+  if (task.type !== 'test') {
+    return false
+  }
+
+  const duration = task.result?.duration
+  if (typeof duration !== 'number') {
+    return false
+  }
+
+  const treshold = config.value.slowTestThreshold
+  return typeof treshold === 'number' && duration > treshold
 }
 
 export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {
@@ -73,6 +87,7 @@ export function createOrUpdateFileNode(
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
+    fileNode.slow = false
     fileNode.collectDuration = file.collectDuration
     fileNode.setupDuration = file.setupDuration
     fileNode.environmentLoad = file.environmentLoad
@@ -93,6 +108,7 @@ export function createOrUpdateFileNode(
       typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
       duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
+      slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
       projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
@@ -169,6 +185,7 @@ export function createOrUpdateNode(
       taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
+      taskNode.slow = isSlowTestTask(task)
       taskNode.state = task.result?.state
     }
     else {
@@ -184,6 +201,7 @@ export function createOrUpdateNode(
           expanded: false,
           indent: node.indent + 1,
           duration,
+          slow: isSlowTestTask(task),
           state: task.result?.state,
         } as TestTreeNode
       }
@@ -202,6 +220,7 @@ export function createOrUpdateNode(
           tasks: [],
           indent: node.indent + 1,
           duration,
+          slow: false,
           state: task.result?.state,
         } as SuiteTreeNode
       }

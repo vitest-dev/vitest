@@ -389,14 +389,14 @@ function printErrorMessage(error: TestError, logger: ErrorLogger) {
   }
 }
 
-function printStack(
+export function printStack(
   logger: ErrorLogger,
   project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: (stack: ParsedStack) => void,
-) {
+): void {
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)

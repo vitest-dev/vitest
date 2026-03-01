@@ -50,7 +50,7 @@ const widthPending = computed(() => {
         absolute
         l-0
         t-0
-        bg-red5
+        bg-red-700 dark:bg-red-500
         h-3px
         :class="classes"
         :style="`width: ${widthFailed}px;`"
@@ -61,7 +61,7 @@ const widthPending = computed(() => {
         absolute
         l-0
         t-0
-        bg-green5
+        bg-green-700 dark:bg-green-500
         h-3px
         :class="classes"
         :style="`left: ${widthFailed}px; width: ${widthPass}px;`"
@@ -72,7 +72,7 @@ const widthPending = computed(() => {
         absolute
         l-0
         t-0
-        bg-yellow5
+        bg-yellow-700 dark:bg-yellow-500
         h-3px
         :class="classes"
         :style="`left: ${widthPass + widthFailed}px; width: ${widthPending}px;`"

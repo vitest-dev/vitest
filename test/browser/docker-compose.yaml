@@ -1,0 +1,24 @@
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677 --host 0.0.0.0"
+    init: true
+    ipc: host
+    user: pwuser
+    ports:
+      - '6677:6677'
+
+  # This setup employs simpler and robust `network_mode: host` instead of port mapping.
+  # This supports debug inspector, which can only bind to 127.0.0.1.
+  # `connectOptions.exposeNetwork: '<loopback>'` is also not needed for this setup.
+  # Note that `network_mode: host` is supported only on Linux Docker.
+  # Run it by:
+  #   pnpm run docker up playwright-host
+  playwright-host:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    command: /bin/sh -c "npx -y playwright@1.58.1 run-server --port 6677"
+    init: true
+    ipc: host
+    user: pwuser
+    network_mode: host
+    profiles: [host]

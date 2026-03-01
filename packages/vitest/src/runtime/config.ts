@@ -117,6 +117,7 @@ export interface SerializedConfig {
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
     includeSamples: boolean
@@ -144,14 +145,13 @@ export interface SerializedConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+  slowTestThreshold: number | undefined
 }
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
 }

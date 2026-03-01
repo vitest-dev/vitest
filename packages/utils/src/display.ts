@@ -181,6 +181,9 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
         if (typeof value === 'bigint') {
           return `${value.toString()}n`
         }
+        if (typeof value === 'symbol') {
+          return 'NaN'
+        }
         return Number(value).toString()
       }
       case '%i': {
@@ -226,7 +229,7 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
 
   for (let x = args[i]; i < len; x = args[++i]) {
     if (x === null || typeof x !== 'object') {
-      str += ` ${x}`
+      str += ` ${typeof x === 'symbol' ? x.toString() : x}`
     }
     else {
       str += ` ${formatArg(x)}`

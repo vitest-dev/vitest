@@ -1,13 +1,12 @@
 import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
-import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
+import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { createAssertionMessage, recordAsyncExpect } from '../../../../expect/src/utils'
 
 let _client: SnapshotClient
 
@@ -65,8 +64,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     utils.addMethod(
       chai.Assertion.prototype,
       key,
-      function (
-        this: Record<string, unknown>,
+      wrapAssertion(utils, key, function (
+        this,
         properties?: object,
         message?: string,
       ) {
@@ -90,7 +89,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           errorMessage,
           ...getTestNames(test),
         })
-      },
+      }),
     )
   }
 
@@ -124,6 +123,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         promise,
         createAssertionMessage(utils, this, true),
         error,
+        utils.flag(this, 'soft'),
       )
     },
   )
@@ -131,8 +131,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchInlineSnapshot',
-    function __INLINE_SNAPSHOT__(
-      this: Record<string, unknown>,
+    wrapAssertion(utils, 'toMatchInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
       properties?: object,
       inlineSnapshot?: string,
       message?: string,
@@ -165,12 +165,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    function (this: Record<string, unknown>, message?: string) {
+    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, properties?: object, message?: string) {
       utils.flag(this, '_name', 'toThrowErrorMatchingSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
@@ -188,13 +188,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingInlineSnapshot',
-    function __INLINE_SNAPSHOT__(
-      this: Record<string, unknown>,
+    wrapAssertion(utils, 'toThrowErrorMatchingInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
       inlineSnapshot: string,
       message: string,
     ) {
@@ -223,7 +223,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage,
         ...getTestNames(test),
       })
-    },
+    }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
 }

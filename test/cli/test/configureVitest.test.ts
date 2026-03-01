@@ -194,7 +194,7 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => throws({
     projects: [
@@ -219,7 +219,7 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 
   await expect(() => throws({
     projects: [
@@ -246,7 +246,7 @@ test('adding a plugin with existing name throws and error', async () => {
       },
     ],
   }),
-  ).rejects.toThrowError('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+  ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
 })
 
 async function throws(cliOptions: TestUserConfig) {

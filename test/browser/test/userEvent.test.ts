@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { userEvent as _uE, server } from 'vitest/browser'
+import { userEvent as _uE, page, server } from 'vitest/browser'
 import '../src/button.css'
 
 beforeEach(() => {
@@ -157,6 +157,18 @@ describe('userEvent.click', () => {
       y: expect.closeTo(150, -1),
     })
   })
+
+  test('click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').click()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
+  })
 })
 
 describe('userEvent.dblClick', () => {
@@ -192,6 +204,18 @@ describe('userEvent.dblClick', () => {
 
     expect(onClick).not.toHaveBeenCalled()
     expect(dblClick).not.toHaveBeenCalled()
+  })
+
+  test('double click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').dblClick()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
   })
 })
 
@@ -239,6 +263,18 @@ describe('userEvent.tripleClick', () => {
     expect(dblClick).not.toHaveBeenCalled()
     expect(tripleClick).not.toHaveBeenCalled()
   })
+
+  test('triple click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').tripleClick()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
+  })
 })
 
 describe('userEvent.hover, userEvent.unhover', () => {
@@ -274,6 +310,18 @@ describe('userEvent.hover, userEvent.unhover', () => {
 
     expect(pointerEntered).toBe(false)
     expect(mouseEntered).toBe(false)
+  })
+
+  test('hover throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').hover()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
   })
 
   test.runIf(server.provider === 'playwright')('hover, unhover correctly pass options', async () => {
@@ -408,6 +456,30 @@ const inputLike = [
     return contentEditable
   },
 ]
+
+test('type throws an error with multiple elements', async () => {
+  const button1 = document.createElement('button')
+  const button2 = document.createElement('button')
+  document.body.append(button1, button2)
+
+  await expect(() => userEvent.type(page.getByRole('button'), 'Hello World')).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
+})
+
+test('fill throws an error with multiple elements', async () => {
+  const button1 = document.createElement('button')
+  const button2 = document.createElement('button')
+  document.body.append(button1, button2)
+
+  await expect(() => page.getByRole('button').fill('Hello World')).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
+})
 
 describe.each(inputLike)('userEvent.type', (getElement) => {
   test('types into an input', async () => {
@@ -814,7 +886,19 @@ describe.each([
   //     return { select, options: [option1, option2] }
   //   },
   // ],
-])('selectOptions in "%s" works correctly', (_, createSelect) => {
+])('selectOptions in "%s" works correctly', (name, createSelect) => {
+  test(`${name} throws an error with multiple elements`, async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').selectOptions('Hello World')).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
+  })
+
   test('can select a single primitive value', async () => {
     const { select } = createSelect()
 

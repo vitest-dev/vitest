@@ -11,6 +11,7 @@ import {
 } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { vi } from '../integrations/vi'
+import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv } from './setup-node'
@@ -57,11 +58,19 @@ export async function run(
         workerState.filepath = file.filepath
 
         if (method === 'run') {
+          const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
+
           await traces.$(
             `vitest.test.runner.${method}.module`,
             { attributes: { 'code.file.path': file.filepath } },
             () => startTests([file], testRunner),
           )
+
+          const leaks = await collectAsyncLeaks?.()
+
+          if (leaks?.length) {
+            workerState.rpc.onAsyncLeaks(leaks)
+          }
         }
         else {
           await traces.$(

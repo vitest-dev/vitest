@@ -259,6 +259,7 @@ export type TaskUpdateEvent
     | 'test-prepare'
     | 'test-finished'
     | 'test-retried'
+    | 'test-cancel'
     | 'suite-prepare'
     | 'suite-finished'
     | 'before-hook-start'
@@ -1345,6 +1346,23 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
+interface FailureScreenshotArtifactAttachment extends TestAttachment {
+  path: string
+  /** Original file system path to the screenshot, before attachment resolution */
+  originalPath: string
+  body?: undefined
+}
+
+/**
+ * @experimental
+ *
+ * Artifact type for failure screenshots.
+ */
+export interface FailureScreenshotArtifact extends TestArtifactBase {
+  type: 'internal:failureScreenshot'
+  attachments: [FailureScreenshotArtifactAttachment] | []
+}
+
 /**
  * @experimental
  * @advanced
@@ -1426,4 +1444,8 @@ export interface TestArtifactRegistry {}
  *
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
-export type TestArtifact = TestAnnotationArtifact | VisualRegressionArtifact | TestArtifactRegistry[keyof TestArtifactRegistry]
+export type TestArtifact
+  = | FailureScreenshotArtifact
+    | TestAnnotationArtifact
+    | VisualRegressionArtifact
+    | TestArtifactRegistry[keyof TestArtifactRegistry]

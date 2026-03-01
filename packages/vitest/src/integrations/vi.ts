@@ -43,12 +43,12 @@ export interface VitestUtils {
   runOnlyPendingTimersAsync: () => Promise<VitestUtils>
   /**
    * This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired.
-   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimers: () => VitestUtils
   /**
    * This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
-   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimersAsync: () => Promise<VitestUtils>
   /**

@@ -169,20 +169,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
       const playwright = await import('playwright')
 
-      if (this.options.connectOptions) {
-        if (this.options.launchOptions) {
-          this.project.vitest.logger.warn(
-            c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
-          Ignoring ${c.bold(c.italic(c.yellow('launch')))} options and using ${c.bold(c.italic(c.yellow('connect')))} mode.
-          You probably want to remove one of the two options and keep only the one you want to use.`),
-          )
-        }
-        const browser = await playwright[this.browserName].connect(this.options.connectOptions.wsEndpoint, this.options.connectOptions)
-        this.browser = browser
-        this.browserPromise = null
-        return this.browser
-      }
-
       const launchOptions: LaunchOptions = {
         ...this.options.launchOptions,
         headless: options.headless,
@@ -200,9 +186,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         launchOptions.args ||= []
         launchOptions.args.push(`--remote-debugging-port=${port}`)
-        launchOptions.args.push(`--remote-debugging-address=${host}`)
 
-        this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+        if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+          this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chromium only allows remote debugging on localhost.`)
+        }
+        this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers
@@ -216,6 +204,27 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       }
 
       debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+
+      if (this.options.connectOptions) {
+        let { wsEndpoint, headers = {}, ...connectOptions } = this.options.connectOptions
+        if ('x-playwright-launch-options' in headers) {
+          this.project.vitest.logger.warn(
+            c.yellow(
+              'Detected "x-playwright-launch-options" in connectOptions.headers. Provider config launchOptions is ignored.',
+            ),
+          )
+        }
+        else {
+          headers = { ...headers, 'x-playwright-launch-options': JSON.stringify(launchOptions) }
+        }
+        this.browser = await playwright[this.browserName].connect(wsEndpoint, {
+          ...connectOptions,
+          headers,
+        })
+        this.browserPromise = null
+        return this.browser
+      }
+
       let persistentContextOption = this.options.persistentContext
       if (persistentContextOption && openBrowserOptions.parallel) {
         persistentContextOption = false

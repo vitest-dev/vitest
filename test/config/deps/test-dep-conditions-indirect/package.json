@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dep-conditions-indirect",
+  "name": "test-dep-conditions-indirect",
   "type": "module",
   "private": true,
   "exports": {

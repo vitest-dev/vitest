@@ -354,6 +354,10 @@ export function resolveConfig(
     throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
   }
 
+  if (browser.enabled && resolved.detectAsyncLeaks) {
+    logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
+  }
+
   const containsChromium = hasBrowserChromium(vitest, resolved)
   const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
 
@@ -415,6 +419,9 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
+    resolved.coverage.changed = resolved.changed
+  }
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
@@ -429,6 +436,31 @@ export function resolveConfig(
       throw new Error(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
+    }
+
+    if (resolved.coverage.htmlDir) {
+      resolved.coverage.htmlDir = resolve(
+        resolved.root,
+        resolved.coverage.htmlDir,
+      )
+    }
+
+    // infer default htmlDir based on builtin reporter's html output location
+    if (!resolved.coverage.htmlDir) {
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
+      if (htmlReporter) {
+        const [, options] = htmlReporter
+        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
+          ? options.subdir
+          : undefined
+        resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
+      }
+      else {
+        const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
+        if (lcovReporter) {
+          resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
+        }
+      }
     }
   }
 
@@ -534,7 +566,7 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
         ? UPDATE_SNAPSHOT
         : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
@@ -742,7 +774,8 @@ export function resolveConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  if (resolved.sequence.sequencer === RandomSequencer) {
+  // Set seed if either files or tests are shuffled
+  if (resolved.sequence.sequencer === RandomSequencer || resolved.sequence.shuffle) {
     resolved.sequence.seed ??= Date.now()
   }
 

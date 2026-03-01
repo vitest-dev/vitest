@@ -84,7 +84,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot (accepts boolean, "new" or "all")',
+    description: 'Update snapshot (accepts boolean, "new", "all" or "none")',
     argument: '[type]',
   },
   watch: {
@@ -306,6 +306,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
           },
         },
       },
+      changed: {
+        description:
+          'Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.',
+        argument: '<commit/branch>',
+        transform(value) {
+          if (value === 'true' || value === 'yes' || value === true) {
+            return true
+          }
+          if (value === 'false' || value === 'no' || value === false) {
+            return false
+          }
+          return value
+        },
+      },
     },
   },
   mode: {
@@ -440,6 +454,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   logHeapUsage: {
     description: 'Show the size of heap for each test when running in node',
+  },
+  detectAsyncLeaks: {
+    description: 'Detect asynchronous resources leaking from the test file (default: `false`)',
   },
   allowOnly: {
     description:
@@ -716,7 +733,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   maxConcurrency: {
-    description: 'Maximum number of concurrent tests in a suite (default: `5`)',
+    description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
   expect: {
@@ -912,6 +929,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  staticParse: null,
+  staticParseConcurrency: null,
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
@@ -939,6 +958,13 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
+  },
+  staticParse: {
+    description: 'Parse files statically instead of running them to collect tests (default: false)',
+  },
+  staticParseConcurrency: {
+    description: 'How many tests to process at the same time (default: os.availableParallelism())',
+    argument: '<limit>',
   },
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',

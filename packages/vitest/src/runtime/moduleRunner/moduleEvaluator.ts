@@ -364,6 +364,13 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   }
 
   private createRequire(url: string) {
+    if (url.startsWith('data:')) {
+      const _require = (id: string) => {
+        throw new SyntaxError(`require() is not supported in virtual modules. Trying to call require("${id}") in ${url}`)
+      }
+      _require.resolve = _require
+      return _require
+    }
     return this.vm
       ? this.vm.externalModulesExecutor.createRequire(url)
       : createRequire(url)
