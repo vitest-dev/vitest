@@ -1,4 +1,4 @@
-import type { TaskResultPack } from '@vitest/runner'
+import type { File, Suite, Task, TaskResultPack } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../../core'
 import type { TestRunEndReason } from '../../types/reporter'
@@ -14,6 +14,7 @@ import { renderTable } from './tableRender'
 
 export class BenchmarkReporter extends DefaultReporter {
   compare?: Parameters<typeof renderTable>[0]['compare']
+  private _printedTasks = new WeakSet<Suite | File>()
 
   async onInit(ctx: Vitest): Promise<void> {
     super.onInit(ctx)
@@ -54,10 +55,23 @@ export class BenchmarkReporter extends DefaultReporter {
   }
 
   protected printTestModule(testModule: TestModule): void {
-    this.printSuiteTable(testModule)
+    // If module contains top-level benches, avoid letting the default module printer
+    const benches = testModule.task.tasks.filter(t => t.meta.benchmark)
+    if (areBenchesFinished(benches)) {
+      this.printSuiteTable(testModule)
+      return
+    }
+
+    super.printTestModule(testModule)
   }
 
   private printSuiteTable(testTask: TestModule | TestSuite): void {
+    // Ensure we print each module/suite only once — some lifecycle events may
+    // trigger the same printing more than once for the same module.
+    if (this._printedTasks.has(testTask.task)) {
+      return
+    }
+    this._printedTasks.add(testTask.task)
     const state = testTask.state()
     if (state === 'pending' || state === 'queued') {
       return
@@ -66,7 +80,7 @@ export class BenchmarkReporter extends DefaultReporter {
     const benches = testTask.task.tasks.filter(t => t.meta.benchmark)
     const duration = testTask.task.result?.duration || 0
 
-    if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
+    if (areBenchesFinished(benches)) {
       let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project)}${getFullName(testTask.task, separator)}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
@@ -111,4 +125,8 @@ export class BenchmarkReporter extends DefaultReporter {
       this.log(`Benchmark report written to ${outputFile}`)
     }
   }
+}
+
+function areBenchesFinished(benches: Array<Task>): boolean {
+  return benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')
 }

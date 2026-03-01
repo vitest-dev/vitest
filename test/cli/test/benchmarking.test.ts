@@ -183,3 +183,12 @@ it('basic', { timeout: 60_000 }, async () => {
     ]
   `)
 })
+
+// https://github.com/vitest-dev/vitest/issues/9718
+it('top level bench should print result once', async () => {
+  const root = pathe.join(import.meta.dirname, '../fixtures/benchmarking/top-level')
+  const { stdout } = await runVitest({ root }, [], { mode: 'benchmark' })
+
+  const occurrences = stdout.split('\n').filter(l => /✓\s+base\.bench\.ts/.test(l)).length
+  expect(occurrences).toBe(1)
+})
