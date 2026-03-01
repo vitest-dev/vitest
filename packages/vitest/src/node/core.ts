@@ -19,6 +19,7 @@ import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
+import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
@@ -613,8 +614,10 @@ export class Vitest {
         await this._reportFileTask(file)
       }
 
-      this._checkUnhandledErrors(errors)
-      await this._testRun.end(specifications, errors)
+      // append errors thrown during reporter event replay during merge reports
+      const unhandledErrors = [...errors, ...this.state.getUnhandledErrors()]
+      this._checkUnhandledErrors(unhandledErrors)
+      await this._testRun.end(specifications, unhandledErrors)
       await this.initCoverageProvider()
       await this.coverageProvider?.mergeReports?.(coverages)
 
@@ -637,7 +640,9 @@ export class Vitest {
     const project = this.getProjectByName(file.projectName || '')
     // TODO: for now, silence errors of `onUserConsoleLog` and `onCollected`
     // to align with normal test run behavior.
-    await this._testRun.enqueued(project, file)
+    await this._testRun.enqueued(project, file).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
     await this._testRun.collected(project, [file]).catch(noop)
 
     const logs: UserConsoleLog[] = []
@@ -654,7 +659,9 @@ export class Vitest {
       await this._testRun.log(log).catch(noop)
     }
 
-    await this._testRun.updated(packs, events)
+    await this._testRun.updated(packs, events).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
   }
 
   async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {

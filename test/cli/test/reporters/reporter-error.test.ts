@@ -86,12 +86,15 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(true)
-    expect(result.exitCode).toBe(1)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 1,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 
-  // TODO: align unhandled errors
   test('onTestModuleQueued in --merge-reports', async () => {
     await runVitest({
       root,
@@ -115,17 +118,23 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toContain('reporter error: onTestModuleQueued')
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onTestModuleQueued",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(false)
-    expect(result.exitCode).toBe(1)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 1,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 
   // TODO: don't silence onTestModuleCollected errors
@@ -154,9 +163,13 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(true)
-    expect(result.exitCode).toBe(0)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 0,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 
   test('onTestModuleCollected in --merge-reports', async () => {
@@ -190,9 +203,13 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(true)
-    expect(result.exitCode).toBe(0)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 0,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 
   test('onTaskUpdate in normal run', async () => {
@@ -222,16 +239,15 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect({ didThrow, onTestRunEndCalled }).toMatchInlineSnapshot(`
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
+        "exitCode": 1,
         "onTestRunEndCalled": true,
       }
     `)
-    expect(result.exitCode).toBe(1)
   })
 
-  // TODO: align unhandled errors with normal run
   test('onTaskUpdate in --merge-reports', async () => {
     await runVitest({
       root,
@@ -255,21 +271,23 @@ describe('reporter errors', () => {
         },
       ],
     })
-    expect(result.stderr).toContain('reporter error: onTaskUpdate')
     expect(result.errorTree()).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "reporter error: onTaskUpdate",
+        ],
         "basic.test.ts": {
           "basic": "passed",
         },
       }
     `)
-    expect({ didThrow, onTestRunEndCalled }).toMatchInlineSnapshot(`
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
       {
         "didThrow": true,
-        "onTestRunEndCalled": false,
+        "exitCode": 1,
+        "onTestRunEndCalled": true,
       }
     `)
-    expect(result.exitCode).toBe(1)
   })
 
   // TODO: don't silence onUserConsoleLog errors
@@ -300,9 +318,13 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(true)
-    expect(result.exitCode).toBe(0)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 0,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 
   test('onUserConsoleLog in --merge-reports', async () => {
@@ -338,8 +360,12 @@ describe('reporter errors', () => {
         },
       }
     `)
-    expect(didThrow).toBe(true)
-    expect(onTestRunEndCalled).toBe(true)
-    expect(result.exitCode).toBe(0)
+    expect({ didThrow, onTestRunEndCalled, exitCode: result.exitCode }).toMatchInlineSnapshot(`
+      {
+        "didThrow": true,
+        "exitCode": 0,
+        "onTestRunEndCalled": true,
+      }
+    `)
   })
 })
