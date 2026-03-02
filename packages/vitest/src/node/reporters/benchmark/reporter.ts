@@ -1,6 +1,7 @@
 import type { TaskResultPack } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../../core'
+import type { TestSpecification } from '../../test-specification'
 import type { TestRunEndReason } from '../../types/reporter'
 import type { TestModule, TestSuite } from '../reported-tasks'
 import fs from 'node:fs'
@@ -14,6 +15,7 @@ import { renderTable } from './tableRender'
 
 export class BenchmarkReporter extends DefaultReporter {
   compare?: Parameters<typeof renderTable>[0]['compare']
+  private readonly printedTables = new Set<string>()
 
   async onInit(ctx: Vitest): Promise<void> {
     super.onInit(ctx)
@@ -32,6 +34,11 @@ export class BenchmarkReporter extends DefaultReporter {
         this.error(`Failed to read '${compareFile}'`, e)
       }
     }
+  }
+
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    this.printedTables.clear()
+    super.onTestRunStart(specifications)
   }
 
   onTaskUpdate(packs: TaskResultPack[]): void {
@@ -63,10 +70,22 @@ export class BenchmarkReporter extends DefaultReporter {
       return
     }
 
+    if (
+      testTask.type === 'suite'
+      && testTask.parent.type === 'module'
+      && getFullName(testTask.task, separator) === getFullName(testTask.parent.task, separator)
+    ) {
+      return
+    }
+
     const benches = testTask.task.tasks.filter(t => t.meta.benchmark)
     const duration = testTask.task.result?.duration || 0
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
+      if (this.printedTables.has(testTask.task.id)) {
+        return
+      }
+      this.printedTables.add(testTask.task.id)
       let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project)}${getFullName(testTask.task, separator)}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {

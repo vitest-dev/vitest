@@ -42,6 +42,15 @@ it('non-tty', async () => {
   }
 })
 
+it('top-level bench output is not duplicated', async () => {
+  const root = pathe.join(import.meta.dirname, '../fixtures/benchmarking/top-level')
+  const result = await runVitest({ root }, [], { mode: 'benchmark' })
+
+  expect(result.stderr).toBe('')
+  expect(result.stdout.match(/✓ no-describe\.bench\.ts/g)).toHaveLength(1)
+  expect(result.stdout.match(/✓ with-describe\.bench\.ts > group/g)).toHaveLength(1)
+})
+
 it.for([true, false])('includeSamples %s', async (includeSamples) => {
   const result = await runVitest(
     {
