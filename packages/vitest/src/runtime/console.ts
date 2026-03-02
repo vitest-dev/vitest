@@ -114,13 +114,15 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   ) {
     const timer = timers.get(taskId)!
     const time = type === 'stderr' ? timer.stderrTime : timer.stdoutTime
-    state().rpc.onUserConsoleLog({
+    void state().rpc.onUserConsoleLog({
       type,
       content: content || '<empty line>',
       taskId,
       time: time || RealDate.now(),
       size,
       origin,
+    }).catch((error) => {
+      state().rpc.onUnhandledError(error, 'Unhandled Reporter Error')
     })
   }
 

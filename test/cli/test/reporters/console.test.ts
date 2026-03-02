@@ -92,3 +92,24 @@ test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
     },
   ])
 })
+
+test('surfaces reporter errors thrown from onUserConsoleLog', async () => {
+  const { ctx, exitCode } = await runVitest({
+    root: './fixtures/reporters',
+    reporters: [
+      {
+        onUserConsoleLog() {
+          throw new Error('Reporter onUserConsoleLog failed')
+        },
+      } satisfies Reporter,
+    ],
+  }, [resolve('./fixtures/reporters/console.test.ts')])
+
+  expect(exitCode).toBe(1)
+  expect(
+    ctx!.state.getUnhandledErrors().some(error =>
+      (error as any).type === 'Unhandled Reporter Error'
+      && String(error).includes('Reporter onUserConsoleLog failed'),
+    ),
+  ).toBe(true)
+})
