@@ -797,6 +797,37 @@ export const userEvent: UserEvent
  */
 export const commands: BrowserCommands
 
+export type BrowserHttpMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
+  | 'HEAD'
+  | 'OPTIONS'
+
+export type BrowserRouteMatch = string | RegExp
+
+export type BrowserHttpMethodName = Lowercase<BrowserHttpMethod>
+
+export type BrowserResponseResolver = () => Response | Promise<Response>
+
+export interface BrowserRouteHandler {
+  match: BrowserRouteMatch,
+  resolver: BrowserResponseResolver,
+}
+
+export type BrowserHttpHandlers = Record<BrowserHttpMethodName, (
+  match: BrowserRouteMatch,
+  resolver: BrowserResponseResolver,
+) => Promise<void>>
+
+export interface SerializedHttpResponse {
+  status: number
+  headers: [string, string][]
+  body: string
+}
+
 export interface BrowserPage extends LocatorSelectors {
   /**
    * Change the size of iframe's viewport.
@@ -844,6 +875,10 @@ export interface BrowserPage extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/locators}
    */
   frameLocator(locator: Locator): FrameLocator
+  /**
+   * HTTP route handlers to mock network requests.
+   */
+  http: BrowserHttpHandlers
 }
 
 export interface BrowserLocators {

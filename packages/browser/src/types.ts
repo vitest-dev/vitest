@@ -80,6 +80,16 @@ export interface WebSocketBrowserEvents {
     keys: string[]
     responseId: string
   }>
+
+  runHttpResolver: (
+    resolverId: string,
+  ) => Promise<SerializedHttpResponse>
+}
+
+export interface SerializedHttpResponse {
+  status: number
+  headers: [string, string][]
+  body: string
 }
 
 export type WebSocketBrowserRPC = BirpcReturn<
