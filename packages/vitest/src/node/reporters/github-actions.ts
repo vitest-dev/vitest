@@ -247,8 +247,11 @@ function escapeProperty(s: string): string {
     .replace(/,/g, '%2C')
 }
 
+type SummaryTestsStats = Record<'failed' | 'passed' | 'expectedFail' | 'skipped' | 'todo', number>
+
 interface SummaryData {
-  stats: Record<'failed' | 'passed' | 'expectedFail' | 'skipped' | 'todo', number>
+  fileStats: Pick<SummaryTestsStats, 'failed' | 'passed'>
+  testsStats: SummaryTestsStats
   flakyTests: Array<{
     path: {
       relative: string
@@ -268,7 +271,11 @@ interface SummaryData {
 
 function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData {
   const summaryData: SummaryData = {
-    stats: {
+    fileStats: {
+      failed: 0,
+      passed: 0,
+    },
+    testsStats: {
       failed: 0,
       passed: 0,
       expectedFail: 0,
@@ -284,28 +291,39 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>): SummaryData
       tests: [],
     }
 
+    switch (module.task.result?.state) {
+      case 'fail': {
+        summaryData.fileStats.failed += 1
+        break
+      }
+      case 'pass': {
+        summaryData.fileStats.passed += 1
+        break
+      }
+    }
+
     for (const test of module.children.allTests()) {
       switch (test.task.mode) {
         case 'skip': {
-          summaryData.stats.skipped += 1
+          summaryData.testsStats.skipped += 1
           break
         }
         case 'todo': {
-          summaryData.stats.todo += 1
+          summaryData.testsStats.todo += 1
           break
         }
         default: {
           switch (test.task.result?.state) {
             case 'fail': {
-              summaryData.stats.failed += 1
+              summaryData.testsStats.failed += 1
               break
             }
             case 'pass': {
               if (test.task.fails) {
-                summaryData.stats.expectedFail += 1
+                summaryData.testsStats.expectedFail += 1
               }
               else {
-                summaryData.stats.passed += 1
+                summaryData.testsStats.passed += 1
               }
 
               break
@@ -366,41 +384,55 @@ function mdLink(text: string, url: string | null): string {
   return url === null ? text : `[${text}](${url})`
 }
 
-function renderStats(stats: SummaryData['stats']): string {
-  const primaryInfoTotal = stats.failed + stats.passed + stats.expectedFail
-  const secondaryInfoTotal = stats.skipped + stats.todo
+function renderStats({ fileStats, testsStats }: SummaryData): string {
+  const SEPARATOR_SYMBOL = ' · '
 
+  const fileInfoTotal = fileStats.failed + fileStats.passed
+  const primaryInfoTotal = testsStats.failed + testsStats.passed + testsStats.expectedFail
+  const secondaryInfoTotal = testsStats.skipped + testsStats.todo
+
+  const fileInfo: string[] = []
   const primaryInfo: string[] = []
   const secondaryInfo: string[] = []
 
-  if (stats.failed > 0) {
-    primaryInfo.push(`❌ **${stats.failed} ${noun(stats.failed, 'failure', 'failures')}**`)
+  if (fileStats.failed > 0) {
+    fileInfo.push(`❌ **${fileStats.failed} ${noun(fileStats.failed, 'failure', 'failures')}**`)
   }
 
-  if (stats.passed > 0) {
-    primaryInfo.push(`✅ **${stats.passed} ${noun(stats.passed, 'pass', 'passes')}**`)
+  if (fileStats.passed > 0) {
+    fileInfo.push(`✅ **${fileStats.passed} ${noun(fileStats.passed, 'pass', 'passes')}**`)
   }
 
-  if (stats.expectedFail > 0) {
-    primaryInfo.push(`🔵 **${stats.expectedFail} expected ${noun(stats.expectedFail, 'failure', 'failures')}**`)
+  fileInfo.push(`${fileInfoTotal} total`)
+
+  if (testsStats.failed > 0) {
+    primaryInfo.push(`❌ **${testsStats.failed} ${noun(testsStats.failed, 'failure', 'failures')}**`)
+  }
+
+  if (testsStats.passed > 0) {
+    primaryInfo.push(`✅ **${testsStats.passed} ${noun(testsStats.passed, 'pass', 'passes')}**`)
+  }
+
+  if (testsStats.expectedFail > 0) {
+    primaryInfo.push(`🔵 **${testsStats.expectedFail} expected ${noun(testsStats.expectedFail, 'failure', 'failures')}**`)
   }
 
   primaryInfo.push(`${primaryInfoTotal} total`)
 
-  if (stats.skipped > 0) {
-    secondaryInfo.push(`${stats.skipped} ${noun(stats.skipped, 'skip', 'skips')}`)
+  if (testsStats.skipped > 0) {
+    secondaryInfo.push(`${testsStats.skipped} ${noun(testsStats.skipped, 'skip', 'skips')}`)
   }
 
-  if (stats.todo > 0) {
-    secondaryInfo.push(`${stats.todo} ${noun(stats.todo, 'todo', 'todos')}`)
+  if (testsStats.todo > 0) {
+    secondaryInfo.push(`${testsStats.todo} ${noun(testsStats.todo, 'todo', 'todos')}`)
   }
 
-  let output = `\n### Summary\n\n- **Test Results**: ${primaryInfo.join(' · ')}\n`
+  let output = `\n### Summary\n\n- **Test Files**: ${fileInfo.join(SEPARATOR_SYMBOL)}\n- **Test Results**: ${primaryInfo.join(SEPARATOR_SYMBOL)}\n`
 
   if (secondaryInfo.length > 0) {
     secondaryInfo.push(`${secondaryInfoTotal} total`)
 
-    output += `- **Other**: ${secondaryInfo.join(' · ')}\n`
+    output += `- **Other**: ${secondaryInfo.join(SEPARATOR_SYMBOL)}\n`
   }
 
   return output
@@ -411,7 +443,7 @@ const SUMMARY_HEADER = '## Vitest Test Report\n'
 function renderSummary(summaryData: SummaryData, fileLinks?: JobSummaryOptions['fileLinks']): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
-  let summary = `${SUMMARY_HEADER}${renderStats(summaryData.stats)}`
+  let summary = `${SUMMARY_HEADER}${renderStats(summaryData)}`
 
   if (summaryData.flakyTests.length > 0) {
     summary += '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'

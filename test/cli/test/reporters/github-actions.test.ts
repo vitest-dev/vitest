@@ -96,6 +96,7 @@ describe(GithubActionsReporter, () => {
 
         ### Summary
 
+        - **Test Files**: ❌ **1 failure** · ✅ **1 pass** · 2 total
         - **Test Results**: ❌ **1 failure** · ✅ **9 passes** · 🔵 **1 expected failure** · 11 total
         - **Other**: 1 skip · 1 todo · 2 total
 
@@ -182,6 +183,7 @@ describe(GithubActionsReporter, () => {
 
         ### Summary
 
+        - **Test Files**: ❌ **1 failure** · ✅ **1 pass** · 2 total
         - **Test Results**: ❌ **1 failure** · ✅ **9 passes** · 🔵 **1 expected failure** · 11 total
         - **Other**: 1 skip · 1 todo · 2 total
 
