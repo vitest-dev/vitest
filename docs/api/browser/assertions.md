@@ -370,7 +370,7 @@ await expect.element(getByTestId('parent')).toContainHTML('</span>')
 ::: warning
 Chances are you probably do not need to use this matcher. We encourage testing from the perspective of how the user perceives the app in a browser. That's why testing against a specific DOM structure is not advised.
 
-It could be useful in situations where the code being tested renders html that was obtained from an external source, and you want to validate that that html code was used as intended.
+It could be useful in situations where the code being tested renders html that was obtained from an external source, and you want to validate that html code was used as intended.
 
 It should not be used to check DOM structure that you control. Please, use [`toContainElement`](#tocontainelement) instead.
 :::
