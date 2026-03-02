@@ -232,7 +232,7 @@ export default <Environment>{
 }
 
 function createCompatRequest(utils: CompatUtils) {
-  const CompatRequest = class Request extends NodeRequest_ {
+  class Request extends NodeRequest_ {
     constructor(...args: [input: RequestInfo, init?: RequestInit]) {
       const [input, init] = args
       if (init?.body != null) {
@@ -254,12 +254,11 @@ function createCompatRequest(utils: CompatUtils) {
       return instance instanceof NodeRequest_
     }
   }
-  Object.defineProperty(CompatRequest, 'name', { value: 'Request' })
-  return CompatRequest
+  return Request
 }
 
 function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
-  const CompatURL = class URL extends NodeURL {
+  class URL extends NodeURL {
     static createObjectURL(blob: any): string {
       if (blob instanceof utils.window.Blob) {
         const compatBlob = utils.makeCompatBlob(blob)
@@ -271,11 +270,8 @@ function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
     static [Symbol.hasInstance](instance: unknown): boolean {
       return instance instanceof NodeURL
     }
-  } as typeof URL
-  // bundlers may rename the class expression to avoid conflicts (e.g. URL$1)
-  // https://github.com/vitest-dev/vitest/issues/9761
-  Object.defineProperty(CompatURL, 'name', { value: 'URL' })
-  return CompatURL
+  }
+  return URL
 }
 
 interface CompatUtils {
