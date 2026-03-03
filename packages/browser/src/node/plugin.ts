@@ -49,6 +49,16 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // strip _vitest_original query added by importActual so that
+        // virtual module plugins can match the clean id in load()
+        server.middlewares.use((req, _res, next) => {
+          if (req.url?.includes('_vitest_original')) {
+            req.url = req.url
+              .replace(/[?&]_vitest_original(?=[&#]|$)/, '')
+              .replace(/\?$/, '')
+          }
+          next()
+        })
         server.middlewares.use(createOrchestratorMiddleware(parentServer))
         server.middlewares.use(createTesterMiddleware(parentServer))
 

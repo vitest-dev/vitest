@@ -1,4 +1,6 @@
+import type { RunVitestConfig } from '../../test-utils'
 import path from 'node:path'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest } from '../../test-utils'
@@ -134,7 +136,21 @@ test('can mock invalid module', () => {
   }
 })
 
-test('importOriginal works for virtual modules', async () => {
+function browserConfig(mode: string): RunVitestConfig {
+  if (mode === 'browser') {
+    return {
+      browser: {
+        enabled: true,
+        provider: playwright(),
+        instances: [{ browser: 'chromium' }],
+        headless: true,
+      },
+    }
+  }
+  return {}
+}
+
+test.for(['node', 'browser'])('importOriginal works for virtual modules (%s)', async (mode) => {
   const { stderr, testTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
@@ -167,7 +183,7 @@ test('importOriginal returns original virtual module exports', () => {
   expect(value).toBe('original-modified')
 })
     `,
-  })
+  }, browserConfig(mode))
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
@@ -179,7 +195,7 @@ test('importOriginal returns original virtual module exports', () => {
   `)
 })
 
-test('mocking virtual module without importOriginal skips loading original', async () => {
+test.for(['node', 'browser'])('mocking virtual module without importOriginal skips loading original (%s)', async (mode) => {
   const { stderr, testTree } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
@@ -211,7 +227,7 @@ test('mock works without loading original', () => {
   expect(value).toBe('mocked')
 })
     `,
-  })
+  }, browserConfig(mode))
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
