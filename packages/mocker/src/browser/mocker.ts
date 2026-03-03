@@ -2,7 +2,7 @@ import type { CreateMockInstanceProcedure } from '../automocker'
 import type { MockedModule, MockedModuleType } from '../registry'
 import type { ModuleMockContext, ModuleMockOptions, TestModuleMocker } from '../types'
 import type { ModuleMockerInterceptor } from './interceptor'
-import { join } from 'pathe'
+import { extname, join } from 'pathe'
 import { mockObject } from '../automocker'
 import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 
@@ -65,8 +65,9 @@ export class ModuleMocker implements TestModuleMocker {
         `[vitest] Cannot resolve "${id}" imported from "${importer}"`,
       )
     }
+    const ext = extname(resolved.id)
     const url = new URL(resolved.url, this.getBaseUrl())
-    const query = '_vitest_original'
+    const query = `_vitest_original&ext${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
     }${url.hash}`
