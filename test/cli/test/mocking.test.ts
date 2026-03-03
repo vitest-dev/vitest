@@ -133,3 +133,45 @@ test('can mock invalid module', () => {
     `)
   }
 })
+
+test('mocking virtual module without importOriginal skips loading original', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
+  plugins: [{
+    name: 'virtual-test',
+    resolveId(source) {
+      if (source === 'virtual:my-module') return source
+    },
+    load(id) {
+      if (id === 'virtual:my-module') {
+        throw new Error('virtual module load should not be called')
+      }
+    },
+  }],
+})
+    `,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import { value } from 'virtual:my-module'
+
+vi.mock('virtual:my-module', () => {
+  return { value: 'mocked' }
+})
+
+test('mock works without loading original', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "mock works without loading original": "passed",
+      },
+    }
+  `)
+})

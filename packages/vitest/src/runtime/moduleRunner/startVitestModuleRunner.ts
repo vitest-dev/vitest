@@ -9,7 +9,7 @@ import { isBareImport } from '@vitest/utils/helpers'
 import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
 import { getSafeWorkerState } from '../utils'
 import { getCachedVitestImport } from './cachedResolver'
-import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
+import { removeQuery, unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
 
@@ -95,6 +95,13 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           return vitest
         }
 
+        // Strip _vitest_original query — importActual uses this to bypass
+        // the mock short-circuit and fetch real module code.
+        const isImportActual = id.includes('_vitest_original')
+        if (isImportActual) {
+          id = removeQuery(id, '_vitest_original')
+        }
+
         const rawId = unwrapId(id)
         resolvingModules.add(rawId)
 
@@ -103,15 +110,17 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             await moduleRunner.mocker.resolveMocks()
           }
 
-          const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
-          if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
-            return {
-              code: '',
-              file: null,
-              id: resolvedMock.id,
-              url: resolvedMock.url,
-              invalidate: false,
-              mockedModule: resolvedMock,
+          if (!isImportActual) {
+            const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+            if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
+              return {
+                code: '',
+                file: null,
+                id: resolvedMock.id,
+                url: resolvedMock.url,
+                invalidate: false,
+                mockedModule: resolvedMock,
+              }
             }
           }
 
