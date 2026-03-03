@@ -1,5 +1,7 @@
 # @vitest/web-worker
 
+[![NPM version](https://img.shields.io/npm/v/@vitest/web-worker?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/web-worker)
+
 > Web Worker support for Vitest testing. Doesn't require JSDom.
 
 Simulates Web Worker, but in the same thread.
@@ -88,3 +90,5 @@ worker.onmessage = (e) => {
 - Transferring Buffer will not change its `byteLength`.
 - You have access to shared global space as your tests.
 - You can debug your worker, using `DEBUG=vitest:web-worker` environmental variable.
+
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/web-worker) | [Documentation](https://vitest.dev/)
