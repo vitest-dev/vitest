@@ -1,10 +1,15 @@
 import type { RunVitestConfig } from '../../test-utils'
+import { setDefaultResultOrder } from 'node:dns'
 import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
 import { webdriverio } from '@vitest/browser-webdriverio'
-import { expect, test } from 'vitest'
+import { afterAll, expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest } from '../../test-utils'
+
+// webdriver@9 sets dns.setDefaultResultOrder("ipv4first") on import,
+// which makes Vite resolve localhost to 127.0.0.1 and breaks other tests asserting "localhost"
+afterAll(() => setDefaultResultOrder('verbatim'))
 
 test('setting resetMocks works if restoreMocks is also set', async () => {
   const { stderr, testTree } = await runInlineTests({
