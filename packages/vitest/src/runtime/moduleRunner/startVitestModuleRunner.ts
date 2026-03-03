@@ -12,7 +12,7 @@ import { getCachedVitestImport } from './cachedResolver'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
-import { removeQuery } from './utils'
+import { injectQuery, removeQuery } from './utils'
 
 const { readFileSync } = fs
 
@@ -149,7 +149,18 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           )
           if ('cached' in result) {
             const code = readFileSync(result.tmp, 'utf-8')
-            return { code, ...result }
+            const fetched = { code, ...result }
+            if (isImportActual) {
+              fetched.id = injectQuery(fetched.id, '_vitest_original')
+              fetched.url = injectQuery(fetched.url, '_vitest_original')
+            }
+            return fetched
+          }
+          // Add back _vitest_original to result id/url so Vite caches the
+          // actual module under a separate key from the mocked one.
+          if (isImportActual && 'id' in result && 'url' in result) {
+            result.id = injectQuery(result.id, '_vitest_original')
+            result.url = injectQuery(result.url, '_vitest_original')
           }
           return result
         }
