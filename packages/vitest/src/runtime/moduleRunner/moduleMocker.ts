@@ -7,7 +7,7 @@ import vm from 'node:vm'
 import { AutomockedModule, RedirectedModule } from '@vitest/mocker'
 import { distDir } from '../../paths'
 import { BareModuleMocker } from './bareModuleMocker'
-import { injectQuery } from './moduleEvaluator'
+import { injectQuery } from './utils'
 
 const spyModulePath = resolve(distDir, 'spy.js')
 
