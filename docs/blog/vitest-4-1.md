@@ -27,7 +27,7 @@ head:
 
 # Vitest 4.1 is out!
 
-_Match 1, 2026_
+_March 1, 2026_
 
 ![Vitest 4.1 Announcement Cover Image](/og-vitest-4.jpg)
 
@@ -43,7 +43,7 @@ Quick links:
 
 If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
 
-We extend our gratitude to the over [713 contributors to Vitest Core](https://github.com/vitest-dev/vitest/graphs/contributors) and to the maintainers and contributors of Vitest integrations, tools, and translations who have helped us develop this new major release. We encourage you to get involved and help us improve Vitest for the entire ecosystem. Learn more at our [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
+We extend our gratitude to the over [713 contributors to Vitest Core](https://github.com/vitest-dev/vitest/graphs/contributors) and to the maintainers and contributors of Vitest integrations, tools, and translations who have helped us develop this new release. We encourage you to get involved and help us improve Vitest for the entire ecosystem. Learn more at our [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
 
 To get started, we suggest helping [triage issues](https://github.com/vitest-dev/vitest/issues), [review PRs](https://github.com/vitest-dev/vitest/pulls), send failing tests PRs based on open issues, and support others in [Discussions](https://github.com/vitest-dev/vitest/discussions) and Vitest Land's [help forum](https://discord.com/channels/917386801235247114/1057959614160851024). If you'd like to talk to us, join our [Discord community](http://chat.vitest.dev/) and say hi on the [#contributing channel](https://discord.com/channels/917386801235247114/1057959614160851024).
 
@@ -114,11 +114,50 @@ vitest --tags-filter="api/*"
 
 ## Configure UI Browser Window
 
-https://github.com/vitest-dev/vitest/pull/9525
+Vitest 4.1 introduces [`browser.detailsPanelPosition`](/config/browser/detailspanelposition), letting you choose where the details panel appears in Browser UI.
+
+This is especially useful on smaller screens, where switching to a bottom panel leaves more horizontal space for your app:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      detailsPanelPosition: 'bottom', // or 'right'
+    },
+  },
+})
+```
+
+You can also switch this directly from the UI via the new layout toggle button.
 
 ## Custom Marks in Trace View
 
-https://github.com/vitest-dev/vitest/pull/9652
+Trace view now supports custom markers through [`page.mark`](/api/browser/context#mark) and [`locator.mark`](/api/browser/locators#mark).
+
+Vitest already annotates many browser actions automatically, but marks let you highlight important moments in your own test flow:
+
+```ts
+import { page } from 'vitest/browser'
+
+await page.mark('before sign in')
+await page.getByRole('button', { name: 'Sign in' }).click()
+await page.mark('after sign in')
+```
+
+You can also group a whole flow under one named entry:
+
+```ts
+await page.mark('sign in flow', async () => {
+  await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
+  await page.getByRole('textbox', { name: 'Password' }).fill('secret')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+})
+```
+
+Read more in the [Trace View guide](/guide/browser/trace-view#trace-markers).
 
 ## Type-Inference in `test.extend` - New Builder Pattern
 
@@ -178,7 +217,7 @@ This change could be considered breaking - previously Vitest passed down undocum
 
 ## New `aroundAll` and `aroundEach` Hooks
 
-New `aroundEach` hook registers a callback function that wraps around each test within the current suite. The callback receives a `runTest` function that **must** be called to run the test. The `aroundAll` hooks works simillarly, but is called for every suite, not a test.
+New `aroundEach` hook registers a callback function that wraps around each test within the current suite. The callback receives a `runTest` function that **must** be called to run the test. The `aroundAll` hook works similarly, but is called for every suite, not a test.
 
 You should use `aroundEach` when your test needs to run **inside a context** that wraps around it, such as:
 - Wrapping tests in [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) context
@@ -189,7 +228,7 @@ You should use `aroundEach` when your test needs to run **inside a context** tha
 import { aroundEach, test as baseTest } from 'vitest'
 
 const test = baseTest
-  .extend('db', ({}, { onCleanup }) => {
+  .extend('db', async ({}, { onCleanup }) => {
     // db is created before `aroundEach` hook
     const db = await createTestDatabase()
     onCleanup(() => db.close())
@@ -227,7 +266,28 @@ test('example', () => {
 This is especially useful for custom assertion libraries and reusable test utilities where the call site is more meaningful than the implementation.
 
 ## `--detect-async-leaks` to Catch Leaks
-https://github.com/vitest-dev/vitest/pull/9528
+
+Leaked timers, handles, and unresolved async resources can make test suites flaky and hard to debug. Vitest 4.1 adds [`detectAsyncLeaks`](/config/detectasyncleaks) to help track these issues.
+
+You can enable it via CLI:
+
+```sh
+vitest --detect-async-leaks
+```
+
+Or in config:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    detectAsyncLeaks: true,
+  },
+})
+```
+
+When enabled, Vitest uses `node:async_hooks` to report leaked async resources with source locations. Since this adds runtime overhead, it is best used while debugging.
 
 ## New `mockThrow` API
 
@@ -240,6 +300,17 @@ myMockFn() // throws Error<'error message'>
 ```
 
 ## Strict Mode in WebdriverIO and Preview
+
+Locating elements is now strict by default in `webdriverio` and `preview`, matching Playwright behavior.
+
+If a locator resolves to multiple elements, Vitest throws a "strict mode violation" instead of silently picking one. This helps catch ambiguous queries early:
+
+```ts
+const button = page.getByRole('button')
+
+await button.click() // throws if multiple buttons match
+await button.click({ strict: false }) // opt out and return first match
+```
 
 ## Chai-style Mocking Assertions
 
