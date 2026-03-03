@@ -96,6 +96,10 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           return vitest
         }
 
+        // if (id.includes('repro-dep') || id.includes('virtual:')) {
+        //   console.log({ id })
+        // }
+
         // strip _vitest_original query added by importActual so that
         // the plugin pipeline sees the original import id (e.g. virtual modules's load hook)
         const isImportActual = id.includes('_vitest_original')
@@ -112,7 +116,10 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           }
 
           if (!isImportActual) {
-            const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+            const resolvedMock = moduleRunner.mocker.getDependencyMockByUrl(id)
+            // if (id.includes('repro-dep') || id.includes('virtual:')) {
+            //   console.log({ rawId, resolvedMock })
+            // }
             if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
               return {
                 code: '',

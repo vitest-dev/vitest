@@ -87,9 +87,7 @@ test('invalid packages', async () => {
           ],
         },
         "mock-wrapper.test.ts": {
-          "__module_errors__": [
-            "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
-          ],
+          "basic": "passed",
         },
       }
     `)
@@ -97,10 +95,10 @@ test('invalid packages', async () => {
 })
 
 test('mocking modules with syntax error', async () => {
-  // TODO: manual mocked module still gets transformed so this is not supported yet.
   const { errorTree } = await runInlineTests({
     './syntax-error.js': `syntax error`,
     './basic.test.js': /* ts */ `
+import { test, expect, vi } from 'vitest'
 import * as dep from './syntax-error.js'
 
 vi.mock('./syntax-error.js', () => {
@@ -117,13 +115,7 @@ test('can mock invalid module', () => {
     expect(errorTree()).toMatchInlineSnapshot(`
       {
         "basic.test.js": {
-          "__module_errors__": [
-            "Parse failure: Parse failed with 1 error:
-      Expected a semicolon or an implicit semicolon after a statement, but found none
-      1: syntax error
-               ^
-      At file: /syntax-error.js:1:6",
-          ],
+          "can mock invalid module": "passed",
         },
       }
     `)
@@ -132,10 +124,7 @@ test('can mock invalid module', () => {
     expect(errorTree()).toMatchInlineSnapshot(`
       {
         "basic.test.js": {
-          "__module_errors__": [
-            "Parse failure: Expected ';', '}' or <eof>
-      At file: /syntax-error.js:1:7",
-          ],
+          "can mock invalid module": "passed",
         },
       }
     `)
