@@ -405,8 +405,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     tracesDir?: string
     screenshots?: boolean
     snapshots?: boolean
-    // TODO: map locations to test ones
-    // sources?: boolean
+    sources?: boolean
   }
 }
 
