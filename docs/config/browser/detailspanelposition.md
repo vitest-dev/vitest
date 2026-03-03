@@ -37,7 +37,7 @@ export default defineConfig({
 </center>
 == right
 <center>
-  <img alt="Vitest UI with details at the bottom" img-light src="/ui/light-ui-details-right.png">
-  <img alt="Vitest UI with details at the bottom" img-dark src="/ui/dark-ui-details-right.png">
+  <img alt="Vitest UI with details at the right side" img-light src="/ui/light-ui-details-right.png">
+  <img alt="Vitest UI with details at the right side" img-dark src="/ui/dark-ui-details-right.png">
 </center>
 :::
