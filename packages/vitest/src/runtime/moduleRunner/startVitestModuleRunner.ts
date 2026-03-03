@@ -10,9 +10,9 @@ import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
 import { getSafeWorkerState } from '../utils'
 import { getCachedVitestImport } from './cachedResolver'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
-import { removeQuery } from './utils'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
+import { removeQuery } from './utils'
 
 const { readFileSync } = fs
 
