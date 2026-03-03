@@ -211,6 +211,9 @@ test('importOriginal returns original virtual module exports', () => {
     )
     expect(tree).toMatchInlineSnapshot(`
       {
+        "__unhandled_errors__": [
+          "[vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock",
+        ],
         "basic.test.js": {
           "__module_errors__": [
             "Failed to import test file <root>/basic.test.js",
