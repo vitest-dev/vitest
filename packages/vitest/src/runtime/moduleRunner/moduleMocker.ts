@@ -131,8 +131,7 @@ export class VitestMocker extends BareModuleMocker {
     callstack?: string[] | null,
   ): Promise<T> {
     const { url } = await this.resolveId(rawId, importer)
-    const actualUrl = injectQuery(url, '_vitest_original')
-    const node = await this.moduleRunner.fetchModule(actualUrl, importer)
+    const node = await this.moduleRunner.fetchModule(injectQuery(url, '_vitest_original'), importer)
     const result = await this.moduleRunner.cachedRequest(
       node.url,
       node,
