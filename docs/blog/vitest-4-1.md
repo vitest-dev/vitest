@@ -88,7 +88,7 @@ test('flaky database test', { tags: ['flaky', 'db'] }, () => {
 
 The test has a timeout of 60 seconds and will be retried 3 times on CI because these options were specified in the configuration file for `db` and `flaky` tags.
 
-You can also filter tests by tags with a special syntax. Vitest supports these keywords:
+Inspired by [pytest](https://docs.pytest.org/en/stable/reference/reference.html#cmdoption-m), Vitest supports a custom syntax for filtering tags:
 
 - `and` or `&&` to include both expressions
 - `or` or `||` to include at least one expression
