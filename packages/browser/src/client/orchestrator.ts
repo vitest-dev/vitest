@@ -67,8 +67,7 @@ export class IframeOrchestrator {
     const container = await getContainer(config)
 
     if (config.browser.ui) {
-      container.className = 'absolute origin-top mt-[8px]'
-      container.parentElement!.setAttribute('data-ready', 'true')
+      container.setAttribute('data-ready', 'true')
       // in non-isolated mode this will also remove the iframe,
       // so we only do this once
       if (container.textContent) {
@@ -154,9 +153,8 @@ export class IframeOrchestrator {
 
     const config = getConfig()
     const { width, height } = config.browser.viewport
-    const iframe = this.iframes.get(ID_ALL)!
 
-    await setIframeViewport(iframe, width, height)
+    await setIframeViewport(width, height)
     debug('run non-isolated tests', options.files.join(', '))
     await this.sendEventToIframe({
       event: 'execute',
@@ -187,13 +185,13 @@ export class IframeOrchestrator {
       this.iframes.delete(file)
     }
 
-    const iframe = await this.prepareIframe(
+    await this.prepareIframe(
       container,
       file,
       startTime,
       otelContext,
     )
-    await setIframeViewport(iframe, width, height)
+    await setIframeViewport(width, height)
     // running tests after the "prepare" event
     await this.sendEventToIframe({
       event: 'execute',
@@ -312,16 +310,37 @@ export class IframeOrchestrator {
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
     const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const config = getConfig()
+
     iframe.setAttribute('loading', 'eager')
     iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')
-
-    iframe.style.border = 'none'
-    iframe.style.width = '100%'
-    iframe.style.height = '100%'
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
+
+    iframe.style.setProperty('border', 'none')
+    iframe.style.setProperty('width', 'var(--viewport-width)')
+    iframe.style.setProperty('height', 'var(--viewport-height)')
+
+    // enable scaling only when using the UI, without UI the iframe fills the page
+    if (config.browser.ui) {
+      iframe.style.setProperty('transform', 'scale(min(1, calc(100cqw / var(--viewport-width))))')
+
+      // Firefox does not support typed arithmetic (divisions between typed values): https://bugzilla.mozilla.org/show_bug.cgi?id=1264520
+      if (config.browser.name === 'firefox') {
+        // Firefox cannot resolve relative units like `cqw` directly inside `atan2()`
+        // Storing it in a CSS variable first forces Firefox to resolve `100cqw` to an absolute pixel value
+        iframe.style.setProperty('--container-width', '100cqw')
+        // `tan(atan2(a, b))` produces a unit-less `a / b` ratio:
+        //  - `atan2()` accepts two lengths and returns an `<angle>`
+        //  - `tan()` converts it back to a unit-less `<number>`
+        iframe.style.setProperty('transform', 'scale(min(1, tan(atan2(var(--container-width), var(--viewport-width)))))')
+      }
+
+      iframe.style.setProperty('transform-origin', 'top left')
+    }
+
     return iframe
   }
 
@@ -357,7 +376,7 @@ export class IframeOrchestrator {
           )
           break
         }
-        await setIframeViewport(iframe, width, height)
+        await setIframeViewport(width, height)
         channel.postMessage({ event: 'viewport:done', iframeId: id } satisfies IframeViewportDoneEvent)
         break
       }
@@ -447,37 +466,24 @@ function generateFileId(file: string) {
 }
 
 async function setIframeViewport(
-  iframe: HTMLIFrameElement,
   width: number,
   height: number,
 ) {
   const ui = getUiAPI()
   if (ui) {
-    await ui.setIframeViewport(width, height)
+    return ui.setIframeViewport(width, height)
   }
-  else if (getBrowserState().provider === 'webdriverio') {
-    iframe.parentElement?.setAttribute('data-scale', '1')
+
+  document.body.style.setProperty('--viewport-width', `${width}px`)
+  document.body.style.setProperty('--viewport-height', `${height}px`)
+
+  if (getBrowserState().provider === 'webdriverio') {
     await client.rpc.triggerCommand(
       getBrowserState().sessionId,
       '__vitest_viewport',
       undefined,
       [{ width, height }],
     )
-  }
-  else {
-    const scale = Math.min(
-      1,
-      iframe.parentElement!.parentElement!.clientWidth / width,
-      iframe.parentElement!.parentElement!.clientHeight / height,
-    )
-    iframe.parentElement!.style.cssText = `
-      width: ${width}px;
-      height: ${height}px;
-      transform: scale(${scale});
-      transform-origin: left top;
-    `
-    iframe.parentElement?.setAttribute('data-scale', String(scale))
-    await new Promise(r => requestAnimationFrame(r))
   }
 }
 
