@@ -116,6 +116,13 @@ vitest --tags-filter="api/*"
 
 Vitest 4.1 introduces [`browser.detailsPanelPosition`](/config/browser/detailspanelposition), letting you choose where the details panel appears in Browser UI.
 
+<center>
+  <img alt="Vitest UI with details at the bottom" img-light src="/ui/light-ui-details-bottom.png">
+  <img alt="Vitest UI with details at the bottom" img-dark src="/ui/dark-ui-details-bottom.png">
+
+  <sup>An example of UI with the details panel at the bottom.</sup>
+</center>
+
 This is especially useful on smaller screens, where switching to a bottom panel leaves more horizontal space for your app:
 
 ```ts [vitest.config.ts]
