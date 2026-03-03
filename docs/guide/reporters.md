@@ -576,6 +576,67 @@ export default defineConfig({
 })
 ```
 
+The GitHub Actions reporter automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries.
+
+<img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
+<img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
+
+The job summary is enabled by default and writes to the path specified by `$GITHUB_STEP_SUMMARY`. You can override it by using the `jobSummary.outputPath` option:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          outputPath: '/home/runner/jobs/summary/step',
+        },
+      }],
+    ],
+  },
+})
+```
+
+To disable the job summary:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { jobSummary: { enabled: false } }],
+    ],
+  },
+})
+```
+
+The flaky tests section of the summary includes permalink URLs that link test names directly to the relevant source lines on GitHub. These links are generated automatically using environment variables that GitHub Actions provides (`$GITHUB_REPOSITORY`, `$GITHUB_SHA`, and `$GITHUB_WORKSPACE`), so no configuration is needed in most cases.
+
+If you need to override these values — for example, when running in a container or a custom environment — you can customize them via the `fileLinks` option:
+
+- `repository`: the GitHub repository in `owner/repo` format. Defaults to `process.env.GITHUB_REPOSITORY`.
+- `commitHash`: the commit SHA to use in permalink URLs. Defaults to `process.env.GITHUB_SHA`.
+- `workspacePath`: the absolute path to the root of the repository on disk. Used to compute relative file paths for the permalink URLs. Defaults to `process.env.GITHUB_WORKSPACE`.
+
+All three values must be available for the links to be generated.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          fileLinks: {
+            repository: 'owner/repo',
+            commitHash: 'abcdefg',
+            workspacePath: '/home/runner/work/repo/',
+          },
+        },
+      }],
+    ],
+  },
+})
+```
+
 ### Blob Reporter
 
 Stores test results on the machine so they can be later merged using [`--merge-reports`](/guide/cli#merge-reports) command.
