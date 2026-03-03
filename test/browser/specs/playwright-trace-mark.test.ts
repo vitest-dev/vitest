@@ -3,6 +3,7 @@ import path from 'node:path'
 import { stripVTControlCharacters } from 'node:util'
 import { resolve } from 'pathe'
 import { afterEach, describe, expect, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import * as yauzl from 'yauzl'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
@@ -220,7 +221,12 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           const markerEvent = events.find(e => e.title === '__vitest_click')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
-            expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
+            if (rolldownVersion) {
+              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
+            }
+            else {
+              expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:39"`)
+            }
           }
           else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:36:33"`)
