@@ -13,7 +13,7 @@ head:
       content: Announcing Vitest 4.1
   - - meta
     - property: og:image
-      content: https://vitest.dev/og-vitest-4.jpg
+      content: https://vitest.dev/og-vitest-4-1.jpg
   - - meta
     - property: og:url
       content: https://vitest.dev/blog/vitest-4-1
@@ -29,7 +29,7 @@ head:
 
 _March 1, 2026_
 
-![Vitest 4.1 Announcement Cover Image](/og-vitest-4.jpg)
+![Vitest 4.1 Announcement Cover Image](/og-vitest-4-1.jpg)
 
 ## The next Vitest minor is here
 
