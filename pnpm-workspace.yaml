@@ -46,7 +46,7 @@ patchedDependencies:
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
 
 catalog:
-  '@iconify-json/carbon': ^1.2.18
+  '@iconify-json/carbon': ^1.2.19
   '@iconify-json/logos': ^1.2.10
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
@@ -59,14 +59,14 @@ catalog:
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
-  '@unocss/reset': ^66.6.0
+  '@unocss/reset': ^66.6.3
   '@vitejs/plugin-vue': ^6.0.4
   '@vueuse/core': ^14.2.1
   acorn-walk: ^8.3.5
   birpc: ^4.0.0
   cac: ^6.7.14
   chai: ^6.2.2
-  flatted: 3.3.3
+  flatted: 3.3.4
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
   istanbul-lib-source-maps: ^5.0.6
@@ -86,7 +86,7 @@ catalog:
   tinyrainbow: ^3.0.3
   tinyspy: ^4.0.4
   typescript: ^5.9.3
-  unocss: ^66.6.0
+  unocss: ^66.6.2
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.29
   ws: ^8.19.0
