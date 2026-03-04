@@ -68,16 +68,11 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       task.addEventListener(
         'complete',
         (e) => {
-          const task = e.task
+          const task = e.task!
           benchmark.result!.state = 'pass'
           const result = benchmark.result!.benchmark!
-          Object.assign(result, task!.result!)
-          result.numberOfSamples = result.latency.samples.length
-          if (!runner.config.benchmark?.includeSamples) {
-            result.samples.length = 0
-            result.latency.samples.length = 0
-            result.throughput.samples.length = 0
-          }
+          Object.assign(result, task.result)
+          result.numberOfSamples = result.latency.samplesCount
           updateTask('test-finished', benchmark)
         },
         {
@@ -87,7 +82,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       task.addEventListener(
         'error',
         (e) => {
-          defer.reject(e.task?.result?.error ?? e)
+          defer.reject(e.error ?? e)
         },
         {
           once: true,
@@ -98,7 +93,11 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     const { setTimeout } = getSafeTimers()
     const tasks: [TinybenchTask, Benchmark][] = []
     for (const benchmark of benchmarkGroup) {
-      const bench = new Bench(getBenchOptions(benchmark))
+      const benchOptions = getBenchOptions(benchmark)
+      const bench = new Bench({
+        ...benchOptions,
+        retainSamples: !!runner.config.benchmark?.includeSamples,
+      })
       bench.add(benchmark.name, getBenchFn(benchmark))
       benchmark.result = {
         state: 'run',

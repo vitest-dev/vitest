@@ -56,10 +56,10 @@ it.for([true, false])('includeSamples %s', async (includeSamples) => {
     .filter(t => t.meta.benchmark)
     .map(t => t.result?.benchmark?.latency.samples)
   if (includeSamples) {
-    expect(allSamples[0]).not.toEqual([])
+    expect(allSamples[0]).not.toEqual(undefined)
   }
   else {
-    expect(allSamples[0]).toEqual([])
+    expect(allSamples[0]).toEqual(undefined)
   }
 })
 

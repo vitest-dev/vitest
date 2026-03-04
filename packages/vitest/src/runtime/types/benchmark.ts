@@ -4,9 +4,14 @@ import type {
   Bench,
   Fn as BenchFunction,
   BenchOptions,
+  Statistics as TinybenchStatistics,
   Task as TinybenchTask,
   TaskResult as TinybenchTaskResult,
 } from 'tinybench'
+
+export type BenchmarkStatistics = Omit<TinybenchStatistics, 'samples'> & {
+  samples: number[] | undefined
+}
 
 export interface Benchmark extends Test {
   meta: {
@@ -15,10 +20,14 @@ export interface Benchmark extends Test {
   }
 }
 
-export interface BenchmarkResult extends TinybenchTaskResult {
+export interface BenchmarkResult {
   name: string
   rank: number
   numberOfSamples: number
+  latency: BenchmarkStatistics
+  throughput: BenchmarkStatistics
+  period: number
+  totalTime: number
 }
 
 type ChainableBenchmarkAPI = ChainableFunction<

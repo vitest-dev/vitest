@@ -151,8 +151,8 @@ export function renderTable(
       let body = renderBenchmark(bench.current, columnWidths)
 
       if (options.compare && bench.baseline) {
-        if (bench.current.hz) {
-          const diff = bench.current.hz / bench.baseline.hz
+        if (bench.current.throughput.mean) {
+          const diff = bench.current.throughput.mean / bench.baseline.throughput.mean
           const diffFixed = diff.toFixed(2)
 
           if (diffFixed === '1.0.0') {
