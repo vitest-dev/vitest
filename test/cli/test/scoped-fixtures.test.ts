@@ -5,7 +5,7 @@ import type { TestFsStructure } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { beforeEach, describe, expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { replaceRoot, runInlineTests, stripIndent } from '../../test-utils'
+import { runInlineTests, stripIndent } from '../../test-utils'
 
 // "it" is used inside subtests, we can't "import" it because vitest will inject __vite_ssr_import__
 declare const it: TestAPI
@@ -13,7 +13,7 @@ declare const it: TestAPI
 if (rolldownVersion) {
   beforeEach(({ skip }) => {
     // TODO: remove skip when we only test against rolldown
-    // oxc has a dofferent output of inlined functions in "runInlineTests"
+    // oxc has a different output of inlined functions in "runInlineTests"
     // it keeps comments and formats the output
     skip()
   })
@@ -660,8 +660,8 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
   `)
 })
 
-test('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
-  const { stderr, fixtures, fs } = await runFixtureTests(({ log }) => {
+test.only('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
+  const { stderr, fixtures } = await runFixtureTests(({ log }) => {
     return it
       .extend('fileValue', { scope: 'file' }, () => {
         log('fileValue setup')
@@ -678,12 +678,24 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
     },
   })
 
-  expect(fixtures).toMatchInlineSnapshot(`">> fixture | beforeAll | file: undefined"`)
-  expect(replaceRoot(stderr, fs.root)).toMatchInlineSnapshot(`
-    "stderr | basic.test.ts
-    The beforeAll hook uses fixtures "fileValue", but has no access to context. Did you forget to call it as "test.beforeAll()" instead of "beforeAll()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks
-        at <root>/basic.test.ts:4:3
-        at <root>/basic.test.ts:11:1
+  expect(fixtures).toMatchInlineSnapshot(`""`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    FixtureAccessError: The beforeAll hook uses fixtures "fileValue", but has no access to context. Did you forget to call it as "test.beforeAll()" instead of "beforeAll()"?
+    If you used internal "suite" task as the first argument previously, access it in the second argument instead. See https://vitest.dev/guide/test-context#suite-level-hooks
+     ❯ basic.test.ts:4:3
+          2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
+          3| const results = await (({ extendedTest, beforeAll }) => {
+          4|   beforeAll(({
+           |   ^
+          5|     fileValue
+          6|   }) => {
+     ❯ basic.test.ts:11:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
   `)

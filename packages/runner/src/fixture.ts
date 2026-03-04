@@ -1,7 +1,7 @@
 import type { FixtureFn, Suite, VitestRunner } from './types'
 import type { File, FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
-import { FixtureDependencyError } from './errors'
+import { FixtureAccessError, FixtureDependencyError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
 
@@ -548,15 +548,19 @@ function resolveDeps(
   return pendingFixtures
 }
 
-function validateSuiteHook(fn: Function, hook: string, error: Error | undefined) {
+function validateSuiteHook(fn: Function, hook: string, suiteError: Error | undefined) {
   const usedProps = getUsedProps(fn)
   if (usedProps.size) {
-    console.warn(`The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. Did you forget to call it as "test.${hook}()" instead of "${hook}()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks`)
-    if (error) {
-      const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
-      const stack = processor(error.stack || '')
-      console.warn(stack)
+    const error = new FixtureAccessError(
+      `The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. `
+      + `Did you forget to call it as "test.${hook}()" instead of "${hook}()"?\n`
+      + `If you used internal "suite" task as the first argument previously, access it in the second argument instead. `
+      + `See https://vitest.dev/guide/test-context#suite-level-hooks`,
+    )
+    if (suiteError) {
+      error.stack = suiteError.stack?.replace(suiteError.message, error.message)
     }
+    throw error
   }
 }
 
