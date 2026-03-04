@@ -131,6 +131,32 @@ test('can mock invalid module', () => {
   }
 })
 
+test('redirect mock with syntax error in original does not load original', async () => {
+  const { errorTree, stderr } = await runInlineTests({
+    './broken.js': `syntax error`,
+    './__mocks__/broken.js': `export const value = 'mocked'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import { value } from './broken.js'
+
+vi.mock('./broken.js')
+
+test('redirect mock works without loading broken original', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "redirect mock works without loading broken original": "passed",
+      },
+    }
+  `)
+})
+
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {
     return {
