@@ -146,6 +146,15 @@ test('redirect mock works without loading broken original', () => {
   `)
 })
 
+function replaceRoot(tree: any, root: string): any {
+  for (const child of Object.values(tree) as any[]) {
+    if (child?.__module_errors__) {
+      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
+    }
+  }
+  return tree
+}
+
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {
     return {
@@ -209,11 +218,7 @@ test('importOriginal returns original virtual module exports', () => {
   // intercepts the clean id, so importActual returns the mock instead
   // of the original module. This is a known limitation.
   if (mode === 'webdriverio') {
-    const tree = errorTree()
-    tree['basic.test.js'].__module_errors__ = tree['basic.test.js'].__module_errors__.map(
-      (e: string) => e.replace(root, '<root>'),
-    )
-    expect(tree).toMatchInlineSnapshot(`
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
       {
         "__unhandled_errors__": [
           "[vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock",
@@ -313,11 +318,7 @@ test('mock works without loading original', () => {
   }, modeToConfig(mode))
 
   if (mode === 'webdriverio') {
-    const tree = errorTree()
-    for (const child of Object.values(tree)) {
-      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
-    }
-    expect(tree).toMatchInlineSnapshot(`
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
       {
         "basic.test.js": {
           "__module_errors__": [
@@ -369,11 +370,7 @@ test('mock works without loading original', () => {
   }, modeToConfig(mode))
 
   if (mode === 'webdriverio') {
-    const tree = errorTree()
-    for (const child of Object.values(tree)) {
-      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
-    }
-    expect(tree).toMatchInlineSnapshot(`
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
       {
         "basic.test.js": {
           "__module_errors__": [
