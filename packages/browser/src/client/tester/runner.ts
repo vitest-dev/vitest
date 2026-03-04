@@ -81,16 +81,15 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
       const trace = this.config.browser.trace
       const test = args[0]
-      if (trace === 'off') {
-        return
-      }
       const { retry, repeats } = args[1]
-      if (trace === 'on-all-retries' && retry === 0) {
+      const shouldTrace = trace !== 'off'
+        && !(trace === 'on-all-retries' && retry === 0)
+        && !(trace === 'on-first-retry' && retry !== 1)
+      if (!shouldTrace) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
-      }
+      getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
       if (retry) {
         title += ` (retry x${retry})`
@@ -107,16 +106,13 @@ export function createBrowserRunner(
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
-      const trace = this.config.browser.trace
-      if (trace === 'off') {
+      if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
         return
       }
-      if (trace === 'on-all-retries' && retry === 0) {
-        return
-      }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
-      }
+      await this.commands.triggerCommand('__vitest_markTrace', [{
+        name: `onAfterRetryTask [${test.result?.state}]`,
+        stack: test.result?.errors?.[0].stack,
+      }])
       const name = getTraceName(test, retry, repeats)
       if (!this.traces.has(test.id)) {
         this.traces.set(test.id, [])
