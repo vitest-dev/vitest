@@ -20,7 +20,7 @@ Vitest
 Next generation testing framework powered by Vite.
 <p>
 <p align="center">
-  <a href="https://npmx.dev/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
+  <a href="https://npmx.dev/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label=" alt="current vitest version badge"></a>
 <p>
 
 <p align="center">
@@ -89,7 +89,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg' alt="vitest's sponsors"/>
   </a>
 </p>
 
@@ -97,7 +97,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg' alt="vladimir's sponsors"/>
   </a>
 </p>
 
@@ -105,7 +105,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="anthony's sponsors"/>
   </a>
 </p>
 
@@ -113,7 +113,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg' alt="patak's sponsors"/>
   </a>
 </p>
 
