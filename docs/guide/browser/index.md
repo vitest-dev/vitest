@@ -55,13 +55,13 @@ bun add -D vitest @vitest/browser-preview
 :::
 
 ::: warning
-However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
+However, to run tests in CI you need to install either [`playwright`](https://npmx.dev/package/playwright) or [`webdriverio`](https://npmx.dev/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
 
 If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster.
 
 ::: tabs key:provider
 == Playwright
-[Playwright](https://npmjs.com/package/playwright) is a framework for Web Testing and Automation.
+[Playwright](https://npmx.dev/package/playwright) is a framework for Web Testing and Automation.
 
 ::: code-group
 ```bash [npm]
@@ -78,7 +78,7 @@ bun add -D vitest @vitest/browser-playwright
 ```
 == WebdriverIO
 
-[WebdriverIO](https://www.npmjs.com/package/webdriverio) allows you to run tests locally using the WebDriver protocol.
+[WebdriverIO](https://npmx.dev/package/webdriverio) allows you to run tests locally using the WebDriver protocol.
 
 ::: code-group
 ```bash [npm]
@@ -362,7 +362,7 @@ npx vitest --browser.headless
 In this case, Vitest will run in headless mode using the Chrome browser.
 
 ::: warning
-Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
+Headless mode is not available by default. You need to use either [`playwright`](https://npmx.dev/package/playwright) or [`webdriverio`](https://npmx.dev/package/webdriverio) providers to enable this feature.
 :::
 
 ## Examples

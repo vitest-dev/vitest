@@ -233,7 +233,7 @@ project.globTestFiles(['basic/foo.js:10']) // ❌
 ```
 
 ::: tip
-Vitest uses [fast-glob](https://www.npmjs.com/package/fast-glob) to find test files. `test.dir`, `test.root`, `root` or `process.cwd()` define the `cwd` option.
+Vitest uses [fast-glob](https://npmx.dev/package/fast-glob) to find test files. `test.dir`, `test.root`, `root` or `process.cwd()` define the `cwd` option.
 
 This method looks at several config options:
 

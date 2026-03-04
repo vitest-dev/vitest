@@ -1,6 +1,6 @@
 # @vitest/web-worker
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/web-worker?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/web-worker)
+[![NPM version](https://img.shields.io/npm/v/@vitest/web-worker?color=a1b858&label=)](https://npmx.dev/package/@vitest/web-worker)
 
 > Web Worker support for Vitest testing. Doesn't require JSDom.
 
