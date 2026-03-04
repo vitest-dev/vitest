@@ -166,21 +166,16 @@ export class VitestModuleRunner
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      // force "importActual" for following cases: TODO: refactor
-
-      // check if mock still exists in registry (mayt have been removed by doUnmock)
       const mockedModule = mod.meta.mockedModule as MockedModule
-      if (!this.mocker.getDependencyMock(mod.id)) {
-        // mock was removed, re-fetch without mock
-        const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
-        return this._cachedRequest(node.url, node, callstack, metadata)
-      }
-      // detect self-import and change it to "importActual" automatically
       const mockId = this.mocker.getMockPath(mod.id)
+      // bypass mock and force "importActual" behavior when:
+      // - mock was removed by doUnmock (stale mockedModule in meta)
+      // - self-import: mock factory/file is importing the module it's mocking
+      const isStale = !this.mocker.getDependencyMock(mod.id)
       const isSelfImport = callstack.includes(mockId)
         || callstack.includes(url)
         || ('redirect' in mockedModule && callstack.includes(mockedModule.redirect))
-      if (isSelfImport) {
+      if (isStale || isSelfImport) {
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
