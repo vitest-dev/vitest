@@ -94,24 +94,48 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       task: TinybenchTask,
       benchmark: Benchmark,
     ) => {
+      let hasErrored = false
+
       task.addEventListener(
-        'complete',
+        'error',
         (e) => {
-          const task = e.task!
-          benchmark.result!.state = 'pass'
-          const result = benchmark.result!.benchmark!
-          Object.assign(result, task.result)
-          result.numberOfSamples = result.latency.samplesCount
-          updateTask('test-finished', benchmark)
+          hasErrored = true
+          defer.reject(e.error ?? e)
         },
         {
           once: true,
         },
       )
       task.addEventListener(
-        'error',
+        'complete',
         (e) => {
-          defer.reject(e.error ?? e)
+          const task = e.task!
+          const taskResult = task.result
+
+          if (hasErrored || taskResult.state !== 'completed') {
+            benchmark.result!.state = 'fail'
+            updateTask('test-finished', benchmark)
+            return
+          }
+
+          const result = benchmark.result!.benchmark!
+          result.latency = {
+            ...taskResult.latency,
+            samples: taskResult.latency.samples
+              ? [...taskResult.latency.samples]
+              : undefined,
+          }
+          result.throughput = {
+            ...taskResult.throughput,
+            samples: taskResult.throughput.samples
+              ? [...taskResult.throughput.samples]
+              : undefined,
+          }
+          result.period = taskResult.period
+          result.totalTime = taskResult.totalTime
+          result.numberOfSamples = taskResult.latency.samplesCount
+          benchmark.result!.state = 'pass'
+          updateTask('test-finished', benchmark)
         },
         {
           once: true,
