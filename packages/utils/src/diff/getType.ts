@@ -1,18 +1,18 @@
-type ValueType =
-  | 'array'
-  | 'bigint'
-  | 'boolean'
-  | 'function'
-  | 'null'
-  | 'number'
-  | 'object'
-  | 'regexp'
-  | 'map'
-  | 'set'
-  | 'date'
-  | 'string'
-  | 'symbol'
-  | 'undefined'
+type ValueType
+  = | 'array'
+    | 'bigint'
+    | 'boolean'
+    | 'function'
+    | 'null'
+    | 'number'
+    | 'object'
+    | 'regexp'
+    | 'map'
+    | 'set'
+    | 'date'
+    | 'string'
+    | 'symbol'
+    | 'undefined'
 
 // get the type of a value with handling the edge cases like `typeof []`
 // and `typeof null`

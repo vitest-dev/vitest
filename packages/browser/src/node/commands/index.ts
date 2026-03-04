@@ -1,38 +1,22 @@
-import { clear } from './clear'
-import { click, dblClick, tripleClick } from './click'
-import { dragAndDrop } from './dragAndDrop'
-import { fill } from './fill'
 import {
   _fileInfo,
   readFile,
   removeFile,
   writeFile,
 } from './fs'
-import { hover } from './hover'
-import { keyboard, keyboardCleanup } from './keyboard'
 import { screenshot } from './screenshot'
-import { selectOptions } from './select'
-import { tab } from './tab'
-import { type } from './type'
-import { upload } from './upload'
+import { screenshotMatcher } from './screenshotMatcher'
+import { _groupTraceEnd, _groupTraceStart, _markTrace } from './trace'
 
 export default {
-  readFile,
-  removeFile,
-  writeFile,
-  __vitest_fileInfo: _fileInfo,
-  __vitest_upload: upload,
-  __vitest_click: click,
-  __vitest_dblClick: dblClick,
-  __vitest_tripleClick: tripleClick,
-  __vitest_screenshot: screenshot,
-  __vitest_type: type,
-  __vitest_clear: clear,
-  __vitest_fill: fill,
-  __vitest_tab: tab,
-  __vitest_keyboard: keyboard,
-  __vitest_selectOptions: selectOptions,
-  __vitest_dragAndDrop: dragAndDrop,
-  __vitest_hover: hover,
-  __vitest_cleanup: keyboardCleanup,
+  readFile: readFile as typeof readFile,
+  removeFile: removeFile as typeof removeFile,
+  writeFile: writeFile as typeof writeFile,
+  // private commands
+  __vitest_markTrace: _markTrace as typeof _markTrace,
+  __vitest_groupTraceStart: _groupTraceStart as typeof _groupTraceStart,
+  __vitest_groupTraceEnd: _groupTraceEnd as typeof _groupTraceEnd,
+  __vitest_fileInfo: _fileInfo as typeof _fileInfo,
+  __vitest_screenshot: screenshot as typeof screenshot,
+  __vitest_screenshotMatcher: screenshotMatcher as typeof screenshotMatcher,
 }

@@ -26,4 +26,16 @@ test('virtual files should be excluded', async () => {
     // Vitest browser
     expect(file).not.toContain('\x00')
   }
+
+  expect(files).toContain('<process-cwd>/fixtures/src/math.ts')
+
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
+  expect(fileCoverage).toMatchInlineSnapshot(`
+    {
+      "branches": "0/0 (100%)",
+      "functions": "1/4 (25%)",
+      "lines": "1/4 (25%)",
+      "statements": "1/4 (25%)",
+    }
+  `)
 })

@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { codemirrorRef } from '~/composables/codemirror'
+import type { EditorFromTextArea } from 'codemirror'
+import type { Ref } from 'vue'
+import { onMounted, ref, useAttrs } from 'vue'
+import { codemirrorRef, useCodeMirror } from '~/composables/codemirror'
 
 const { mode, readOnly } = defineProps<{
   mode?: string
   readOnly?: boolean
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{
   (event: 'save', content: string): void
+  (event: 'codemirror', codemirror: EditorFromTextArea): void
 }>()
 
 const modelValue = defineModel<string>()
@@ -15,9 +20,9 @@ const modelValue = defineModel<string>()
 const attrs = useAttrs()
 
 const modeMap: Record<string, any> = {
-  // html: 'htmlmixed',
-  // vue: 'htmlmixed',
-  // svelte: 'htmlmixed',
+  html: 'htmlmixed',
+  vue: 'htmlmixed',
+  svelte: 'htmlmixed',
   js: 'javascript',
   mjs: 'javascript',
   cjs: 'javascript',
@@ -38,22 +43,35 @@ onMounted(async () => {
     readOnly: readOnly ? true : undefined,
     extraKeys: {
       'Cmd-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
       'Ctrl-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
     },
+  })
+
+  codemirror.on('refresh', () => {
+    emit('codemirror', codemirror)
+  })
+  codemirror.on('change', () => {
+    emit('codemirror', codemirror)
   })
   codemirror.setSize('100%', '100%')
   codemirror.clearHistory()
   codemirrorRef.value = codemirror
-  setTimeout(() => codemirrorRef.value!.refresh(), 100)
+  setTimeout(() => codemirrorRef.value?.refresh(), 100)
 })
 </script>
 
 <template>
-  <div relative font-mono text-sm class="codemirror-scrolls">
+  <div relative font-mono text-sm class="codemirror-scrolls" :class="saving ? 'codemirror-busy' : undefined">
     <textarea ref="el" />
   </div>
 </template>

@@ -355,7 +355,7 @@ test('teardown should be called once time', () => {
   expect(teardownFn).toBeCalledTimes(1)
 })
 
-describe('asynchonous setup/teardown', () => {
+describe('asynchronous setup/teardown', () => {
   const trackFn = vi.fn()
 
   const myTest = test.extend<{ a: string }>({
@@ -382,5 +382,261 @@ describe('asynchonous setup/teardown', () => {
       ['teardown-sync'],
       ['teardown-async'],
     ])
+  })
+})
+
+describe('scoping variables to suite', () => {
+  const testAPI = test.extend<{
+    dependency: string
+    pkg: { dependency: string }
+  }>({
+    dependency: 'default',
+    pkg: ({ dependency }, use) => use({ dependency }),
+  })
+
+  testAPI('uses default values', ({ pkg }) => {
+    expect(pkg).toEqual({ dependency: 'default' })
+  })
+
+  describe('override dependency', () => {
+    testAPI.override({ dependency: 'new' })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'new' })
+    })
+
+    describe('nested keeps parent scope', () => {
+      testAPI('keeps using new values', ({ pkg }) => {
+        expect(pkg).toEqual({ dependency: 'new' })
+      })
+    })
+
+    describe('override nested overridden scope', () => {
+      testAPI.override({ dependency: 'override' })
+
+      testAPI('keeps using new values', ({ pkg }) => {
+        expect(pkg).toEqual({ dependency: 'override' })
+      })
+    })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'new' })
+    })
+  })
+
+  testAPI('keeps using default values', ({ pkg }) => {
+    expect(pkg).toEqual({ dependency: 'default' })
+  })
+
+  describe('override the pkg too', () => {
+    testAPI.override({ pkg: { dependency: 'override' } })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'override' })
+    })
+  })
+
+  describe('override as dynamic', () => {
+    testAPI.override({ dependency: ({}, use) => use('override') })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'override' })
+    })
+  })
+
+  describe.skip('type only', () => {
+    testAPI.override({
+      // @ts-expect-error nonExisting is not defined on the testAPI
+      nonExisting: false,
+    })
+  })
+})
+
+describe('test.scoped repro #7793', () => {
+  const extendedTest = test.extend<{ foo: boolean }>({
+    foo: false,
+  })
+
+  describe('top level', () => {
+    extendedTest.override({ foo: true })
+
+    describe('second level', () => {
+      extendedTest('foo is true', ({ foo }) => {
+        expect(foo).toBe(true)
+      })
+    })
+  })
+})
+
+describe('test.scoped repro #7813', () => {
+  const extendedTest = test.extend<{ foo?: boolean }>({
+    foo: false,
+  })
+
+  describe('foo is scoped to true', () => {
+    extendedTest.override({ foo: true })
+
+    extendedTest('foo is true', ({ foo }) => {
+      expect(foo).toBe(true)
+    })
+  })
+
+  describe('foo is left as default of false', () => {
+    extendedTest('foo is false', ({ foo }) => {
+      expect(foo).toBe(false)
+    })
+  })
+})
+
+describe('test.scoped repro #9305', () => {
+  const extendedTest = test.extend<{
+    a: number
+    b: number
+    numbers: number[]
+  }>({
+    a: 1,
+    b: 2,
+    numbers: async ({ a }, use) => use([a]),
+  })
+
+  describe('suite with overwritten fixture', () => {
+    extendedTest.override({
+      numbers: async ({ a, b }, use) => use([a, b]),
+    })
+
+    extendedTest('scoped fixture can access dependencies from original test', async ({
+      numbers,
+    }) => {
+      expect(numbers).toStrictEqual([1, 2])
+    })
+  })
+})
+
+describe('suite with timeout', () => {
+  test.extend({})('timeout is inherited from suite', ({ task }) => {
+    expect(task.timeout).toBe(100)
+  })
+
+  test.extend({})('timeout is inherited from options', { timeout: 1_000 }, ({ task }) => {
+    expect(task.timeout).toBe(1_000)
+  })
+}, 100)
+
+const counterTest = test.extend<{
+  counter: { value: number }
+  fileCounter: { value: number }
+}>({
+  counter: async ({}, use) => { await use({ value: 0 }) },
+  fileCounter: [async ({}, use) => { await use({ value: 0 }) }, { scope: 'file' }],
+})
+
+counterTest.describe('type-safe fixture hooks', () => {
+  counterTest.beforeEach(({ counter }) => {
+    // shouldn't have typescript error because of 'counter' here
+    counter.value += 1
+  })
+
+  counterTest.afterEach(({ fileCounter }) => {
+    // shouldn't have typescript error because of 'fileCounter' here
+    fileCounter.value += 2
+  })
+
+  // beforeAll and afterAll hooks are not tested here, because they don't provide an extra context
+
+  counterTest('beforeEach fixture hook can adapt type-safe context', ({ counter }) => {
+    expect(counter.value).toBe(1)
+  })
+
+  counterTest('afterEach fixture hook can adapt type-safe context', ({ fileCounter }) => {
+    expect(fileCounter.value).toBe(2)
+  })
+})
+
+// Use the scoped fixtures approach with { $test, $file, $worker } structure
+const helperTest = test.extend<{
+  $worker: { workerFixture: boolean }
+  $file: { fileFixture: number }
+  $test: { testFixture: string }
+}>({
+  workerFixture: [async ({}, use) => {
+    await use(true)
+  }, { scope: 'worker' }],
+  fileFixture: [async ({ workerFixture }, use) => {
+    expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
+    await use(workerFixture ? 42 : 0)
+  }, { scope: 'file' }],
+  testFixture: async ({ fileFixture, workerFixture }, use) => {
+    expectTypeOf(fileFixture).toEqualTypeOf<number>()
+    expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
+    await use(`test-${fileFixture}-${workerFixture}`)
+  },
+})
+
+helperTest.describe('scoped fixtures with tuple syntax', () => {
+  helperTest('fixtures should have correct types', ({ testFixture, fileFixture, workerFixture }) => {
+    expectTypeOf(workerFixture).toEqualTypeOf<boolean>()
+    expectTypeOf(fileFixture).toEqualTypeOf<number>()
+    expectTypeOf(testFixture).toEqualTypeOf<string>()
+
+    expect(workerFixture).toBe(true)
+    expect(fileFixture).toBe(42)
+    expect(testFixture).toBe('test-42-true')
+  })
+})
+
+describe('builder pattern with non-function values', () => {
+  const nonFnTest = test
+    .extend('stringValue', 'hello')
+    .extend('numberValue', 42)
+    .extend('arrayValue', [1, 2, 3])
+    .extend('objectValue', { key: 'value', nested: { a: 1 } })
+
+  nonFnTest('non-function values are provided correctly', ({ stringValue, numberValue, arrayValue, objectValue }) => {
+    expectTypeOf(stringValue).toEqualTypeOf<string>()
+    expectTypeOf(numberValue).toEqualTypeOf<number>()
+    expectTypeOf(arrayValue).toEqualTypeOf<number[]>()
+    expectTypeOf(objectValue).toEqualTypeOf<{ key: string; nested: { a: number } }>()
+
+    expect(stringValue).toBe('hello')
+    expect(numberValue).toBe(42)
+    expect(arrayValue).toEqual([1, 2, 3])
+    expect(objectValue).toEqual({ key: 'value', nested: { a: 1 } })
+  })
+
+  const mixedTest = test
+    .extend('config', { port: 3000, host: 'localhost' })
+    .extend('url', async ({ config }) => {
+      expectTypeOf(config).toEqualTypeOf<{ port: number; host: string }>()
+      return `http://${config.host}:${config.port}`
+    })
+
+  mixedTest('non-function values can be used by function fixtures', ({ config, url }) => {
+    expectTypeOf(config).toEqualTypeOf<{ port: number; host: string }>()
+    expectTypeOf(url).toEqualTypeOf<string>()
+
+    expect(config).toEqual({ port: 3000, host: 'localhost' })
+    expect(url).toBe('http://localhost:3000')
+  })
+
+  // Test that synchronous (non-async) functions work in the builder pattern
+  const syncTest = test
+    .extend('prefix', 'hello')
+    .extend('syncValue', ({ prefix }) => {
+      // This is a synchronous function - no async/await needed
+      return `${prefix} world`
+    })
+    .extend('chainedSync', ({ syncValue }) => {
+      // Another sync function that depends on the previous one
+      return syncValue.toUpperCase()
+    })
+
+  syncTest('synchronous functions work in builder pattern', ({ prefix, syncValue, chainedSync }) => {
+    expectTypeOf(prefix).toEqualTypeOf<string>()
+    expectTypeOf(syncValue).toEqualTypeOf<string>()
+    expectTypeOf(chainedSync).toEqualTypeOf<string>()
+
+    expect(prefix).toBe('hello')
+    expect(syncValue).toBe('hello world')
+    expect(chainedSync).toBe('HELLO WORLD')
   })
 })

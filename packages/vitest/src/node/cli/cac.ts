@@ -1,12 +1,14 @@
+import type { CAC, Command } from 'cac'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
-import { toArray } from '@vitest/utils'
-import cac, { type CAC, type Command } from 'cac'
+import { toArray } from '@vitest/utils/helpers'
+import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -22,6 +24,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
         `Expected a single value for option "${command}", received [${received}]`,
       )
     }
+    value = removeQuotes(value)
     if (option.transform) {
       return option.transform(value)
     }
@@ -70,7 +73,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CliParseOptions = {}) {
+export function createCLI(options: CliParseOptions = {}): CAC {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -193,14 +196,40 @@ export function createCLI(options: CliParseOptions = {}) {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
+  setupTabCompletions(cli)
   return cli
+}
+
+function removeQuotes<T>(str: T): T {
+  if (typeof str !== 'string') {
+    if (Array.isArray(str)) {
+      return str.map(removeQuotes) as unknown as T
+    }
+    return str
+  }
+  if (str[0] === '"' && str.endsWith('"')) {
+    return str.slice(1, -1) as unknown as T
+  }
+  if (str.startsWith(`'`) && str.endsWith(`'`)) {
+    return str.slice(1, -1) as unknown as T
+  }
+  return str
+}
+
+function splitArgv(argv: string): string[] {
+  const reg = /(['"])(?:(?!\1).)+\1/g
+  argv = argv.replace(reg, match => match.replace(/\s/g, '\x00'))
+  return argv.split(' ').map((arg: string) => {
+    arg = arg.replace(/\0/g, ' ')
+    return removeQuotes(arg)
+  })
 }
 
 export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
-  const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
+  const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
@@ -212,7 +241,7 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
   if (arrayArgs[2] === 'watch' || arrayArgs[2] === 'dev') {
     options.watch = true
   }
-  if (arrayArgs[2] === 'run') {
+  if (arrayArgs[2] === 'run' && !options.watch) {
     options.run = true
   }
   if (arrayArgs[2] === 'related') {
@@ -238,7 +267,9 @@ async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
-  options.run = true
+  // "vitest run --watch" should still be watch mode
+  options.run = !options.watch
+
   await start('test', cliFilters, options)
 }
 
@@ -256,23 +287,18 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
     argv.includeTaskLocation ??= true
   }
 
-  // running "vitest --browser.headless"
-  if (typeof argv.browser === 'object' && !('enabled' in argv.browser)) {
-    argv.browser.enabled = true
-  }
   if (typeof argv.typecheck?.only === 'boolean') {
     argv.typecheck.enabled ??= true
+  }
+  if (argv.clearCache || argv.listTags) {
+    argv.watch = false
+    argv.run = true
   }
 
   return argv
 }
 
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
-  try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
   try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
@@ -281,8 +307,8 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     }
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
 
@@ -306,19 +332,20 @@ async function init(project: string) {
 
 async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
-    process.title = 'node (vitest)'
-  }
-  catch {}
-
-  try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
-    })
+    }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
-      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(
+        cliFilters.map(normalize),
+        {
+          staticParse: options.staticParse,
+          staticParseConcurrency: options.staticParseConcurrency,
+        },
+      )
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')
@@ -338,8 +365,8 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     await ctx.close()
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
 

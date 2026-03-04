@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test:browser": "vitest --config=vitest.browser.config.ts"
+  },
+  "dependencies": {
+    "vitest": "latest"
+  },
+  "devDependencies": {
+    "@vitest/browser-preview": "latest"
+  }
+}

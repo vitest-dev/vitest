@@ -1,0 +1,159 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`addFileAttribute false 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="ok.test.ts" name="ok" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`addFileAttribute true 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="ok.test.ts" file="ok.test.ts" name="ok" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`emits <failure> when beforeAll/afterAll failed 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="8" failures="2" errors="0" time="...">
+    <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="8" failures="2" errors="0" skipped="4" time="...">
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 1" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 2" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll &gt; skip 1" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; ok 1" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; ok 2" time="...">
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll &gt; skip 1" time="...">
+            <skipped/>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with beforeAll" time="...">
+            <failure message="beforeAll error" type="Error">
+Error: beforeAll error
+ ❯ basic.test.ts:10:11
+            </failure>
+        </testcase>
+        <testcase classname="basic.test.ts" name="suite with afterAll" time="...">
+            <failure message="afterAll error" type="Error">
+Error: afterAll error
+ ❯ basic.test.ts:20:11
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`format error 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="8" errors="0" time="...">
+    <testsuite name="error.test.ts" timestamp="..." hostname="..." tests="9" failures="8" errors="0" skipped="0" time="...">
+        <testcase classname="error.test.ts" name="stack" time="...">
+            <failure message="throwSimple" type="Error">
+Error: throwSimple
+ ❯ throwSimple error.test.ts:44:9
+ ❯ throwDeep error.test.ts:40:3
+ ❯ error.test.ts:8:3
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="diff" time="...">
+            <failure message="expected { hello: &apos;x&apos; } to deeply equal { hello: &apos;y&apos; }" type="AssertionError">
+AssertionError: expected { hello: &apos;x&apos; } to deeply equal { hello: &apos;y&apos; }
+
+- Expected
++ Received
+
+  {
+-   &quot;hello&quot;: &quot;y&quot;,
++   &quot;hello&quot;: &quot;x&quot;,
+  }
+
+ ❯ error.test.ts:12:26
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="unhandled" time="...">
+        </testcase>
+        <testcase classname="error.test.ts" name="no name object" time="...">
+            <failure>
+{ noName: &apos;hi&apos;, stacks: [] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { noName: &apos;hi&apos; }
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="string" time="...">
+            <failure message="hi">
+Unknown Error: hi
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="number" time="...">
+            <failure message="1234">
+Unknown Error: 1234
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="number name object" time="...">
+            <failure type="1234">
+{ name: 1234, stacks: [] }
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="xml" time="...">
+            <failure message="error message that has XML in it &lt;div&gt;&lt;input/&gt;&lt;/div&gt;" type="Error">
+Error: error message that has XML in it &lt;div&gt;&lt;input/&gt;&lt;/div&gt;
+ ❯ error.test.ts:36:9
+            </failure>
+        </testcase>
+        <testcase classname="error.test.ts" name="error.test.ts" time="...">
+            <failure message="throwSuite" type="Error">
+Error: throwSuite
+ ❯ throwSuite error.test.ts:48:9
+ ❯ error.test.ts:4:3
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`includeConsoleOutput false 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="console-simple.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="console-simple.test.ts" name="test" time="...">
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`includeConsoleOutput true 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
+    <testsuite name="console-simple.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="console-simple.test.ts" name="test" time="...">
+            <system-out>
+__test_stdout__
+
+            </system-out>
+            <system-err>
+__test_stderr__
+
+            </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;

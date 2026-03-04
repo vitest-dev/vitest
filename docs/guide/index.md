@@ -36,7 +36,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
+Vitest requires Vite >=v6.0.0 and Node >=v20.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` tool comes with npm and Node.js).
@@ -92,7 +92,7 @@ Test Files  1 passed (1)
 If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
 :::
 
-Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
+Learn more about the usage of Vitest, see the [API](/api/test) section.
 
 ## Configuring Vitest
 
@@ -100,7 +100,7 @@ One of the main advantages of Vitest is its unified configuration with Vite. If 
 
 - Create `vitest.config.ts`, which will have the higher priority
 - Pass `--config` option to CLI, e.g. `vitest --config ./path/to/vitest.config.ts`
-- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`
+- Use `process.env.VITEST` or `mode` property on `defineConfig` (will be set to `test` if not overridden) to conditionally apply different configuration in `vite.config.ts`. Note that like any other environment variable, `VITEST` is also exposed on `import.meta.env` in your tests
 
 Vitest supports the same extensions for your configuration file as Vite does: `.js`, `.mjs`, `.cjs`, `.ts`, `.cts`, `.mts`. Vitest does not support `.json` extension.
 
@@ -123,25 +123,12 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
 ```ts [vite.config.ts]
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    // ...
-  },
-})
-```
-
-The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
-
-```ts [vite.config.ts]
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
-    // ... Specify options here.
+    // ...
   },
 })
 ```
@@ -175,38 +162,42 @@ export default defineConfig({
 However, we recommend using the same file for both Vite and Vitest, instead of creating two separate files.
 :::
 
-## Workspaces Support
+## Projects Support
 
-Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+Run different project configurations inside the same project with [Test Projects](/guide/projects). You can define a list of files and folders that define your projects in `vitest.config` file.
 
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  // you can use a list of glob patterns to define your workspaces
-  // Vitest expects a list of config files
-  // or directories where there is a config file
-  'packages/*',
-  'tests/*/vitest.config.{e2e,unit}.ts',
-  // you can even run the same tests,
-  // but with different configs in the same "vitest" process
-  {
-    test: {
-      name: 'happy-dom',
-      root: './shared_tests',
-      environment: 'happy-dom',
-      setupFiles: ['./setup.happy-dom.ts'],
-    },
+export default defineConfig({
+  test: {
+    projects: [
+      // you can use a list of glob patterns to define your projects
+      // Vitest expects a list of config files
+      // or directories where there is a config file
+      'packages/*',
+      'tests/*/vitest.config.{e2e,unit}.ts',
+      // you can even run the same tests,
+      // but with different configs in the same "vitest" process
+      {
+        test: {
+          name: 'happy-dom',
+          root: './shared_tests',
+          environment: 'happy-dom',
+          setupFiles: ['./setup.happy-dom.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'node',
+          root: './shared_tests',
+          environment: 'node',
+          setupFiles: ['./setup.node.ts'],
+        },
+      },
+    ],
   },
-  {
-    test: {
-      name: 'node',
-      root: './shared_tests',
-      environment: 'node',
-      setupFiles: ['./setup.node.ts'],
-    },
-  },
-])
+})
 ```
 
 ## Command Line Interface
@@ -234,7 +225,7 @@ Vitest will prompt you to install certain dependencies if they are not already i
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
+We also provided an official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
@@ -249,15 +240,15 @@ Learn more about [IDE Integrations](/guide/ide)
 | `in-source-test` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/in-source-test?initialPath=__vitest__/) |
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__/) |
 | `vue` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/vue) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/vue?initialPath=__vitest__/) |
-| `marko` | [GitHub](https://github.com/marko-js/examples/tree/master/examples/library-ts) | [Play Online](https://stackblitz.com/fork/github/marko-js/examples/tree/master/examples/library-ts/) |
+| `marko` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/marko) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/marko?initialPath=__vitest__/) |
 | `preact` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/preact) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/preact?initialPath=__vitest__/) |
+| `qwik`| [Github](https://github.com/vitest-tests/browser-examples/tree/main/examples/qwik) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/qwik?initialPath=__vitest__/) |
 | `react` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/react) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/react?initialPath=__vitest__/) |
 | `solid` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/solid) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/solid?initialPath=__vitest__/) |
 | `svelte` | [GitHub](https://github.com/vitest-tests/browser-examples/tree/main/examples/svelte) | [Play Online](https://stackblitz.com/fork/github/vitest-tests/browser-examples/tree/main/examples/svelte?initialPath=__vitest__/) |
-| `sveltekit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/sveltekit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/sveltekit?initialPath=__vitest__/) |
 | `profiling` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/profiling) | Not Available |
 | `typecheck` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/typecheck) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/typecheck?initialPath=__vitest__/) |
-| `workspace` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/workspace) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/workspace?initialPath=__vitest__/) |
+| `projects` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/projects) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/projects?initialPath=__vitest__/) |
 
 ## Projects using Vitest
 

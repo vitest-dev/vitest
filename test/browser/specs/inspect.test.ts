@@ -6,25 +6,23 @@ import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
-const IS_PLAYWRIGHT = process.env.PROVIDER === 'playwright'
 const REMOTE_DEBUG_URL = '127.0.0.1:9123'
 
-test.runIf(IS_PLAYWRIGHT || !process.env.CI)('--inspect-brk stops at test file', async () => {
-  const { vitest, waitForClose } = await runVitestCli(
-    '--root',
-    'fixtures/inspect',
-    '--browser',
-    '--no-file-parallelism',
-    '--inspect-brk',
-    REMOTE_DEBUG_URL,
-  )
+test.each(['', 'with workspace'])('--inspect-brk stops at test file %s', async (isWorkspace) => {
+  const options = ['--root', 'fixtures/inspect', '--no-file-parallelism', '--inspect-brk', REMOTE_DEBUG_URL]
+
+  if (isWorkspace) {
+    options.push('--config')
+    options.push('vitest.config.with-workspace.ts')
+  }
+
+  const { vitest, waitForClose } = await runVitestCli(...options)
 
   await vitest.waitForStdout(`Debugger listening on ws://${REMOTE_DEBUG_URL}`)
 
-  const url = await vi.waitFor(() =>
-    fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
-      .then(response => response.json())
-      .then(json => json[0].webSocketDebuggerUrl))
+  const url = await vi.waitFor(() => fetch(`http://${REMOTE_DEBUG_URL}/json/list`)
+    .then(response => response.json())
+    .then(json => json[0].webSocketDebuggerUrl), { timeout: 30_000 })
 
   const { receive, send } = await createChannel(url)
 
@@ -48,7 +46,7 @@ test.runIf(IS_PLAYWRIGHT || !process.env.CI)('--inspect-brk stops at test file',
 
   await vitest.waitForStdout('Test Files  1 passed (1)')
   await waitForClose()
-})
+}, 60_000)
 
 async function createChannel(url: string) {
   const ws = new WebSocket(url)

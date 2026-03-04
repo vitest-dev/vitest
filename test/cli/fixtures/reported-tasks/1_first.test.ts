@@ -18,6 +18,7 @@ it('fails multiple times', () => {
 
 it('skips an option test', { skip: true })
 it.skip('skips a .modifier test')
+it('skips an ctx.skip() test', (ctx) => ctx.skip())
 
 it('todos an option test', { todo: true })
 it.todo('todos a .modifier test')
@@ -61,6 +62,14 @@ describe('a group', () => {
   })
 })
 
+describe.todo('todo group', () => {
+  it('test inside todo group', () => {})
+})
+
+describe.skip('skipped group', () => {
+  it('test inside skipped group', () => {})
+})
+
 describe.shuffle('shuffled group', () => {
   it('runs a test in a shuffled group', () => {
     expect(1).toBe(1)
@@ -75,6 +84,10 @@ describe.each([1])('each group %s', (groupValue) => {
 
 it('registers a metadata', (ctx) => {
   ctx.task.meta.key = 'value'
+})
+
+it('should not show up as pending test when finished (#9689)', { retry: 2, repeats: 2 }, ({ task }) => {
+  expect(task.result?.state).toBe('run')
 })
 
 declare module 'vitest' {

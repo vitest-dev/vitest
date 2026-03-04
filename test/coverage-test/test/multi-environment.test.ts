@@ -1,11 +1,11 @@
 import { expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
-test('{ all: true } includes uncovered files', async () => {
+test('files transformed with multiple transform modes work (#3251)', async () => {
   await runVitest({
     include: ['fixtures/test/multi-environment-fixture-**'],
     config: 'fixtures/configs/vitest.config.multi-transform.ts',
-    coverage: { all: false, reporter: 'json' },
+    coverage: { reporter: 'json' },
   })
 
   const coverageMap = await readCoverageMap()

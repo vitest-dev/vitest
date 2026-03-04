@@ -5,13 +5,13 @@ describe('vitest runs code in strict mode', () => {
     const o = { id: 1 }
     Object.defineProperty(o, 'id', { writable: false, configurable: false })
 
-    expect(() => o.id = 42).toThrowError(TypeError)
+    expect(() => o.id = 42).toThrow(TypeError)
   })
 
   test('cannot defined non existing variable', () => {
     expect(() => {
       someGlobalVariableICameUpWith = 22
-    }).toThrowError()
+    }).toThrow()
   })
 
   test('cannot redefine getter', () => {
@@ -22,12 +22,12 @@ describe('vitest runs code in strict mode', () => {
     }
     expect(() => {
       obj2.x = 5
-    }).toThrowError(TypeError)
+    }).toThrow(TypeError)
   })
 
   test('cannot declare properties on primitives', () => {
-    expect(() => false.true = '').toThrowError(TypeError)
-    expect(() => (14).sailing = 'home').toThrowError(TypeError)
-    expect(() => 'with'.you = 'far away').toThrowError(TypeError)
+    expect(() => false.true = '').toThrow(TypeError)
+    expect(() => (14).sailing = 'home').toThrow(TypeError)
+    expect(() => 'with'.you = 'far away').toThrow(TypeError)
   })
 })

@@ -1,12 +1,5 @@
-import type { TypecheckConfig } from '../node/types/config'
 import type { RawErrsMap, TscErrorInfo } from './types'
-import { writeFile } from 'node:fs/promises'
-import os from 'node:os'
-import url from 'node:url'
-import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
-import { basename, dirname, join, resolve } from 'pathe'
 
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const newLineRegExp = /\r?\n/
 const errCodeRegExp = /error TS(?<errCode>\d+)/
 
@@ -63,44 +56,7 @@ export async function makeTscErrorInfo(
   ]
 }
 
-export async function getTsconfig(root: string, config: TypecheckConfig) {
-  const configName = config.tsconfig ? basename(config.tsconfig) : undefined
-  const configSearchPath = config.tsconfig
-    ? dirname(resolve(root, config.tsconfig))
-    : root
-
-  const tsconfig = getTsconfigContent(configSearchPath, configName)
-
-  if (!tsconfig) {
-    throw new Error('no tsconfig.json found')
-  }
-
-  const tempConfigPath = join(
-    dirname(tsconfig.path),
-    'tsconfig.vitest-temp.json',
-  )
-
-  try {
-    const tmpTsConfig: Record<string, any> = { ...tsconfig.config }
-
-    tmpTsConfig.compilerOptions = tmpTsConfig.compilerOptions || {}
-    tmpTsConfig.compilerOptions.emitDeclarationOnly = false
-    tmpTsConfig.compilerOptions.incremental = true
-    tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
-      process.versions.pnp ? join(os.tmpdir(), 'vitest') : __dirname,
-      'tsconfig.tmp.tsbuildinfo',
-    )
-
-    const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
-    await writeFile(tempConfigPath, tsconfigFinalContent)
-    return { path: tempConfigPath, config: tmpTsConfig }
-  }
-  catch (err) {
-    throw new Error('failed to write tsconfig.temp.json', { cause: err })
-  }
-}
-
-export async function getRawErrsMapFromTsCompile(tscErrorStdout: string) {
+export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promise<RawErrsMap> {
   const rawErrsMap: RawErrsMap = new Map()
 
   // Merge details line with main line (i.e. which contains file path)
@@ -111,7 +67,7 @@ export async function getRawErrsMapFromTsCompile(tscErrorStdout: string) {
         if (!next) {
           return prev
         }
-        else if (!next.startsWith(' ')) {
+        else if (next[0] !== ' ') {
           prev.push(next)
         }
         else {

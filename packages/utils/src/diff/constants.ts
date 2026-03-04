@@ -9,4 +9,4 @@ export const NO_DIFF_MESSAGE: string = 'Compared values have no visual differenc
 
 export const SIMILAR_MESSAGE: string
   = 'Compared values serialize to the same structure.\n'
-  + 'Printing internal object structure without calling `toJSON` instead.'
+    + 'Printing internal object structure without calling `toJSON` instead.'

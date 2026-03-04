@@ -5,11 +5,11 @@ vi.mock(import('./src/mocks_factory'), async (importOriginal) => {
   const original = await importOriginal()
   return {
     ...original,
-    mocked: 'mocked!',
+    mocked: true,
   }
 })
 
 test('actual is overriding import', () => {
-  expect(mocked).toBe('mocked!')
+  expect(mocked).toBe(true)
   expect(calculator('plus', 1, 2)).toBe(3)
 })

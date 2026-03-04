@@ -10,9 +10,10 @@ test('correctly imports external dependencies with a development condition', asy
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"development"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"development"',
+      },
     },
   })
 
@@ -30,9 +31,10 @@ test('correctly imports external dependencies with a production condition', asyn
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"production"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"production"',
+      },
     },
   })
 
@@ -49,14 +51,75 @@ test('correctly imports external dependencies with a custom condition', async ()
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    resolve: {
-      conditions: ['custom'],
-    },
-    define: {
-      TEST_CONDITION: '"custom"',
+    $viteConfig: {
+      resolve: {
+        conditions: ['custom'],
+      },
+      ssr: {
+        resolve: {
+          conditions: ['custom'],
+        },
+      },
+      define: {
+        TEST_CONDITION: '"custom"',
+      },
     },
   })
 
   expect(stderr).toBe('')
+})
+
+test('conditions (external)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('conditions (inline direct)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['test-dep-conditions'],
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('conditions (inline indirect)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['test-dep-conditions', 'test-dep-conditions-indirect'],
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('project resolve.conditions', async () => {
+  const { stderr, errorProjectTree } = await runVitest({
+    root: 'fixtures/conditions-projects',
+  })
+  expect(stderr).toBe('')
+  expect(errorProjectTree()).toMatchInlineSnapshot(`
+    {
+      "project-a": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+      "project-b": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+    }
+  `)
 })

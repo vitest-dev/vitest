@@ -1,3 +1,4 @@
+import { provider } from '../../settings'
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -5,8 +6,11 @@ export default defineConfig({
   test: {
     watch: false,
     browser: {
-      provider: "playwright",
-      name: "chromium",
+      enabled: true,
+      provider,
+      instances: [
+        { browser: provider.name === 'webdriverio' ? "chrome" : "chromium" },
+      ],
       headless: true,
     },
   },

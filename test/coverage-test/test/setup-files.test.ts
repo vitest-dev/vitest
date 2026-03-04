@@ -12,7 +12,6 @@ test('tests with multiple suites are covered (#3514)', async () => {
       'fixtures/src/another-setup.ts',
     ],
     coverage: {
-      include: ['fixtures/**'],
       reporter: 'json',
     },
   })
@@ -29,6 +28,13 @@ test('tests with multiple suites are covered (#3514)', async () => {
 
   // Some valid coverage should be reported
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
-  expect(fileCoverage.toSummary().functions.covered).toBe(1)
-  expect(fileCoverage.toSummary().functions.pct).toBeLessThanOrEqual(25)
+
+  expect(fileCoverage).toMatchInlineSnapshot(`
+    {
+      "branches": "0/0 (100%)",
+      "functions": "1/4 (25%)",
+      "lines": "1/4 (25%)",
+      "statements": "1/4 (25%)",
+    }
+  `)
 })

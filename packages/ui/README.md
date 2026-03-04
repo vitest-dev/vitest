@@ -1,15 +1,7 @@
 # @vitest/ui
 
-This package is for UI interface of Vitest.
+[![NPM version](https://img.shields.io/npm/v/@vitest/ui?color=a1b858&label=)](https://npmx.dev/package/@vitest/ui)
 
-## Development Setup
+See your test results in the browser.
 
-At project root, create terminals with each of the following commands:
-
-```bash
-nr ui:dev
-```
-
-```bash
-nr test --api
-```
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/ui) | [Documentation](https://vitest.dev/guide/ui)

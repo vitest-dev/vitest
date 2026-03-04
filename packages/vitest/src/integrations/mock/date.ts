@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-export const RealDate = Date
+export const RealDate: DateConstructor = Date
 
 let now: null | number = null
 

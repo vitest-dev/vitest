@@ -8,7 +8,7 @@ describe('waitFor', () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve(true)
-            }, 100)
+            }, 1000)
           })
         }, 50)
       }).rejects.toThrow('Timed out in waitFor!')
@@ -130,7 +130,7 @@ describe('waitUntil', () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve(true)
-            }, 100)
+            }, 1000)
           })
         }, 50)
       }).rejects.toThrow('Timed out in waitUntil!')
@@ -143,8 +143,8 @@ describe('waitUntil', () => {
 
       await expect(
         vi.waitUntil(callback, {
-          timeout: 1000,
-          interval: 600,
+          timeout: 500,
+          interval: 400,
         }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
 

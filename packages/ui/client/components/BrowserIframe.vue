@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import type { ViewportSize } from '~/composables/browser'
+import { useWindowSize } from '@vueuse/core'
+import { computed } from 'vue'
 import { viewport } from '~/composables/browser'
+import { browserState } from '~/composables/client'
 import {
-  hideRightPanel,
+  detailsPanelVisible,
+  detailsPosition,
   panels,
   showNavigationPanel,
-  showRightPanel,
+  updateBrowserPanel,
 } from '~/composables/navigation'
+import IconButton from './IconButton.vue'
 
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
   'small-mobile': [320, 568],
@@ -19,16 +24,24 @@ function isViewport(name: ViewportSize) {
   return viewport.value[0] === preset[0] && viewport.value[1] === preset[1]
 }
 
+const { width: windowWidth, height: windowHeight } = useWindowSize()
+
 async function changeViewport(name: ViewportSize) {
   viewport.value = sizes[name]
+  if (browserState?.provider === 'webdriverio') {
+    updateBrowserPanel()
+  }
 }
-
-const { width: windowWidth, height: windowHeight } = useWindowSize()
 
 const PADDING_SIDES = 20
 const PADDING_TOP = 100
 
 const containerSize = computed(() => {
+  if (browserState?.provider === 'webdriverio') {
+    const [width, height] = viewport.value
+    return { width, height }
+  }
+
   const parentContainerWidth = windowWidth.value * (panels.details.size / 100)
   const parentOffsetWidth = parentContainerWidth * (panels.details.browser / 100)
   const containerWidth = parentOffsetWidth - PADDING_SIDES
@@ -40,6 +53,10 @@ const containerSize = computed(() => {
 })
 
 const scale = computed(() => {
+  if (browserState?.provider === 'webdriverio') {
+    return 1
+  }
+
   const [iframeWidth, iframeHeight] = viewport.value
   const { width: containerWidth, height: containerHeight } = containerSize.value
   const widthScale = containerWidth > iframeWidth ? 1 : containerWidth / iframeWidth
@@ -59,7 +76,7 @@ const marginLeft = computed(() => {
   <div h="full" flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <IconButton
-        v-show="panels.navigation <= 2"
+        v-show="panels.navigation <= 15"
         v-tooltip.bottom="'Show Navigation Panel'"
         title="Show Navigation Panel"
         rotate-180
@@ -69,19 +86,11 @@ const marginLeft = computed(() => {
       <div class="i-carbon-content-delivery-network" />
       <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Browser UI</span>
       <IconButton
-        v-show="panels.details.main > 0"
-        v-tooltip.bottom="'Hide Right Panel'"
-        title="Hide Right Panel"
+        v-show="detailsPosition === 'right' && !detailsPanelVisible"
+        v-tooltip.bottom="'Show Details Panel'"
+        title="Show Details Panel"
         icon="i-carbon:side-panel-close"
-        rotate-180
-        @click="hideRightPanel()"
-      />
-      <IconButton
-        v-show="panels.details.main === 0"
-        v-tooltip.bottom="'Show Right Panel'"
-        title="Show Right Panel"
-        icon="i-carbon:side-panel-close"
-        @click="showRightPanel()"
+        @click="detailsPanelVisible = true"
       />
     </div>
     <div p="l3 y2 r2" flex="~ gap-2" items-center bg-header border="b-2 base">

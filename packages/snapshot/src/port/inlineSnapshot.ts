@@ -1,11 +1,11 @@
 import type MagicString from 'magic-string'
 import type { SnapshotEnvironment } from '../types'
+import { getCallLastIndex } from '@vitest/utils/helpers'
 import {
-  getCallLastIndex,
   lineSplitRE,
   offsetToLineNumber,
   positionToOffset,
-} from '../../../utils/src/index'
+} from '@vitest/utils/offset'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -24,7 +24,11 @@ export async function saveInlineSnapshots(
   await Promise.all(
     Array.from(files).map(async (file) => {
       const snaps = snapshots.filter(i => i.file === file)
-      const code = await environment.readSnapshotFile(file) as string
+      const code = await environment.readSnapshotFile(file)
+      if (code == null) {
+        throw new Error(`cannot read ${file} when saving inline snapshot`)
+      }
+
       const s = new MagicString(code)
 
       for (const snap of snaps) {
@@ -198,7 +202,7 @@ export function stripSnapshotIndentation(inlineSnapshot: string): string {
     return inlineSnapshot
   }
 
-  if (lines[0].trim() !== '' || lines[lines.length - 1].trim() !== '') {
+  if (lines[0].trim() !== '' || lines.at(-1)?.trim() !== '') {
     // If not blank first and last lines, abort.
     return inlineSnapshot
   }

@@ -211,3 +211,7 @@ html.dark {
 .v-popper__popper .v-popper__arrow-outer {
   border-color: var(--background-color);
 }
+
+.codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {
+  cursor: wait !important;
+}

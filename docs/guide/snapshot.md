@@ -79,6 +79,12 @@ Or you can use the `--update` or `-u` flag in the CLI to make Vitest update snap
 vitest -u
 ```
 
+### CI behavior
+
+By default, Vitest does not write snapshots in CI (`process.env.CI` is truthy) and any snapshot mismatches, missing snapshots, and obsolete snapshots fail the run. See [`update`](/config/update) for the details.
+
+An **obsolete snapshot** is a snapshot entry (or snapshot file) that no longer matches any collected test. This usually happens after removing or renaming tests.
+
 ## File Snapshots
 
 When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `` ` ``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
@@ -96,20 +102,21 @@ it('render basic', async () => {
 
 It will compare with the content of `./test/basic.output.html`. And can be written back with the `--update` flag.
 
-## Image Snapshots
+## Visual Snapshots
 
-It's also possible to snapshot images using [`jest-image-snapshot`](https://github.com/americanexpress/jest-image-snapshot).
-
-```bash
-npm i -D jest-image-snapshot
-```
+For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/api/browser/assertions#tomatchscreenshot) assertion:
 
 ```ts
-test('image snapshot', () => {
-  expect(readFileSync('./test/stubs/input-image.png'))
-    .toMatchImageSnapshot()
+import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
+
+test('button looks correct', async () => {
+  const button = page.getByRole('button')
+  await expect(button).toMatchScreenshot('primary-button')
 })
 ```
+
+This captures screenshots and compares them against reference images to detect unintended visual changes. Learn more in the [Visual Regression Testing guide](/guide/browser/visual-regression-testing).
 
 ## Custom Serializer
 
@@ -135,7 +142,7 @@ expect.addSnapshotSerializer({
 })
 ```
 
-We also support [snapshotSerializers](/config/#snapshotserializers) option to implicitly add custom serializers.
+We also support [snapshotSerializers](/config/snapshotserializers) option to implicitly add custom serializers.
 
 ```ts [path/to/custom-serializer.ts]
 import { SnapshotSerializer } from 'vitest'

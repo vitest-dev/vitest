@@ -27,7 +27,7 @@ export class IncludeTaskLocationDisabledError extends Error {
   code = 'VITEST_INCLUDE_TASK_LOCATION_DISABLED'
 
   constructor() {
-    super('Recieved line number filters while `includeTaskLocation` option is disabled')
+    super('Received line number filters while `includeTaskLocation` option is disabled')
   }
 }
 
@@ -37,5 +37,13 @@ export class RangeLocationFilterProvidedError extends Error {
   constructor(filter: string) {
     super(`Found "-" in location filter ${filter}.  Note that range location filters `
       + `are not supported.  Consider specifying the exact line numbers of your tests.`)
+  }
+}
+
+export class VitestFilteredOutProjectError extends Error {
+  code = 'VITEST_FILTERED_OUT_PROJECT'
+
+  constructor() {
+    super('VITEST_FILTERED_OUT_PROJECT')
   }
 }

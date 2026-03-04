@@ -30,21 +30,7 @@ import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
 
-export type {
-  Colors,
-  CompareKeys,
-  Config,
-  NewPlugin,
-  OldPlugin,
-  Options,
-  OptionsReceived,
-  Plugin,
-  Plugins,
-  PrettyFormatOptions,
-  Printer,
-  Refs,
-  Theme,
-} from './types'
+export { createDOMElementFilter } from './plugins/DOMElement'
 
 const toString = Object.prototype.toString
 const toISOString = Date.prototype.toISOString
@@ -343,22 +329,22 @@ function printPlugin(
     printed = isNewPlugin(plugin)
       ? plugin.serialize(val, config, indentation, depth, refs, printer)
       : plugin.print(
-        val,
-        valChild => printer(valChild, config, indentation, depth, refs),
-        (str) => {
-          const indentationNext = indentation + config.indent
-          return (
-            indentationNext
-            + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
-          )
-        },
-        {
-          edgeSpacing: config.spacingOuter,
-          min: config.min,
-          spacing: config.spacingInner,
-        },
-        config.colors,
-      )
+          val,
+          valChild => printer(valChild, config, indentation, depth, refs),
+          (str) => {
+            const indentationNext = indentation + config.indent
+            return (
+              indentationNext
+              + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
+            )
+          },
+          {
+            edgeSpacing: config.spacingOuter,
+            min: config.min,
+            spacing: config.spacingInner,
+          },
+          config.colors,
+        )
   }
   catch (error: any) {
     throw new PrettyFormatPluginError(error.message, error.stack)
@@ -444,12 +430,13 @@ export const DEFAULT_OPTIONS: Options = {
   plugins: [],
   printBasicPrototype: true,
   printFunctionName: true,
+  printShadowRoot: true,
   theme: DEFAULT_THEME,
 } satisfies Options
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_OPTIONS, key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }
@@ -519,6 +506,7 @@ function getConfig(options?: OptionsReceived): Config {
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
     printBasicPrototype: options?.printBasicPrototype ?? true,
     printFunctionName: getPrintFunctionName(options),
+    printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
   }
@@ -556,6 +544,22 @@ export function format(val: unknown, options?: OptionsReceived): string {
 
   return printComplexValue(val, getConfig(options), '', 0, [])
 }
+
+export type {
+  Colors,
+  CompareKeys,
+  Config,
+  NewPlugin,
+  OldPlugin,
+  Options,
+  OptionsReceived,
+  Plugin,
+  Plugins,
+  PrettyFormatOptions,
+  Printer,
+  Refs,
+  Theme,
+} from './types'
 
 export const plugins: {
   AsymmetricMatcher: NewPlugin

@@ -164,8 +164,8 @@ export class SnapshotClient {
       throw createMismatchError(
         `Snapshot \`${key || 'unknown'}\` mismatched`,
         snapshotState.expand,
-        actual?.trim(),
-        expected?.trim(),
+        rawSnapshot ? actual : actual?.trim(),
+        rawSnapshot ? expected : expected?.trim(),
       )
     }
   }
@@ -193,7 +193,7 @@ export class SnapshotClient {
       )
       rawSnapshot.content
         = (await snapshotState.environment.readSnapshotFile(rawSnapshot.file))
-        ?? undefined
+          ?? undefined
     }
 
     return this.assert(options)

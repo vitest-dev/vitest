@@ -7,9 +7,9 @@
 import { expect, it, vi } from 'vitest'
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __property_dom: unknown
-  // eslint-disable-next-line no-var
+
   var happyDOM: any
 }
 
@@ -118,6 +118,20 @@ it('globals are the same', () => {
   expect(window.Blob).toBe(globalThis.Blob)
   expect(window.globalThis.Blob).toBe(globalThis.Blob)
   expect(Blob).toBe(globalThis.Blob)
+})
+
+it('fetch globals work', () => {
+  const file = new File([window.Buffer.from('<foo />')], 'a.xml')
+  expect(() => URL.createObjectURL(file)).not.toThrow()
+
+  expect(new File([], 'test.txt')).toBeInstanceOf(Blob)
+
+  const response = new Response('', {
+    headers: new Headers({
+      'Content-Type': 'application/json',
+    }),
+  })
+  expect(response.headers.get('content-type')).toBe('application/json')
 })
 
 it.skipIf(import.meta.env.VITEST_VM_POOL)('default view references global object', () => {

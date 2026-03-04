@@ -9,5 +9,5 @@ export type {
   ModuleMockerConfig,
   ModuleMockerRPC,
   ResolveIdResult,
-  ResolveMockResul,
+  ResolveMockResult,
 } from './mocker'

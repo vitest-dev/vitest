@@ -1,33 +1,40 @@
 import type { TestProject } from '../project'
 import type { BrowserServerStateSession } from '../types/browser'
-import { createDefer } from '@vitest/utils'
+import { createDefer } from '@vitest/utils/helpers'
 
 export class BrowserSessions {
   private sessions = new Map<string, BrowserServerStateSession>()
 
-  getSession(sessionId: string) {
+  public sessionIds: Set<string> = new Set()
+
+  getSession(sessionId: string): BrowserServerStateSession | undefined {
     return this.sessions.get(sessionId)
   }
 
-  createAsyncSession(method: 'run' | 'collect', sessionId: string, files: string[], project: TestProject): Promise<void> {
+  destroySession(sessionId: string): void {
+    this.sessions.delete(sessionId)
+  }
+
+  createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }): Promise<void> {
+    // this promise only waits for the WS connection with the orhcestrator to be established
     const defer = createDefer<void>()
 
     const timeout = setTimeout(() => {
-      defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" within the timeout.`))
+      defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`))
     }, project.vitest.config.browser.connectTimeout ?? 60_000).unref()
 
     this.sessions.set(sessionId, {
-      files,
-      method,
       project,
       connected: () => {
+        defer.resolve()
         clearTimeout(timeout)
       },
-      resolve: () => {
+      // this fails the whole test run and cancels the pool
+      fail: (error: Error) => {
         defer.resolve()
-        this.sessions.delete(sessionId)
+        clearTimeout(timeout)
+        pool.reject(error)
       },
-      reject: defer.reject,
     })
     return defer
   }

@@ -28,7 +28,7 @@ it('html-pretty', () => {
       <input name="email" />
       <button>Submit</button>
     </form>
-  `.replaceAll(/\n */gm, ""); // strip new liens
+  `.replaceAll(/\n */gm, ""); // strip new lines
   console.log(prettyDOM(div))
 })
 

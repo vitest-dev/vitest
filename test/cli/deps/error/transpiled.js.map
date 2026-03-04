@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["transpiled.ts"],
+  "sourcesContent": ["import 'node:path'\n\nexport type Dummy = {\n  foo: \"foo\",\n}\n\n/**\n * dummy\n * dummy\n */\nexport default function testStack() {\n  innerTestStack()\n}\n\nimport 'node:util'\n\n/**\n * bar\n * bar\n */\nfunction innerTestStack() {\n  throw new Error('__TEST_STACK_TRANSPILED__')\n}"],
+  "mappings": "AAAA,OAAO;AAUP,wBAAwB,YAAY;AAClC,iBAAe;AACjB;AAEA,OAAO;AAMP,SAAS,iBAAiB;AACxB,QAAM,IAAI,MAAM,2BAA2B;AAC7C;",
+  "names": []
+}

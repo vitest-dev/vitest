@@ -1,34 +1,32 @@
-import type { FileCoverageData } from 'istanbul-lib-coverage'
-import type { TestFunction } from 'vitest'
-import type { UserConfig } from 'vitest/node'
-import { readFileSync } from 'node:fs'
+import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
+import type { UserConfig as ViteUserConfig } from 'vite'
+import type { SuiteAPI, TestAPI } from 'vitest'
+import type { TestUserConfig } from 'vitest/node'
+import { existsSync, readFileSync } from 'node:fs'
+import { unlink } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
+import { playwright } from '@vitest/browser-playwright'
+import { toArray } from '@vitest/utils/helpers'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
-import * as testUtils from '../test-utils'
+import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import * as testUtils from '../test-utils/index'
 
-export function test(name: string, fn: TestFunction, skip = false) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestTest.skipIf(skip)(name, fn)
-  }
-}
+export const test: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestTest
+  : (() => {}) as any as TestAPI
 
-export function describe(name: string, fn: () => void) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestDescribe(name, () => fn())
-  }
-}
+export const describe: SuiteAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestDescribe
+  : (() => {}) as any as SuiteAPI
 
-export function coverageTest(name: string, fn: TestFunction) {
-  if (process.env.COVERAGE_TEST === 'true') {
-    return vitestTest(name, fn)
-  }
-}
+export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? (() => {}) as any as TestAPI
+  : vitestTest
 
-export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
+export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
   const provider = process.env.COVERAGE_PROVIDER as any
 
   const result = await testUtils.runVitest({
@@ -49,11 +47,38 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
-      name: 'chromium',
-      provider: 'playwright',
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
       ...config.browser,
     },
+    experimental: {
+      ...config.experimental,
+      viteModuleRunner: process.env.VITE_MODULE_RUNNER === 'false' ? false : config.experimental?.viteModuleRunner,
+    },
+    setupFiles: [
+      resolve(import.meta.dirname, 'setup.native.ts'),
+      ...config.setupFiles ?? [],
+    ],
+
+    projects: config.projects?.map((project) => {
+      if (typeof project !== 'string' && 'test' in project) {
+        project.test ||= {}
+        project.test.setupFiles = toArray(project.test.setupFiles)
+        project.test.setupFiles.push(resolve(import.meta.dirname, 'setup.native.ts'))
+      }
+
+      return project
+    }),
+
+    $viteConfig: viteOverrides,
   })
+
+  if (TestRunner.getCurrentTest()) {
+    onTestFailed(() => {
+      console.error('stderr:', result.stderr)
+      console.error('stdout:', result.stdout)
+    })
+  }
 
   if (options.throwOnError) {
     if (result.stderr !== '') {
@@ -62,6 +87,12 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
   }
 
   return result
+}
+
+export async function cleanupCoverageJson(name = './coverage/coverage-final.json') {
+  if (existsSync(name)) {
+    await unlink(name)
+  }
 }
 
 /**
@@ -89,6 +120,13 @@ export async function readCoverageMap(name = './coverage/coverage-final.json') {
   return libCoverage.createCoverageMap(coverageJson)
 }
 
+export function formatSummary(summary: CoverageSummary) {
+  return (['branches', 'functions', 'lines', 'statements'] as const).reduce((all, current) => ({
+    ...all,
+    [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
+  }), {})
+}
+
 export function normalizeFilename(filename: string) {
   return normalize(filename)
     .replace(normalize(process.cwd()), '<process-cwd>')
@@ -101,6 +139,10 @@ export function isV8Provider() {
 
 export function isBrowser() {
   return process.env.COVERAGE_BROWSER === 'true'
+}
+
+export function isNativeRunner() {
+  return process.env.VITE_MODULE_RUNNER === 'false'
 }
 
 export function normalizeURL(importMetaURL: string) {

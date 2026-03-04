@@ -1,12 +1,18 @@
 import type {
+  ImportDuration,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
+  TestAnnotation,
+  TestArtifact,
 } from '@vitest/runner'
-import type { TestError } from '@vitest/utils'
+import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../test-specification'
 
 class ReportedTaskImplementation {
   /**
@@ -16,7 +22,7 @@ class ReportedTaskImplementation {
   public readonly task: RunnerTask
 
   /**
-   * The project assosiacted with the test or suite.
+   * The project associated with the test or suite.
    */
   public readonly project: TestProject
 
@@ -50,6 +56,13 @@ class ReportedTaskImplementation {
   public ok(): boolean {
     const result = this.task.result
     return !result || result.state !== 'fail'
+  }
+
+  /**
+   * Custom metadata that was attached to the test during its execution.
+   */
+  public meta(): TaskMeta {
+    return this.task.meta
   }
 
   /**
@@ -90,6 +103,11 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
+  /**
+   * Tags associated with the test.
+   */
+  public readonly tags: string[]
+
   /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
@@ -104,6 +122,7 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = this.module
     }
     this.options = buildOptions(task)
+    this.tags = this.options.tags || []
   }
 
   /**
@@ -122,12 +141,29 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Test results. Will be `undefined` if test is skipped, not finished yet or was just collected.
+   * Test results.
+   * - **pending**: Test was collected, but didn't finish running yet.
+   * - **passed**: Test passed successfully
+   * - **failed**: Test failed to execute
+   * - **skipped**: Test was skipped during collection or dynamically with `ctx.skip()`.
    */
-  public result(): TestResult | undefined {
+  public result(): TestResult {
     const result = this.task.result
+    const mode = result?.state || this.task.mode
+
+    if (!result && (mode === 'skip' || mode === 'todo')) {
+      return {
+        state: 'skipped',
+        note: undefined,
+        errors: undefined,
+      }
+    }
+
     if (!result || result.state === 'run' || result.state === 'queued') {
-      return undefined
+      return {
+        state: 'pending',
+        errors: undefined,
+      }
     }
     const state = result.state === 'fail'
       ? 'failed' as const
@@ -154,18 +190,19 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
+   * Test annotations added via the `task.annotate` API during the test execution.
    */
-  public skipped(): boolean {
-    const mode = this.task.result?.state || this.task.mode
-    return mode === 'skip' || mode === 'todo'
+  public annotations(): ReadonlyArray<TestAnnotation> {
+    return [...this.task.annotations]
   }
 
   /**
-   * Custom metadata that was attached to the test during its execution.
+   * @experimental
+   *
+   * Test artifacts recorded via the `recordArtifact` API during the test execution.
    */
-  public meta(): TaskMeta {
-    return this.task.meta
+  public artifacts(): ReadonlyArray<TestArtifact> {
+    return [...this.task.artifacts]
   }
 
   /**
@@ -175,7 +212,7 @@ export class TestCase extends ReportedTaskImplementation {
   public diagnostic(): TestDiagnostic | undefined {
     const result = this.task.result
     // startTime should always be available if the test has properly finished
-    if (!result || result.state === 'run' || result.state === 'queued' || !result.startTime) {
+    if (!result || !result.startTime) {
       return undefined
     }
     const duration = result.duration || 0
@@ -189,6 +226,18 @@ export class TestCase extends ReportedTaskImplementation {
       repeatCount: result.repeatCount ?? 0,
       flaky: !!result.retryCount && result.state === 'pass' && result.retryCount > 0,
     }
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test case.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds: [this.id] },
+      isTypecheck ? 'typecheck' : undefined,
+    )
   }
 }
 
@@ -228,13 +277,13 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  * allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.children.allTests(state)
+        yield* child.children.allTests(state)
       }
       else if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -248,14 +297,14 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  * tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
       }
 
       if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -269,7 +318,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  *suites(): Generator<TestSuite, undefined, void> {
+  * suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -280,16 +329,16 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  *allSuites(): Generator<TestSuite, undefined, void> {
+  * allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
-        yield * child.children.allSuites()
+        yield* child.children.allSuites()
       }
     }
   }
 
-  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
+  * [Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
@@ -297,6 +346,14 @@ class TestCollection {
 }
 
 export type { TestCollection }
+
+export type ReportedHookContext = {
+  readonly name: 'beforeAll' | 'afterAll'
+  readonly entity: TestSuite | TestModule
+} | {
+  readonly name: 'beforeEach' | 'afterEach'
+  readonly entity: TestCase
+}
 
 abstract class SuiteImplementation extends ReportedTaskImplementation {
   /** @internal */
@@ -314,18 +371,10 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the suite was skipped during collection.
-   */
-  public skipped(): boolean {
-    const mode = this.task.mode
-    return mode === 'skip' || mode === 'todo'
-  }
-
-  /**
    * Errors that happened outside of the test run during collection, like syntax errors.
    */
-  public errors(): TestError[] {
-    return (this.task.result?.errors as TestError[] | undefined) || []
+  public errors(): SerializedError[] {
+    return (this.task.result?.errors as SerializedError[] | undefined) || []
   }
 }
 
@@ -379,6 +428,31 @@ export class TestSuite extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * The meta information attached to the suite during its collection or execution.
+   */
+  declare public meta: () => TaskMeta
+
+  /**
+   * Checks the running state of the suite.
+   */
+  public state(): TestSuiteState {
+    return getSuiteState(this.task)
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test suite.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    const testIds = [...this.children.allTests()].map(test => test.id)
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds },
+      isTypecheck ? 'typecheck' : undefined,
+    )
+  }
+
+  /**
    * Full name of the suite including all parent suites separated with `>`.
    */
   public get fullName(): string {
@@ -401,16 +475,58 @@ export class TestModule extends SuiteImplementation {
   public readonly type = 'module'
 
   /**
+   * The Vite environment that processes files on the server.
+   *
+   * Can be empty if test module did not run yet.
+   */
+  public readonly viteEnvironment: DevEnvironment | undefined
+
+  /**
    * This is usually an absolute UNIX file path.
-   * It can be a virtual id if the file is not on the disk.
-   * This value corresponds to Vite's `ModuleGraph` id.
+   * It can be a virtual ID if the file is not on the disk.
+   * This value corresponds to the ID in the Vite's module graph.
    */
   public readonly moduleId: string
+
+  /**
+   * Module id relative to the project. This is the same as `task.name`.
+   */
+  public readonly relativeModuleId: string
 
   /** @internal */
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
+    this.relativeModuleId = task.name
+    if (task.viteEnvironment === '__browser__') {
+      this.viteEnvironment = project.browser?.vite.environments.client
+    }
+    else if (typeof task.viteEnvironment === 'string') {
+      this.viteEnvironment = project.vite.environments[task.viteEnvironment]
+    }
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test module.
+   */
+  public toTestSpecification(testCases?: TestCase[]): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.moduleId,
+      testCases?.length ? { testIds: testCases.map(t => t.id) } : undefined,
+      isTypecheck ? 'typecheck' : undefined,
+    )
+  }
+
+  /**
+   * Checks the running state of the test file.
+   */
+  public state(): TestModuleState {
+    const state = this.task.result?.state
+    if (state === 'queued') {
+      return 'queued'
+    }
+    return getSuiteState(this.task)
   }
 
   /**
@@ -420,9 +536,9 @@ export class TestModule extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
-   * Checks if the module was skipped and didn't run.
+   * The meta information attached to the module during its collection or execution.
    */
-  declare public skipped: () => boolean
+  declare public meta: () => TaskMeta
 
   /**
    * Useful information about the module like duration, memory usage, etc.
@@ -434,62 +550,97 @@ export class TestModule extends SuiteImplementation {
     const prepareDuration = this.task.prepareDuration || 0
     const environmentSetupDuration = this.task.environmentLoad || 0
     const duration = this.task.result?.duration || 0
+    const heap = this.task.result?.heap
+    const importDurations = this.task.importDurations ?? {}
     return {
       environmentSetupDuration,
       prepareDuration,
       collectDuration,
       setupDuration,
       duration,
+      heap,
+      importDurations,
     }
   }
 }
 
 export interface TaskOptions {
-  each: boolean | undefined
-  concurrent: boolean | undefined
-  shuffle: boolean | undefined
-  retry: number | undefined
-  repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
+  readonly each: boolean | undefined
+  readonly fails: boolean | undefined
+  readonly concurrent: boolean | undefined
+  readonly shuffle: boolean | undefined
+  readonly retry: SerializableRetry | undefined
+  readonly repeats: number | undefined
+  readonly tags: string[] | undefined
+  /**
+   * Only tests have a `timeout` option.
+   */
+  readonly timeout: number | undefined
+  readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
 function buildOptions(
-  task: RunnerTestCase | RunnerTestFile | RunnerTestSuite,
+  task: RunnerTestCase | RunnerTestSuite,
 ): TaskOptions {
   return {
     each: task.each,
+    fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
-    mode: task.mode,
+    tags: task.tags,
+    timeout: task.type === 'test' ? task.timeout : undefined,
+    // runner types are too broad, but the public API should be more strict
+    // the queued state exists only on Files and this method is called
+    // only for tests and suites
+    mode: task.mode as TaskOptions['mode'],
   }
 }
 
-export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
+export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
+export type TestModuleState = TestSuiteState | 'queued'
+export type TestState = TestResult['state']
+
+export type TestResult
+  = | TestResultPassed
+    | TestResultFailed
+    | TestResultSkipped
+    | TestResultPending
+
+export interface TestResultPending {
+  /**
+   * The test was collected, but didn't finish running yet.
+   */
+  readonly state: 'pending'
+  /**
+   * Pending tests have no errors.
+   */
+  readonly errors: undefined
+}
 
 export interface TestResultPassed {
   /**
    * The test passed successfully.
    */
-  state: 'passed'
+  readonly state: 'passed'
   /**
    * Errors that were thrown during the test execution.
    *
    * **Note**: If test was retried successfully, errors will still be reported.
    */
-  errors: TestError[] | undefined
+  readonly errors: ReadonlyArray<TestError> | undefined
 }
 
 export interface TestResultFailed {
   /**
    * The test failed to execute.
    */
-  state: 'failed'
+  readonly state: 'failed'
   /**
    * Errors that were thrown during the test execution.
    */
-  errors: TestError[]
+  readonly errors: ReadonlyArray<TestError>
 }
 
 export interface TestResultSkipped {
@@ -497,80 +648,81 @@ export interface TestResultSkipped {
    * The test was skipped with `only` (on another test), `skip` or `todo` flag.
    * You can see which one was used in the `options.mode` option.
    */
-  state: 'skipped'
+  readonly state: 'skipped'
   /**
    * Skipped tests have no errors.
    */
-  errors: undefined
+  readonly errors: undefined
   /**
    * A custom note passed down to `ctx.skip(note)`.
    */
-  note: string | undefined
+  readonly note: string | undefined
 }
 
 export interface TestDiagnostic {
   /**
    * If the duration of the test is above `slowTestThreshold`.
    */
-  slow: boolean
+  readonly slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
-  heap: number | undefined
+  readonly heap: number | undefined
   /**
    * The time it takes to execute the test in ms.
    */
-  duration: number
+  readonly duration: number
   /**
    * The time in ms when the test started.
    */
-  startTime: number
+  readonly startTime: number
   /**
    * The amount of times the test was retried.
    */
-  retryCount: number
+  readonly retryCount: number
   /**
    * The amount of times the test was repeated as configured by `repeats` option.
    * This value can be lower if the test failed during the repeat and no `retry` is configured.
    */
-  repeatCount: number
+  readonly repeatCount: number
   /**
    * If test passed on a second retry.
    */
-  flaky: boolean
+  readonly flaky: boolean
 }
 
 export interface ModuleDiagnostic {
   /**
    * The time it takes to import and initiate an environment.
    */
-  environmentSetupDuration: number
+  readonly environmentSetupDuration: number
   /**
    * The time it takes Vitest to setup test harness (runner, mocks, etc.).
    */
-  prepareDuration: number
+  readonly prepareDuration: number
   /**
    * The time it takes to import the test module.
    * This includes importing everything in the module and executing suite callbacks.
    */
-  collectDuration: number
+  readonly collectDuration: number
   /**
    * The time it takes to import the setup module.
    */
-  setupDuration: number
+  readonly setupDuration: number
   /**
    * Accumulated duration of all tests and hooks in the module.
    */
-  duration: number
-}
-
-function getTestState(test: TestCase): TestResult['state'] | 'running' {
-  if (test.skipped()) {
-    return 'skipped'
-  }
-  const result = test.result()
-  return result ? result.state : 'running'
+  readonly duration: number
+  /**
+   * The amount of memory used by the test module in bytes.
+   * This value is only available if the test was executed with `logHeapUsage` flag.
+   */
+  readonly heap: number | undefined
+  /**
+   * The time spent importing every non-externalized dependency that Vitest has processed.
+   */
+  readonly importDurations: Record<string, ImportDuration>
 }
 
 function storeTask(
@@ -592,4 +744,30 @@ function getReportedTask(
     )
   }
   return reportedTask
+}
+
+function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
+  const mode = task.mode
+  const state = task.result?.state
+  if (mode === 'skip' || mode === 'todo' || state === 'skip' || state === 'todo') {
+    return 'skipped'
+  }
+  if (state == null || state === 'run' || state === 'only') {
+    return 'pending'
+  }
+  if (state === 'fail') {
+    return 'failed'
+  }
+  if (state === 'pass') {
+    return 'passed'
+  }
+  throw new Error(`Unknown suite state: ${state}`)
+}
+
+export function experimental_getRunnerTask(entity: TestCase): RunnerTestCase
+export function experimental_getRunnerTask(entity: TestSuite): RunnerTestSuite
+export function experimental_getRunnerTask(entity: TestModule): RunnerTestFile
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase
+export function experimental_getRunnerTask(entity: TestCase | TestSuite | TestModule): RunnerTestSuite | RunnerTestFile | RunnerTestCase {
+  return entity.task
 }

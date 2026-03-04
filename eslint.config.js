@@ -15,6 +15,7 @@ export default antfu(
       '**/*.d.ts',
       '**/*.timestamp-*',
       'test/core/src/self',
+      'test/core/test/mocking/already-hoisted.test.ts',
       'test/cache/cache/.vitest-base/results.json',
       'test/core/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
@@ -23,13 +24,15 @@ export default antfu(
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
+      'test/cli/deps/error/*',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
       // uses invalid js example
-      'docs/advanced/api/import-example.md',
+      'docs/api/advanced/import-example.md',
+      'docs/guide/examples/*.md',
     ],
   },
   {
@@ -40,6 +43,7 @@ export default antfu(
       'no-empty-pattern': 'off',
       'antfu/indent-binary-ops': 'off',
       'unused-imports/no-unused-imports': 'error',
+      'pnpm/json-enforce-catalog': 'off',
       'style/member-delimiter-style': [
         'error',
         {
@@ -56,6 +60,10 @@ export default antfu(
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
       'ts/no-unsafe-function-type': 'off',
+
+      'markdown/fenced-code-language': 'off',
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -86,7 +94,7 @@ export default antfu(
   },
   {
     // these files define vitest as peer dependency
-    files: [`packages/{coverage-*,ui,browser,web-worker}/${GLOB_SRC}`],
+    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*}/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -103,6 +111,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
@@ -110,6 +119,8 @@ export default antfu(
       'unused-imports/no-unused-imports': 'off',
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
+      'import/no-mutable-exports': 'off',
+      'no-throw-literal': 'off',
     },
   },
   {
@@ -129,13 +140,6 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
-    },
-  },
-  {
-    files: [`packages/vite-node/${GLOB_SRC}`],
-    rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
     },
   },
 )

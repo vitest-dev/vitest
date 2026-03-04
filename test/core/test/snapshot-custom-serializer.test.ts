@@ -44,7 +44,7 @@ test('basic', () => {
   `)
 })
 
-test('throwning snapshot', () => {
+test('throwing snapshot', () => {
   // example from https://github.com/vitest-dev/vitest/issues/3655
 
   class ErrorWithDetails extends Error {

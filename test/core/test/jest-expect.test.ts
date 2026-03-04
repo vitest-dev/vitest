@@ -34,6 +34,9 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
     expect(null).toBeNull()
     expect(1).not.toBeNull()
+    expect(null).toBeNullable()
+    expect(undefined).toBeNullable()
+    expect(0).not.toBeNullable()
     expect(null).toBeDefined()
     expect(undefined).not.toBeDefined()
     expect(undefined).toBeUndefined()
@@ -112,7 +115,7 @@ describe('jest-expect', () => {
     }).toThrow('')
     expect(() => {
       throw new Error('error')
-    }).not.toThrowError('')
+    }).not.toThrow('')
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -147,6 +150,10 @@ describe('jest-expect', () => {
     expect(undefined).not.toEqual(expect.anything())
     expect({ a: 0, b: 0 }).toEqual(expect.objectContaining({ a: 0 }))
     expect({ a: 0, b: 0 }).not.toEqual(expect.objectContaining({ z: 0 }))
+    // objectContaining with symbol key
+    const symbolForObjectContaining = Symbol('symbolForObjectContaining')
+    expect({ [symbolForObjectContaining]: 0 }).toEqual(expect.objectContaining({ [symbolForObjectContaining]: 0 }))
+    expect({ [symbolForObjectContaining]: 0 }).not.toEqual(expect.objectContaining({ [symbolForObjectContaining]: 1 }))
     expect(0).toEqual(expect.any(Number))
     expect('string').toEqual(expect.any(String))
     expect('string').not.toEqual(expect.any(Number))
@@ -194,6 +201,36 @@ describe('jest-expect', () => {
         sum: expect.closeTo(0.4),
       })
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
+  })
+
+  it('asymmetric matchers and equality testers', () => {
+    // iterable equality testers
+    expect([new Set(['x'])]).toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect([new Set()]).not.toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect({ foo: new Set(['x']) }).toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+    expect({ foo: new Set() }).not.toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+
+    // `toStrictEqual` testers
+    class Stock {
+      constructor(public type: string) {}
+    }
+    expect([new Stock('x')]).toEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).not.toStrictEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).toStrictEqual(
+      expect.arrayContaining([new Stock('x')]),
+    )
   })
 
   it('asymmetric matchers negate', () => {
@@ -246,6 +283,15 @@ describe('jest-expect', () => {
           message: () => '',
         }
       },
+      toBeTestedMatcherContext<T>(received: unknown, expected: T) {
+        if (typeof this.utils?.stringify !== 'function') {
+          throw new TypeError('this.utils.stringify is not available.')
+        }
+        return {
+          pass: received === expected,
+          message: () => 'toBeTestedMatcherContext',
+        }
+      },
     })
 
     expect(5).toBeDividedBy(5)
@@ -254,11 +300,11 @@ describe('jest-expect', () => {
       one: expect.toBeDividedBy(1),
       two: expect.not.toBeDividedBy(5),
     })
-    expect(() => expect(2).toBeDividedBy(5)).toThrowError()
+    expect(() => expect(2).toBeDividedBy(5)).toThrow()
 
-    expect(() => expect(null).toBeTestedSync()).toThrowError('toBeTestedSync')
-    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrowError('toBeTestedAsync')
-    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrowError('toBeTestedPromise')
+    expect(() => expect(null).toBeTestedSync()).toThrow('toBeTestedSync')
+    await expect(async () => await expect(null).toBeTestedAsync()).rejects.toThrow('toBeTestedAsync')
+    await expect(async () => await expect(null).toBeTestedPromise()).rejects.toThrow('toBeTestedPromise')
 
     expect(expect).toBeJestCompatible()
   })
@@ -321,7 +367,7 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('some-unknown-property')
-    }).toThrowError()
+    }).toThrow()
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
@@ -437,6 +483,73 @@ describe('jest-expect', () => {
         expect(async () => {
         }).toThrow(Error)
       }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
+    })
+
+    it('custom error class', () => {
+      class Error1 extends Error {};
+      class Error2 extends Error {};
+
+      // underlying `toEqual` doesn't require constructor/prototype equality
+      expect(() => {
+        throw new Error1('hi')
+      }).toThrow(new Error2('hi'))
+      expect(new Error1('hi')).toEqual(new Error2('hi'))
+      expect(new Error1('hi')).not.toStrictEqual(new Error2('hi'))
+    })
+
+    it('non Error instance', () => {
+      // primitives
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 42
+      }).toThrow(42)
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw 42
+      }).not.toThrow(43)
+
+      expect(() => {
+        expect(() => {
+        // eslint-disable-next-line no-throw-literal
+          throw 42
+        }).toThrow(43)
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal 43]`)
+
+      // deep equality
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw { foo: 'hello world' }
+      }).toThrow({ foo: expect.stringContaining('hello') })
+      expect(() => {
+        // eslint-disable-next-line no-throw-literal
+        throw { foo: 'bar' }
+      }).not.toThrow({ foo: expect.stringContaining('hello') })
+
+      expect(() => {
+        expect(() => {
+        // eslint-disable-next-line no-throw-literal
+          throw { foo: 'bar' }
+        }).toThrow({ foo: expect.stringContaining('hello') })
+      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`)
+    })
+
+    it('error from different realm', async () => {
+      const vm = await import('node:vm')
+      const context: any = {}
+      vm.createContext(context)
+      new vm.Script('fn = () => { throw new TypeError("oops") }; globalObject = this').runInContext(context)
+      const { fn, globalObject } = context
+
+      // constructor
+      expect(fn).toThrow(globalObject.TypeError)
+      expect(fn).not.toThrow(globalObject.ReferenceError)
+      expect(fn).not.toThrow(globalObject.EvalError)
+
+      // instance
+      expect(fn).toThrow(new globalObject.TypeError('oops'))
+      expect(fn).not.toThrow(new globalObject.TypeError('message'))
+      expect(fn).not.toThrow(new globalObject.ReferenceError('oops'))
+      expect(fn).not.toThrow(new globalObject.EvalError('no way'))
     })
   })
 })
@@ -590,7 +703,9 @@ describe('toBeOneOf()', () => {
     expect(0).toBeOneOf([0, 1, 2])
     expect(0).toBeOneOf([expect.any(Number)])
     expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('apple').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('apple').toBeOneOf([expect.any(String)])
+    expect('apple').toBeOneOf(new Set([expect.any(String)]))
     expect(true).toBeOneOf([true, false])
     expect(true).toBeOneOf([expect.any(Boolean)])
     expect(null).toBeOneOf([expect.any(Object)])
@@ -601,7 +716,9 @@ describe('toBeOneOf()', () => {
     expect(3).not.toBeOneOf([0, 1, 2])
     expect(3).not.toBeOneOf([expect.any(String)])
     expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').not.toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect('mango').not.toBeOneOf(new Set([expect.any(Number)]))
     expect(null).not.toBeOneOf([undefined])
   })
 
@@ -609,7 +726,9 @@ describe('toBeOneOf()', () => {
     expect(3).toBeOneOf([0, 1, 2])
     expect(3).toBeOneOf([expect.any(String)])
     expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').toBeOneOf(new Set(['apple', 'banana', 'orange']))
     expect('mango').toBeOneOf([expect.any(Number)])
+    expect('mango').toBeOneOf(new Set([expect.any(Number)]))
     expect(null).toBeOneOf([undefined])
   })
 
@@ -698,7 +817,7 @@ describe('toSatisfy()', () => {
 describe('toHaveBeenCalled', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock()
 
       expect(() => {
@@ -706,12 +825,38 @@ describe('toHaveBeenCalled', () => {
       }).toThrow(/^expected "spy" to not be called at all[^e]/)
     })
   })
+
+  it('undefined argument', () => {
+    const fn = vi.fn()
+    fn(undefined)
+    expect(fn).not.toHaveBeenCalledWith()
+    expect(fn).toHaveBeenCalledWith(undefined)
+    expect(fn).toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no argument', () => {
+    const fn = vi.fn()
+    fn()
+    expect(fn).toHaveBeenCalledWith()
+    expect(fn).not.toHaveBeenCalledWith(undefined)
+    expect(fn).not.toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).not.toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).not.toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no strict equal check for each argument', () => {
+    const fn = vi.fn()
+    fn({ x: undefined, z: 123 })
+    expect(fn).toHaveBeenCalledWith({ y: undefined, z: 123 })
+  })
 })
 
 describe('toHaveBeenCalledWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -724,7 +869,7 @@ describe('toHaveBeenCalledWith', () => {
 describe('toHaveBeenCalledExactlyOnceWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
-      const mock = vi.fn()
+      const mock = vi.fn().mockName('spy')
       mock(3)
 
       expect(() => {
@@ -754,7 +899,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
   })
 
   it('fails if not called or called too many times', () => {
-    const mock = vi.fn()
+    const mock = vi.fn().mockName('spy')
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
@@ -774,7 +919,7 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
     expect(() => {
       expect(mock).toHaveBeenCalledExactlyOnceWith(3)
-    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+    }).toThrow(/^expected "vi\.fn\(\)" to be called once with arguments: \[ 3 \][^e]/)
   })
 
   it('passes if called exactly once with args', () => {
@@ -787,8 +932,8 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
 
 describe('toHaveBeenCalledBefore', () => {
   it('success if expect mock is called before result mock', () => {
-    const expectMock = vi.fn()
-    const resultMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
+    const resultMock = vi.fn().mockName('resultMock')
 
     expectMock()
     resultMock()
@@ -817,7 +962,7 @@ describe('toHaveBeenCalledBefore', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -833,13 +978,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called before "resultMock"/)
   })
 
   it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -851,13 +996,13 @@ describe('toHaveBeenCalledBefore', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledBefore(vi.fn())
-    }).toThrow(/^expected "spy" to have been called before "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called before "vi\.fn\(\)"/)
   })
 })
 
@@ -893,7 +1038,7 @@ describe('toHaveBeenCalledAfter', () => {
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "vi\.fn\(\)"/)
   })
 
   it('throws with correct mock name if failed', () => {
@@ -909,13 +1054,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if result mock is not called', () => {
-    const expectMock = vi.fn()
+    const expectMock = vi.fn().mockName('expectMock')
 
     expectMock()
 
     expect(() => {
       expect(expectMock).toHaveBeenCalledAfter(vi.fn())
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "expectMock" to have been called after "vi\.fn\(\)"/)
   })
 
   it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
@@ -927,13 +1072,13 @@ describe('toHaveBeenCalledAfter', () => {
   })
 
   it('fails if expect mock is not called', () => {
-    const resultMock = vi.fn()
+    const resultMock = vi.fn().mockName('resultMock')
 
     resultMock()
 
     expect(() => {
       expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
-    }).toThrow(/^expected "spy" to have been called after "spy"/)
+    }).toThrow(/^expected "vi\.fn\(\)" to have been called after "resultMock"/)
   })
 })
 
@@ -960,7 +1105,7 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow()
     }
 
-    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
   })
 
   it('resolves throws jest', async () => {
@@ -968,7 +1113,7 @@ describe('async expect', () => {
       await expect((async () => new Error('msg'))()).resolves.toThrow(Error)
     }
 
-    await expect(assertion).rejects.toThrowError('expected promise to throw an error, but it didn\'t')
+    await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
@@ -1172,6 +1317,19 @@ describe('async expect', () => {
       expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
+
+  it('chainable types', async () => {
+    /* eslint-disable prefer-promise-reject-errors */
+    await expect(Promise.resolve(1)).resolves.toBeOneOf([1])
+    await expect(Promise.resolve(1)).resolves.not.toBeOneOf([2])
+    await expect(Promise.reject(1)).rejects.toBeOneOf([1])
+    await expect(Promise.reject(1)).rejects.not.toBeOneOf([2])
+    await expect(Promise.resolve(1)).resolves.toSatisfy(v => v === 1)
+    await expect(Promise.reject(2)).rejects.toSatisfy(v => v === 2)
+    await (expect(Promise.resolve(1)).resolves.to.equal(1) satisfies Promise<any>)
+    await (expect(Promise.resolve(1)).resolves.not.to.equal(2) satisfies Promise<any>)
+    /* eslint-enable prefer-promise-reject-errors */
+  })
 })
 
 it('compatible with jest', () => {
@@ -1193,7 +1351,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripVTControlCharacters(error.diff)
+    const diff = stripVTControlCharacters(error.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1206,7 +1364,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripVTControlCharacters(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause!.diff!)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -1222,12 +1380,12 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff!)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
         {
-          "a": Any<Number>,
+          "a": 1,
       -   "b": Any<Function>,
       +   "b": "string",
         }"
@@ -1246,10 +1404,107 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff!))]
   }
   return expect.unreachable()
 }
+
+it('toMatchObject', () => {
+  expect(() => expect(null).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to match object Set{}]`)
+  expect(() => expect(undefined).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to match object Set{}]`)
+  expect(() => expect(1234).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1234 to match object Set{}]`)
+  expect(() => expect('hello').toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Set()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Set{}]`)
+  expect(() => expect({}).toMatchObject(new Map()))
+    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Map{}]`)
+
+  // subset equality works inside Set/Map
+  expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))
+  expect(new Map([[1, { a: 1 }]])).toMatchObject(new Map([[1, {}]]))
+
+  // Set/Map matches against empty object shape
+  expect(new Set()).toMatchObject({})
+  expect(new Map()).toMatchObject({})
+})
+
+it('proxy equality', () => {
+  // { intercepted: 'original', passthrough: 'original' } => { intercepted: 'proxied', passthrough: 'original' }
+  const proxyActual = new Proxy({ intercepted: 'original', passthrough: 'original' }, {
+    get(target, prop, receiver) {
+      if (prop === 'intercepted') {
+        return 'proxied'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+  // { intercepted: 'original' } => { intercepted: 'proxied' }
+  const proxyExpected = new Proxy({ intercepted: 'original' }, {
+    get(target, prop, receiver) {
+      if (prop === 'intercepted') {
+        return 'proxied'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+
+  // objectContaining
+  expect(proxyActual).toEqual(expect.objectContaining({ intercepted: 'proxied', passthrough: 'original' }))
+  expect(proxyActual).not.toEqual(expect.objectContaining({ intercepted: 'original' }))
+  expect({ intercepted: 'proxied', extra: 'ignored' }).toEqual(expect.objectContaining(proxyExpected))
+  expect({ intercepted: 'original' }).not.toEqual(expect.objectContaining(proxyExpected))
+
+  // toMatchObject
+  expect(proxyActual).toMatchObject({ intercepted: 'proxied', passthrough: 'original' })
+  expect(proxyActual).not.toMatchObject({ intercepted: 'original' })
+  expect({ intercepted: 'proxied', extra: 'ignored' }).toMatchObject(proxyExpected)
+  expect({ intercepted: 'original' }).not.toMatchObject(proxyExpected)
+
+  // toEqual
+  expect(proxyActual).toEqual({ intercepted: 'proxied', passthrough: 'original' })
+  expect(proxyActual).not.toEqual({ intercepted: 'original', passthrough: 'original' })
+  expect({ intercepted: 'proxied' }).toEqual(proxyExpected)
+  expect({ intercepted: 'original' }).not.toEqual(proxyExpected)
+
+  // empty target proxy with only `get` trap
+  const proxyBad = new Proxy({} as any, {
+    get(target, prop, receiver) {
+      if (prop === 'virtual') {
+        return 'value'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+  expect(proxyBad).not.toEqual(expect.objectContaining({ virtual: 'value' }))
+  expect(proxyBad).not.toMatchObject({ virtual: 'value' })
+  expect(proxyBad).not.toEqual({ virtual: 'value' })
+  expect({ virtual: 'value' }).not.toEqual(proxyBad)
+
+  // empty target proxy with required traps
+  const proxyGood = new Proxy({}, {
+    get(target, prop, receiver) {
+      if (prop === 'virtual') {
+        return 'value'
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+    ownKeys: () => ['virtual'],
+    getOwnPropertyDescriptor(target, prop) {
+      if (prop === 'virtual') {
+        return { enumerable: true, configurable: true, value: 'value' }
+      }
+      return Reflect.getOwnPropertyDescriptor(target, prop)
+    },
+  })
+  expect(proxyGood).toEqual({ virtual: 'value' })
+  expect(proxyGood).toMatchObject({ virtual: 'value' })
+  expect(proxyGood).toEqual(expect.objectContaining({ virtual: 'value' }))
+  expect({ virtual: 'value' }).toEqual(proxyGood)
+})
 
 it('toMatchObject error diff', () => {
   // single property on root (3 total properties, 1 expected)
@@ -1570,7 +1825,7 @@ function snapshotError(f: () => unknown) {
     f()
   }
   catch (error) {
-    const e = processError(error)
+    const e = processError(error, { expand: true })
     expect({
       message: stripVTControlCharacters(e.message),
       diff: e.diff ? stripVTControlCharacters(e.diff) : e.diff,
@@ -1685,7 +1940,7 @@ it('error equality', () => {
     snapshotError(() =>
       expect(() => {
         throw e1
-      }).toThrowError(e2),
+      }).toThrow(e2),
     )
   }
 
@@ -1704,9 +1959,8 @@ it('error equality', () => {
     // different class
     const e1 = new MyError('hello', 'a')
     const e2 = new YourError('hello', 'a')
-    snapshotError(() => expect(e1).toEqual(e2))
-    expect(e1).not.toEqual(e2)
-    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    snapshotError(() => expect(e1).toStrictEqual(e2))
+    expect(e1).toEqual(e2)
     assert.deepEqual(e1, e2)
     nodeAssert.notDeepStrictEqual(e1, e2)
   }
@@ -1722,7 +1976,7 @@ it('error equality', () => {
 
     expect(() => {
       throw e1
-    }).toThrowError(e2)
+    }).toThrow(e2)
   }
 
   {

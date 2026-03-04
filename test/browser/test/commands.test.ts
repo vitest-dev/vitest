@@ -1,5 +1,5 @@
-import { server } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
+import { server } from 'vitest/browser'
 
 const { readFile, writeFile, removeFile, myCustomCommand } = server.commands
 
@@ -13,10 +13,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+      expect(err.message).toMatch('test\\browser\\test.txt')
     }
     else {
-      expect(err.message).toMatch('test/browser/test/test.txt')
+      expect(err.message).toMatch('test/browser/test.txt')
     }
   }
 
@@ -34,10 +34,10 @@ it('can manipulate files', async () => {
   catch (err) {
     expect(err.message).toMatch(`ENOENT: no such file or directory, open`)
     if (server.platform === 'win32') {
-      expect(err.message).toMatch('test\\browser\\test\\test.txt')
+      expect(err.message).toMatch('test\\browser\\test.txt')
     }
     else {
-      expect(err.message).toMatch('test/browser/test/test.txt')
+      expect(err.message).toMatch('test/browser/test.txt')
     }
   }
 })
@@ -51,7 +51,7 @@ it('can run custom commands', async () => {
   })
 })
 
-declare module '@vitest/browser/context' {
+declare module 'vitest/browser' {
   interface BrowserCommands {
     myCustomCommand: (arg1: string, arg2: string) => Promise<{
       testPath: string
@@ -60,5 +60,7 @@ declare module '@vitest/browser/context' {
     }>
 
     stripVTControlCharacters: (text: string) => Promise<string>
+    startTrace: () => Promise<void>
+    stopTrace: () => Promise<void>
   }
 }

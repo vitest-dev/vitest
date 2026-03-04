@@ -4,7 +4,7 @@ import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
-import { assertTypes } from '@vitest/utils'
+import { assertTypes } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import {
@@ -16,6 +16,7 @@ import {
   arrayBufferEquality,
   generateToBeMessage,
   getObjectSubset,
+  isError,
   iterableEquality,
   equals as jestEquals,
   sparseArrayEquality,
@@ -81,7 +82,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           if (!isNot) {
             const message
               = utils.flag(this, 'message')
-              || 'expected promise to throw an error, but it didn\'t'
+                || 'expected promise to throw an error, but it didn\'t'
             const error = {
               showDiff: false,
             }
@@ -405,6 +406,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
     )
   })
+  def('toBeNullable', function () {
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      obj == null,
+      'expected #{this} to be nullish',
+      'expected #{this} not to be nullish',
+      null,
+      obj,
+    )
+  })
   def('toBeDefined', function () {
     const obj = utils.flag(this, 'object')
     this.assert(
@@ -457,7 +468,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const actual = this._obj as any
       const [propertyName, expected] = args
       const getValue = () => {
-        const hasOwn = Object.prototype.hasOwnProperty.call(
+        const hasOwn = Object.hasOwn(
           actual,
           propertyName,
         )
@@ -469,7 +480,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const { value, exists } = getValue()
       const pass
         = exists
-        && (args.length === 1 || jestEquals(expected, value, customTesters))
+          && (args.length === 1 || jestEquals(expected, value, customTesters))
 
       const valueString
         = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
@@ -576,12 +587,19 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       throw new AssertionError(msg)
     }
   })
+
+  // manually compare array elements since `jestEquals` cannot
+  // apply asymmetric matcher to `undefined` array element.
+  function equalsArgumentArray(a: unknown[], b: unknown[]) {
+    return a.length === b.length && a.every((aItem, i) =>
+      jestEquals(aItem, b[i], [...customTesters, iterableEquality]),
+    )
+  }
+
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg =>
-      jestEquals(callArg, args, [...customTesters, iterableEquality]),
-    )
+    const pass = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const isNot = utils.flag(this, 'negate') as boolean
 
     const msg = utils.getMessage(this, [
@@ -599,9 +617,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const callCount = spy.mock.calls.length
-    const hasCallWithArgs = spy.mock.calls.some(callArg =>
-      jestEquals(callArg, args, [...customTesters, iterableEquality]),
-    )
+    const hasCallWithArgs = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const pass = hasCallWithArgs && callCount === 1
     const isNot = utils.flag(this, 'negate') as boolean
 
@@ -617,7 +633,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
   })
   def(
-    ['toHaveBeenNthCalledWith', 'nthCalledWith'],
+    'toHaveBeenNthCalledWith',
     function (times: number, ...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
@@ -625,7 +641,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const callCount = spy.mock.calls.length
       const isCalled = times <= callCount
       this.assert(
-        jestEquals(nthCall, args, [...customTesters, iterableEquality]),
+        nthCall && equalsArgumentArray(nthCall, args),
         `expected ${ordinalOf(
           times,
         )} "${spyName}" call to have been called with #{exp}${
@@ -641,14 +657,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     },
   )
   def(
-    ['toHaveBeenLastCalledWith', 'lastCalledWith'],
+    'toHaveBeenLastCalledWith',
     function (...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
-      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
+      const lastCall = spy.mock.calls.at(-1)
 
       this.assert(
-        jestEquals(lastCall, args, [...customTesters, iterableEquality]),
+        lastCall && equalsArgumentArray(lastCall, args),
         `expected last "${spyName}" call to have been called with #{exp}`,
         `expected last "${spyName}" call to not have been called with #{exp}`,
         args,
@@ -751,7 +767,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (!isNot) {
           const message
             = utils.flag(this, 'message')
-            || 'expected promise to throw an error, but it didn\'t'
+              || 'expected promise to throw an error, but it didn\'t'
           const error = {
             showDiff: false,
           }
@@ -774,7 +790,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (!isThrow && !isNot) {
           const message
             = utils.flag(this, 'message')
-            || 'expected function to throw an error, but it didn\'t'
+              || 'expected function to throw an error, but it didn\'t'
           const error = {
             showDiff: false,
           }
@@ -793,7 +809,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (expected instanceof Error) {
+      if (isError(expected)) {
         const equal = jestEquals(thrown, expected, [
           ...customTesters,
           iterableEquality,
@@ -822,8 +838,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      throw new Error(
-        `"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`,
+      const equal = jestEquals(thrown, expected, [
+        ...customTesters,
+        iterableEquality,
+      ])
+      return this.assert(
+        equal,
+        'expected a thrown value to equal #{exp}',
+        'expected a thrown value not to equal #{exp}',
+        expected,
+        thrown,
       )
     },
   )
@@ -950,23 +974,23 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         name: 'toHaveLastResolvedWith',
         condition: (spy, value) => {
           const result
-            = spy.mock.settledResults[spy.mock.settledResults.length - 1]
-          return (
+            = spy.mock.settledResults.at(-1)
+          return Boolean(
             result
             && result.type === 'fulfilled'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value),
           )
         },
         action: 'resolve',
       },
       {
-        name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
+        name: 'toHaveLastReturnedWith',
         condition: (spy, value) => {
-          const result = spy.mock.results[spy.mock.results.length - 1]
-          return (
+          const result = spy.mock.results.at(-1)
+          return Boolean(
             result
             && result.type === 'return'
-            && jestEquals(result.value, value)
+            && jestEquals(result.value, value),
           )
         },
         action: 'return',
@@ -977,7 +1001,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const spy = getSpy(this)
       const results
         = action === 'return' ? spy.mock.results : spy.mock.settledResults
-      const result = results[results.length - 1]
+      const result = results.at(-1)
       const spyName = spy.getMockName()
       this.assert(
         condition(spy, value),
@@ -1003,7 +1027,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         action: 'resolve',
       },
       {
-        name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
+        name: 'toHaveNthReturnedWith',
         condition: (spy, index, value) => {
           const result = spy.mock.results[index - 1]
           return (
@@ -1074,7 +1098,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = obj.then(
+            const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
                 return result.call(this, ...args)
@@ -1087,13 +1111,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                   { showDiff: false },
                 ) as Error
                 _error.cause = err
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
@@ -1142,7 +1170,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = wrapper.then(
+            const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(
                   `promise resolved "${utils.inspect(
@@ -1154,17 +1182,21 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                     actual: value,
                   },
                 ) as any
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
               (err: any) => {
                 utils.flag(this, 'object', err)
                 return result.call(this, ...args)
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
@@ -1201,9 +1233,9 @@ function ordinalOf(i: number) {
 }
 
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
-  if (spy.mock.calls) {
+  if (spy.mock.calls.length) {
     msg += c.gray(
-      `\n\nReceived: \n\n${spy.mock.calls
+      `\n\nReceived:\n\n${spy.mock.calls
         .map((callArg, i) => {
           let methodCall = c.bold(
             `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
@@ -1238,29 +1270,31 @@ function formatReturns(
   msg: string,
   showActualReturn?: any,
 ) {
-  msg += c.gray(
-    `\n\nReceived: \n\n${results
-      .map((callReturn, i) => {
-        let methodCall = c.bold(
-          `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
-        )
-        if (showActualReturn) {
-          methodCall += diff(showActualReturn, callReturn.value, {
-            omitAnnotationLines: true,
-          })
-        }
-        else {
-          methodCall += stringify(callReturn)
-            .split('\n')
-            .map(line => `    ${line}`)
-            .join('\n')
-        }
+  if (results.length) {
+    msg += c.gray(
+      `\n\nReceived:\n\n${results
+        .map((callReturn, i) => {
+          let methodCall = c.bold(
+            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+          )
+          if (showActualReturn) {
+            methodCall += diff(showActualReturn, callReturn.value, {
+              omitAnnotationLines: true,
+            })
+          }
+          else {
+            methodCall += stringify(callReturn)
+              .split('\n')
+              .map(line => `    ${line}`)
+              .join('\n')
+          }
 
-        methodCall += '\n'
-        return methodCall
-      })
-      .join('\n')}`,
-  )
+          methodCall += '\n'
+          return methodCall
+        })
+        .join('\n')}`,
+    )
+  }
   msg += c.gray(
     `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
   )

@@ -1,22 +1,45 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest/node'
-import { runVitest } from '../../test-utils'
-import { browser } from '../settings'
+import type { TestUserConfig } from 'vitest/node'
+import type { RunVitestConfig, TestFsStructure, VitestRunnerCLIOptions } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
+import { instances, provider } from '../settings'
 
-export { browser, instances, provider } from '../settings'
+export { instances, provider } from '../settings'
+
+export async function runInlineBrowserTests(
+  structure: TestFsStructure,
+  config?: RunVitestConfig,
+  options?: VitestRunnerCLIOptions,
+) {
+  return runInlineTests(
+    structure,
+    {
+      watch: false,
+      reporters: 'none',
+      ...config,
+      browser: {
+        enabled: true,
+        provider,
+        instances,
+        headless: true,
+        ...config?.browser,
+      } as TestUserConfig['browser'],
+    },
+    options,
+  )
+}
 
 export async function runBrowserTests(
-  config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> },
+  config?: Omit<TestUserConfig, 'browser'> & { browser?: Partial<TestUserConfig['browser']> },
   include?: string[],
   viteOverrides?: Partial<ViteUserConfig>,
+  runnerOptions?: VitestRunnerCLIOptions,
 ) {
   return runVitest({
     watch: false,
     reporters: 'none',
     ...config,
-    browser: {
-      headless: browser !== 'safari',
-      ...config?.browser,
-    } as UserConfig['browser'],
-  }, include, 'test', viteOverrides)
+    browser: { headless: true, ...config?.browser },
+    $viteConfig: viteOverrides,
+  }, include, runnerOptions)
 }

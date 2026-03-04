@@ -22,8 +22,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Tester, TesterContext } from './types'
-import { isObject } from '@vitest/utils'
+import { isObject } from '@vitest/utils/helpers'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -38,7 +40,7 @@ export function equals(
 
 const functionToString = Function.prototype.toString
 
-export function isAsymmetric(obj: any) {
+export function isAsymmetric(obj: any): obj is AsymmetricMatcher<any> {
   return (
     !!obj
     && typeof obj === 'object'
@@ -47,7 +49,7 @@ export function isAsymmetric(obj: any) {
   )
 }
 
-export function hasAsymmetric(obj: any, seen = new Set()): boolean {
+export function hasAsymmetric(obj: any, seen: Set<any> = new Set()): boolean {
   if (seen.has(obj)) {
     return false
   }
@@ -67,7 +69,7 @@ export function hasAsymmetric(obj: any, seen = new Set()): boolean {
   return false
 }
 
-function asymmetricMatch(a: any, b: any) {
+function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
   const asymmetricA = isAsymmetric(a)
   const asymmetricB = isAsymmetric(b)
 
@@ -76,13 +78,28 @@ function asymmetricMatch(a: any, b: any) {
   }
 
   if (asymmetricA) {
-    return a.asymmetricMatch(b)
+    return a.asymmetricMatch(b, customTesters)
   }
 
   if (asymmetricB) {
-    return b.asymmetricMatch(a)
+    return b.asymmetricMatch(a, customTesters)
   }
 }
+
+// https://github.com/jestjs/jest/blob/905bcbced3d40cdf7aadc4cdf6fb731c4bb3dbe3/packages/expect-utils/src/utils.ts#L509
+export function isError(value: unknown): value is Error {
+  if (typeof Error.isError === 'function') {
+    return Error.isError(value)
+  }
+  switch (Object.prototype.toString.call(value)) {
+    case '[object Error]':
+    case '[object Exception]':
+    case '[object DOMException]':
+      return true
+    default:
+      return value instanceof Error
+  }
+};
 
 // Equality function lovingly adapted from isEqual in
 //   [Underscore](http://underscorejs.org)
@@ -96,7 +113,7 @@ function eq(
 ): boolean {
   let result = true
 
-  const asymmetricResult = asymmetricMatch(a, b)
+  const asymmetricResult = asymmetricMatch(a, b, customTesters)
   if (asymmetricResult !== undefined) {
     return asymmetricResult
   }
@@ -159,6 +176,16 @@ function eq(
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
+    case '[object Temporal.Instant]':
+    case '[object Temporal.ZonedDateTime]':
+    case '[object Temporal.PlainDateTime]':
+    case '[object Temporal.PlainDate]':
+    case '[object Temporal.PlainTime]':
+    case '[object Temporal.PlainYearMonth]':
+    case '[object Temporal.PlainMonthDay]':
+      return a.equals(b)
+    case '[object Temporal.Duration]':
+      return a.toString() === b.toString()
   }
   if (typeof a !== 'object' || typeof b !== 'object') {
     return false
@@ -192,7 +219,7 @@ function eq(
     return false
   }
 
-  if (a instanceof Error && b instanceof Error) {
+  if (isError(a) && isError(b)) {
     try {
       return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
     }
@@ -218,7 +245,7 @@ function eq(
     // Deep compare each member
     result
       = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
+        && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
 
     if (!result) {
       return false
@@ -245,7 +272,7 @@ function isErrorEqual(
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
 
   let result = (
-    Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+    Object.prototype.toString.call(a) === Object.prototype.toString.call(b)
     && a.name === b.name
     && a.message === b.message
   )
@@ -284,10 +311,10 @@ function hasDefinedKey(obj: any, key: string) {
 }
 
 function hasKey(obj: any, key: string) {
-  return Object.prototype.hasOwnProperty.call(obj, key)
+  return Object.hasOwn(obj, key)
 }
 
-export function isA(typeName: string, value: unknown) {
+export function isA(typeName: string, value: unknown): boolean {
   return Object.prototype.toString.apply(value) === `[object ${typeName}]`
 }
 
@@ -304,7 +331,7 @@ function isDomNode(obj: any): boolean {
   )
 }
 
-export function fnNameFor(func: Function) {
+export function fnNameFor(func: Function): string {
   if (func.name) {
     return func.name
   }
@@ -332,7 +359,7 @@ export function hasProperty(obj: object | null, property: string): boolean {
     return false
   }
 
-  if (Object.prototype.hasOwnProperty.call(obj, property)) {
+  if (Object.hasOwn(obj, property)) {
     return true
   }
 
@@ -346,7 +373,7 @@ const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_ORDERED_SENTINEL = '@@__IMMUTABLE_ORDERED__@@'
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 
-export function isImmutableUnorderedKeyed(maybeKeyed: any) {
+export function isImmutableUnorderedKeyed(maybeKeyed: any): boolean {
   return !!(
     maybeKeyed
     && maybeKeyed[IS_KEYED_SENTINEL]
@@ -354,7 +381,7 @@ export function isImmutableUnorderedKeyed(maybeKeyed: any) {
   )
 }
 
-export function isImmutableUnorderedSet(maybeSet: any) {
+export function isImmutableUnorderedSet(maybeSet: any): boolean {
   return !!(
     maybeSet
     && maybeSet[IS_SET_SENTINEL]
@@ -538,7 +565,7 @@ export function iterableEquality(
   ) {
     const aEntries = Object.entries(a)
     const bEntries = Object.entries(b)
-    if (!equals(aEntries, bEntries)) {
+    if (!equals(aEntries, bEntries, filteredCustomTesters)) {
       return false
     }
   }
@@ -561,7 +588,7 @@ function hasPropertyInObject(object: object, key: string | symbol): boolean {
   }
 
   return (
-    Object.prototype.hasOwnProperty.call(object, key)
+    Object.hasOwn(object, key)
     || hasPropertyInObject(Object.getPrototypeOf(object), key)
   )
 }
@@ -569,9 +596,11 @@ function hasPropertyInObject(object: object, key: string | symbol): boolean {
 function isObjectWithKeys(a: any) {
   return (
     isObject(a)
-    && !(a instanceof Error)
+    && !isError(a)
     && !Array.isArray(a)
     && !(a instanceof Date)
+    && !(a instanceof Set)
+    && !(a instanceof Map)
   )
 }
 
@@ -602,12 +631,12 @@ export function subsetEquality(
             seenReferences.set(subset[key], true)
           }
           const result
-          = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            ...filteredCustomTesters,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            = object != null
+              && hasPropertyInObject(object, key)
+              && equals(object[key], subset[key], [
+                ...filteredCustomTesters,
+                subsetEqualityWithContext(seenReferences),
+              ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -687,7 +716,7 @@ export function generateToBeMessage(
   deepEqualityName: string,
   expected = '#{this}',
   actual = '#{exp}',
-) {
+): string {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName)) {
@@ -739,7 +768,7 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-            // return "expected" subset to avoid showing irrelavant toMatchObject diff
+            // return "expected" subset to avoid showing irrelevant toMatchObject diff
             return subset
           }
 
@@ -759,9 +788,9 @@ export function getObjectSubset(
               trimmed[key] = seenReferences.has(object[key])
                 ? seenReferences.get(object[key])
                 : getObjectSubsetWithContext(seenReferences)(
-                  object[key],
-                  subset[key],
-                )
+                    object[key],
+                    subset[key],
+                  )
             }
             else {
               if (!seenReferences.has(object[key])) {
@@ -787,4 +816,16 @@ export function getObjectSubset(
       }
 
   return { subset: getObjectSubsetWithContext()(object, subset), stripped }
+}
+
+/**
+ * Detects if an object is a Standard Schema V1 compatible schema
+ */
+export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
+  return (
+    !!obj
+    && (typeof obj === 'object' || typeof obj === 'function')
+    && obj['~standard']
+    && typeof obj['~standard'].validate === 'function'
+  )
 }

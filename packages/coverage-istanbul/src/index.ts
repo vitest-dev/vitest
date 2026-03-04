@@ -3,7 +3,7 @@ import type { CoverageProviderModule } from 'vitest/node'
 import type { IstanbulCoverageProvider } from './provider'
 import { COVERAGE_STORE_KEY } from './constants'
 
-export default {
+const mod: CoverageProviderModule = {
   takeCoverage() {
     // @ts-expect-error -- untyped global
     return globalThis[COVERAGE_STORE_KEY]
@@ -41,9 +41,10 @@ export default {
     const providerPath = './provider.js'
     const { IstanbulCoverageProvider } = (await import(
       /* @vite-ignore */
-      providerPath
+      providerPath,
     )) as typeof import('./provider')
 
     return new IstanbulCoverageProvider()
   },
-} satisfies CoverageProviderModule
+}
+export default mod

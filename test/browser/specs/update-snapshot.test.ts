@@ -38,7 +38,7 @@ test('update snapshot', async () => {
   expect(files).toHaveLength(1)
   expect(files[0].result.state).toBe('fail')
 
-  // updateSnapshot API to simulate "u" commmand
+  // updateSnapshot API to simulate "u" command
   await vitest.updateSnapshot()
 
   // verify snapshot value is updated
@@ -46,7 +46,7 @@ test('update snapshot', async () => {
   expect(snapshotData).toContain('`1`')
 
   const testFile = readFileSync(testPath, 'utf-8')
-  expect(testFile).toContain('expect(fn).toMatchInlineSnapshot(`[MockFunction spy]`)')
+  expect(testFile).toContain('expect(fn).toMatchInlineSnapshot(`[MockFunction]`)')
   expect(testFile).toMatchSnapshot()
 
   // test passes

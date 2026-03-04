@@ -11,3 +11,7 @@ it('add', () => {
   })
   expect(1 + 1).toEqual(2)
 })
+
+it('has tags', { tags: ['db', 'flaky'] }, () => {
+  // ...
+})

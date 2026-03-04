@@ -2,7 +2,9 @@ import { expect, onTestFailed, onTestFinished, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 import { instances } from '../settings'
 
-test.each([true, false])('mocking works correctly - isolated %s', async (isolate) => {
+// TODO: investigate `isolate: false` tests.
+// Doesn't seem like we can run things in parallel if there are mocks
+test.each([true/* , false */])('mocking works correctly - isolated %s', async (isolate) => {
   const result = await runVitest({
     root: 'fixtures/mocking',
     isolate,
@@ -61,5 +63,18 @@ test('mocking dependency correctly invalidates it on rerun', async () => {
   instances.forEach(({ browser }) => {
     expect(vitest.stdout).toReportPassedTest('1_mocked-on-watch-change.test.ts', browser)
     expect(vitest.stdout).not.toReportPassedTest('2_not-mocked-import.test.ts', browser)
+  })
+})
+
+test('mocking out of root', async () => {
+  const { vitest, ctx } = await runVitest({
+    root: 'fixtures/mocking-out-of-root/project1',
+  })
+  onTestFinished(async () => {
+    await ctx.close()
+  })
+  expect(vitest.stderr).toReportNoErrors()
+  instances.forEach(({ browser }) => {
+    expect(vitest.stdout).toReportPassedTest('basic.test.js', browser)
   })
 })

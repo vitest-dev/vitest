@@ -31,7 +31,7 @@ export interface FileFilter {
   lineNumber?: undefined | number
 }
 
-export function groupFilters(filters: FileFilter[]) {
+export function groupFilters(filters: FileFilter[]): Record<string, number[]> {
   const groupedFilters_ = groupBy(filters, f => f.filename)
   const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
     .map((entry) => {

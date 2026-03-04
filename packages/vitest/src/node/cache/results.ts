@@ -1,7 +1,10 @@
 import type { File } from '@vitest/runner'
+import type { Logger } from '../logger'
 import type { ResolvedConfig } from '../types/config'
-import fs from 'node:fs'
+import fs, { existsSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'pathe'
+import { Vitest } from '../core'
 
 export interface SuiteResultCache {
   failed: boolean
@@ -15,26 +18,33 @@ export class ResultsCache {
   private version: string
   private root = '/'
 
-  constructor(version: string) {
-    this.version = version
+  constructor(private logger: Logger) {
+    this.version = Vitest.version
   }
 
-  public getCachePath() {
+  public getCachePath(): string | null {
     return this.cachePath
   }
 
-  setConfig(root: string, config: ResolvedConfig['cache']) {
+  setConfig(root: string, config: ResolvedConfig['cache']): void {
     this.root = root
     if (config) {
       this.cachePath = resolve(config.dir, 'results.json')
     }
   }
 
-  getResults(key: string) {
+  getResults(key: string): SuiteResultCache | undefined {
     return this.cache.get(key)
   }
 
-  async readFromCache() {
+  async clearCache(): Promise<void> {
+    if (this.cachePath && existsSync(this.cachePath)) {
+      await rm(this.cachePath, { force: true, recursive: true })
+      this.logger.log('[cache] cleared results cache at', this.cachePath)
+    }
+  }
+
+  async readFromCache(): Promise<void> {
     if (!this.cachePath) {
       return
     }
@@ -45,8 +55,9 @@ export class ResultsCache {
 
     const resultsCache = await fs.promises.readFile(this.cachePath, 'utf8')
     const { results, version } = JSON.parse(resultsCache || '[]')
+    const [major, minor] = version.split('.')
     // handling changed in 0.30.0
-    if (Number(version.split('.')[1]) >= 30) {
+    if (major > 0 || Number(minor) >= 30) {
       this.cache = new Map(results)
       this.version = version
       results.forEach(([spec]: [string]) => {
@@ -58,7 +69,7 @@ export class ResultsCache {
     }
   }
 
-  updateResults(files: File[]) {
+  updateResults(files: File[]): void {
     files.forEach((file) => {
       const result = file.result
       if (!result) {
@@ -74,7 +85,7 @@ export class ResultsCache {
     })
   }
 
-  removeFromCache(filepath: string) {
+  removeFromCache(filepath: string): void {
     this.cache.forEach((_, key) => {
       if (key.endsWith(filepath)) {
         this.cache.delete(key)
@@ -82,7 +93,7 @@ export class ResultsCache {
     })
   }
 
-  async writeToCache() {
+  async writeToCache(): Promise<void> {
     if (!this.cachePath) {
       return
     }

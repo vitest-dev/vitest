@@ -21,3 +21,25 @@ test.each([
   expect(stderr).toContain(`Error: env.mode should be equal to "${expectedMode}"`)
   expect(stdout).toBe('')
 })
+
+test.each([
+  { options: ['run'], expected: 'run' },
+  { options: ['run', '--watch'], expected: 'watch' },
+  { options: ['watch'], expected: 'watch' },
+] as const)(`vitest $options.0 $options.1 resolves to $expected-mode`, async ({ options, expected }) => {
+  const { vitest } = await testUtils.runVitestCli(...options, '--root', 'fixtures/run-mode')
+
+  if (expected === 'watch') {
+    await vitest.waitForStdout('Test Files  1 passed (1)')
+
+    expect(vitest.stdout).not.toContain('RUN')
+    expect(vitest.stdout).toContain('DEV')
+    expect(vitest.stdout).toContain('Waiting for file changes')
+  }
+
+  if (expected === 'run') {
+    expect(vitest.stdout).toContain('RUN')
+    expect(vitest.stdout).not.toContain('DEV')
+    expect(vitest.stdout).not.toContain('Waiting for file changes')
+  }
+})

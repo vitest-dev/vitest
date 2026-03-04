@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vitest'
+import { chai, expect, test, vi } from 'vitest'
 
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
@@ -8,10 +8,10 @@ test('simple usage', async () => {
 
   await expect(async () => {
     await expect.poll(() => Promise.resolve(1)).resolves.toBe(1)
-  }).rejects.toThrowError('expect.poll() is not supported in combination with .resolves')
+  }).rejects.toThrow('expect.poll() is not supported in combination with .resolves')
   await expect(async () => {
-    await expect.poll(() => Promise.reject(new Error('empty'))).rejects.toThrowError('empty')
-  }).rejects.toThrowError('expect.poll() is not supported in combination with .rejects')
+    await expect.poll(() => Promise.reject(new Error('empty'))).rejects.toThrow('empty')
+  }).rejects.toThrow('expect.poll() is not supported in combination with .rejects')
 
   const unsupported = [
     'matchSnapshot',
@@ -29,18 +29,18 @@ test('simple usage', async () => {
   for (const key of unsupported) {
     await expect(async () => {
       await expect.poll(() => Promise.resolve(1))[key as 'matchSnapshot']()
-    }).rejects.toThrowError(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
+    }).rejects.toThrow(`expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`)
   }
 })
 
 test('timeout', async () => {
   await expect(async () => {
     await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
-  }).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+  }).rejects.toThrow(expect.objectContaining({
+    message: 'expected false to be true // Object.is equality',
     stack: expect.stringContaining('expect-poll.test.ts:38:68'),
     cause: expect.objectContaining({
-      message: 'expected false to be true // Object.is equality',
+      message: 'Matcher did not succeed in time.',
     }),
   }))
 })
@@ -50,7 +50,7 @@ test('interval', async () => {
   await expect(async () => {
     // using big values because CI can be slow
     await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
-  }).rejects.toThrowError()
+  }).rejects.toThrow()
   // CI can be unstable, but there should be always at least 5 calls
   expect(fn.mock.calls.length >= 4).toBe(true)
 })
@@ -60,7 +60,7 @@ test('fake timers don\'t break it', async () => {
   vi.useFakeTimers()
   await expect(async () => {
     await expect.poll(() => false, { timeout: 100 }).toBe(true)
-  }).rejects.toThrowError('Matcher did not succeed in 100ms')
+  }).rejects.toThrow('expected false to be true // Object.is equality')
   vi.useRealTimers()
   const diff = Date.now() - now
   expect(diff >= 100).toBe(true)
@@ -90,19 +90,60 @@ test('toBeDefined', async () => {
 
   await expect(() =>
     expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined(),
-  ).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+  ).rejects.toThrow(expect.objectContaining({
+    message: 'expected 1 to be undefined',
     cause: expect.objectContaining({
-      message: 'expected 1 to be undefined',
+      message: 'Matcher did not succeed in time.',
     }),
   }))
 
   await expect(() =>
     expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined(),
-  ).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+  ).rejects.toThrow(expect.objectContaining({
+    message: 'expected undefined to be defined',
     cause: expect.objectContaining({
-      message: 'expected undefined to be defined',
+      message: 'Matcher did not succeed in time.',
+    }),
+  }))
+})
+
+test('should set _isLastPollAttempt flag on last call', async () => {
+  const fn = vi.fn(function (this: object) {
+    return chai.util.flag(this, '_isLastPollAttempt')
+  })
+  await expect(async () => {
+    await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
+  }).rejects.toThrow()
+  fn.mock.results.forEach((result, index) => {
+    const isLastCall = index === fn.mock.results.length - 1
+    expect(result.value).toBe(isLastCall ? true : undefined)
+  })
+})
+
+test('should handle success on last attempt', async () => {
+  const fn = vi.fn(function (this: object) {
+    if (chai.util.flag(this, '_isLastPollAttempt')) {
+      return 1
+    }
+    return undefined
+  })
+  await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(1)
+})
+
+test('should handle failure on last attempt', async () => {
+  const fn = vi.fn(function (this: object) {
+    if (chai.util.flag(this, '_isLastPollAttempt')) {
+      return 3
+    }
+    return 2
+  })
+  await expect(async () => {
+    await expect.poll(fn, { interval: 10, timeout: 100 }).toBe(1)
+  }).rejects.toThrow(expect.objectContaining({
+    // makes sure cause message reflects the last attempt value
+    message: 'expected 3 to be 1 // Object.is equality',
+    cause: expect.objectContaining({
+      message: 'Matcher did not succeed in time.',
     }),
   }))
 })

@@ -19,7 +19,11 @@ export type {
 } from './registry'
 
 export type {
+  ModuleMockContext,
   ModuleMockFactory,
   ModuleMockFactoryWithHelper,
   ModuleMockOptions,
+  ServerIdResolution,
+  ServerMockResolution,
+  TestModuleMocker,
 } from './types'

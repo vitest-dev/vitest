@@ -1,12 +1,10 @@
 import { expect } from 'vitest'
-import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
-test('{ all: true } includes uncovered files that require custom transform', async () => {
+test('uncovered files that require custom transform', async () => {
   await runVitest({
-    workspace: 'fixtures/configs/vitest.workspace.multi-transforms.ts',
+    config: './fixtures/configs/vitest.config.multi-transforms.ts',
     coverage: {
-      all: true,
-      extension: ['.ts', '.custom-1', '.custom-2'],
       reporter: ['json', 'html'],
       include: ['**/*.custom-1', '**/*.custom-2', '**/math.ts'],
     },
@@ -26,18 +24,40 @@ test('{ all: true } includes uncovered files that require custom transform', asy
     ]
   `)
 
-  const covered1 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/covered.custom-1')
-  const uncovered1 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/uncovered.custom-1')
-  const covered2 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2')
-  const uncovered2 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2')
+  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
 
-  // Coverage maps indicate whether source maps are correct. Check html-report if these change
-  await expect(JSON.stringify(covered1, null, 2)).toMatchFileSnapshot(snapshotName('covered-1'))
-  await expect(JSON.stringify(uncovered1, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-1'))
-  await expect(JSON.stringify(covered2, null, 2)).toMatchFileSnapshot(snapshotName('covered-2'))
-  await expect(JSON.stringify(uncovered2, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-2'))
+  expect(fileCoverages).toMatchInlineSnapshot(`
+    {
+      "<process-cwd>/fixtures/src/covered.custom-1": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+      "<process-cwd>/fixtures/src/math.ts": {
+        "branches": "0/0 (100%)",
+        "functions": "1/4 (25%)",
+        "lines": "1/4 (25%)",
+        "statements": "1/4 (25%)",
+      },
+      "<process-cwd>/fixtures/src/uncovered.custom-1": {
+        "branches": "0/0 (100%)",
+        "functions": "0/1 (0%)",
+        "lines": "0/1 (0%)",
+        "statements": "0/1 (0%)",
+      },
+      "<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2": {
+        "branches": "0/0 (100%)",
+        "functions": "1/2 (50%)",
+        "lines": "1/2 (50%)",
+        "statements": "1/2 (50%)",
+      },
+      "<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2": {
+        "branches": "0/0 (100%)",
+        "functions": "0/1 (0%)",
+        "lines": "0/1 (0%)",
+        "statements": "0/1 (0%)",
+      },
+    }
+  `)
 })
-
-function snapshotName(label: string) {
-  return `__snapshots__/custom-file-${label}-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`
-}

@@ -1,0 +1,65 @@
+{
+  "name": "@vitest/browser-playwright",
+  "type": "module",
+  "version": "4.1.0-beta.5",
+  "description": "Browser running for Vitest using playwright",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://vitest.dev/config/browser/playwright",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/browser-playwright"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "browser",
+    "playwright",
+    "component",
+    "mocks",
+    "test",
+    "testing"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./context": {
+      "types": "./context.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "context.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "build": "premove dist && pnpm rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'"
+  },
+  "peerDependencies": {
+    "playwright": "*",
+    "vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "@vitest/browser": "workspace:*",
+    "@vitest/mocker": "workspace:*",
+    "tinyrainbow": "catalog:"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.2",
+    "vitest": "workspace:*"
+  }
+}

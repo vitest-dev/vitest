@@ -3,7 +3,7 @@
 
 import { expect, test } from 'vitest'
 
-test('react 18', () => {
+test('react 19', () => {
   expect(<div>hello</div>).toMatchInlineSnapshot(`
     <div>
       hello

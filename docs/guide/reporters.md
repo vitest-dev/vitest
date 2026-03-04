@@ -5,7 +5,7 @@ outline: deep
 
 # Reporters
 
-Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/#reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
+Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
 
 Using reporters via command line:
 
@@ -40,7 +40,7 @@ export default defineConfig({
 
 ## Reporter Output
 
-By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/#outputfile) either in your Vite configuration file or via CLI.
+By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
 
 :::code-group
 ```bash [CLI]
@@ -141,38 +141,27 @@ Final output after tests have finished:
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
-### Basic Reporter
+If there is only one test file running, Vitest will output the full test tree of that file, similar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
 
-The `basic` reporter is equivalent to `default` reporter without `summary`.
-
-:::code-group
-```bash [CLI]
-npx vitest --reporter=basic
-```
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: ['basic']
-  },
-})
-```
-:::
-
-Example output using basic reporter:
 ```bash
 ✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (2) 746ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
 
- Test Files  2 passed (2)
-      Tests  4 passed (4)
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
    Start at  12:34:32
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
 ### Verbose Reporter
 
-Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
+The verbose reporter prints every test case once it is finished. It does not report suites or files separately. If `--includeTaskLocation` is enabled, it will also include the location of each test in the output. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+In addition to this, the `verbose` reporter prints test error messages right away. The full test error is reported when the test run is finished.
+
+This is the only terminal reporter that reports [annotations](/guide/test-annotations) when the test doesn't fail.
 
 :::code-group
 ```bash [CLI]
@@ -184,6 +173,54 @@ export default defineConfig({
   test: {
     reporters: [
       ['verbose', { summary: false }]
+    ]
+  },
+})
+```
+:::
+
+Example output:
+
+```bash
+✓ __tests__/file1.test.ts > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+An example with `--includeTaskLocation`:
+
+```bash
+✓ __tests__/file1.test.ts:2:1 > first test file > 2 + 2 should equal 4 1ms
+✓ __tests__/file1.test.ts:3:1 > first test file > 4 - 2 should equal 2 1ms
+✓ __tests__/file2.test.ts:2:1 > second test file > 1 + 1 should equal 2 1ms
+✓ __tests__/file2.test.ts:3:1 > second test file > 2 - 1 should equal 1 1ms
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  12:34:32
+   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+```
+
+### Tree Reporter
+
+The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+:::code-group
+```bash [CLI]
+npx vitest --reporter=tree
+```
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['tree', { summary: false }]
     ]
   },
 })
@@ -228,7 +265,7 @@ Example of final terminal output for a passing test suite:
 
 ### Dot Reporter
 
-Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the `basic` reporter summary for the suite.
+Prints a single dot for each completed test to provide minimal output while still showing all tests that have run. Details are only provided for failed tests, along with the summary for the suite.
 
 :::code-group
 ```bash [CLI]
@@ -257,7 +294,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/#outputfile) configuration option.
+Outputs a report of the test results in JUnit XML format. Can either be printed to the terminal or written to an XML file using the [`outputFile`](/config/outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -308,7 +345,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -380,7 +417,7 @@ Since Vitest 3, the JSON reporter includes coverage information in `coverageMap`
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.
 
-Output file can be specified using the [`outputFile`](/config/#outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
+Output file can be specified using the [`outputFile`](/config/outputfile) configuration option. If no `outputFile` option is provided, a new HTML file will be created.
 
 :::code-group
 ```bash [CLI]
@@ -492,28 +529,118 @@ export default defineConfig({
 ```
 :::
 
-### Github Actions Reporter {#github-actions-reporter}
+### GitHub Actions Reporter {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
-to provide annotations for test failures. This reporter is automatically enabled with a [`default`](#default-reporter) reporter when `process.env.GITHUB_ACTIONS === 'true'`.
+to provide annotations for test failures. This reporter is automatically enabled when the `reporters` option is not configured and `process.env.GITHUB_ACTIONS === 'true'` (on GitHub Actions environment).
 
-If you configure non-default reporters, you need to explicitly add `github-actions`.
+<img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
+<img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+
+If you configure reporters, you need to explicitly add `github-actions`.
 
 ```ts
 export default defineConfig({
   test: {
-    reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
+    reporters: process.env.GITHUB_ACTIONS === 'true' ? ['dot', 'github-actions'] : ['dot'],
   },
 })
 ```
 
-<img alt="Github Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
-<img alt="Github Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
+You can customize the file paths that are printed in [GitHub's annotation command format](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions) by using the `onWritePath` option. This is useful when running Vitest in a containerized environment, such as Docker, where the file paths may not match the paths in the GitHub Actions environment.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: process.env.GITHUB_ACTIONS === 'true'
+      ? [
+          'default',
+          ['github-actions', { onWritePath(path) {
+            return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
+          } }],
+        ]
+      : ['default'],
+  },
+})
+```
+
+If you are using [Annotations API](/guide/test-annotations), the reporter will automatically inline them in the GitHub UI. You can disable this by setting `displayAnnotations` option to `false`:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { displayAnnotations: false }],
+    ],
+  },
+})
+```
+
+The GitHub Actions reporter automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries.
+
+<img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
+<img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
+
+The job summary is enabled by default and writes to the path specified by `$GITHUB_STEP_SUMMARY`. You can override it by using the `jobSummary.outputPath` option:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          outputPath: '/home/runner/jobs/summary/step',
+        },
+      }],
+    ],
+  },
+})
+```
+
+To disable the job summary:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { jobSummary: { enabled: false } }],
+    ],
+  },
+})
+```
+
+The flaky tests section of the summary includes permalink URLs that link test names directly to the relevant source lines on GitHub. These links are generated automatically using environment variables that GitHub Actions provides (`$GITHUB_REPOSITORY`, `$GITHUB_SHA`, and `$GITHUB_WORKSPACE`), so no configuration is needed in most cases.
+
+If you need to override these values — for example, when running in a container or a custom environment — you can customize them via the `fileLinks` option:
+
+- `repository`: the GitHub repository in `owner/repo` format. Defaults to `process.env.GITHUB_REPOSITORY`.
+- `commitHash`: the commit SHA to use in permalink URLs. Defaults to `process.env.GITHUB_SHA`.
+- `workspacePath`: the absolute path to the root of the repository on disk. Used to compute relative file paths for the permalink URLs. Defaults to `process.env.GITHUB_WORKSPACE`.
+
+All three values must be available for the links to be generated.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          fileLinks: {
+            repository: 'owner/repo',
+            commitHash: 'abcdefg',
+            workspacePath: '/home/runner/work/repo/',
+          },
+        },
+      }],
+    ],
+  },
+})
+```
 
 ### Blob Reporter
 
 Stores test results on the machine so they can be later merged using [`--merge-reports`](/guide/cli#merge-reports) command.
-By default, stores all results in `.vitest-reports` folder, but can be overriden with `--outputFile` or `--outputFile.blob` flags.
+By default, stores all results in `.vitest-reports` folder, but can be overridden with `--outputFile` or `--outputFile.blob` flags.
 
 ```bash
 npx vitest --reporter=blob --outputFile=reports/blob-1.json
@@ -525,6 +652,9 @@ All blob reports can be merged into any report by using `--merge-reports` comman
 ```bash
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
+
+Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).
+Make sure to merge [`attachmentsDir`](/config/attachmentsdir) separately alongside blob reports on CI when using this feature.
 
 ::: tip
 Both `--reporter=blob` and `--merge-reports` do not work in watch mode.
@@ -548,7 +678,7 @@ export default defineConfig({
 ```
 :::
 
-Additionally, you can define your own [custom reporters](/advanced/reporters) and use them by specifying their file path:
+Additionally, you can define your own [custom reporters](/guide/advanced/reporters) and use them by specifying their file path:
 
 ```bash
 npx vitest --reporter=./path/to/reporter.ts

@@ -25,10 +25,10 @@ export default function HelloWorld({ name }: { name: string }) {
   test: `
 import { expect, test } from 'vitest'
 import { render } from '@testing-library/jsx'
-import HelloWorld from './HelloWorld.jsx'
+import HelloWorld from './HelloWorld.<EXT>x'
 
 test('renders name', async () => {
-  const { getByText } = render(<HelloWorld name="Vitest" />)
+  const { getByText } = await render(<HelloWorld name="Vitest" />)
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
@@ -135,6 +135,130 @@ test('renders name', async () => {
 `,
 }
 
+const litExample = {
+  name: 'HelloWorld.js',
+  js: `
+import { html, LitElement } from 'lit'
+
+export class HelloWorld extends LitElement {
+  static properties = {
+    name: { type: String },
+  }
+
+  constructor() {
+    super()
+    this.name = 'World'
+  }
+
+  render() {
+    return html\`<h1>Hello \${this.name}!</h1>\`
+  }
+}
+
+customElements.define('hello-world', HelloWorld)
+`,
+  ts: `
+import { html, LitElement } from 'lit'
+import { customElement, property } from 'lit/decorators.js'
+
+@customElement('hello-world')
+export class HelloWorld extends LitElement {
+  @property({ type: String })
+  name = 'World'
+
+  render() {
+    return html\`<h1>Hello \${this.name}!</h1>\`
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'hello-world': HelloWorld
+  }
+}
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-lit'
+import { html } from 'lit'
+import './HelloWorld.js'
+
+test('renders name', async () => {
+  const screen = render(html\`<hello-world name="Vitest"></hello-world>\`)
+  const element = screen.getByText('Hello Vitest!')
+  await expect.element(element).toBeInTheDocument()
+})
+`,
+}
+
+const qwikExample = {
+  name: 'HelloWorld.jsx',
+  js: `
+import { component$ } from '@builder.io/qwik'
+
+export default component$(({ name }) => {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+})
+`,
+  ts: `
+import { component$ } from '@builder.io/qwik'
+
+export default component$(({ name }: { name: string }) => {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+})
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-qwik'
+import HelloWorld from './HelloWorld.tsx'
+
+test('renders name', async () => {
+  const { getByText } = render(<HelloWorld name="Vitest" />)
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
+})
+`,
+}
+
+const preactExample = {
+  name: 'HelloWorld.jsx',
+  js: `
+export default function HelloWorld({ name }) {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+}
+`,
+  ts: `
+export default function HelloWorld({ name }: { name: string }) {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+}
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-preact'
+import HelloWorld from './HelloWorld.<EXT>x'
+
+test('renders name', async () => {
+  const { getByText } = render(<HelloWorld name="Vitest" />)
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
+})
+`,
+}
+
 const vanillaExample = {
   name: 'HelloWorld.js',
   js: `
@@ -177,28 +301,33 @@ test('renders name', () => {
 function getExampleTest(framework: string) {
   switch (framework) {
     case 'solid':
-    case 'preact':
       return {
         ...jsxExample,
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
       }
+    case 'preact':
+      return preactExample
     case 'react':
       return {
         ...jsxExample,
-        test: jsxExample.test.replace('@testing-library/jsx', 'vitest-browser-react'),
+        test: jsxExample.test.replace('@testing-library/jsx', `vitest-browser-${framework}`),
       }
     case 'vue':
       return vueExample
     case 'svelte':
       return svelteExample
+    case 'lit':
+      return litExample
     case 'marko':
       return markoExample
+    case 'qwik':
+      return qwikExample
     default:
       return vanillaExample
   }
 }
 
-export async function generateExampleFiles(framework: string, lang: 'ts' | 'js') {
+export async function generateExampleFiles(framework: string, lang: 'ts' | 'js'): Promise<string> {
   const example = getExampleTest(framework)
   let fileName = example.name
   const folder = resolve(process.cwd(), 'vitest-example')
@@ -215,6 +344,8 @@ export async function generateExampleFiles(framework: string, lang: 'ts' | 'js')
   else if (fileName.endsWith('.js') && lang === 'ts') {
     fileName = fileName.replace('.js', '.ts')
   }
+
+  example.test = example.test.replace('<EXT>', lang)
 
   const filePath = resolve(folder, fileName)
   const testPath = resolve(folder, `HelloWorld.test.${isJSX ? `${lang}x` : lang}`)

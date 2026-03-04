@@ -49,7 +49,7 @@ export class EsmExecutor {
   public async createEsModule(
     fileURL: string,
     getCode: () => Promise<string> | string,
-  ) {
+  ): Promise<VMModule> {
     const cached = this.moduleCache.get(fileURL)
     if (cached) {
       return cached
@@ -66,9 +66,9 @@ export class EsmExecutor {
     const code = await getCode()
     // TODO: should not be allowed in strict mode, implement in #2854
     if (fileURL.endsWith('.json')) {
-      const m = new SyntheticModule(['default'], () => {
+      const m = new SyntheticModule(['default'], function () {
         const result = JSON.parse(code)
-        m.setExport('default', result)
+        this.setExport('default', result)
       })
       this.moduleCache.set(fileURL, m)
       return m
@@ -96,7 +96,7 @@ export class EsmExecutor {
     return m
   }
 
-  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer) {
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer<ArrayBuffer>): Promise<VMModule> {
     const cached = this.moduleCache.get(fileUrl)
     if (cached) {
       return cached
@@ -106,7 +106,7 @@ export class EsmExecutor {
     return m
   }
 
-  public async createNetworkModule(fileUrl: string) {
+  public async createNetworkModule(fileUrl: string): Promise<VMModule> {
     // https://nodejs.org/api/esm.html#https-and-http-imports
     if (fileUrl.startsWith('http:')) {
       const url = new URL(fileUrl)
@@ -127,7 +127,7 @@ export class EsmExecutor {
       fetch(fileUrl).then(r => r.text()))
   }
 
-  public async loadWebAssemblyModule(source: Buffer, identifier: string) {
+  public async loadWebAssemblyModule(source: Buffer<ArrayBuffer>, identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
     if (cached) {
       return cached
@@ -148,15 +148,17 @@ export class EsmExecutor {
       }
     }
 
+    const evaluateModule = (module: VMModule) => this.evaluateModule(module)
+
     const syntheticModule = new SyntheticModule(
       exports.map(({ name }) => name),
-      async () => {
+      async function () {
         const importsObject: WebAssembly.Imports = {}
         for (const { module, name } of imports) {
           if (!importsObject[module]) {
             importsObject[module] = {}
           }
-          await this.evaluateModule(moduleLookup[module])
+          await evaluateModule(moduleLookup[module])
           importsObject[module][name] = (moduleLookup[module].namespace as any)[
             name
           ]
@@ -166,7 +168,7 @@ export class EsmExecutor {
           importsObject,
         )
         for (const { name } of exports) {
-          syntheticModule.setExport(name, wasmInstance.exports[name])
+          this.setExport(name, wasmInstance.exports[name])
         }
       },
       { context: this.context, identifier },
@@ -175,11 +177,11 @@ export class EsmExecutor {
     return syntheticModule
   }
 
-  public cacheModule(identifier: string, module: VMModule) {
+  public cacheModule(identifier: string, module: VMModule): void {
     this.moduleCache.set(identifier, module)
   }
 
-  public resolveCachedModule(identifier: string) {
+  public resolveCachedModule(identifier: string): VMModule | Promise<VMModule> | undefined {
     return this.moduleCache.get(identifier)
   }
 
@@ -229,9 +231,9 @@ export class EsmExecutor {
     if (mime === 'application/json') {
       const module = new SyntheticModule(
         ['default'],
-        () => {
+        function () {
           const obj = JSON.parse(code)
-          module.setExport('default', obj)
+          this.setExport('default', obj)
         },
         { context: this.context, identifier },
       )

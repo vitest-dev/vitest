@@ -10,7 +10,6 @@ test('reporter as string', async () => {
     include,
     coverage: {
       reporter: 'json',
-      all: false,
     },
   })
 
@@ -28,7 +27,6 @@ test('reporter as string when coverage is disabled', async () => {
     coverage: {
       enabled: false,
       reporter: 'json',
-      all: false,
     },
   })
 
@@ -40,7 +38,6 @@ test('reporter as list of strings', async () => {
     include,
     coverage: {
       reporter: ['json', 'lcov'],
-      all: false,
     },
   })
 
@@ -55,7 +52,6 @@ test('reporter as list of lists', async () => {
     include,
     coverage: {
       reporter: [['json'], ['text', { file: 'custom-text-report' }]],
-      all: false,
     },
   })
 
@@ -73,7 +69,6 @@ test('all reporter variants mixed', async () => {
         ['lcov'],
         ['text', { file: 'custom-text-report' }],
       ],
-      all: false,
     },
   })
 

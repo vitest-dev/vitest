@@ -1,11 +1,11 @@
 {
   "name": "@vitest/spy",
   "type": "module",
-  "version": "3.0.0-beta.3",
+  "version": "4.1.0-beta.5",
   "description": "Lightweight Jest compatible spy implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/spy#readme",
+  "homepage": "https://vitest.dev/api/mock",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,13 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "mock",
+    "spy",
+    "intercept"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -29,10 +36,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch"
-  },
-  "dependencies": {
-    "tinyspy": "^3.0.2"
   }
 }

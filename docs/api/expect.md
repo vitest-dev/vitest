@@ -6,7 +6,19 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+
+```ts
+export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
+  <T>(actual: T, message?: string): Assertion<T>
+  extend: (expects: MatchersObject) => void
+  anything: () => any
+  any: (constructor: unknown) => any
+  getState: () => MatcherState
+  setState: (state: Partial<MatcherState>) => void
+  not: AsymmetricMatchersContaining
+}
+```
 
 For example, this code asserts that an `input` value is equal to `2`. If it's not, the assertion will throw an error, and the test will fail.
 
@@ -19,12 +31,42 @@ expect(input).to.equal(2) // chai API
 expect(input).toBe(2) // jest API
 ```
 
-Technically this example doesn't use [`test`](/api/#test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/).
+Technically this example doesn't use [`test`](/api/test) function, so in the console you will see Node.js error instead of Vitest output. To learn more about `test`, please read [Test API Reference](/api/test).
 
 Also, `expect` can be used statically to access matcher functions, described later, and more.
 
 ::: warning
 `expect` has no effect on testing types, if the expression doesn't have a type error. If you want to use Vitest as [type checker](/guide/testing-types), use [`expectTypeOf`](/api/expect-typeof) or [`assertType`](/api/assert-type).
+:::
+
+## assert
+
+- **Type:** `Chai.AssertStatic`
+
+Vitest reexports chai's [`assert` API](https://www.chaijs.com/api/assert/) as `expect.assert` for convenience. You can see the supported methods on the [Assert API page](/api/assert).
+
+This is especially useful if you need to narrow down the type, since `expect.to*` methods do not support that:
+
+```ts
+interface Cat {
+  __type: 'Cat'
+  mew(): void
+}
+interface Dog {
+  __type: 'Dog'
+  bark(): void
+}
+type Animal = Cat | Dog
+
+const animal: Animal = { __type: 'Dog', bark: () => {} }
+
+expect.assert(animal.__type === 'Dog')
+// does not show a type error!
+expect(animal.bark()).toBeUndefined()
+```
+
+::: tip
+Note that `expect.assert` also supports other type-narrowing methods (like `assert.isDefined`, `assert.exists` and so on).
 :::
 
 ## soft
@@ -56,14 +98,14 @@ test('expect.soft test', () => {
 ```
 
 ::: warning
-`expect.soft` can only be used inside the [`test`](/api/#test) function.
+`expect.soft` can only be used inside the [`test`](/api/test) function.
 :::
 
 ## poll
 
 ```ts
 interface ExpectPoll extends ExpectStatic {
-  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+  (actual: () => T, options?: { interval?: number; timeout?: number; message?: string }): Promise<Assertions<T>>
 }
 ```
 
@@ -146,7 +188,7 @@ Try not to use `toBe` with floating-point numbers. Since JavaScript rounds them,
 
 - **Type:** `(value: number, numDigits?: number) => Awaitable<void>`
 
-Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. For example:
+Use `toBeCloseTo` to compare floating-point numbers. The optional `numDigits` argument limits the number of digits to check _after_ the decimal point. The default for `numDigits` is 2. For example:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -287,6 +329,32 @@ test('we don\'t have apples', () => {
 })
 ```
 
+## toBeNullable
+
+- **Type:** `() => Awaitable<void>`
+
+`toBeNullable` simply asserts if something is nullable (`null` or `undefined`).
+
+```ts
+import { expect, test } from 'vitest'
+
+function apples() {
+  return null
+}
+
+function bananas() {
+  return undefined
+}
+
+test('we don\'t have apples', () => {
+  expect(apples()).toBeNullable()
+})
+
+test('we don\'t have bananas', () => {
+  expect(bananas()).toBeNullable()
+})
+```
+
 ## toBeNaN
 
 - **Type:** `() => Awaitable<void>`
@@ -311,9 +379,13 @@ test('getApplesCount has some unusual side effects...', () => {
 
 ## toBeOneOf
 
-- **Type:** `(sample: Array<any>) => any`
+- **Type:** `(sample: Array<any> | Set<any>) => any`
 
-`toBeOneOf` asserts if a value matches any of the values in the provided array.
+`toBeOneOf` asserts if a value matches any of the values in the provided array or set.
+
+::: warning EXPERIMENTAL
+Providing a `Set` is an experimental feature and may change in a future release.
+:::
 
 ```ts
 import { expect, test } from 'vitest'
@@ -360,6 +432,17 @@ test('stock is type of string', () => {
   expect(actual).toBeTypeOf('string')
 })
 ```
+
+:::warning
+`toBeTypeOf` uses the native `typeof` operator under the hood with all its quirks, most notably that the value `null` has type `object`.
+
+```ts
+test('toBeTypeOf cannot check for null or array', () => {
+  expect(null).toBeTypeOf('object')
+  expect([]).toBeTypeOf('object')
+})
+```
+:::
 
 ## toBeInstanceOf
 
@@ -477,7 +560,7 @@ expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
 expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
 ```
 
-To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+To test if something was thrown, use [`toThrow`](#tothrow) assertion.
 :::
 
 ## toStrictEqual
@@ -490,7 +573,7 @@ Differences from [`.toEqual`](#toequal):
 
 -  Keys with `undefined` properties are checked. e.g. `{a: undefined, b: 2}` does not match `{b: 2}` when using `.toStrictEqual`.
 -  Array sparseness is checked. e.g. `[, 1]` does not match `[undefined, 1]` when using `.toStrictEqual`.
--  Object types are checked to be equal. e.g. A class instance with fields `a` and` b` will not equal a literal object with fields `a` and `b`.
+-  Object types are checked to be equal. e.g. A class instance with fields `a` and `b` will not equal a literal object with fields `a` and `b`.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -519,7 +602,13 @@ import { getAllFruits } from './stocks.js'
 
 test('the fruit list contains orange', () => {
   expect(getAllFruits()).toContain('orange')
+})
 
+test('pineapple contains apple', () => {
+  expect('pineapple').toContain('apple')
+})
+
+test('the element contains a class and is contained', () => {
   const element = document.querySelector('#el')
   // element has a class
   expect(element.classList).toContain('flex')
@@ -615,6 +704,9 @@ test('John Doe Invoice', () => {
 
   // Wrap your key in an array to avoid the key from being parsed as a deep reference
   expect(invoice).toHaveProperty(['P.O'], '12345')
+
+  // Deep equality of object property
+  expect(invoice).toHaveProperty('items[0]', { type: 'apples', quantity: 10 })
 })
 ```
 
@@ -639,7 +731,7 @@ test('top fruits', () => {
 
 `toMatchObject` asserts if an object matches a subset of the properties of an object.
 
-You can also pass an array of objects. This is useful if you want to check that two arrays match in their number of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
+You can also pass an array of objects. This is useful if you want to check that two arrays match in their number and order of elements, as opposed to `arrayContaining`, which allows for extra elements in the received array.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -685,22 +777,30 @@ test('the number of elements must match exactly', () => {
 })
 ```
 
-## toThrowError
+## toThrow
 
-- **Type:** `(received: any) => Awaitable<void>`
+- **Type:** `(expected?: any) => Awaitable<void>`
 
-- **Alias:** `toThrow`
+- **Alias:** `toThrowError` <Deprecated />
 
-`toThrowError` asserts if a function throws an error when it is called.
+`toThrow` asserts if a function throws an error when it is called.
 
 You can provide an optional argument to test that a specific error is thrown:
 
 - `RegExp`: error message matches the pattern
 - `string`: error message includes the substring
-- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
+- any other value: compare with thrown value using deep equality (similar to `toEqual`)
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+```ts
+test('expect rejects toThrow', async ({ expect }) => {
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrow()
+})
+```
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -718,18 +818,18 @@ function getFruitStock(type: string) {
 
 test('throws on pineapples', () => {
   // Test that the error message says "stock" somewhere: these are equivalent
-  expect(() => getFruitStock('pineapples')).toThrowError(/stock/)
-  expect(() => getFruitStock('pineapples')).toThrowError('stock')
+  expect(() => getFruitStock('pineapples')).toThrow(/stock/)
+  expect(() => getFruitStock('pineapples')).toThrow('stock')
 
   // Test the exact error message
-  expect(() => getFruitStock('pineapples')).toThrowError(
+  expect(() => getFruitStock('pineapples')).toThrow(
     /^Pineapples are not in stock$/,
   )
 
-  expect(() => getFruitStock('pineapples')).toThrowError(
+  expect(() => getFruitStock('pineapples')).toThrow(
     new Error('Pineapples are not in stock'),
   )
-  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+  expect(() => getFruitStock('pineapples')).toThrow(expect.objectContaining({
     message: 'Pineapples are not in stock',
   }))
 })
@@ -744,14 +844,25 @@ function getAsyncFruitStock() {
 }
 
 test('throws on pineapples', async () => {
-  await expect(() => getAsyncFruitStock()).rejects.toThrowError('empty')
+  await expect(() => getAsyncFruitStock()).rejects.toThrow('empty')
+})
+```
+:::
+
+:::tip
+You can also test non-Error values that are thrown:
+
+```ts
+test('throws non-Error values', () => {
+  expect(() => { throw 42 }).toThrow(42)
+  expect(() => { throw { message: 'error' } }).toThrow({ message: 'error' })
 })
 ```
 :::
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -783,7 +894,7 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -826,7 +937,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -843,15 +954,15 @@ Note that since file system operation is async, you need to use `await` with `to
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
-The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
+The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrow`](#tothrow).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
-The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
+The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
 ## toHaveBeenCalled
 
@@ -930,7 +1041,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
+## toHaveBeenCalledBefore
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -949,7 +1060,7 @@ test('calls mock1 before mock2', () => {
 })
 ```
 
-## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
+## toHaveBeenCalledAfter
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -968,7 +1079,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
+## toHaveBeenCalledExactlyOnceWit
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1131,6 +1242,8 @@ test('spy function returns bananas on a last call', () => {
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthReturnedWith(2, ...)`.
+
 ```ts
 import { expect, test, vi } from 'vitest'
 
@@ -1236,9 +1349,11 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
+
+The count starts at 1. So, to check the second entry, you would write `.toHaveNthResolvedWith(2, ...)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1252,6 +1367,347 @@ test('spy function returns bananas on second call', async () => {
   expect(sell).toHaveNthResolvedWith(2, { product: 'bananas' })
 })
 ```
+
+## called <Version>4.1.0</Version> {#called}
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called at least once. This is equivalent to `toHaveBeenCalled()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.called`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy was called', () => {
+  const spy = vi.fn()
+
+  spy()
+
+  expect(spy).to.have.been.called
+  expect(spy).to.not.have.been.called // negation
+})
+```
+
+## callCount <Version>4.1.0</Version> {#callcount}
+
+- **Type:** `(count: number) => void`
+
+Chai-style assertion that checks if a spy was called a specific number of times. This is equivalent to `toHaveBeenCalledTimes(count)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy call count', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.callCount(3)
+})
+```
+
+## calledWith <Version>4.1.0</Version> {#calledwith}
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if a spy was called with specific arguments at least once. This is equivalent to `toHaveBeenCalledWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called with arguments', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+
+  expect(spy).to.have.been.calledWith('apple', 10)
+  expect(spy).to.have.been.calledWith('banana', 20)
+})
+```
+
+## calledOnce <Version>4.1.0</Version> {#calledonce}
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly once. This is equivalent to `toHaveBeenCalledOnce()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledOnce`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called once', () => {
+  const spy = vi.fn()
+
+  spy()
+
+  expect(spy).to.have.been.calledOnce
+})
+```
+
+## calledOnceWith <Version>4.1.0</Version> {#calledoncewith}
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if a spy was called exactly once with specific arguments. This is equivalent to `toHaveBeenCalledExactlyOnceWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called once with arguments', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+
+  expect(spy).to.have.been.calledOnceWith('apple', 10)
+})
+```
+
+## calledTwice <Version>4.1.0</Version> {#calledtwice}
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly twice. This is equivalent to `toHaveBeenCalledTimes(2)`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledTwice`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called twice', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+
+  expect(spy).to.have.been.calledTwice
+})
+```
+
+## calledThrice <Version>4.1.0</Version> {#calledthrice}
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy was called exactly three times. This is equivalent to `toHaveBeenCalledTimes(3)`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.been.calledThrice`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called thrice', () => {
+  const spy = vi.fn()
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.been.calledThrice
+})
+```
+
+## lastCalledWith
+
+- **Type:** `(...args: any[]) => void`
+
+Chai-style assertion that checks if the last call to a spy was made with specific arguments. This is equivalent to `toHaveBeenLastCalledWith(...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy last called with', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+
+  expect(spy).to.have.been.lastCalledWith('banana', 20)
+})
+```
+
+## nthCalledWith
+
+- **Type:** `(n: number, ...args: any[]) => void`
+
+Chai-style assertion that checks if the nth call to a spy was made with specific arguments. This is equivalent to `toHaveBeenNthCalledWith(n, ...args)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy nth called with', () => {
+  const spy = vi.fn()
+
+  spy('apple', 10)
+  spy('banana', 20)
+  spy('cherry', 30)
+
+  expect(spy).to.have.been.nthCalledWith(2, 'banana', 20)
+})
+```
+
+## returned <Version>4.1.0</Version> {#returned}
+
+- **Type:** `Assertion` (property, not a method)
+
+Chai-style assertion that checks if a spy returned successfully at least once. This is equivalent to `toHaveReturned()`.
+
+::: tip
+This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.returned`
+:::
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned', () => {
+  const spy = vi.fn(() => 'result')
+
+  spy()
+
+  expect(spy).to.have.returned
+})
+```
+
+## returnedWith <Version>4.1.0</Version> {#returnedwith}
+
+- **Type:** `(value: any) => void`
+
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned with value', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+
+  spy()
+  spy()
+
+  expect(spy).to.have.returnedWith('apple')
+  expect(spy).to.have.returnedWith('banana')
+})
+```
+
+## returnedTimes <Version>4.1.0</Version> {#returnedtimes}
+
+- **Type:** `(count: number) => void`
+
+Chai-style assertion that checks if a spy returned successfully a specific number of times. This is equivalent to `toHaveReturnedTimes(count)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy returned times', () => {
+  const spy = vi.fn(() => 'result')
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.returnedTimes(3)
+})
+```
+
+## lastReturnedWith
+
+- **Type:** `(value: any) => void`
+
+Chai-style assertion that checks if the last return value of a spy matches the expected value. This is equivalent to `toHaveLastReturnedWith(value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy last returned with', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+
+  spy()
+  spy()
+
+  expect(spy).to.have.lastReturnedWith('banana')
+})
+```
+
+## nthReturnedWith
+
+- **Type:** `(n: number, value: any) => void`
+
+Chai-style assertion that checks if the nth return value of a spy matches the expected value. This is equivalent to `toHaveNthReturnedWith(n, value)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy nth returned with', () => {
+  const spy = vi.fn()
+    .mockReturnValueOnce('apple')
+    .mockReturnValueOnce('banana')
+    .mockReturnValueOnce('cherry')
+
+  spy()
+  spy()
+  spy()
+
+  expect(spy).to.have.nthReturnedWith(2, 'banana')
+})
+```
+
+## calledBefore <Version>4.1.0</Version> {#calledbefore}
+
+- **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
+
+Chai-style assertion that checks if a spy was called before another spy. This is equivalent to `toHaveBeenCalledBefore(mock, failIfNoFirstInvocation)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called before another', () => {
+  const spy1 = vi.fn()
+  const spy2 = vi.fn()
+
+  spy1()
+  spy2()
+
+  expect(spy1).to.have.been.calledBefore(spy2)
+})
+```
+
+## calledAfter <Version>4.1.0</Version> {#calledafter}
+
+- **Type:** `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => void`
+
+Chai-style assertion that checks if a spy was called after another spy. This is equivalent to `toHaveBeenCalledAfter(mock, failIfNoFirstInvocation)`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('spy called after another', () => {
+  const spy1 = vi.fn()
+  const spy2 = vi.fn()
+
+  spy1()
+  spy2()
+
+  expect(spy2).to.have.been.calledAfter(spy1)
+})
+```
+
+::: tip Migration Guide
+For a complete guide on migrating from Mocha+Chai+Sinon to Vitest, see the [Migration Guide](/guide/migration#mocha-chai-sinon).
+:::
 
 ## toSatisfy
 
@@ -1456,7 +1912,7 @@ test.each(errorDirs)('build fails with "%s"', async (dir) => {
 
 - **Type:** `() => any`
 
-This asymmetric matcher, when used with equality check, will always return `true`. Useful, if you just want to be sure that the property exist.
+This asymmetric matcher matches anything except `null` or `undefined`. Useful if you just want to be sure that a property exists with any value that's not either `null` or `undefined`.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -1612,16 +2068,52 @@ test('variety ends with "re"', () => {
 You can use `expect.not` with this matcher to negate the expected value.
 :::
 
+## expect.schemaMatching
+
+- **Type:** `(expected: StandardSchemaV1) => any`
+
+When used with an equality check, this asymmetric matcher will return `true` if the value matches the provided schema. The schema must implement the [Standard Schema v1](https://standardschema.dev/) specification.
+
+```ts
+import { expect, test } from 'vitest'
+import { z } from 'zod'
+import * as v from 'valibot'
+import { type } from 'arktype'
+
+test('email validation', () => {
+  const user = { email: 'john@example.com' }
+
+  // using Zod
+  expect(user).toEqual({
+    email: expect.schemaMatching(z.string().email()),
+  })
+
+  // using Valibot
+  expect(user).toEqual({
+    email: expect.schemaMatching(v.pipe(v.string(), v.email()))
+  })
+
+  // using ArkType
+  expect(user).toEqual({
+    email: expect.schemaMatching(type('string.email')),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to negate the expected value.
+:::
+
 ## expect.addSnapshotSerializer
 
 - **Type:** `(plugin: PrettyFormatPlugin) => void`
 
 This method adds custom serializers that are called when creating a snapshot. This is an advanced feature - if you want to know more, please read a [guide on custom serializers](/guide/snapshot#custom-serializer).
 
-If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/#setupfiles). This will affect every snapshot.
+If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/setupfiles). This will affect every snapshot.
 
 :::tip
-If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
+If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
 
 ## expect.extend
@@ -1653,7 +2145,7 @@ test('custom matchers', () => {
 ```
 
 ::: tip
-If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/#setupfiles).
+If you want your matchers to appear in every test, you should call this method inside [`setupFiles`](/config/setupfiles).
 :::
 
 This function is compatible with Jest's `expect.extend`, so any library that uses it to create custom matchers will work with Vitest.

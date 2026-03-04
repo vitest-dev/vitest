@@ -1,0 +1,65 @@
+{
+  "name": "@vitest/browser-webdriverio",
+  "type": "module",
+  "version": "4.1.0-beta.5",
+  "description": "Browser running for Vitest using webdriverio",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://vitest.dev/config/browser/webdriverio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/browser-webdriverio"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "browser",
+    "webdriverio",
+    "wdio",
+    "component",
+    "mocks",
+    "test",
+    "testing"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./context": {
+      "types": "./context.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "context.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "build": "premove dist && pnpm rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'"
+  },
+  "peerDependencies": {
+    "vitest": "workspace:*",
+    "webdriverio": "*"
+  },
+  "peerDependenciesMeta": {
+    "webdriverio": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "@vitest/browser": "workspace:*"
+  },
+  "devDependencies": {
+    "@wdio/types": "^9.24.0",
+    "vitest": "workspace:*",
+    "webdriverio": "^9.20.0"
+  }
+}

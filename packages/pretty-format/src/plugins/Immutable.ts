@@ -88,13 +88,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
       // from Immutable collection of entries or from ECMAScript object
       val._iter || val._object
         ? printIteratorEntries(
-          val.entries(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )
+            val.entries(),
+            config,
+            indentation,
+            depth,
+            refs,
+            printer,
+          )
         : LAZY
     }}`
   }
@@ -105,13 +105,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
     || val._collection // from ECMAScript collection in immutable v4
     || val._iterable // from ECMAScript collection in immutable v3
       ? printIteratorValues(
-        val.values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )
+          val.values(),
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+        )
       : LAZY
   }]`
 }

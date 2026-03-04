@@ -7,6 +7,9 @@ test.each([
   ['--pool=forks'],
   ['--pool=vmForks'],
   ['--browser.enabled'],
+  ['--typecheck'],
+  ['--typecheck.only'],
+  ['--static-parse'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()
@@ -177,7 +180,7 @@ test('correctly prints project name and locations in json report', async () => {
         "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
-          "line": 3,
+          "line": 5,
           "column": 1
         }
       },
@@ -186,7 +189,7 @@ test('correctly prints project name and locations in json report', async () => {
         "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
-          "line": 7,
+          "line": 9,
           "column": 1
         }
       }

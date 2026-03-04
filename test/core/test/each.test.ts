@@ -98,6 +98,28 @@ test.each([
   expect(result).toBe(expected)
 })
 
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('the number of the test case is %$', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
+
+test.each([
+  [1, 2, 3],
+  [4, 5, 9],
+])('return a promise like result %$', async (a, b, expected) => {
+  const promiseResolver = (first: number, second: number) => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(first + second), 1)
+    })
+  }
+
+  const result = await promiseResolver(a, b)
+  expect(result).toBe(expected)
+})
+
 describe('context on test and describe - todo/skip', () => {
   let count = 0
 

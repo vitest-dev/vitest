@@ -1,4 +1,4 @@
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
@@ -28,7 +28,7 @@ function copyStackTrace(target: Error, source: Error) {
 export function waitFor<T>(
   callback: WaitForCallback<T>,
   options: number | WaitForOptions = {},
-) {
+): Promise<T> {
   const { setTimeout, setInterval, clearTimeout, clearInterval }
     = getSafeTimers()
   const { interval = 50, timeout = 1000 }
@@ -124,7 +124,7 @@ type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
 export function waitUntil<T>(
   callback: WaitUntilCallback<T>,
   options: number | WaitUntilOptions = {},
-) {
+): Promise<Truthy<T>> {
   const { setTimeout, setInterval, clearTimeout, clearInterval }
     = getSafeTimers()
   const { interval = 50, timeout = 1000 }

@@ -1,0 +1,21 @@
+{
+  "name": "@vitest/example-opentelemetry",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "compose": "docker compose",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/context-zone": "^2.5.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.212.0",
+    "@opentelemetry/resources": "^2.5.1",
+    "@opentelemetry/sdk-node": "^0.212.0",
+    "@opentelemetry/sdk-trace-web": "^2.5.1",
+    "@vitest/browser-playwright": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

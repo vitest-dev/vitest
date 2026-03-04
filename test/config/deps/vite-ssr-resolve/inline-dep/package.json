@@ -1,0 +1,5 @@
+{
+  "name": "inline-dep",
+  "type": "module",
+  "exports": "./index.js"
+}

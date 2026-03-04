@@ -8,9 +8,9 @@ title: Common Errors | Guide
 
 If you receive an error that module cannot be found, it might mean several different things:
 
-- 1. You misspelled the path. Make sure the path is correct.
+1. You misspelled the path. Make sure the path is correct.
 
-- 2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://www.npmjs.com/package/vite-tsconfig-paths) yourself, if you rely on this behaviour.
+2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://npmx.dev/package/vite-tsconfig-paths) yourself, if you rely on this behavior.
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -28,7 +28,7 @@ Or rewrite your path to not be relative to root:
 + import helpers from '../src/helpers'
 ```
 
-- 3. Make sure you don't have relative [aliases](/config/#alias). Vite treats them as relative to the file where the import is instead of the root.
+3. Make sure you don't have relative [aliases](/config/alias). Vite treats them as relative to the file where the import is instead of the root.
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -43,43 +43,60 @@ export default defineConfig({
 })
 ```
 
-## Cannot mock "./mocked-file.js" because it is already loaded
+## Failed to Terminate Worker
 
-This error happens when `vi.mock` method is called on a module that was already loaded. Vitest throws this error because this call has no effect since cached modules are preferred.
+This error can happen when NodeJS's `fetch` is used with [`pool: 'threads'`](/config/pool#threads). See [#3077](https://github.com/vitest-dev/vitest/issues/3077) for details.
 
-Remember that `vi.mock` is always hoisted - it means that the module was loaded before the test file started executing - most likely in a setup file. To fix the error, remove the import or clear the cache at the end of a setup file - beware that setup file and your test file will reference different modules in that case.
+The default [`pool: 'forks'`](/config/pool#forks) does not have this issue. If you've explicitly set `pool: 'threads'`, switching back to `'forks'` or using [`'vmForks'`](/config/pool#vmforks) will resolve it.
 
-```ts [setupFile.js]
-import { vi } from 'vitest'
-import { sideEffect } from './mocked-file.js'
+## Custom package conditions are not resolved
 
-sideEffect()
+If you are using custom conditions in your `package.json` [exports](https://nodejs.org/api/packages.html#package-entry-points) or [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), you may find that Vitest does not respect these conditions by default.
 
-vi.resetModules()
+For example, if you have the following in your `package.json`:
+
+```json
+{
+  "exports": {
+    ".": {
+      "custom": "./lib/custom.js",
+      "import": "./lib/index.js"
+    }
+  },
+  "imports": {
+    "#internal": {
+      "custom": "./src/internal.js",
+      "default": "./lib/internal.js"
+    }
+  }
+}
 ```
 
-## Failed to terminate worker
+By default, Vitest will only use the `import` and `default` conditions. To make Vitest respect custom conditions, you need to configure [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) in your Vitest config:
 
-This error can happen when NodeJS's `fetch` is used with default [`pool: 'threads'`](/config/#threads). This issue is tracked on issue [Timeout abort can leave process(es) running in the background #3077](https://github.com/vitest-dev/vitest/issues/3077).
-
-As work-around you can switch to [`pool: 'forks'`](/config/#forks) or [`pool: 'vmForks'`](/config/#vmforks).
-
-::: code-group
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: {
-    pool: 'forks',
+  ssr: {
+    resolve: {
+      conditions: ['custom', 'import', 'default'],
+    },
   },
 })
 ```
-```bash [CLI]
-vitest --pool=forks
-```
+
+::: tip Why `ssr.resolve.conditions` and not `resolve.conditions`?
+Vitest follows Vite's configuration convention:
+- [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) applies to Vite's `client` environment, which corresponds to Vitest's browser mode, jsdom, happy-dom, or custom environments with `viteEnvironment: 'client'`.
+- [`ssr.resolve.conditions`](https://vite.dev/config/ssr-options#ssr-resolve-conditions) applies to Vite's `ssr` environment, which corresponds to Vitest's node environment or custom environments with `viteEnvironment: 'ssr'`.
+
+Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 'ssr'`), module resolution uses `ssr.resolve.conditions`. This applies to both package exports and subpath imports.
+
+You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
 :::
 
-## Segfaults and native code errors
+## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
 
@@ -88,7 +105,7 @@ Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 't
 - `Abort trap: 6`
 - `internal error: entered unreachable code`
 
-In these cases the native module is likely not built to be multi-thread safe. As work-around, you can switch to `pool: 'forks'` which runs the test cases in multiple `node:child_process` instead of multiple `node:worker_threads`.
+In these cases the native module is likely not built to be multi-thread safe. As a workaround, you can switch to `pool: 'forks'` which runs the test cases in multiple `node:child_process` instead of multiple `node:worker_threads`.
 
 ::: code-group
 ```ts [vitest.config.js]

@@ -1,0 +1,8 @@
+{
+  "name": "@test/test-dep-linked",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./ts": "./index.ts"
+  }
+}

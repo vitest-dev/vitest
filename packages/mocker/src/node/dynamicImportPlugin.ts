@@ -32,7 +32,6 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
 }
 
 export interface DynamicImportInjectorResult {
-  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -43,9 +42,13 @@ export function injectDynamicImport(
   parse: Rollup.PluginContext['parse'],
   options: DynamicImportPluginOptions = {},
 ): DynamicImportInjectorResult | undefined {
+  if (code.includes('wrapDynamicImport')) {
+    return
+  }
+
   const s = new MagicString(code)
 
-  let ast: any
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }
@@ -75,7 +78,6 @@ export function injectDynamicImport(
   })
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
   }

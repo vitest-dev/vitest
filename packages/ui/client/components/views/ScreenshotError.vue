@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { onKeyStroke } from '@vueuse/core'
+import IconButton from '../IconButton.vue'
+
 defineProps<{
   file: string
   name: string

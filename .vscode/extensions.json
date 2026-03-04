@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "vitest.explorer",
+    "dbaeumer.vscode-eslint"
+  ]
+}

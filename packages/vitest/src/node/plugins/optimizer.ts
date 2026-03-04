@@ -1,5 +1,6 @@
 import type { Plugin } from 'vite'
-import { resolveOptimizerConfig } from './utils'
+import { resolve } from 'pathe'
+import { VitestCache } from '../cache'
 
 export function VitestOptimizer(): Plugin {
   return {
@@ -8,24 +9,18 @@ export function VitestOptimizer(): Plugin {
       order: 'post',
       handler(viteConfig) {
         const testConfig = viteConfig.test || {}
-        const webOptimizer = resolveOptimizerConfig(
-          testConfig.deps?.optimizer?.web,
-          viteConfig.optimizeDeps,
-          testConfig,
-          viteConfig.cacheDir,
-        )
-        const ssrOptimizer = resolveOptimizerConfig(
-          testConfig.deps?.optimizer?.ssr,
-          viteConfig.ssr?.optimizeDeps,
-          testConfig,
-          viteConfig.cacheDir,
-        )
 
-        viteConfig.cacheDir
-          = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
-        viteConfig.optimizeDeps = webOptimizer.optimizeDeps
-        viteConfig.ssr ??= {}
-        viteConfig.ssr.optimizeDeps = ssrOptimizer.optimizeDeps
+        const root = resolve(viteConfig.root || process.cwd())
+        const name = viteConfig.test?.name
+        const label = typeof name === 'string' ? name : (name?.label || '')
+
+        viteConfig.cacheDir = VitestCache.resolveCacheDir(
+          resolve(root || process.cwd()),
+          testConfig.cache != null && testConfig.cache !== false
+            ? testConfig.cache.dir
+            : viteConfig.cacheDir,
+          label,
+        )
       },
     },
   }

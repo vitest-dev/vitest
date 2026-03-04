@@ -1,8 +1,9 @@
+import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
+import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { getTests } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
+import { isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -23,7 +24,7 @@ const keys = [
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp() {
+export function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
@@ -39,9 +40,41 @@ ${keys
   )
 }
 
+function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
+  if (isTestCase(t)) {
+    if (t.name.match(filter)) {
+      const displayName = `${parentName} > ${t.name}`
+      yield { key: t.name, toString: () => displayName }
+    }
+  }
+  else {
+    parentName = parentName.length ? `${parentName} > ${t.name}` : t.name
+    for (const task of t.tasks) {
+      yield* traverseFilteredTestNames(parentName, filter, task)
+    }
+  }
+}
+
+function* getFilteredTestNames(pattern: string, suite: File[]): Generator<FilterObject> {
+  try {
+    const reg = new RegExp(pattern)
+    // TODO: we cannot run tests per workspace yet: filtering files
+    const files = new Set<string>()
+    for (const file of suite) {
+      if (!files.has(file.name)) {
+        files.add(file.name)
+        yield* traverseFilteredTestNames('', reg, file)
+      }
+    }
+  }
+  catch {
+    // `new RegExp` may throw error when input is invalid regexp
+  }
+}
+
 export function registerConsoleShortcuts(
   ctx: Vitest,
-  stdin: NodeJS.ReadStream = process.stdin,
+  stdin: NodeJS.ReadStream | undefined = process.stdin,
   stdout: NodeJS.WriteStream | Writable,
 ) {
   let latestFilename = ''
@@ -55,14 +88,12 @@ export function registerConsoleShortcuts(
       || (key && key.ctrl && key.name === 'c')
     ) {
       if (!ctx.isCancelling) {
-        ctx.logger.logUpdate.clear()
         ctx.logger.log(
           c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
         )
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
-        await ctx.runningPromise
       }
       return ctx.exit(true)
     }
@@ -137,24 +168,13 @@ export function registerConsoleShortcuts(
 
   async function inputNamePattern() {
     off()
-    const watchFilter = new WatchFilter(
+    const watchFilter = new WatchFilter<'object'>(
       'Input test name pattern (RegExp)',
       stdin,
       stdout,
     )
     const filter = await watchFilter.filter((str: string) => {
-      const files = ctx.state.getFiles()
-      const tests = getTests(files)
-      try {
-        const reg = new RegExp(str)
-        return tests
-          .map(test => test.name)
-          .filter(testName => testName.match(reg))
-      }
-      catch {
-        // `new RegExp` may throw error when input is invalid regexp
-        return []
-      }
+      return [...getFilteredTestNames(str, ctx.state.getFiles())]
     })
 
     on()
@@ -184,7 +204,7 @@ export function registerConsoleShortcuts(
         name: 'filter',
         type: 'text',
         message: 'Input a single project name',
-        initial: toArray(ctx.configOverride.project)[0] || '',
+        initial: ctx.config.project[0] || '',
       },
     ])
     on()
@@ -201,8 +221,11 @@ export function registerConsoleShortcuts(
     )
 
     const filter = await watchFilter.filter(async (str: string) => {
-      const files = await ctx.globTestFiles([str])
-      return files.map(file => relative(ctx.config.root, file[1]))
+      const specifications = await ctx.globTestSpecifications([str])
+
+      return specifications
+        .map(specification => relative(ctx.config.root, specification.moduleId))
+        .filter((file, index, all) => all.indexOf(file) === index)
     })
 
     on()
@@ -244,7 +267,7 @@ export function registerConsoleShortcuts(
 
   on()
 
-  return function cleanup() {
+  return function cleanup(): void {
     off()
   }
 }

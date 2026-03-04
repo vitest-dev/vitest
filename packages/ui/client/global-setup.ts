@@ -1,6 +1,7 @@
 /// <reference types="vite-plugin-pages/client" />
 
-import FloatingVue, { VTooltip } from 'floating-vue'
+import type { Directive } from 'vue'
+import FloatingVue, { vTooltip } from 'floating-vue'
 import routes from 'virtual:generated-pages'
 import {
   createRouter as _createRouter,
@@ -15,8 +16,8 @@ import './styles/main.css'
 import 'floating-vue/dist/style.css'
 import 'uno.css'
 
-export const directives = {
-  tooltip: VTooltip,
+export const directives: Record<string, Directive> = {
+  tooltip: vTooltip,
 }
 
 FloatingVue.options.instantMove = true

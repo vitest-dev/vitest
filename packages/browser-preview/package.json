@@ -1,0 +1,57 @@
+{
+  "name": "@vitest/browser-preview",
+  "type": "module",
+  "version": "4.1.0-beta.5",
+  "description": "Browser running for Vitest using your browser of choice",
+  "license": "MIT",
+  "funding": "https://opencollective.com/vitest",
+  "homepage": "https://vitest.dev/guide/browser",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitest-dev/vitest.git",
+    "directory": "packages/browser-preview"
+  },
+  "bugs": {
+    "url": "https://github.com/vitest-dev/vitest/issues"
+  },
+  "keywords": [
+    "browser",
+    "component",
+    "mocks",
+    "test",
+    "testing"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./context": {
+      "types": "./context.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "context.d.ts",
+    "dist"
+  ],
+  "scripts": {
+    "build": "premove dist && pnpm rollup -c",
+    "dev": "rollup -c --watch --watch.include 'src/**'"
+  },
+  "peerDependencies": {
+    "vitest": "workspace:*"
+  },
+  "dependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/browser": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}

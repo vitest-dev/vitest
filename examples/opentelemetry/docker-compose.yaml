@@ -1,0 +1,27 @@
+services:
+  # for testing open-telemetry integration locally
+  # https://www.jaegertracing.io/docs/2.12/getting-started/
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.15.1
+    # Assign ports for Jaeger UI and OTLP receiver
+    ports:
+      # UI http://localhost:16686
+      - 16686:16686
+      # OTLP over HTTP (default for NodeSDK)
+      - 4318:4318
+      # Optional: uncomment if needed
+      # - 4317:4317  # OTLP over gRPC
+      # - 5778:5778  # Jaeger sampling strategies
+      # - 9411:9411  # Zipkin compatibility
+
+    # Use volume to persist data across container restarts.
+    # This can be commented out if persistence is not needed.
+    # https://www.jaegertracing.io/docs/2.12/storage/badger/
+    user: '0:0'
+    command: --config /etc/jaeger/config.yml
+    volumes:
+      - ./jaeger-config.yml:/etc/jaeger/config.yml:ro
+      - jaeger-data:/tmp/badger
+
+volumes:
+  jaeger-data:

@@ -25,11 +25,15 @@ To develop and test `vitest` package:
 
 > 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
 
+### UI Development
+
+If you want to improve Vitest Browser Mode, see the [Browser Mode development guide](./packages/ui/README.md) for setup instructions and development workflow.
+
 ## Debugging
 
 ### VS Code
 
-If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/editor/debugging) feature from vscode.
+If you want to use break point and explore code execution you can use the ["Run and debug"](https://code.visualstudio.com/docs/debugtest/debugging) feature from vscode.
 
 1. Add a `debugger` statement where you want to stop the code execution.
 
@@ -39,11 +43,11 @@ If you want to use break point and explore code execution you can use the ["Run 
 
 4. It will open a terminal, then type the test command: `pnpm run test`
 
-5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) to continue, step over, restart the process...
+5. The execution will stop and you'll use the [Debug toolbar](https://code.visualstudio.com/docs/debugtest/debugging#_debug-actions) to continue, step over, restart the process...
 
 ## Testing Vitest against external packages
 
-You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
+You may wish to test your locally-modified copy of Vitest against another package that is using it. For pnpm, after building Vitest, you can use [`pnpm.overrides`](https://pnpm.io/9.x/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
 
 ```json
 {
@@ -63,7 +67,7 @@ And re-run `pnpm install` to link the package.
 Add a `.npmrc` file with following line next to the `package.json`:
 
 ```sh
-VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
+VITEST_MODULE_DIRECTORIES=/node_modules/,/packages/
 ```
 
 ## Pull Request Guidelines
@@ -74,6 +78,7 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 
   - Add accompanying test case.
   - Provide a convincing reason to add this feature. Ideally, you should open a suggestion issue first and have it approved before working on it.
+  - When adding cli options, run `pnpm -C docs run cli-table` to update the cli-generated.md file
 
 - If fixing bug:
 
@@ -97,23 +102,23 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 
 ```mermaid
 flowchart TD
-    start{Followed issue\ntemplate?}
-    start --NO--> close1[Close and ask to\nfollow template]
+    start{Followed issue<br/>template?}
+    start --NO--> close1[Close and ask to<br/>follow template]
     start --YES--> dupe{Is duplicate?}
-    dupe --YES--> close2[Close and point\nto duplicate]
-    dupe --NO--> repro{Has proper\nreproduction?}
-    repro --NO--> close3[Label: 'needs reproduction'\nbot will auto close if no update\nhas been made in 3 days]
+    dupe --YES--> close2[Close and point<br/>to duplicate]
+    dupe --NO--> repro{Has proper<br/>reproduction?}
+    repro --NO--> close3[Label: 'needs reproduction'<br/>bot will auto close if no update has been made in 3 days]
     repro --YES--> real{Is actually a bug?}
-    real --NO--> intended{Is the intended\nbehaviour?}
-    intended --YES--> explain[Explain and close\npoint to docs if needed]
-    intended --NO--> open[Keep open for discussion\nRemove 'pending triage' label]
-    real --YES--> real2["1. Remove 'pending triage' label\n2. Add related feature label if\napplicable (e.g. 'feat: browser')\n3. Add priority and meta labels (see below)"]
-    real2 --> unusable{Does the\nbug make Vitest\nunusable?}
-    unusable --YES--> maj{Does the bug\naffect the majority\nof Vitest users?}
+    real --NO--> intended{Is the intended<br/>behaviour?}
+    intended --YES--> explain[Explain and close<br/>point to docs if needed]
+    intended --NO--> open[Keep open for discussion<br/>Remove 'pending triage' label]
+    real --YES--> real2["1. Remove 'pending triage' label<br/>2. Add related feature label if<br/>applicable (e.g. 'feat: browser')<br/>3. Add priority and meta labels (see below)"]
+    real2 --> unusable{Does the<br/>bug make Vitest<br/>unusable?}
+    unusable --YES--> maj{Does the bug<br/>affect the majority<br/>of Vitest users?}
     maj --YES--> p5[p5: urgent]
     maj --NO--> p4[p4: important]
-    unusable --NO--> workarounds{Are there\nworkarounds for\nthe bug?}
-    workarounds --YES--> p2[p2: edge case\nhas workaround]
+    unusable --NO--> workarounds{Are there<br/>workarounds for<br/>the bug?}
+    workarounds --YES--> p2[p2: edge case<br/>has workaround]
     workarounds --NO--> p3[p3: minor bug]
 ```
 
@@ -121,16 +126,16 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    start{Bug fix\nor\nfeature}
-    start --BUG FIX--> strict_bug{"Is a 'strict fix'\ni.e. fixes an obvious\noversight with no\nside effects"}
-    start --FEATURE--> feature[- Discuss feature necessity\n- Is this the best way to address the need\n- Review code quality\n- Add feature labels\n- Approve if you feel strongly\nthat the feature is needed]
+    start{Bug fix<br/>or<br/>feature}
+    start --BUG FIX--> strict_bug{"Is a 'strict fix'<br/>i.e. fixes an obvious<br/>oversight with no<br/>side effects"}
+    start --FEATURE--> feature[- Discuss feature necessity<br/>- Is this the best way to address the need<br/>- Review code quality<br/>- Add feature labels<br/>- Approve if you feel strongly<br/>that the feature is needed]
     feature --> merge
-    strict_bug --YES--> strict[- Verify the fix locally\n- Review code quality\n- Require test case if applicable\n- Request changes if necessary]
-    strict_bug --NO--> non_strict[- Discuss the potential side\neffects of the fix, e.g.\n- Could it introduce implicit\nbehavior changes in other\ncases?\n- Does it introduce too much\nchanges?]
-    non_strict --> label["Add priority labels\n(see issue triaging workflow)"]
+    strict_bug --YES--> strict[- Verify the fix locally<br/>- Review code quality<br/>- Require test case if applicable<br/>- Request changes if necessary]
+    strict_bug --NO--> non_strict[- Discuss the potential side<br/>effects of the fix, e.g.<br/>- Could it introduce implicit<br/>behavior changes in other<br/>cases?<br/>- Does it introduce too much<br/>changes?]
+    non_strict --> label["Add priority labels<br/>(see issue triaging workflow)"]
     strict --> label
     label --> approve
-    approve --> merge["Merge if approved by 2 or\nmore team members\n- Use 'Squash and Merge'\n- Edit commit message to follow\nconvention\n- In commit message body, list\nrelevant issues being fixed\ne.g. 'fix #1234, fix #1235'"]
+    approve --> merge["Merge if approved by 2 or<br/>more team members<br/>- Use 'Squash and Merge'<br/>- Edit commit message to follow convention<br/>- In commit message body, list relevant issues being fixed<br/>e.g. 'fix #1234, fix #1235'"]
 ```
 
 ## Notes on Dependencies
@@ -149,7 +154,7 @@ Avoid deps that has large transitive dependencies that results in bloated size c
 
 If there are libraries that are needed and don't comply with our size
 requirements, a fork can be tried to reduce its size while we work with them to
-upstream our changes (see [tinypool](https://github.com/tinylibs/tinypool) for example)
+upstream our changes.
 
 ### Think before adding yet another option
 

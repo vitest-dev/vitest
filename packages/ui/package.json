@@ -1,11 +1,11 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "3.0.0-beta.3",
+  "version": "4.1.0-beta.5",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/ui#readme",
+  "homepage": "https://vitest.dev/guide/ui",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,11 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "html",
+    "reporter"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -34,10 +39,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
     "build:node": "rollup -c",
     "typecheck": "tsc --noEmit",
+    "typecheck:client": "vue-tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
@@ -49,42 +55,44 @@
   "dependencies": {
     "@vitest/utils": "workspace:*",
     "fflate": "^0.8.2",
-    "flatted": "^3.3.2",
-    "pathe": "^1.1.2",
-    "sirv": "^3.0.0",
-    "tinyglobby": "^0.2.10",
-    "tinyrainbow": "^1.2.0"
+    "flatted": "catalog:",
+    "pathe": "catalog:",
+    "sirv": "catalog:",
+    "tinyglobby": "catalog:",
+    "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.3.0",
-    "@iconify-json/carbon": "^1.2.5",
-    "@iconify-json/logos": "^1.2.4",
-    "@testing-library/vue": "^8.1.0",
-    "@types/codemirror": "^5.60.15",
+    "@faker-js/faker": "^10.3.0",
+    "@iconify-json/carbon": "catalog:",
+    "@iconify-json/logos": "catalog:",
+    "@types/codemirror": "^5.60.17",
     "@types/d3-force": "^3.0.10",
     "@types/d3-selection": "^3.0.11",
-    "@types/ws": "^8.5.13",
-    "@unocss/reset": "^0.65.2",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@types/ws": "catalog:",
+    "@unocss/reset": "catalog:",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vitest/browser-playwright": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vue/test-utils": "^2.4.6",
-    "@vueuse/core": "^12.0.0",
+    "@vueuse/core": "catalog:",
     "ansi-to-html": "^0.7.2",
-    "birpc": "0.2.19",
+    "birpc": "catalog:",
     "codemirror": "^5.65.18",
     "codemirror-theme-vars": "^0.1.2",
-    "d3-graph-controller": "^3.0.11",
+    "d3-graph-controller": "^3.1.8",
     "floating-vue": "^5.2.2",
-    "rollup": "^4.28.1",
-    "splitpanes": "^3.1.5",
-    "unocss": "^0.65.2",
-    "unplugin-auto-import": "^0.19.0",
-    "unplugin-vue-components": "^0.28.0",
+    "mime": "^4.1.0",
+    "rollup": "^4.59.0",
+    "splitpanes": "^4.0.4",
+    "typescript": "^5.9.3",
+    "unocss": "catalog:",
     "vite": "^5.0.0",
-    "vite-plugin-pages": "^0.32.4",
-    "vue": "^3.5.12",
-    "vue-router": "^4.5.0",
+    "vite-plugin-pages": "^0.33.3",
+    "vitest-browser-vue": "2.0.2",
+    "vue": "catalog:",
+    "vue-router": "^5.0.3",
+    "vue-tsc": "^3.2.5",
     "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }

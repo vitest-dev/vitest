@@ -11,9 +11,9 @@ it('on-finished regular', () => {
   collected.push(2)
 })
 
-it('on-finished context', (t) => {
+it('on-finished context', ({ onTestFinished }) => {
   collected.push(4)
-  t.onTestFinished(() => {
+  onTestFinished(() => {
     collected.push(6)
   })
   collected.push(5)
@@ -29,9 +29,9 @@ it.fails('failed finish', () => {
   collected.push(null)
 })
 
-it.fails('failed finish context', (t) => {
+it.fails('failed finish context', ({ onTestFinished }) => {
   collected.push(10)
-  t.onTestFinished(() => {
+  onTestFinished(() => {
     collected.push(12)
   })
   collected.push(11)

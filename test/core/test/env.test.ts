@@ -60,21 +60,14 @@ test('PROD, DEV, SSR should be boolean', () => {
   expect(process.env.PROD).toBe('')
   expect(process.env.DEV).toBe('1')
 
-  // see https://github.com/vitest-dev/vitest/issues/5562
-  if (process.execArgv.includes('--experimental-vm-modules')) {
-    expect(import.meta.env.SSR).toBe(false)
-    expect(process.env.SSR).toBe(undefined)
-  }
-  else {
-    expect(import.meta.env.SSR).toBe(true)
-    expect(process.env.SSR).toBe('1')
-  }
+  expect(import.meta.env.SSR).toBe(true)
+  expect(process.env.SSR).toBe('1')
 
   import.meta.env.SSR = false
   expect(import.meta.env.SSR).toEqual(false)
 })
 
-test.runIf(process.platform === 'win32')('main process env variables are case insentive', () => {
+test.runIf(process.platform === 'win32')('main process env variables are case insensitive', () => {
   expect(process.env.PROGRAMFILES).toBeDefined()
   expect(process.env['PROGRAMFILES(X86)']).toBeDefined()
   expect(process.env['ProgramFiles(x86)']).toBeDefined()

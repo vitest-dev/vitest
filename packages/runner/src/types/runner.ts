@@ -1,13 +1,19 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
   File,
+  ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
+  SerializableRetry,
   Suite,
-  Task,
+  TaskEventPack,
   TaskResultPack,
   Test,
+  TestAnnotation,
+  TestArtifact,
   TestContext,
+  TestOptions,
+  TestTags,
 } from './tasks'
 
 /**
@@ -16,10 +22,10 @@ import type {
 export interface VitestRunnerConfig {
   root: string
   setupFiles: string[]
-  name?: string
+  name: string | undefined
   passWithNoTests: boolean
-  testNamePattern?: RegExp
-  allowOnly?: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -27,15 +33,18 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  chaiConfig?: {
+  chaiConfig: {
     truncateThreshold?: number
-  }
+  } | undefined
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
-  retry: number
-  includeTaskLocation?: boolean
+  retry: SerializableRetry
+  includeTaskLocation: boolean | undefined
   diffOptions?: DiffOptions
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
 }
 
 /**
@@ -43,7 +52,32 @@ export interface VitestRunnerConfig {
  */
 export interface FileSpecification {
   filepath: string
+  // file can be marked via a jsdoc comment to have tags,
+  // these are _not_ tags to filter tests by
+  fileTags?: string[]
   testLocations: number[] | undefined
+  testNamePattern: RegExp | undefined
+  testTagsFilter: string[] | undefined
+  testIds: string[] | undefined
+}
+
+export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'> {
+  /**
+   * The name of the tag. This is what you use in the `tags` array in tests.
+   */
+  name: keyof TestTags extends never
+    ? string
+    : TestTags[keyof TestTags]
+  /**
+   * A description for the tag. This will be shown in the CLI help and UI.
+   */
+  description?: string
+  /**
+   * Priority for merging options when multiple tags with the same options are applied to a test.
+   *
+   * Lower number means higher priority. E.g., priority 1 takes precedence over priority 3.
+   */
+  priority?: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -52,10 +86,10 @@ export interface VitestRunnerConstructor {
   new (config: VitestRunnerConfig): VitestRunner
 }
 
-export type CancelReason =
-  | 'keyboard-input'
-  | 'test-failure'
-  | (string & Record<string, never>)
+export type CancelReason
+  = | 'keyboard-input'
+    | 'test-failure'
+    | (string & Record<string, never>)
 
 export interface VitestRunner {
   /**
@@ -76,18 +110,18 @@ export interface VitestRunner {
    * Runner should listen for this method and mark tests and suites as skipped in
    * "onBeforeRunSuite" and "onBeforeRunTask" when called.
    */
-  onCancel?: (reason: CancelReason) => unknown
+  cancel?: (reason: CancelReason) => unknown
 
   /**
    * Called before running a single test. Doesn't have "result" yet.
    */
-  onBeforeRunTask?: (test: Task) => unknown
+  onBeforeRunTask?: (test: Test) => unknown
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
   onBeforeTryTask?: (
-    test: Task,
-    options: { retry: number; repeats: number }
+    test: Test,
+    options: { retry: number; repeats: number },
   ) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
@@ -96,13 +130,21 @@ export interface VitestRunner {
   /**
    * Called after result and state are set.
    */
-  onAfterRunTask?: (test: Task) => unknown
+  onAfterRunTask?: (test: Test) => unknown
   /**
    * Called right after running the test function. Doesn't have new state yet. Will not be called, if the test function throws.
    */
   onAfterTryTask?: (
-    test: Task,
-    options: { retry: number; repeats: number }
+    test: Test,
+    options: { retry: number; repeats: number },
+  ) => unknown
+  /**
+   * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
+   * All `after` hooks were also called by this point.
+   */
+  onAfterRetryTask?: (
+    test: Test,
+    options: { retry: number; repeats: number },
   ) => unknown
 
   /**
@@ -123,12 +165,24 @@ export interface VitestRunner {
    * If defined, will be called instead of usual Vitest handling. Useful, if you have your custom test function.
    * "before" and "after" hooks will not be ignored.
    */
-  runTask?: (test: Task) => Promise<void>
+  runTask?: (test: Test) => Promise<void>
 
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?: (task: TaskResultPack[]) => Promise<void>
+  onTaskUpdate?: (task: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
+
+  /**
+   * Called when annotation is added via the `context.annotate` method.
+   */
+  onTestAnnotate?: (test: Test, annotation: TestAnnotation) => Promise<TestAnnotation>
+
+  /**
+   * @experimental
+   *
+   * Called when artifacts are recorded on tests via the `recordArtifact` utility.
+   */
+  onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
 
   /**
    * Called before running all tests in collected paths.
@@ -154,6 +208,10 @@ export interface VitestRunner {
    */
   injectValue?: (key: string) => unknown
   /**
+   * Gets the time spent importing each individual non-externalized file that Vitest collected.
+   */
+  getImportDurations?: () => Record<string, ImportDuration>
+  /**
    * Publicly available configuration.
    */
   config: VitestRunnerConfig
@@ -161,4 +219,20 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+  /**
+   * The current Vite environment that processes the files on the server.
+   */
+  viteEnvironment?: string
+
+  onCleanupWorkerContext?: (cleanup: () => unknown) => void
+
+  // eslint-disable-next-line ts/method-signature-style
+  trace?<T>(name: string, cb: () => T): T
+  // eslint-disable-next-line ts/method-signature-style
+  trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
+
+  /** @private */
+  _currentTaskStartTime?: number
+  /** @private */
+  _currentTaskTimeout?: number
 }

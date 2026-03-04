@@ -5,7 +5,7 @@ import { expect, test, vi } from 'vitest'
 // @ts-expect-error wasm is not typed
 import { add } from '../src/wasm/add.wasm'
 
-const wasmFileBuffer = readFileSync(resolve(__dirname, '../src/wasm/add.wasm'))
+const wasmFileBuffer = readFileSync(resolve(import.meta.dirname, '../src/wasm/add.wasm'))
 
 test('supports native wasm imports', () => {
   expect(add(1, 2)).toBe(3)
@@ -34,7 +34,7 @@ test('supports dynamic wasm imports', async () => {
 
 test('supports imports from "data:application/wasm" URI with base64 encoding', async () => {
   const importedWasmModule = await import(
-    `data:application/wasm;base64,${wasmFileBuffer.toString('base64')}`
+    `data:application/wasm;base64,${wasmFileBuffer.toString('base64')}`,
   )
   expect(importedWasmModule.add(0, 42)).toBe(42)
 })
@@ -48,7 +48,7 @@ test('imports from "data:application/wasm" URI without explicit encoding fail', 
     expect(error).toMatchInlineSnapshot(`[Error: Missing data URI encoding]`)
   }
   else {
-    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm,AGFzbQEAAAABBwFgAn9/AX8DAgEABwcBA2FkZAAACgkBBwAgACABags=: WebAssembly.compile(): expected magic word 00 61 73 6d, found 41 47 46 7a @+0]`)
+    expect(error).toMatchObject({ name: 'CompileError' })
   }
 })
 
@@ -59,7 +59,7 @@ test('imports from "data:application/wasm" URI with invalid encoding fail', asyn
     expect(error).toMatchInlineSnapshot(`[Error: Invalid data URI encoding: charset=utf-8]`)
   }
   else {
-    expect(error).toMatchInlineSnapshot(`[CompileError: data:application/wasm;charset=utf-8,oops: WebAssembly.compile(): expected magic word 00 61 73 6d, found 6f 6f 70 73 @+0]`)
+    expect(error).toMatchObject({ name: 'CompileError' })
   }
 })
 

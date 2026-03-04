@@ -1,17 +1,17 @@
+import fn from '@vitest/test-fn'
 import { describe, expect, test, vi } from 'vitest'
-import zustand from 'zustand'
-import { magic } from '../../src/mocks/zustand-magic'
+import { magic } from '../../src/mocks/test-fn-magic'
 
-vi.mock('zustand')
+vi.mock('@vitest/test-fn')
 
-describe('zustand didn\'t go into an infinite loop', () => {
-  test('zustand is mocked', () => {
-    expect(vi.isMockFunction(zustand)).toBe(true)
+describe('fn didn\'t go into an infinite loop', () => {
+  test('fn is mocked', () => {
+    expect(vi.isMockFunction(fn)).toBe(true)
   })
 
-  test('magic calls zustand', () => {
+  test('magic calls fn', () => {
     const store = magic()
-    expect(zustand).toHaveBeenCalled()
+    expect(fn).toHaveBeenCalled()
     expect(store).toBeTypeOf('function')
   })
 })

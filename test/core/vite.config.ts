@@ -1,12 +1,17 @@
+import type { LabelColor } from 'vitest'
+import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
+  // tests should not fail when base is set
+  base: '/some-url/',
   plugins: [
     {
       name: 'example',
       resolveId(source) {
-        if (source === 'virtual-module') {
+        if (source === 'virtual-module' || source === 'virtual-module-direct' || source === 'virtual-module-indirect') {
           return source
         }
       },
@@ -14,6 +19,16 @@ export default defineConfig({
         if (id === 'virtual-module') {
           return `
             export const value = 'original';
+          `
+        }
+        if (id === 'virtual-module-direct') {
+          return `
+            export const value = 'original-direct';
+          `
+        }
+        if (id === 'virtual-module-indirect') {
+          return `
+            export const value = 'original-indirect';
           `
         }
       },
@@ -41,10 +56,18 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: '#', replacement: resolve(__dirname, 'src') },
-      { find: /^custom-lib$/, replacement: resolve(__dirname, 'projects', 'custom-lib') },
-      { find: /^inline-lib$/, replacement: resolve(__dirname, 'projects', 'inline-lib') },
+      { find: /^#/, replacement: resolve(import.meta.dirname, 'src') },
+      { find: /^custom-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'custom-lib') },
+      { find: /^inline-lib$/, replacement: resolve(import.meta.dirname, 'projects', 'inline-lib') },
     ],
+    noExternal: [/projects\/vite-external/],
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        noExternal: [/projects\/vite-environment-external/],
+      },
+    },
   },
   server: {
     port: 3022,
@@ -52,43 +75,58 @@ export default defineConfig({
   test: {
     api: {
       port: 3023,
+      allowExec: false,
+      allowWrite: false,
     },
     name: 'core',
     includeSource: [
       'src/in-source/*.ts',
     ],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // FIXME: wait for ecma decorator support in rolldown/oxc
+      // https://github.com/oxc-project/oxc/issues/9170
+      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
       './test/setup.ts',
     ],
+    server: {
+      deps: {
+        external: [
+          'tinyspy',
+          /src\/external/,
+          /esm\/esm/,
+          /packages\/web-worker/,
+          /\.wasm$/,
+          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
+          /dep-esm-non-existing/,
+        ],
+        inline: ['inline-lib'],
+      },
+    },
+    includeTaskLocation: true,
+    reporters: process.env.GITHUB_ACTIONS
+      ? ['default', ['github-actions', { displayAnnotations: false }]]
+      : [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
-    environmentMatchGlobs: [
-      ['**/*.dom.test.ts', 'happy-dom'],
-      ['test/env-glob-dom/**', 'jsdom'],
-    ],
-    poolMatchGlobs: [
-      ['**/test/*.child_process.test.ts', 'forks'],
-      ['**/test/*.threads.test.ts', 'threads'],
-    ],
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.typecheck.json',
+    },
     environmentOptions: {
       custom: {
         option: 'config-option',
       },
     },
-    poolOptions: {
-      threads: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-      forks: {
-        execArgv: ['--experimental-wasm-modules'],
-      },
-    },
+    execArgv: ['--experimental-wasm-modules'],
     env: {
       CUSTOM_ENV: 'foo',
     },
@@ -105,25 +143,12 @@ export default defineConfig({
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
-    server: {
-      deps: {
-        external: [
-          'tinyspy',
-          /src\/external/,
-          /esm\/esm/,
-          /packages\/web-worker/,
-          /\.wasm$/,
-          /\/wasm-bindgen-no-cyclic\/index_bg.js/,
-        ],
-        inline: ['inline-lib'],
-      },
-    },
     alias: [
       {
         find: 'test-alias',
         replacement: '',
         // vitest doesn't crash because function is defined
-        customResolver: () => resolve(__dirname, 'src', 'aliased-mod.ts'),
+        customResolver: () => resolve(import.meta.dirname, 'src', 'aliased-mod.ts'),
       },
     ],
     onConsoleLog(log) {
@@ -133,6 +158,36 @@ export default defineConfig({
       if (log.includes('Importing WebAssembly ')) {
         return false
       }
+      if (log.includes('run [...filters]')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/some-invalid-path')) {
+        return false
+      }
+      if (log.includes('Cannot find module') && log.includes('/web-worker/workerInvalid-path.ts')) {
+        return false
+      }
+      if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
+        return false
+      }
+      if (log.startsWith('Importing from') && log.includes('is deprecated since Vitest 4.1')) {
+        return false
+      }
     },
+    projects: [
+      project('threads', 'red'),
+      project('forks', 'green'),
+      project('vmThreads', 'blue'),
+    ],
   },
 })
+
+function project(pool: Pool, color: LabelColor) {
+  return {
+    extends: './vite.config.ts',
+    test: {
+      name: { label: pool, color },
+      pool,
+    },
+  }
+}

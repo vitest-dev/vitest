@@ -25,20 +25,20 @@ export interface BenchmarkUserOptions {
   includeSource?: string[]
 
   /**
-   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
-   * and/or paths to custom reporters
+   * Custom reporters to use for output. Can contain one or more built-in reporter names, reporter instances,
+   * and/or paths to custom reporter files to import.
    *
    * @default ['default']
    */
-  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
+  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter | (string & {})>
 
   /**
    * @deprecated Use `benchmark.outputJson` instead
    */
   outputFile?:
     | string
-    | (Partial<Record<BenchmarkBuiltinReporters, string>> &
-      Record<string, string>)
+    | (Partial<Record<BenchmarkBuiltinReporters, string>>
+      & Record<string, string>)
 
   /**
    * benchmark output file to compare against
