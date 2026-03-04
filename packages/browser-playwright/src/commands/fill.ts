@@ -1,5 +1,6 @@
 import type { UserEvent } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
+import { getDescribedLocator } from './utils'
 
 export const fill: UserEventCommand<UserEvent['fill']> = async (
   context,
@@ -7,7 +8,6 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
   text,
   options = {},
 ) => {
-  const { iframe } = context
-  const element = iframe.locator(selector)
+  const element = getDescribedLocator(context, selector)
   await element.fill(text, options)
 }
