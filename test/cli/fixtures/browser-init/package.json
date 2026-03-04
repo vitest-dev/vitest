@@ -3,9 +3,9 @@
     "test:browser": "vitest --config=vitest.browser.config.ts"
   },
   "dependencies": {
-    "vitest": "latest"
+    "vitest": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/browser-preview": "latest"
+    "@vitest/browser-preview": "workspace:*"
   }
 }
