@@ -20,6 +20,8 @@ export function defineBrowserCommand<T extends unknown[]>(
 // export type { ProjectBrowser } from './project'
 export { parseKeyDef, resolveScreenshotPath } from './utils'
 
+export { asLocator } from 'ivya'
+
 export const createBrowserServer: BrowserServerFactory = async (options) => {
   const project = options.project
   const configFile = project.vite.config.configFile

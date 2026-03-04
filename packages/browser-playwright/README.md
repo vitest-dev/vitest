@@ -1,6 +1,6 @@
 # @vitest/browser-playwright
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/browser-playwright?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/browser-playwright)
+[![NPM version](https://img.shields.io/npm/v/@vitest/browser-playwright?color=a1b858&label=)](https://npmx.dev/package/@vitest/browser-playwright)
 
 Run your Vitest [browser tests](https://vitest.dev/guide/browser/) using [playwright](https://playwright.dev/docs/api/class-playwright) API. Note that Vitest does not use playwright as a test runner, but only as a browser provider.
 

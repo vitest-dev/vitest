@@ -120,7 +120,7 @@ jobs:
       - name: Test Examples
         run: pnpm run test:examples
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
@@ -242,7 +242,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown

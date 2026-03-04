@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
+    "@types/yauzl": "catalog:",
     "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitest/browser": "workspace:*",
     "@vitest/browser-playwright": "workspace:*",
@@ -46,6 +47,7 @@
     "url": "^0.11.4",
     "vitest": "workspace:*",
     "vitest-browser-react": "^2.0.5",
-    "ws": "catalog:"
+    "ws": "catalog:",
+    "yauzl": "catalog:"
   }
 }

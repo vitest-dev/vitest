@@ -21,8 +21,8 @@
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@iconify/vue": "catalog:",
-    "@shikijs/transformers": "^3.22.0",
-    "@shikijs/vitepress-twoslash": "^3.22.0",
+    "@shikijs/transformers": "^3.23.0",
+    "@shikijs/vitepress-twoslash": "^3.23.0",
     "@unocss/reset": "catalog:",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/vitepress": "^1.1.0",
@@ -36,7 +36,7 @@
     "vitepress": "2.0.0-alpha.16",
     "vitepress-plugin-group-icons": "^1.7.1",
     "vitepress-plugin-llms": "^1.11.0",
-    "vitepress-plugin-tabs": "^0.7.3",
+    "vitepress-plugin-tabs": "^0.8.0",
     "workbox-window": "^7.4.0"
   }
 }

@@ -1085,7 +1085,7 @@ import { vi } from 'vitest'
 vi.useFakeTimers()
 
 // Manual mode (default)
-vi.setTimerTickMode({ mode: 'manual' })
+vi.setTimerTickMode('manual')
 
 let i = 0
 setInterval(() => console.log(++i), 50)
@@ -1093,13 +1093,13 @@ setInterval(() => console.log(++i), 50)
 vi.advanceTimersByTime(150) // logs 1, 2, 3
 
 // nextTimerAsync mode
-vi.setTimerTickMode({ mode: 'nextTimerAsync' })
+vi.setTimerTickMode('nextTimerAsync')
 
 // Timers will advance automatically after each macrotask
 await new Promise(resolve => setTimeout(resolve, 150)) // logs 4, 5, 6
 
 // interval mode (default when 'fakeTimers.shouldAdvanceTime' is `true`)
-vi.setTimerTickMode({ mode: 'interval', interval: 50 })
+vi.setTimerTickMode('interval', 50)
 
 // Timers will advance automatically every 50ms
 await new Promise(resolve => setTimeout(resolve, 150)) // logs 7, 8, 9

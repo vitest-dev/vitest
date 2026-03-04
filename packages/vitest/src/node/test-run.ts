@@ -230,6 +230,11 @@ export class TestRun {
       return
     }
 
+    if (event === 'test-cancel' && entity.type === 'test') {
+      // This is used to just update state of the task
+      return
+    }
+
     if (event === 'test-prepare' && entity.type === 'test') {
       return await this.vitest.report('onTestCaseReady', entity)
     }

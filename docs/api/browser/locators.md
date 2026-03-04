@@ -7,7 +7,7 @@ outline: [2, 3]
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmx.dev/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
 
 ::: tip
 This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
@@ -818,6 +818,30 @@ const { path, base64 } = await button.screenshot({
 ::: warning WARNING <Version>3.2.0</Version>
 Note that `screenshot` will always return a base64 string if `save` is set to `false`.
 The `path` is also ignored in that case.
+:::
+
+### mark
+
+```ts
+function mark(name: string, options?: { stack?: string }): Promise<void>
+```
+
+Adds a named marker to the trace timeline and uses the current locator as marker context.
+
+Pass `options.stack` to override the callsite location in trace metadata. This is useful for wrapper libraries that need to preserve the end-user source location.
+
+```ts
+import { page } from 'vitest/browser'
+
+const submitButton = page.getByRole('button', { name: 'Submit' })
+
+await submitButton.mark('before submit')
+await submitButton.click()
+await submitButton.mark('after submit')
+```
+
+::: tip
+This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
 :::
 
 ### query
