@@ -111,24 +111,13 @@ test('can mock invalid module', () => {
     `,
   })
 
-  if (rolldownVersion) {
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "can mock invalid module": "passed",
-        },
-      }
-    `)
-  }
-  else {
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "can mock invalid module": "passed",
-        },
-      }
-    `)
-  }
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "can mock invalid module": "passed",
+      },
+    }
+  `)
 })
 
 test('redirect mock with syntax error in original does not load original', async () => {
@@ -285,6 +274,102 @@ test('mock works without loading original', () => {
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "mock works without loading original": "passed",
+      },
+    }
+  `)
+})
+
+test.for(['node', 'playwright', 'webdriverio'])('mocking actual module with factory skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree, root } = await runInlineTests({
+    'vitest.config.js': `
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
+  plugins: [{
+    name: 'guard-load',
+    transform(code, id) {
+      if (id.includes('do-not-load')) {
+        throw new Error('original module should not be transformed')
+      }
+    },
+  }],
+})
+    `,
+    './do-not-load.js': `export const value = 'original'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import * as dep from './do-not-load.js'
+
+vi.mock('./do-not-load.js', () => {
+  return { value: 'mocked' }
+})
+
+test('mock works without loading original', () => {
+  expect(dep).toMatchObject({ value: 'mocked' })
+})
+    `,
+  }, modeToConfig(mode))
+
+  if (mode === 'webdriverio') {
+    const tree = errorTree()
+    for (const child of Object.values(tree)) {
+      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
+    }
+    expect(tree).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "__module_errors__": [
+            "Failed to import test file <root>/basic.test.js",
+          ],
+        },
+      }
+    `)
+    return;
+  }
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "mock works without loading original": "passed",
+      },
+    }
+  `)
+})
+
+// TODO
+test.fails.for(['node', 'playwright', 'webdriverio'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree } = await runInlineTests({
+    'vitest.config.js': `
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
+  plugins: [{
+    name: 'guard-load',
+    transform(code, id) {
+      if (id.includes('test-dep-mock')) {
+        // throw new Error('original module should not be transformed')
+      }
+    },
+  }],
+})
+    `,
+    './__mocks__/test-dep-mock': `export const value = 'mocked'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import { value } from 'test-dep-mock'
+
+vi.mock('test-dep-mock')
+
+test('mock works without loading original', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+  }, modeToConfig(mode))
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
