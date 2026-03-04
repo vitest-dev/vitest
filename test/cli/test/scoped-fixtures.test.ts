@@ -660,7 +660,7 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
   `)
 })
 
-test.only('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
+test('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
   const { stderr, fixtures } = await runFixtureTests(({ log }) => {
     return it
       .extend('fileValue', { scope: 'file' }, () => {
@@ -694,6 +694,44 @@ test.only('global beforeAll/afterAll hooks throw error when accessing any fixtur
           5|     fileValue
           6|   }) => {
      ❯ basic.test.ts:11:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
+test('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
+  const { stderr, fixtures } = await runFixtureTests(({ log }) => {
+    return it
+      .extend('fileValue', { scope: 'file' }, () => {
+        log('fileValue setup')
+        return 'file-scoped'
+      })
+  }, {
+    'basic.test.ts': ({ extendedTest, beforeAll }) => {
+      beforeAll<{ fileValue: string }>((suite) => {
+        console.log('>> fixture | beforeAll | file:', suite.fileValue)
+      })
+      extendedTest('test1', ({}) => {})
+    },
+  })
+
+  expect(fixtures).toMatchInlineSnapshot(`""`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    FixtureParseError: The 1st argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). Instead, received "suite". If you used internal "suite" task as the 1st argument previously, access it in the 2nd argument instead.
+     ❯ basic.test.ts:4:3
+          2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
+          3| const results = await (({ extendedTest, beforeAll }) => {
+          4|   beforeAll((suite) => {
+           |   ^
+          5|     console.log(">> fixture | beforeAll | file:", suite.fileValue);
+          6|   });
+     ❯ basic.test.ts:9:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

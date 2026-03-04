@@ -1,7 +1,7 @@
 import type { FixtureFn, Suite, VitestRunner } from './types'
 import type { File, FixtureOptions, TestContext } from './types/tasks'
-import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
-import { FixtureAccessError, FixtureDependencyError } from './errors'
+import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
+import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
 
@@ -269,12 +269,14 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   cleanupFnArray.length = fromIndex
 }
 
+type SuiteHook = 'beforeAll' | 'afterAll' | 'aroundAll'
+
 export interface WithFixturesOptions {
   /**
    * Whether this is a suite-level hook (beforeAll/afterAll/aroundAll).
    * Suite hooks can only access file/worker scoped fixtures and static values.
    */
-  suiteHook?: 'beforeAll' | 'afterAll' | 'aroundAll'
+  suiteHook?: SuiteHook
   /**
    * The test context to use. If not provided, the hookContext passed to the
    * returned function will be used.
@@ -548,8 +550,8 @@ function resolveDeps(
   return pendingFixtures
 }
 
-function validateSuiteHook(fn: Function, hook: string, suiteError: Error | undefined) {
-  const usedProps = getUsedProps(fn)
+function validateSuiteHook(fn: Function, hook: SuiteHook, suiteError: Error | undefined) {
+  const usedProps = getUsedProps(fn, { sourceError: suiteError, suiteHook: hook })
   if (usedProps.size) {
     const error = new FixtureAccessError(
       `The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. `
@@ -565,6 +567,7 @@ function validateSuiteHook(fn: Function, hook: string, suiteError: Error | undef
 }
 
 const kPropsSymbol = Symbol('$vitest:fixture-props')
+const kPropNamesSymbol = Symbol('$vitest:fixture-prop-names')
 
 interface FixturePropsOptions {
   index?: number
@@ -578,7 +581,21 @@ export function configureProps(fn: Function, options: FixturePropsOptions): void
   })
 }
 
-function getUsedProps(fn: Function): Set<string> {
+function memoProps(fn: Function, props: Set<string>): Set<string> {
+  (fn as any)[kPropNamesSymbol] = props
+  return props
+}
+
+interface PropsParserOptions {
+  sourceError?: Error | undefined
+  suiteHook?: SuiteHook
+}
+
+function getUsedProps(fn: Function, { sourceError, suiteHook }: PropsParserOptions = {}): Set<string> {
+  if (kPropNamesSymbol in fn) {
+    return fn[kPropNamesSymbol] as Set<string>
+  }
+
   const {
     index: fixturesIndex = 0,
     original: implementation = fn,
@@ -595,24 +612,31 @@ function getUsedProps(fn: Function): Set<string> {
   }
   const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   const args = splitByComma(match[1])
   if (!args.length) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   const fixturesArgument = args[fixturesIndex]
 
   if (!fixturesArgument) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   if (!(fixturesArgument[0] === '{' && fixturesArgument.endsWith('}'))) {
-    throw new Error(
-      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${fixturesArgument}".`,
+    const ordinalArgument = ordinal(fixturesIndex + 1)
+    const error = new FixtureParseError(
+      `The ${ordinalArgument} argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). `
+      + `Instead, received "${fixturesArgument}".`
+      + `${(suiteHook ? ` If you used internal "suite" task as the ${ordinalArgument} argument previously, access it in the ${ordinal(fixturesIndex + 2)} argument instead.` : '')}`,
     )
+    if (sourceError) {
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+    }
+    throw error
   }
 
   const _first = fixturesArgument.slice(1, -1).replace(/\s/g, '')
@@ -622,12 +646,16 @@ function getUsedProps(fn: Function): Set<string> {
 
   const last = props.at(-1)
   if (last && last.startsWith('...')) {
-    throw new Error(
+    const error = new FixtureParseError(
       `Rest parameters are not supported in fixtures, received "${last}".`,
     )
+    if (sourceError) {
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+    }
+    throw error
   }
 
-  return new Set(props)
+  return memoProps(fn, new Set(props))
 }
 
 function splitByComma(s: string) {
