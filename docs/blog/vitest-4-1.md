@@ -112,6 +112,34 @@ vitest --tags-filter="frontend && !flaky"
 vitest --tags-filter="api/*"
 ```
 
+## Experimental `viteModuleRunner: false`
+
+By default, Vitest runs all code inside Vite's [module runner](https://vite.dev/guide/api-environment-runtimes#modulerunner) — a permissive sandbox that provides `import.meta.env`, `require`, `__dirname`, `__filename`, and applies Vite plugins and aliases. While this makes getting started easy, it can hide real issues: your tests may pass in the sandbox but fail in production because the runtime behavior differs from native Node.js.
+
+Vitest 4.1 introduces [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner), which lets you disable the module runner entirely and run tests with native `import` instead:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      viteModuleRunner: false,
+    },
+  },
+})
+```
+
+With this flag, **no file transforms are applied** — your test files, source code, and setup files are executed by Node.js directly. This means faster startup, closer-to-production behavior, and issues like incorrect `__dirname` injection or silently passing imports of nonexistent exports are caught early.
+
+If you are using Node.js 22.18+ or 23.6+, TypeScript is [stripped natively](https://nodejs.org/en/learn/typescript/run-natively) — no extra configuration needed.
+
+Mocking with `vi.mock` and `vi.hoisted` is supported via the Node.js [Module Loader API](https://nodejs.org/api/module.html#customization-hooks) (requires Node.js 22.15+). Note that `import.meta.env`, Vite plugins, aliases, and the `istanbul` coverage provider are not available in this mode.
+
+Consider this option if you run server-side or script-like tests that don't need Vite transforms. For `jsdom`/`happy-dom` tests, we still recommend the default module runner or [browser mode](/guide/browser/).
+
+Read more in the [`experimental.viteModuleRunner` docs](/config/experimental#experimental-vitemodulerunner).
+
 ## Configure UI Browser Window
 
 Vitest 4.1 introduces [`browser.detailsPanelPosition`](/config/browser/detailspanelposition), letting you choose where the details panel appears in Browser UI.
