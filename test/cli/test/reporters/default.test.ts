@@ -164,11 +164,12 @@ describe('default reporter', async () => {
     })
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-      "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+      "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts (5 tests | 2 skipped | 1 todo) [...]ms
          ✓ passing test #1 [...]ms
          ✓ passing suite (1)
            ✓ passing test #2 [...]ms
          ↓ skipped test #1
+         ↓ todo test #1
          ↓ skipped suite (1)
            ↓ skipped test #2"
     `)
@@ -183,10 +184,11 @@ describe('default reporter', async () => {
     })
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-      "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+      "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts (5 tests | 2 skipped | 1 todo) [...]ms
          ✓ passing test #1 [...]ms
          ✓ passing suite (1)
-           ✓ passing test #2 [...]ms"
+           ✓ passing test #2 [...]ms
+         ↓ todo test #1"
     `)
   })
 

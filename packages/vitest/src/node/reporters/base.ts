@@ -134,6 +134,7 @@ export abstract class BaseReporter implements Reporter {
     let testsCount = 0
     let failedCount = 0
     let skippedCount = 0
+    let todoCount = 0
 
     // delaying logs to calculate the test stats first
     // which minimizes the amount of for loops
@@ -147,7 +148,7 @@ export abstract class BaseReporter implements Reporter {
           const suiteState = child.state()
 
           // Skipped suites are hidden when --hideSkippedTests, print otherwise
-          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped') {
+          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped' || child.task.mode === 'todo') {
             this.printTestSuite(child)
           }
 
@@ -161,10 +162,15 @@ export abstract class BaseReporter implements Reporter {
             failedCount++
           }
           else if (testResult.state === 'skipped') {
-            skippedCount++
+            if (child.options.mode === 'todo') {
+              todoCount++
+            }
+            else {
+              skippedCount++
+            }
           }
 
-          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped') {
+          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped' && child.options.mode !== 'todo') {
             // Skipped suites are hidden when --hideSkippedTests
             continue
           }
@@ -185,6 +191,7 @@ export abstract class BaseReporter implements Reporter {
       tests: testsCount,
       failed: failedCount,
       skipped: skippedCount,
+      todo: todoCount,
     }))
     logs.forEach(log => this.log(log))
   }
@@ -205,7 +212,7 @@ export abstract class BaseReporter implements Reporter {
       this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)} ${suffix}`)
     }
 
-    else if (this.ctx.config.hideSkippedTests && (testResult.state === 'skipped')) {
+    else if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
       // Skipped tests are hidden when --hideSkippedTests
     }
 
@@ -218,6 +225,7 @@ export abstract class BaseReporter implements Reporter {
     tests: number
     failed: number
     skipped: number
+    todo: number
   }): string {
     let state = c.dim(`${counts.tests} test${counts.tests > 1 ? 's' : ''}`)
 
@@ -227,6 +235,10 @@ export abstract class BaseReporter implements Reporter {
 
     if (counts.skipped) {
       state += c.dim(' | ') + c.yellow(`${counts.skipped} skipped`)
+    }
+
+    if (counts.todo) {
+      state += c.dim(' | ') + c.gray(`${counts.todo} todo`)
     }
 
     let suffix = c.dim('(') + state + c.dim(')') + this.getDurationPrefix(testModule.task)
