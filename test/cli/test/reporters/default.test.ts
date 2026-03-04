@@ -169,7 +169,7 @@ describe('default reporter', async () => {
          ✓ passing suite (1)
            ✓ passing test #2 [...]ms
          ↓ skipped test #1
-         ↓ todo test #1
+         □ todo test #1
          ↓ skipped suite (1)
            ↓ skipped test #2"
     `)
@@ -188,7 +188,7 @@ describe('default reporter', async () => {
          ✓ passing test #1 [...]ms
          ✓ passing suite (1)
            ✓ passing test #2 [...]ms
-         ↓ todo test #1"
+         □ todo test #1"
     `)
   })
 

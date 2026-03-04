@@ -36,7 +36,7 @@ test('prints skipped tests by default', async () => {
     "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts > passing test #1 [...]ms
      ✓ fixtures/reporters/pass-and-skip-test-suites.test.ts > passing suite > passing test #2 [...]ms
      ↓ fixtures/reporters/pass-and-skip-test-suites.test.ts > skipped test #1
-     ↓ fixtures/reporters/pass-and-skip-test-suites.test.ts > todo test #1
+     □ fixtures/reporters/pass-and-skip-test-suites.test.ts > todo test #1
      ↓ fixtures/reporters/pass-and-skip-test-suites.test.ts > skipped suite > skipped test #2"
   `)
 })
@@ -52,7 +52,7 @@ test('hides skipped tests when --hideSkippedTests', async () => {
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
     "✓ fixtures/reporters/pass-and-skip-test-suites.test.ts > passing test #1 [...]ms
      ✓ fixtures/reporters/pass-and-skip-test-suites.test.ts > passing suite > passing test #2 [...]ms
-     ↓ fixtures/reporters/pass-and-skip-test-suites.test.ts > todo test #1"
+     □ fixtures/reporters/pass-and-skip-test-suites.test.ts > todo test #1"
   `)
 })
 

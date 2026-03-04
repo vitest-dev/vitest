@@ -14,10 +14,12 @@ import {
   F_DOWN_RIGHT,
   F_LONG_DASH,
   F_POINTER,
+  F_TODO,
 } from './figures'
 
 export const pointer: string = c.yellow(F_POINTER)
 export const skipped: string = c.dim(c.gray(F_DOWN))
+export const todo: string = c.dim(c.gray(F_TODO))
 export const benchmarkPass: string = c.green(F_DOT)
 export const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
@@ -181,7 +183,11 @@ export function getStateString(
 }
 
 export function getStateSymbol(task: Task): string {
-  if (task.mode === 'skip' || task.mode === 'todo') {
+  if (task.mode === 'todo') {
+    return todo
+  }
+
+  if (task.mode === 'skip') {
     return skipped
   }
 
