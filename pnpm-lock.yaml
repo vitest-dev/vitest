@@ -1299,9 +1299,6 @@ importers:
       test-dep-invalid:
         specifier: link:./deps/dep-invalid
         version: link:deps/dep-invalid
-      test-dep-mock:
-        specifier: file:./deps/dep-mock
-        version: file:test/cli/deps/dep-mock
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4
@@ -9392,9 +9389,6 @@ packages:
 
   test-dep-error@file:test/browser/deps/test-dep-error:
     resolution: {directory: test/browser/deps/test-dep-error, type: directory}
-
-  test-dep-mock@file:test/cli/deps/dep-mock:
-    resolution: {directory: test/cli/deps/dep-mock, type: directory}
 
   text-decoder@1.1.1:
     resolution: {integrity: sha512-8zll7REEv4GDD3x4/0pW+ppIxSNs7H1J10IKFZsuOMscumCdM2a+toDGLPA3T+1+fLBql4zbt5z83GEQGGV5VA==}
@@ -18551,8 +18545,6 @@ snapshots:
       test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
 
   test-dep-error@file:test/browser/deps/test-dep-error: {}
-
-  test-dep-mock@file:test/cli/deps/dep-mock: {}
 
   text-decoder@1.1.1:
     dependencies:
