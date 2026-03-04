@@ -117,7 +117,7 @@ export abstract class BaseReporter implements Reporter {
     this.printTestModule(testModule)
   }
 
-  private logFailedTask(task: Task) {
+  protected logFailedTask(task: Task): void {
     if (this.ctx.config.silent === 'passed-only') {
       for (const log of task.logs || []) {
         this.onUserConsoleLog(log, 'failed')
