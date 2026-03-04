@@ -28,7 +28,7 @@ Exclude globs for benchmark test files
 - **Type:** `string[]`
 - **Default:** `[]`
 
-Include globs for in-source benchmark test files. This option is similar to [`includeSource`](#includesource).
+Include globs for in-source benchmark test files. This option is similar to [`includeSource`](/config/includesource).
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 

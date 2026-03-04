@@ -22,11 +22,11 @@ it('should work', ({ task }) => {
 
 ## Built-in Test Context
 
-#### `task`
+### `task`
 
 A readonly object containing metadata about the test.
 
-#### `expect`
+### `expect`
 
 The `expect` API bound to the current test:
 
@@ -52,7 +52,7 @@ it.concurrent('math is hard', ({ expect }) => {
 })
 ```
 
-#### `skip`
+### `skip`
 
 ```ts
 function skip(note?: string): never
@@ -79,7 +79,7 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
-#### `annotate` <Version>3.2.0</Version> {#annotate}
+### `annotate` <Version>3.2.0</Version> {#annotate}
 
 ```ts
 function annotate(
@@ -102,7 +102,7 @@ test('annotations API', async ({ annotate }) => {
 })
 ```
 
-#### `signal` <Version>3.2.0</Version> {#signal}
+### `signal` <Version>3.2.0</Version> {#signal}
 
 An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
 
@@ -117,11 +117,11 @@ it('stop request when test times out', async ({ signal }) => {
 }, 2000)
 ```
 
-#### `onTestFailed`
+### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
-#### `onTestFinished`
+### `onTestFinished`
 
 The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
