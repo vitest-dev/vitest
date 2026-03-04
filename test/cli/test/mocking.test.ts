@@ -326,7 +326,7 @@ test('mock works without loading original', () => {
         },
       }
     `)
-    return;
+    return
   }
 
   expect(stderr).toBe('')
@@ -339,34 +339,51 @@ test('mock works without loading original', () => {
   `)
 })
 
-// TODO
-test.fails.for(['node', 'playwright', 'webdriverio'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
-  const { stderr, errorTree } = await runInlineTests({
+test.for(['node', 'playwright', 'webdriverio'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree, root } = await runInlineTests({
     'vitest.config.js': `
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [{
     name: 'guard-load',
     transform(code, id) {
-      if (id.includes('test-dep-mock')) {
-        // throw new Error('original module should not be transformed')
+      if (id.includes('do-not-load') && !id.includes('__mocks__')) {
+        throw new Error('original module should not be transformed')
       }
     },
   }],
 })
     `,
-    './__mocks__/test-dep-mock': `export const value = 'mocked'`,
+    './do-not-load.js': `export const value = 'original'`,
+    './__mocks__/do-not-load.js': `export const value = 'mocked'`,
     './basic.test.js': `
 import { test, expect, vi } from 'vitest'
-import { value } from 'test-dep-mock'
+import { value } from './do-not-load.js'
 
-vi.mock('test-dep-mock')
+vi.mock('./do-not-load.js')
 
 test('mock works without loading original', () => {
   expect(value).toBe('mocked')
 })
     `,
   }, modeToConfig(mode))
+
+  if (mode === 'webdriverio') {
+    const tree = errorTree()
+    for (const child of Object.values(tree)) {
+      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
+    }
+    expect(tree).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "__module_errors__": [
+            "Failed to import test file <root>/basic.test.js",
+          ],
+        },
+      }
+    `)
+    return
+  }
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
