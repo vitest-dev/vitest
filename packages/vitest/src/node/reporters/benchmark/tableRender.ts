@@ -155,11 +155,10 @@ export function renderTable(
           const diff = bench.current.throughput.mean / bench.baseline.throughput.mean
           const diffFixed = diff.toFixed(2)
 
-          if (diffFixed === '1.0.0') {
+          if (diffFixed === '1.00') {
             body += c.gray(`  [${diffFixed}x]`)
           }
-
-          if (diff > 1) {
+          else if (diff > 1) {
             body += c.blue(`  [${diffFixed}x] ⇑`)
           }
           else {

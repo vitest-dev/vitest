@@ -10,6 +10,7 @@ import type { SerializedConfig } from '../config'
 import type {
   Benchmark,
   BenchmarkResult,
+  BenchmarkStatistics,
   TinybenchTask,
 } from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
@@ -18,12 +19,40 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
 
+function createEmptyStatistics(): BenchmarkStatistics {
+  return {
+    aad: 0,
+    critical: 0,
+    df: 0,
+    mad: 0,
+    max: 0,
+    mean: 0,
+    min: 0,
+    moe: 0,
+    p50: 0,
+    p75: 0,
+    p99: 0,
+    p995: 0,
+    p999: 0,
+    rme: 0,
+    samples: undefined,
+    samplesCount: 0,
+    sd: 0,
+    sem: 0,
+    variance: 0,
+  }
+}
+
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
     name,
     rank: 0,
     numberOfSamples: 0,
-  } as BenchmarkResult
+    latency: createEmptyStatistics(),
+    throughput: createEmptyStatistics(),
+    period: 0,
+    totalTime: 0,
+  }
 }
 
 async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
@@ -62,7 +91,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
-      task: InstanceType<typeof TinybenchTask>,
+      task: TinybenchTask,
       benchmark: Benchmark,
     ) => {
       task.addEventListener(
@@ -91,7 +120,6 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     }
 
     const { setTimeout } = getSafeTimers()
-    const tasks: [TinybenchTask, Benchmark][] = []
     for (const benchmark of benchmarkGroup) {
       const benchOptions = getBenchOptions(benchmark)
       const bench = new Bench({
@@ -106,11 +134,12 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       }
       addBenchTaskListener(bench.getTask(benchmark.name)!, benchmark)
       updateTask('test-prepare', benchmark)
-      tasks.push([await new Promise<TinybenchTask>(resolve =>
+      await new Promise<void>(resolve =>
         setTimeout(async () => {
-          resolve((await bench.run())[0])
+          await bench.run()
+          resolve()
         }),
-      ), benchmark])
+      )
     }
 
     suite.result!.duration = performance.now() - start
