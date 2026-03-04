@@ -1,5 +1,7 @@
 # @vitest/expect
 
+[![NPM version](https://img.shields.io/npm/v/@vitest/runner?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/runner)
+
 Jest's expect matchers as a Chai plugin.
 
 ## Usage
@@ -19,3 +21,5 @@ chai.use(JestChaiExpect)
 // adds asymmetric matchers like stringContaining, objectContaining
 chai.use(JestAsymmetricMatchers)
 ```
+
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/expect) | [Documentation](https://vitest.dev/api/expect)

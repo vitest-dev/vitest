@@ -1,5 +1,7 @@
 # @vitest/snapshot
 
+[![NPM version](https://img.shields.io/npm/v/@vitest/snapshot?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/snapshot)
+
 Lightweight implementation of Jest's snapshots.
 
 ## Usage
@@ -82,3 +84,5 @@ manager.add(result)
 
 console.log(manager.summary)
 ```
+
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/snapshot) | [Documentation](https://vitest.dev/guide/snapshot)

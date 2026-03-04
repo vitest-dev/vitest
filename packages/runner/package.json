@@ -5,7 +5,7 @@
   "description": "Vitest test runner",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/runner#readme",
+  "homepage": "https://vitest.dev/api/advanced/runner",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,11 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "test-runner"
+  ],
   "sideEffects": true,
   "exports": {
     ".": {
