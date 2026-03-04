@@ -1,6 +1,6 @@
 # @vitest/coverage-istanbul
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/coverage-istanbul?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/coverage-istanbul)
+[![NPM version](https://img.shields.io/npm/v/@vitest/coverage-istanbul?color=a1b858&label=)](https://npmx.dev/package/@vitest/coverage-istanbul)
 
 Vitest coverage provider that instruments code coverage via [istanbul](https://istanbul.js.org/).
 

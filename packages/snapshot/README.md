@@ -1,6 +1,6 @@
 # @vitest/snapshot
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/snapshot?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/snapshot)
+[![NPM version](https://img.shields.io/npm/v/@vitest/snapshot?color=a1b858&label=)](https://npmx.dev/package/@vitest/snapshot)
 
 Lightweight implementation of Jest's snapshots.
 

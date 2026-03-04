@@ -1,6 +1,6 @@
 # @vitest/expect
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/runner?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/runner)
+[![NPM version](https://img.shields.io/npm/v/@vitest/runner?color=a1b858&label=)](https://npmx.dev/package/@vitest/runner)
 
 Jest's expect matchers as a Chai plugin.
 

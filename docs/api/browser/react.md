@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-react
 
-The community [`vitest-browser-react`](https://www.npmjs.com/package/vitest-browser-react) package renders [React](https://react.dev/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-react`](https://npmx.dev/package/vitest-browser-react) package renders [React](https://react.dev/) components in [Browser Mode](/guide/browser/).
 
 ```jsx
 import { render } from 'vitest-browser-react'
