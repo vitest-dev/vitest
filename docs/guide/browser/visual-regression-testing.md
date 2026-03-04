@@ -421,7 +421,7 @@ Your CI needs browsers installed. How you do this depends on your provider:
 ::: tabs key:provider
 == Playwright
 
-[Playwright](https://npmjs.com/package/playwright) makes this easy. Just pin
+[Playwright](https://npmx.dev/package/playwright) makes this easy. Just pin
 your version and add this before running tests:
 
 ```yaml [.github/workflows/ci.yml]
@@ -432,7 +432,7 @@ your version and add this before running tests:
 
 == WebdriverIO
 
-[WebdriverIO](https://www.npmjs.com/package/webdriverio) expects you to bring
+[WebdriverIO](https://npmx.dev/package/webdriverio) expects you to bring
 your own browsers. The folks at
 [@browser-actions](https://github.com/browser-actions) have your back:
 

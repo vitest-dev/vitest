@@ -1,6 +1,6 @@
 # @vitest/coverage-v8
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/coverage-v8?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/coverage-v8)
+[![NPM version](https://img.shields.io/npm/v/@vitest/coverage-v8?color=a1b858&label=)](https://npmx.dev/package/@vitest/coverage-v8)
 
 Vitest coverage provider that supports native code coverage via [v8](https://v8.dev/blog/javascript-code-coverage).
 

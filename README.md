@@ -20,7 +20,7 @@ Vitest
 Next generation testing framework powered by Vite.
 <p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
+  <a href="https://npmx.dev/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
 <p>
 
 <p align="center">

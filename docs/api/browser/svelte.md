@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-svelte
 
-The community [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
