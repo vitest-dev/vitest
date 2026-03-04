@@ -11,6 +11,7 @@ import * as viteModuleRunner from 'vite/module-runner'
 import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
+import { injectQuery } from './utils'
 
 export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
@@ -165,11 +166,21 @@ export class VitestModuleRunner
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
+      // detect self-import and change it to "importActual" automatically
+      const mockedModule = mod.meta.mockedModule as MockedModule
+      const mockId = this.mocker.getMockPath(mod.id)
+      const isSelfImport = callstack.includes(mockId)
+        || callstack.includes(url)
+        || ('redirect' in mockedModule && callstack.includes(mockedModule.redirect))
+      if (isSelfImport) {
+        const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
+        return this._cachedRequest(node.url, node, callstack, metadata)
+      }
       mocked = await this.mocker.requestWithMockedModule(
         url,
         mod,
         callstack,
-        mod.meta.mockedModule as MockedModule,
+        mockedModule,
       )
     }
     else {
