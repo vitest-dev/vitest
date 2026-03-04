@@ -87,8 +87,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       task.addEventListener(
         'error',
         (e) => {
-          const task = e.task
-          defer.reject(benchmark ? task.result!.error : e)
+          defer.reject(e.task?.result?.error ?? e)
         },
         {
           once: true,
