@@ -51,6 +51,10 @@ For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bl
 
 To stay updated, keep an eye on the [VoidZero blog](https://voidzero.dev/blog) and subscribe to the [newsletter](https://voidzero.dev/newsletter).
 
+## Vite 8 Support
+
+This release adds support for the new Vite 8 version. Additionally, Vitest now uses the installed `vite` version instead of downloading a separate dependency, if possible. This makes issues like type inconsistencies in your config file obsolete.
+
 ## Test Tags
 
 [Tags](/guide/test-tags) let you label tests to organize them into groups. Once tagged, you can filter tests by tag or apply shared options - like a longer timeout or automatic retries - to every test with a given tag.
@@ -252,7 +256,7 @@ This change could be considered breaking - previously Vitest passed down undocum
 
 ## New `aroundAll` and `aroundEach` Hooks
 
-New `aroundEach` hook registers a callback function that wraps around each test within the current suite. The callback receives a `runTest` function that **must** be called to run the test. The `aroundAll` hook works similarly, but is called for every suite, not a test.
+The new `aroundEach` hook registers a callback function that wraps around each test within the current suite. The callback receives a `runTest` function that **must** be called to run the test. The `aroundAll` hook works similarly, but is called for every suite, not every test.
 
 You should use `aroundEach` when your test needs to run **inside a context** that wraps around it, such as:
 - Wrapping tests in [AsyncLocalStorage](https://nodejs.org/api/async_context.html#class-asynclocalstorage) context
@@ -260,7 +264,7 @@ You should use `aroundEach` when your test needs to run **inside a context** tha
 - Database transactions
 
 ```ts
-import { aroundEach, test as baseTest } from 'vitest'
+import { test as baseTest } from 'vitest'
 
 const test = baseTest
   .extend('db', async ({}, { onCleanup }) => {
@@ -367,9 +371,9 @@ expect(fn).to.have.callCount(1) // expect(fn).toHaveBeenCalledTimes(1)
 ## Coverage `ignore start/stop` Ignore Hints
 
 You can now completely ignore specific lines from code coverage using `ignore start/stop` comments.
-In Vitest v3 this was supported by `v8` provider, but not in v4.0 version due to underlying dependency changes.
+In Vitest v3, this was supported by the `v8` provider, but not in v4.0 due to underlying dependency changes.
 
-Due to community's request, we've now implemented it back outselves and extended the support to both `v8` and `istanbul` providers.
+Due to the community's request, we've now implemented it back ourselves and extended the support to both `v8` and `istanbul` providers.
 
 ```ts
 /* istanbul ignore start -- @preserve */
@@ -402,7 +406,7 @@ See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code) for more exam
 If you want to get code coverage only for the modified files, you can use [`coverage.changed`](/config/coverage.html#coverage-changed) to limit the file inclusion.
 
 Compared to the regular [`--changed`](/guide/cli.html#changed) flag, `--coverage.changed` allows you to still run all test files, but limit the coverage reporting only to the changed files.
-This allows you to exclude non-changed files from coverage that regular `--changed` would have included in.
+This allows you to exclude unchanged files from coverage that `--changed` would otherwise include.
 
 ## Acknowledgments
 
