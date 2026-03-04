@@ -336,6 +336,46 @@ expect(fn).to.have.returned // expect(fn).toHaveReturned()
 expect(fn).to.have.callCount(1) // expect(fn).toHaveBeenCalledTimes(1)
 ```
 
+## Coverage `ignore start/stop` Ignore Hints
+
+You can now completely ignore specific lines from code coverage using `ignore start/stop` comments.
+In Vitest v3 this was supported by `v8` provider, but not in v4.0 version due to underlying dependency changes.
+
+Due to community's request, we've now implemented it back outselves and extended the support to both `v8` and `istanbul` providers.
+
+```ts
+/* istanbul ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* istanbul ignore stop -- @preserve */
+
+console.log('Included')
+
+/* v8 ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* v8 ignore stop -- @preserve */
+
+console.log('Included')
+```
+
+See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code) for more examples.
+
+## Coverage For Changed Files Only
+
+If you want to get code coverage only for the modified files, you can use [`coverage.changed`](/config/coverage.html#coverage-changed) to limit the file inclusion.
+
+Compared to the regular [`--changed`](/guide/cli.html#changed) flag, `--coverage.changed` allows you to still run all test files, but limit the coverage reporting only to the changed files.
+This allows you to exclude non-changed files from coverage that regular `--changed` would have included in.
+
 ## Acknowledgments
 
 Vitest 4.1 is the result of countless hours by the [Vitest team](/team) and our contributors. We appreciate the individuals and companies sponsoring Vitest development. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) are part of the [VoidZero](https://voidzero.dev) Team and are able to work on Vite and Vitest full-time, and [Ari](https://github.com/ariperkkio) can invest more time in Vitest thanks to support from [Chromatic](https://www.chromatic.com/). A big shout-out to [Zammad](https://zammad.com), and sponsors on [Vitest's GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Vitest's Open Collective](https://opencollective.com/vitest).
