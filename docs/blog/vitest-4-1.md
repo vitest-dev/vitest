@@ -417,6 +417,10 @@ If you want to get code coverage only for the modified files, you can use [`cove
 Compared to the regular [`--changed`](/guide/cli.html#changed) flag, `--coverage.changed` allows you to still run all test files, but limit the coverage reporting only to the changed files.
 This allows you to exclude unchanged files from coverage that `--changed` would otherwise include.
 
+## Coverage in HTML Reporter and Subpath Deployments
+
+Coverage HTML viewing now works reliably across UI mode, HTML reporter, and browser mode — including when deployed under a subpath. For custom coverage reporters, the new [`coverage.htmlDir`](/config/coverage#coverage-htmldir) option can be used to integrate their HTML output.
+
 ## Acknowledgments
 
 Vitest 4.1 is the result of countless hours by the [Vitest team](/team) and our contributors. We appreciate the individuals and companies sponsoring Vitest development. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) are part of the [VoidZero](https://voidzero.dev) Team and are able to work on Vite and Vitest full-time, and [Ari](https://github.com/ariperkkio) can invest more time in Vitest thanks to support from [Chromatic](https://www.chromatic.com/). A big shout-out to [Zammad](https://zammad.com), and sponsors on [Vitest's GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Vitest's Open Collective](https://opencollective.com/vitest).
