@@ -145,11 +145,8 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     const { setTimeout } = getSafeTimers()
     for (const benchmark of benchmarkGroup) {
-      const benchOptions = getBenchOptions(benchmark)
-      const bench = new Bench({
-        ...benchOptions,
-        retainSamples: !!runner.config.benchmark?.includeSamples,
-      })
+      const benchOptions = getBenchOptions(benchmark, runner.config)
+      const bench = new Bench(benchOptions)
       bench.add(benchmark.name, getBenchFn(benchmark))
       benchmark.result = {
         state: 'run',

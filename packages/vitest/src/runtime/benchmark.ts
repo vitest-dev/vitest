@@ -1,4 +1,5 @@
 import type { Test } from '@vitest/runner'
+import type { SerializedConfig } from './config'
 import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
@@ -8,8 +9,11 @@ import { getWorkerState } from './utils'
 const benchFns = new WeakMap<Test, BenchFunction>()
 const benchOptsMap = new WeakMap<Test, BenchOptions>()
 
-export function getBenchOptions(key: Test): BenchOptions {
-  return benchOptsMap.get(key)!
+export function getBenchOptions(key: Test, config: SerializedConfig): BenchOptions {
+  return {
+    ...benchOptsMap.get(key)!,
+    retainSamples: !!config.benchmark?.includeSamples,
+  }
 }
 
 export function getBenchFn(key: Test): BenchFunction {
