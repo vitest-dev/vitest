@@ -35,11 +35,13 @@ export async function runBrowserTests(
   viteOverrides?: Partial<ViteUserConfig>,
   runnerOptions?: VitestRunnerCLIOptions,
 ) {
-  return runVitest({
+  const result = await runVitest({
     watch: false,
     reporters: 'none',
     ...config,
     browser: { headless: true, ...config?.browser },
     $viteConfig: viteOverrides,
   }, include, runnerOptions)
+
+  return { ...result, stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '') }
 }

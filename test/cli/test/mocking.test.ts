@@ -87,9 +87,7 @@ test('invalid packages', async () => {
           ],
         },
         "mock-wrapper.test.ts": {
-          "__module_errors__": [
-            "Failed to resolve entry for package "test-dep-invalid". The package may have incorrect main/module/exports specified in its package.json.",
-          ],
+          "basic": "passed",
         },
       }
     `)
@@ -97,10 +95,10 @@ test('invalid packages', async () => {
 })
 
 test('mocking modules with syntax error', async () => {
-  // TODO: manual mocked module still gets transformed so this is not supported yet.
   const { errorTree } = await runInlineTests({
     './syntax-error.js': `syntax error`,
     './basic.test.js': /* ts */ `
+import { test, expect, vi } from 'vitest'
 import * as dep from './syntax-error.js'
 
 vi.mock('./syntax-error.js', () => {
@@ -113,34 +111,49 @@ test('can mock invalid module', () => {
     `,
   })
 
-  if (rolldownVersion) {
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "__module_errors__": [
-            "Parse failure: Parse failed with 1 error:
-      Expected a semicolon or an implicit semicolon after a statement, but found none
-      1: syntax error
-               ^
-      At file: /syntax-error.js:1:6",
-          ],
-        },
-      }
-    `)
-  }
-  else {
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.js": {
-          "__module_errors__": [
-            "Parse failure: Expected ';', '}' or <eof>
-      At file: /syntax-error.js:1:7",
-          ],
-        },
-      }
-    `)
-  }
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "can mock invalid module": "passed",
+      },
+    }
+  `)
 })
+
+test('redirect mock with syntax error in original does not load original', async () => {
+  const { errorTree, stderr } = await runInlineTests({
+    './broken.js': `syntax error`,
+    './__mocks__/broken.js': `export const value = 'mocked'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import { value } from './broken.js'
+
+vi.mock('./broken.js')
+
+test('redirect mock works without loading broken original', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "redirect mock works without loading broken original": "passed",
+      },
+    }
+  `)
+})
+
+function replaceRoot(tree: any, root: string): any {
+  for (const child of Object.values(tree) as any[]) {
+    if (child?.__module_errors__) {
+      child.__module_errors__ = child.__module_errors__.map((e: string) => e.replace(root, '<root>'))
+    }
+  }
+  return tree
+}
 
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {
@@ -205,11 +218,7 @@ test('importOriginal returns original virtual module exports', () => {
   // intercepts the clean id, so importActual returns the mock instead
   // of the original module. This is a known limitation.
   if (mode === 'webdriverio') {
-    const tree = errorTree()
-    tree['basic.test.js'].__module_errors__ = tree['basic.test.js'].__module_errors__.map(
-      (e: string) => e.replace(root, '<root>'),
-    )
-    expect(tree).toMatchInlineSnapshot(`
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
       {
         "__unhandled_errors__": [
           "[vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock",
@@ -270,6 +279,111 @@ test('mock works without loading original', () => {
 
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "mock works without loading original": "passed",
+      },
+    }
+  `)
+})
+
+test.for(['node', 'playwright', 'webdriverio'])('mocking actual module with factory skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree, root } = await runInlineTests({
+    'vitest.config.js': `
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
+  plugins: [{
+    name: 'guard-load',
+    transform(code, id) {
+      if (id.includes('do-not-load')) {
+        throw new Error('original module should not be transformed')
+      }
+    },
+  }],
+})
+    `,
+    './do-not-load.js': `export const value = 'original'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import * as dep from './do-not-load.js'
+
+vi.mock('./do-not-load.js', () => {
+  return { value: 'mocked' }
+})
+
+test('mock works without loading original', () => {
+  expect(dep).toMatchObject({ value: 'mocked' })
+})
+    `,
+  }, modeToConfig(mode))
+
+  if (mode === 'webdriverio') {
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "__module_errors__": [
+            "Failed to import test file <root>/basic.test.js",
+          ],
+        },
+      }
+    `)
+    return
+  }
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "mock works without loading original": "passed",
+      },
+    }
+  `)
+})
+
+test.for(['node', 'playwright', 'webdriverio'])('mocking actual module via __mocks__ skips loading original (%s)', async (mode) => {
+  const { stderr, errorTree, root } = await runInlineTests({
+    'vitest.config.js': `
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
+  plugins: [{
+    name: 'guard-load',
+    transform(code, id) {
+      if (id.includes('do-not-load') && !id.includes('__mocks__')) {
+        throw new Error('original module should not be transformed')
+      }
+    },
+  }],
+})
+    `,
+    './do-not-load.js': `export const value = 'original'`,
+    './__mocks__/do-not-load.js': `export const value = 'mocked'`,
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+import { value } from './do-not-load.js'
+
+vi.mock('./do-not-load.js')
+
+test('mock works without loading original', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+  }, modeToConfig(mode))
+
+  if (mode === 'webdriverio') {
+    expect(replaceRoot(errorTree(), root)).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "__module_errors__": [
+            "Failed to import test file <root>/basic.test.js",
+          ],
+        },
+      }
+    `)
+    return
+  }
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
