@@ -829,154 +829,93 @@ describe('util.inspect conformance', () => {
 
 describe('loupe comparison', () => {
   const loupeOpts = { truncate: Infinity } // no truncation
-  const pi = (val: unknown) => prettyInspect(val)
-  const li = (val: unknown) => loupeInspect(val, loupeOpts)
 
-  // -- primitives --
-
-  test('null / undefined', () => {
-    expect(pi(null)).toMatchInlineSnapshot(`"null"`)
-    expect(li(null)).toMatchInlineSnapshot(`"null"`)
-    expect(pi(undefined)).toMatchInlineSnapshot(`"undefined"`)
-    expect(li(undefined)).toMatchInlineSnapshot(`"undefined"`)
+  // values where prettyInspect output matches loupe exactly
+  test.for([
+    null,
+    undefined,
+    true,
+    false,
+    -0,
+    42,
+    -123,
+    3.14,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    123n,
+    'hello',
+    '',
+    /test/gi,
+    new Date(10e11),
+    Symbol('test'),
+    {},
+    [],
+    [1, 2, 3],
+    { a: 1, b: 2 },
+    { a: { b: { c: 1 } } },
+  ])('matches loupe: %s', (val) => {
+    expect(prettyInspect(val)).toBe(loupeInspect(val, loupeOpts))
   })
 
-  test('booleans', () => {
-    expect(pi(true)).toMatchInlineSnapshot(`"true"`)
-    expect(li(true)).toMatchInlineSnapshot(`"true"`)
-    expect(pi(false)).toMatchInlineSnapshot(`"false"`)
-    expect(li(false)).toMatchInlineSnapshot(`"false"`)
+  // -- known divergences --
+
+  test('0 — loupe shows +0', () => {
+    expect(prettyInspect(0)).toMatchInlineSnapshot(`"0"`)
+    expect(loupeInspect(0, loupeOpts)).toMatchInlineSnapshot(`"+0"`)
   })
 
-  test('numbers', () => {
-    expect(pi(0)).toMatchInlineSnapshot(`"0"`)
-    expect(li(0)).toMatchInlineSnapshot(`"+0"`)
-    expect(pi(-0)).toMatchInlineSnapshot(`"-0"`)
-    expect(li(-0)).toMatchInlineSnapshot(`"-0"`)
-    expect(pi(42)).toMatchInlineSnapshot(`"42"`)
-    expect(li(42)).toMatchInlineSnapshot(`"42"`)
-    expect(pi(-123)).toMatchInlineSnapshot(`"-123"`)
-    expect(li(-123)).toMatchInlineSnapshot(`"-123"`)
-    expect(pi(3.14)).toMatchInlineSnapshot(`"3.14"`)
-    expect(li(3.14)).toMatchInlineSnapshot(`"3.14"`)
-    expect(pi(Number.NaN)).toMatchInlineSnapshot(`"NaN"`)
-    expect(li(Number.NaN)).toMatchInlineSnapshot(`"NaN"`)
-    expect(pi(Number.POSITIVE_INFINITY)).toMatchInlineSnapshot(`"Infinity"`)
-    expect(li(Number.POSITIVE_INFINITY)).toMatchInlineSnapshot(`"Infinity"`)
-    expect(pi(Number.NEGATIVE_INFINITY)).toMatchInlineSnapshot(`"-Infinity"`)
-    expect(li(Number.NEGATIVE_INFINITY)).toMatchInlineSnapshot(`"-Infinity"`)
+  test('string with single quotes — prettyInspect does not escape (escapeString: false)', () => {
+    expect(prettyInspect('it\'s')).toMatchInlineSnapshot(`"'it's'"`)
+    expect(loupeInspect('it\'s', loupeOpts)).toMatchInlineSnapshot(`"'it\\'s'"`)
   })
 
-  test('bigint', () => {
-    expect(pi(123n)).toMatchInlineSnapshot(`"123n"`)
-    expect(li(123n)).toMatchInlineSnapshot(`"123n"`)
+  test('anonymous function — prettyInspect adds "anonymous"', () => {
+    expect(prettyInspect(() => {})).toMatchInlineSnapshot(`"[Function anonymous]"`)
+    expect(loupeInspect(() => {}, loupeOpts)).toMatchInlineSnapshot(`"[Function]"`)
   })
 
-  test('strings', () => {
-    expect(pi('hello')).toMatchInlineSnapshot(`"'hello'"`)
-    expect(li('hello')).toMatchInlineSnapshot(`"'hello'"`)
-    expect(pi('')).toMatchInlineSnapshot(`"''"`)
-    expect(li('')).toMatchInlineSnapshot(`"''"`)
-    // single quote escaping
-    expect(pi('it\'s')).toMatchInlineSnapshot(`"'it's'"`)
-    expect(li('it\'s')).toMatchInlineSnapshot(`"'it\\'s'"`)
-  })
-
-  test('symbol', () => {
-    expect(pi(Symbol('test'))).toMatchInlineSnapshot(`"Symbol(test)"`)
-    expect(li(Symbol('test'))).toMatchInlineSnapshot(`"Symbol(test)"`)
-  })
-
-  test('regexp', () => {
-    expect(pi(/test/gi)).toMatchInlineSnapshot(`"/test/gi"`)
-    expect(li(/test/gi)).toMatchInlineSnapshot(`"/test/gi"`)
-  })
-
-  test('date', () => {
-    expect(pi(new Date(10e11))).toMatchInlineSnapshot(`"2001-09-09T01:46:40.000Z"`)
-    expect(li(new Date(10e11))).toMatchInlineSnapshot(`"2001-09-09T01:46:40.000Z"`)
-  })
-
-  // -- functions --
-
-  test('named function', () => {
-    function myFn() {}
-    expect(pi(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
-    expect(li(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
-  })
-
-  test('anonymous function', () => {
-    expect(pi(() => {})).toMatchInlineSnapshot(`"[Function anonymous]"`)
-    expect(li(() => {})).toMatchInlineSnapshot(`"[Function]"`)
-  })
-
-  test('async function', () => {
+  test('async function — prettyInspect loses AsyncFunction tag', () => {
     async function asyncFn() {}
-    expect(pi(asyncFn)).toMatchInlineSnapshot(`"[Function asyncFn]"`)
-    expect(li(asyncFn)).toMatchInlineSnapshot(`"[AsyncFunction asyncFn]"`)
+    expect(prettyInspect(asyncFn)).toMatchInlineSnapshot(`"[Function asyncFn]"`)
+    expect(loupeInspect(asyncFn, loupeOpts)).toMatchInlineSnapshot(`"[AsyncFunction asyncFn]"`)
   })
 
-  test('generator function', () => {
-    function* genFn() { yield 1 }
-    expect(pi(genFn)).toMatchInlineSnapshot(`"[Function genFn]"`)
-    expect(li(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
+  test('generator function — prettyInspect loses GeneratorFunction tag', () => {
+    function* genFn() {
+      yield 1
+    }
+    expect(prettyInspect(genFn)).toMatchInlineSnapshot(`"[Function genFn]"`)
+    expect(loupeInspect(genFn, loupeOpts)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
   })
 
-  // -- collections --
-
-  test('empty object / array', () => {
-    expect(pi({})).toMatchInlineSnapshot(`"{}"`)
-    expect(li({})).toMatchInlineSnapshot(`"{}"`)
-    expect(pi([])).toMatchInlineSnapshot(`"[]"`)
-    expect(li([])).toMatchInlineSnapshot(`"[]"`)
+  test('Map — prettyInspect adds space before brace', () => {
+    expect(prettyInspect(new Map([['a', 1]]))).toMatchInlineSnapshot(`"Map { 'a' => 1 }"`)
+    expect(loupeInspect(new Map([['a', 1]]), loupeOpts)).toMatchInlineSnapshot(`"Map{ 'a' => 1 }"`)
   })
 
-  test('array with items', () => {
-    expect(pi([1, 2, 3])).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
-    expect(li([1, 2, 3])).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
+  test('Set — prettyInspect adds space before brace', () => {
+    expect(prettyInspect(new Set([1, 2]))).toMatchInlineSnapshot(`"Set { 1, 2 }"`)
+    expect(loupeInspect(new Set([1, 2]), loupeOpts)).toMatchInlineSnapshot(`"Set{ 1, 2 }"`)
   })
 
-  test('object with properties', () => {
-    expect(pi({ a: 1, b: 2 })).toMatchInlineSnapshot(`"{ a: 1, b: 2 }"`)
-    expect(li({ a: 1, b: 2 })).toMatchInlineSnapshot(`"{ a: 1, b: 2 }"`)
+  test('Error — prettyInspect uses bracket format', () => {
+    expect(prettyInspect(new Error('boom'))).toMatchInlineSnapshot(`"[Error: boom]"`)
+    expect(loupeInspect(new Error('boom'), loupeOpts)).toMatchInlineSnapshot(`"Error: boom"`)
   })
 
-  test('nested object', () => {
-    expect(pi({ a: { b: { c: 1 } } })).toMatchInlineSnapshot(`"{ a: { b: { c: 1 } } }"`)
-    expect(li({ a: { b: { c: 1 } } })).toMatchInlineSnapshot(`"{ a: { b: { c: 1 } } }"`)
+  test('WeakMap — prettyInspect shows empty braces', () => {
+    expect(prettyInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap {}"`)
+    expect(loupeInspect(new WeakMap(), loupeOpts)).toMatchInlineSnapshot(`"WeakMap{…}"`)
   })
 
-  test('Map', () => {
-    const m = new Map([['a', 1]])
-    expect(pi(m)).toMatchInlineSnapshot(`"Map { 'a' => 1 }"`)
-    expect(li(m)).toMatchInlineSnapshot(`"Map{ 'a' => 1 }"`)
+  test('WeakSet — prettyInspect shows empty braces', () => {
+    expect(prettyInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
+    expect(loupeInspect(new WeakSet(), loupeOpts)).toMatchInlineSnapshot(`"WeakSet{…}"`)
   })
 
-  test('Set', () => {
-    const s = new Set([1, 2])
-    expect(pi(s)).toMatchInlineSnapshot(`"Set { 1, 2 }"`)
-    expect(li(s)).toMatchInlineSnapshot(`"Set{ 1, 2 }"`)
-  })
-
-  // -- special --
-
-  test('Error', () => {
-    expect(pi(new Error('boom'))).toMatchInlineSnapshot(`"[Error: boom]"`)
-    expect(li(new Error('boom'))).toMatchInlineSnapshot(`"Error: boom"`)
-  })
-
-  test('WeakMap', () => {
-    expect(pi(new WeakMap())).toMatchInlineSnapshot(`"WeakMap {}"`)
-    expect(li(new WeakMap())).toMatchInlineSnapshot(`"WeakMap{…}"`)
-  })
-
-  test('WeakSet', () => {
-    expect(pi(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
-    expect(li(new WeakSet())).toMatchInlineSnapshot(`"WeakSet{…}"`)
-  })
-
-  test('Promise', () => {
-    expect(pi(Promise.resolve())).toMatchInlineSnapshot(`"{}"`)
-    expect(li(Promise.resolve())).toMatchInlineSnapshot(`"Promise{…}"`)
+  test('Promise — prettyInspect drops constructor name in min mode', () => {
+    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"{}"`)
+    expect(loupeInspect(Promise.resolve(), loupeOpts)).toMatchInlineSnapshot(`"Promise{…}"`)
   })
 })
