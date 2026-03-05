@@ -12,7 +12,7 @@ export class BrowserServerCDPHandler {
   ) {}
 
   send(method: string, params?: Record<string, unknown>): Promise<unknown> {
-    return this.session.send(method, params)
+    return this.session.send(method as any, params)
   }
 
   on(event: string, id: string, once = false): void {
@@ -32,7 +32,7 @@ export class BrowserServerCDPHandler {
         }
       }
 
-      this.session.on(event, this.listeners[event])
+      this.session.on(event as any, this.listeners[event])
     }
   }
 
@@ -43,7 +43,7 @@ export class BrowserServerCDPHandler {
     this.listenerIds[event] = this.listenerIds[event].filter(l => l !== id)
 
     if (!this.listenerIds[event].length) {
-      this.session.off(event, this.listeners[event])
+      this.session.off(event as any, this.listeners[event])
       delete this.listeners[event]
     }
   }
