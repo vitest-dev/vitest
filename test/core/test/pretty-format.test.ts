@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest'
+import { inspect as nodeInspect } from 'node:util'
 import { format, plugins } from '@vitest/pretty-format'
+import { describe, expect, test } from 'vitest'
 
 // TODO
 // - multiline output should use inline snapshot?
@@ -217,7 +218,6 @@ describe('objects', () => {
   })
 
   test('keys are sorted by default', () => {
-    // eslint-disable-next-line sort-keys
     expect(format({ b: 1, a: 2 })).toBe(
       'Object {\n  "a": 2,\n  "b": 1,\n}',
     )
@@ -407,7 +407,6 @@ describe('min option', () => {
 
 describe('compareKeys option', () => {
   test('null preserves insertion order', () => {
-    // eslint-disable-next-line sort-keys
     expect(format({ b: 1, a: 2 }, { compareKeys: null })).toBe(
       'Object {\n  "b": 1,\n  "a": 2,\n}',
     )
@@ -577,6 +576,111 @@ describe('spacingInner / spacingOuter options', () => {
   test('spacingInner override', () => {
     // min: true still places comma before spacingInner
     expect(format([1, 2], { min: true, spacingInner: ' | ' })).toBe('[1, | 2]')
+  })
+})
+
+// -- util.inspect conformance --
+// pretty-format with the right options should approximate Node's util.inspect
+// output style. Tests are split into exact matches (compared directly via
+// test.each loop) and known divergences (tested individually).
+
+describe('util.inspect conformance', () => {
+  const inspectOpts = {
+    singleQuote: true,
+    quoteKeys: false,
+    min: true,
+    spacingInner: ' ',
+    spacingOuter: ' ',
+    printBasicPrototype: false,
+    compareKeys: null as null,
+  }
+  const prettyInspect = (val: unknown) => format(val, inspectOpts)
+
+  // values where pretty-format output exactly matches util.inspect
+  test.each([
+    null,
+    undefined,
+    true,
+    false,
+    0,
+    -0,
+    42,
+    -123,
+    3.14,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    123n,
+    -123n,
+    'hello',
+    '',
+    /test/gi,
+    new Date(10e11),
+    Symbol('test'),
+    {},
+    [],
+    [1, 2, 3],
+    [[1], [2]],
+    { a: 1, b: 2 },
+    { b: 1, a: 2 },
+    { a: { b: { c: 1 } } },
+    [{ a: 1 }, { b: 2 }],
+  ])('matches util.inspect: %s', (val) => {
+    expect(prettyInspect(val)).toBe(nodeInspect(val, { depth: null, maxArrayLength: null }))
+  })
+
+  // values where output diverges from util.inspect
+  test('string with single quotes — escapes instead of switching quote style', () => {
+    expect(prettyInspect('it\'s')).toBe('\'it\\\'s\'')
+    expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
+  })
+
+  test('function — no colon, different anonymous style', () => {
+    function myFn() {}
+    expect(prettyInspect(myFn)).toBe('[Function myFn]')
+    expect(nodeInspect(myFn)).toMatchInlineSnapshot(`"[Function: myFn]"`)
+
+    expect(prettyInspect((() => {}) as unknown)).toBe('[Function anonymous]')
+    expect(nodeInspect(() => {})).toMatchInlineSnapshot(`"[Function (anonymous)]"`)
+  })
+
+  test('error — bracket format, no stack', () => {
+    expect(prettyInspect(new Error('boom'))).toBe('[Error: boom]')
+    expect(nodeInspect(new Error('boom'))).toMatch('Error: boom\n')
+  })
+
+  test('Map — no size prefix', () => {
+    const m = new Map([['a', 1], ['b', 2]])
+    expect(prettyInspect(m)).toBe('Map { \'a\' => 1, \'b\' => 2 }')
+    expect(nodeInspect(m)).toMatchInlineSnapshot(`"Map(2) { 'a' => 1, 'b' => 2 }"`)
+  })
+
+  test('Set — no size prefix', () => {
+    const s = new Set([1, 2, 3])
+    expect(prettyInspect(s)).toBe('Set { 1, 2, 3 }')
+    expect(nodeInspect(s)).toMatchInlineSnapshot(`"Set(3) { 1, 2, 3 }"`)
+  })
+
+  test('circular reference — no ref labels', () => {
+    const val: any = {}
+    val.self = val
+    expect(prettyInspect(val)).toBe('{ self: [Circular] }')
+    expect(nodeInspect(val)).toMatchInlineSnapshot(`"<ref *1> { self: [Circular *1] }"`)
+  })
+
+  test('WeakMap — empty braces vs items unknown', () => {
+    expect(prettyInspect(new WeakMap())).toBe('WeakMap {}')
+    expect(nodeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap { <items unknown> }"`)
+  })
+
+  test('WeakSet — empty braces vs items unknown', () => {
+    expect(prettyInspect(new WeakSet())).toBe('WeakSet {}')
+    expect(nodeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet { <items unknown> }"`)
+  })
+
+  test('Promise — opaque, min mode drops constructor', () => {
+    expect(prettyInspect(Promise.resolve())).toBe('{}')
+    expect(nodeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise { undefined }"`)
   })
 })
 
