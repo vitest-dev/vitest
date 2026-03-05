@@ -24,7 +24,7 @@ A custom class that defines methods for sharding and sorting. You can extend `Ba
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
 
-If [`sequencer.groupOrder`](#grouporder) is specified, the sequencer will be called once for each group and pool.
+If [`sequence.groupOrder`](#sequence-grouporder) is specified, the sequencer will be called once for each group and pool.
 
 ## sequence.groupOrder
 
@@ -38,7 +38,7 @@ Controls the order in which this project runs its tests when using multiple [pro
 - If several projects use the same group order, they will run at the same time.
 
 This setting only affects the order in which projects run, not the order of tests within a project.
-To control test isolation or the order of tests inside a project, use the [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+To control test isolation or the order of tests inside a project, use the [`isolate`](/config/isolate) and [`sequence.sequencer`](/config/sequence#sequence-sequencer) options.
 
 ::: details Example
 Consider this example:

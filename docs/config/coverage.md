@@ -149,7 +149,7 @@ Generate coverage report even when tests fail.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
-Collect coverage of files outside the [project `root`](#root).
+Collect coverage of files outside the [project `root`](/config/root).
 
 ## coverage.excludeAfterRemap
 

@@ -241,7 +241,12 @@ export async function runVitest(
       return ctx?.state.getTestModules() || []
     },
     errorTree() {
-      return buildErrorTree(ctx?.state.getTestModules() || [])
+      const tree = buildErrorTree(ctx?.state.getTestModules() || [])
+      const errors = ctx?.state.getUnhandledErrors()
+      if (errors && errors.length > 0) {
+        tree.__unhandled_errors__ = errors.map((e: any) => e.message)
+      }
+      return tree
     },
     errorProjectTree() {
       return buildErrorProjectTree(ctx?.state.getTestModules() || [])
