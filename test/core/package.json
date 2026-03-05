@@ -19,6 +19,7 @@
     "@test/vite-external": "link:./projects/vite-external",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
+    "@vitest/pretty-format": "workspace:",
     "@vitest/runner": "workspace:*",
     "@vitest/test-dep-cjs": "file:./deps/dep-cjs",
     "@vitest/test-dep-nested-cjs": "file:./deps/dep-nested-cjs",
