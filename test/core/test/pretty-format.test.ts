@@ -954,8 +954,10 @@ describe('loupe comparison', () => {
       expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
     })
 
-    test('nested object', () => {
+    test('nested object — stringify adaptive maxDepth halves depth until it fits', () => {
       const obj = { a: { b: { c: 'deep' } } }
+      // full output is "{ a: { b: { c: 'deep' } } }" (28 chars)
+      // stringify halves maxDepth, collapsing inner object to [Object]
       expect(prettyInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: [Object] }"`)
       expect(loupeInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: { …(1) } }"`)
     })
