@@ -95,7 +95,7 @@ describe('format()', () => {
   })
 
   test('unnamed symbol', () => {
-    expect(format(Symbol())).toBe('Symbol()')
+    expect(format(Symbol(''))).toBe('Symbol()')
   })
 
   test('named function', () => {
@@ -108,7 +108,9 @@ describe('format()', () => {
   })
 
   test('named generator function', () => {
-    function* gen() { yield 1 }
+    function* gen() {
+      yield 1
+    }
     expect(format(gen)).toBe('[Function gen]')
   })
 
@@ -125,11 +127,11 @@ describe('format()', () => {
   })
 
   test('regexp from constructor', () => {
-    expect(format(new RegExp('regexp'))).toBe('/regexp/')
+    expect(format(/regexp/)).toBe('/regexp/')
   })
 
   test('error', () => {
-    expect(format(new Error())).toBe('[Error]')
+    expect(format(new Error('test'))).toBe('[Error: test]')
   })
 
   test('typed error with message', () => {
