@@ -918,4 +918,73 @@ describe('loupe comparison', () => {
     expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"{}"`)
     expect(loupeInspect(Promise.resolve(), loupeOpts)).toMatchInlineSnapshot(`"Promise{…}"`)
   })
+
+  // -- truncation comparison --
+  // loupe threads a character budget through recursion, truncating structurally.
+  // prettyInspect does surface-level truncation (structural summary for containers).
+
+  describe('truncation', () => {
+    test('short string — both fit', () => {
+      expect(prettyInspect('hi', { truncate: 40 })).toMatchInlineSnapshot(`"'hi'"`)
+      expect(loupeInspect('hi', { truncate: 40 })).toMatchInlineSnapshot(`"'hi'"`)
+    })
+
+    test('long string', () => {
+      const s = '0123456789012345678901234567890123456789'
+      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234567…"`)
+      expect(loupeInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'01234567890123456…'"`)
+    })
+
+    test('short array — both fit', () => {
+      expect(prettyInspect([1, 2, 3], { truncate: 40 })).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
+      expect(loupeInspect([1, 2, 3], { truncate: 40 })).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
+    })
+
+    test('long array', () => {
+      const arr = [1, 2, 3, 4, 5]
+      expect(prettyInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(loupeInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ 1, 2, …(3) ]"`)
+    })
+
+    test('array with long string values', () => {
+      const arr = ['one', 'two', 'three', 'four', 'five']
+      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(loupeInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', …(1) ]"`)
+    })
+
+    test('short object — both fit', () => {
+      expect(prettyInspect({ a: 1 }, { truncate: 40 })).toMatchInlineSnapshot(`"{ a: 1 }"`)
+      expect(loupeInspect({ a: 1 }, { truncate: 40 })).toMatchInlineSnapshot(`"{ a: 1 }"`)
+    })
+
+    test('long object', () => {
+      const obj = { one: 1, two: 2, three: 3, four: 4, five: 5 }
+      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ Object (one, two, ...) }"`)
+      expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
+    })
+
+    test('nested object', () => {
+      const obj = { a: { b: { c: 'deep' } } }
+      expect(prettyInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ Object (a) }"`)
+      expect(loupeInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: { …(1) } }"`)
+    })
+
+    test('Map', () => {
+      const m = new Map([['a', 1], ['b', 2], ['c', 3]])
+      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, 'b'…"`)
+      expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
+    })
+
+    test('Set', () => {
+      const s = new Set([1, 2, 3, 4, 5])
+      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set { 1, 2, 3,…"`)
+      expect(loupeInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set{ 1, …(4) }"`)
+    })
+
+    test('function', () => {
+      function myLongFunctionName() {}
+      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function: myLongFunctionName]"`)
+      expect(loupeInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function …]"`)
+    })
+  })
 })
