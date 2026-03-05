@@ -260,13 +260,19 @@ export function prettyInspect(
   obj: unknown,
   options: { truncate?: number } = {},
 ): string {
-  const formatted = stringify(obj, undefined, INSPECT_OPTIONS)
-
   const threshold = options.truncate ?? 0
+  const formatted = stringify(obj, undefined, {
+    ...INSPECT_OPTIONS,
+    maxLength: threshold || undefined,
+  })
+
   if (threshold === 0 || formatted.length <= threshold) {
     return formatted
   }
 
+  // stringify's adaptive maxDepth only helps for nested structures (depth > 1).
+  // For flat arrays/objects that exceed the budget, show a short summary instead
+  // of a raw slice, since slicing mid-value looks broken.
   const type = Object.prototype.toString.call(obj)
   if (type === '[object Function]') {
     const fn = obj as (...args: any[]) => any
@@ -283,7 +289,7 @@ export function prettyInspect(
     return `{ Object (${kstr}) }`
   }
 
-  return `${formatted.slice(0, threshold - 1)}\u2026`
+  return `${formatted.slice(0, threshold - 3)}...`
 }
 
 export function inspect(obj: unknown, options: LoupeOptions = {}): string {

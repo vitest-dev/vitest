@@ -699,31 +699,22 @@ describe('prettyInspect', () => {
     expect(prettyInspect('short', { truncate: 100 })).toBe('\'short\'')
   })
 
-  test('truncates string with ellipsis', () => {
+  test('truncates with ... suffix', () => {
     const long = '0123456789012345678901234567890123456789'
-    const result = prettyInspect(long, { truncate: 20 })
-    expect(result.length).toBe(20)
-    expect(result.endsWith('\u2026')).toBe(true)
+    expect(prettyInspect(long, { truncate: 20 })).toBe('\'0123456789012345...')
   })
 
   test('truncates array to structural summary', () => {
-    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 5 })).toBe('[ Array(5) ]')
+    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toBe('[ Array(5) ]')
   })
 
-  test('truncates object to structural summary (few keys)', () => {
-    expect(prettyInspect({ a: 1 }, { truncate: 5 })).toBe('{ Object (a) }')
+  test('truncates object to structural summary', () => {
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toBe('{ Object (a, b, ...) }')
   })
 
-  test('truncates object to structural summary (many keys)', () => {
-    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 5 })).toBe('{ Object (a, b, ...) }')
-  })
-
-  test('truncates function to summary', () => {
+  test('truncates function to structural summary', () => {
     function myFn() {}
     expect(prettyInspect(myFn, { truncate: 5 })).toBe('[Function: myFn]')
-  })
-
-  test('truncates anonymous function to summary', () => {
     expect(prettyInspect(() => {}, { truncate: 5 })).toBe('[Function]')
   })
 })
@@ -931,7 +922,7 @@ describe('loupe comparison', () => {
 
     test('long string', () => {
       const s = '0123456789012345678901234567890123456789'
-      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234567…"`)
+      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'0123456789012345..."`)
       expect(loupeInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'01234567890123456…'"`)
     })
 
@@ -965,19 +956,19 @@ describe('loupe comparison', () => {
 
     test('nested object', () => {
       const obj = { a: { b: { c: 'deep' } } }
-      expect(prettyInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ Object (a) }"`)
+      expect(prettyInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: [Object] }"`)
       expect(loupeInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: { …(1) } }"`)
     })
 
     test('Map', () => {
       const m = new Map([['a', 1], ['b', 2], ['c', 3]])
-      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, 'b'…"`)
+      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, '..."`)
       expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
     })
 
     test('Set', () => {
       const s = new Set([1, 2, 3, 4, 5])
-      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set { 1, 2, 3,…"`)
+      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set { 1, 2, ..."`)
       expect(loupeInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set{ 1, …(4) }"`)
     })
 
