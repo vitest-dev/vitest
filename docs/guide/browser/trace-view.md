@@ -111,6 +111,9 @@ This will start the Trace Viewer and load the specified trace file.
 
 Alternatively, you can open the Trace Viewer in your browser at https://trace.playwright.dev and upload the trace file there.
 
+<img alt="Trace Viewer showing the trace timeline and rendered component" img-light src="/trace-viewer-light.png">
+<img alt="Trace Viewer showing the trace timeline and rendered component" img-dark src="/trace-viewer-dark.png">
+
 ## Source Location
 
 When you open a trace, you'll notice that Vitest groups browser interactions and links them back to the exact line in your test that triggered them. This happens automatically for:
