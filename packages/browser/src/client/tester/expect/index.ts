@@ -21,6 +21,7 @@ import toHaveFormValues from './toHaveFormValues'
 import toHaveRole from './toHaveRole'
 import toHaveSelection from './toHaveSelection'
 import toHaveStyle from './toHaveStyle'
+import toHaveTagName from './toHaveTagName'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
 import toMatchScreenshot from './toMatchScreenshot'
@@ -45,6 +46,7 @@ export const matchers: MatchersObject = {
   toHaveFocus,
   toHaveFormValues,
   toHaveStyle,
+  toHaveTagName,
   toHaveTextContent,
   toHaveValue,
   toHaveDisplayValue,

@@ -379,6 +379,23 @@ export interface TestingLibraryMatchers<E, R> {
   toHaveStyle(css: string | Partial<CSSStyleDeclaration>): R
   /**
    * @description
+   * Assert whether the given element has a specific tag name.
+   * @example
+  * <button
+  *   type="submit"
+  *   data-testid="submit-button"
+  * >
+  *   Submit
+  * </button>
+   *
+   * const submit = page.getByTestId('submit-button')
+   * await expect.element(submit).toHaveTagName('button')
+   * await expect.element(submit).not.toHaveTagName('a')
+   * @see https://vitest.dev/api/browser/assertions#tohavetagname
+   */
+  toHaveTagName(expectedTagName: Lowercase<string>): R
+  /**
+   * @description
    * Check whether the given element has a text content or not.
    *
    * When a string argument is passed through, it will perform a partial case-sensitive match to the element
