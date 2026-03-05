@@ -246,6 +246,46 @@ export function browserFormat(...args: unknown[]): string {
   return baseFormat(args, { prettifyObject: true })
 }
 
+export const INSPECT_OPTIONS: PrettyFormatOptions = {
+  singleQuote: true,
+  quoteKeys: false,
+  min: true,
+  spacingInner: ' ',
+  spacingOuter: ' ',
+  printBasicPrototype: false,
+  compareKeys: null,
+}
+
+export function prettyInspect(
+  obj: unknown,
+  options: { truncate?: number } = {},
+): string {
+  const formatted = stringify(obj, undefined, INSPECT_OPTIONS)
+
+  const threshold = options.truncate ?? 0
+  if (threshold === 0 || formatted.length <= threshold) {
+    return formatted
+  }
+
+  const type = Object.prototype.toString.call(obj)
+  if (type === '[object Function]') {
+    const fn = obj as (...args: any[]) => any
+    return fn.name ? `[Function: ${fn.name}]` : '[Function]'
+  }
+  if (type === '[object Array]') {
+    return `[ Array(${(obj as any[]).length}) ]`
+  }
+  if (type === '[object Object]') {
+    const keys = Object.keys(obj as object)
+    const kstr = keys.length > 2
+      ? `${keys.slice(0, 2).join(', ')}, ...`
+      : keys.join(', ')
+    return `{ Object (${kstr}) }`
+  }
+
+  return `${formatted.slice(0, threshold - 1)}\u2026`
+}
+
 export function inspect(obj: unknown, options: LoupeOptions = {}): string {
   if (options.truncate === 0) {
     options.truncate = Number.POSITIVE_INFINITY
