@@ -77,7 +77,7 @@ The `This expression is not callable` part isn't all that helpful - the meaningf
 
 If TypeScript added support for ["throw" types](https://github.com/microsoft/TypeScript/pull/40468) these error messages could be improved significantly. Until then they will take a certain amount of squinting.
 
-#### Concrete "expected" objects vs typeargs
+### Concrete "expected" objects vs typeargs
 
 Error messages for an assertion like this:
 

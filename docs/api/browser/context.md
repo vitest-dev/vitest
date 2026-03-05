@@ -292,7 +292,7 @@ utils.configurePrettyDOM({
 - **`maxLength`** - Maximum length of the output string (default: `7000`)
 - **`filterNode`** - A CSS selector string or function to filter out nodes from the output. When a string is provided, elements matching the selector will be excluded. When a function is provided, it should return `false` to exclude a node.
 - **`highlight`** - Enable syntax highlighting (default: `true`)
-- And other options from [`pretty-format`](https://www.npmjs.com/package/@vitest/pretty-format)
+- And other options from [`pretty-format`](https://npmx.dev/package/@vitest/pretty-format)
 
 #### Filtering with CSS Selectors <Version>4.1.0</Version> {#filtering-with-css-selectors}
 

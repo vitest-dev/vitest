@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-vue
 
-The community [`vitest-browser-vue`](https://www.npmjs.com/package/vitest-browser-vue) package renders [Vue](https://vuejs.org/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-vue`](https://npmx.dev/package/vitest-browser-vue) package renders [Vue](https://vuejs.org/) components in [Browser Mode](/guide/browser/).
 
 ```ts
 import { render } from 'vitest-browser-vue'

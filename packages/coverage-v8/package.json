@@ -6,7 +6,7 @@
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/coverage-v8#readme",
+  "homepage": "https://vitest.dev/guide/coverage",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",

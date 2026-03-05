@@ -28,5 +28,5 @@ You can extend default `VitestSnapshotEnvironment` from `vitest/snapshot` entry 
 ::: warning
 This is a low-level option and should be used only for advanced cases where you don't have access to default Node.js APIs.
 
-If you just need to configure snapshots feature, use [`snapshotFormat`](#snapshotformat) or [`resolveSnapshotPath`](#resolvesnapshotpath) options.
+If you just need to configure snapshots feature, use [`snapshotFormat`](/config/snapshotformat) or [`resolveSnapshotPath`](/config/resolvesnapshotpath) options.
 :::
