@@ -112,7 +112,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           }
 
           if (!isImportActual) {
-            const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
+            const resolvedMock = moduleRunner.mocker.getDependencyMockByUrl(id)
             if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
               return {
                 code: '',
