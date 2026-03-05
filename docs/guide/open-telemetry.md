@@ -143,7 +143,7 @@ To generate traces, run Vitest as usual. You can run Vitest in either watch mode
 
 You can view traces using any of the open source or commercial products that support OpenTelemetry API. If you did not use OpenTelemetry before, we recommend starting with [Jaeger](https://www.jaegertracing.io/docs/2.11/getting-started/#all-in-one) because it is really easy to setup.
 
-<img src="/otel-jaeger.png" />
+<img src="/otel-jaeger.png" alt="an example of open telemetry result in jaeger" />
 
 ## `@opentelemetry/api`
 

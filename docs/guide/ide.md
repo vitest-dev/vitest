@@ -12,19 +12,19 @@ const { isDark } = useData()
 ## VS Code <Badge>Official</Badge> {#vs-code}
 
 <p text-center>
-<img :src="`https://raw.githubusercontent.com/vitest-dev/vscode/main/img/cover-${isDark ? 'light' : 'dark' }.png`" w-60>
+<img :src="`https://raw.githubusercontent.com/vitest-dev/vscode/main/img/cover-${isDark ? 'light' : 'dark' }.png`" w-60 alt="vscode logo">
 </p>
 
 [GitHub](https://github.com/vitest-dev/vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 
-![](https://i.ibb.co/bJCbCf2/202203292020.gif)
+![A gif of vscode extension in vscode](https://i.ibb.co/bJCbCf2/202203292020.gif)
 
 ## JetBrains IDE
 
 WebStorm, PhpStorm, IntelliJ IDEA Ultimate, and other JetBrains IDEs come with built-in support for Vitest.
 
 <p text-center>
-<img :src="`/ide/vitest-jb-${isDark ? 'light' : 'dark'}.png`" w-60>
+<img :src="`/ide/vitest-jb-${isDark ? 'light' : 'dark'}.png`" w-60 alt="webstorm logo">
 </p>
 
 [WebStorm Help](https://www.jetbrains.com/help/webstorm/vitest.html) | [IntelliJ IDEA Ultimate Help](https://www.jetbrains.com/help/idea/vitest.html) | [PhpStorm Help](https://www.jetbrains.com/help/phpstorm/vitest.html)

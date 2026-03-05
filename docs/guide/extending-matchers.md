@@ -109,29 +109,29 @@ expect.extend({ customMatcher })
 
 Matcher function has access to `this` context with the following properties:
 
-### `isNot`
+## `isNot`
 
 Returns true, if matcher was called on `not` (`expect(received).not.toBeFoo()`). You do not need to respect it, Vitest will reverse the value of `pass` automatically.
 
-### `promise`
+## `promise`
 
 If matcher was called on `resolved/rejected`, this value will contain the name of modifier. Otherwise, it will be an empty string.
 
-### `equals`
+## `equals`
 
 This is a utility function that allows you to compare two values. It will return `true` if values are equal, `false` otherwise. This function is used internally for almost every matcher. It supports objects with asymmetric matchers by default.
 
-### `utils`
+## `utils`
 
 This contains a set of utility functions that you can use to display messages.
 
 `this` context also contains information about the current test. You can also get it by calling `expect.getState()`. The most useful properties are:
 
-### `currentTestName`
+## `currentTestName`
 
 Full name of the current test (including describe block).
 
-### `task` <Advanced /> <Version>4.1.0</Version> {#task}
+## `task` <Advanced /> <Version>4.1.0</Version> {#task}
 
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
@@ -139,15 +139,15 @@ Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) whe
 When using the global `expect` with concurrent tests, `this.task` is `undefined`. Use `context.expect` instead to ensure `task` is available in custom matchers.
 :::
 
-### `testPath`
+## `testPath`
 
 File path to the current test.
 
-### `environment`
+## `environment`
 
 The name of the current [`environment`](/config/environment) (for example, `jsdom`).
 
-### `soft`
+## `soft`
 
 Was assertion called as a [`soft`](/api/expect#soft) one. You don't need to respect it, Vitest will always catch the error.
 

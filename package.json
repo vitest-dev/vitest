@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.1.0-beta.5",
   "private": true,
-  "packageManager": "pnpm@10.30.2",
+  "packageManager": "pnpm@10.30.3",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -40,13 +40,13 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.2.0",
+    "@antfu/eslint-config": "^7.6.1",
     "@antfu/ni": "^28.2.0",
     "@playwright/test": "^1.58.2",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "24.10.13",
+    "@types/node": "24.11.0",
     "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -55,7 +55,7 @@
     "bumpp": "^10.4.1",
     "changelogithub": "^14.0.0",
     "esbuild": "^0.27.3",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.3",
     "magic-string": "^0.30.21",
     "pathe": "^2.0.3",
     "premove": "^4.0.0",

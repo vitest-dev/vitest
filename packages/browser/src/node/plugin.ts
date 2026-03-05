@@ -49,6 +49,20 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // strip _vitest_original query added by importActual so that
+        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook).
+        server.middlewares.use((req, _res, next) => {
+          if (
+            req.url?.includes('_vitest_original')
+            && parentServer.project.config.browser.provider?.name === 'playwright'
+          ) {
+            req.url = req.url
+              .replace(/[?&]_vitest_original(?=[&#]|$)/, '')
+              .replace(/[?&]ext\b[^&#]*/, '')
+              .replace(/\?$/, '')
+          }
+          next()
+        })
         server.middlewares.use(createOrchestratorMiddleware(parentServer))
         server.middlewares.use(createTesterMiddleware(parentServer))
 

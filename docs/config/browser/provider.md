@@ -64,7 +64,7 @@ export default defineConfig({
 ## Custom Provider <Badge type="danger">advanced</Badge>
 
 ::: danger ADVANCED API
-The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
+The custom provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](/config/browser/instances) option instead.
 :::
 
 ```ts

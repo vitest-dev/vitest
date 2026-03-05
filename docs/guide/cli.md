@@ -169,7 +169,7 @@ For package manager autocompletions, you should install [tab's package manager c
 ## Options
 
 ::: tip
-Vitest supports both camel case and kebab case for CLI arguments. For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
+Vitest supports both camel case and kebab case for [CLI arguments](https://github.com/cacjs/cac#dot-nested-options). For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
 
 Vitest also supports different ways of specifying the value: `--reporter dot` and `--reporter=dot` are both valid.
 
@@ -238,4 +238,3 @@ Merges every blob report located in the specified folder (`.vitest-reports` by d
 vitest --merge-reports --reporter=junit
 ```
 
-[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options
