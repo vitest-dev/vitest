@@ -172,11 +172,20 @@ export default defineConfig({
 
 You can also switch this directly from the UI via the new layout toggle button.
 
-## Custom Marks in Trace View
+## Enhanced Browser Trace View
 
-Trace view now supports custom markers through [`page.mark`](/api/browser/context#mark) and [`locator.mark`](/api/browser/locators#mark).
+Vitest 4.1 brings major improvements to the [Playwright Trace Viewer](/guide/browser/trace-view) integration in browser mode. Browser interactions like `click`, `fill`, and `expect.element` are now automatically grouped in the trace timeline and linked back to the exact line in your test file.
 
-Vitest already annotates many browser actions automatically, but marks let you highlight important moments in your own test flow:
+<center>
+  <img alt="Trace Viewer showing the trace timeline and rendered component" img-light src="/trace-viewer-light.png">
+  <img alt="Trace Viewer showing the trace timeline and rendered component" img-dark src="/trace-viewer-dark.png">
+
+  <sup>An example of trace view with `expect.element` assertion failure highlighted.</sup>
+</center>
+
+Framework libraries are also integrating with the trace. For example, [`vitest-browser-react`](https://github.com/vitest-community/vitest-browser-react)'s `render()` utility now automatically appears in the trace with rendered element highlighted.
+
+For custom annotations, the new [`page.mark`](/api/browser/context#mark) and [`locator.mark`](/api/browser/locators#mark) APIs let you add your own markers to the trace:
 
 ```ts
 import { page } from 'vitest/browser'
@@ -196,7 +205,7 @@ await page.mark('sign in flow', async () => {
 })
 ```
 
-Read more in the [Trace View guide](/guide/browser/trace-view#trace-markers).
+Read more in the [Trace View guide](/guide/browser/trace-view).
 
 ## Type-Inference in `test.extend` - New Builder Pattern
 
