@@ -4,24 +4,6 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-import * as loupe from 'loupe'
-
-type Inspect = (value: unknown, options: Options) => string
-interface Options {
-  showHidden: boolean
-  depth: number
-  colors: boolean
-  customInspect: boolean
-  showProxy: boolean
-  maxArrayLength: number
-  breakLength: number
-  truncate: number
-  seen: unknown[]
-  inspect: Inspect
-  stylize: (value: string, styleType: string) => string
-}
-
-export type LoupeOptions = Partial<Options>
 
 const {
   AsymmetricMatcher,
@@ -128,7 +110,7 @@ interface FormatOptions {
 }
 
 export function baseFormat(args: unknown[], options: FormatOptions = {}): string {
-  const formatArg = (item: unknown, inspecOptions?: LoupeOptions) => {
+  const formatArg = (item: unknown) => {
     if (options.stringifyOptions) {
       return stringify(item, undefined, options.stringifyOptions)
     }
@@ -138,13 +120,13 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
         escapeString: false,
       })
     }
-    return inspect(item, inspecOptions)
+    return prettyInspect(item)
   }
 
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++) {
-      objects.push(formatArg(args[i], { depth: 0, colors: false }))
+      objects.push(formatArg(args[i]))
     }
     return objects.join(' ')
   }
@@ -172,7 +154,7 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
           if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
             return value.toString()
           }
-          return formatArg(value, { depth: 0, colors: false })
+          return formatArg(value)
         }
         return String(value)
       }
@@ -196,8 +178,6 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
       case '%f':
         return Number.parseFloat(String(args[i++])).toString()
       case '%o':
-        // TODO: respect { showHidden: true, showProxy: true }?
-        return formatArg(args[i++], { showHidden: true, showProxy: true })
       case '%O':
         return formatArg(args[i++])
       case '%c': {
@@ -238,6 +218,7 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
   return str
 }
 
+// TODO: two should be comes same (remove browserFormat)
 export function format(...args: unknown[]): string {
   return baseFormat(args)
 }
@@ -256,6 +237,7 @@ export const INSPECT_OPTIONS: PrettyFormatOptions = {
   compareKeys: null,
 }
 
+// TODO: rename to `inspect`?
 export function prettyInspect(
   obj: unknown,
   options: { truncate?: number } = {},
@@ -270,13 +252,17 @@ export function prettyInspect(
     return formatted
   }
 
-  // stringify's adaptive maxDepth only helps for nested structures (depth > 1).
-  // For flat arrays/objects that exceed the budget, show a short summary instead
-  // of a raw slice, since slicing mid-value looks broken.
+  // if stringify's adaptive maxDepth (down to 1) fails to truncate enough,
+  // - for known types (e.g. string, object), do something reasonable.
+  // - for other values, fallback to maxDepth = 0 which should show minimal output (though it can technically exeed the threshold for some cases)
+
   const type = Object.prototype.toString.call(obj)
-  if (type === '[object Function]') {
-    const fn = obj as (...args: any[]) => any
-    return fn.name ? `[Function: ${fn.name}]` : '[Function]'
+  if (typeof obj === 'string') {
+    let end = threshold - 4
+    if (end > 0 && isHighSurrogate(formatted[end - 1])) {
+      end = end - 1
+    }
+    return `'${formatted.slice(1, end)}...'`
   }
   if (type === '[object Array]') {
     return `[ Array(${(obj as any[]).length}) ]`
@@ -289,42 +275,14 @@ export function prettyInspect(
     return `{ Object (${kstr}) }`
   }
 
-  return `${formatted.slice(0, threshold - 3)}...`
+  return stringify(obj, undefined, {
+    ...INSPECT_OPTIONS,
+    maxDepth: 0,
+    maxLength: threshold || undefined,
+  })
 }
 
-export function inspect(obj: unknown, options: LoupeOptions = {}): string {
-  if (options.truncate === 0) {
-    options.truncate = Number.POSITIVE_INFINITY
-  }
-  return loupe.inspect(obj, options)
-}
-
-export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
-  if (typeof options.truncate === 'undefined') {
-    options.truncate = 40
-  }
-  const str = inspect(obj, options)
-  const type = Object.prototype.toString.call(obj)
-
-  if (options.truncate && str.length >= options.truncate) {
-    if (type === '[object Function]') {
-      const fn = obj as () => void
-      return !fn.name ? '[Function]' : `[Function: ${fn.name}]`
-    }
-    else if (type === '[object Array]') {
-      return `[ Array(${(obj as []).length}) ]`
-    }
-    else if (type === '[object Object]') {
-      const keys = Object.keys(obj as object)
-      const kstr
-        = keys.length > 2
-          ? `${keys.splice(0, 2).join(', ')}, ...`
-          : keys.join(', ')
-      return `{ Object (${kstr}) }`
-    }
-    else {
-      return str
-    }
-  }
-  return str
+// https://github.com/chaijs/loupe/pull/79
+function isHighSurrogate(char: string): boolean {
+  return char >= '\uD800' && char <= '\uDBFF'
 }

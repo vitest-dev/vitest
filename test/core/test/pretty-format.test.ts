@@ -699,23 +699,28 @@ describe('prettyInspect', () => {
     expect(prettyInspect('short', { truncate: 100 })).toBe('\'short\'')
   })
 
-  test('truncates with ... suffix', () => {
+  test('truncates string', () => {
     const long = '0123456789012345678901234567890123456789'
-    expect(prettyInspect(long, { truncate: 20 })).toBe('\'0123456789012345...')
+    expect(prettyInspect(long, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
   })
 
-  test('truncates array to structural summary', () => {
+  test('truncates surragete pair correctly', () => {
+    expect(prettyInspect('😀'.repeat(5), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀'"`)
+    expect(prettyInspect('😀'.repeat(6), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀'"`)
+    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
+    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(5)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀'"`)
+    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+  })
+
+  test('truncates array', () => {
     expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toBe('[ Array(5) ]')
   })
 
-  test('truncates object to structural summary', () => {
+  test('truncates object', () => {
     expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toBe('{ Object (a, b, ...) }')
-  })
-
-  test('truncates function to structural summary', () => {
-    function myFn() {}
-    expect(prettyInspect(myFn, { truncate: 5 })).toBe('[Function: myFn]')
-    expect(prettyInspect(() => {}, { truncate: 5 })).toBe('[Function]')
   })
 })
 
@@ -922,7 +927,7 @@ describe('loupe comparison', () => {
 
     test('long string', () => {
       const s = '0123456789012345678901234567890123456789'
-      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'0123456789012345..."`)
+      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
       expect(loupeInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'01234567890123456…'"`)
     })
 
@@ -964,19 +969,19 @@ describe('loupe comparison', () => {
 
     test('Map', () => {
       const m = new Map([['a', 1], ['b', 2], ['c', 3]])
-      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, '..."`)
+      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"[Map]"`)
       expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
     })
 
     test('Set', () => {
       const s = new Set([1, 2, 3, 4, 5])
-      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set { 1, 2, ..."`)
+      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"[Set]"`)
       expect(loupeInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set{ 1, …(4) }"`)
     })
 
     test('function', () => {
       function myLongFunctionName() {}
-      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function: myLongFunctionName]"`)
+      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function myLongFunctionName]"`)
       expect(loupeInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function …]"`)
     })
   })

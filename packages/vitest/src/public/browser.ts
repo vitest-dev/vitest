@@ -11,11 +11,11 @@ export {
 export { type OTELCarrier, Traces } from '../utils/traces'
 export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
-export type { LoupeOptions, ParsedStack, StringifyOptions } from '@vitest/utils'
+export type { ParsedStack, StringifyOptions } from '@vitest/utils'
 export {
   browserFormat,
   format,
-  inspect,
+  prettyInspect,
   stringify,
 } from '@vitest/utils/display'
 export { processError } from '@vitest/utils/error'

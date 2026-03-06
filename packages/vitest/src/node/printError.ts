@@ -7,7 +7,7 @@ import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
-import { inspect } from '@vitest/utils/display'
+import { prettyInspect } from '@vitest/utils/display'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -418,7 +418,7 @@ export function printStack(
   }
   if (hasProperties(errorProperties)) {
     logger.error(c.red(c.dim(divider())))
-    const propertiesString = inspect(errorProperties)
+    const propertiesString = prettyInspect(errorProperties)
     logger.error(c.red(c.bold('Serialized Error:')), c.gray(propertiesString))
   }
 }

@@ -987,9 +987,6 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
-      loupe:
-        specifier: ^3.2.1
-        version: 3.2.1
 
   packages/vitest:
     dependencies:

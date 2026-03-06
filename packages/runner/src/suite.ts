@@ -18,7 +18,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { baseFormat, formatRegExp, stringify } from '@vitest/utils/display'
+import { baseFormat, formatRegExp, INSPECT_OPTIONS, prettyInspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1028,19 +1028,8 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      // TODO: respect truncateThreshold?
-      return stringify(value, undefined, {
-        singleQuote: true,
-        quoteKeys: false,
-        min: true,
-        spacingInner: ' ',
-        spacingOuter: ' ',
-        printBasicPrototype: false,
-        compareKeys: null,
-      })
-      // return objDisplay(value, {
-      //   truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      // })
+      // TODO: introduce new option
+      return prettyInspect(value, { truncate: runner?.config?.chaiConfig?.truncateThreshold })
     })
   }
 
@@ -1054,15 +1043,8 @@ function formatTitle(template: string, items: any[], idx: number) {
       if (i < count) {
         // output += format(match[0], items[i++])
         output += baseFormat([match[0], items[i++]], {
-          stringifyOptions: {
-            singleQuote: true,
-            quoteKeys: false,
-            min: true,
-            spacingInner: ' ',
-            spacingOuter: ' ',
-            printBasicPrototype: false,
-            compareKeys: null,
-          },
+          // TODO: bake it in `format`
+          stringifyOptions: INSPECT_OPTIONS,
         })
       }
       else {
