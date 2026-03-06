@@ -729,19 +729,20 @@ describe('prettyInspect', () => {
   })
 })
 
-// -- util.inspect conformance --
-// pretty-format with the right options should approximate Node's util.inspect
-// output style. Tests are split into exact matches (compared directly via
-// test.each loop) and known divergences (tested individually).
+// -- three-way inspect comparison --
+// Compare prettyInspect output against node's util.inspect and loupe.inspect.
+// Organized by agreement pattern to show where outputs align or diverge.
 
-describe('util.inspect conformance', () => {
-  // values where pretty-format output exactly matches util.inspect
-  test.each([
+describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
+  const nodeOpts = { depth: null, maxArrayLength: null } // depth 2 by default
+
+  // -- all three agree --
+
+  test.for([
     null,
     undefined,
     true,
     false,
-    0,
     -0,
     42,
     -123,
@@ -764,118 +765,15 @@ describe('util.inspect conformance', () => {
     { b: 1, a: 2 },
     { a: { b: { c: 1 } } },
     [{ a: 1 }, { b: 2 }],
-    new (class CustomClass {
-      public key: string
-      constructor() {
-        this.key = 'value'
-      }
-    })(),
-  ])('matches util.inspect: %s', (val) => {
-    expect(prettyInspect(val)).toBe(nodeInspect(val, { depth: null, maxArrayLength: null }))
+  ])('all three match: %s', (val) => {
+    const result = prettyInspect(val)
+    expect(result).toBe(nodeInspect(val, nodeOpts))
+    expect(result).toBe(loupeInspect(val))
   })
 
-  test('non-enumerable properties', () => {
-    const val = { visible: true }
-    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
-    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
-    expect(nodeInspect(val, { depth: null })).toMatchInlineSnapshot(`"{ visible: true }"`)
-  })
+  // -- prettyInspect matches node, diverges from loupe --
 
-  // -- known divergences --
-
-  test('string with single quotes — no escaping (stringify uses escapeString: false)', () => {
-    expect(prettyInspect('it\'s')).toBe('\'it\'s\'')
-    expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
-  })
-
-  test('function — no colon, different anonymous style', () => {
-    function myFn() {}
-    expect(prettyInspect(myFn)).toBe('[Function myFn]')
-    expect(nodeInspect(myFn)).toMatchInlineSnapshot(`"[Function: myFn]"`)
-
-    expect(prettyInspect((() => {}) as unknown)).toBe('[Function anonymous]')
-    expect(nodeInspect(() => {})).toMatchInlineSnapshot(`"[Function (anonymous)]"`)
-  })
-
-  test('error — bracket format, no stack', () => {
-    expect(prettyInspect(new Error('boom'))).toBe('[Error: boom]')
-    expect(nodeInspect(new Error('boom'))).toMatch('Error: boom\n')
-  })
-
-  test('Map — no size prefix', () => {
-    const m = new Map([['a', 1], ['b', 2]])
-    expect(prettyInspect(m)).toBe('Map { \'a\' => 1, \'b\' => 2 }')
-    expect(nodeInspect(m)).toMatchInlineSnapshot(`"Map(2) { 'a' => 1, 'b' => 2 }"`)
-  })
-
-  test('Set — no size prefix', () => {
-    const s = new Set([1, 2, 3])
-    expect(prettyInspect(s)).toBe('Set { 1, 2, 3 }')
-    expect(nodeInspect(s)).toMatchInlineSnapshot(`"Set(3) { 1, 2, 3 }"`)
-  })
-
-  test('circular reference — no ref labels', () => {
-    const val: any = {}
-    val.self = val
-    expect(prettyInspect(val)).toBe('{ self: [Circular] }')
-    expect(nodeInspect(val)).toMatchInlineSnapshot(`"<ref *1> { self: [Circular *1] }"`)
-  })
-
-  test('WeakMap — empty braces vs items unknown', () => {
-    expect(prettyInspect(new WeakMap())).toBe('WeakMap {}')
-    expect(nodeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap { <items unknown> }"`)
-  })
-
-  test('WeakSet — empty braces vs items unknown', () => {
-    expect(prettyInspect(new WeakSet())).toBe('WeakSet {}')
-    expect(nodeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet { <items unknown> }"`)
-  })
-
-  test('Promise — opaque, min mode drops constructor', () => {
-    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
-    expect(nodeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise { undefined }"`)
-  })
-})
-
-// -- loupe comparison --
-// Document where prettyInspect matches or differs from loupe.inspect.
-// loupe is the formatter being replaced — these tests track the migration.
-// All tests use inline snapshots to show both outputs side by side.
-
-describe('loupe comparison', () => {
-  const loupeOpts = { truncate: Infinity } // no truncation
-
-  // values where prettyInspect output matches loupe exactly
-  test.for([
-    null,
-    undefined,
-    true,
-    false,
-    -0,
-    42,
-    -123,
-    3.14,
-    Number.NaN,
-    Number.POSITIVE_INFINITY,
-    Number.NEGATIVE_INFINITY,
-    123n,
-    'hello',
-    '',
-    /test/gi,
-    new Date(10e11),
-    Symbol('test'),
-    {},
-    [],
-    [1, 2, 3],
-    { a: 1, b: 2 },
-    { a: { b: { c: 1 } } },
-  ])('matches loupe: %s', (val) => {
-    expect(prettyInspect(val)).toBe(loupeInspect(val, loupeOpts))
-  })
-
-  // -- known divergences --
-
-  test('custom class', () => {
+  test('custom class — matches node (loupe omits space before brace)', () => {
     class CustomClass {
       public key: string
       constructor() {
@@ -883,76 +781,108 @@ describe('loupe comparison', () => {
       }
     }
     expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
-    expect(loupeInspect(new CustomClass(), loupeOpts)).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
+    expect(nodeInspect(new CustomClass(), nodeOpts)).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+    expect(loupeInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
   })
 
-  test('0 — loupe shows +0', () => {
+  test('0 — matches node (loupe shows +0)', () => {
     expect(prettyInspect(0)).toMatchInlineSnapshot(`"0"`)
-    expect(loupeInspect(0, loupeOpts)).toMatchInlineSnapshot(`"+0"`)
+    expect(nodeInspect(0)).toMatchInlineSnapshot(`"0"`)
+    expect(loupeInspect(0)).toMatchInlineSnapshot(`"+0"`)
   })
 
-  test('string with single quotes — prettyInspect does not escape (escapeString: false)', () => {
+  test('non-enumerable properties — matches node (loupe shows them via getOwnPropertyNames)', () => {
+    const val = { visible: true }
+    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(nodeInspect(val, nodeOpts)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(loupeInspect(val)).toMatchInlineSnapshot(`"{ visible: true, hidden: 'secret' }"`)
+  })
+
+  // -- prettyInspect diverges from both --
+
+  test('string with single quotes — no escaping (escapeString: false)', () => {
     expect(prettyInspect('it\'s')).toMatchInlineSnapshot(`"'it's'"`)
-    expect(loupeInspect('it\'s', loupeOpts)).toMatchInlineSnapshot(`"'it\\'s'"`)
+    expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
+    expect(loupeInspect('it\'s')).toMatchInlineSnapshot(`"'it\\'s'"`)
   })
 
-  test('anonymous function — prettyInspect adds "anonymous"', () => {
-    expect(prettyInspect(() => {})).toMatchInlineSnapshot(`"[Function anonymous]"`)
-    expect(loupeInspect(() => {}, loupeOpts)).toMatchInlineSnapshot(`"[Function]"`)
+  test('named function — format differences', () => {
+    function myFn() {}
+    expect(prettyInspect(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
+    expect(nodeInspect(myFn)).toMatchInlineSnapshot(`"[Function: myFn]"`)
+    expect(loupeInspect(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
   })
 
-  test('async function — prettyInspect loses AsyncFunction tag', () => {
+  test('anonymous function', () => {
+    expect(prettyInspect((() => {}) as unknown)).toMatchInlineSnapshot(`"[Function anonymous]"`)
+    expect(nodeInspect(() => {})).toMatchInlineSnapshot(`"[Function (anonymous)]"`)
+    expect(loupeInspect(() => {})).toMatchInlineSnapshot(`"[Function]"`)
+  })
+
+  test('async function — loses AsyncFunction tag', () => {
     async function asyncFn() {}
     expect(prettyInspect(asyncFn)).toMatchInlineSnapshot(`"[Function asyncFn]"`)
-    expect(loupeInspect(asyncFn, loupeOpts)).toMatchInlineSnapshot(`"[AsyncFunction asyncFn]"`)
+    expect(nodeInspect(asyncFn)).toMatchInlineSnapshot(`"[AsyncFunction: asyncFn]"`)
+    expect(loupeInspect(asyncFn)).toMatchInlineSnapshot(`"[AsyncFunction asyncFn]"`)
   })
 
-  test('generator function — prettyInspect loses GeneratorFunction tag', () => {
+  test('generator function — loses GeneratorFunction tag', () => {
     function* genFn() {
       yield 1
     }
     expect(prettyInspect(genFn)).toMatchInlineSnapshot(`"[Function genFn]"`)
-    expect(loupeInspect(genFn, loupeOpts)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
+    expect(nodeInspect(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction: genFn]"`)
+    expect(loupeInspect(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
   })
 
-  test('Map — prettyInspect adds space before brace', () => {
-    expect(prettyInspect(new Map([['a', 1]]))).toMatchInlineSnapshot(`"Map { 'a' => 1 }"`)
-    expect(loupeInspect(new Map([['a', 1]]), loupeOpts)).toMatchInlineSnapshot(`"Map{ 'a' => 1 }"`)
-  })
-
-  test('Set — prettyInspect adds space before brace', () => {
-    expect(prettyInspect(new Set([1, 2]))).toMatchInlineSnapshot(`"Set { 1, 2 }"`)
-    expect(loupeInspect(new Set([1, 2]), loupeOpts)).toMatchInlineSnapshot(`"Set{ 1, 2 }"`)
-  })
-
-  test('Error — prettyInspect uses bracket format', () => {
+  test('Error — bracket format', () => {
     expect(prettyInspect(new Error('boom'))).toMatchInlineSnapshot(`"[Error: boom]"`)
-    expect(loupeInspect(new Error('boom'), loupeOpts)).toMatchInlineSnapshot(`"Error: boom"`)
+    expect(nodeInspect(new Error('boom'))).toMatch('Error: boom\n')
+    expect(loupeInspect(new Error('boom'))).toMatchInlineSnapshot(`"Error: boom"`)
   })
 
-  test('WeakMap — prettyInspect shows empty braces', () => {
+  test('Map — space before brace, no size prefix', () => {
+    const m = new Map([['a', 1], ['b', 2]])
+    expect(prettyInspect(m)).toMatchInlineSnapshot(`"Map { 'a' => 1, 'b' => 2 }"`)
+    expect(nodeInspect(m)).toMatchInlineSnapshot(`"Map(2) { 'a' => 1, 'b' => 2 }"`)
+    expect(loupeInspect(m)).toMatchInlineSnapshot(`"Map{ 'a' => 1, 'b' => 2 }"`)
+  })
+
+  test('Set — space before brace, no size prefix', () => {
+    const s = new Set([1, 2, 3])
+    expect(prettyInspect(s)).toMatchInlineSnapshot(`"Set { 1, 2, 3 }"`)
+    expect(nodeInspect(s)).toMatchInlineSnapshot(`"Set(3) { 1, 2, 3 }"`)
+    expect(loupeInspect(s)).toMatchInlineSnapshot(`"Set{ 1, 2, 3 }"`)
+  })
+
+  test('circular reference — no ref labels', () => {
+    const val: any = {}
+    val.self = val
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ self: [Circular] }"`)
+    expect(nodeInspect(val)).toMatchInlineSnapshot(`"<ref *1> { self: [Circular *1] }"`)
+    // loupe: would need circular-safe call, skip
+  })
+
+  test('WeakMap', () => {
     expect(prettyInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap {}"`)
-    expect(loupeInspect(new WeakMap(), loupeOpts)).toMatchInlineSnapshot(`"WeakMap{…}"`)
+    expect(nodeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap { <items unknown> }"`)
+    expect(loupeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap{…}"`)
   })
 
-  test('WeakSet — prettyInspect shows empty braces', () => {
+  test('WeakSet', () => {
     expect(prettyInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
-    expect(loupeInspect(new WeakSet(), loupeOpts)).toMatchInlineSnapshot(`"WeakSet{…}"`)
+    expect(nodeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet { <items unknown> }"`)
+    expect(loupeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet{…}"`)
   })
 
-  test('non-enumerable properties — loupe shows them (uses getOwnPropertyNames)', () => {
-    const val = { visible: true }
-    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
-    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
-    expect(loupeInspect(val, loupeOpts)).toMatchInlineSnapshot(`"{ visible: true, hidden: 'secret' }"`)
-  })
-
-  test('Promise — prettyInspect drops constructor name in min mode', () => {
+  test('Promise', () => {
     expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
-    expect(loupeInspect(Promise.resolve(), loupeOpts)).toMatchInlineSnapshot(`"Promise{…}"`)
+    expect(nodeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise { undefined }"`)
+    expect(loupeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise{…}"`)
   })
 
-  // -- truncation comparison --
+  // -- truncation (prettyInspect vs loupe only) --
   // loupe threads a character budget through recursion, truncating structurally.
   // prettyInspect does surface-level truncation (structural summary for containers).
 
