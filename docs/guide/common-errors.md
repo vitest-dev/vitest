@@ -10,7 +10,7 @@ If you receive an error that module cannot be found, it might mean several diffe
 
 1. You misspelled the path. Make sure the path is correct.
 
-2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://www.npmjs.com/package/vite-tsconfig-paths) yourself, if you rely on this behavior.
+2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://npmx.dev/package/vite-tsconfig-paths) yourself, if you rely on this behavior.
 
 ```ts
 import { defineConfig } from 'vitest/config'

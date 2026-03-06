@@ -1,4 +1,5 @@
 export {
+  type CDPSession,
   playwright,
   PlaywrightBrowserProvider,
   type PlaywrightProviderOptions,

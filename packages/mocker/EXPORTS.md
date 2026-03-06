@@ -1,4 +1,4 @@
-# Using as a Vite plugin
+## Using as a Vite plugin
 
 Make sure you have `vite` and `@vitest/spy` installed (and `msw` if you are planning to use `ModuleMockerMSWInterceptor`).
 
