@@ -769,9 +769,16 @@ describe('util.inspect conformance', () => {
       constructor() {
         this.key = 'value'
       }
-    })
+    })(),
   ])('matches util.inspect: %s', (val) => {
     expect(prettyInspect(val)).toBe(nodeInspect(val, { depth: null, maxArrayLength: null }))
+  })
+
+  test('non-enumerable properties', () => {
+    const val = { visible: true }
+    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(nodeInspect(val, { depth: null })).toMatchInlineSnapshot(`"{ visible: true }"`)
   })
 
   // -- known divergences --
@@ -931,6 +938,13 @@ describe('loupe comparison', () => {
   test('WeakSet — prettyInspect shows empty braces', () => {
     expect(prettyInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
     expect(loupeInspect(new WeakSet(), loupeOpts)).toMatchInlineSnapshot(`"WeakSet{…}"`)
+  })
+
+  test('non-enumerable properties — loupe shows them (uses getOwnPropertyNames)', () => {
+    const val = { visible: true }
+    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(loupeInspect(val, loupeOpts)).toMatchInlineSnapshot(`"{ visible: true, hidden: 'secret' }"`)
   })
 
   test('Promise — prettyInspect drops constructor name in min mode', () => {
