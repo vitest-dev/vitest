@@ -116,7 +116,7 @@ export function format(args: unknown[], options: FormatOptions = {}): string {
         escapeString: false,
       })
     }
-    return prettyInspect(item)
+    return inspect(item)
   }
 
   if (typeof args[0] !== 'string') {
@@ -225,7 +225,7 @@ const INSPECT_OPTIONS: PrettyFormatOptions = {
 }
 
 // TODO: rename to `inspect`?
-export function prettyInspect(
+export function inspect(
   obj: unknown,
   options: { truncate?: number } = {},
 ): string {

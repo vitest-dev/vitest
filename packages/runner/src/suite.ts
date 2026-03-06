@@ -18,7 +18,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, prettyInspect } from '@vitest/utils/display'
+import { format, formatRegExp, inspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1029,7 +1029,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
       // TODO: introduce new option
-      return prettyInspect(value, { truncate: runner?.config?.chaiConfig?.truncateThreshold ?? 40 })
+      return inspect(value, { truncate: runner?.config?.chaiConfig?.truncateThreshold ?? 40 })
     })
   }
 

@@ -14,7 +14,7 @@ export * as SpyModule from '@vitest/spy'
 export type { ParsedStack, StringifyOptions } from '@vitest/utils'
 export {
   format,
-  prettyInspect,
+  inspect,
   stringify,
 } from '@vitest/utils/display'
 export { processError } from '@vitest/utils/error'

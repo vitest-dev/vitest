@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, test } from 'vitest'
 import { commands, utils } from 'vitest/browser'
 
-import { prettyInspect } from 'vitest/internal/browser'
+import { inspect } from 'vitest/internal/browser'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -11,8 +11,8 @@ beforeEach(() => {
   utils.configurePrettyDOM({})
 })
 
-it('utils package correctly uses prettyInspect', async () => {
-  expect(prettyInspect({ test: 1 })).toBe('{ test: 1 }')
+it('utils package correctly uses inspect', async () => {
+  expect(inspect({ test: 1 })).toBe('{ test: 1 }')
 })
 
 test('prints default document', async () => {

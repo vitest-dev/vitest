@@ -1,6 +1,6 @@
 import { inspect as nodeInspect } from 'node:util'
 import { format, plugins } from '@vitest/pretty-format'
-import { prettyInspect } from '@vitest/utils/display'
+import { inspect as prettyInspect } from '@vitest/utils/display'
 import { inspect as loupeInspect } from 'loupe'
 import { describe, expect, test } from 'vitest'
 
