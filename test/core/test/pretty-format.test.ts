@@ -727,6 +727,15 @@ describe('prettyInspect', () => {
     expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 5 })).toMatchInlineSnapshot(`"[Map]"`)
     expect(prettyInspect(new Set([1, 2, 3]), { truncate: 5 })).toMatchInlineSnapshot(`"[Set]"`)
   })
+
+  test('multiline', () => {
+    expect(prettyInspect({ a: 1, b: 2 }, { multiline: true })).toMatchInlineSnapshot(`
+      "{
+        a: 1,
+        b: 2,
+      }"
+    `)
+  })
 })
 
 // -- three-way inspect comparison --
