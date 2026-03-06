@@ -3,7 +3,6 @@ import type { Connect } from 'vite'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
 import crypto from 'node:crypto'
-import { join } from 'pathe'
 import { replacer } from './utils'
 
 export async function resolveTester(
@@ -64,8 +63,7 @@ export async function resolveTester(
     : await browserProject.testerHtml
 
   try {
-    const url = join('/@fs/', browserProject.testerFilepath)
-    const indexhtml = await browserProject.vite.transformIndexHtml(url, testerHtml)
+    const indexhtml = await browserProject.vite.transformIndexHtml(browserProject.testerFilepath, testerHtml)
     const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
