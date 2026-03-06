@@ -769,6 +769,19 @@ describe('util.inspect conformance', () => {
   })
 
   // values where output diverges from util.inspect
+
+  test('custom class', () => {
+    class CustomClass {
+      public key: string
+      constructor() {
+        this.key = 'value'
+      }
+    }
+    // TODO?
+    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"{ key: 'value' }"`)
+    expect(nodeInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+  })
+
   test('string with single quotes — no escaping (stringify uses escapeString: false)', () => {
     expect(prettyInspect('it\'s')).toBe('\'it\'s\'')
     expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
@@ -860,6 +873,17 @@ describe('loupe comparison', () => {
   })
 
   // -- known divergences --
+
+  test('custom class', () => {
+    class CustomClass {
+      public key: string
+      constructor() {
+        this.key = 'value'
+      }
+    }
+    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"{ key: 'value' }"`)
+    expect(loupeInspect(new CustomClass(), loupeOpts)).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
+  })
 
   test('0 — loupe shows +0', () => {
     expect(prettyInspect(0)).toMatchInlineSnapshot(`"0"`)
