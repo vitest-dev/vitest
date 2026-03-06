@@ -1,4 +1,3 @@
-import { prettyInspect } from '@vitest/utils/display'
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
@@ -276,21 +275,6 @@ describe('objectAttr', () => {
     ${{ func }}                   | ${'func'}       | ${func}
   `('objectAttr($value, $path) -> $expected', ({ value, path, expected }) => {
     expect(objectAttr(value, path)).toEqual(expected)
-  })
-})
-
-// TODO: pretty-format.test.ts covers this. so remove
-describe('objDisplay', () => {
-  test.each`
-  value | expected
-  ${'a'.repeat(100)} | ${`'${'a'.repeat(35)}...'`}
-  ${'🐱'.repeat(100)} | ${`'${'🐱'.repeat(17)}...'`}
-  ${`a${'🐱'.repeat(100)}…`} | ${`'a${'🐱'.repeat(17)}...'`}
-  `('Do not truncate strings anywhere but produce valid unicode strings for $value', ({ value, expected }) => {
-    // encodeURI can be used to detect invalid strings including invalid code-points
-    // note: our code should not split surrogate pairs, but may split graphemes
-    expect(() => encodeURI(prettyInspect(value, { truncate: 40 }))).not.toThrow()
-    expect(prettyInspect(value, { truncate: 40 })).toEqual(expected)
   })
 })
 
