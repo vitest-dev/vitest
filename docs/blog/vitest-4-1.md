@@ -337,6 +337,59 @@ export default defineConfig({
 
 When enabled, Vitest uses `node:async_hooks` to report leaked async resources with source locations. Since this adds runtime overhead, it is best used while debugging.
 
+## GitHub Actions Job Summary
+
+The built-in [`github-actions` reporter](/guide/reporters#github-actions-reporter) now automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries — with permalink URLs linking test names directly to the relevant source lines on GitHub.
+
+<center>
+  <img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
+  <img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
+
+  <sup>An example of the job summary with flaky test details.</sup>
+</center>
+
+The summary is enabled by default when running in GitHub Actions and writes to the path specified by `$GITHUB_STEP_SUMMARY`. No configuration is needed in most cases. To disable it or customize the output path:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          enabled: false, // or set `outputPath` to customize where the summary is written
+        },
+      }],
+    ],
+  },
+})
+```
+
+## New `agent` Reporter to Reduce Token Usage
+
+As AI coding agents become a common way to run tests, Vitest 4.1 introduces the [`agent` reporter](/guide/reporters#agent-reporter) — a minimal output mode designed to reduce token usage. It only displays failed tests and their errors, suppressing passed test output and console logs from passing tests.
+
+Vitest automatically enables this reporter when it detects it's running inside an AI coding agent. The detection is powered by [`std-env`](https://github.com/unjs/std-env), which recognizes popular agent environments out of the box. You can also set the `AI_AGENT=copilot` (or any name) environment variable explicitly. No configuration needed — just run Vitest as usual:
+
+```sh
+AI_AGENT=copilot vitest
+```
+
+You can also enable it explicitly:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: ['agent'],
+  },
+})
+```
+
+If you configure custom reporters, the automatic detection is skipped, so add `'agent'` to the list manually if you want both.
+
 ## New `mockThrow` API
 
 Previously, making a mock throw required wrapping the error in a function: `mockImplementation(() => { throw new Error(...) })`. The new [`mockThrow`](/api/mock#mockthrow) and [`mockThrowOnce`](/api/mock#mockthrowonce) methods make this more concise and readable:
