@@ -376,18 +376,6 @@ Vitest automatically enables this reporter when it detects it's running inside a
 AI_AGENT=copilot vitest
 ```
 
-You can also enable it explicitly:
-
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    reporters: ['agent'],
-  },
-})
-```
-
 If you configure custom reporters, the automatic detection is skipped, so add `'agent'` to the list manually if you want both.
 
 ## New `mockThrow` API
