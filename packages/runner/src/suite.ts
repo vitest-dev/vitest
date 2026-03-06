@@ -18,7 +18,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { baseFormat, formatRegExp, INSPECT_OPTIONS, prettyInspect } from '@vitest/utils/display'
+import { format, formatRegExp, prettyInspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1041,11 +1041,7 @@ function formatTitle(template: string, items: any[], idx: number) {
     // format "%"
     (match) => {
       if (i < count) {
-        // output += format(match[0], items[i++])
-        output += baseFormat([match[0], items[i++]], {
-          // TODO: bake it in `format`
-          stringifyOptions: INSPECT_OPTIONS,
-        })
+        output += format([match[0], items[i++]])
       }
       else {
         output += match[0]

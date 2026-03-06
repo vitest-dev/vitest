@@ -106,14 +106,10 @@ export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
 interface FormatOptions {
   prettifyObject?: boolean
-  stringifyOptions?: StringifyOptions
 }
 
-export function baseFormat(args: unknown[], options: FormatOptions = {}): string {
+export function format(args: unknown[], options: FormatOptions = {}): string {
   const formatArg = (item: unknown) => {
-    if (options.stringifyOptions) {
-      return stringify(item, undefined, options.stringifyOptions)
-    }
     if (options.prettifyObject) {
       return stringify(item, undefined, {
         printBasicPrototype: false,
@@ -218,16 +214,7 @@ export function baseFormat(args: unknown[], options: FormatOptions = {}): string
   return str
 }
 
-// TODO: two should be comes same (remove browserFormat)
-export function format(...args: unknown[]): string {
-  return baseFormat(args)
-}
-
-export function browserFormat(...args: unknown[]): string {
-  return baseFormat(args, { prettifyObject: true })
-}
-
-export const INSPECT_OPTIONS: PrettyFormatOptions = {
+const INSPECT_OPTIONS: PrettyFormatOptions = {
   singleQuote: true,
   quoteKeys: false,
   min: true,
