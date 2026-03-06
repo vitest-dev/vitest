@@ -232,11 +232,9 @@ function printComplexValue(
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-        min
+        (min || !config.printBasicPrototype) && val.constructor.name === 'Array'
           ? ''
-          : !config.printBasicPrototype && val.constructor.name === 'Array'
-              ? ''
-              : `${val.constructor.name} `
+          : `${val.constructor.name} `
       }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
   if (toStringed === '[object Map]') {
@@ -270,11 +268,9 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-      min
+      (min || !config.printBasicPrototype) && getConstructorName(val) === 'Object'
         ? ''
-        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
-            ? ''
-            : `${getConstructorName(val)} `
+        : `${getConstructorName(val)} `
     }{${printObjectProperties(
       val,
       config,

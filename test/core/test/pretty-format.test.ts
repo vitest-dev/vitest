@@ -764,23 +764,17 @@ describe('util.inspect conformance', () => {
     { b: 1, a: 2 },
     { a: { b: { c: 1 } } },
     [{ a: 1 }, { b: 2 }],
-  ])('matches util.inspect: %s', (val) => {
-    expect(prettyInspect(val)).toBe(nodeInspect(val, { depth: null, maxArrayLength: null }))
-  })
-
-  // values where output diverges from util.inspect
-
-  test('custom class', () => {
-    class CustomClass {
+    new (class CustomClass {
       public key: string
       constructor() {
         this.key = 'value'
       }
-    }
-    // TODO?
-    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"{ key: 'value' }"`)
-    expect(nodeInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+    })
+  ])('matches util.inspect: %s', (val) => {
+    expect(prettyInspect(val)).toBe(nodeInspect(val, { depth: null, maxArrayLength: null }))
   })
+
+  // -- known divergences --
 
   test('string with single quotes — no escaping (stringify uses escapeString: false)', () => {
     expect(prettyInspect('it\'s')).toBe('\'it\'s\'')
@@ -831,7 +825,7 @@ describe('util.inspect conformance', () => {
   })
 
   test('Promise — opaque, min mode drops constructor', () => {
-    expect(prettyInspect(Promise.resolve())).toBe('{}')
+    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
     expect(nodeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise { undefined }"`)
   })
 })
@@ -881,7 +875,7 @@ describe('loupe comparison', () => {
         this.key = 'value'
       }
     }
-    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"{ key: 'value' }"`)
+    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
     expect(loupeInspect(new CustomClass(), loupeOpts)).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
   })
 
@@ -940,7 +934,7 @@ describe('loupe comparison', () => {
   })
 
   test('Promise — prettyInspect drops constructor name in min mode', () => {
-    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"{}"`)
+    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
     expect(loupeInspect(Promise.resolve(), loupeOpts)).toMatchInlineSnapshot(`"Promise{…}"`)
   })
 
