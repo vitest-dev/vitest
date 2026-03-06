@@ -64,12 +64,13 @@ describe('running browser tests', async () => {
       expect(events).toContain(`onBrowserInit ${project.name}`)
     })
 
-    // test files are optimized automatically
+    // test files are optimized automatically (type-check-only files are excluded)
+    const runtimeTestFiles = testFiles.filter(f => !f.endsWith('.test-d.ts'))
     expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
-      .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
+      .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
 
     const testFilesCount = readdirSync('./test')
-      .filter(n => n.includes('.test.'))
+      .filter(n => n.includes('.test.') || n.includes('.test-d.'))
       .length + 1 // 1 is in-source-test
 
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
