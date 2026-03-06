@@ -722,6 +722,11 @@ describe('prettyInspect', () => {
   test('truncates object', () => {
     expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toBe('{ Object (a, b, ...) }')
   })
+
+  test('truncate other types', () => {
+    expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 5 })).toMatchInlineSnapshot(`"[Map]"`)
+    expect(prettyInspect(new Set([1, 2, 3]), { truncate: 5 })).toMatchInlineSnapshot(`"[Set]"`)
+  })
 })
 
 // -- util.inspect conformance --
