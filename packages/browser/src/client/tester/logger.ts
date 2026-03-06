@@ -30,7 +30,7 @@ export function setupConsoleLogSpy(): void {
 
   console.dir = (item, options) => {
     dir(item, options)
-    sendLog('stdout', format([item], { prettifyObject: true }))
+    sendLog('stdout', processLog([item]))
   }
 
   console.dirxml = (...args) => {
@@ -114,7 +114,7 @@ function stderr(base: (...args: unknown[]) => void) {
 }
 
 function processLog(args: unknown[]) {
-  return format(args, { prettifyObject: true })
+  return format(args, { multiline: true })
 }
 
 function sendLog(

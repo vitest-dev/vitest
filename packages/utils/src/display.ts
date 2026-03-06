@@ -104,20 +104,8 @@ function createNodeFilterFromSelector(selector: string): (node: any) => boolean 
 
 export const formatRegExp: RegExp = /%[sdjifoOc%]/g
 
-interface FormatOptions {
-  prettifyObject?: boolean
-}
-
-export function format(args: unknown[], options: FormatOptions = {}): string {
-  const formatArg = (item: unknown) => {
-    if (options.prettifyObject) {
-      return stringify(item, undefined, {
-        printBasicPrototype: false,
-        escapeString: false,
-      })
-    }
-    return inspect(item)
-  }
+export function format(args: unknown[], options: InspectOptions = {}): string {
+  const formatArg = (item: unknown) => inspect(item, options)
 
   if (typeof args[0] !== 'string') {
     const objects = []
@@ -214,24 +202,30 @@ export function format(args: unknown[], options: FormatOptions = {}): string {
   return str
 }
 
-const INSPECT_OPTIONS: PrettyFormatOptions = {
-  singleQuote: true,
-  quoteKeys: false,
-  min: true,
-  spacingInner: ' ',
-  spacingOuter: ' ',
-  printBasicPrototype: false,
-  compareKeys: null,
+export interface InspectOptions extends StringifyOptions {
+  truncate?: number
+  multiline?: boolean
 }
 
-// TODO: rename to `inspect`?
 export function inspect(
   obj: unknown,
-  options: { truncate?: number } = {},
+  options?: InspectOptions,
 ): string {
-  const threshold = options.truncate ?? 0
+  const { truncate, multiline, ...stringifyOptions } = options ?? {}
+  const prettyFormatOptions: PrettyFormatOptions = {
+    singleQuote: true,
+    quoteKeys: false,
+    min: true,
+    spacingInner: ' ',
+    spacingOuter: ' ',
+    printBasicPrototype: false,
+    compareKeys: null,
+    ...(multiline ? { min: false, spacingInner: undefined, spacingOuter: undefined } : {}),
+  }
+  const threshold = truncate ?? 0
   const formatted = stringify(obj, undefined, {
-    ...INSPECT_OPTIONS,
+    ...prettyFormatOptions,
+    ...stringifyOptions,
     maxLength: threshold || undefined,
   })
 
@@ -263,9 +257,9 @@ export function inspect(
   }
 
   return stringify(obj, undefined, {
-    ...INSPECT_OPTIONS,
+    ...prettyFormatOptions,
+    ...stringifyOptions,
     maxDepth: 0,
-    maxLength: threshold || undefined,
   })
 }
 
