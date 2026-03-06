@@ -47,7 +47,7 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   return {
     name,
     rank: 0,
-    numberOfSamples: 0,
+    samplesCount: 0,
     latency: createEmptyStatistics(),
     throughput: createEmptyStatistics(),
     period: 0,
@@ -133,7 +133,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           }
           result.period = taskResult.period
           result.totalTime = taskResult.totalTime
-          result.numberOfSamples = taskResult.latency.samplesCount
+          result.samplesCount = taskResult.latency.samplesCount
           benchmark.result!.state = 'pass'
           updateTask('test-finished', benchmark)
         },

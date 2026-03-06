@@ -23,7 +23,7 @@ export interface Benchmark extends Test {
 export interface BenchmarkResult {
   name: string
   rank: number
-  numberOfSamples: number
+  samplesCount: number
   latency: BenchmarkStatistics
   throughput: BenchmarkStatistics
   period: number

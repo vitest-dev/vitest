@@ -42,7 +42,7 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.latency.p995 || 0),
     formatNumber(result.latency.p999 || 0),
     `±${(result.latency.rme || 0).toFixed(2)}%`,
-    (result.numberOfSamples || 0).toString(),
+    (result.samplesCount || 0).toString(),
   ]
 }
 
