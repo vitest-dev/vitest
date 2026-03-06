@@ -119,7 +119,7 @@ describe('running browser tests', async () => {
   })
 })
 
-describe.only('console logging tests', async () => {
+describe('console logging tests', async () => {
   let stderr: string
   let stdout: string
   beforeAll(async () => {
