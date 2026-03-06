@@ -355,7 +355,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        if (viteConfig.esbuild !== false) {
+        // Only set esbuild options when not using rolldown-vite (Vite 8+),
+        // which uses oxc for transformation instead of esbuild
+        if (!rolldownVersion && viteConfig.esbuild !== false) {
           viteConfig.esbuild ||= {}
           viteConfig.esbuild.legalComments = 'inline'
         }
