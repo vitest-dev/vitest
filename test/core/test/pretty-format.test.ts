@@ -4,9 +4,6 @@ import { inspect as prettyInspect } from '@vitest/utils/display'
 import { inspect as loupeInspect } from 'loupe'
 import { describe, expect, test } from 'vitest'
 
-// TODO
-// - multiline output should use inline snapshot?
-
 function returnArguments(..._args: Array<unknown>) {
   // eslint-disable-next-line prefer-rest-params
   return arguments
@@ -16,140 +13,143 @@ function returnArguments(..._args: Array<unknown>) {
 
 describe('format()', () => {
   test('null', () => {
-    expect(format(null)).toBe('null')
+    expect(format(null)).toMatchInlineSnapshot(`"null"`)
   })
 
   test('undefined', () => {
-    expect(format(undefined)).toBe('undefined')
+    expect(format(undefined)).toMatchInlineSnapshot(`"undefined"`)
   })
 
   test('true', () => {
-    expect(format(true)).toBe('true')
+    expect(format(true)).toMatchInlineSnapshot(`"true"`)
   })
 
   test('false', () => {
-    expect(format(false)).toBe('false')
+    expect(format(false)).toMatchInlineSnapshot(`"false"`)
   })
 
   test('positive number', () => {
-    expect(format(123)).toBe('123')
+    expect(format(123)).toMatchInlineSnapshot(`"123"`)
   })
 
   test('negative number', () => {
-    expect(format(-123)).toBe('-123')
+    expect(format(-123)).toMatchInlineSnapshot(`"-123"`)
   })
 
   test('zero', () => {
-    expect(format(0)).toBe('0')
+    expect(format(0)).toMatchInlineSnapshot(`"0"`)
   })
 
   test('negative zero', () => {
-    expect(format(-0)).toBe('-0')
+    expect(format(-0)).toMatchInlineSnapshot(`"-0"`)
   })
 
   test('NaN', () => {
-    expect(format(Number.NaN)).toBe('NaN')
+    expect(format(Number.NaN)).toMatchInlineSnapshot(`"NaN"`)
   })
 
   test('Infinity', () => {
-    expect(format(Number.POSITIVE_INFINITY)).toBe('Infinity')
+    expect(format(Number.POSITIVE_INFINITY)).toMatchInlineSnapshot(`"Infinity"`)
   })
 
   test('-Infinity', () => {
-    expect(format(Number.NEGATIVE_INFINITY)).toBe('-Infinity')
+    expect(format(Number.NEGATIVE_INFINITY)).toMatchInlineSnapshot(`"-Infinity"`)
   })
 
   test('float', () => {
-    expect(format(3.14)).toBe('3.14')
+    expect(format(3.14)).toMatchInlineSnapshot(`"3.14"`)
   })
 
   test('positive bigint', () => {
-    expect(format(123n)).toBe('123n')
+    expect(format(123n)).toMatchInlineSnapshot(`"123n"`)
   })
 
   test('negative bigint', () => {
-    expect(format(-123n)).toBe('-123n')
+    expect(format(-123n)).toMatchInlineSnapshot(`"-123n"`)
   })
 
   test('zero bigint', () => {
-    expect(format(0n)).toBe('0n')
+    expect(format(0n)).toMatchInlineSnapshot(`"0n"`)
   })
 
   test('string', () => {
-    expect(format('string')).toBe('"string"')
+    expect(format('string')).toMatchInlineSnapshot(`""string""`)
   })
 
   test('empty string', () => {
-    expect(format('')).toBe('""')
+    expect(format('')).toMatchInlineSnapshot(`""""`)
   })
 
   test('string with double quotes and backslash (escapeString default)', () => {
     expect(format('"\'\\'))
-      .toBe('"\\"\'\\\\"')
+      .toMatchInlineSnapshot(`""\\"'\\\\""`)
   })
 
   test('multiline string', () => {
-    expect(format('line 1\nline 2')).toBe('"line 1\nline 2"')
+    expect(format('line 1\nline 2')).toMatchInlineSnapshot(`
+      ""line 1
+      line 2""
+    `)
   })
 
   test('named symbol', () => {
-    expect(format(Symbol('test'))).toBe('Symbol(test)')
+    expect(format(Symbol('test'))).toMatchInlineSnapshot(`"Symbol(test)"`)
   })
 
   test('unnamed symbol', () => {
-    expect(format(Symbol(''))).toBe('Symbol()')
+    expect(format(Symbol(''))).toMatchInlineSnapshot(`"Symbol()"`)
   })
 
   test('named function', () => {
     function named() {}
-    expect(format(named)).toBe('[Function named]')
+    expect(format(named)).toMatchInlineSnapshot(`"[Function named]"`)
   })
 
   test('anonymous function', () => {
-    expect(format(() => {})).toBe('[Function anonymous]')
+    expect(format(() => {})).toMatchInlineSnapshot(`"[Function anonymous]"`)
   })
 
   test('named generator function', () => {
     function* gen() {
       yield 1
     }
-    expect(format(gen)).toBe('[Function gen]')
+    expect(format(gen)).toMatchInlineSnapshot(`"[Function gen]"`)
   })
 
   test('date', () => {
-    expect(format(new Date(10e11))).toBe('2001-09-09T01:46:40.000Z')
+    expect(format(new Date(10e11))).toMatchInlineSnapshot(`"2001-09-09T01:46:40.000Z"`)
   })
 
   test('invalid date', () => {
-    expect(format(new Date(Infinity))).toBe('Date { NaN }')
+    expect(format(new Date(Infinity))).toMatchInlineSnapshot(`"Date { NaN }"`)
   })
 
   test('regexp from literal', () => {
-    expect(format(/regexp/gi)).toBe('/regexp/gi')
+    expect(format(/regexp/gi)).toMatchInlineSnapshot(`"/regexp/gi"`)
   })
 
   test('regexp from constructor', () => {
-    expect(format(/regexp/)).toBe('/regexp/')
+    expect(format(/regexp/)).toMatchInlineSnapshot(`"/regexp/"`)
   })
 
   test('error', () => {
-    expect(format(new Error('test'))).toBe('[Error: test]')
+    expect(format(new Error('test'))).toMatchInlineSnapshot(`"[Error: test]"`)
   })
 
   test('typed error with message', () => {
-    expect(format(new TypeError('message'))).toBe('[TypeError: message]')
+    expect(format(new TypeError('message'))).toMatchInlineSnapshot(`"[TypeError: message]"`)
   })
 
   test('WeakMap', () => {
-    expect(format(new WeakMap())).toBe('WeakMap {}')
+    expect(format(new WeakMap())).toMatchInlineSnapshot(`"WeakMap {}"`)
   })
 
   test('WeakSet', () => {
-    expect(format(new WeakSet())).toBe('WeakSet {}')
+    expect(format(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
   })
 
   test('Promise', () => {
-    expect(format(Promise.resolve())).toBe('Promise {}')
+    expect(format(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
   })
 })
 
@@ -157,134 +157,235 @@ describe('format()', () => {
 
 describe('arrays', () => {
   test('empty', () => {
-    expect(format([])).toBe('Array []')
+    expect(format([])).toMatchInlineSnapshot(`"Array []"`)
   })
 
   test('with items', () => {
-    expect(format([1, 2, 3])).toBe('Array [\n  1,\n  2,\n  3,\n]')
+    expect(format([1, 2, 3])).toMatchInlineSnapshot(`
+      "Array [
+        1,
+        2,
+        3,
+      ]"
+    `)
   })
 
   test('sparse with only holes', () => {
     // eslint-disable-next-line no-sparse-arrays
-    expect(format([, , ,])).toBe('Array [\n  ,\n  ,\n  ,\n]')
+    expect(format([, , ,])).toMatchInlineSnapshot(`
+      "Array [
+        ,
+        ,
+        ,
+      ]"
+    `)
   })
 
   test('sparse with items', () => {
     // eslint-disable-next-line no-sparse-arrays
-    expect(format([1, , , 4])).toBe('Array [\n  1,\n  ,\n  ,\n  4,\n]')
+    expect(format([1, , , 4])).toMatchInlineSnapshot(`
+      "Array [
+        1,
+        ,
+        ,
+        4,
+      ]"
+    `)
   })
 
   test('sparse with undefined', () => {
     // eslint-disable-next-line no-sparse-arrays
-    expect(format([1, , undefined, , 4])).toBe(
-      'Array [\n  1,\n  ,\n  undefined,\n  ,\n  4,\n]',
+    expect(format([1, , undefined, , 4])).toMatchInlineSnapshot(
+      `
+      "Array [
+        1,
+        ,
+        undefined,
+        ,
+        4,
+      ]"
+    `,
     )
   })
 
   test('nested', () => {
-    expect(format([[1, 2]])).toBe(
-      'Array [\n  Array [\n    1,\n    2,\n  ],\n]',
+    expect(format([[1, 2]])).toMatchInlineSnapshot(
+      `
+      "Array [
+        Array [
+          1,
+          2,
+        ],
+      ]"
+    `,
     )
   })
 
   test('typed array empty', () => {
-    expect(format(new Uint8Array(0))).toBe('Uint8Array []')
+    expect(format(new Uint8Array(0))).toMatchInlineSnapshot(`"Uint8Array []"`)
   })
 
   test('typed array with items', () => {
-    expect(format(new Uint32Array(3))).toBe(
-      'Uint32Array [\n  0,\n  0,\n  0,\n]',
+    expect(format(new Uint32Array(3))).toMatchInlineSnapshot(
+      `
+      "Uint32Array [
+        0,
+        0,
+        0,
+      ]"
+    `,
     )
   })
 
   test('ArrayBuffer', () => {
-    expect(format(new ArrayBuffer(3))).toBe(
-      'ArrayBuffer [\n  0,\n  0,\n  0,\n]',
+    expect(format(new ArrayBuffer(3))).toMatchInlineSnapshot(
+      `
+      "ArrayBuffer [
+        0,
+        0,
+        0,
+      ]"
+    `,
     )
   })
 
   test('DataView', () => {
-    expect(format(new DataView(new ArrayBuffer(3)))).toBe(
-      'DataView [\n  0,\n  0,\n  0,\n]',
+    expect(format(new DataView(new ArrayBuffer(3)))).toMatchInlineSnapshot(
+      `
+      "DataView [
+        0,
+        0,
+        0,
+      ]"
+    `,
     )
   })
 })
 
 describe('objects', () => {
   test('empty', () => {
-    expect(format({})).toBe('Object {}')
+    expect(format({})).toMatchInlineSnapshot(`"Object {}"`)
   })
 
   test('with properties', () => {
-    expect(format({ prop1: 'value1', prop2: 'value2' })).toBe(
-      'Object {\n  "prop1": "value1",\n  "prop2": "value2",\n}',
+    expect(format({ prop1: 'value1', prop2: 'value2' })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "prop1": "value1",
+        "prop2": "value2",
+      }"
+    `,
     )
   })
 
   test('keys are sorted by default', () => {
-    expect(format({ b: 1, a: 2 })).toBe(
-      'Object {\n  "a": 2,\n  "b": 1,\n}',
+    expect(format({ b: 1, a: 2 })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "a": 2,
+        "b": 1,
+      }"
+    `,
     )
   })
 
   test('deeply nested', () => {
-    expect(format({ a: { b: { c: 'val' } } })).toBe(
-      'Object {\n  "a": Object {\n    "b": Object {\n      "c": "val",\n    },\n  },\n}',
+    expect(format({ a: { b: { c: 'val' } } })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "a": Object {
+          "b": Object {
+            "c": "val",
+          },
+        },
+      }"
+    `,
     )
   })
 
   test('Object.create(null)', () => {
-    expect(format(Object.create(null))).toBe('Object {}')
+    expect(format(Object.create(null))).toMatchInlineSnapshot(`"Object {}"`)
   })
 
   test('custom constructor name', () => {
     class Foo { x = 1 }
-    expect(format(new Foo())).toBe('Foo {\n  "x": 1,\n}')
+    expect(format(new Foo())).toMatchInlineSnapshot(`
+      "Foo {
+        "x": 1,
+      }"
+    `)
   })
 
   test('with symbol properties', () => {
     const val: any = { prop: 'value' }
     val[Symbol('sym')] = 'symval'
-    expect(format(val)).toBe(
-      'Object {\n  "prop": "value",\n  Symbol(sym): "symval",\n}',
+    expect(format(val)).toMatchInlineSnapshot(
+      `
+      "Object {
+        "prop": "value",
+        Symbol(sym): "symval",
+      }"
+    `,
     )
   })
 
   test('skips non-enumerable string keys', () => {
     const val = { enumerable: true }
     Object.defineProperty(val, 'hidden', { enumerable: false, value: false })
-    expect(format(val)).toBe('Object {\n  "enumerable": true,\n}')
+    expect(format(val)).toMatchInlineSnapshot(`
+      "Object {
+        "enumerable": true,
+      }"
+    `)
   })
 
   test('skips non-enumerable symbol keys', () => {
     const val = { enumerable: true }
     Object.defineProperty(val, Symbol('hidden'), { enumerable: false, value: false })
-    expect(format(val)).toBe('Object {\n  "enumerable": true,\n}')
+    expect(format(val)).toMatchInlineSnapshot(`
+      "Object {
+        "enumerable": true,
+      }"
+    `)
   })
 
   test('circular reference', () => {
     const val: any = {}
     val.self = val
-    expect(format(val)).toBe('Object {\n  "self": [Circular],\n}')
+    expect(format(val)).toMatchInlineSnapshot(`
+      "Object {
+        "self": [Circular],
+      }"
+    `)
   })
 
   test('parallel references', () => {
     const inner = {}
-    expect(format({ a: inner, b: inner })).toBe(
-      'Object {\n  "a": Object {},\n  "b": Object {},\n}',
+    expect(format({ a: inner, b: inner })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "a": Object {},
+        "b": Object {},
+      }"
+    `,
     )
   })
 })
 
 describe('Map', () => {
   test('empty', () => {
-    expect(format(new Map())).toBe('Map {}')
+    expect(format(new Map())).toMatchInlineSnapshot(`"Map {}"`)
   })
 
   test('with string keys', () => {
     const val = new Map([['a', 1], ['b', 2]])
-    expect(format(val)).toBe(
-      'Map {\n  "a" => 1,\n  "b" => 2,\n}',
+    expect(format(val)).toMatchInlineSnapshot(
+      `
+      "Map {
+        "a" => 1,
+        "b" => 2,
+      }"
+    `,
     )
   })
 
@@ -295,32 +396,50 @@ describe('Map', () => {
       [undefined, 'undef'],
       [42, 'num'],
     ])
-    expect(format(val)).toBe(
-      'Map {\n  false => "bool",\n  null => "null",\n  undefined => "undef",\n  42 => "num",\n}',
+    expect(format(val)).toMatchInlineSnapshot(
+      `
+      "Map {
+        false => "bool",
+        null => "null",
+        undefined => "undef",
+        42 => "num",
+      }"
+    `,
     )
   })
 })
 
 describe('Set', () => {
   test('empty', () => {
-    expect(format(new Set())).toBe('Set {}')
+    expect(format(new Set())).toMatchInlineSnapshot(`"Set {}"`)
   })
 
   test('with values', () => {
-    expect(format(new Set(['a', 'b']))).toBe(
-      'Set {\n  "a",\n  "b",\n}',
+    expect(format(new Set(['a', 'b']))).toMatchInlineSnapshot(
+      `
+      "Set {
+        "a",
+        "b",
+      }"
+    `,
     )
   })
 })
 
 describe('Arguments', () => {
   test('empty', () => {
-    expect(format(returnArguments())).toBe('Arguments []')
+    expect(format(returnArguments())).toMatchInlineSnapshot(`"Arguments []"`)
   })
 
   test('with values', () => {
-    expect(format(returnArguments(1, 2, 3))).toBe(
-      'Arguments [\n  1,\n  2,\n  3,\n]',
+    expect(format(returnArguments(1, 2, 3))).toMatchInlineSnapshot(
+      `
+      "Arguments [
+        1,
+        2,
+        3,
+      ]"
+    `,
     )
   })
 })
@@ -331,20 +450,38 @@ describe('indent option', () => {
   const val = [{ a: 1 }]
 
   test('default (2 spaces)', () => {
-    expect(format(val)).toBe(
-      'Array [\n  Object {\n    "a": 1,\n  },\n]',
+    expect(format(val)).toMatchInlineSnapshot(
+      `
+      "Array [
+        Object {
+          "a": 1,
+        },
+      ]"
+    `,
     )
   })
 
   test('0 spaces', () => {
-    expect(format(val, { indent: 0 })).toBe(
-      'Array [\nObject {\n"a": 1,\n},\n]',
+    expect(format(val, { indent: 0 })).toMatchInlineSnapshot(
+      `
+      "Array [
+      Object {
+      "a": 1,
+      },
+      ]"
+    `,
     )
   })
 
   test('4 spaces', () => {
-    expect(format(val, { indent: 4 })).toBe(
-      'Array [\n    Object {\n        "a": 1,\n    },\n]',
+    expect(format(val, { indent: 4 })).toMatchInlineSnapshot(
+      `
+      "Array [
+          Object {
+              "a": 1,
+          },
+      ]"
+    `,
     )
   })
 })
@@ -352,53 +489,83 @@ describe('indent option', () => {
 describe('maxDepth option', () => {
   test('truncates nested structures', () => {
     const val = { a: { b: { c: 'deep' } }, arr: [[1]] }
-    expect(format(val, { maxDepth: 1 })).toBe(
-      'Object {\n  "a": [Object],\n  "arr": [Array],\n}',
+    expect(format(val, { maxDepth: 1 })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "a": [Object],
+        "arr": [Array],
+      }"
+    `,
     )
   })
 
   test('maxDepth with Map and Set', () => {
     const val = { m: new Map([['k', 'v']]), s: new Set([1]) }
-    expect(format(val, { maxDepth: 1 })).toBe(
-      'Object {\n  "m": [Map],\n  "s": [Set],\n}',
+    expect(format(val, { maxDepth: 1 })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "m": [Map],
+        "s": [Set],
+      }"
+    `,
     )
   })
 })
 
 describe('maxWidth option', () => {
   test('truncates arrays', () => {
-    expect(format([1, 2, 3, 4, 5], { maxWidth: 3 })).toBe(
-      'Array [\n  1,\n  2,\n  3,\n  …\n]',
+    expect(format([1, 2, 3, 4, 5], { maxWidth: 3 })).toMatchInlineSnapshot(
+      `
+      "Array [
+        1,
+        2,
+        3,
+        …
+      ]"
+    `,
     )
   })
 
   test('truncates sets', () => {
-    expect(format(new Set([1, 2, 3, 4, 5]), { maxWidth: 3 })).toBe(
-      'Set {\n  1,\n  2,\n  3,\n  …\n}',
+    expect(format(new Set([1, 2, 3, 4, 5]), { maxWidth: 3 })).toMatchInlineSnapshot(
+      `
+      "Set {
+        1,
+        2,
+        3,
+        …
+      }"
+    `,
     )
   })
 
   test('truncates maps', () => {
     const val = new Map([['a', 1], ['b', 2], ['c', 3], ['d', 4]])
-    expect(format(val, { maxWidth: 2 })).toBe(
-      'Map {\n  "a" => 1,\n  "b" => 2,\n  …\n}',
+    expect(format(val, { maxWidth: 2 })).toMatchInlineSnapshot(
+      `
+      "Map {
+        "a" => 1,
+        "b" => 2,
+        …
+      }"
+    `,
     )
   })
 })
 
 describe('min option', () => {
   test('basic values', () => {
-    expect(format({ a: [1, 2], b: 'str' }, { min: true })).toBe(
-      '{"a": [1, 2], "b": "str"}',
+    expect(format({ a: [1, 2], b: 'str' }, { min: true })).toMatchInlineSnapshot(
+      `"{"a": [1, 2], "b": "str"}"`,
     )
   })
 
   test('Map and Set', () => {
-    expect(format(new Map([['k', 'v']]), { min: true })).toBe(
-      'Map {"k" => "v"}',
+    expect(format(new Map([['k', 'v']]), { min: true })).toMatchInlineSnapshot(
+      `"Map {"k" => "v"}"`,
     )
-    expect(format(new Set([1, 2]), { min: true })).toBe(
-      'Set {1, 2}',
+    expect(format(new Set([1, 2]), { min: true })).toMatchInlineSnapshot(
+      `"Set {1, 2}"`,
     )
   })
 
@@ -411,23 +578,37 @@ describe('min option', () => {
 
 describe('compareKeys option', () => {
   test('null preserves insertion order', () => {
-    expect(format({ b: 1, a: 2 }, { compareKeys: null })).toBe(
-      'Object {\n  "b": 1,\n  "a": 2,\n}',
+    expect(format({ b: 1, a: 2 }, { compareKeys: null })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "b": 1,
+        "a": 2,
+      }"
+    `,
     )
   })
 
   test('custom sort (reverse)', () => {
     const compareKeys = (a: string, b: string) => (a > b ? -1 : 1)
-    expect(format({ a: 1, b: 2 }, { compareKeys })).toBe(
-      'Object {\n  "b": 2,\n  "a": 1,\n}',
+    expect(format({ a: 1, b: 2 }, { compareKeys })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "b": 2,
+        "a": 1,
+      }"
+    `,
     )
   })
 })
 
 describe('callToJSON option', () => {
   test('calls toJSON by default', () => {
-    expect(format({ toJSON: () => ({ replaced: true }), orig: 1 })).toBe(
-      'Object {\n  "replaced": true,\n}',
+    expect(format({ toJSON: () => ({ replaced: true }), orig: 1 })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "replaced": true,
+      }"
+    `,
     )
   })
 
@@ -439,58 +620,62 @@ describe('callToJSON option', () => {
   })
 
   test('does not call toJSON recursively', () => {
-    expect(format({ toJSON: () => ({ toJSON: () => 'deep' }) })).toBe(
-      'Object {\n  "toJSON": [Function toJSON],\n}',
+    expect(format({ toJSON: () => ({ toJSON: () => 'deep' }) })).toMatchInlineSnapshot(
+      `
+      "Object {
+        "toJSON": [Function toJSON],
+      }"
+    `,
     )
   })
 })
 
 describe('printBasicPrototype option', () => {
   test('includes prototype name by default', () => {
-    expect(format({})).toBe('Object {}')
-    expect(format([])).toBe('Array []')
+    expect(format({})).toMatchInlineSnapshot(`"Object {}"`)
+    expect(format([])).toMatchInlineSnapshot(`"Array []"`)
   })
 
   test('omits basic prototype names when false', () => {
-    expect(format({}, { printBasicPrototype: false })).toBe('{}')
-    expect(format([], { printBasicPrototype: false })).toBe('[]')
+    expect(format({}, { printBasicPrototype: false })).toMatchInlineSnapshot(`"{}"`)
+    expect(format([], { printBasicPrototype: false })).toMatchInlineSnapshot(`"[]"`)
   })
 
   test('still shows custom constructor names when false', () => {
     class Custom {}
-    expect(format(new Custom(), { printBasicPrototype: false })).toBe('Custom {}')
+    expect(format(new Custom(), { printBasicPrototype: false })).toMatchInlineSnapshot(`"Custom {}"`)
   })
 })
 
 describe('printFunctionName option', () => {
   test('prints function name by default', () => {
     function myFn() {}
-    expect(format(myFn)).toBe('[Function myFn]')
+    expect(format(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
   })
 
   test('hides function name when false', () => {
     function myFn() {}
-    expect(format(myFn, { printFunctionName: false })).toBe('[Function]')
+    expect(format(myFn, { printFunctionName: false })).toMatchInlineSnapshot(`"[Function]"`)
   })
 })
 
 describe('escapeString option', () => {
   test('escapes by default', () => {
-    expect(format('"hello"')).toBe('"\\\"hello\\\""')
+    expect(format('"hello"')).toMatchInlineSnapshot(`""\\"hello\\"""`)
   })
 
   test('does not escape when false', () => {
-    expect(format('"hello"', { escapeString: false })).toBe('""hello""')
+    expect(format('"hello"', { escapeString: false })).toMatchInlineSnapshot(`"""hello"""`)
   })
 })
 
 describe('escapeRegex option', () => {
   test('no escaping by default', () => {
-    expect(format(/regexp\d/gi)).toBe('/regexp\\d/gi')
+    expect(format(/regexp\d/gi)).toMatchInlineSnapshot(`"/regexp\\d/gi"`)
   })
 
   test('escapes when true', () => {
-    expect(format(/regexp\d/gi, { escapeRegex: true })).toBe('/regexp\\\\d/gi')
+    expect(format(/regexp\d/gi, { escapeRegex: true })).toMatchInlineSnapshot(`"/regexp\\\\d/gi"`)
   })
 })
 
@@ -498,70 +683,70 @@ describe('escapeRegex option', () => {
 
 describe('singleQuote option', () => {
   test('uses double quotes by default', () => {
-    expect(format('hello')).toBe('"hello"')
+    expect(format('hello')).toMatchInlineSnapshot(`""hello""`)
   })
 
   test('uses single quotes when true', () => {
-    expect(format('hello', { singleQuote: true })).toBe('\'hello\'')
+    expect(format('hello', { singleQuote: true })).toMatchInlineSnapshot(`"'hello'"`)
   })
 
   test('escapes single quotes inside string when singleQuote + escapeString', () => {
-    expect(format('it\'s', { singleQuote: true })).toBe('\'it\\\'s\'')
+    expect(format('it\'s', { singleQuote: true })).toMatchInlineSnapshot(`"'it\\'s'"`)
   })
 
   test('escapes backslash when singleQuote + escapeString', () => {
-    expect(format('a\\b', { singleQuote: true })).toBe('\'a\\\\b\'')
+    expect(format('a\\b', { singleQuote: true })).toMatchInlineSnapshot(`"'a\\\\b'"`)
   })
 
   test('does not escape double quotes when singleQuote', () => {
-    expect(format('say "hi"', { singleQuote: true })).toBe('\'say "hi"\'')
+    expect(format('say "hi"', { singleQuote: true })).toMatchInlineSnapshot(`"'say "hi"'"`)
   })
 
   test('applies to object values', () => {
-    expect(format({ a: 'b' }, { singleQuote: true, min: true })).toBe(
-      '{\'a\': \'b\'}',
+    expect(format({ a: 'b' }, { singleQuote: true, min: true })).toMatchInlineSnapshot(
+      `"{'a': 'b'}"`,
     )
   })
 
   test('applies to Map keys and values', () => {
-    expect(format(new Map([['k', 'v']]), { singleQuote: true, min: true })).toBe(
-      'Map {\'k\' => \'v\'}',
+    expect(format(new Map([['k', 'v']]), { singleQuote: true, min: true })).toMatchInlineSnapshot(
+      `"Map {'k' => 'v'}"`,
     )
   })
 })
 
 describe('quoteKeys option', () => {
   test('quotes all keys by default', () => {
-    expect(format({ a: 1 }, { min: true })).toBe('{"a": 1}')
+    expect(format({ a: 1 }, { min: true })).toMatchInlineSnapshot(`"{"a": 1}"`)
   })
 
   test('does not quote valid identifiers when false', () => {
-    expect(format({ a: 1, foo_bar: 2, $x: 3 }, { quoteKeys: false, min: true })).toBe(
-      '{$x: 3, a: 1, foo_bar: 2}',
+    expect(format({ a: 1, foo_bar: 2, $x: 3 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{$x: 3, a: 1, foo_bar: 2}"`,
     )
   })
 
   test('still quotes non-identifier keys when false', () => {
-    expect(format({ 'has space': 1 }, { quoteKeys: false, min: true })).toBe(
-      '{"has space": 1}',
+    expect(format({ 'has space': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"has space": 1}"`,
     )
   })
 
   test('still quotes keys starting with digit when false', () => {
-    expect(format({ '0abc': 1 }, { quoteKeys: false, min: true })).toBe(
-      '{"0abc": 1}',
+    expect(format({ '0abc': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"0abc": 1}"`,
     )
   })
 
   test('still quotes empty key when false', () => {
-    expect(format({ '': 1 }, { quoteKeys: false, min: true })).toBe(
-      '{"": 1}',
+    expect(format({ '': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"": 1}"`,
     )
   })
 
   test('still quotes key with dash when false', () => {
-    expect(format({ 'my-key': 1 }, { quoteKeys: false, min: true })).toBe(
-      '{"my-key": 1}',
+    expect(format({ 'my-key': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"my-key": 1}"`,
     )
   })
 })
@@ -569,17 +754,17 @@ describe('quoteKeys option', () => {
 describe('spacingInner / spacingOuter options', () => {
   test('min: true defaults', () => {
     // min: true → spacingInner: ' ', spacingOuter: ''
-    expect(format({ a: 1, b: 2 }, { min: true })).toBe('{"a": 1, "b": 2}')
+    expect(format({ a: 1, b: 2 }, { min: true })).toMatchInlineSnapshot(`"{"a": 1, "b": 2}"`)
   })
 
   test('spacingOuter override with min: true', () => {
     // override spacingOuter to add space around braces (loupe-like)
-    expect(format({ a: 1 }, { min: true, spacingOuter: ' ' })).toBe('{ "a": 1 }')
+    expect(format({ a: 1 }, { min: true, spacingOuter: ' ' })).toMatchInlineSnapshot(`"{ "a": 1 }"`)
   })
 
   test('spacingInner override', () => {
     // min: true still places comma before spacingInner
-    expect(format([1, 2], { min: true, spacingInner: ' | ' })).toBe('[1, | 2]')
+    expect(format([1, 2], { min: true, spacingInner: ' | ' })).toMatchInlineSnapshot(`"[1, | 2]"`)
   })
 })
 
@@ -641,7 +826,7 @@ describe('plugins', () => {
         print: (val: any) => `Foo(${val.value})`,
       }],
     })
-    expect(result).toBe('Foo(42)')
+    expect(result).toMatchInlineSnapshot(`"Foo(42)"`)
   })
 
   test('custom plugin with test/serialize', () => {
@@ -652,7 +837,7 @@ describe('plugins', () => {
         serialize: () => 'serialized Bar',
       }],
     })
-    expect(result).toBe('serialized Bar')
+    expect(result).toMatchInlineSnapshot(`"serialized Bar"`)
   })
 
   test('plugin returning empty string', () => {
@@ -662,7 +847,7 @@ describe('plugins', () => {
         print: () => '',
       }],
     })
-    expect(result).toBe('')
+    expect(result).toMatchInlineSnapshot(`""`)
   })
 
   test('throws if plugin returns non-string', () => {
@@ -693,10 +878,11 @@ describe('prettyInspect', () => {
   test('no truncation by default (truncate: 0)', () => {
     const long = 'a'.repeat(200)
     expect(prettyInspect(long)).toBe(`'${long}'`)
+    expect(prettyInspect(long, { truncate: 0 })).toBe(`'${long}'`)
   })
 
   test('no truncation when value fits within threshold', () => {
-    expect(prettyInspect('short', { truncate: 100 })).toBe('\'short\'')
+    expect(prettyInspect('short', { truncate: 100 })).toMatchInlineSnapshot(`"'short'"`)
   })
 
   test('truncates string', () => {
@@ -716,11 +902,11 @@ describe('prettyInspect', () => {
   })
 
   test('truncates array', () => {
-    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toBe('[ Array(5) ]')
+    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
   })
 
   test('truncates object', () => {
-    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toBe('{ Object (a, b, ...) }')
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toMatchInlineSnapshot(`"{ Object (a, b, ...) }"`)
   })
 
   test('truncate other types', () => {
