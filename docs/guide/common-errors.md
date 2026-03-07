@@ -96,6 +96,12 @@ Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 's
 You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
 :::
 
+::: warning Avoid adding `types` condition
+The `types` condition in `exports` and `imports` is usually reserved for Typescript, for libraries to declare where the declaration files are located (`.d.ts` files).
+
+If you add `types` to `ssr.resolve.conditions`, Vitest will try to import the `types` export from packages (`.d.ts`) instead of the `.js` files and Node.js will fail with error `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`
+:::
+
 ## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.
