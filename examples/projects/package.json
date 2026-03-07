@@ -16,7 +16,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/ui": "latest",
     "fastify": "^5.7.2",
-    "jsdom": "^27.4.0",
+    "jsdom": "^28.1.0",
     "react": "^19.2.4",
     "supertest": "^7.2.2",
     "tsx": "^4.21.0",
