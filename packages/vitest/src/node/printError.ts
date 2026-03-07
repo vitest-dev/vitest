@@ -12,6 +12,7 @@ import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
+import { isCI } from '../utils/env'
 import {
   defaultStackIgnorePatterns,
   lineSplitRE,
@@ -20,6 +21,7 @@ import {
 } from '../utils/source-map'
 import { F_POINTER } from './reporters/renderers/figures'
 import { divider, errorBanner, truncateString } from './reporters/renderers/utils'
+import { createTerminalLink } from './reporters/terminalLink'
 
 type ErrorLogger = Pick<Logger, 'error' | 'highlight'>
 
@@ -142,7 +144,7 @@ function printErrorInner(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
-          // we are checking that this module was processed by us at one point
+        // we are checking that this module was processed by us at one point
           try {
             const environments = [
               ...Object.values(project._vite?.environments || {}),
@@ -397,15 +399,18 @@ export function printStack(
   errorProperties: Record<string, unknown>,
   onStack?: (stack: ParsedStack) => void,
 ): void {
+  const isTTY = (project.vitest.logger.outputStream as typeof process.stdout).isTTY ?? false
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)
+    const formattedPath = `${path}:${c.dim(`${frame.line}:${frame.column}`)}`
+    const linkedPath = createTerminalLink(formattedPath, frame.file, { isTTY, isCI })
 
     logger.error(
       color(
         ` ${c.dim(F_POINTER)} ${[
           frame.method,
-          `${path}:${c.dim(`${frame.line}:${frame.column}`)}`,
+          linkedPath,
         ]
           .filter(Boolean)
           .join(' ')}`,
