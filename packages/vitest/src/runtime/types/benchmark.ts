@@ -1,28 +1,35 @@
 import type { Test } from '@vitest/runner'
 import type { ChainableFunction } from '@vitest/runner/utils'
 import type {
-  Bench as BenchFactory,
-  Options as BenchOptions,
-  Task as BenchTask,
-  TaskResult as BenchTaskResult,
-  TaskResult as TinybenchResult,
+  Bench,
+  Fn as BenchFunction,
+  BenchOptions,
+  Statistics as TinybenchStatistics,
+  Task as TinybenchTask,
+  TaskResult as TinybenchTaskResult,
 } from 'tinybench'
+
+export type BenchmarkStatistics = Omit<TinybenchStatistics, 'samples'> & {
+  samples: number[] | undefined
+}
 
 export interface Benchmark extends Test {
   meta: {
     benchmark: true
-    result?: BenchTaskResult
+    result?: TinybenchTaskResult
   }
 }
 
-export interface BenchmarkResult extends TinybenchResult {
+export interface BenchmarkResult {
   name: string
   rank: number
-  sampleCount: number
-  median: number
+  samplesCount: number
+  latency: BenchmarkStatistics
+  throughput: BenchmarkStatistics
+  period: number
+  totalTime: number
 }
 
-export type BenchFunction = (this: BenchFactory) => Promise<void> | void
 type ChainableBenchmarkAPI = ChainableFunction<
   'skip' | 'only' | 'todo',
   (name: string | Function, fn?: BenchFunction, options?: BenchOptions) => void
@@ -32,4 +39,4 @@ export type BenchmarkAPI = ChainableBenchmarkAPI & {
   runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
-export { BenchFactory, BenchOptions, BenchTask, BenchTaskResult }
+export { Bench, BenchFunction, BenchOptions, TinybenchTask, TinybenchTaskResult }

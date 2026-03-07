@@ -188,7 +188,7 @@
     "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
-    "tinybench": "^2.9.0",
+    "tinybench": "^6.0.0",
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
