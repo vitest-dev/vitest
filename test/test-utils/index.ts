@@ -172,6 +172,7 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,
       },
@@ -281,7 +282,13 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     args.push('--maxWorkers=1')
   }
 
-  const subprocess = x(command, args, options as Options).process!
+  const subprocess = x(command, args, {
+    ...options as Options,
+    nodeOptions: {
+      ...(options as Options)?.nodeOptions,
+      env: { ...process.env, AI_AGENT: '', ...(options as Options)?.nodeOptions?.env },
+    },
+  }).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
