@@ -48,6 +48,10 @@ export class TestFixtures {
     return TestFixtures._definitions.map(f => f.getFileContext(file))
   }
 
+  static isFixtureOptions(obj: unknown): boolean {
+    return isObject(obj) && Object.keys(obj as any).some(key => TestFixtures._fixtureOptionKeys.includes(key))
+  }
+
   constructor(registrations?: FixtureRegistrations) {
     this._registrations = registrations ?? new Map()
     this._suiteContexts = new WeakMap()
@@ -125,8 +129,7 @@ export class TestFixtures {
       if (
         Array.isArray(fn)
         && fn.length >= 2
-        && isObject(fn[1])
-        && Object.keys(fn[1]).some(key => TestFixtures._fixtureOptionKeys.includes(key))
+        && TestFixtures.isFixtureOptions(fn[1])
       ) {
         _options = fn[1] as FixtureOptions
         options = {
