@@ -162,6 +162,7 @@ export async function runVitest(
       outputJson,
       mergeReports,
       clearCache,
+      cache: false,
 
       // Test cases are already run with multiple forks/threads
       maxWorkers: maxWorkers ?? 1,
