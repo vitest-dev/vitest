@@ -163,11 +163,18 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       return false
     }
 
+    if (pm.isMatch(filename, this.options.exclude, { dot: true })) {
+      this.globCache.set(filename, false)
+      return false
+    }
+
     // By default `coverage.include` matches all files, except "coverage.exclude"
     const glob = this.options.include || '**'
 
-    let included = pm.isMatch(filename, glob, {
-      contains: true,
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
+    const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
+
+    let included = pm.isMatch(relativeFilename, glob, {
       dot: true,
       ignore: this.options.exclude,
     })

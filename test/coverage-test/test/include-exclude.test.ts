@@ -96,8 +96,7 @@ test('exclude can exclude covered files #2', async () => {
       reporter: 'json',
       include: ['fixtures/src/{math,even}.ts'],
 
-      // pattern that's recognized by picomatch but not by tinyglobby
-      exclude: ['math'],
+      exclude: ['**/math.ts'],
     },
   })
 
