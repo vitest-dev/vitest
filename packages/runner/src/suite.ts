@@ -867,7 +867,7 @@ export function createTaskCollector(
         optionsOrFn !== null
         && typeof optionsOrFn === 'object'
         && !Array.isArray(optionsOrFn)
-        && ('scope' in optionsOrFn || 'auto' in optionsOrFn)
+        && TestFixtures.isFixtureOptions(optionsOrFn)
       ) {
         // (name, options) with no value - treat as empty object fixture
         fixtureOptions = optionsOrFn as object
