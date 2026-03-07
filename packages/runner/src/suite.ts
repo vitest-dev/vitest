@@ -18,7 +18,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
+import { format, formatRegExp, inspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1028,9 +1028,8 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      })
+      // TODO: introduce new option
+      return inspect(value, { truncate: runner?.config?.chaiConfig?.truncateThreshold ?? 40 })
     })
   }
 
@@ -1042,7 +1041,7 @@ function formatTitle(template: string, items: any[], idx: number) {
     // format "%"
     (match) => {
       if (i < count) {
-        output += format(match[0], items[i++])
+        output += format([match[0], items[i++]])
       }
       else {
         output += match[0]

@@ -81,6 +81,9 @@ catalogs:
     istanbul-reports:
       specifier: ^3.2.0
       version: 3.2.0
+    loupe:
+      specifier: ^3.2.1
+      version: 3.2.1
     magic-string:
       specifier: ^0.30.21
       version: 0.30.21
@@ -987,9 +990,6 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
-      loupe:
-        specifier: ^3.2.1
-        version: 3.2.1
 
   packages/vitest:
     dependencies:
@@ -1425,6 +1425,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker
+      '@vitest/pretty-format':
+        specifier: 'workspace:'
+        version: link:../../packages/pretty-format
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
@@ -1458,6 +1461,9 @@ importers:
       immutable:
         specifier: 5.1.4
         version: 5.1.4
+      loupe:
+        specifier: 'catalog:'
+        version: 3.2.1
       memfs:
         specifier: ^4.56.10
         version: 4.56.10(tslib@2.8.1)
@@ -13236,7 +13242,7 @@ snapshots:
       eslint: 9.39.3(jiti@2.6.1)
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
       - typescript

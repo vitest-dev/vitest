@@ -139,12 +139,12 @@ describe('console logging tests', async () => {
     expect(stdout).toContain('hello from console.debug')
     expect(stdout).toContain(`
 {
-  "hello": "from dir",
+  hello: 'from dir',
 }
       `.trim())
     expect(stdout).toContain(`
 {
-  "hello": "from dirxml",
+  hello: 'from dirxml',
 }
       `.trim())
     expect(stdout).toContain('dom <div />')
@@ -160,7 +160,7 @@ describe('console logging tests', async () => {
     expect(stdout).not.toContain('[console-time-fake]: 0 ms')
     expect(stdout).toContain('hello from one')
     expect(stdout).toContain(`hello from two {
-  "hello": "object",
+  hello: 'object',
 }`)
   })
 
