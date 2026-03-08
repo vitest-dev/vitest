@@ -29,7 +29,7 @@
     "@vitest/web-worker": "workspace:^",
     "@vueuse/integrations": "^14.2.1",
     "axios": "^1.13.4",
-    "immutable": "5.1.4",
+    "immutable": "5.1.5",
     "memfs": "^4.56.10",
     "obug": "^2.1.1",
     "react": "^19.2.4",
