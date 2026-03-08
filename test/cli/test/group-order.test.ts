@@ -1,6 +1,27 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+test('throws on invalid groupOrder type (array instead of number)', async () => {
+  const { stderr } = await runInlineTests({
+    'example.test.ts': `test('ok', () => {})`,
+  }, {
+    $cliOptions: { globals: true },
+    projects: [
+      {
+        test: {
+          name: 'fast',
+          include: ['./example.test.ts'],
+          sequence: {
+            // @ts-expect-error -- testing runtime validation
+            groupOrder: ['fast'],
+          },
+        },
+      },
+    ],
+  })
+  expect(stderr).toContain('Invalid "sequence.groupOrder" value')
+})
+
 test('tests run according to the group order', async () => {
   const { stdout, stderr } = await runInlineTests({
     'example.1.test.ts': `test('1', () => {})`,
