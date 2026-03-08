@@ -775,7 +775,7 @@ export function resolveConfig(
   if (resolved.sequence.groupOrder != null) {
     const order = Number(resolved.sequence.groupOrder)
     if (!Number.isFinite(order)) {
-      throw new Error(
+      throw new TypeError(
         `Invalid "sequence.groupOrder" value: expected a finite number, received ${JSON.stringify(resolved.sequence.groupOrder)}`,
       )
     }
