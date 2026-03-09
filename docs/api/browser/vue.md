@@ -40,7 +40,15 @@ The package exposes two entry points: `vitest-browser-vue` and `vitest-browser-v
 export function render(
   component: Component,
   options?: ComponentRenderOptions,
-): RenderResult
+): RenderResult & PromiseLike<RenderResult>
+```
+
+The `render` function is synchronous and can be used without `await`. When awaited, it integrates with the [Trace View](/guide/browser/trace-view) by recording a `vue.render` trace mark:
+
+```ts
+// both are valid
+const screen = render(Component)
+const screen = await render(Component)
 ```
 
 ### Options
@@ -125,10 +133,12 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 #### rerender
 
 ```ts
-function rerender(props: Partial<Props>): void
+function rerender(props: Partial<Props>): void & PromiseLike<void>
 ```
 
 It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
+
+When awaited, it records a `vue.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
 
 ```js
 import { render } from 'vitest-browser-vue'
@@ -136,16 +146,18 @@ import { render } from 'vitest-browser-vue'
 const { rerender } = render(NumberDisplay, { props: { number: 1 } })
 
 // re-render the same component with different props
-rerender({ number: 2 })
+await rerender({ number: 2 })
 ```
 
 #### unmount
 
 ```ts
-function unmount(): void
+function unmount(): void & PromiseLike<void>
 ```
 
 This will cause the rendered component to be unmounted. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+
+When awaited, it records a `vue.unmount` trace mark in the [Trace View](/guide/browser/trace-view).
 
 #### emitted
 

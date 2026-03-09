@@ -39,7 +39,15 @@ export function render<C extends Component>(
   Component: ComponentImport<C>,
   options?: ComponentOptions<C>,
   renderOptions?: SetupOptions
-): RenderResult<C>
+): RenderResult<C> & PromiseLike<RenderResult<C>>
+```
+
+The `render` function is synchronous and can be used without `await`. When awaited, it integrates with the [Trace View](/guide/browser/trace-view) by recording a `svelte.render` trace mark:
+
+```ts
+// both are valid
+const screen = render(Component)
+const screen = await render(Component)
 ```
 
 ### Options
@@ -139,10 +147,10 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 #### rerender
 
 ```ts
-function rerender(props: Partial<ComponentProps<T>>): void
+function rerender(props: Partial<ComponentProps<T>>): Promise<void>
 ```
 
-Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes.
+Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes. Also records a `svelte.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
@@ -158,16 +166,18 @@ await rerender({ number: 2 })
 #### unmount
 
 ```ts
-function unmount(): void
+function unmount(): void & PromiseLike<void>
 ```
 
 Unmount and destroy the Svelte component. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+
+When awaited, it records a `svelte.unmount` trace mark in the [Trace View](/guide/browser/trace-view).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
 
 const { container, unmount } = render(Component)
-unmount()
+await unmount()
 // your component has been unmounted and now: container.innerHTML === ''
 ```
 
