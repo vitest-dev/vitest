@@ -55,18 +55,20 @@ export class TestFixtures {
   }
 
   extend(runner: VitestRunner, userFixtures: UserFixtures | TestFixtures): TestFixtures {
-    const { suite } = getCurrentSuite()
+    const { suite, file } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
+    const targetSuite = suite || file
 
     if (userFixtures instanceof TestFixtures) {
-      const registrations = new Map(this._registrations)
-      for (const [name, item] of userFixtures._registrations) {
+      const registrations = new Map(this.get(targetSuite))
+      for (const [name, item] of userFixtures.get(targetSuite)) {
         registrations.set(name, item)
       }
       return new TestFixtures(registrations)
     }
 
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
+    const parentRegistrations = new Map(this.get(targetSuite))
+    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, parentRegistrations)
     return new TestFixtures(registrations)
   }
 
@@ -116,6 +118,10 @@ export class TestFixtures {
       this._suiteContexts.set(TestFixtures._workerContextSymbol, Object.create(null))
     }
     return this._suiteContexts.get(TestFixtures._workerContextSymbol)!
+  }
+
+  getRegistrations(): FixtureRegistrations {
+    return this._registrations
   }
 
   private parseUserFixtures(
@@ -203,7 +209,19 @@ export class TestFixtures {
       }
     })
 
-    // validate fixture dependency scopes
+    if (errors.length === 1) {
+      throw errors[0]
+    }
+    else if (errors.length > 1) {
+      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+    }
+
+    return registrations
+  }
+
+  static validateFixtures(registrations: FixtureRegistrations): void {
+    const errors: Error[] = []
+
     for (const fixture of registrations.values()) {
       for (const depName of fixture.deps) {
         if (TestFixtures._builtinFixtures.includes(depName)) {
@@ -233,7 +251,6 @@ export class TestFixtures {
     else if (errors.length > 1) {
       throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
     }
-    return registrations
   }
 }
 

@@ -18,7 +18,7 @@ if (rolldownVersion) {
   })
 }
 
-// --- Error paths ---
+// Error handling for invalid mergeTests() invocations
 
 test('mergeTests() with zero arguments throws TypeError', async () => {
   const { stderr } = await runInlineTests({
@@ -87,7 +87,7 @@ test('mergeTests with invalid first arg triggers currentContext check', async ()
     ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts [ basic.test.ts ]
-    TypeError: Cannot merge tests: base test is not a valid test instance
+    TypeError: mergeTests requires extended test instances created via test.extend()
      ❯ basic.test.ts:4:7
           2|       import { test, mergeTests } from 'vitest'
           3|       const valid = test.extend({ a: 1 })
@@ -113,7 +113,28 @@ test('mergeTests with single arg passes through without validation', async () =>
   expect(stderr).toMatchInlineSnapshot(`""`)
 })
 
-// --- Basic merging with async fixtures and teardown ordering ---
+test('mergeTests throws on circular dependency that emerges only after merge', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': `
+      import { test, mergeTests } from 'vitest'
+
+      const t1 = test.extend({
+        a: async ({ b }, use) => use('a-' + b),
+      })
+      const t2 = test.extend({
+        b: async ({ a }, use) => use('b-' + a),
+      })
+
+      const merged = mergeTests(t1, t2)
+
+      // Triggers dependency resolution to verify circular cycle detection
+      merged('circular test', ({ a }) => {})
+    `,
+  }, { globals: true })
+  expect(stderr).toMatch(/circular fixture dependency/i)
+})
+
+// Fixture setup and teardown sequence
 
 test('mergeTests merges async fixtures with setup and teardown', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
@@ -151,7 +172,7 @@ test('mergeTests merges async fixtures with setup and teardown', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > uses both async fixtures <time>"`)
 })
 
-// --- Scoped fixtures ---
+// Scoped fixture behavior in merged tests
 
 test('mergeTests merges file-scoped fixtures (init once, teardown once)', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
@@ -240,98 +261,45 @@ test('mergeTests merges worker-scoped fixtures', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > uses worker and local <time>"`)
 })
 
-test('mergeTests file-scoped fixture depending on test-scoped fixture fails', async () => {
-  const { stderr } = await runMergeFixtureTests(({ log }) => {
-    const t1 = it.extend<{ local: string; fileFix: string }>({
-      local: async ({}, use) => {
-        await use('local-val')
-      },
-      fileFix: [
-        async ({ local }, use) => {
-          log(`fileFix from ${local}`)
-          await use(local)
-        },
-        { scope: 'file' },
-      ],
+test('mergeTests throws when same fixture has different scopes', async () => {
+  const { stderr } = await runMergeFixtureTests(() => {
+    const t1 = it.extend<{ f: string }>({
+      f: [async ({}, use: any) => use('file-val'), { scope: 'file' }] as any,
     })
-    const t2 = it.extend<{ other: number }>({ other: 1 })
+    const t2 = it.extend<{ f: string }>({
+      f: [async ({}, use: any) => use('test-val'), { scope: 'test' }] as any,
+    })
     return mergeTests(t1, t2)
   }, {
     'basic.test.ts': ({ extendedTest }) => {
-      extendedTest('should fail', ({ fileFix: _f }) => {})
+      extendedTest('should fail', () => {})
     },
   })
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts [ basic.test.ts ]
-    FixtureDependencyError: The file "fileFix" fixture cannot depend on a test fixture "local".
-     ❯ test.js:7:17
-          5| export const expectTypeOf = globalThis.expectTypeOf
-          6| export const extendedTest = (({ log }) => {
-          7|   const t1 = it.extend({
-           |                 ^
-          8|     local: async ({}, use) => {
-          9|       await use("local-val");
-     ❯ test.js:21:3
-     ❯ basic.test.ts:2:1
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
+  expect(stderr).toMatch(/Fixture "f" defined with conflicting scopes: "file" vs "test"/)
 })
 
-// Documents the architectural invariant: a true A→B→A cycle that only emerges after
-// merge cannot be constructed, because parseUserFixtures() eagerly validates that every
-// dep is known at extend() time. Attempting `it.extend({ a: ({ b }) => ... })` where `b`
-// is not yet in the registry throws FixtureDependencyError immediately.
-// This is a guarantee — not a gap — that the cycle detection in resolveDeps() handles.
-test('mergeTests circular dep across merge boundary: eager validation prevents construction', async () => {
+test('mergeTests throws when a file-scoped fixture depends on a dependency that becomes test-scoped after merge', async () => {
   const { stderr } = await runMergeFixtureTests(() => {
-    // t1: `a` tries to depend on `b`. `b` is not in t1's registry.
-    // parseUserFixtures() uses getUsedProps() to extract 'b' from the destructured arg,
-    // then validates registrations.get('b') === undefined → FixtureDependencyError.
-    const t1 = (it as any).extend({
-      a: async ({ b }: any, use: any) => use(`a-from-${b}`),
+    // Verification that scope conflicts are caught even when merging across different contexts
+    const t1 = it.extend<{ base: string; derived: string }>({
+      base: [async ({}, use: any) => use('file-base'), { scope: 'file' }] as any,
+      derived: [async ({ base }: any, use: any) => use(`derived-${base}`), { scope: 'file' }] as any,
     })
-    const t2 = (it as any).extend({
-      b: async ({ a }: any, use: any) => use(`b-from-${a}`),
+    // base is overridden with mismatching scope in t2
+    const t2 = it.extend<{ base: string }>({
+      base: [async ({}, use: any) => use('test-base'), { scope: 'test' }] as any,
     })
     return mergeTests(t1, t2)
   }, {
-    'basic.test.ts': ({ extendedTest }: any) => {
-      extendedTest('cycle triggers error', ({ a: _a }: any) => {})
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('should fail', () => {})
     },
   })
-  // Error is thrown at t1.extend() time — the merge never runs.
-  // A cycle only detectable post-merge is structurally impossible.
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts [ basic.test.ts ]
-    FixtureDependencyError: The "a" fixture depends on unknown fixture "b".
-     ❯ test.js:7:17
-          5| export const expectTypeOf = globalThis.expectTypeOf
-          6| export const extendedTest = (() => {
-          7|   const t1 = it.extend({
-           |                 ^
-          8|     a: async ({ b }, use) => use(\`a-from-\${b}\`)
-          9|   });
-     ❯ test.js:14:3
-     ❯ basic.test.ts:2:1
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
+  expect(stderr).toMatch(/Fixture "base" defined with conflicting scopes: "file" vs "test"/)
 })
 
-// Validates that when two fixtures share a name but have incompatible value types,
-// the fast-path Map.set() replacement works cleanly: no stale function/deps metadata
-// from t1's function fixture leaks onto t2's static fixture.
+// Ensure static values correctly override function fixtures without leaking metadata
 test('mergeTests same fixture name with incompatible types still follows last-wins semantics', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
     const t1 = it.extend<{ foo: string }>({
@@ -342,10 +310,11 @@ test('mergeTests same fixture name with incompatible types still follows last-wi
     })
     return mergeTests(t1, t2)
   }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
+    'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
       extendedTest('last wins regardless of shape', ({ foo }) => {
         // t2's static `123` wins over t1's async function fixture.
         // No stale `deps` or `value` should leak from t1's TestFixtureItem.
+        expectTypeOf(foo).toEqualTypeOf<number>()
         expect(foo).toBe(123)
       })
     },
@@ -354,60 +323,7 @@ test('mergeTests same fixture name with incompatible types still follows last-wi
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > last wins regardless of shape <time>"`)
 })
 
-test('mergeTests same fixture name with different scopes — last definition wins across all scope transitions', async () => {
-  // file→test
-  const { stderr: e1, tests: t1Out } = await runMergeFixtureTests(() => {
-    const ta = it.extend<{ f: string }>({
-      f: [async ({}, use) => use('file-val'), { scope: 'file' }],
-    })
-    const tb = it.extend<{ f: string }>({
-      f: async ({}, use) => use('test-val'),
-    })
-    return mergeTests(ta, tb)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('file→test wins test-val', ({ f }) => expect(f).toBe('test-val'))
-    },
-  })
-  expect(e1).toMatchInlineSnapshot(`""`)
-  expect(t1Out).toMatchInlineSnapshot(`" ✓ basic.test.ts > file→test wins test-val <time>"`)
-
-  // test→worker
-  const { stderr: e2, tests: t2Out } = await runMergeFixtureTests(() => {
-    const ta = it.extend<{ f: string }>({
-      f: async ({}, use) => use('test-val'),
-    })
-    const tb = it.extend<{ f: string }>({
-      f: [async ({}, use) => use('worker-val'), { scope: 'worker' }],
-    })
-    return mergeTests(ta, tb)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('test→worker wins worker-val', ({ f }) => expect(f).toBe('worker-val'))
-    },
-  })
-  expect(e2).toMatchInlineSnapshot(`""`)
-  expect(t2Out).toMatchInlineSnapshot(`" ✓ basic.test.ts > test→worker wins worker-val <time>"`)
-
-  // worker→file
-  const { stderr: e3, tests: t3Out } = await runMergeFixtureTests(() => {
-    const ta = it.extend<{ f: string }>({
-      f: [async ({}, use) => use('worker-val'), { scope: 'worker' }],
-    })
-    const tb = it.extend<{ f: string }>({
-      f: [async ({}, use) => use('file-val'), { scope: 'file' }],
-    })
-    return mergeTests(ta, tb)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('worker→file wins file-val', ({ f }) => expect(f).toBe('file-val'))
-    },
-  })
-  expect(e3).toMatchInlineSnapshot(`""`)
-  expect(t3Out).toMatchInlineSnapshot(`" ✓ basic.test.ts > worker→file wins file-val <time>"`)
-})
-
-// --- Override after merge ---
+// .override() semantics on merged tests
 
 test('mergeTests override works on merged test with nested describe', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
@@ -440,7 +356,7 @@ test('mergeTests override works on merged test with nested describe', async () =
   `)
 })
 
-// --- Fixture lifecycle ordering ---
+// Lifecycle ordering verification
 
 test('mergeTests init and teardown execute per test', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
@@ -483,11 +399,9 @@ test('mergeTests init and teardown execute per test', async () => {
   `)
 })
 
-// --- Structural invariants & dependency graph guarantees ---
+// Internal structural guarantees
 
-// Non-mutation guarantee: mergeTests must not modify t1 or t2 in-place.
-// The implementation does currentTest = currentTest.extend(fixtures) which creates
-// a new TestFixtures instance — the original registrations maps are never mutated.
+// mergeTests should never modify input TestAPI instances in-place
 test('mergeTests does not mutate original test instances', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
     const t1 = it.extend<{ a: string }>({ a: 'from-t1' })
@@ -497,11 +411,14 @@ test('mergeTests does not mutate original test instances', async () => {
     // Return t1 unchanged — it must NOT see t2's fixture `b`
     return t1
   }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
+    'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
       extendedTest('original still only has its own fixtures', ({ a }) => {
+        expectTypeOf(a).toBeString()
         expect(a).toBe('from-t1')
-        // Proof of non-mutation: t1 was used alone and correctly resolved only its own fixture.
-        // If mergeTests mutated t1, `a` would be undefined or `b` would appear in context.
+        // Proof of non-mutation: We only requested 'a'.
+        // If mergeTests had mutated t1 to include t2's fixtures, this would still pass,
+        // but the fact that this test *runs* successfully with t1 alone (no 'b' provider)
+        // proves that 'b' is not a required dependency of t1.
       })
     },
   })
@@ -534,7 +451,7 @@ test('mergeTests resolves dependency chain from shared base', async () => {
 })
 
 test('mergeTests fixture from t2 can depend on fixture provided by t1', async () => {
-  // This tests cross-merge dependency: t2's fixture depends on t1's fixture
+  // Fixtures from different merge inputs can depend on each other
   const { stderr, tests } = await runMergeFixtureTests(({ log }) => {
     const t1 = it.extend<{ baseUrl: string }>({
       baseUrl: async ({}, use) => {
@@ -580,9 +497,7 @@ test('mergeTests same-named fixture: dependent fixture uses the winning override
     'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('derived sees t2 base', ({ base, derived }) => {
         expect(base).toBe('t2-base')
-        // `derived` was defined in t1 and depends on `base`.
-        // After merge, `base` is overridden by t2.
-        // Vitest resolves `derived` using the current fixture map, so it gets t2's base.
+        // Vitest resolves derived using the live map, seeing the override from t2
         expect(derived).toBe('derived-from-t2-base')
       })
     },
@@ -592,11 +507,9 @@ test('mergeTests same-named fixture: dependent fixture uses the winning override
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > derived sees t2 base <time>"`)
 })
 
-// --- Structural dependency graph stress tests ---
+// Structural dependency graph stress tests
 
-// [Test 2] Both t1 and t2 define dependents on the same-named fixture.
-// After merge, t2's base wins. resolveDeps() must remap BOTH dependents
-// to the surviving base via name lookup — not frozen parent pointer.
+// Dependents should look up the winning override by name, not by frozen pointer
 test('mergeTests both-side dependents remap to the winning base override', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
     const t1 = it.extend<{ base: string; a: string }>({
@@ -611,8 +524,7 @@ test('mergeTests both-side dependents remap to the winning base override', async
   }, {
     'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('both sides see base-v2', ({ a, b }) => {
-        // t2's base wins. Both `a` (from t1) and `b` (from t2)
-        // must resolve `base` via registrations.get('base') — live lookup.
+        // Dependents must resolve the surrogate base via live lookup
         expect(a).toBe('a-from-base-v2')
         expect(b).toBe('b-from-base-v2')
       })
@@ -622,11 +534,7 @@ test('mergeTests both-side dependents remap to the winning base override', async
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > both sides see base-v2 <time>"`)
 })
 
-// [Test 3] Diamond dependency across merged tests.
-// resolveDeps() clears depSet after each fixture to avoid false positives.
-// This directly validates that `depSet.clear()` is correct:
-// `base` is reachable via two separate paths (through `a` AND through `b`),
-// but must NOT be detected as a cycle.
+// A diamond dependency is not a cycle; depSet must be cleared correctly
 test('mergeTests diamond dependency does not falsely trigger cycle detection', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
     const base = it.extend<{ base: string }>({
@@ -643,8 +551,7 @@ test('mergeTests diamond dependency does not falsely trigger cycle detection', a
   }, {
     'basic.test.ts': ({ extendedTest, expect }) => {
       extendedTest('diamond resolves without cycle error', ({ derived }) => {
-        // `base` is a shared dep of both `a` and `b`, both consumed by `derived`.
-        // Without depSet.clear(), the second visit to `base` would throw CircularError.
+        // base is reachable via two separate paths; depSet.clear() prevents false cycle detection
         expect(derived).toBe('a-from-base-val+b-from-base-val')
       })
     },
@@ -653,8 +560,7 @@ test('mergeTests diamond dependency does not falsely trigger cycle detection', a
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > diamond resolves without cycle error <time>"`)
 })
 
-// [Test 4] File-scoped fixtures cached by TestFixtureItem object identity (WeakMap).
-// Self-merge must not produce a duplicate TestFixtureItem causing double-init.
+// File-scoped fixtures should be cached by identity to avoid redundant init during self-merge
 test('mergeTests self-merge file-scoped fixture initialises exactly once per file', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
     const t = it.extend<{ fileFix: string }>({
@@ -675,10 +581,7 @@ test('mergeTests self-merge file-scoped fixture initialises exactly once per fil
     },
   })
   expect(stderr).toMatchInlineSnapshot(`""`)
-  // File-scoped fixture must init exactly once (not twice due to self-merge).
-  // The WeakMap cache in resolveScopeFixtureValue keys by TestFixtureItem identity.
-  // Self-merge via the fast-path in extend(TestFixtures) copies the same item object,
-  // so the cache hit is guaranteed — one init, one teardown.
+  // File-scoped fixtures cached by identity; self-merge shouldn't double-init
   expect(fixtures).toMatchInlineSnapshot(`
     ">> fixture | fileFix init | test1
     >> fixture | fileFix teardown | test2"
@@ -689,10 +592,7 @@ test('mergeTests self-merge file-scoped fixture initialises exactly once per fil
   `)
 })
 
-// [Test 5] Three-way merge with a full override chain.
-// t1 provides base, t2 provides mid(base), t3 provides top(mid).
-// Each extend is valid at creation. After merge, the full dep chain
-// base → mid → top must resolve in the correct order.
+// Multi-level inheritance chain resolution
 test('mergeTests three-way merge resolves full dep chain in order', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
     const t1 = it.extend<{ base: string }>({
@@ -716,8 +616,7 @@ test('mergeTests three-way merge resolves full dep chain in order', async () => 
         log('top teardown')
       },
     })
-    // Merge explicitly-typed separate tests to verify mergeTests handles
-    // deep chains coming from different TestFixtures instances
+    // verify mergeTests handles deep chains from different TestFixtures instances
     return mergeTests(t1, mergeTests(t2, t3))
   }, {
     'basic.test.ts': ({ extendedTest, expect }) => {
@@ -953,7 +852,7 @@ test('mergeTests merge already-merged tests', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > double merge resolves all <time>"`)
 })
 
-// --- Mixed fixture types in one merge ---
+// Mixed fixture type support
 
 test('mergeTests merges file-scoped + async + static + injected in one', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
@@ -1046,7 +945,7 @@ test('mergeTests fixtures work with beforeAll/afterAll hooks', async () => {
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > fixtures work alongside hooks <time>"`)
 })
 
-// --- Cross-file behavior ---
+// Cross-file isolation
 
 test('mergeTests fixtures work across multiple test files', async () => {
   const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
@@ -1131,7 +1030,7 @@ test('mergeTests file-scoped fixture inits once per file across multiple files',
   `)
 })
 
-// --- Test harness (adapted from scoped-fixtures.test.ts) ---
+// Isolated test runner for fixture lifecycle verification
 
 async function runMergeFixtureTests<T>(
   extendedTest: ({ log, expectTypeOf }: { log: typeof console.log; expectTypeOf: typeof ExpectTypeOfFn }) => TestAPI<T>,

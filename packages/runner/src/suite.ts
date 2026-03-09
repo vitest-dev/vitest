@@ -34,6 +34,7 @@ import {
   runWithSuite,
   withTimeout,
 } from './context'
+import { FixtureDependencyError } from './errors'
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
@@ -1109,35 +1110,62 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
  * const test = mergeTests(dbTest, serverTest, uiTest)
  */
 export function mergeTests<A>(a: TestAPI<A>): TestAPI<A>
-export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<A & B>
-export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<A & B & C>
-export function mergeTests<A, B, C, D>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>): TestAPI<A & B & C & D>
-export function mergeTests<A, B, C, D, E>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>): TestAPI<A & B & C & D & E>
-export function mergeTests<A, B, C, D, E, F>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>, f: TestAPI<F>): TestAPI<A & B & C & D & E & F>
+export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<Omit<A, keyof B> & B>
+export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<Omit<A, keyof B | keyof C> & Omit<B, keyof C> & C>
+export function mergeTests<A, B, C, D>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>): TestAPI<Omit<A, keyof B | keyof C | keyof D> & Omit<B, keyof C | keyof D> & Omit<C, keyof D> & D>
+export function mergeTests<A, B, C, D, E>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>): TestAPI<Omit<A, keyof B | keyof C | keyof D | keyof E> & Omit<B, keyof C | keyof D | keyof E> & Omit<C, keyof D | keyof E> & Omit<D, keyof E> & E>
+export function mergeTests<A, B, C, D, E, F>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>, f: TestAPI<F>): TestAPI<Omit<A, keyof B | keyof C | keyof D | keyof E | keyof F> & Omit<B, keyof C | keyof D | keyof E | keyof F> & Omit<C, keyof D | keyof E | keyof F> & Omit<D, keyof E | keyof F> & Omit<E, keyof F> & F>
 export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
   if (tests.length === 0) {
     throw new TypeError('mergeTests requires at least one test')
   }
 
-  let [currentTest, ...rest] = tests
+  const mergedMap = new Map()
 
-  for (const nextTest of rest) {
-    const nextContext = getChainableContext(nextTest)
-    if (!nextContext || typeof nextContext.getFixtures !== 'function') {
+  for (const test of tests) {
+    const ctx = getChainableContext(test)
+    if (!ctx || typeof ctx.getFixtures !== 'function') {
       throw new TypeError(
         'mergeTests requires extended test instances created via test.extend()',
       )
     }
 
-    const currentContext = getChainableContext(currentTest)
-    if (!currentContext) {
-      throw new TypeError(
-        'Cannot merge tests: base test is not a valid test instance',
-      )
+    const fixtures = ctx.getFixtures() as TestFixtures
+    const { suite, file } = getCurrentSuite()
+    const targetSuite = suite || file
+    const registrations = fixtures.get(targetSuite as any)
+    for (const [name, item] of registrations) {
+      const existing = mergedMap.get(name)
+      if (existing) {
+        if (existing.scope !== item.scope) {
+          throw new FixtureDependencyError(
+            `Fixture "${name}" defined with conflicting scopes: "${existing.scope}" vs "${item.scope}"`,
+          )
+        }
+        if (existing.auto !== item.auto) {
+          throw new FixtureDependencyError(
+            `Fixture "${name}" defined with conflicting auto options: ${existing.auto} vs ${item.auto}`,
+          )
+        }
+      }
+      mergedMap.set(name, item)
     }
-
-    currentTest = currentTest.extend(nextContext.getFixtures() as any)
   }
 
-  return currentTest
+  TestFixtures.validateFixtures(mergedMap)
+
+  const newFixtures = new TestFixtures(mergedMap)
+  const baseFn = (tests[0] as any).fn
+
+  const _test = createTest(function (
+    name: string | Function,
+    optionsOrFn?: TestOptions | TestFunction,
+    optionsOrTest?: number | TestFunction,
+  ) {
+    baseFn.call(this, formatName(name), optionsOrFn, optionsOrTest)
+  })
+
+  getChainableContext(_test).mergeContext({ fixtures: newFixtures })
+
+  return _test
 }

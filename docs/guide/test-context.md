@@ -853,6 +853,15 @@ test('uses both db and server', ({ db, server }) => {
 
 If multiple tests define the same fixture name, the one from the later test (further to the right in the arguments) overrides the earlier one.
 
+::: tip
+Circular fixture dependencies are not detected during the merge process itself. Instead, they are caught at runtime when the fixtures are actually resolved for a test.
+:::
+
+::: warning
+If multiple test instances define a fixture with the same name but different scopes (e.g., one `test` and one `file`), `mergeTests` will throw a `FixtureDependencyError`.
+You cannot override a fixture's scope during a merge.
+:::
+
 ### Type-Safe Hooks
 
 When using `test.extend`, the extended `test` object provides type-safe hooks that are aware of the extended context:
