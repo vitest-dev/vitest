@@ -199,7 +199,7 @@ describe(
       },
       ({ task }) => {
         // task.meta === { nested: { object: false } }
-        // notice array got lost because "nested" object was overriden
+        // notice array got lost because "nested" object was overridden
       }
     )
   }

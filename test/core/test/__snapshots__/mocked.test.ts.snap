@@ -3,7 +3,7 @@
 exports[`mocked function which fails on toReturnWith > just one call 1`] = `
 "expected "vi.fn()" to return with: 2 at least once
 
-Received: 
+Received:
 
   1st vi.fn() call return:
 
@@ -18,7 +18,7 @@ Number of calls: 1
 exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
 "expected "vi.fn()" to return with: 2 at least once
 
-Received: 
+Received:
 
   1st vi.fn() call return:
 
@@ -43,7 +43,7 @@ Number of calls: 3
 exports[`mocked function which fails on toReturnWith > oject type 1`] = `
 "expected "vi.fn()" to return with: { a: '4' } at least once
 
-Received: 
+Received:
 
   1st vi.fn() call return:
 

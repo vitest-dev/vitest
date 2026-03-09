@@ -1,5 +1,6 @@
 import type { TestProject } from '../project'
 import type { ApiConfig, SerializedConfig } from '../types/config'
+import { configDefaults } from '../../defaults'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -141,5 +142,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     tags: config.tags || [],
     tagsFilter: config.tagsFilter,
     strictTags: config.strictTags ?? true,
+    slowTestThreshold:
+      config.slowTestThreshold
+      ?? globalConfig.slowTestThreshold
+      ?? configDefaults.slowTestThreshold,
   }
 }

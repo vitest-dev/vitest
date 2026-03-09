@@ -16,7 +16,7 @@ Path to config file
 - **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot (accepts boolean, "new" or "all")
+Update snapshot (accepts boolean, "new", "all" or "none")
 
 ### watch
 
@@ -102,7 +102,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/reporters)
 
-Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
+Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
 ### outputFile
 

@@ -24,6 +24,14 @@ export class FixtureDependencyError extends Error {
   public name = 'FixtureDependencyError'
 }
 
+export class FixtureAccessError extends Error {
+  public name = 'FixtureAccessError'
+}
+
+export class FixtureParseError extends Error {
+  public name = 'FixtureParseError'
+}
+
 export class AroundHookSetupError extends Error {
   public name = 'AroundHookSetupError'
 }

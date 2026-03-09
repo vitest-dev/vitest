@@ -24,6 +24,7 @@ export const treeFilter = useLocalStorage<TreeFilterState>(
     failed: false,
     success: false,
     skipped: false,
+    slow: false,
     onlyTests: false,
     search: '',
     project: ALL_PROJECTS,
@@ -92,6 +93,7 @@ export const filter = reactive<Filter>({
   failed: treeFilter.value.failed,
   success: treeFilter.value.success,
   skipped: treeFilter.value.skipped,
+  slow: treeFilter.value.slow,
   onlyTests: treeFilter.value.onlyTests,
 })
 export const isFilteredByStatus = computed(() => {
@@ -104,6 +106,10 @@ export const isFilteredByStatus = computed(() => {
   }
 
   if (filter.skipped) {
+    return true
+  }
+
+  if (filter.slow) {
     return true
   }
 

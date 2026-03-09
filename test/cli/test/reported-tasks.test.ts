@@ -76,15 +76,15 @@ it('correctly reports a file', ({ testModule, files, project }) => {
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project).toBe(project)
-  expect(testModule.children.size).toBe(17)
+  expect(testModule.children.size).toBe(18)
 
   const tests = [...testModule.children.tests()]
-  expect(tests).toHaveLength(12)
+  expect(tests).toHaveLength(13)
   const deepTests = [...testModule.children.allTests()]
-  expect(deepTests).toHaveLength(22)
+  expect(deepTests).toHaveLength(23)
 
   expect.soft([...testModule.children.allTests('skipped')]).toHaveLength(8)
-  expect.soft([...testModule.children.allTests('passed')]).toHaveLength(9)
+  expect.soft([...testModule.children.allTests('passed')]).toHaveLength(10)
   expect.soft([...testModule.children.allTests('failed')]).toHaveLength(5)
   expect.soft([...testModule.children.allTests('pending')]).toHaveLength(0)
 

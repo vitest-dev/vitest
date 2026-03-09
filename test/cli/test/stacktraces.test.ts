@@ -1,6 +1,7 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest } from '../../test-utils'
 
 // To prevent the warning coming up in snapshots
@@ -217,7 +218,87 @@ it('resolves/rejects', async () => {
     `,
   })
 
-  expect(stderr).toMatchInlineSnapshot(`
+  if (rolldownVersion) {
+    expect(stderr).toMatchInlineSnapshot(`
+      "
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+       FAIL  repro.test.ts > resolves: resolved promise with mismatched value
+      AssertionError: expected 3 to be 4 // Object.is equality
+
+      - Expected
+      + Received
+
+      - 4
+      + 3
+
+       ❯ repro.test.ts:5:41
+            3|
+            4|       test('resolves: resolved promise with mismatched value', async (…
+            5|         await expect(Promise.resolve(3)).resolves.toBe(4)
+             |                                         ^
+            6|       })
+            7|
+
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+       FAIL  repro.test.ts > rejects: rejected promise with mismatched value
+      AssertionError: expected 3 to be 4 // Object.is equality
+
+      - Expected
+      + Received
+
+      - 4
+      + 3
+
+       ❯ repro.test.ts:9:40
+            7|
+            8|       test('rejects: rejected promise with mismatched value', async ()…
+            9|         await expect(Promise.reject(3)).rejects.toBe(4)
+             |                                        ^
+           10|       })
+           11|
+
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+       FAIL  repro.test.ts > rejects: resolves when rejection expected
+      AssertionError: promise resolved "3" instead of rejecting
+
+      - Expected:
+      Error {
+        "message": "rejected promise",
+      }
+
+      + Received:
+      3
+
+       ❯ repro.test.ts:13:41
+           11|
+           12|       test('rejects: resolves when rejection expected', async () => {
+           13|         await expect(Promise.resolve(3)).rejects.toBe(4)
+             |                                         ^
+           14|       })
+           15|
+
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+       FAIL  repro.test.ts > resolves: rejects when resolve expected
+      AssertionError: promise rejected "3" instead of resolving
+       ❯ repro.test.ts:17:40
+           15|
+           16|       test('resolves: rejects when resolve expected', async () => {
+           17|         await expect(Promise.reject(3)).resolves.toBe(4)
+             |                                        ^
+           18|       })
+           19|
+
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+      "
+    `)
+  }
+  else {
+    expect(stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
 
@@ -262,12 +343,12 @@ it('resolves/rejects', async () => {
      FAIL  repro.test.ts > rejects: resolves when rejection expected
     AssertionError: promise resolved "3" instead of rejecting
 
-    - Expected: 
+    - Expected:
     Error {
       "message": "rejected promise",
     }
 
-    + Received: 
+    + Received:
     3
 
      ❯ repro.test.ts:13:40
@@ -294,6 +375,7 @@ it('resolves/rejects', async () => {
 
     "
   `)
+  }
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "repro.test.ts": {

@@ -23,7 +23,7 @@ import {
   defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider } from '../../utils/env'
+import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
@@ -566,7 +566,7 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new'
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
         ? UPDATE_SNAPSHOT
         : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
@@ -729,7 +729,7 @@ export function resolveConfig(
   }
 
   if (!resolved.reporters.length) {
-    resolved.reporters.push(['default', {}])
+    resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
 
     // also enable github-actions reporter as a default
     if (process.env.GITHUB_ACTIONS === 'true') {

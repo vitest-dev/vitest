@@ -1,3 +1,12 @@
+import type {
+  UserEventClearOptions,
+  UserEventClickOptions,
+  UserEventFillOptions,
+  UserEventHoverOptions,
+  UserEventSelectOptions,
+  UserEventUploadOptions,
+  UserEventWheelOptions,
+} from 'vitest/browser'
 import {
   convertElementToCssSelector,
   getByAltTextSelector,
@@ -26,40 +35,57 @@ class PreviewLocator extends Locator {
     return selectors.join(', ')
   }
 
-  click(): Promise<void> {
-    return userEvent.click(this.element())
+  async click(options?: UserEventClickOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.click(element)
   }
 
-  dblClick(): Promise<void> {
-    return userEvent.dblClick(this.element())
+  async dblClick(options?: UserEventClickOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.dblClick(element)
   }
 
-  tripleClick(): Promise<void> {
-    return userEvent.tripleClick(this.element())
+  async tripleClick(options?: UserEventClickOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.tripleClick(element)
   }
 
-  hover(): Promise<void> {
-    return userEvent.hover(this.element())
+  async hover(options?: UserEventHoverOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.hover(element)
   }
 
-  unhover(): Promise<void> {
-    return userEvent.unhover(this.element())
+  async unhover(options?: UserEventHoverOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.unhover(element)
   }
 
-  async fill(text: string): Promise<void> {
-    return userEvent.fill(this.element(), text)
+  async fill(text: string, options?: UserEventFillOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.fill(element, text)
   }
 
-  async upload(file: string | string[] | File | File[]): Promise<void> {
-    return userEvent.upload(this.element(), file)
+  async upload(file: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.upload(element, file)
   }
 
-  selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    return userEvent.selectOptions(this.element(), options)
+  async wheel(options: UserEventWheelOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.wheel(element, options)
   }
 
-  clear(): Promise<void> {
-    return userEvent.clear(this.element())
+  async selectOptions(
+    options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[],
+    settings?: UserEventSelectOptions,
+  ): Promise<void> {
+    const element = await this.findElement(settings)
+    return userEvent.selectOptions(element, options)
+  }
+
+  async clear(options?: UserEventClearOptions): Promise<void> {
+    const element = await this.findElement(options)
+    return userEvent.clear(element)
   }
 
   protected locator(selector: string) {

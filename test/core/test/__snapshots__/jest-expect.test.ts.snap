@@ -59,10 +59,10 @@ exports[`asymmetric matcher error 4`] = `
 exports[`asymmetric matcher error 5`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 stringContainingCustom<"xx">
 
-+ Received: 
++ Received:
 "hello"",
   "expected": "stringContainingCustom<"xx">",
   "message": "expected 'hello' to deeply equal stringContainingCustom<"xx">",
@@ -72,10 +72,10 @@ stringContainingCustom<"xx">
 exports[`asymmetric matcher error 6`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 not.stringContainingCustom<"ll">
 
-+ Received: 
++ Received:
 "hello"",
   "expected": "not.stringContainingCustom<"ll">",
   "message": "expected 'hello' to deeply equal not.stringContainingCustom<"ll">",
@@ -141,12 +141,12 @@ exports[`asymmetric matcher error 10`] = `
 exports[`asymmetric matcher error 11`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 testComplexMatcher<Object {
   "x": "y",
 }>
 
-+ Received: 
++ Received:
 "hello"",
   "expected": "testComplexMatcher<Object {
   "x": "y",
@@ -226,13 +226,13 @@ exports[`asymmetric matcher error 15`] = `
 exports[`asymmetric matcher error 16`] = `
 {
   "actual": "foo",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 toBeOneOf<Array [
   "bar",
   "baz",
 ]>
 
-+ Received: 
++ Received:
 "foo"",
   "expected": "toBeOneOf<Array [
   "bar",
@@ -248,14 +248,14 @@ toBeOneOf<Array [
 exports[`asymmetric matcher error 17`] = `
 {
   "actual": "0",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 toBeOneOf<Array [
   Any<String>,
   null,
   undefined,
 ]>
 
-+ Received: 
++ Received:
 0",
   "expected": "toBeOneOf<Array [
   Any<String>,
@@ -272,7 +272,7 @@ exports[`asymmetric matcher error 18`] = `
   "k": "v",
   "k2": "v2",
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 toBeOneOf<Array [
   ObjectContaining {
     "k": "v",
@@ -282,7 +282,7 @@ toBeOneOf<Array [
   undefined,
 ]>
 
-+ Received: 
++ Received:
 {
   "k": "v",
   "k2": "v2",
@@ -320,10 +320,10 @@ exports[`asymmetric matcher error 20`] = `
 exports[`asymmetric matcher error 21`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 stringContainingCustom<"xx">
 
-+ Received: 
++ Received:
 "hello"",
   "expected": "stringContainingCustom<"xx">",
   "message": "expected error to match asymmetric matcher",
@@ -342,10 +342,10 @@ exports[`asymmetric matcher error 22`] = `
 exports[`asymmetric matcher error 23`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 stringContainingCustom<"ll">
 
-+ Received: 
++ Received:
 "hello"",
   "expected": "stringContainingCustom<"ll">",
   "message": "expected error not to match asymmetric matcher",
@@ -355,10 +355,10 @@ stringContainingCustom<"ll">
 exports[`asymmetric matcher error 24`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 StringContaining "ll"
 
-+ Received: 
++ Received:
 Error {
   "message": "hello",
 }",
@@ -370,10 +370,10 @@ Error {
 exports[`asymmetric matcher error 25`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 stringContainingCustom<"ll">
 
-+ Received: 
++ Received:
 Error {
   "message": "hello",
 }",
@@ -385,10 +385,10 @@ Error {
 exports[`asymmetric matcher error 26`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 [Function MyError1]
 
-+ Received: 
++ Received:
 MyError2 {
   "message": "hello",
 }",
@@ -400,10 +400,10 @@ MyError2 {
 exports[`diff 1`] = `
 {
   "actual": "undefined",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 true
 
-+ Received: 
++ Received:
 undefined",
   "expected": "true",
   "message": "expected undefined to be truthy",
@@ -415,10 +415,10 @@ exports[`diff 2`] = `
   "actual": "Object {
   "hello": "world",
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 false
 
-+ Received: 
++ Received:
 {
   "hello": "world",
 }",
@@ -432,10 +432,10 @@ exports[`diff 3`] = `
   "actual": "Object {
   "hello": "world",
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 NaN
 
-+ Received: 
++ Received:
 {
   "hello": "world",
 }",
@@ -449,10 +449,10 @@ exports[`diff 4`] = `
   "actual": "Object {
   "hello": "world",
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 undefined
 
-+ Received: 
++ Received:
 {
   "hello": "world",
 }",
@@ -466,10 +466,10 @@ exports[`diff 5`] = `
   "actual": "Object {
   "hello": "world",
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 null
 
-+ Received: 
++ Received:
 {
   "hello": "world",
 }",
@@ -747,7 +747,7 @@ exports[`toBeOneOf() > error message 3`] = `
   "actual": "Object {
   "a": 0,
 }",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 toBeOneOf<Array [
   ObjectContaining {
     "b": 0,
@@ -756,7 +756,7 @@ toBeOneOf<Array [
   undefined,
 ]>
 
-+ Received: 
++ Received:
 {
   "a": 0,
 }",
@@ -851,10 +851,10 @@ Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohell
 exports[`toMatch/toContain diff 3`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected: 
+  "diff": "- Expected:
 /world/
 
-+ Received: 
++ Received:
 "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "/world/",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match /world/",

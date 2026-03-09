@@ -188,8 +188,6 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   /**
    * Matches if the received number is within a certain precision of the expected number.
    *
-   * @param precision - Optional decimal precision for comparison. Default is 2.
-   *
    * @example
    * expect(10.45).toEqual(expect.closeTo(10.5, 1));
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision

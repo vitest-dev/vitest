@@ -134,9 +134,28 @@ export function mockObject(
         continue
       }
 
+      if (options.type === 'autospy' && type === 'Module') {
+        // Replace with clean object to recursively autospy exported module objects:
+        //   export * as ns from "./ns"
+        // or
+        //   import * as ns from "./ns"
+        //   export { ns }
+        const exports = Object.create(null)
+        Object.defineProperty(exports, Symbol.toStringTag, {
+          value: 'Module',
+          configurable: true,
+          writable: true,
+        })
+        try {
+          newContainer[property] = exports
+        }
+        catch {
+          continue
+        }
+      }
       // Sometimes this assignment fails for some unknown reason. If it does,
       // just move along.
-      if (!define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})) {
+      else if (!define(newContainer, property, isFunction || options.type === 'autospy' ? value : {})) {
         continue
       }
 
