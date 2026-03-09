@@ -221,7 +221,12 @@ export class SummaryReporter implements Reporter {
       this.tests.failed++
     }
     else if (!result?.state || result?.state === 'skipped') {
-      this.tests.skipped++
+      if (test.options.mode === 'todo') {
+        this.tests.todo++
+      }
+      else {
+        this.tests.skipped++
+      }
     }
 
     this.renderer.schedule()

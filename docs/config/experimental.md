@@ -276,6 +276,10 @@ Duration thresholds in milliseconds for coloring and warnings:
 
 ## experimental.viteModuleRunner <Version type="experimental">4.1.0</Version> {#experimental-vitemodulerunner}
 
+::: tip FEEDBACK
+Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9501).
+:::
+
 - **Type:** `boolean`
 - **Default:** `true`
 

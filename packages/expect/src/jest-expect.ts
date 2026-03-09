@@ -4,7 +4,7 @@ import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
-import { assertTypes } from '@vitest/utils/helpers'
+import { assertTypes, ordinal } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import {
@@ -642,12 +642,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const isCalled = times <= callCount
       this.assert(
         nthCall && equalsArgumentArray(nthCall, args),
-        `expected ${ordinalOf(
+        `expected ${ordinal(
           times,
         )} "${spyName}" call to have been called with #{exp}${
           isCalled ? `` : `, but called only ${callCount} times`
         }`,
-        `expected ${ordinalOf(
+        `expected ${ordinal(
           times,
         )} "${spyName}" call to not have been called with #{exp}`,
         args,
@@ -1046,7 +1046,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const results
         = action === 'return' ? spy.mock.results : spy.mock.settledResults
       const result = results[nthCall - 1]
-      const ordinalCall = `${ordinalOf(nthCall)} call`
+      const ordinalCall = `${ordinal(nthCall)} call`
 
       this.assert(
         condition(spy, nthCall, value),
@@ -1213,32 +1213,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   )
 }
 
-function ordinalOf(i: number) {
-  const j = i % 10
-  const k = i % 100
-
-  if (j === 1 && k !== 11) {
-    return `${i}st`
-  }
-
-  if (j === 2 && k !== 12) {
-    return `${i}nd`
-  }
-
-  if (j === 3 && k !== 13) {
-    return `${i}rd`
-  }
-
-  return `${i}th`
-}
-
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
   if (spy.mock.calls.length) {
     msg += c.gray(
       `\n\nReceived:\n\n${spy.mock.calls
         .map((callArg, i) => {
           let methodCall = c.bold(
-            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
+            `  ${ordinal(i + 1)} ${spy.getMockName()} call:\n\n`,
           )
           if (showActualCall) {
             methodCall += diff(showActualCall, callArg, {
@@ -1275,7 +1256,7 @@ function formatReturns(
       `\n\nReceived:\n\n${results
         .map((callReturn, i) => {
           let methodCall = c.bold(
-            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+            `  ${ordinal(i + 1)} ${spy.getMockName()} call return:\n\n`,
           )
           if (showActualReturn) {
             methodCall += diff(showActualReturn, callReturn.value, {

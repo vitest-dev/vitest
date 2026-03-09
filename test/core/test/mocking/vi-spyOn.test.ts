@@ -120,7 +120,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync calls', () => {
+  test('vi.spyOn() spies and tracks overridden sync calls', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(() => 100)
@@ -153,7 +153,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(() => 100)
@@ -187,7 +187,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync prototype calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync prototype calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(function (this: any) {
@@ -224,7 +224,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync class calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync class calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'Class')
     mock.mockImplementation(class {
@@ -262,7 +262,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden async calls', async () => {
+  test('vi.spyOn() spies and tracks overridden async calls', async () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'async')
     mock.mockImplementation(() => Promise.resolve(100))
@@ -450,7 +450,7 @@ describe('vi.spyOn() settings', () => {
     expect(foo.bar).toEqual('foo')
   })
 
-  test('vi.spyOn() inherits overriden methods', () => {
+  test('vi.spyOn() inherits overridden methods', () => {
     class Bar {
       _bar = 'bar'
       get bar(): string {
@@ -472,7 +472,7 @@ describe('vi.spyOn() settings', () => {
     expect(foo.bar).toEqual('foo')
     // foo.bar setter is not inherited from Bar
     expect(() => {
-      // @ts-expect-error bar cannot be overriden
+      // @ts-expect-error bar cannot be overridden
       foo.bar = 'baz'
     }).toThrow()
     expect(foo.bar).toEqual('foo')
@@ -642,7 +642,7 @@ describe('vi.spyOn() restoration', () => {
 
     object.getter = 100
 
-    expect(object.getter).toBe(42) // getter was not overriden
+    expect(object.getter).toBe(42) // getter was not overridden
     expect(spy.mock.calls).toHaveLength(1)
     spy.mockRestore()
 
@@ -660,7 +660,7 @@ describe('vi.spyOn() restoration', () => {
 
     object.getter = 100
 
-    expect(object.getter).toBe(42) // getter was not overriden
+    expect(object.getter).toBe(42) // getter was not overridden
     expect(spy.mock.calls).toHaveLength(1)
     vi.restoreAllMocks()
 

@@ -192,6 +192,11 @@ export class BareModuleMocker implements TestModuleMocker {
     return registry.getById(fixLeadingSlashes(id))
   }
 
+  public getDependencyMockByUrl(url: string): MockedModule | undefined {
+    const registry = this.getMockerRegistry()
+    return registry.get(url)
+  }
+
   public findMockRedirect(mockPath: string, external: string | null): string | null {
     return findMockRedirect(this.root, mockPath, external)
   }

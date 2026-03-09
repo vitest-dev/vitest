@@ -18,7 +18,7 @@ export class VerboseReporter extends DefaultReporter {
 
     const testResult = test.result()
 
-    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped') {
+    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
       return
     }
 
