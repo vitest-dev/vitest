@@ -297,7 +297,7 @@ const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const suite = collector.suite || collector.file
+  const collectorSuite = collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
@@ -314,6 +314,9 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       return fn(context)
     }
 
+    // Use the test's parent suite when available so that beforeEach/afterEach
+    // hooks pick up fixture overrides registered in the test's describe block
+    const suite = hookContext?.task?.suite ?? collectorSuite
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
       return fn(context)

@@ -640,3 +640,25 @@ describe('builder pattern with non-function values', () => {
     expect(chainedSync).toBe('HELLO WORLD')
   })
 })
+
+// https://github.com/vitest-dev/vitest/issues/9810
+describe('override affects auto fixtures that depend on overridden fixture', () => {
+  const myTest = test
+    .extend('config', { auto: true }, () => 'config:default')
+    .extend('server', { auto: true }, ({ config }) => {
+      return `server:${config}`
+    })
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  describe('with override', () => {
+    myTest.override('config', 'config:override')
+
+    myTest('auto fixture sees overridden dependency', ({ config, server }) => {
+      expect(config).toBe('config:override')
+      expect(server).toBe('server:config:override')
+    })
+  })
+})
