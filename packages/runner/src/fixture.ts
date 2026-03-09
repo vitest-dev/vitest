@@ -316,7 +316,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
 
     // Use the test's parent suite when available so that beforeEach/afterEach
     // hooks pick up fixture overrides registered in the test's describe block
-    const suite = hookContext?.task?.suite ?? collectorSuite
+    const suite = context.task?.suite ?? collectorSuite
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
       return fn(context)
