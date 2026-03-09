@@ -314,8 +314,10 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       return fn(context)
     }
 
-    // For xxxEach hooks, use the test's parent suite to pick up fixture
-    // overrides registered in the test's describe block (#9810)
+    // For `xxxEach` hooks, use the test's parent suite to pick up fixture
+    // overrides registered in the test's describe block.
+    // For `test`, `collectorSuite` is already same as `context.task.suite`.
+    // For `xxxAll` hooks, there's no `context.task`.
     const suite = context.task?.suite ?? collectorSuite
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
