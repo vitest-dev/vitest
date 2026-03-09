@@ -391,3 +391,46 @@ test('mock works without loading original', () => {
     }
   `)
 })
+
+test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
+  // This tests repeats doUnmock + doMock
+  //   vi.doUnmock('/mock-lib-0');
+  //   vi.doMock('/mock-lib-0', () => ({ value: 0 }));
+  //   vi.doUnmock('/mock-lib-1');
+  //   vi.doMock('/mock-lib-1', () => ({ value: 1 }));
+  //   ...
+  // then, all modules should be mocked
+  //   import('/mock-lib-0') // => { value: 0 }
+  //   import('/mock-lib-1') // => { value: 1 }
+  //   ...
+  const N = 20
+  const mockEntries = Array.from({ length: N }, (_, i) => `\
+vi.doUnmock('/mock-lib-${i}');
+vi.doMock('/mock-lib-${i}', () => ({ value: ${i} }));
+`
+  ).join('\n')
+  const importChecks = Array.from({ length: N }, (_, i) => `\
+await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: ${i} });
+`,
+  ).join('\n')
+
+  const { stderr, errorTree } = await runInlineTests({
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+
+test('many unmock + mock (all should mocked)', async () => {
+${mockEntries}
+${importChecks}
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "many unmock + mock (all should mocked)": "passed",
+      },
+    }
+  `)
+})
