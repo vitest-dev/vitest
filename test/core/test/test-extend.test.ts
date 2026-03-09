@@ -642,96 +642,115 @@ describe('builder pattern with non-function values', () => {
 })
 
 // https://github.com/vitest-dev/vitest/issues/9810
-describe('override with beforeEach resolves from test suite', () => {
+describe('override auto fixture with outer beforeEach', () => {
   const myTest = test
     .extend('config', { auto: true }, () => 'config:default')
     .extend('server', { auto: true }, ({ config }) => {
       return `server:${config}`
     })
 
-  // file-level beforeEach triggers auto fixture resolution
   beforeEach(({ task }) => {
     expect(task).toBeTruthy()
   })
 
-  describe('auto fixture sees overridden dependency', () => {
+  describe('with override', () => {
     myTest.override('config', 'config:override')
 
-    myTest('override applies to auto fixture', ({ config, server }) => {
+    myTest('auto fixture sees overridden dependency', ({ config, server }) => {
       expect(config).toBe('config:override')
       expect(server).toBe('server:config:override')
     })
   })
+})
 
-  describe('beforeEach inside override describe (already working)', () => {
-    myTest.override('config', 'config:inner')
-
-    beforeEach(({ task }) => {
-      expect(task).toBeTruthy()
+describe('override auto fixture with co-located beforeEach', () => {
+  const myTest = test
+    .extend('config', { auto: true }, () => 'config:default')
+    .extend('server', { auto: true }, ({ config }) => {
+      return `server:${config}`
     })
 
-    myTest('override applies when beforeEach is co-located', ({ config, server }) => {
-      expect(config).toBe('config:inner')
-      expect(server).toBe('server:config:inner')
-    })
+  myTest.override('config', 'config:inner')
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
   })
 
-  describe('non-auto fixture with override and file-level beforeEach', () => {
-    const manualTest = test
-      .extend('config', () => 'config:default')
-      .extend('derived', ({ config }) => `derived:${config}`)
+  myTest('override applies when beforeEach is co-located', ({ config, server }) => {
+    expect(config).toBe('config:inner')
+    expect(server).toBe('server:config:inner')
+  })
+})
 
-    describe('with override', () => {
-      manualTest.override('config', 'config:override')
+describe('override non-auto fixture with outer beforeEach', () => {
+  const manualTest = test
+    .extend('config', () => 'config:default')
+    .extend('derived', ({ config }) => `derived:${config}`)
 
-      manualTest('override applies to non-auto dependency', ({ config, derived }) => {
-        expect(config).toBe('config:override')
-        expect(derived).toBe('derived:config:override')
-      })
-    })
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
   })
 
-  describe('non-auto fixture accessed in file-level beforeEach', () => {
-    const hookTest = test
-      .extend('config', () => 'config:default')
-      .extend('server', ({ config }) => `server:${config}`)
+  describe('with override', () => {
+    manualTest.override('config', 'config:override')
 
-    const hookValues: string[] = []
-
-    hookTest.beforeEach(({ config }) => {
-      hookValues.push(config)
-    })
-
-    afterEach(() => {
-      hookValues.length = 0
-    })
-
-    describe('with override', () => {
-      hookTest.override('config', 'config:override')
-
-      hookTest('beforeEach sees overridden fixture', ({ server }) => {
-        expect(hookValues).toEqual(['config:override'])
-        expect(server).toBe('server:config:override')
-      })
+    manualTest('override applies to non-auto dependency', ({ config, derived }) => {
+      expect(config).toBe('config:override')
+      expect(derived).toBe('derived:config:override')
     })
   })
+})
 
-  describe('nested overrides with file-level beforeEach', () => {
-    describe('outer', () => {
-      myTest.override('config', 'config:outer')
+describe('override fixture accessed in outer beforeEach', () => {
+  const hookTest = test
+    .extend('config', () => 'config:default')
+    .extend('server', ({ config }) => `server:${config}`)
 
-      myTest('outer override', ({ config, server }) => {
-        expect(config).toBe('config:outer')
-        expect(server).toBe('server:config:outer')
-      })
+  const hookValues: string[] = []
 
-      describe('inner', () => {
-        myTest.override('config', 'config:inner')
+  hookTest.beforeEach(({ config }) => {
+    hookValues.push(config)
+  })
 
-        myTest('inner override wins', ({ config, server }) => {
-          expect(config).toBe('config:inner')
-          expect(server).toBe('server:config:inner')
-        })
+  afterEach(() => {
+    hookValues.length = 0
+  })
+
+  describe('with override', () => {
+    hookTest.override('config', 'config:override')
+
+    hookTest('beforeEach sees overridden fixture', ({ server }) => {
+      expect(hookValues).toEqual(['config:override'])
+      expect(server).toBe('server:config:override')
+    })
+  })
+})
+
+describe('nested overrides with outer beforeEach', () => {
+  const myTest = test
+    .extend('config', { auto: true }, () => 'config:default')
+    .extend('server', { auto: true }, ({ config }) => {
+      return `server:${config}`
+    })
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  describe('outer', () => {
+    myTest.override('config', 'config:outer')
+
+    myTest('outer override', ({ config, server }) => {
+      expect(config).toBe('config:outer')
+      expect(server).toBe('server:config:outer')
+    })
+
+    describe('inner', () => {
+      myTest.override('config', 'config:inner')
+
+      myTest('inner override wins', ({ config, server }) => {
+        expect(config).toBe('config:inner')
+        expect(server).toBe('server:config:inner')
       })
     })
   })
