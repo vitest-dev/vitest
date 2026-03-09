@@ -152,27 +152,25 @@ export class BareModuleMocker implements TestModuleMocker {
       return
     }
 
-    await Promise.all(
-      BareModuleMocker.pendingIds.map(async (mock) => {
-        const { id, url, external } = await this.resolveId(
+    for (const mock of BareModuleMocker.pendingIds) {
+      const { id, url, external } = await this.resolveId(
+        mock.id,
+        mock.importer,
+      )
+      if (mock.action === 'unmock') {
+        this.unmockPath(id)
+      }
+      if (mock.action === 'mock') {
+        this.mockPath(
           mock.id,
-          mock.importer,
+          id,
+          url,
+          external,
+          mock.type,
+          mock.factory,
         )
-        if (mock.action === 'unmock') {
-          this.unmockPath(id)
-        }
-        if (mock.action === 'mock') {
-          this.mockPath(
-            mock.id,
-            id,
-            url,
-            external,
-            mock.type,
-            mock.factory,
-          )
-        }
-      }),
-    )
+      }
+    }
 
     BareModuleMocker.pendingIds = []
   }
