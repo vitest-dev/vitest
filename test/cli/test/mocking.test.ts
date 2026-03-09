@@ -407,12 +407,10 @@ test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
   const mockEntries = Array.from({ length: N }, (_, i) => `\
 vi.doUnmock('/mock-lib-${i}');
 vi.doMock('/mock-lib-${i}', () => ({ value: ${i} }));
-`
-  ).join('\n')
+`).join('\n')
   const importChecks = Array.from({ length: N }, (_, i) => `\
 await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: ${i} });
-`,
-  ).join('\n')
+`).join('\n')
 
   const { stderr, errorTree } = await runInlineTests({
     './basic.test.js': `
