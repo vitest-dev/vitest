@@ -71,9 +71,11 @@ export function recordAsyncExpect(
         return promise.then(onFulfilled, onRejected)
       },
       catch(onRejected) {
+        resolved = true
         return promise.catch(onRejected)
       },
       finally(onFinally) {
+        resolved = true
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
