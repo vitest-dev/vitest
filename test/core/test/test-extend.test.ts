@@ -751,3 +751,25 @@ describe('nested overrides with outer beforeEach', () => {
     })
   })
 })
+
+describe('override fixture accessed in aroundEach', () => {
+  const myTest = test
+    .extend('base', () => 'base:default')
+    .extend('derived', ({ base }) => `derived:${base}`)
+
+  const hookValues: string[] = []
+
+  myTest.aroundEach(async (runTest, { base }) => {
+    hookValues.push(base)
+    await runTest()
+  })
+
+  describe('with override', () => {
+    myTest.override('base', 'base:override')
+
+    myTest('aroundEach sees overridden fixture', ({ derived }) => {
+      expect(hookValues).toEqual(['base:override'])
+      expect(derived).toBe('derived:base:override')
+    })
+  })
+})
