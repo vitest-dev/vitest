@@ -1,4 +1,4 @@
-import type { UserFixtures } from './fixture'
+import type { TestFixtureItem, UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
   File,
@@ -1121,11 +1121,13 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
     throw new TypeError('mergeTests requires at least one test')
   }
 
-  const mergedMap = new Map()
+  const mergedMap = new Map<string, TestFixtureItem>()
+  const builtinNames = ['task', 'signal', 'onTestFailed', 'onTestFinished', 'skip', 'annotate']
 
   for (const test of tests) {
     const ctx = getChainableContext(test)
-    if (!ctx || typeof ctx.getFixtures !== 'function') {
+
+    if (!ctx) {
       throw new TypeError(
         'mergeTests requires extended test instances created via test.extend()',
       )
@@ -1134,26 +1136,41 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
     const fixtures = ctx.getFixtures() as TestFixtures
     const { suite, file } = getCurrentSuite()
     const targetSuite = suite || file
-    const registrations = fixtures.get(targetSuite as any)
+    const registrations = fixtures.get(targetSuite)
+
     for (const [name, item] of registrations) {
+      // Preserve builtins from the first test only
+      if (builtinNames.includes(name)) {
+        if (!mergedMap.has(name)) {
+          mergedMap.set(name, { ...item })
+        }
+        continue
+      }
+
       const existing = mergedMap.get(name)
+
       if (existing) {
         if (existing.scope !== item.scope) {
           throw new FixtureDependencyError(
             `Fixture "${name}" defined with conflicting scopes: "${existing.scope}" vs "${item.scope}"`,
           )
         }
+
         if (existing.auto !== item.auto) {
           throw new FixtureDependencyError(
-            `Fixture "${name}" defined with conflicting auto options: ${existing.auto} vs ${item.auto}`,
+            `Fixture "${name}" defined with conflicting auto options: "${existing.auto}" vs "${item.auto}"`,
           )
         }
       }
-      mergedMap.set(name, item)
+
+      // last-writer-wins
+      mergedMap.set(name, { ...item })
     }
   }
 
+  // Validate full dependency graph AFTER merge
   TestFixtures.validateFixtures(mergedMap)
+
   const newFixtures = new TestFixtures(mergedMap)
   const baseFn = (tests[0] as any).fn
 

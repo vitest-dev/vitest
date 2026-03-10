@@ -59,18 +59,30 @@ export class TestFixtures {
     const isTopLevel = !suite || suite.file === suite
     const targetSuite = suite || file
 
+    // allow merging another TestFixtures instance
     if (userFixtures instanceof TestFixtures) {
       const registrations = new Map(this.get(targetSuite))
+
       for (const [name, item] of userFixtures.get(targetSuite)) {
-        registrations.set(name, item)
+        registrations.set(name, { ...item })
       }
+
       TestFixtures.validateFixtures(registrations, { allowUnknown: true })
+
       return new TestFixtures(registrations)
     }
 
     const parentRegistrations = new Map(this.get(targetSuite))
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, parentRegistrations)
+
+    const registrations = this.parseUserFixtures(
+      runner,
+      userFixtures,
+      isTopLevel,
+      parentRegistrations,
+    )
+
     TestFixtures.validateFixtures(registrations, { allowUnknown: true })
+
     return new TestFixtures(registrations)
   }
 
@@ -121,10 +133,6 @@ export class TestFixtures {
       this._suiteContexts.set(TestFixtures._workerContextSuite, Object.create(null))
     }
     return this._suiteContexts.get(TestFixtures._workerContextSuite)!
-  }
-
-  getRegistrations(): FixtureRegistrations {
-    return this._registrations
   }
 
   private parseUserFixtures(
@@ -194,7 +202,7 @@ export class TestFixtures {
 
       const deps = isFixtureFunction(value)
         ? getUsedProps(value)
-        : parent ? parent.deps : new Set<string>()
+        : new Set<string>()
       const item: TestFixtureItem = {
         name,
         value,
@@ -218,11 +226,13 @@ export class TestFixtures {
     else if (errors.length > 1) {
       throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
     }
-
     return registrations
   }
 
-  static validateFixtures(registrations: FixtureRegistrations, options: { allowUnknown?: boolean } = {}): void {
+  static validateFixtures(
+    registrations: FixtureRegistrations,
+    options: { allowUnknown?: boolean } = {},
+  ): void {
     const errors: Error[] = []
 
     for (const fixture of registrations.values()) {
@@ -230,22 +240,37 @@ export class TestFixtures {
         if (TestFixtures._builtinFixtures.includes(depName)) {
           continue
         }
-
         const dep = registrations.get(depName)
+
         if (!dep) {
           if (!options.allowUnknown) {
-            errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
+            errors.push(
+              new FixtureDependencyError(
+                `The "${fixture.name}" fixture depends on unknown fixture "${depName}".`,
+              ),
+            )
           }
           continue
         }
+
         if (depName === fixture.name && !fixture.parent) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`))
+          errors.push(
+            new FixtureDependencyError(
+              `The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`,
+            ),
+          )
           continue
         }
 
-        if (TestFixtures._fixtureScopes.indexOf(fixture.scope) > TestFixtures._fixtureScopes.indexOf(dep.scope)) {
-          errors.push(new FixtureDependencyError(`The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`))
-          continue
+        if (
+          TestFixtures._fixtureScopes.indexOf(fixture.scope)
+          > TestFixtures._fixtureScopes.indexOf(dep.scope)
+        ) {
+          errors.push(
+            new FixtureDependencyError(
+              `The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`,
+            ),
+          )
         }
       }
     }
@@ -254,7 +279,7 @@ export class TestFixtures {
       throw errors[0]
     }
     else if (errors.length > 1) {
-      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+      throw new AggregateError(errors, 'Cannot resolve user fixtures.')
     }
   }
 }
@@ -322,13 +347,18 @@ export interface WithFixturesOptions {
    * Current fixtures from the context.
    */
   fixtures?: TestFixtures
+  /**
+   * The suite to use for fixture lookups.
+   * Used by beforeEach/afterEach/aroundEach hooks to pick up fixture overrides from the test's describe block.
+   */
+  suite?: Suite
 }
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const suite = collector.suite || collector.file
+  const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
