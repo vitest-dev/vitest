@@ -146,6 +146,11 @@ describe('complex merge validation edge cases', () => {
     expect(merged).toBeDefined()
   })
 
+  test('throws if mergeTests is called with no arguments', () => {
+    // @ts-expect-error -- testing runtime validation for empty arguments
+    expect(() => mergeTests()).toThrow('mergeTests requires at least one test')
+  })
+
   test('throws on unknown fixture dependency during merge', () => {
     const t1 = test.extend({ valid: 'value' })
     const t2 = test.extend({
