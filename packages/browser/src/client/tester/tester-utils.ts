@@ -186,7 +186,9 @@ export class CommandsManager {
   }
 }
 
-const now = Date.now
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
 export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (
@@ -212,7 +214,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_: 
   options_ = options_ || {} as T
   const currentTime = now()
   const endTime = startTime + timeout
-  const remainingTime = endTime - currentTime
+  const remainingTime = Math.floor(endTime - currentTime)
   if (remainingTime <= 0) {
     return options_
   }
