@@ -1031,6 +1031,60 @@ test('mergeTests file-scoped fixture inits once per file across multiple files',
   `)
 })
 
+test('mergeTests overlapping fixture reactively updates its dependents', async () => {
+  const { stderr, tests } = await runMergeFixtureTests(() => {
+    const t1 = it.extend<{ a: string; b: string }>({
+      a: 'from-t1',
+      b: async ({ a }: any, use: any) => use(`b-depends-on-${a}`),
+    })
+    const t2 = it.extend<{ a: string }>({
+      a: 'from-t2',
+    })
+    return mergeTests(t1, t2)
+  }, {
+    'basic.test.ts': ({ extendedTest, expect }) => {
+      extendedTest('dependent b sees updated a', ({ a, b }: any) => {
+        expect(a).toBe('from-t2')
+        expect(b).toBe('b-depends-on-from-t2')
+      })
+    },
+  })
+  expect(stderr).toBe('')
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > dependent b sees updated a <time>"`)
+})
+
+test('mergeTests fixture from t2 can depend on t1 fixture', async () => {
+  const { stderr, tests } = await runMergeFixtureTests(() => {
+    const t1 = it.extend<{ a: string }>({ a: 'a-value' })
+    const t2 = it.extend<{ b: string }>({
+      b: async ({ a }: any, use: any) => use(`b-resolved-${a}`),
+    })
+    return mergeTests(t1, t2)
+  }, {
+    'basic.test.ts': ({ extendedTest, expect }) => {
+      extendedTest('cross-test resolution works', ({ a, b }: any) => {
+        expect(a).toBe('a-value')
+        expect(b).toBe('b-resolved-a-value')
+      })
+    },
+  })
+  expect(stderr).toBe('')
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > cross-test resolution works <time>"`)
+})
+
+test('mergeTests throws on conflicting scopes in CLI', async () => {
+  const { stderr } = await runMergeFixtureTests(() => {
+    const t1 = it.extend({ a: [() => 'a', { scope: 'file' }] as any })
+    const t2 = it.extend({ a: [() => 'a', { scope: 'test' }] as any })
+    return mergeTests(t1, t2)
+  }, {
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('fail', () => {})
+    },
+  })
+  expect(stderr).toContain('Fixture "a" defined with conflicting scopes: "file" vs "test"')
+})
+
 // Isolated test runner for fixture lifecycle verification
 
 async function runMergeFixtureTests<T>(
