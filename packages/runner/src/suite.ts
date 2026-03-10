@@ -1154,7 +1154,6 @@ export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
   }
 
   TestFixtures.validateFixtures(mergedMap)
-
   const newFixtures = new TestFixtures(mergedMap)
   const baseFn = (tests[0] as any).fn
 

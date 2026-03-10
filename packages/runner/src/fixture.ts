@@ -64,11 +64,13 @@ export class TestFixtures {
       for (const [name, item] of userFixtures.get(targetSuite)) {
         registrations.set(name, item)
       }
+      TestFixtures.validateFixtures(registrations, { allowUnknown: true })
       return new TestFixtures(registrations)
     }
 
     const parentRegistrations = new Map(this.get(targetSuite))
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, parentRegistrations)
+    TestFixtures.validateFixtures(registrations, { allowUnknown: true })
     return new TestFixtures(registrations)
   }
 
@@ -96,6 +98,7 @@ export class TestFixtures {
     // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
     const suiteRegistrations = new Map(this.get(suite))
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
+    TestFixtures.validateFixtures(registrations, { allowUnknown: true })
     // If defined in top-level, just override all registrations
     // We don't support overriding suite-level fixtures anyway (it will throw an error)
     if (isTopLevel) {
@@ -191,7 +194,7 @@ export class TestFixtures {
 
       const deps = isFixtureFunction(value)
         ? getUsedProps(value)
-        : new Set<string>()
+        : parent ? parent.deps : new Set<string>()
       const item: TestFixtureItem = {
         name,
         value,
@@ -219,7 +222,7 @@ export class TestFixtures {
     return registrations
   }
 
-  static validateFixtures(registrations: FixtureRegistrations): void {
+  static validateFixtures(registrations: FixtureRegistrations, options: { allowUnknown?: boolean } = {}): void {
     const errors: Error[] = []
 
     for (const fixture of registrations.values()) {
@@ -230,7 +233,9 @@ export class TestFixtures {
 
         const dep = registrations.get(depName)
         if (!dep) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
+          if (!options.allowUnknown) {
+            errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
+          }
           continue
         }
         if (depName === fixture.name && !fixture.parent) {

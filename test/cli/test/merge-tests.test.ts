@@ -404,26 +404,27 @@ test('mergeTests init and teardown execute per test', async () => {
 // mergeTests should never modify input TestAPI instances in-place
 test('mergeTests does not mutate original test instances', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
+    // t1 and t2 both define 'a' but with different values
     const t1 = it.extend<{ a: string }>({ a: 'from-t1' })
-    const t2 = it.extend<{ b: string }>({ b: 'from-t2' })
-    // Create merged, then use original t1 independently
+    const t2 = it.extend<{ a: string }>({ a: 'from-t2' })
+
+    // Create merged: this should NOT change t1's internal state
     mergeTests(t1, t2)
-    // Return t1 unchanged — it must NOT see t2's fixture `b`
+
+    // Return t1 — it must still resolve 'a' as 'from-t1'
     return t1
   }, {
-    'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
-      extendedTest('original still only has its own fixtures', ({ a }) => {
-        expectTypeOf(a).toBeString()
-        expect(a).toBe('from-t1')
-        // Proof of non-mutation: We only requested 'a'.
-        // If mergeTests had mutated t1 to include t2's fixtures, this would still pass,
-        // but the fact that this test *runs* successfully with t1 alone (no 'b' provider)
-        // proves that 'b' is not a required dependency of t1.
+    'basic.test.ts': ({ extendedTest, expect, expectTypeOf, describe }) => {
+      describe('non-mutation', () => {
+        extendedTest('original t1 is not mutated by mergeTests', ({ a }) => {
+          expectTypeOf(a).toBeString()
+          expect(a).toBe('from-t1')
+        })
       })
     },
   })
   expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > original still only has its own fixtures <time>"`)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > non-mutation > original t1 is not mutated by mergeTests <time>"`)
 })
 
 test('mergeTests resolves dependency chain from shared base', async () => {
