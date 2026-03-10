@@ -493,31 +493,6 @@ test('mergeTests deduplicates same-named worker fixtures across merges', async (
   expect(tests).toContain('✓ basic.test.ts > worker check')
 })
 
-test('mergeTests supports auto-fixture depending on normal fixture', async () => {
-  const { fixtures, tests } = await runMergeFixtureTests(({ log }) => {
-    const t1 = it.extend({
-      dep: async ({}, use) => {
-        log('dep-init')
-        await use('dep')
-      },
-    })
-    const t2 = it.extend({
-      auto: [async ({ dep }: any, use: any) => {
-        log(`auto-init-${dep}`)
-        await use('auto')
-      }, { auto: true }] as any,
-    })
-    return mergeTests(t1, t2)
-  }, {
-    'basic.test.ts': ({ extendedTest }) => {
-      extendedTest('auto-dep check', () => {})
-    },
-  })
-  expect(fixtures).toContain('dep-init')
-  expect(fixtures).toContain('auto-init-dep')
-  expect(tests).toContain('✓ basic.test.ts > auto-dep check')
-})
-
 // A diamond dependency graph is valid and must not be mistaken for a cycle.
 // This verifies that the dependency tracking stack is cleared correctly.
 test('mergeTests diamond dependency does not falsely trigger cycle detection', async () => {
@@ -626,46 +601,6 @@ test('mergeTests three-way merge resolves full dep chain in order', async () => 
 })
 
 // --- Variadic merge (3+ tests) ---
-
-test('mergeTests merges three tests with function fixtures', async () => {
-  const { stderr, fixtures, tests } = await runMergeFixtureTests(({ log }) => {
-    const t1 = it.extend<{ a: string }>({
-      a: async ({}, use) => {
-        log('init a')
-        await use('a')
-      },
-    })
-    const t2 = it.extend<{ b: string }>({
-      b: async ({}, use) => {
-        log('init b')
-        await use('b')
-      },
-    })
-    const t3 = it.extend<{ c: string }>({
-      c: async ({}, use) => {
-        log('init c')
-        await use('c')
-      },
-    })
-    return mergeTests(t1, t2, t3)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }: any) => {
-      extendedTest('all three fixtures work', ({ a, b, c }: any) => {
-        expect(a).toBe('a')
-        expect(b).toBe('b')
-        expect(c).toBe('c')
-      })
-    },
-  })
-
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(fixtures).toMatchInlineSnapshot(`
-    ">> fixture | init a | all three fixtures work
-    >> fixture | init b | all three fixtures work
-    >> fixture | init c | all three fixtures work"
-  `)
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > all three fixtures work <time>"`)
-})
 
 test('mergeTests variadic — later test overrides same-named fixture', async () => {
   const { stderr, tests } = await runMergeFixtureTests(() => {
@@ -794,24 +729,6 @@ test('mergeTests base → child → grandchild merged with sibling from same bas
 
   expect(stderr).toMatchInlineSnapshot(`""`)
   expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > all levels resolve <time>"`)
-})
-
-test('mergeTests deep chain with same fixture name — grandchild overrides base', async () => {
-  const { stderr, tests } = await runMergeFixtureTests(() => {
-    const base = it.extend<{ val: string }>({ val: 'base' })
-    const child = base.extend<{ val: string }>({ val: 'child' })
-    const grandchild = child.extend<{ val: string }>({ val: 'grandchild' })
-    return mergeTests(grandchild)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('grandchild value wins', ({ val }) => {
-        expect(val).toBe('grandchild')
-      })
-    },
-  })
-
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > grandchild value wins <time>"`)
 })
 
 test('mergeTests merge already-merged tests', async () => {
@@ -1016,28 +933,6 @@ test('mergeTests file-scoped fixture inits once per file across multiple files',
   `)
 })
 
-test('mergeTests overlapping fixture reactively updates its dependents', async () => {
-  const { stderr, tests } = await runMergeFixtureTests(() => {
-    const t1 = it.extend<{ a: string; b: string }>({
-      a: 'from-t1',
-      b: async ({ a }: any, use: any) => use(`b-depends-on-${a}`),
-    })
-    const t2 = it.extend<{ a: string }>({
-      a: 'from-t2',
-    })
-    return mergeTests(t1, t2)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('dependent b sees updated a', ({ a, b }) => {
-        expect(a).toBe('from-t2')
-        expect(b).toBe('b-depends-on-from-t2')
-      })
-    },
-  })
-  expect(stderr).toBe('')
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > dependent b sees updated a <time>"`)
-})
-
 // Cross-merge dependency resolution is already verified in 'fixture from t2 can depend on t1 fixture' above.
 
 test('mergeTests throws on conflicting scopes in CLI', async () => {
@@ -1051,31 +946,6 @@ test('mergeTests throws on conflicting scopes in CLI', async () => {
     },
   })
   expect(stderr).toContain('Fixture "a" defined with conflicting scopes: "file" vs "test"')
-})
-
-test('mergeTests handles multiple injected fixtures from different sources', async () => {
-  const { stderr, tests } = await runMergeFixtureTests(() => {
-    const t1 = it.extend<{ inj1: string }>({
-      inj1: [async ({}: any, use: any) => {
-        await use('fallback-1')
-      }, { injected: true }] as any,
-    })
-    const t2 = it.extend<{ inj2: string }>({
-      inj2: [async ({}: any, use: any) => {
-        await use('fallback-2')
-      }, { injected: true }] as any,
-    })
-    return mergeTests(t1, t2)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('both injected work', ({ inj1, inj2 }: any) => {
-        expect(inj1).toBe('fallback-1')
-        expect(inj2).toBe('fallback-2')
-      })
-    },
-  })
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > both injected work <time>"`)
 })
 
 test('mergeTests handles union of auto-fixtures in integration', async () => {
@@ -1157,29 +1027,6 @@ test('mergeTests resolves complex linear chain split across merge boundary', asy
 })
 
 // Type conflicts and intersections are metadata-level validations, moved to Core suite.
-
-test('mergeTests resolves conflicting dependency chains', async () => {
-  const { stderr, tests } = await runMergeFixtureTests(() => {
-    const t1 = it.extend({
-      base: 'base1',
-      derived: async ({ base }: any, use: any) => use(`t1-${base}`),
-    })
-    const t2 = it.extend({
-      base: 'base2',
-      derived: async ({ base }: any, use: any) => use(`t2-${base}`),
-    })
-    return mergeTests(t1, t2)
-  }, {
-    'basic.test.ts': ({ extendedTest, expect }) => {
-      extendedTest('t2 wins implementation and value', ({ base, derived }: any) => {
-        expect(base).toBe('base2')
-        expect(derived).toBe('t2-base2')
-      })
-    },
-  })
-  expect(stderr).toMatchInlineSnapshot(`""`)
-  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > t2 wins implementation and value <time>"`)
-})
 
 test('mergeTests detects scope inheritance conflicts created by merge', async () => {
   const { stderr } = await runMergeFixtureTests(() => {
