@@ -4,20 +4,11 @@ import { buildTestProjectTree } from '../../test-utils'
 import { instances, runBrowserTests } from './utils'
 
 test('vi.defineHelper hides internal stack traces', async () => {
-  const { results, ctx } = await runBrowserTests({
+  const { errorTree } = await runBrowserTests({
     root: './fixtures/assertion-helper',
   })
 
-  const projectTree = buildTestProjectTree(results, (testCase) => {
-    const result = testCase.result()
-    return result.errors.map((e) => {
-      const stacks = e.stacks.map(s => ({
-        ...s,
-        file: path.relative(ctx.config.root, s.file),
-      }))
-      return ({ message: e.message, stacks })
-    })
-  })
+  const projectTree = errorTree({ project: true, stackTrace: true })
   expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
 
   for (const [name, tree] of Object.entries(projectTree)) {
@@ -29,12 +20,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 8,
-                    "file": "basic.test.ts",
-                    "line": 26,
-                    "method": "",
-                  },
+                  "basic.test.ts:26:8",
                 ],
               },
             ],
@@ -42,12 +28,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 14,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
+                  "basic.test.ts:30:14",
                 ],
               },
             ],
@@ -55,12 +36,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 8,
-                    "file": "basic.test.ts",
-                    "line": 34,
-                    "method": "",
-                  },
+                  "basic.test.ts:34:8",
                 ],
               },
             ],
@@ -68,12 +44,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'sync' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 10,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
+                  "basic.test.ts:22:10",
                 ],
               },
             ],
@@ -92,12 +63,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 20,
-                    "file": "basic.test.ts",
-                    "line": 9,
-                    "method": "",
-                  },
+                  "basic.test.ts:9:20",
                 ],
               },
             ],
@@ -105,12 +71,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 14,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
+                  "basic.test.ts:30:14",
                 ],
               },
             ],
@@ -118,12 +79,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 25,
-                    "file": "basic.test.ts",
-                    "line": 18,
-                    "method": "",
-                  },
+                  "basic.test.ts:18:25",
                 ],
               },
             ],
@@ -131,12 +87,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'sync' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 10,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
+                  "basic.test.ts:22:10",
                 ],
               },
             ],
@@ -152,12 +103,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 26,
-                    "method": "",
-                  },
+                  "basic.test.ts:26:2",
                 ],
               },
             ],
@@ -165,12 +111,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
+                  "basic.test.ts:30:2",
                 ],
               },
             ],
@@ -178,12 +119,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'soft async' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 34,
-                    "method": "",
-                  },
+                  "basic.test.ts:34:2",
                 ],
               },
             ],
@@ -191,12 +127,7 @@ test('vi.defineHelper hides internal stack traces', async () => {
               {
                 "message": "expected 'sync' to deeply equal 'x'",
                 "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
+                  "basic.test.ts:22:2",
                 ],
               },
             ],
