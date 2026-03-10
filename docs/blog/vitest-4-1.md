@@ -337,6 +337,22 @@ export default defineConfig({
 
 When enabled, Vitest uses `node:async_hooks` to report leaked async resources with source locations. Since this adds runtime overhead, it is best used while debugging.
 
+## `vscode` Improvements
+
+The official [vscode extension](https://vitest.dev/vscode) received a large number of fixes and new features:
+
+- The extension no longer keeps a running process in the background unless you explicitly enable continuous run manually or via a new config option `watchOnStartup`. This reduces memory usage and eliminates the `maximumConfigs` config option.
+- The new "Run Related Tests" command runs tests that import the currently open file.
+- The new "Toggle Continuous Run" action is now available when clicking on the gutter icon.
+- The extension now supports [Deno runtime](https://deno.com/).
+- The extension cancels the test run sooner after clicking "Stop", when possible.
+- The extension displays the module load time inline next to each import statement, if you are using Vitest 4.1.
+
+<center>
+  <img src="/vscode-import-breakdown.png" alt="An example of import breakdown in vscode">
+  <sup>An example of import breakdown in vscode.</sup>
+</center>
+
 ## GitHub Actions Job Summary
 
 The built-in [`github-actions` reporter](/guide/reporters#github-actions-reporter) now automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries — with permalink URLs linking test names directly to the relevant source lines on GitHub.
