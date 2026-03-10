@@ -302,7 +302,7 @@ const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const collectorSuite = collector.suite || collector.file
+  const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
@@ -319,7 +319,6 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       return fn(context)
     }
 
-    const suite = options?.suite ?? collectorSuite
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
       return fn(context)
