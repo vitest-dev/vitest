@@ -571,7 +571,7 @@ export class StableTestFileOrderSorter {
 }
 
 export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
-  const root = testModules[0]!.project.config.root
+  const root = testModules[0]?.project.config.root
 
   function mapError(e: { message: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
     if (options?.stackTrace) {
