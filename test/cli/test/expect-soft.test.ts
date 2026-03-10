@@ -45,6 +45,20 @@ describe('expect.soft', () => {
     expect.soft(stderr).toContain('Error: expected 4 to be 3')
   })
 
+  test('promise rejection', async () => {
+    const { stderr } = await run()
+    // both assertions should execute (not abort after first rejection)
+    expect.soft(stderr).toContain('promise rejected "Error: boom 1st" instead of resolving')
+    expect.soft(stderr).toContain('promise rejected "Error: boom 2nd" instead of resolving')
+  })
+
+  test('promise resolved instead of rejecting', async () => {
+    const { stderr } = await run()
+    // both assertions should execute
+    expect.soft(stderr).toContain('promise resolved "value 1" instead of rejecting')
+    expect.soft(stderr).toContain('promise resolved "value 2" instead of rejecting')
+  })
+
   test('passed', async () => {
     const { stdout } = await run()
     expect.soft(stdout).toContain('soft.test.ts > passed')
