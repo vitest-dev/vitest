@@ -152,7 +152,7 @@ export class BareModuleMocker implements TestModuleMocker {
       return
     }
 
-    for (const mock of BareModuleMocker.pendingIds) {
+    const resolve = async (mock: (typeof BareModuleMocker.pendingIds)[0]) => {
       const { id, url, external } = await this.resolveId(
         mock.id,
         mock.importer,
@@ -169,6 +169,18 @@ export class BareModuleMocker implements TestModuleMocker {
           mock.type,
           mock.factory,
         )
+      }
+    }
+
+    // resolve in parallel if all pending mocks are of the same type,
+    // otherwise resolve sequentially to preserve mock/unmock ordering
+    const allSameAction = new Set(BareModuleMocker.pendingIds.map(m => m.action)).size === 1
+    if (allSameAction) {
+      await Promise.all(BareModuleMocker.pendingIds.map(resolve))
+    }
+    else {
+      for (const mock of BareModuleMocker.pendingIds) {
+        await resolve(mock)
       }
     }
 
