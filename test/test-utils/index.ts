@@ -573,12 +573,13 @@ export class StableTestFileOrderSorter {
 export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
   const root = testModules[0]!.project.config.root
 
-  function mapError(e: { message: string; stacks?: { file: string; line: number; column: number }[] }) {
+  function mapError(e: { message: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
     if (options?.stackTrace) {
-      return {
-        message: e.message,
-        stacks: (e.stacks || []).map(s => `${relative(root, s.file)}:${s.line}:${s.column}`),
-      }
+      const stacks = (e.stacks || []).map((s) => {
+        const loc = `${relative(root, s.file)}:${s.line}:${s.column}`
+        return s.method ? `    at ${s.method} (${loc})` : `    at ${loc}`
+      })
+      return [e.message, ...stacks].join('\n')
     }
     return e.message
   }
