@@ -12,7 +12,7 @@ import { expect, test } from 'vitest'
 import Component from './Component.vue'
 
 test('counter button increments the count', async () => {
-  const screen = render(Component, {
+  const screen = await render(Component, {
     props: {
       initialCount: 1,
     }
@@ -43,13 +43,16 @@ export function render(
 ): RenderResult & PromiseLike<RenderResult>
 ```
 
-The `render` function is synchronous and can be used without `await`. When awaited, it integrates with the [Trace View](/guide/browser/trace-view) by recording a `vue.render` trace mark:
+The `render` function records a `vue.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
+
+::: warning
+Synchronous usage of `render` is deprecated and will be removed in the next major version. Please always `await` the result:
 
 ```ts
-// both are valid
-const screen = render(Component)
-const screen = await render(Component)
+const screen = render(Component) // [!code --]
+const screen = await render(Component) // [!code ++]
 ```
+:::
 
 ### Options
 
@@ -64,7 +67,7 @@ For example, if you are unit testing a `tbody` element, it cannot be a child of 
 ```js
 const table = document.createElement('table')
 
-const { container } = render(TableBody, {
+const { container } = await render(TableBody, {
   props,
   // ⚠️ appending the element to `body` manually before rendering
   container: document.body.appendChild(table),
@@ -80,7 +83,7 @@ If the `container` is specified, then this defaults to that, otherwise this defa
 In addition to documented return value, the `render` function also returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
 
 ```ts
-const screen = render(TableBody, { props })
+const screen = await render(TableBody, { props })
 
 await screen.getByRole('link', { name: 'Expand' }).click()
 ```
@@ -110,7 +113,7 @@ The [locator](/api/browser/locators) of your `container`. It is useful to use qu
 ```js
 import { render } from 'vitest-browser-vue'
 
-const { locator } = render(NumberDisplay, {
+const { locator } = await render(NumberDisplay, {
   props: { number: 2 }
 })
 
@@ -136,14 +139,18 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 function rerender(props: Partial<Props>): void & PromiseLike<void>
 ```
 
+Also records a `vue.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
+
 It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
 
-When awaited, it records a `vue.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
+::: warning
+Synchronous usage of `rerender` is deprecated and will be removed in the next major version. Please always `await` the result.
+:::
 
 ```js
 import { render } from 'vitest-browser-vue'
 
-const { rerender } = render(NumberDisplay, { props: { number: 1 } })
+const { rerender } = await render(NumberDisplay, { props: { number: 1 } })
 
 // re-render the same component with different props
 await rerender({ number: 2 })
@@ -155,9 +162,11 @@ await rerender({ number: 2 })
 function unmount(): void & PromiseLike<void>
 ```
 
-This will cause the rendered component to be unmounted. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+This will cause the rendered component to be unmounted. Also records a `vue.unmount` trace mark in the [Trace View](/guide/browser/trace-view). This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
 
-When awaited, it records a `vue.unmount` trace mark in the [Trace View](/guide/browser/trace-view).
+::: warning
+Synchronous usage of `unmount` is deprecated and will be removed in the next major version. Please always `await` the result.
+:::
 
 #### emitted
 
@@ -194,7 +203,7 @@ locators.extend({
   },
 })
 
-const screen = render(Component)
+const screen = await render(Component)
 await expect.element(
   screen.getByArticleTitle('Hello World')
 ).toBeVisible()
