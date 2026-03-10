@@ -136,7 +136,7 @@ export function withCancel<T extends (...args: any[]) => any>(
 
 const abortControllers = new WeakMap<TestContext, AbortController>()
 
-export function abortIfTimeout([context]: [TestContext?], error: Error): void {
+export function abortIfTimeout([context]: [TestContext?, unknown?], error: Error): void {
   if (context) {
     abortContextSignal(context, error)
   }
