@@ -2,7 +2,7 @@
 title: Vitest 4.1 is out!
 author:
   name: The Vitest Team
-date: 2026-03-01
+date: 2026-03-12
 sidebar: false
 head:
   - - meta
@@ -27,7 +27,7 @@ head:
 
 # Vitest 4.1 is out!
 
-_March 1, 2026_
+_March 12, 2026_
 
 ![Vitest 4.1 Announcement Cover Image](/og-vitest-4-1.jpg)
 
