@@ -197,11 +197,12 @@ test('mergeTests same fixture name with incompatible types still follows last-wi
     })
     return mergeTests(t1, t2)
   }, {
-    'basic.test.ts': ({ extendedTest, expect, expectTypeOf: _expectTypeOf }) => {
+    'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
       extendedTest('last wins regardless of shape', ({ foo }) => {
         // t2's static `123` wins over t1's async function fixture.
         // No stale `deps` or `value` should leak from t1's TestFixtureItem.
         expect(foo).toBe(123)
+        expectTypeOf(foo).toEqualTypeOf<number>()
       })
     },
   })

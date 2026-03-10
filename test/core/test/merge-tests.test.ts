@@ -1,4 +1,4 @@
-import { describe, expect, mergeTests, test } from 'vitest'
+import { describe, expect, expectTypeOf, mergeTests, test } from 'vitest'
 
 describe('mergeTests', () => {
   describe('basic merge behavior', () => {
@@ -30,7 +30,7 @@ describe('mergeTests', () => {
       expect(c).toBe(3)
     })
 
-    test('mergeTests(t) returns equivalent test instance', () => {
+    test('mergeTests with single test returns valid TestAPI', () => {
       const t = test.extend({ a: 1 })
       const merged = mergeTests(t)
 
@@ -175,6 +175,7 @@ describe('mergeTests', () => {
 
     mergedTypes('handles type conflicts by following last-wins metadata', ({ value }) => {
       expect(value).toBe(123)
+      expectTypeOf(value).toEqualTypeOf<number>()
     })
 
     const tNulls1 = test.extend({ undefinedValue: undefined, nullValue: null })
@@ -257,13 +258,6 @@ describe('mergeTests', () => {
     })
 
     test('mergeTests preserves built-in fixtures', () => {
-      const t = test.extend({ custom: 1 })
-      const merged = mergeTests(t)
-
-      expect(typeof merged).toBe('function')
-    })
-
-    test('preserves built-in fixtures', () => {
       const t1 = test.extend({ task: 'custom' } as any)
       const merged = mergeTests(t1)
       expect(typeof merged).toBe('function')
@@ -284,32 +278,16 @@ describe('mergeTests', () => {
       expect(typeof merged).toBe('function')
     })
 
-    test('mergeTests does not mutate source test instances', () => {
+    test('mergeTests does not mutate source tests', () => {
       const t1 = test.extend({ a: 1 })
       const t2 = test.extend({ b: 2 })
 
       const merged = mergeTests(t1, t2)
 
-      // original tests should still behave independently
-      const mergedAgain = mergeTests(t1)
+      const t1Extended = t1.extend({ c: 3 })
 
       expect(typeof merged).toBe('function')
-      expect(typeof mergedAgain).toBe('function')
-
-      // ensure original APIs are intact
-      expect(typeof t1.extend).toBe('function')
-      expect(typeof t2.extend).toBe('function')
-    })
-
-    test('source tests remain extendable after merge', () => {
-      const t1 = test.extend({ a: 1 })
-      const t2 = test.extend({ b: 2 })
-
-      mergeTests(t1, t2)
-
-      const extended = t1.extend({ c: 3 })
-
-      expect(typeof extended).toBe('function')
+      expect(typeof t1Extended).toBe('function')
     })
 
     test('subsequent merges work after local failure', () => {
