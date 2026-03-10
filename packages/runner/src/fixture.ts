@@ -291,6 +291,11 @@ export interface WithFixturesOptions {
    * Current fixtures from the context.
    */
   fixtures?: TestFixtures
+  /**
+   * The suite to use for fixture lookups.
+   * Used by beforeEach/afterEach/aroundEach hooks to pick up fixture overrides from the test's describe block.
+   */
+  suite?: Suite
 }
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
@@ -314,11 +319,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       return fn(context)
     }
 
-    // For `xxxEach` hooks, use the test's parent suite to pick up fixture
-    // overrides registered in the test's describe block.
-    // For `test`, `collectorSuite` is already same as `context.task.suite`.
-    // For `xxxAll` hooks, there's no `context.task`.
-    const suite = context.task?.suite ?? collectorSuite
+    const suite = options?.suite ?? collectorSuite
     const registrations = fixtures.get(suite)
     if (!registrations.size) {
       return fn(context)
