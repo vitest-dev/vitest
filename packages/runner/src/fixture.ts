@@ -291,13 +291,18 @@ export interface WithFixturesOptions {
    * Current fixtures from the context.
    */
   fixtures?: TestFixtures
+  /**
+   * The suite to use for fixture lookups.
+   * Used by beforeEach/afterEach/aroundEach hooks to pick up fixture overrides from the test's describe block.
+   */
+  suite?: Suite
 }
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const suite = collector.suite || collector.file
+  const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
