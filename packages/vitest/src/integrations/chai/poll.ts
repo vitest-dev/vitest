@@ -152,9 +152,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               return (resultPromise ||= promise()).then(onFulfilled, onRejected)
             },
             catch(onRejected) {
+              awaited = true
               return (resultPromise ||= promise()).catch(onRejected)
             },
             finally(onFinally) {
+              awaited = true
               return (resultPromise ||= promise()).finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',

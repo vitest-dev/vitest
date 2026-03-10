@@ -237,4 +237,3 @@ Merges every blob report located in the specified folder (`.vitest-reports` by d
 ```sh
 vitest --merge-reports --reporter=junit
 ```
-

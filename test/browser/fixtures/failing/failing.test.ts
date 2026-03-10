@@ -38,3 +38,15 @@ it('several locator methods are not awaited', () => {
 it('correctly prints error from a bundled file', () => {
   index()
 })
+
+it('not awaited but with then/catch/finally', async () => {
+  await page.getByRole('button').click().then()
+  await page.getByRole('button').click().catch()
+  await page.getByRole('button').click().finally()
+  await userEvent.click(page.getByRole('button')).then()
+  await userEvent.click(page.getByRole('button')).catch()
+  await userEvent.click(page.getByRole('button')).finally()
+  page.getByRole('button').click().then()
+  page.getByRole('button').click().catch()
+  page.getByRole('button').click().finally()
+})
