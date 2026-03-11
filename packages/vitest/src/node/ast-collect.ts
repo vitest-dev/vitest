@@ -46,6 +46,7 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
+  concurrent: boolean
   tags: string[]
 }
 
@@ -103,8 +104,8 @@ function astParseFile(filepath: string, code: string) {
       ) {
         return getName(callee.property)
       }
-      // call as `__vite_ssr__.test.skip()`
-      return getName(callee.object?.property)
+      // call as `__vite_ssr__.test.skip()` or `describe.concurrent.each()`
+      return getName(callee.object)
     }
     // unwrap (0, ...)
     if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
@@ -114,6 +115,29 @@ function astParseFile(filepath: string, code: string) {
       }
     }
     return null
+  }
+
+  const getProperties = (callee: any): string[] => {
+    if (!callee) {
+      return []
+    }
+    if (callee.type === 'Identifier') {
+      return []
+    }
+    if (callee.type === 'CallExpression') {
+      return getProperties(callee.callee)
+    }
+    if (callee.type === 'TaggedTemplateExpression') {
+      return getProperties(callee.tag)
+    }
+    if (callee.type === 'MemberExpression') {
+      const props = getProperties(callee.object)
+      if (callee.property?.name) {
+        props.push(callee.property.name)
+      }
+      return props
+    }
+    return []
   }
 
   walkAst(ast as any, {
@@ -127,11 +151,16 @@ function astParseFile(filepath: string, code: string) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
+      const properties = getProperties(callee)
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
       // they will be picked up in the next iteration
       if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(mode)) {
         return
+      }
+      const isConcurrent = properties.includes('concurrent')
+      if (mode === 'concurrent' || mode === 'sequential') {
+        mode = 'run'
       }
 
       let start: number
@@ -224,6 +253,7 @@ function astParseFile(filepath: string, code: string) {
         mode,
         task: null as any,
         dynamic: isDynamicEach,
+        concurrent: isConcurrent,
         tags,
       } satisfies LocalCallDefinition)
     },
@@ -366,6 +396,7 @@ function createFileTask(
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
       const taskTags = unique([...parentTags, ...definition.tags])
+      const concurrent = definition.concurrent || latestSuite.concurrent || undefined
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
@@ -376,6 +407,7 @@ function createFileTask(
           tasks: [],
           mode,
           each: definition.dynamic,
+          concurrent,
           name: definition.name,
           fullName: createTaskName([latestSuite.fullName, definition.name]),
           fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
@@ -398,6 +430,7 @@ function createFileTask(
         suite: latestSuite,
         file,
         each: definition.dynamic,
+        concurrent,
         mode,
         context: {} as any, // not used on the server
         name: definition.name,

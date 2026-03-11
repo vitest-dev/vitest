@@ -1046,6 +1046,104 @@ test('collects tags with other options', async () => {
   `)
 })
 
+test('collects tests with concurrent modifier', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent('concurrent suite', () => {
+      test('test in concurrent suite', () => {})
+      test.skip('skipped in concurrent suite', () => {})
+    })
+
+    test.concurrent('concurrent test', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "skipped in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > skipped in concurrent suite",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "test in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > test in concurrent suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "concurrent test": {
+        "concurrent": true,
+        "errors": [],
+        "fullName": "concurrent test",
+        "id": "-1732721377_1",
+        "location": "9:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
+test('collects tests with describe.concurrent.each', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent.each([1, 2, 3])('concurrent each %i', (num) => {
+      test('test inside concurrent each', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent each %i": {
+        "test inside concurrent each": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent each %i > test inside concurrent each",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with test.concurrent.each', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('suite', () => {
+      test.concurrent.each([1, 2, 3])('concurrent each test %i', (num) => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "suite": {
+        "concurrent each test %i": {
+          "concurrent": true,
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "suite > concurrent each test %i",
+          "id": "-1732721377_0_0-dynamic",
+          "location": "5:36",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
 test('reports error when using undefined tag', async () => {
   const testModule = await collectTestModule(`
     import { test } from 'vitest'
@@ -1192,6 +1290,7 @@ function testItem(testCase: TestCase) {
     errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
     ...(testCase.options.each ? { each: true } : {}),
+    ...(testCase.options.concurrent ? { concurrent: true } : {}),
     ...(testCase.task.tags?.length ? { tags: testCase.task.tags } : {}),
   }
 }
