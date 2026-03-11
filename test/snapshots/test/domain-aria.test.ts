@@ -107,8 +107,8 @@ test('aria snapshot', async () => {
     + Received
 
       - button /User \\d+/: Profile
-      - paragraph: You have 3 messages
     - - paragraph: You have 7 notifications
+    + - paragraph: You have 3 messages
 
      ❯ basic.test.ts:28:25
          26|     <p>You have 3 messages</p>
