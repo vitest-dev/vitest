@@ -54,3 +54,11 @@ test('expect(element) - capture from DOM element', () => {
   `
   expect(document.body).toMatchDomainSnapshot('aria')
 })
+
+test('semantic match with regex in snapshot', () => {
+  document.body.innerHTML = `
+    <button aria-label="User 42">Profile</button>
+    <p>You have 7 notifications</p>
+  `
+  expect(document.body).toMatchDomainSnapshot('aria')
+})

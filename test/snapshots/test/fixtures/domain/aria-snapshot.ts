@@ -16,7 +16,7 @@ export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRole
   },
 
   render(captured) {
-    return renderAriaTree(captured)
+    return `\n${renderAriaTree(captured)}\n`
   },
 
   parseExpected(input) {
