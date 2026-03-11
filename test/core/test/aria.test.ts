@@ -322,8 +322,7 @@ describe('matchAriaTree', () => {
       - button "Submit": Go
       ",
         "expected": "
-      - button "Submit": Go
-      - button "Cancel"
+      - button "Cancel": Go
       ",
         "mergedExpected": "
       - button "Submit": Go
@@ -363,8 +362,7 @@ describe('matchAriaTree', () => {
       - button "User 42": Go
       ",
         "expected": "
-      - button "User 42": Go
-      - button /Goodbye/
+      - button /Goodbye/: Go
       ",
         "mergedExpected": "
       - button "User 42": Go
@@ -394,7 +392,7 @@ describe('matchAriaTree', () => {
       ",
         "expected": "
       - list:
-        - listitem: One
+        - listitem: Two
         - listitem: Two
         - listitem: Three
       ",
@@ -404,7 +402,7 @@ describe('matchAriaTree', () => {
         - listitem: Two
         - listitem: Three
       ",
-        "pass": true,
+        "pass": false,
       }
     `)
   })
@@ -431,7 +429,7 @@ describe('matchAriaTree', () => {
         "expected": "
       - list:
         - listitem: A
-        - listitem: B
+        - listitem: C
         - listitem: C
       ",
         "mergedExpected": "
@@ -440,7 +438,7 @@ describe('matchAriaTree', () => {
         - listitem: B
         - listitem: C
       ",
-        "pass": true,
+        "pass": false,
       }
     `)
   })
@@ -466,12 +464,9 @@ describe('matchAriaTree', () => {
       ",
         "expected": "
       - list:
-        - listitem: A
-        - listitem: B
-        - listitem: C
-      - list:
         - listitem: C
         - listitem: A
+        - listitem: C
       ",
         "mergedExpected": "
       - list:
@@ -511,8 +506,7 @@ describe('matchAriaTree', () => {
       - heading [level=2]: Title
       ",
         "expected": "
-      - heading [level=2]: Title
-      - heading [level=1]
+      - heading [level=1]: Title
       ",
         "mergedExpected": "
       - heading [level=2]: Title
@@ -570,7 +564,6 @@ describe('matchAriaTree', () => {
       - paragraph: You have 7 notifications
       ",
         "expected": "
-      - paragraph: You have 7 notifications
       - paragraph: /\\d+ errors/
       ",
         "mergedExpected": "
@@ -596,7 +589,6 @@ describe('matchAriaTree', () => {
       ",
         "expected": "
       - button /User \\d+/: Profile
-      - paragraph: You have 3 messages
       - paragraph: You have 7 notifications
       ",
         "mergedExpected": "

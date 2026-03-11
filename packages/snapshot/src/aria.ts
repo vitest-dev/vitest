@@ -644,6 +644,34 @@ interface MergeLines {
   pass: boolean
 }
 
+function matchesNodeShallow(node: AriaNode | string, template: AriaTemplateNode): boolean {
+  if (typeof node === 'string' && template.kind === 'text') {
+    return true
+  }
+  if (typeof node === 'string' || template.kind !== 'role') {
+    return false
+  }
+  if (template.role !== 'fragment' && template.role !== node.role) {
+    return false
+  }
+  return true
+}
+
+function pairChildren(
+  children: (AriaNode | string)[],
+  templates: AriaTemplateNode[],
+): Map<number, number> {
+  const pairs = new Map<number, number>()
+  let ti = 0
+  for (let ci = 0; ci < children.length && ti < templates.length; ci++) {
+    if (matchesNodeShallow(children[ci], templates[ti])) {
+      pairs.set(ci, ti)
+      ti++
+    }
+  }
+  return pairs
+}
+
 function mergeChildLists(
   children: (AriaNode | string)[],
   templates: AriaTemplateNode[],
@@ -654,10 +682,18 @@ function mergeChildLists(
   const merged: string[] = []
   let allPass = true
 
-  // Greedy pairing: walk through captured children, consume template nodes in order
-  let ti = 0
-  for (const child of children) {
-    if (ti < templates.length && matchesNode(child, templates[ti])) {
+  const pairs = pairChildren(children, templates)
+  const allTemplatesMatched = pairs.size === templates.length
+
+  if (!allTemplatesMatched) {
+    allPass = false
+  }
+
+  for (let ci = 0; ci < children.length; ci++) {
+    const child = children[ci]
+    const ti = pairs.get(ci)
+
+    if (ti !== undefined) {
       // Paired — detailed merge
       const r = mergeNode(child, templates[ti], indent)
       actual.push(...r.actual)
@@ -666,10 +702,9 @@ function mergeChildLists(
       if (!r.pass) {
         allPass = false
       }
-      ti++
     }
     else {
-      // Unpaired captured child — render normally in actual/merged
+      // Unpaired captured child — render in actual/merged, also expected (context)
       const rendered: string[] = []
       if (typeof child === 'string') {
         rendered.push(`${indent}- text: ${child}`)
@@ -683,19 +718,20 @@ function mergeChildLists(
     }
   }
 
-  // Remaining unmatched template nodes — they're expected but missing
-  while (ti < templates.length) {
-    allPass = false
-    const tmpl = templates[ti]
-    if (tmpl.kind === 'text') {
-      expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
+  // Remaining unmatched template nodes — append to expected only
+  for (let ti = 0; ti < templates.length; ti++) {
+    const matched = [...pairs.values()].includes(ti)
+    if (!matched) {
+      const tmpl = templates[ti]
+      if (tmpl.kind === 'text') {
+        expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
+      }
+      else {
+        const tmplLines: string[] = []
+        renderTemplateNode(tmpl, indent, tmplLines)
+        expected.push(...tmplLines)
+      }
     }
-    else {
-      const tmplLines: string[] = []
-      renderTemplateNode(tmpl, indent, tmplLines)
-      expected.push(...tmplLines)
-    }
-    ti++
   }
 
   return { actual, expected, merged, pass: allPass }

@@ -106,10 +106,9 @@ test('aria snapshot', async () => {
     - Expected
     + Received
 
-    - - button /User \\d+/: Profile
-    + - button "User 99": Profile
+      - button /User \\d+/: Profile
+      - paragraph: You have 3 messages
     - - paragraph: You have 7 notifications
-    + - paragraph: You have 3 messages
 
      ❯ aria-snapshot.test.ts:28:25
          26|     <p>You have 3 messages</p>
@@ -163,7 +162,7 @@ test('aria snapshot', async () => {
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button "User 99": Profile
+    - button /User \\\\d+/: Profile
     - paragraph: You have 3 messages
     \`;
 

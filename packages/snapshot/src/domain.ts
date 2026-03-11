@@ -12,6 +12,7 @@ export interface DomainMatchResult {
   mergedExpected?: string
 }
 
+// TODO: is context/options needed or slop?
 export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, Options = unknown> {
   name: string
   capture: (
