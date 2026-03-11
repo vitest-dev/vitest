@@ -32,10 +32,15 @@ const testDomainAdapter: DomainSnapshotAdapter<string, string> = {
 
 expect.addSnapshotDomain(testDomainAdapter)
 
-test('toMatchDomainSnapshot simple', () => {
+test('literal', () => {
   expect('hello 123').toMatchDomainSnapshot('test-domain')
 })
 
-test('toMatchDomainSnapshot regex match', () => {
+test('regex', () => {
   expect('world 456').toMatchDomainSnapshot('test-domain')
+})
+
+test('mixed', () => {
+  expect('foo 789').toMatchDomainSnapshot('test-domain')
+  expect('bar 012').toMatchDomainSnapshot('test-domain')
 })

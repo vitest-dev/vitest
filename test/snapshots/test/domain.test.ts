@@ -5,418 +5,199 @@ import { editFile, runVitest } from '../../test-utils'
 
 test('domain snapshot', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain')
-  const testFile = join(root, 'aria-snapshot.test.ts')
-  const snapshotFile = join(root, '__snapshots__/aria-snapshot.test.ts.snap')
+  const testFile = join(root, 'basic.test.ts')
+  const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')
 
   // clean slate
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
 
-  // 1. create snapshots from scratch — should produce literal rendered values
+  // 1. create snapshots from scratch — literal rendered values
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
-        "semantic match with regex in snapshot": "passed",
-        "simple heading and paragraph": "passed",
-      },
-      "aria.test.ts": Object {
-        "captureAriaTree": Object {
-          "anchor without href has no role": "passed",
-          "aria-hidden elements are excluded": "passed",
-          "aria-label sets name": "passed",
-          "checkbox states": "passed",
-          "explicit role overrides implicit": "passed",
-          "heading": "passed",
-          "label for input": "passed",
-          "link with href": "passed",
-          "nested list structure": "passed",
-        },
-        "matchAriaTree": Object {
-          "attribute match — checked": "passed",
-          "attribute mismatch — wrong level": "passed",
-          "contain semantics — order matters": "passed",
-          "contain semantics — partial children match": "passed",
-          "deep match — finds node in subtree": "passed",
-          "exact match": "passed",
-          "name match": "passed",
-          "regex name match": "passed",
-          "regex text child": "passed",
-          "role mismatch": "passed",
-        },
-        "parseAriaTemplate": Object {
-          "heading with level": "passed",
-          "inline regex text child": "passed",
-          "inline text child": "passed",
-          "nested children": "passed",
-          "role with attributes": "passed",
-          "role with quoted name": "passed",
-          "role with regex name": "passed",
-          "simple role": "passed",
-          "text node": "passed",
-        },
-        "render -> parse roundtrip": Object {
-          "rendered output parses back to matching template": "passed",
-        },
-        "renderAriaTree": Object {
-          "checkbox attributes": "passed",
-          "form with inputs": "passed",
-          "heading with level": "passed",
-          "nav with nested list": "passed",
-        },
-      },
       "basic.test.ts": Object {
-        "toMatchDomainSnapshot regex match": "passed",
-        "toMatchDomainSnapshot simple": "passed",
+        "literal": "passed",
+        "mixed": "passed",
+        "regex": "passed",
       },
     }
   `)
-
-  // first run should produce literal values, not regex patterns
   let snap = readFileSync(snapshotFile, 'utf-8')
   expect(snap).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
+    exports[\`literal 1\`] = \`custom:hello 123\`;
 
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
-    - main:
-      - heading [level=1]: Dashboard
-      - navigation "Actions":
-        - button: Save
-        - button: Cancel
-    \`;
+    exports[\`mixed 1\`] = \`custom:foo 789\`;
 
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
+    exports[\`mixed 2\`] = \`custom:bar 012\`;
 
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
-    \`;
-
-    exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button "User 42": Profile
-    - paragraph: You have 7 notifications
-    \`;
-
-    exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
-    - paragraph: Some description
-    \`;
+    exports[\`regex 1\`] = \`custom:world 456\`;
     "
   `)
 
   // 2. hand-edit snapshot to introduce regex patterns
-  //    for "semantic match with regex in snapshot" test case
   editFile(snapshotFile, s => s
-    .replace('button "User 42": Profile', 'button /User \\d+/: Profile')
-    .replace('paragraph: You have 7 notifications', 'paragraph: /You have \\d+ notifications/'),
+    .replace('custom:world 456', 'custom:/world \\d+/')
+    .replace('custom:foo 789', 'custom:/foo \\d+/')
   )
 
-  // 3. re-run without update — regex patterns match, tests pass, snapshot unchanged
+  // 3. re-run without update — regex patterns match, snapshot unchanged
   const snapWithRegex = readFileSync(snapshotFile, 'utf-8')
   result = await runVitest({ root })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  aria-snapshot.test.ts > semantic match with regex in snapshot
-    Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
+     FAIL  basic.test.ts > regex
+    Error: Snapshot \`regex 1\` mismatched
 
-    - Expected
-    + Received
+    Expected: "custom:/world d+/"
+    Received: "custom:world 456"
 
-    - - button /User d+/: Profile
-    + - button "User 42": Profile
-    - - paragraph: /You have d+ notifications/
-    + - paragraph: You have 7 notifications
+     ❯ basic.test.ts:40:23
+         38|
+         39| test('regex', () => {
+         40|   expect('world 456').toMatchDomainSnapshot('test-domain')
+           |                       ^
+         41| })
+         42|
 
-     ❯ aria-snapshot.test.ts:63:25
-         61|     <p>You have 7 notifications</p>
-         62|   \`
-         63|   expect(document.body).toMatchDomainSnapshot('aria')
-           |                         ^
-         64| })
-         65|
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+     FAIL  basic.test.ts > mixed
+    Error: Snapshot \`mixed 1\` mismatched
+
+    Expected: "custom:/foo d+/"
+    Received: "custom:foo 789"
+
+     ❯ basic.test.ts:44:21
+         42|
+         43| test('mixed', () => {
+         44|   expect('foo 789').toMatchDomainSnapshot('test-domain')
+           |                     ^
+         45|   expect('bar 012').toMatchDomainSnapshot('test-domain')
+         46| })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "literal": "passed",
+        "mixed": Array [
+          "Snapshot \`mixed 1\` mismatched",
+        ],
+        "regex": Array [
+          "Snapshot \`regex 1\` mismatched",
+        ],
+      },
+    }
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
+    exports[\`literal 1\`] = \`custom:hello 123\`;
 
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
-    - main:
-      - heading [level=1]: Dashboard
-      - navigation "Actions":
-        - button: Save
-        - button: Cancel
-    \`;
+    exports[\`mixed 1\`] = \`custom:/foo d+/\`;
 
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
+    exports[\`mixed 2\`] = \`custom:bar 012\`;
 
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
-    \`;
-
-    exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button /User d+/: Profile
-    - paragraph: /You have d+ notifications/
-    \`;
-
-    exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
-    - paragraph: Some description
-    \`;
+    exports[\`regex 1\`] = \`custom:/world d+/\`;
     "
   `)
 
-  // 4. edit test to change DOM so paragraph regex no longer matches,
-  //    but button regex still matches
-  editFile(testFile, s => s.replace(
-    'You have 7 notifications',
-    'Your inbox is empty',
-  ))
+  // 4. edit test: change values so regex still matches some, not others
+  //    - 'world 456' -> 'world 999' (regex /world \d+/ still matches)
+  //    - 'foo 789' -> 'foo 999' (regex /foo \d+/ still matches)
+  //    - 'bar 012' -> 'baz 345' (literal 'bar 012' does NOT match)
+  editFile(testFile, s => s
+    .replace(`'world 456'`, `'world 999'`)
+    .replace(`'foo 789'`, `'foo 999'`)
+    .replace(`'bar 012'`, `'baz 345'`)
+  )
 
-  // 5. run without update — should fail on the regex mismatch
+  // 5. run without update — 'bar 012' mismatch causes failure
   result = await runVitest({ root })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  aria-snapshot.test.ts > semantic match with regex in snapshot
-    Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
+     FAIL  basic.test.ts > regex
+    Error: Snapshot \`regex 1\` mismatched
 
-    - Expected
-    + Received
+    Expected: "custom:/world d+/"
+    Received: "custom:world 999"
 
-    - - button /User d+/: Profile
-    + - button "User 42": Profile
-    - - paragraph: /You have d+ notifications/
-    + - paragraph: Your inbox is empty
+     ❯ basic.test.ts:40:23
+         38|
+         39| test('regex', () => {
+         40|   expect('world 999').toMatchDomainSnapshot('test-domain')
+           |                       ^
+         41| })
+         42|
 
-     ❯ aria-snapshot.test.ts:63:25
-         61|     <p>Your inbox is empty</p>
-         62|   \`
-         63|   expect(document.body).toMatchDomainSnapshot('aria')
-           |                         ^
-         64| })
-         65|
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+     FAIL  basic.test.ts > mixed
+    Error: Snapshot \`mixed 1\` mismatched
+
+    Expected: "custom:/foo d+/"
+    Received: "custom:foo 999"
+
+     ❯ basic.test.ts:44:21
+         42|
+         43| test('mixed', () => {
+         44|   expect('foo 999').toMatchDomainSnapshot('test-domain')
+           |                     ^
+         45|   expect('baz 345').toMatchDomainSnapshot('test-domain')
+         46| })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
-        "semantic match with regex in snapshot": Array [
-          "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
-        ],
-        "simple heading and paragraph": "passed",
-      },
-      "aria.test.ts": Object {
-        "captureAriaTree": Object {
-          "anchor without href has no role": "passed",
-          "aria-hidden elements are excluded": "passed",
-          "aria-label sets name": "passed",
-          "checkbox states": "passed",
-          "explicit role overrides implicit": "passed",
-          "heading": "passed",
-          "label for input": "passed",
-          "link with href": "passed",
-          "nested list structure": "passed",
-        },
-        "matchAriaTree": Object {
-          "attribute match — checked": "passed",
-          "attribute mismatch — wrong level": "passed",
-          "contain semantics — order matters": "passed",
-          "contain semantics — partial children match": "passed",
-          "deep match — finds node in subtree": "passed",
-          "exact match": "passed",
-          "name match": "passed",
-          "regex name match": "passed",
-          "regex text child": "passed",
-          "role mismatch": "passed",
-        },
-        "parseAriaTemplate": Object {
-          "heading with level": "passed",
-          "inline regex text child": "passed",
-          "inline text child": "passed",
-          "nested children": "passed",
-          "role with attributes": "passed",
-          "role with quoted name": "passed",
-          "role with regex name": "passed",
-          "simple role": "passed",
-          "text node": "passed",
-        },
-        "render -> parse roundtrip": Object {
-          "rendered output parses back to matching template": "passed",
-        },
-        "renderAriaTree": Object {
-          "checkbox attributes": "passed",
-          "form with inputs": "passed",
-          "heading with level": "passed",
-          "nav with nested list": "passed",
-        },
-      },
       "basic.test.ts": Object {
-        "toMatchDomainSnapshot regex match": "passed",
-        "toMatchDomainSnapshot simple": "passed",
+        "literal": "passed",
+        "mixed": Array [
+          "Snapshot \`mixed 1\` mismatched",
+        ],
+        "regex": Array [
+          "Snapshot \`regex 1\` mismatched",
+        ],
       },
     }
   `)
 
-  // 6. run with update — should preserve button regex (still matches),
-  //    overwrite paragraph with literal (no longer matches)
+  // 6. run with update — should preserve regex where it matched,
+  //    overwrite literal where it didn't
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
-        "semantic match with regex in snapshot": "passed",
-        "simple heading and paragraph": "passed",
-      },
-      "aria.test.ts": Object {
-        "captureAriaTree": Object {
-          "anchor without href has no role": "passed",
-          "aria-hidden elements are excluded": "passed",
-          "aria-label sets name": "passed",
-          "checkbox states": "passed",
-          "explicit role overrides implicit": "passed",
-          "heading": "passed",
-          "label for input": "passed",
-          "link with href": "passed",
-          "nested list structure": "passed",
-        },
-        "matchAriaTree": Object {
-          "attribute match — checked": "passed",
-          "attribute mismatch — wrong level": "passed",
-          "contain semantics — order matters": "passed",
-          "contain semantics — partial children match": "passed",
-          "deep match — finds node in subtree": "passed",
-          "exact match": "passed",
-          "name match": "passed",
-          "regex name match": "passed",
-          "regex text child": "passed",
-          "role mismatch": "passed",
-        },
-        "parseAriaTemplate": Object {
-          "heading with level": "passed",
-          "inline regex text child": "passed",
-          "inline text child": "passed",
-          "nested children": "passed",
-          "role with attributes": "passed",
-          "role with quoted name": "passed",
-          "role with regex name": "passed",
-          "simple role": "passed",
-          "text node": "passed",
-        },
-        "render -> parse roundtrip": Object {
-          "rendered output parses back to matching template": "passed",
-        },
-        "renderAriaTree": Object {
-          "checkbox attributes": "passed",
-          "form with inputs": "passed",
-          "heading with level": "passed",
-          "nav with nested list": "passed",
-        },
-      },
       "basic.test.ts": Object {
-        "toMatchDomainSnapshot regex match": "passed",
-        "toMatchDomainSnapshot simple": "passed",
+        "literal": "passed",
+        "mixed": "passed",
+        "regex": "passed",
       },
     }
   `)
-
   snap = readFileSync(snapshotFile, 'utf-8')
   expect(snap).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
+    exports[\`literal 1\`] = \`custom:hello 123\`;
 
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
-    - main:
-      - heading [level=1]: Dashboard
-      - navigation "Actions":
-        - button: Save
-        - button: Cancel
-    \`;
+    exports[\`mixed 1\`] = \`custom:foo 999\`;
 
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
+    exports[\`mixed 2\`] = \`custom:baz 345\`;
 
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
-    \`;
-
-    exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button "User 42": Profile
-    - paragraph: Your inbox is empty
-    \`;
-
-    exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
-    - paragraph: Some description
-    \`;
+    exports[\`regex 1\`] = \`custom:world 999\`;
     "
   `)
 })
