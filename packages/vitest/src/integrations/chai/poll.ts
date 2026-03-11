@@ -4,6 +4,15 @@ import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
 
+// these matchers own their poll lifecycle (probe/commit split)
+// poll.ts skips fn() and retry — the matcher calls poll() internally
+const snapshotPollMatchers = [
+  'toMatchDomainSnapshot',
+  'toMatchDomainInlineSnapshot',
+  'toMatchAriaSnapshot',
+  'toMatchAriaInlineSnapshot',
+]
+
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
@@ -101,6 +110,22 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
             try {
+              // Snapshot matchers own their entire poll lifecycle.
+              // Skip fn() and retry — go straight to the matcher, which calls poll() internally.
+              // TODO: consolidate later
+              if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
+                try {
+                  executionPhase = 'assertion'
+                  const output = await assertionFunction.call(assertion, ...args)
+                  await onSettled?.({ assertion, status: 'pass' })
+                  return output
+                }
+                catch (err) {
+                  await onSettled?.({ assertion, status: 'fail' })
+                  throwWithCause(err, STACK_TRACE_ERROR)
+                }
+              }
+
               while (true) {
                 const isLastAttempt = hasTimedOut
 

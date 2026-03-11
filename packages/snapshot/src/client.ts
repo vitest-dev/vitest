@@ -236,7 +236,7 @@ export class SnapshotClient {
     }
   }
 
-  // TODO: how to resue expect.poll logic?
+  // TODO: consolidate with expect.poll logic
   async assertDomainWithRetry<Options = unknown>(options: AssertDomainPollOptions<Options>): Promise<void> {
     const {
       poll,

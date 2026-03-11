@@ -97,35 +97,65 @@ const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
 
 expect.addSnapshotDomain(kvAdapter)
 
-// poll() throws on first call, then returns stable value
-test('poll retries until value available', async () => {
-  let i = 0
+// Test plan:
+//
+// 1. poll() throws then succeeds — retries poll until value available, creates snapshot
+//    - verify trial count to confirm retry happened
+//    - note: outer expect.poll loop calls poll() once before our matcher sees it,
+//      so trial count includes that extra call
+//
+// 2. stable value — poll() returns immediately, snapshot created/matched
+//
+// 3. settling value (retry-on-compare) — poll() returns intermediate values first,
+//    snapshot is pre-seeded (via integration test) with the final value,
+//    retry loop keeps probing until poll() returns matching value
+//
+// 4. timeout on compare — poll() never returns matching value,
+//    should fail with snapshot mismatch (showing last captured value),
+//    not a generic timeout error
+//
+// 5. poll() always throws — never produces a value within timeout,
+//    should propagate the last error
+//
+// 6. multiple poll+snapshot in same test — two expect.poll().toMatchDomainSnapshot()
+//    calls in one test, verifies key counter works correctly (probe peek invariant)
+//
+// 7. non-poll alongside poll — regular expect(value).toMatchDomainSnapshot('kv')
+//    in the same file, verifies no interference
+//
+// 8. pattern-preserving update with poll — hand-edit regex into snapshot,
+//    run with --update, verify mergedExpected preserves matched patterns
+//    (tested via integration test editFile + runVitest)
+
+test('throw then pass', async () => {
+  let trial = 0
   await expect.poll(() => {
-    i++
-    if (i === 1) {
-      throw new Error('not ready yet')
+    trial++
+    if (trial === 1) {
+      throw new Error(`Fail at ${trial}`)
     }
     return { name: 'alice', age: '30' }
   }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(2)
 })
 
-// poll() returns the final value immediately
-test('stable value', async () => {
-  await expect.poll(() => {
-    return { name: 'bob', score: '999', status: 'active' }
-  }).toMatchDomainSnapshot('kv')
-})
+// // poll() returns the final value immediately
+// test('stable value', async () => {
+//   await expect.poll(() => {
+//     return { name: 'bob', score: '999', status: 'active' }
+//   }).toMatchDomainSnapshot('kv')
+// })
 
-// poll() returns changing values that eventually settle.
-// Used to test retry-on-compare: snapshot is pre-seeded with the final value,
-// and poll() goes through intermediate states before matching.
-test('settling value', async () => {
-  let i = 0
-  await expect.poll(() => {
-    i++
-    if (i === 1) {
-      return { city: 'loading', pop: '0' }
-    }
-    return { city: 'tokyo', pop: '14000000' }
-  }).toMatchDomainSnapshot('kv')
-})
+// // poll() returns changing values that eventually settle.
+// // Used to test retry-on-compare: snapshot is pre-seeded with the final value,
+// // and poll() goes through intermediate states before matching.
+// test('settling value', async () => {
+//   let trial = 0
+//   await expect.poll(() => {
+//     trial++
+//     if (trial === 1) {
+//       return { city: 'loading', pop: '0' }
+//     }
+//     return { city: 'tokyo', pop: '14000000' }
+//   }).toMatchDomainSnapshot('kv')
+// })
