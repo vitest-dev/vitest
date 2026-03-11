@@ -1,4 +1,4 @@
-import type { DomainSnapshotAdapter } from './domain'
+import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -55,6 +55,12 @@ interface AssertDomainOptions<Options = unknown> extends Omit<AssertOptions, 're
   received: unknown
   adapter: DomainSnapshotAdapter<any, any, Options>
   adapterOptions?: Options
+}
+
+interface AssertDomainPollOptions<Options = unknown> extends Omit<AssertDomainOptions<Options>, 'received'> {
+  poll: () => Promise<unknown> | unknown
+  timeout?: number
+  interval?: number
 }
 
 export interface SnapshotClientOptions {
@@ -217,6 +223,119 @@ export class SnapshotClient {
       isEqual: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot, context, adapterOptions)
         return adapter.match(captured, parsed, context, adapterOptions)
+      },
+    })
+
+    if (!pass) {
+      throw createMismatchError(
+        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        snapshotState.expand,
+        actual?.trim(),
+        expected?.trim(),
+      )
+    }
+  }
+
+  // TODO: how to resue expect.poll logic?
+  async assertDomainWithRetry<Options = unknown>(options: AssertDomainPollOptions<Options>): Promise<void> {
+    const {
+      poll,
+      filepath,
+      name,
+      testId = name,
+      message,
+      adapter,
+      adapterOptions,
+      isInline = false,
+      inlineSnapshot,
+      error,
+      timeout = 1000,
+      interval = 50,
+    } = options
+
+    if (!filepath) {
+      throw new Error('Snapshot cannot be used outside of test')
+    }
+
+    const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
+    const context = { filepath, name, testId }
+
+    // Probe: read existing snapshot without mutating state
+    const { expected: existingSnapshot, updateSnapshot } = snapshotState.probe(testName, {
+      isInline,
+      inlineSnapshot,
+    })
+
+    const hasSnapshot = existingSnapshot != null && existingSnapshot.length > 0
+    const shouldRetryMatch = hasSnapshot && updateSnapshot !== 'all'
+
+    let lastCaptured: any
+    let lastRendered: string | undefined
+    let lastResult: DomainMatchResult | undefined
+
+    if (shouldRetryMatch) {
+      // Parse expected once — it doesn't change between retries
+      const parsedExpected = adapter.parseExpected(existingSnapshot!, context, adapterOptions)
+      const deadline = Date.now() + timeout
+
+      // Retry loop: capture + match, no state mutation
+      while (true) {
+        try {
+          const received = await poll()
+          lastCaptured = adapter.capture(received, context, adapterOptions)
+          lastRendered = adapter.render(lastCaptured, context, adapterOptions)
+          lastResult = adapter.match(lastCaptured, parsedExpected, context, adapterOptions)
+          if (lastResult.pass) {
+            break
+          }
+        }
+        catch {
+          // poll() threw — value not ready, keep retrying
+        }
+
+        if (Date.now() >= deadline) {
+          break
+        }
+        await new Promise(r => setTimeout(r, interval))
+      }
+    }
+    else {
+      // No match retry, but still retry poll() until it succeeds.
+      // The value may not be available yet (e.g. element doesn't exist).
+      const deadline = Date.now() + timeout
+      while (true) {
+        try {
+          const received = await poll()
+          lastCaptured = adapter.capture(received, context, adapterOptions)
+          lastRendered = adapter.render(lastCaptured, context, adapterOptions)
+          break
+        }
+        catch (e) {
+          if (Date.now() >= deadline) {
+            throw e
+          }
+          await new Promise(r => setTimeout(r, interval))
+        }
+      }
+    }
+
+    // Commit: single matchDomain call
+    const { actual, expected, key, pass } = snapshotState.matchDomain({
+      testId,
+      testName,
+      received: lastRendered!,
+      isInline,
+      inlineSnapshot,
+      error,
+      isEqual: (snapshot) => {
+        // If we already have a result from the probe loop, return it
+        if (lastResult) {
+          return lastResult
+        }
+        // Otherwise (no-retry path), compare now
+        const parsed = adapter.parseExpected(snapshot, context, adapterOptions)
+        return adapter.match(lastCaptured, parsed, context, adapterOptions)
       },
     })
 

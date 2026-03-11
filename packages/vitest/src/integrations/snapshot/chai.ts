@@ -233,7 +233,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         throw new Error('toMatchDomainSnapshot cannot be used with "not"')
       }
       const test = getTest('toMatchDomainSnapshot', this)
-      const expected = utils.flag(this, 'object')
       const errorMessage = utils.flag(this, 'message')
 
       if (typeof domain !== 'string' || !domain) {
@@ -249,6 +248,23 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
       }
 
+      // Detect poll context — use retry-aware path
+      const pollFn = utils.flag(this, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
+      if (pollFn) {
+        utils.flag(this, '_poll.assert_once', true)
+        return getSnapshotClient().assertDomainWithRetry({
+          poll: pollFn,
+          adapter,
+          message,
+          isInline: false,
+          errorMessage,
+          timeout: utils.flag(this, '_poll.timeout') as number | undefined,
+          interval: utils.flag(this, '_poll.interval') as number | undefined,
+          ...getTestNames(test),
+        })
+      }
+
+      const expected = utils.flag(this, 'object')
       getSnapshotClient().assertDomain({
         received: expected,
         adapter,

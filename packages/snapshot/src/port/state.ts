@@ -43,6 +43,11 @@ interface SnapshotReturnOptions {
   pass: boolean
 }
 
+export interface SnapshotProbeResult {
+  expected: string | undefined
+  updateSnapshot: SnapshotUpdateState
+}
+
 interface SaveStatus {
   deleted: boolean
   saved: boolean
@@ -452,6 +457,26 @@ export default class SnapshotState {
           pass: true,
         }
       }
+    }
+  }
+
+  probe(testName: string, options?: { isInline?: boolean; inlineSnapshot?: string }): SnapshotProbeResult {
+    // Peek at the counter WITHOUT incrementing — compute the same key
+    // that the subsequent match/matchDomain call will use.
+    const count = this._counters.get(testName) + 1
+    const key = testNameToKey(testName, count)
+
+    let expected: string | undefined
+    if (options?.isInline) {
+      expected = options.inlineSnapshot
+    }
+    else {
+      expected = this._snapshotData[key]
+    }
+
+    return {
+      expected,
+      updateSnapshot: this._updateSnapshot,
     }
   }
 

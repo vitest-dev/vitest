@@ -1,12 +1,6 @@
 import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 import { expect, test } from 'vitest'
 
-// Key-value domain adapter: each snapshot is multiple lines of `key=value`.
-// Values can be literal strings or `/regex/` patterns in the stored snapshot.
-// On match, each line is checked independently — regex lines use RegExp.test().
-// On partial match, `mergedExpected` preserves regex for matched lines
-// and substitutes literal rendered values for unmatched lines.
-
 interface KVCaptured {
   entries: { key: string; value: string }[]
 }
@@ -65,7 +59,6 @@ const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
       if (exp.value instanceof RegExp) {
         const patternStr = `${exp.key}=/${exp.value.source}/`
         if (exp.value.test(cap.value)) {
-          // regex matched — both sides show pattern form (cancels in diff)
           mergedLines.push(patternStr)
           actualLines.push(patternStr)
           expectedLines.push(patternStr)
@@ -104,17 +97,35 @@ const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
 
 expect.addSnapshotDomain(kvAdapter)
 
-test('all literal', () => {
-  let i = 0;
-  expect.poll(async () => {
-    i++;
+// poll() throws on first call, then returns stable value
+test('poll retries until value available', async () => {
+  let i = 0
+  await expect.poll(() => {
+    i++
     if (i === 1) {
-      throw new Error('simulated failure')
+      throw new Error('not ready yet')
     }
     return { name: 'alice', age: '30' }
   }).toMatchDomainSnapshot('kv')
 })
 
-// test('with regex', () => {
-//   expect({ name: 'bob', score: '999', status: 'active' }).toMatchDomainSnapshot('kv')
-// })
+// poll() returns the final value immediately
+test('stable value', async () => {
+  await expect.poll(() => {
+    return { name: 'bob', score: '999', status: 'active' }
+  }).toMatchDomainSnapshot('kv')
+})
+
+// poll() returns changing values that eventually settle.
+// Used to test retry-on-compare: snapshot is pre-seeded with the final value,
+// and poll() goes through intermediate states before matching.
+test('settling value', async () => {
+  let i = 0
+  await expect.poll(() => {
+    i++
+    if (i === 1) {
+      return { city: 'loading', pop: '0' }
+    }
+    return { city: 'tokyo', pop: '14000000' }
+  }).toMatchDomainSnapshot('kv')
+})

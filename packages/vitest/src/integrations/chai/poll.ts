@@ -59,6 +59,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    chai.util.flag(assertion, '_poll.fn', fn)
+    chai.util.flag(assertion, '_poll.timeout', timeout)
+    chai.util.flag(assertion, '_poll.interval', interval)
     const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
