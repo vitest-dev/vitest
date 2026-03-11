@@ -275,15 +275,31 @@ export class SnapshotClient {
     let lastResult: DomainMatchResult | undefined
     let lastPollError: unknown
 
+    const TIMEOUT = Symbol('timeout')
+    const deadline = Date.now() + timeout
+
+    function raceTimeout<T>(promise: Promise<T>): Promise<T | typeof TIMEOUT> {
+      const remaining = deadline - Date.now()
+      if (remaining <= 0) {
+        return Promise.resolve(TIMEOUT)
+      }
+      return Promise.race([
+        promise,
+        new Promise<typeof TIMEOUT>(r => setTimeout(() => r(TIMEOUT), remaining)),
+      ])
+    }
+
     if (shouldRetryMatch) {
       // Parse expected once — it doesn't change between retries
       const parsedExpected = adapter.parseExpected(existingSnapshot!, context, adapterOptions)
-      const deadline = Date.now() + timeout
 
       // Retry loop: capture + match, no state mutation
       while (true) {
         try {
-          const received = await poll()
+          const received = await raceTimeout(Promise.resolve(poll()))
+          if (received === TIMEOUT) {
+            break
+          }
           lastCaptured = adapter.capture(received, context, adapterOptions)
           lastRendered = adapter.render(lastCaptured, context, adapterOptions)
           lastResult = adapter.match(lastCaptured, parsedExpected, context, adapterOptions)
@@ -305,10 +321,12 @@ export class SnapshotClient {
     else {
       // No match retry, but still retry poll() until it succeeds.
       // The value may not be available yet (e.g. element doesn't exist).
-      const deadline = Date.now() + timeout
       while (true) {
         try {
-          const received = await poll()
+          const received = await raceTimeout(Promise.resolve(poll()))
+          if (received === TIMEOUT) {
+            throw new Error('poll() timed out')
+          }
           lastCaptured = adapter.capture(received, context, adapterOptions)
           lastRendered = adapter.render(lastCaptured, context, adapterOptions)
           break

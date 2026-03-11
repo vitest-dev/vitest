@@ -96,6 +96,24 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
           const promise = async () => {
+            chai.util.flag(assertion, '_name', key)
+
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+
+            // Snapshot matchers own their entire poll lifecycle (probe/commit split).
+            // They handle timeout, retry, and poll() internally via assertDomainWithRetry.
+            if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
+              try {
+                const output = await assertionFunction.call(assertion, ...args)
+                await onSettled?.({ assertion, status: 'pass' })
+                return output
+              }
+              catch (err) {
+                await onSettled?.({ assertion, status: 'fail' })
+                throwWithCause(err, STACK_TRACE_ERROR)
+              }
+            }
+
             const { setTimeout, clearTimeout } = getSafeTimers()
 
             let executionPhase: 'fn' | 'assertion' = 'fn'
@@ -105,27 +123,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               hasTimedOut = true
             }, timeout)
 
-            chai.util.flag(assertion, '_name', key)
-
-            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
-
             try {
-              // Snapshot matchers own their entire poll lifecycle.
-              // Skip fn() and retry — go straight to the matcher, which calls poll() internally.
-              // TODO: consolidate later
-              if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
-                try {
-                  executionPhase = 'assertion'
-                  const output = await assertionFunction.call(assertion, ...args)
-                  await onSettled?.({ assertion, status: 'pass' })
-                  return output
-                }
-                catch (err) {
-                  await onSettled?.({ assertion, status: 'fail' })
-                  throwWithCause(err, STACK_TRACE_ERROR)
-                }
-              }
-
               while (true) {
                 const isLastAttempt = hasTimedOut
 

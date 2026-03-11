@@ -223,7 +223,7 @@ test('domain snapshot with poll', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > stable
-    TypeError: kv adapter expects a plain object
+    Error: poll() never returned a value within the timeout
      ❯ basic.test.ts:136:24
         134|     return new Promise(r => setTimeout(r, 1000))
         135|     return { name: 'a', age: '23' }
@@ -243,7 +243,7 @@ test('domain snapshot with poll', async () => {
     Object {
       "basic.test.ts": Object {
         "stable": Array [
-          "kv adapter expects a plain object",
+          "poll() never returned a value within the timeout",
         ],
         "throw then stable": "passed",
         "unstable": "passed",
