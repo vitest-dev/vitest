@@ -107,8 +107,8 @@ Domain snapshots bypass the regular `serialize()` / `prettyFormat()` path entire
 interface DomainMatchResult {
   pass: boolean
   message?: string
-  expected?: string   // adapter-adjusted expected for diff
-  actual?: string     // adapter-adjusted actual for diff
+  expected?: string // adapter-adjusted expected for diff
+  actual?: string // adapter-adjusted actual for diff
   mismatches?: Array<{
     path: string
     reason: string
@@ -131,21 +131,40 @@ When a stored snapshot contains semantic patterns:
 
 And the test fails on an unrelated change (say the paragraph text changed), the diff shows every regex token as a mismatch because the rendered actual (`button "User 42"`) differs textually from the pattern (`button /User \d+/`).
 
-### The solution (next step)
+### The solution (next steps)
 
-The adapter's `match()` already traverses both trees and knows which nodes matched (including via regex). It should return adjusted `actual`/`expected` strings in `DomainMatchResult`:
+The adapter's `match()` already traverses both trees and knows which nodes matched (including via regex). It should return adjusted `actual`/`expected` strings in `DomainMatchResult`. This serves **two distinct purposes**:
+
+#### 1. Pattern-preserving updates
+
+When `--update` is used and the adapter provides a greedy match mapping, the **update value** should be a merge of the old template and the new rendered output — not a full overwrite. Nodes where the old regex/pattern matched the new captured value should keep their pattern form; only genuinely changed nodes get their literal rendered value.
+
+Example: stored snapshot has `- button /User \d+/: Profile`. The actual DOM now has `button "User 99"`. The regex matches, so on update the stored snapshot keeps `- button /User \d+/: Profile` instead of replacing it with `- button "User 99": Profile`.
+
+Without this, `--update` destroys hand-edited semantic patterns, which defeats the purpose of domain snapshots supporting richer-than-literal matching.
+
+The mechanism:
 
 1. **Greedy match mapping**: during semantic matching, record which template nodes matched which captured nodes.
-2. **Adjusted actual**: for matched regex/pattern tokens, substitute the actual value with the template token form. Only genuinely mismatched nodes show their real actual value.
-3. **Adjusted expected**: optionally normalize the expected side for cleaner diff alignment.
+2. **Merged rendering**: produce a string that preserves template tokens (regex, wildcards) for matched nodes, and substitutes literal rendered values only for unmatched/new nodes.
+3. The merged string becomes the value written to the snapshot file on update, instead of the raw `rendered` output.
 
-The plumbing change needed in vitest core:
+#### 2. Diff quality on failure
+
+When a test fails, the diff should not show every regex token as a mismatch. The same greedy match mapping can produce adjusted `actual`/`expected` strings where matched regex tokens are substituted so only genuinely mismatched nodes appear as differences.
+
+This is a presentation concern — the match decision stays the same; only the failure output gets cleaner.
+
+#### Plumbing changes needed
+
+Both purposes require the same core change:
 
 - `isEqual` callback (or a replacement) must return the full `DomainMatchResult`, not just `boolean`.
-- `assertDomain` uses `result.actual` / `result.expected` (when provided) instead of raw rendered/stored strings for the error.
-- `matchDomain` needs access to these adjusted strings for the failure return value.
+- `DomainMatchResult` carries `mergedExpected` (pattern-preserving merge for updates) and `actual`/`expected` (adjusted strings for diffs).
+- `matchDomain` uses `mergedExpected` as the stored value on update instead of raw rendered string.
+- `assertDomain` uses `result.actual` / `result.expected` for the error on failure.
 
-This is a presentation improvement, not a matching logic change. The match decision stays the same; only the failure output gets smarter.
+These are separable steps — pattern-preserving updates and diff quality can be implemented independently, but both depend on the greedy match mapping in the adapter.
 
 ## API surface
 
@@ -246,6 +265,8 @@ Match: contain semantics (template children match in order, can skip), deep subt
 
 ### Next
 
+- Greedy match mapping in adapter `match()` — record which template nodes matched which captured nodes
+- Pattern-preserving updates — use merged rendering (keeps matched regex tokens) as the stored value on `--update`, instead of raw rendered output
 - Wire `DomainMatchResult.actual`/`expected` into failure diff path (diff quality)
 - Inline snapshot support (`toMatchDomainInlineSnapshot`)
 - Consider whether `DomainMatchResult.mismatches` should influence reporter output
