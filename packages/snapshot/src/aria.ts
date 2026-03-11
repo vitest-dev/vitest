@@ -574,9 +574,6 @@ export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRole
   },
 
   match(captured, expected): DomainMatchResult {
-    if (typeof expected === 'string') {
-      expected = parseAriaTemplate(expected.trim())
-    }
     const pass = matchAriaTree(captured, expected)
     return {
       pass,

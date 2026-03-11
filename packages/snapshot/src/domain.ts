@@ -31,7 +31,7 @@ export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, O
   ) => Expected
   match: (
     captured: Captured,
-    expected: Expected | string,
+    expected: Expected,
     context: DomainSnapshotContext,
     options?: Options,
   ) => DomainMatchResult

@@ -45,10 +45,6 @@ const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   },
 
   match(captured, expected): DomainMatchResult {
-    if (typeof expected === 'string') {
-      expected = this.parseExpected(expected, {} as any)
-    }
-
     const mergedLines: string[] = []
     const actualLines: string[] = []
     const expectedLines: string[] = []
