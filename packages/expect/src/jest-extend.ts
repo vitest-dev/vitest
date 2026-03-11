@@ -65,7 +65,7 @@ function getMatcherState(
 }
 
 class JestExtendError extends Error {
-  constructor(message: string, public actual?: any, public expected?: any) {
+  constructor(message: string, public actual?: any, public expected?: any, public meta?: object) {
     super(message)
   }
 }
@@ -92,23 +92,23 @@ function JestExtendPlugin(
             && typeof (result as any).then === 'function'
           ) {
             const thenable = result as PromiseLike<SyncExpectationResult>
-            return thenable.then(({ pass, message, actual, expected }) => {
+            return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
                 const errorMessage = customMessage != null
                   ? customMessage
                   : message()
-                throw new JestExtendError(errorMessage, actual, expected)
+                throw new JestExtendError(errorMessage, actual, expected, meta)
               }
             })
           }
 
-          const { pass, message, actual, expected } = result as SyncExpectationResult
+          const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
             const errorMessage = customMessage != null
               ? customMessage
               : message()
-            throw new JestExtendError(errorMessage, actual, expected)
+            throw new JestExtendError(errorMessage, actual, expected, meta)
           }
         }
 
