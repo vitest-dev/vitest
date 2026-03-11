@@ -14,7 +14,9 @@ import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 
-const now = Date.now
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
