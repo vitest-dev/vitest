@@ -263,9 +263,10 @@ Runtime policy: no attempt to align outputs across `jsdom`, `happy-dom`, and bro
 - Key-value toy adapter (`kv`) with regex support, `mergedExpected`, and adjusted `actual`/`expected` — validates pattern-preserving updates and clean diffs
 - ARIA adapter prototype with unit tests (39 tests) and integration tests (6 tests)
 - Integration test (`domain.test.ts`) covering full lifecycle: create → hand-edit regex → pass preserves → partial mismatch → pattern-preserving update
+- Inline snapshot support (`toMatchDomainInlineSnapshot`)
 
 ### TODO
 
-- Inline snapshot support (`toMatchDomainInlineSnapshot`)
 - ARIA adapter: implement greedy match mapping + `mergedExpected` + adjusted `actual`/`expected` (currently only returns `pass`/`message`)
   - Domain-specific sugar matchers (`toMatchAriaSnapshot`)
+  - usable with browser mode helper `expect.element().toMatchAriaSnapshot`
