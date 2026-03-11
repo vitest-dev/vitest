@@ -76,7 +76,7 @@ Key difference from regular snapshots: **comparison is delegated to the adapter*
 Added `matchDomain()` on `SnapshotState` alongside the existing `match()`. It reuses all existing snapshot state machinery (key counters, unchecked tracking, update/add logic, stats) but replaces the comparison step:
 
 - Regular `match()`: serializes received, compares with `===`.
-- `matchDomain()`: takes an `isEqual(existingSnapshot) => boolean` callback. The caller (`assertDomain`) wires this to `adapter.parseExpected` + `adapter.match`.
+- `matchDomain()`: takes an `isEqual(existingSnapshot) => DomainMatchResult` callback. The caller (`assertDomain`) wires this to `adapter.parseExpected` + `adapter.match`.
 
 Critical behavior difference: **on pass, `matchDomain` does not overwrite the stored snapshot**. Regular snapshots refresh the stored value to fix escaping drift. Domain snapshots must preserve hand-edited patterns (regex, wildcards) that differ from the rendered output.
 
@@ -91,8 +91,7 @@ assertDomain(options):
     received: rendered,
     isEqual: (existingSnapshot) => {
       parsed = adapter.parseExpected(existingSnapshot, context)
-      result = adapter.match(captured, parsed, context)
-      return result.pass
+      return adapter.match(captured, parsed, context)  // returns full DomainMatchResult
     },
   })
 ```
@@ -107,8 +106,9 @@ Domain snapshots bypass the regular `serialize()` / `prettyFormat()` path entire
 interface DomainMatchResult {
   pass: boolean
   message?: string
-  expected?: string // adapter-adjusted expected for diff
-  actual?: string // adapter-adjusted actual for diff
+  expected?: string      // adapter-adjusted expected for diff
+  actual?: string        // adapter-adjusted actual for diff
+  mergedExpected?: string // pattern-preserving merge for updates
   mismatches?: Array<{
     path: string
     reason: string
@@ -118,7 +118,10 @@ interface DomainMatchResult {
 }
 ```
 
-The type is defined but **`expected`/`actual` are not yet wired into the failure path**. Currently on failure, `matchDomain` returns the raw rendered string as `actual` and the raw stored snapshot as `expected`. This produces noisy diffs when the stored snapshot contains regex/pattern tokens.
+`isEqual` returns the full `DomainMatchResult`. `matchDomain` uses it as follows:
+
+- **On update (`!pass`)**: stores `mergedExpected ?? received` — preserving matched patterns instead of overwriting with raw rendered output.
+- **On failure (no update)**: uses `actual`/`expected` from the result if provided, falling back to raw rendered/stored strings.
 
 ### The problem
 
@@ -155,16 +158,16 @@ When a test fails, the diff should not show every regex token as a mismatch. The
 
 This is a presentation concern — the match decision stays the same; only the failure output gets cleaner.
 
-#### Plumbing changes needed
+#### Plumbing (done)
 
-Both purposes require the same core change:
+The core plumbing is implemented:
 
-- `isEqual` callback (or a replacement) must return the full `DomainMatchResult`, not just `boolean`.
+- `isEqual` callback returns the full `DomainMatchResult`, not just `boolean`.
 - `DomainMatchResult` carries `mergedExpected` (pattern-preserving merge for updates) and `actual`/`expected` (adjusted strings for diffs).
 - `matchDomain` uses `mergedExpected` as the stored value on update instead of raw rendered string.
-- `assertDomain` uses `result.actual` / `result.expected` for the error on failure.
+- `matchDomain` uses `actual`/`expected` from the result for failure diff output.
 
-These are separable steps — pattern-preserving updates and diff quality can be implemented independently, but both depend on the greedy match mapping in the adapter.
+Pattern-preserving updates and diff quality are separable at the adapter level — each adapter decides what to put in `mergedExpected` and `actual`/`expected`. The core passes them through.
 
 ## API surface
 
@@ -207,10 +210,16 @@ A prototype ARIA adapter exists as test fixtures (not shipped code) to validate 
 
 ```
 test/snapshots/test/fixtures/domain/
+  basic.test.ts           — key-value adapter (toy domain with regex, mergedExpected)
+
+test/snapshots/test/fixtures/domain-aria/
   aria.ts                 — standalone aria pipeline (no vitest dependency)
   aria.test.ts            — unit tests for capture/render/parse/match
   aria-snapshot.ts         — adapter wiring (imports aria.ts, implements DomainSnapshotAdapter)
   aria-snapshot.test.ts    — integration tests using toMatchDomainSnapshot
+
+test/snapshots/test/
+  domain.test.ts          — integration test: full snapshot lifecycle with pattern-preserving updates
 ```
 
 ### Separation of concerns
@@ -255,19 +264,23 @@ Match: contain semantics (template children match in order, can skip), deep subt
 ### Done
 
 - `DomainSnapshotAdapter` interface with all four methods required
-- `DomainMatchResult` type with `pass`, `message`, `expected`, `actual`, `mismatches`
-- `matchDomain()` on `SnapshotState` — snapshot state management with adapter-delegated comparison
-- `assertDomain()` on `SnapshotClient` — orchestrates capture/render/match flow
+- `DomainMatchResult` type with `pass`, `message`, `expected`, `actual`, `mergedExpected`, `mismatches`
+- `matchDomain()` on `SnapshotState` — adapter-delegated comparison, pattern-preserving updates via `mergedExpected`
+- `assertDomain()` on `SnapshotClient` — orchestrates capture/render/match flow, passes full `DomainMatchResult` through
+- `isEqual` callback returns full `DomainMatchResult` (not just `boolean`)
 - `toMatchDomainSnapshot` matcher wired in chai plugin
 - `expect.addSnapshotDomain()` registration API
-- ARIA adapter prototype with full unit test coverage (33 tests) and integration tests (6 tests)
-- Stored snapshots with hand-edited regex patterns are preserved across runs
+- Stored snapshots with hand-edited regex patterns are preserved on pass (no overwrite)
+- Pattern-preserving updates: on `--update`, `mergedExpected` from adapter used instead of raw rendered output
+- `DomainMatchResult.actual`/`expected` wired into failure diff path
+- Key-value toy adapter (`kv`) with regex support and `mergedExpected` — validates pattern-preserving updates
+- ARIA adapter prototype with unit tests (39 tests) and integration tests (6 tests)
+- Integration test (`domain.test.ts`) covering full lifecycle: create → hand-edit regex → pass preserves → partial mismatch → pattern-preserving update
 
 ### Next
 
-- Greedy match mapping in adapter `match()` — record which template nodes matched which captured nodes
-- Pattern-preserving updates — use merged rendering (keeps matched regex tokens) as the stored value on `--update`, instead of raw rendered output
-- Wire `DomainMatchResult.actual`/`expected` into failure diff path (diff quality)
+- Adapter-side diff quality: populate `DomainMatchResult.actual`/`expected` with adjusted strings so matched regex tokens don't appear as diff noise (plumbing is done, adapters need to use it)
+- ARIA adapter: implement greedy match mapping + `mergedExpected` (currently only returns `pass`/`message`)
 - Inline snapshot support (`toMatchDomainInlineSnapshot`)
 - Consider whether `DomainMatchResult.mismatches` should influence reporter output
 

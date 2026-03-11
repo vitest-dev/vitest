@@ -145,7 +145,7 @@ test('domain snapshot', async () => {
 
     exports[\`with regex 1\`] = \`
     name=bob
-    score=42
+    score=/\\\\d+/
     status=inactive
     \`;
     "

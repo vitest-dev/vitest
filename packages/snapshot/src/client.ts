@@ -210,8 +210,7 @@ export class SnapshotClient {
       received: rendered,
       isEqual: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot, context, adapterOptions)
-        const result = adapter.match(captured, parsed, context, adapterOptions)
-        return result.pass
+        return adapter.match(captured, parsed, context, adapterOptions)
       },
     })
 

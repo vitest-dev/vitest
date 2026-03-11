@@ -475,7 +475,8 @@ export default class SnapshotState {
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted = this._fileExists
 
-    const pass = hasSnapshot ? isEqual(expected) : false
+    const matchResult = hasSnapshot ? isEqual(expected) : undefined
+    const pass = matchResult?.pass ?? false
 
     // Unlike regular match, do NOT overwrite snapshot data on pass.
     // Domain snapshots may contain semantic patterns (e.g. regex)
@@ -494,7 +495,10 @@ export default class SnapshotState {
           else {
             this.added.increment(testId)
           }
-          this._addSnapshot(key, received, { testId })
+          // Use mergedExpected from adapter if available — preserves
+          // matched patterns (e.g. regex) while updating changed parts.
+          const updateValue = matchResult?.mergedExpected ?? received
+          this._addSnapshot(key, updateValue, { testId })
         }
         else {
           this.matched.increment(testId)
@@ -517,10 +521,10 @@ export default class SnapshotState {
       if (!pass) {
         this.unmatched.increment(testId)
         return {
-          actual: removeExtraLineBreaks(received),
+          actual: removeExtraLineBreaks(matchResult?.actual ?? received),
           count,
           expected: expected !== undefined
-            ? removeExtraLineBreaks(expected)
+            ? removeExtraLineBreaks(matchResult?.expected ?? expected)
             : undefined,
           key,
           pass: false,
