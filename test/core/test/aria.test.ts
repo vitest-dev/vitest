@@ -256,7 +256,7 @@ describe('render -> parse roundtrip', () => {
     const tree = capture(html)
     const rendered = renderAriaTree(tree)
     const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template)).toBe(true)
+    expect(matchAriaTree(tree, template).pass).toBe(true)
   })
 })
 
@@ -264,97 +264,347 @@ describe('render -> parse roundtrip', () => {
 // match
 // ---------------------------------------------------------------------------
 
+function match(html: string, template: string) {
+  const r = matchAriaTree(capture(html), parseAriaTemplate(template))
+  return {
+    pass: r.pass,
+    actual: `\n${r.actual}\n`,
+    expected: `\n${r.expected}\n`,
+    mergedExpected: `\n${r.mergedExpected}\n`,
+  }
+}
+
 describe('matchAriaTree', () => {
   test('exact match', () => {
-    const tree = capture('<h1>Hello</h1>')
-    const t = parseAriaTemplate('- heading [level=1]')
-    expect(matchAriaTree(tree, t)).toBe(true)
+    expect(match('<h1>Hello</h1>', '- heading [level=1]')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - heading [level=1]: Hello
+      ",
+        "expected": "
+      - heading [level=1]: Hello
+      ",
+        "mergedExpected": "
+      - heading [level=1]: Hello
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('name match', () => {
-    const tree = capture('<button aria-label="Submit">Go</button>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- button "Submit"'))).toBe(true)
-    expect(matchAriaTree(tree, parseAriaTemplate('- button "Cancel"'))).toBe(false)
+    expect(match(
+      '<button aria-label="Submit">Go</button>',
+      '- button "Submit"',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button "Submit": Go
+      ",
+        "expected": "
+      - button "Submit": Go
+      ",
+        "mergedExpected": "
+      - button "Submit": Go
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('name mismatch', () => {
+    expect(match(
+      '<button aria-label="Submit">Go</button>',
+      '- button "Cancel"',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button "Submit": Go
+      ",
+        "expected": "
+      - button "Submit": Go
+      - button "Cancel"
+      ",
+        "mergedExpected": "
+      - button "Submit": Go
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   test('regex name match', () => {
-    const tree = capture('<button aria-label="User 42">Go</button>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- button /User \\d+/'))).toBe(true)
-    expect(matchAriaTree(tree, parseAriaTemplate('- button /Goodbye/'))).toBe(false)
+    expect(match(
+      '<button aria-label="User 42">Go</button>',
+      '- button /User \\d+/',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button /User \\d+/: Go
+      ",
+        "expected": "
+      - button /User \\d+/: Go
+      ",
+        "mergedExpected": "
+      - button /User \\d+/: Go
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('regex name mismatch', () => {
+    expect(match(
+      '<button aria-label="User 42">Go</button>',
+      '- button /Goodbye/',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button "User 42": Go
+      ",
+        "expected": "
+      - button "User 42": Go
+      - button /Goodbye/
+      ",
+        "mergedExpected": "
+      - button "User 42": Go
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   test('contain semantics — partial children match', () => {
-    const tree = capture(`
+    expect(match(`
       <ul>
         <li>One</li>
         <li>Two</li>
         <li>Three</li>
       </ul>
-    `)
-    // Template only mentions Two — contain mode should find it
-    const t = parseAriaTemplate(`
+    `, `
       - list:
         - listitem: Two
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "expected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "pass": true,
+      }
     `)
-    expect(matchAriaTree(tree, t)).toBe(true)
   })
 
-  test('contain semantics — order matters', () => {
-    const tree = capture(`
+  test('contain semantics — order matters (A before C passes)', () => {
+    expect(match(`
       <ul>
         <li>A</li>
         <li>B</li>
         <li>C</li>
       </ul>
+    `, `
+      - list:
+        - listitem: A
+        - listitem: C
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      ",
+        "expected": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      ",
+        "pass": true,
+      }
     `)
-    // A before C — passes
-    expect(matchAriaTree(tree, parseAriaTemplate(`
-      - list:
-        - listitem: A
-        - listitem: C
-    `))).toBe(true)
-
-    // C before A — fails (order-preserving)
-    expect(matchAriaTree(tree, parseAriaTemplate(`
-      - list:
-        - listitem: C
-        - listitem: A
-    `))).toBe(false)
   })
 
-  test('deep match — finds node in subtree', () => {
-    const tree = capture(`
-      <nav aria-label="Main">
-        <ul>
-          <li><a href="/x">Deep Link</a></li>
-        </ul>
-      </nav>
+  test('contain semantics — order matters (C before A fails)', () => {
+    expect(match(`
+      <ul>
+        <li>A</li>
+        <li>B</li>
+        <li>C</li>
+      </ul>
+    `, `
+      - list:
+        - listitem: C
+        - listitem: A
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      ",
+        "expected": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      - list:
+        - listitem: C
+        - listitem: A
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: A
+        - listitem: B
+        - listitem: C
+      ",
+        "pass": false,
+      }
     `)
-    // Match the link directly even though it's deeply nested
-    const t = parseAriaTemplate('- link: Deep Link')
-    expect(matchAriaTree(tree, t)).toBe(true)
   })
 
   test('attribute match — checked', () => {
-    const tree = capture('<div role="checkbox" aria-checked="true" aria-label="A"></div>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- checkbox "A" [checked]'))).toBe(true)
-    expect(matchAriaTree(tree, parseAriaTemplate('- checkbox "A"'))).toBe(true) // no constraint = ok
+    expect(match(
+      '<div role="checkbox" aria-checked="true" aria-label="A"></div>',
+      '- checkbox "A" [checked]',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - checkbox "A" [checked]
+      ",
+        "expected": "
+      - checkbox "A" [checked]
+      ",
+        "mergedExpected": "
+      - checkbox "A" [checked]
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — wrong level', () => {
-    const tree = capture('<h2>Title</h2>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- heading [level=2]'))).toBe(true)
-    expect(matchAriaTree(tree, parseAriaTemplate('- heading [level=1]'))).toBe(false)
+    expect(match('<h2>Title</h2>', '- heading [level=1]')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - heading [level=2]: Title
+      ",
+        "expected": "
+      - heading [level=2]: Title
+      - heading [level=1]
+      ",
+        "mergedExpected": "
+      - heading [level=2]: Title
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   test('role mismatch', () => {
-    const tree = capture('<button>Click</button>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- link'))).toBe(false)
+    expect(match('<button>Click</button>', '- link')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button: Click
+      ",
+        "expected": "
+      - button: Click
+      - link
+      ",
+        "mergedExpected": "
+      - button: Click
+      ",
+        "pass": false,
+      }
+    `)
   })
 
-  test('regex text child', () => {
-    const tree = capture('<p>You have 7 notifications</p>')
-    expect(matchAriaTree(tree, parseAriaTemplate('- paragraph: /You have \\d+ notifications/'))).toBe(true)
-    expect(matchAriaTree(tree, parseAriaTemplate('- paragraph: /\\d+ errors/'))).toBe(false)
+  test('regex text child match', () => {
+    expect(match(
+      '<p>You have 7 notifications</p>',
+      '- paragraph: /You have \\d+ notifications/',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - paragraph: /You have \\d+ notifications/
+      ",
+        "expected": "
+      - paragraph: /You have \\d+ notifications/
+      ",
+        "mergedExpected": "
+      - paragraph: /You have \\d+ notifications/
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('regex text child mismatch', () => {
+    expect(match(
+      '<p>You have 7 notifications</p>',
+      '- paragraph: /\\d+ errors/',
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - paragraph: You have 7 notifications
+      ",
+        "expected": "
+      - paragraph: You have 7 notifications
+      - paragraph: /\\d+ errors/
+      ",
+        "mergedExpected": "
+      - paragraph: You have 7 notifications
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
+  test('merge preserves regex name, updates mismatched text', () => {
+    expect(match(`
+      <button aria-label="User 99">Profile</button>
+      <p>You have 3 messages</p>
+    `, `
+      - button /User \\d+/: Profile
+      - paragraph: You have 7 notifications
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button /User \\d+/: Profile
+      - paragraph: You have 3 messages
+      ",
+        "expected": "
+      - button /User \\d+/: Profile
+      - paragraph: You have 3 messages
+      - paragraph: You have 7 notifications
+      ",
+        "mergedExpected": "
+      - button /User \\d+/: Profile
+      - paragraph: You have 3 messages
+      ",
+        "pass": false,
+      }
+    `)
   })
 })

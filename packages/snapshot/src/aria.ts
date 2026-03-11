@@ -467,6 +467,13 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
 // match – AriaNode tree vs AriaTemplateNode tree
 // ---------------------------------------------------------------------------
 
+export interface MatchAriaResult {
+  pass: boolean
+  actual: string
+  expected: string
+  mergedExpected: string
+}
+
 function matchesText(actual: string, template: string | RegExp): boolean {
   if (typeof template === 'string') {
     return actual === template
@@ -543,16 +550,328 @@ function containsList(children: (AriaNode | string)[], templates: AriaTemplateNo
   return true
 }
 
-export function matchAriaTree(root: AriaNode, template: AriaTemplateNode): boolean {
-  if (matchesNode(root, template)) {
-    return true
+// --- Detailed match with merge ---
+
+function formatName(name: string | RegExp): string {
+  if (name instanceof RegExp) {
+    return `/${name.source}/`
   }
-  for (const child of root.children) {
-    if (typeof child !== 'string' && matchAriaTree(child, template)) {
-      return true
+  return JSON.stringify(name)
+}
+
+function renderKey(node: AriaNode, nameOverride?: string | RegExp): string {
+  let key = node.role
+  const name = nameOverride !== undefined ? nameOverride : node.name
+  if (name) {
+    key += ` ${typeof name === 'string' ? JSON.stringify(name) : formatName(name)}`
+  }
+  if (node.level) {
+    key += ` [level=${node.level}]`
+  }
+  if (node.checked === true) {
+    key += ' [checked]'
+  }
+  if (node.checked === 'mixed') {
+    key += ' [checked=mixed]'
+  }
+  if (node.disabled) {
+    key += ' [disabled]'
+  }
+  if (node.expanded === true) {
+    key += ' [expanded]'
+  }
+  if (node.expanded === false) {
+    key += ' [expanded=false]'
+  }
+  if (node.pressed === true) {
+    key += ' [pressed]'
+  }
+  if (node.pressed === 'mixed') {
+    key += ' [pressed=mixed]'
+  }
+  if (node.selected) {
+    key += ' [selected]'
+  }
+  return key
+}
+
+function renderTemplateKey(tmpl: AriaTemplateRoleNode): string {
+  let key = tmpl.role
+  if (tmpl.name !== undefined) {
+    key += ` ${formatName(tmpl.name)}`
+  }
+  if (tmpl.level) {
+    key += ` [level=${tmpl.level}]`
+  }
+  if (tmpl.checked === true) {
+    key += ' [checked]'
+  }
+  if (tmpl.checked === 'mixed') {
+    key += ' [checked=mixed]'
+  }
+  if (tmpl.disabled) {
+    key += ' [disabled]'
+  }
+  if (tmpl.expanded === true) {
+    key += ' [expanded]'
+  }
+  if (tmpl.expanded === false) {
+    key += ' [expanded=false]'
+  }
+  if (tmpl.pressed === true) {
+    key += ' [pressed]'
+  }
+  if (tmpl.pressed === 'mixed') {
+    key += ' [pressed=mixed]'
+  }
+  if (tmpl.selected) {
+    key += ' [selected]'
+  }
+  return key
+}
+
+function formatText(text: string | RegExp): string {
+  if (text instanceof RegExp) {
+    return `/${text.source}/`
+  }
+  return text
+}
+
+interface MergeLines {
+  actual: string[]
+  expected: string[]
+  merged: string[]
+  pass: boolean
+}
+
+function mergeChildLists(
+  children: (AriaNode | string)[],
+  templates: AriaTemplateNode[],
+  indent: string,
+): MergeLines {
+  const actual: string[] = []
+  const expected: string[] = []
+  const merged: string[] = []
+  let allPass = true
+
+  // Greedy pairing: walk through captured children, consume template nodes in order
+  let ti = 0
+  for (const child of children) {
+    if (ti < templates.length && matchesNode(child, templates[ti])) {
+      // Paired — detailed merge
+      const r = mergeNode(child, templates[ti], indent)
+      actual.push(...r.actual)
+      expected.push(...r.expected)
+      merged.push(...r.merged)
+      if (!r.pass) {
+        allPass = false
+      }
+      ti++
+    }
+    else {
+      // Unpaired captured child — render normally in actual/merged
+      const rendered: string[] = []
+      if (typeof child === 'string') {
+        rendered.push(`${indent}- text: ${child}`)
+      }
+      else {
+        renderNode(child, indent, rendered)
+      }
+      actual.push(...rendered)
+      expected.push(...rendered)
+      merged.push(...rendered)
     }
   }
-  return false
+
+  // Remaining unmatched template nodes — they're expected but missing
+  while (ti < templates.length) {
+    allPass = false
+    const tmpl = templates[ti]
+    if (tmpl.kind === 'text') {
+      expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
+    }
+    else {
+      const tmplLines: string[] = []
+      renderTemplateNode(tmpl, indent, tmplLines)
+      expected.push(...tmplLines)
+    }
+    ti++
+  }
+
+  return { actual, expected, merged, pass: allPass }
+}
+
+function renderTemplateNode(tmpl: AriaTemplateRoleNode, indent: string, lines: string[]): void {
+  const key = renderTemplateKey(tmpl)
+  const children = tmpl.children || []
+
+  if (children.length === 0) {
+    lines.push(`${indent}- ${key}`)
+    return
+  }
+  if (children.length === 1 && children[0].kind === 'text') {
+    lines.push(`${indent}- ${key}: ${formatText(children[0].text)}`)
+    return
+  }
+  lines.push(`${indent}- ${key}:`)
+  for (const child of children) {
+    if (child.kind === 'text') {
+      lines.push(`${indent}  - text: ${formatText(child.text)}`)
+    }
+    else {
+      renderTemplateNode(child, `${indent}  `, lines)
+    }
+  }
+}
+
+function mergeNode(
+  node: AriaNode | string,
+  template: AriaTemplateNode,
+  indent: string,
+): MergeLines {
+  // Text node
+  if (typeof node === 'string' && template.kind === 'text') {
+    const matched = matchesText(node, template.text)
+    if (matched && template.text instanceof RegExp) {
+      // Regex matched — show pattern form in all three (cancels in diff)
+      const patternStr = `${indent}- text: ${formatText(template.text)}`
+      return { actual: [patternStr], expected: [patternStr], merged: [patternStr], pass: true }
+    }
+    if (matched) {
+      const line = `${indent}- text: ${node}`
+      return { actual: [line], expected: [line], merged: [line], pass: true }
+    }
+    return {
+      actual: [`${indent}- text: ${node}`],
+      expected: [`${indent}- text: ${formatText(template.text)}`],
+      merged: [`${indent}- text: ${node}`],
+      pass: false,
+    }
+  }
+
+  if (typeof node === 'string' || template.kind !== 'role') {
+    // Shouldn't happen if matchesNode passed, but handle gracefully
+    const actualLine = typeof node === 'string'
+      ? `${indent}- text: ${node}`
+      : (() => { const l: string[] = []; renderNode(node, indent, l); return l.join('\n') })()
+    return { actual: [actualLine], expected: [], merged: [actualLine], pass: false }
+  }
+
+  // Role node — determine the name to show
+  let namePass = true
+  let mergedName: string | RegExp = node.name
+  if (template.name !== undefined) {
+    if (template.name instanceof RegExp) {
+      if (template.name.test(node.name)) {
+        // Regex matched — use pattern form in actual/expected (cancels in diff), keep pattern in merged
+        mergedName = template.name
+      }
+      else {
+        namePass = false
+      }
+    }
+    else {
+      if (template.name !== node.name) {
+        namePass = false
+      }
+    }
+  }
+
+  const attrPass = (template.level === undefined || template.level === node.level)
+    && (template.checked === undefined || template.checked === node.checked)
+    && (template.disabled === undefined || template.disabled === node.disabled)
+    && (template.expanded === undefined || template.expanded === node.expanded)
+    && (template.pressed === undefined || template.pressed === node.pressed)
+    && (template.selected === undefined || template.selected === node.selected)
+
+  // Build the key line for each output
+  // When name regex matched, use pattern form in actual too (so it cancels in diff)
+  const actualKey = namePass && template.name instanceof RegExp
+    ? renderKey(node, template.name)
+    : renderKey(node)
+  const expectedKey = renderTemplateKey(template)
+  const mergedKey = renderKey(node, mergedName)
+
+  // Recurse into children
+  const childResult = mergeChildLists(
+    node.children,
+    template.children || [],
+    `${indent}  `,
+  )
+
+  const pass = namePass && attrPass && childResult.pass
+
+  const actual: string[] = []
+  const expected: string[] = []
+  const merged: string[] = []
+
+  const hasActualChildren = childResult.actual.length > 0
+  const hasExpectedChildren = childResult.expected.length > 0
+  const hasMergedChildren = childResult.merged.length > 0
+
+  if (!hasActualChildren) {
+    actual.push(`${indent}- ${actualKey}`)
+  }
+  else if (childResult.actual.length === 1 && childResult.actual[0].trimStart().startsWith('- text: ')) {
+    const text = childResult.actual[0].trimStart().slice('- text: '.length)
+    actual.push(`${indent}- ${actualKey}: ${text}`)
+  }
+  else {
+    actual.push(`${indent}- ${actualKey}:`)
+    actual.push(...childResult.actual)
+  }
+
+  if (!hasExpectedChildren) {
+    expected.push(`${indent}- ${expectedKey}`)
+  }
+  else if (childResult.expected.length === 1 && childResult.expected[0].trimStart().startsWith('- text: ')) {
+    const text = childResult.expected[0].trimStart().slice('- text: '.length)
+    expected.push(`${indent}- ${expectedKey}: ${text}`)
+  }
+  else {
+    expected.push(`${indent}- ${expectedKey}:`)
+    expected.push(...childResult.expected)
+  }
+
+  if (!hasMergedChildren) {
+    merged.push(`${indent}- ${mergedKey}`)
+  }
+  else if (childResult.merged.length === 1 && childResult.merged[0].trimStart().startsWith('- text: ')) {
+    const text = childResult.merged[0].trimStart().slice('- text: '.length)
+    merged.push(`${indent}- ${mergedKey}: ${text}`)
+  }
+  else {
+    merged.push(`${indent}- ${mergedKey}:`)
+    merged.push(...childResult.merged)
+  }
+
+  return { actual, expected, merged, pass }
+}
+
+export function matchAriaTree(root: AriaNode, template: AriaTemplateNode): MatchAriaResult {
+  // The template is always a fragment at top level
+  if (template.kind !== 'role') {
+    const rendered = renderAriaTree(root)
+    return {
+      pass: false,
+      actual: rendered,
+      expected: formatText((template as AriaTemplateTextNode).text),
+      mergedExpected: rendered,
+    }
+  }
+
+  const result = mergeChildLists(
+    root.role === 'fragment' ? root.children : [root],
+    template.role === 'fragment' ? (template.children || []) : [template],
+    '',
+  )
+
+  return {
+    pass: result.pass,
+    actual: result.actual.join('\n'),
+    expected: result.expected.join('\n'),
+    mergedExpected: result.merged.join('\n'),
+  }
 }
 
 export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRoleNode> = {
@@ -574,10 +893,13 @@ export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRole
   },
 
   match(captured, expected): DomainMatchResult {
-    const pass = matchAriaTree(captured, expected)
+    const result = matchAriaTree(captured, expected)
     return {
-      pass,
-      message: pass ? undefined : 'ARIA tree does not match expected template',
+      pass: result.pass,
+      message: result.pass ? undefined : 'ARIA tree does not match expected template',
+      actual: `\n${result.actual}\n`,
+      expected: `\n${result.expected}\n`,
+      mergedExpected: `\n${result.mergedExpected}\n`,
     }
   },
 }
