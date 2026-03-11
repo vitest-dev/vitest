@@ -156,7 +156,7 @@ When `isInline: true`:
 
 #### 5. Type declarations (`global.ts`)
 
-```ts
+```
 toMatchDomainInlineSnapshot(snapshot?: string, domain?: string, message?: string): T
 ```
 

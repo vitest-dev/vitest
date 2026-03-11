@@ -184,7 +184,7 @@ Same mechanical change as was done for `toMatchDomainInlineSnapshot`.
 
 In `packages/vitest/src/types/global.ts`, add to `Assertion<T>`:
 
-```ts
+```
 toMatchAriaSnapshot: () => void
 toMatchAriaInlineSnapshot: (snapshot?: string) => void
 ```

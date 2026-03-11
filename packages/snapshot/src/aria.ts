@@ -789,7 +789,11 @@ function mergeNode(
     // Shouldn't happen if matchesNode passed, but handle gracefully
     const actualLine = typeof node === 'string'
       ? `${indent}- text: ${node}`
-      : (() => { const l: string[] = []; renderNode(node, indent, l); return l.join('\n') })()
+      : (() => {
+          const l: string[] = []
+          renderNode(node, indent, l)
+          return l.join('\n')
+        })()
     return { actual: [actualLine], expected: [], merged: [actualLine], pass: false }
   }
 
