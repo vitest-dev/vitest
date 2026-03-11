@@ -127,24 +127,37 @@ expect.addSnapshotDomain(kvAdapter)
 //    run with --update, verify mergedExpected preserves matched patterns
 //    (tested via integration test editFile + runVitest)
 
-test('throw then pass', async () => {
+test('stable', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++;
+    // --- STABLE TEST POLL ---
+    return { name: 'a', age: '23' }
+  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(1)
+})
+
+test('throw then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    if (trial === 1) {
+    if (trial <= 1) {
       throw new Error(`Fail at ${trial}`)
     }
-    return { name: 'alice', age: '30' }
+    return { name: 'b', age: '23' }
   }).toMatchDomainSnapshot('kv')
   expect(trial).toBe(2)
 })
 
-// // poll() returns the final value immediately
-// test('stable value', async () => {
-//   await expect.poll(() => {
-//     return { name: 'bob', score: '999', status: 'active' }
-//   }).toMatchDomainSnapshot('kv')
-// })
+test('unstable', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    return { name: 'c', __UNSTABLE_TRIAL__: trial }
+  }).toMatchDomainSnapshot('kv')
+})
+
+// TODO: keep throwing
 
 // // poll() returns changing values that eventually settle.
 // // Used to test retry-on-compare: snapshot is pre-seeded with the final value,

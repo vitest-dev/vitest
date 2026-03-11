@@ -5,112 +5,227 @@ import { editFile, runVitest } from '../../test-utils'
 
 test('domain snapshot with poll', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-poll')
+  const testFile = join(root, 'basic.test.ts')
   const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')
 
   // clean slate
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
 
-  // 1. create snapshots (update: "new")
-  //    - "poll retries until value available": poll() throws first, then succeeds
-  //    - "stable value": poll() returns stable value immediately
-  //    - "settling value": poll() returns intermediate value on first run (no match retry on create)
+  // create snapshots
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "poll retries until value available": "passed",
-        "settling value": "passed",
-        "stable value": "passed",
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
       },
     }
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`poll retries until value available 1\`] = \`
-    name=alice
-    age=30
+    exports[\`stable 1\`] = \`
+    name=a
+    age=23
     \`;
 
-    exports[\`settling value 1\`] = \`
-    city=loading
-    pop=0
+    exports[\`throw then stable 1\`] = \`
+    name=b
+    age=23
     \`;
 
-    exports[\`stable value 1\`] = \`
-    name=bob
-    score=999
-    status=active
+    exports[\`unstable 1\`] = \`
+    name=c
+    __UNSTABLE_TRIAL__=1
     \`;
     "
   `)
 
-  // 2. re-run (update: "none") — all pass because stored snapshot matches
-  //    what poll() returns on first successful call
+  // re-run passes with no snapshot changes
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "poll retries until value available": "passed",
-        "settling value": "passed",
-        "stable value": "passed",
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
       },
     }
   `)
 
-  // 3. seed "settling value" snapshot with the FINAL value.
-  //    Now poll() returns intermediates first, but retry loop should keep probing
-  //    until poll() returns the value that matches the stored snapshot.
+  // unstable passes on 3rd try
   editFile(snapshotFile, s => s
-    .replace('city=loading', 'city=tokyo')
-    .replace('pop=0', 'pop=14000000'))
+    .replace('__UNSTABLE_TRIAL__=1', '__UNSTABLE_TRIAL__=3'))
 
-  // 4. re-run (update: "none") — poll() returns intermediates first,
-  //    retry loop keeps probing, eventually poll() returns final value that matches
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "poll retries until value available": "passed",
-        "settling value": "passed",
-        "stable value": "passed",
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
       },
     }
   `)
 
-  // 5. update (update: "all") — captures first successful value, no match retry
+  // snapshots updated with first successful poll value
+  editFile(snapshotFile, s => s
+    .replace('name=b', 'name=b-changed'))
+
+  expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`stable 1\`] = \`
+    name=a
+    age=23
+    \`;
+
+    exports[\`throw then stable 1\`] = \`
+    name=b-changed
+    age=23
+    \`;
+
+    exports[\`unstable 1\`] = \`
+    name=c
+    __UNSTABLE_TRIAL__=3
+    \`;
+    "
+  `)
+
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "poll retries until value available": "passed",
-        "settling value": "passed",
-        "stable value": "passed",
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
       },
     }
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`poll retries until value available 1\`] = \`
-    name=alice
-    age=30
+    exports[\`stable 1\`] = \`
+    name=a
+    age=23
     \`;
 
-    exports[\`settling value 1\`] = \`
-    city=loading
-    pop=0
+    exports[\`throw then stable 1\`] = \`
+    name=b
+    age=23
     \`;
 
-    exports[\`stable value 1\`] = \`
-    name=bob
-    score=999
-    status=active
+    exports[\`unstable 1\`] = \`
+    name=c
+    __UNSTABLE_TRIAL__=1
     \`;
     "
+  `)
+
+  // mismatch all retries
+  editFile(snapshotFile, s => s
+    .replace('name=a\n', 'name=a-changed\n'))
+
+  result = await runVitest({ root, update: 'none' })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > stable
+    Error: Snapshot \`stable 1\` mismatched
+
+    - Expected
+    + Received
+
+    - name=a-changed
+    + name=a
+      age=23
+
+     ❯ basic.test.ts:136:24
+        134|     // --- STABLE TEST POLL ---
+        135|     return { name: 'a', age: '23' }
+        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+           |                        ^
+        137|   expect(trial).toBe(1)
+        138| })
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:132:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "stable": Array [
+          "Snapshot \`stable 1\` mismatched",
+        ],
+        "throw then stable": "passed",
+        "unstable": "passed",
+      },
+    }
+  `)
+
+  // throws all retries
+  editFile(testFile, s => s
+    .replace('// --- STABLE TEST POLL ---', 'throw new Error("STABLE TEST ERROR")'))
+  editFile(snapshotFile, s => s
+    .replace('name=a-changed\n', 'name=a\n'))
+
+  result = await runVitest({ root, update: 'none' })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > stable
+    TypeError: Cannot read properties of undefined (reading 'entries')
+     ❯ basic.test.ts:136:24
+        134|     throw new Error("STABLE TEST ERROR")
+        135|     return { name: 'a', age: '23' }
+        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+           |                        ^
+        137|   expect(trial).toBe(1)
+        138| })
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:132:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "stable": Array [
+          "Cannot read properties of undefined (reading 'entries')",
+        ],
+        "throw then stable": "passed",
+        "unstable": "passed",
+      },
+    }
+  `)
+
+  // TODO: what more?
+  editFile(testFile, s => s
+    .replace('throw new Error("STABLE TEST ERROR")', '// --- STABLE TEST POLL ---'))
+
+  result = await runVitest({ root, update: 'none' })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
+      },
+    }
   `)
 })

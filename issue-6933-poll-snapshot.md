@@ -333,7 +333,7 @@ Test fixture at `test/snapshots/test/fixtures/domain-poll/basic.test.ts` using t
 let counter = 0
 function getState() {
   counter++
-  if (counter < 3) return { name: 'loading', score: 0 }
+  if (counter < 3) { return { name: 'loading', score: 0 } }
   return { name: 'bob', score: 42, status: 'active' }
 }
 
