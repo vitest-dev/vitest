@@ -32,8 +32,8 @@ exports[`navigation with links 1`] = `
 `;
 
 exports[`semantic match with regex in snapshot 1`] = `
-- button /User \\d+/: Profile
-- paragraph: /You have \\d+ notifications/
+- button "User 42": Profile
+- paragraph: You have 7 notifications
 `;
 
 exports[`simple heading and paragraph 1`] = `
