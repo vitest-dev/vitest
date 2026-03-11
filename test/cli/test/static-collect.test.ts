@@ -1046,6 +1046,94 @@ test('collects tags with other options', async () => {
   `)
 })
 
+test('sequential cancels inherited concurrent', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent('concurrent suite', () => {
+      test('inherits concurrent', () => {})
+
+      describe.sequential('sequential nested', () => {
+        test('not concurrent', () => {})
+      })
+
+      describe('regular nested', () => {
+        test('still concurrent', () => {})
+      })
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "inherits concurrent": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > inherits concurrent",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "regular nested": {
+          "still concurrent": {
+            "concurrent": true,
+            "errors": [],
+            "fullName": "concurrent suite > regular nested > still concurrent",
+            "id": "-1732721377_0_2_0",
+            "location": "12:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+        "sequential nested": {
+          "not concurrent": {
+            "errors": [],
+            "fullName": "concurrent suite > sequential nested > not concurrent",
+            "id": "-1732721377_0_1_0",
+            "location": "8:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with sequential modifier', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.sequential('sequential suite', () => {
+      test('test in sequential suite', () => {})
+    })
+
+    test.sequential('sequential test', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "sequential suite": {
+        "test in sequential suite": {
+          "errors": [],
+          "fullName": "sequential suite > test in sequential suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "sequential test": {
+        "errors": [],
+        "fullName": "sequential test",
+        "id": "-1732721377_1",
+        "location": "8:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 test('collects tests with concurrent modifier in different order', async () => {
   const testModule = await collectTests(`
     import { test, describe } from 'vitest'

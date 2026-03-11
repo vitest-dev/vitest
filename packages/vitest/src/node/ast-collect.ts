@@ -46,6 +46,7 @@ interface LocalCallDefinition {
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
   concurrent: boolean
+  sequential: boolean
   tags: string[]
 }
 
@@ -167,6 +168,7 @@ function astParseFile(filepath: string, code: string) {
         }
       }
       let isConcurrent = properties.includes('concurrent')
+      let isSequential = properties.includes('sequential')
 
       let start: number
       const end = node.end
@@ -249,6 +251,9 @@ function astParseFile(filepath: string, code: string) {
             else if (keyName === 'concurrent') {
               isConcurrent = true
             }
+            else if (keyName === 'sequential') {
+              isSequential = true
+            }
           }
         }
       }
@@ -263,6 +268,7 @@ function astParseFile(filepath: string, code: string) {
         task: null as any,
         dynamic: isDynamicEach,
         concurrent: isConcurrent,
+        sequential: isSequential,
         tags,
       } satisfies LocalCallDefinition)
     },
@@ -405,7 +411,10 @@ function createFileTask(
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
       const taskTags = unique([...parentTags, ...definition.tags])
-      const concurrent = definition.concurrent || latestSuite.concurrent || undefined
+      // resolve concurrent/sequential: sequential cancels inherited concurrent
+      const concurrent = definition.sequential
+        ? undefined
+        : (definition.concurrent || latestSuite.concurrent || undefined)
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
