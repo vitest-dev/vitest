@@ -17,10 +17,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
+        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -29,35 +26,12 @@ test('aria snapshot', async () => {
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
-
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
+    exports[\`nested structure 1\`] = \`
     - main:
       - heading [level=1]: Dashboard
       - navigation "Actions":
         - button: Save
         - button: Cancel
-    \`;
-
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
-
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
@@ -84,10 +58,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
+        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -96,35 +67,12 @@ test('aria snapshot', async () => {
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
-
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
+    exports[\`nested structure 1\`] = \`
     - main:
       - heading [level=1]: Dashboard
       - navigation "Actions":
         - button: Save
         - button: Cancel
-    \`;
-
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
-
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
@@ -163,13 +111,13 @@ test('aria snapshot', async () => {
     - - paragraph: You have 7 notifications
     + - paragraph: You have 3 messages
 
-     ❯ aria-snapshot.test.ts:60:25
-         58|     <p>You have 3 messages</p>
-         59|   \`
-         60|   expect(document.body).toMatchAriaSnapshot()
+     ❯ aria-snapshot.test.ts:28:25
+         26|     <p>You have 3 messages</p>
+         27|   \`
+         28|   expect(document.body).toMatchAriaSnapshot()
            |                         ^
-         61| })
-         62|
+         29| })
+         30|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -178,10 +126,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
+        "nested structure": "passed",
         "semantic match with regex in snapshot": Array [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
         ],
@@ -197,10 +142,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "aria-snapshot.test.ts": Object {
-        "checkbox states": "passed",
-        "expect(element) - capture from DOM element": "passed",
-        "form with labelled inputs": "passed",
-        "navigation with links": "passed",
+        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -212,35 +154,12 @@ test('aria snapshot', async () => {
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`checkbox states 1\`] = \`
-    - checkbox "Accept terms" [checked]
-    - checkbox "Select all" [checked=mixed]
-    \`;
-
-    exports[\`expect(element) - capture from DOM element 1\`] = \`
+    exports[\`nested structure 1\`] = \`
     - main:
       - heading [level=1]: Dashboard
       - navigation "Actions":
         - button: Save
         - button: Cancel
-    \`;
-
-    exports[\`form with labelled inputs 1\`] = \`
-    - form:
-      - text: Username
-      - textbox "Username"
-      - button: Log in
-    \`;
-
-    exports[\`navigation with links 1\`] = \`
-    - navigation "Main":
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
-        - listitem:
-          - link: Contact
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
