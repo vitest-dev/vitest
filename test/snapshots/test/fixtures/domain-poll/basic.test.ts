@@ -157,18 +157,24 @@ test('unstable', async () => {
   }).toMatchDomainSnapshot('kv')
 })
 
-// TODO: keep throwing
+// #6: multiple poll+snapshot in same test — verifies probe peek counter invariant
+test('multiple poll snapshots', async () => {
+  await expect.poll(() => {
+    return { x: '1' }
+  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
 
-// // poll() returns changing values that eventually settle.
-// // Used to test retry-on-compare: snapshot is pre-seeded with the final value,
-// // and poll() goes through intermediate states before matching.
-// test('settling value', async () => {
-//   let trial = 0
-//   await expect.poll(() => {
-//     trial++
-//     if (trial === 1) {
-//       return { city: 'loading', pop: '0' }
-//     }
-//     return { city: 'tokyo', pop: '14000000' }
-//   }).toMatchDomainSnapshot('kv')
-// })
+  await expect.poll(() => {
+    return { y: '2' }
+  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+})
+
+// #7: non-poll alongside poll — verifies no interference
+test('non-poll alongside poll', async () => {
+  expect({ static: 'value' }).toMatchDomainSnapshot('kv')
+
+  await expect.poll(() => {
+    return { polled: 'value' }
+  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+
+  expect({ another: 'static' }).toMatchDomainSnapshot('kv')
+})

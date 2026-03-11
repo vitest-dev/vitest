@@ -17,6 +17,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": "passed",
         "throw then stable": "passed",
         "unstable": "passed",
@@ -25,6 +27,26 @@ test('domain snapshot with poll', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`multiple poll snapshots 1\`] = \`
+    x=1
+    \`;
+
+    exports[\`multiple poll snapshots 2\`] = \`
+    y=2
+    \`;
+
+    exports[\`non-poll alongside poll 1\`] = \`
+    static=value
+    \`;
+
+    exports[\`non-poll alongside poll 2\`] = \`
+    polled=value
+    \`;
+
+    exports[\`non-poll alongside poll 3\`] = \`
+    another=static
+    \`;
 
     exports[\`stable 1\`] = \`
     name=a
@@ -49,6 +71,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": "passed",
         "throw then stable": "passed",
         "unstable": "passed",
@@ -65,6 +89,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": "passed",
         "throw then stable": "passed",
         "unstable": "passed",
@@ -78,6 +104,26 @@ test('domain snapshot with poll', async () => {
 
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`multiple poll snapshots 1\`] = \`
+    x=1
+    \`;
+
+    exports[\`multiple poll snapshots 2\`] = \`
+    y=2
+    \`;
+
+    exports[\`non-poll alongside poll 1\`] = \`
+    static=value
+    \`;
+
+    exports[\`non-poll alongside poll 2\`] = \`
+    polled=value
+    \`;
+
+    exports[\`non-poll alongside poll 3\`] = \`
+    another=static
+    \`;
 
     exports[\`stable 1\`] = \`
     name=a
@@ -101,6 +147,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": "passed",
         "throw then stable": "passed",
         "unstable": "passed",
@@ -109,6 +157,26 @@ test('domain snapshot with poll', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`multiple poll snapshots 1\`] = \`
+    x=1
+    \`;
+
+    exports[\`multiple poll snapshots 2\`] = \`
+    y=2
+    \`;
+
+    exports[\`non-poll alongside poll 1\`] = \`
+    static=value
+    \`;
+
+    exports[\`non-poll alongside poll 2\`] = \`
+    polled=value
+    \`;
+
+    exports[\`non-poll alongside poll 3\`] = \`
+    another=static
+    \`;
 
     exports[\`stable 1\`] = \`
     name=a
@@ -164,6 +232,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": Array [
           "Snapshot \`stable 1\` mismatched",
         ],
@@ -204,6 +274,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": Array [
           "STABLE TEST ERROR",
         ],
@@ -242,6 +314,8 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
         "stable": Array [
           "poll() never returned a value within the timeout",
         ],
@@ -251,15 +325,63 @@ test('domain snapshot with poll', async () => {
     }
   `)
 
-  // result = await runVitest({ root, update: 'none' })
-  // expect(result.stderr).toMatchInlineSnapshot(`""`)
-  // expect(result.errorTree()).toMatchInlineSnapshot(`
-  //   Object {
-  //     "basic.test.ts": Object {
-  //       "stable": "passed",
-  //       "throw then stable": "passed",
-  //       "unstable": "passed",
-  //     },
-  //   }
-  // `)
+  // #8: pattern-preserving update — hand-edit regex into snapshot, run --update,
+  //     verify mergedExpected preserves matched patterns
+  editFile(testFile, s => s
+    .replace(`return new Promise(r => setTimeout(r, 1000))`, '// --- STABLE TEST POLL ---'))
+  editFile(snapshotFile, s => s
+    .replace('name=a\n', 'name=/\\\\w/\n'))
+
+  result = await runVitest({ root, update: 'all' })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "multiple poll snapshots": "passed",
+        "non-poll alongside poll": "passed",
+        "stable": "passed",
+        "throw then stable": "passed",
+        "unstable": "passed",
+      },
+    }
+  `)
+  expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`multiple poll snapshots 1\`] = \`
+    x=1
+    \`;
+
+    exports[\`multiple poll snapshots 2\`] = \`
+    y=2
+    \`;
+
+    exports[\`non-poll alongside poll 1\`] = \`
+    static=value
+    \`;
+
+    exports[\`non-poll alongside poll 2\`] = \`
+    polled=value
+    \`;
+
+    exports[\`non-poll alongside poll 3\`] = \`
+    another=static
+    \`;
+
+    exports[\`stable 1\`] = \`
+    name=/\\\\w/
+    age=23
+    \`;
+
+    exports[\`throw then stable 1\`] = \`
+    name=b
+    age=23
+    \`;
+
+    exports[\`unstable 1\`] = \`
+    name=c
+    __UNSTABLE_TRIAL__=1
+    \`;
+    "
+  `)
 })
