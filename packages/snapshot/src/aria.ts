@@ -12,6 +12,12 @@
 // Types
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// adapter – DomainSnapshotAdapter wiring
+// ---------------------------------------------------------------------------
+
+import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
+
 export interface AriaNode {
   role: string
   name: string
@@ -68,11 +74,21 @@ const implicitRoles: Record<string, (el: Element) => string | null> = {
   IMG: el => (el.getAttribute('alt') === '' ? 'presentation' : 'img'),
   INPUT: (el) => {
     const type = (el as HTMLInputElement).type?.toLowerCase() || 'text'
-    if (type === 'checkbox') return 'checkbox'
-    if (type === 'radio') return 'radio'
-    if (type === 'button' || type === 'submit' || type === 'reset' || type === 'image') return 'button'
-    if (type === 'range') return 'slider'
-    if (type === 'search') return 'searchbox'
+    if (type === 'checkbox') {
+      return 'checkbox'
+    }
+    if (type === 'radio') {
+      return 'radio'
+    }
+    if (type === 'button' || type === 'submit' || type === 'reset' || type === 'image') {
+      return 'button'
+    }
+    if (type === 'range') {
+      return 'slider'
+    }
+    if (type === 'search') {
+      return 'searchbox'
+    }
     return 'textbox'
   },
   LI: () => 'listitem',
@@ -96,7 +112,12 @@ const implicitRoles: Record<string, (el: Element) => string | null> = {
 }
 
 const headingLevels: Record<string, number> = {
-  H1: 1, H2: 2, H3: 3, H4: 4, H5: 5, H6: 6,
+  H1: 1,
+  H2: 2,
+  H3: 3,
+  H4: 4,
+  H5: 5,
+  H6: 6,
 }
 
 // ---------------------------------------------------------------------------
@@ -105,7 +126,9 @@ const headingLevels: Record<string, number> = {
 
 function getRole(el: Element): string | null {
   const explicit = el.getAttribute('role')
-  if (explicit) return explicit.split(' ')[0].trim() || null
+  if (explicit) {
+    return explicit.split(' ')[0].trim() || null
+  }
   return implicitRoles[el.tagName]?.(el) ?? null
 }
 
@@ -119,23 +142,35 @@ function getAccessibleName(el: Element): string {
       .join(' ')
   }
   const label = el.getAttribute('aria-label')
-  if (label) return label
+  if (label) {
+    return label
+  }
 
-  if (el.tagName === 'IMG') return el.getAttribute('alt') || ''
+  if (el.tagName === 'IMG') {
+    return el.getAttribute('alt') || ''
+  }
   if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
     const id = el.getAttribute('id')
     if (id) {
       const labelEl = el.ownerDocument.querySelector(`label[for="${id}"]`)
-      if (labelEl) return labelEl.textContent?.trim() || ''
+      if (labelEl) {
+        return labelEl.textContent?.trim() || ''
+      }
     }
   }
   return ''
 }
 
 function isHidden(el: Element): boolean {
-  if (el.getAttribute('aria-hidden') === 'true') return true
-  if (el.hasAttribute('hidden')) return true
-  if (['STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE'].includes(el.tagName)) return true
+  if (el.getAttribute('aria-hidden') === 'true') {
+    return true
+  }
+  if (el.hasAttribute('hidden')) {
+    return true
+  }
+  if (['STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE'].includes(el.tagName)) {
+    return true
+  }
   return false
 }
 
@@ -144,15 +179,20 @@ function captureNode(node: Node): (AriaNode | string)[] {
     const text = node.nodeValue?.replace(/\s+/g, ' ') || ''
     return text.trim() ? [text] : []
   }
-  if (node.nodeType !== 1 /* ELEMENT */) return []
+  if (node.nodeType !== 1 /* ELEMENT */) {
+    return []
+  }
 
   const el = node as Element
-  if (isHidden(el)) return []
+  if (isHidden(el)) {
+    return []
+  }
 
   const role = getRole(el)
   const childResults: (AriaNode | string)[] = []
-  for (let child = el.firstChild; child; child = child.nextSibling)
+  for (let child = el.firstChild; child; child = child.nextSibling) {
     childResults.push(...captureNode(child))
+  }
 
   const children = normalizeStringChildren(childResults)
 
@@ -164,13 +204,17 @@ function captureNode(node: Node): (AriaNode | string)[] {
   const ariaNode: AriaNode = { role, name, children }
 
   const level = headingLevels[el.tagName]
-  if (level) ariaNode.level = level
+  if (level) {
+    ariaNode.level = level
+  }
 
   if (el.getAttribute('aria-checked') != null) {
     const v = el.getAttribute('aria-checked')
     ariaNode.checked = v === 'mixed' ? 'mixed' : v === 'true'
   }
-  if (el.getAttribute('aria-disabled') === 'true') ariaNode.disabled = true
+  if (el.getAttribute('aria-disabled') === 'true') {
+    ariaNode.disabled = true
+  }
   if (el.getAttribute('aria-expanded') != null) {
     ariaNode.expanded = el.getAttribute('aria-expanded') === 'true'
   }
@@ -178,11 +222,13 @@ function captureNode(node: Node): (AriaNode | string)[] {
     const v = el.getAttribute('aria-pressed')
     ariaNode.pressed = v === 'mixed' ? 'mixed' : v === 'true'
   }
-  if (el.getAttribute('aria-selected') === 'true') ariaNode.selected = true
+  if (el.getAttribute('aria-selected') === 'true') {
+    ariaNode.selected = true
+  }
 
-  // Collapse single text child that matches name
-  if (ariaNode.children.length === 1 && ariaNode.children[0] === ariaNode.name)
+  if (ariaNode.children.length === 1 && ariaNode.children[0] === ariaNode.name) {
     ariaNode.children = []
+  }
 
   return [ariaNode]
 }
@@ -196,20 +242,25 @@ function normalizeStringChildren(items: (AriaNode | string)[]): (AriaNode | stri
     }
     else {
       const text = buf.replace(/\s+/g, ' ').trim()
-      if (text) result.push(text)
+      if (text) {
+        result.push(text)
+      }
       buf = ''
       result.push(item)
     }
   }
   const text = buf.replace(/\s+/g, ' ').trim()
-  if (text) result.push(text)
+  if (text) {
+    result.push(text)
+  }
   return result
 }
 
 export function captureAriaTree(root: Element): AriaNode {
   const children: (AriaNode | string)[] = []
-  for (let child = root.firstChild; child; child = child.nextSibling)
+  for (let child = root.firstChild; child; child = child.nextSibling) {
     children.push(...captureNode(child))
+  }
   return { role: 'fragment', name: '', children: normalizeStringChildren(children) }
 }
 
@@ -222,26 +273,48 @@ export function renderAriaTree(node: AriaNode): string {
   const children = node.role === 'fragment' ? node.children : [node]
 
   for (const child of children) {
-    if (typeof child === 'string')
+    if (typeof child === 'string') {
       lines.push(`- text: ${child}`)
-    else
+    }
+    else {
       renderNode(child, '', lines)
+    }
   }
   return lines.join('\n')
 }
 
 function renderNode(node: AriaNode, indent: string, lines: string[]): void {
   let key = node.role
-  if (node.name) key += ` ${JSON.stringify(node.name)}`
-  if (node.level) key += ` [level=${node.level}]`
-  if (node.checked === true) key += ' [checked]'
-  if (node.checked === 'mixed') key += ' [checked=mixed]'
-  if (node.disabled) key += ' [disabled]'
-  if (node.expanded === true) key += ' [expanded]'
-  if (node.expanded === false) key += ' [expanded=false]'
-  if (node.pressed === true) key += ' [pressed]'
-  if (node.pressed === 'mixed') key += ' [pressed=mixed]'
-  if (node.selected) key += ' [selected]'
+  if (node.name) {
+    key += ` ${JSON.stringify(node.name)}`
+  }
+  if (node.level) {
+    key += ` [level=${node.level}]`
+  }
+  if (node.checked === true) {
+    key += ' [checked]'
+  }
+  if (node.checked === 'mixed') {
+    key += ' [checked=mixed]'
+  }
+  if (node.disabled) {
+    key += ' [disabled]'
+  }
+  if (node.expanded === true) {
+    key += ' [expanded]'
+  }
+  if (node.expanded === false) {
+    key += ' [expanded=false]'
+  }
+  if (node.pressed === true) {
+    key += ' [pressed]'
+  }
+  if (node.pressed === 'mixed') {
+    key += ' [pressed=mixed]'
+  }
+  if (node.selected) {
+    key += ' [selected]'
+  }
 
   if (!node.children.length) {
     lines.push(`${indent}- ${key}`)
@@ -255,10 +328,12 @@ function renderNode(node: AriaNode, indent: string, lines: string[]): void {
 
   lines.push(`${indent}- ${key}:`)
   for (const child of node.children) {
-    if (typeof child === 'string')
+    if (typeof child === 'string') {
       lines.push(`${indent}  - text: ${child}`)
-    else
-      renderNode(child, indent + '  ', lines)
+    }
+    else {
+      renderNode(child, `${indent}  `, lines)
+    }
   }
 }
 
@@ -272,15 +347,20 @@ export function parseAriaTemplate(text: string): AriaTemplateRoleNode {
   const stack: { node: AriaTemplateRoleNode; indent: number }[] = [{ node: root, indent: -1 }]
 
   for (const line of lines) {
-    if (!line.trim()) continue
+    if (!line.trim()) {
+      continue
+    }
     const indent = line.search(/\S/)
     const content = line.trim()
-    if (!content.startsWith('- ')) continue
+    if (!content.startsWith('- ')) {
+      continue
+    }
 
     const entry = content.slice(2)
 
-    while (stack.length > 1 && stack[stack.length - 1].indent >= indent)
+    while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
       stack.pop()
+    }
     const parent = stack[stack.length - 1].node
 
     if (entry.startsWith('text: ')) {
@@ -294,16 +374,18 @@ export function parseAriaTemplate(text: string): AriaTemplateRoleNode {
 
     const parsed = parseRoleEntry(entry)
     parent.children!.push(parsed.node)
-    if (parsed.hasChildren)
+    if (parsed.hasChildren) {
       stack.push({ node: parsed.node, indent })
+    }
   }
 
   return root
 }
 
 function parseTextValue(raw: string): string | RegExp {
-  if (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1)
+  if (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1) {
     return new RegExp(raw.slice(1, -1))
+  }
   return raw
 }
 
@@ -312,7 +394,9 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
   let rest = entry
 
   const roleMatch = rest.match(/^(\w[\w-]*)/)
-  if (!roleMatch) throw new Error(`Cannot parse aria template entry: ${entry}`)
+  if (!roleMatch) {
+    throw new Error(`Cannot parse aria template entry: ${entry}`)
+  }
   const role = roleMatch[1]
   rest = rest.slice(role.length).trim()
 
@@ -333,21 +417,36 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
   }
 
   const node: AriaTemplateRoleNode = { kind: 'role', role, children: [] }
-  if (name !== undefined) node.name = name
+  if (name !== undefined) {
+    node.name = name
+  }
 
   const attrRegex = /\[(\w+)(?:=(\w+))?\]/g
   let attrMatch
+  // eslint-disable-next-line no-cond-assign
   while ((attrMatch = attrRegex.exec(rest)) !== null) {
     const [, attr, val] = attrMatch
-    if (attr === 'level') node.level = Number(val)
-    else if (attr === 'checked') node.checked = val === 'mixed' ? 'mixed' : true
-    else if (attr === 'disabled') node.disabled = true
-    else if (attr === 'expanded') node.expanded = val === 'false' ? false : true
-    else if (attr === 'pressed') node.pressed = val === 'mixed' ? 'mixed' : true
-    else if (attr === 'selected') node.selected = true
+    if (attr === 'level') {
+      node.level = Number(val)
+    }
+    else if (attr === 'checked') {
+      node.checked = val === 'mixed' ? 'mixed' : true
+    }
+    else if (attr === 'disabled') {
+      node.disabled = true
+    }
+    else if (attr === 'expanded') {
+      node.expanded = val !== 'false'
+    }
+    else if (attr === 'pressed') {
+      node.pressed = val === 'mixed' ? 'mixed' : true
+    }
+    else if (attr === 'selected') {
+      node.selected = true
+    }
   }
 
-  const inlineColonMatch = rest.match(/:\s*(.+)$/)
+  const inlineColonMatch = rest.match(/:\s*(\S.*)$/)
   if (inlineColonMatch) {
     const textVal = inlineColonMatch[1].trim()
     if (textVal) {
@@ -369,36 +468,63 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
 // ---------------------------------------------------------------------------
 
 function matchesText(actual: string, template: string | RegExp): boolean {
-  if (typeof template === 'string') return actual === template
+  if (typeof template === 'string') {
+    return actual === template
+  }
   return template.test(actual)
 }
 
 function matchesName(actual: string, template: string | RegExp | undefined): boolean {
-  if (template === undefined) return true
+  if (template === undefined) {
+    return true
+  }
   return matchesText(actual, template)
 }
 
 function matchesNode(node: AriaNode | string, template: AriaTemplateNode): boolean {
-  if (typeof node === 'string' && template.kind === 'text')
+  if (typeof node === 'string' && template.kind === 'text') {
     return matchesText(node, template.text)
+  }
 
-  if (typeof node === 'string' || template.kind !== 'role') return false
+  if (typeof node === 'string' || template.kind !== 'role') {
+    return false
+  }
 
-  if (template.role !== 'fragment' && template.role !== node.role) return false
-  if (!matchesName(node.name, template.name)) return false
-  if (template.level !== undefined && template.level !== node.level) return false
-  if (template.checked !== undefined && template.checked !== node.checked) return false
-  if (template.disabled !== undefined && template.disabled !== node.disabled) return false
-  if (template.expanded !== undefined && template.expanded !== node.expanded) return false
-  if (template.pressed !== undefined && template.pressed !== node.pressed) return false
-  if (template.selected !== undefined && template.selected !== node.selected) return false
+  if (template.role !== 'fragment' && template.role !== node.role) {
+    return false
+  }
+  if (!matchesName(node.name, template.name)) {
+    return false
+  }
+  if (template.level !== undefined && template.level !== node.level) {
+    return false
+  }
+  if (template.checked !== undefined && template.checked !== node.checked) {
+    return false
+  }
+  if (template.disabled !== undefined && template.disabled !== node.disabled) {
+    return false
+  }
+  if (template.expanded !== undefined && template.expanded !== node.expanded) {
+    return false
+  }
+  if (template.pressed !== undefined && template.pressed !== node.pressed) {
+    return false
+  }
+  if (template.selected !== undefined && template.selected !== node.selected) {
+    return false
+  }
 
   return containsList(node.children, template.children || [])
 }
 
 function containsList(children: (AriaNode | string)[], templates: AriaTemplateNode[]): boolean {
-  if (templates.length === 0) return true
-  if (templates.length > children.length) return false
+  if (templates.length === 0) {
+    return true
+  }
+  if (templates.length > children.length) {
+    return false
+  }
 
   const cc = children.slice()
   for (const t of templates) {
@@ -410,15 +536,51 @@ function containsList(children: (AriaNode | string)[], templates: AriaTemplateNo
         break
       }
     }
-    if (!found) return false
+    if (!found) {
+      return false
+    }
   }
   return true
 }
 
 export function matchAriaTree(root: AriaNode, template: AriaTemplateNode): boolean {
-  if (matchesNode(root, template)) return true
+  if (matchesNode(root, template)) {
+    return true
+  }
   for (const child of root.children) {
-    if (typeof child !== 'string' && matchAriaTree(child, template)) return true
+    if (typeof child !== 'string' && matchAriaTree(child, template)) {
+      return true
+    }
   }
   return false
+}
+
+export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRoleNode> = {
+  name: 'aria',
+
+  capture(received) {
+    if (received instanceof Element) {
+      return captureAriaTree(received)
+    }
+    throw new TypeError('aria adapter expects an Element')
+  },
+
+  render(captured) {
+    return `\n${renderAriaTree(captured)}\n`
+  },
+
+  parseExpected(input) {
+    return parseAriaTemplate(input.trim())
+  },
+
+  match(captured, expected): DomainMatchResult {
+    if (typeof expected === 'string') {
+      expected = parseAriaTemplate(expected.trim())
+    }
+    const pass = matchAriaTree(captured, expected)
+    return {
+      pass,
+      message: pass ? undefined : 'ARIA tree does not match expected template',
+    }
+  },
 }

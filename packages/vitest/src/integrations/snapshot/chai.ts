@@ -10,6 +10,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
+import { ariaDomainAdapter } from '@vitest/snapshot/aria'
 
 let _client: SnapshotClient
 
@@ -260,6 +261,59 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(
     chai.Assertion.prototype,
+    'toMatchAriaSnapshot',
+    wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
+      utils.flag(this, '_name', 'toMatchAriaSnapshot')
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error('toMatchAriaSnapshot cannot be used with "not"')
+      }
+      const expected = utils.flag(this, 'object')
+      const test = getTest('toMatchAriaSnapshot', this)
+      const errorMessage = utils.flag(this, 'message')
+      getSnapshotClient().assertDomain({
+        received: expected,
+        adapter: ariaDomainAdapter,
+        isInline: false,
+        errorMessage,
+        ...getTestNames(test),
+      })
+    }),
+  )
+
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchAriaInlineSnapshot',
+    wrapAssertion(utils, 'toMatchAriaInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
+      inlineSnapshot?: string,
+    ) {
+      utils.flag(this, '_name', 'toMatchAriaInlineSnapshot')
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error('toMatchAriaInlineSnapshot cannot be used with "not"')
+      }
+      const test = getTest('toMatchAriaInlineSnapshot', this)
+      const expected = utils.flag(this, 'object')
+      const error = utils.flag(this, 'error')
+      const errorMessage = utils.flag(this, 'message')
+      if (inlineSnapshot) {
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+      }
+      getSnapshotClient().assertDomain({
+        received: expected,
+        adapter: ariaDomainAdapter,
+        isInline: true,
+        inlineSnapshot,
+        error,
+        errorMessage,
+        ...getTestNames(test),
+      })
+    }),
+  )
+
+  utils.addMethod(
+    chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
     wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, properties?: object, message?: string) {
       utils.flag(this, '_name', 'toThrowErrorMatchingSnapshot')
@@ -318,4 +372,5 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
   utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
+  addDomain(ariaDomainAdapter)
 }

@@ -1428,6 +1428,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
+      '@vitest/snapshot':
+        specifier: workspace:*
+        version: link:../../packages/snapshot
       '@vitest/test-dep-cjs':
         specifier: file:./deps/dep-cjs
         version: file:test/core/deps/dep-cjs

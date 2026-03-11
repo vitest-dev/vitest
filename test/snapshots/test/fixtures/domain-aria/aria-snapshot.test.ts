@@ -1,17 +1,14 @@
 // @vitest-environment happy-dom
 
 import { expect, test } from 'vitest'
-import { ariaDomainAdapter } from './aria-snapshot'
-
-expect.addSnapshotDomain(ariaDomainAdapter)
 
 test('simple heading and paragraph', () => {
-  expect('<h1>Hello World</h1><p>Some description</p>')
-    .toMatchDomainSnapshot('aria')
+  document.body.innerHTML = '<h1>Hello World</h1><p>Some description</p>'
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('navigation with links', () => {
-  const html = `
+  document.body.innerHTML = `
     <nav aria-label="Main">
       <ul>
         <li><a href="/home">Home</a></li>
@@ -20,26 +17,26 @@ test('navigation with links', () => {
       </ul>
     </nav>
   `
-  expect(html).toMatchDomainSnapshot('aria')
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('form with labelled inputs', () => {
-  const html = `
+  document.body.innerHTML = `
     <form>
       <label for="user">Username</label>
       <input id="user" type="text" />
       <button type="submit">Log in</button>
     </form>
   `
-  expect(html).toMatchDomainSnapshot('aria')
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('checkbox states', () => {
-  const html = `
+  document.body.innerHTML = `
     <div role="checkbox" aria-checked="true" aria-label="Accept terms"></div>
     <div role="checkbox" aria-checked="mixed" aria-label="Select all"></div>
   `
-  expect(html).toMatchDomainSnapshot('aria')
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('expect(element) - capture from DOM element', () => {
@@ -52,7 +49,7 @@ test('expect(element) - capture from DOM element', () => {
       </nav>
     </main>
   `
-  expect(document.body).toMatchDomainSnapshot('aria')
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('semantic match with regex in snapshot', () => {
@@ -60,5 +57,5 @@ test('semantic match with regex in snapshot', () => {
     <button aria-label="User 42">Profile</button>
     <p>You have 7 notifications</p>
   `
-  expect(document.body).toMatchDomainSnapshot('aria')
+  expect(document.body).toMatchAriaSnapshot()
 })

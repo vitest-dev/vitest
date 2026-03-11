@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
+import { captureAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTree } from '@vitest/snapshot/aria'
 import { describe, expect, test } from 'vitest'
-import { captureAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTree } from './aria'
 
 function capture(html: string) {
   document.body.innerHTML = html
@@ -20,9 +20,9 @@ describe('captureAriaTree', () => {
   test('heading', () => {
     const tree = capture('<h1>Hello</h1>')
     expect(tree.children).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "children": Array [
+      [
+        {
+          "children": [
             "Hello",
           ],
           "level": 1,
@@ -36,9 +36,9 @@ describe('captureAriaTree', () => {
   test('link with href', () => {
     const tree = capture('<a href="/foo">Click</a>')
     expect(tree.children).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "children": Array [
+      [
+        {
+          "children": [
             "Click",
           ],
           "name": "",
@@ -51,7 +51,7 @@ describe('captureAriaTree', () => {
   test('anchor without href has no role', () => {
     const tree = capture('<a>Not a link</a>')
     expect(tree.children).toMatchInlineSnapshot(`
-      Array [
+      [
         "Not a link",
       ]
     `)
@@ -73,9 +73,9 @@ describe('captureAriaTree', () => {
   test('aria-hidden elements are excluded', () => {
     const tree = capture('<div aria-hidden="true">Hidden</div><p>Visible</p>')
     expect(tree.children).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "children": Array [
+      [
+        {
+          "children": [
             "Visible",
           ],
           "name": "",
@@ -173,9 +173,9 @@ describe('parseAriaTemplate', () => {
   test('simple role', () => {
     const t = parseAriaTemplate('- button')
     expect(t.children).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "children": Array [],
+      [
+        {
+          "children": [],
           "kind": "role",
           "role": "button",
         },

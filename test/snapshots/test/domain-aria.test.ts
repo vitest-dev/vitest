@@ -24,51 +24,6 @@ test('aria snapshot', async () => {
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
-      "aria.test.ts": Object {
-        "captureAriaTree": Object {
-          "anchor without href has no role": "passed",
-          "aria-hidden elements are excluded": "passed",
-          "aria-label sets name": "passed",
-          "checkbox states": "passed",
-          "explicit role overrides implicit": "passed",
-          "heading": "passed",
-          "label for input": "passed",
-          "link with href": "passed",
-          "nested list structure": "passed",
-        },
-        "matchAriaTree": Object {
-          "attribute match — checked": "passed",
-          "attribute mismatch — wrong level": "passed",
-          "contain semantics — order matters": "passed",
-          "contain semantics — partial children match": "passed",
-          "deep match — finds node in subtree": "passed",
-          "exact match": "passed",
-          "name match": "passed",
-          "regex name match": "passed",
-          "regex text child": "passed",
-          "role mismatch": "passed",
-        },
-        "parseAriaTemplate": Object {
-          "heading with level": "passed",
-          "inline regex text child": "passed",
-          "inline text child": "passed",
-          "nested children": "passed",
-          "role with attributes": "passed",
-          "role with quoted name": "passed",
-          "role with regex name": "passed",
-          "simple role": "passed",
-          "text node": "passed",
-        },
-        "render -> parse roundtrip": Object {
-          "rendered output parses back to matching template": "passed",
-        },
-        "renderAriaTree": Object {
-          "checkbox attributes": "passed",
-          "form with inputs": "passed",
-          "heading with level": "passed",
-          "nav with nested list": "passed",
-        },
-      },
     }
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`

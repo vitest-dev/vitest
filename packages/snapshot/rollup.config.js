@@ -17,6 +17,7 @@ const external = [
 
 const entries = {
   index: 'src/index.ts',
+  aria: 'src/aria.ts',
   environment: 'src/environment.ts',
   manager: 'src/manager.ts',
 }

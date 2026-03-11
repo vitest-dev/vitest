@@ -49,10 +49,10 @@ The adapter itself (`ariaAdapter.ts`) lives in `vitest` because it uses `addDoma
 
 ```ts
 // Pipeline functions — independently testable
-export { captureAriaTree, renderAriaTree, parseAriaTemplate, matchAriaTree } from './aria'
+export { captureAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTree } from './aria'
 
 // Types
-export type { AriaNode, AriaTemplateRoleNode, AriaTemplateTextNode, AriaTemplateNode } from './aria'
+export type { AriaNode, AriaTemplateNode, AriaTemplateRoleNode, AriaTemplateTextNode } from './aria'
 ```
 
 These are the building blocks. Users writing custom adapters or debugging can import them directly.
@@ -70,14 +70,13 @@ No changes to the code itself — it's already a self-contained module with no v
 New file: `packages/vitest/src/integrations/snapshot/ariaAdapter.ts`
 
 ```ts
-import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
-import type { AriaNode, AriaTemplateRoleNode } from '@vitest/snapshot'
+import type { AriaNode, AriaTemplateRoleNode, DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 import { captureAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTree } from '@vitest/snapshot'
 
 export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRoleNode> = {
   name: 'aria',
   capture(received) {
-    if (received instanceof Element) return captureAriaTree(received)
+    if (received instanceof Element) { return captureAriaTree(received) }
     if (typeof received === 'string') {
       document.body.innerHTML = received
       return captureAriaTree(document.body)
@@ -91,8 +90,7 @@ export const ariaDomainAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateRole
     return parseAriaTemplate(input.trim())
   },
   match(captured, expected): DomainMatchResult {
-    if (typeof expected === 'string')
-      expected = parseAriaTemplate(expected.trim())
+    if (typeof expected === 'string') { expected = parseAriaTemplate(expected.trim()) }
     const pass = matchAriaTree(captured, expected)
     return {
       pass,
@@ -124,7 +122,7 @@ utils.addMethod(
   wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
     utils.flag(this, '_name', 'toMatchAriaSnapshot')
     const isNot = utils.flag(this, 'negate')
-    if (isNot) throw new Error('toMatchAriaSnapshot cannot be used with "not"')
+    if (isNot) { throw new Error('toMatchAriaSnapshot cannot be used with "not"') }
     const expected = utils.flag(this, 'object')
     const test = getTest('toMatchAriaSnapshot', this)
     const errorMessage = utils.flag(this, 'message')
@@ -148,7 +146,7 @@ utils.addMethod(
   ) {
     utils.flag(this, '_name', 'toMatchAriaInlineSnapshot')
     const isNot = utils.flag(this, 'negate')
-    if (isNot) throw new Error('toMatchAriaInlineSnapshot cannot be used with "not"')
+    if (isNot) { throw new Error('toMatchAriaInlineSnapshot cannot be used with "not"') }
     const test = getTest('toMatchAriaInlineSnapshot', this)
     const expected = utils.flag(this, 'object')
     const error = utils.flag(this, 'error')
