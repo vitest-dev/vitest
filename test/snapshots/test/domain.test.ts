@@ -45,7 +45,7 @@ test('domain snapshot', async () => {
     .replace('score=999', 'score=/\\\\d+/'))
 
   // 3. re-run without update — regex pattern matches, all pass, snapshot unchanged
-  result = await runVitest({ root })
+  result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
