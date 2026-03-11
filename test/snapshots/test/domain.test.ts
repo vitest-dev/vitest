@@ -80,7 +80,7 @@ test('domain snapshot', async () => {
 
   // 5. run without update — status mismatch causes failure
   // NOTE: score=/\\d+/ vs score='42' doesn't show up as diff.
-  result = await runVitest({ root })
+  result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
