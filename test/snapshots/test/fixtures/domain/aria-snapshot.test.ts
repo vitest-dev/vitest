@@ -1,0 +1,1 @@
+// @vitest-environment happy-dom
