@@ -1,11 +1,11 @@
-# Issue #6933 consolidated notes: Playwright survey, Vitest comparison, and domain snapshot proposal
+# Issue #6933: Domain snapshot design document
 
-Date: 2026-02-15
+Date: 2026-02-15 (initial), 2026-03-11 (revised)
 Scope: `vitest-dev/vitest#6933`
 
 ## Executive summary
 
-- Playwright's ARIA snapshots are a semantic matcher pipeline (`capture -> parse -> match -> render/update`), not only string serialization.
+- Playwright's ARIA snapshots are a semantic matcher pipeline (`capture -> parse -> match -> render`), not only string serialization.
 - Vitest already has strong snapshot policy/plumbing (state, inline updates, file IO, update modes), but historically compares serialized strings.
 - Recommended direction: keep Vitest snapshot policy core, add domain adapters for semantics.
 - ARIA can be first adapter, but design must be generic and not Browser Mode specific.
@@ -21,12 +21,6 @@ Main behavior of `expect(locator).toMatchAriaSnapshot(...)`:
 - Renders canonical snapshot text for diff and update.
 - Supports inline and file-backed snapshot forms.
 
-Where logic lives:
-
-- Matcher orchestration/update: `packages/playwright/src/matchers/toMatchAriaSnapshot.ts`
-- Parser/types: `packages/playwright-core/src/utils/isomorphic/ariaSnapshot.ts`
-- Capture + semantic match + renderer: `packages/injected/src/ariaSnapshot.ts`
-
 Notable parser/matcher features:
 
 - Name/text regex support (`/pattern/`).
@@ -34,92 +28,87 @@ Notable parser/matcher features:
 - Additional node properties (e.g. `/url`, placeholder-like props).
 - Subtree-search semantics (`matchesNodeDeep`) rather than root-only exactness.
 
-## Vitest current snapshot baseline
+## Architecture: domain snapshots
 
-Existing strengths:
-
-- Snapshot lifecycle/state in `@vitest/snapshot` (`setup/match/assert/pack/save`).
-- Inline snapshot rewriting and source update plumbing.
-- Raw file snapshot support (`toMatchFileSnapshot`).
-- Configurable snapshot path resolution.
-- Browser-side snapshot fs bridge exists, but concept should remain environment-agnostic.
-
-Current gap (historically):
-
-- Core flow is mostly value serialization/string comparison, not domain parser + semantic matcher.
-
-## Proposed architecture: domain snapshots
-
-Principle:
+### Principle
 
 - Snapshot core owns policy (state, update behavior, persistence).
 - Domain adapter owns semantics (capture/parse/match/render).
+- All four adapter methods are required — no optional fallbacks to string comparison.
 
-Conceptual flow:
-
-- `received -> adapter.capture() -> domain model`
-- `expected text -> adapter.parseExpected()` (optional)
-- `adapter.match(captured, expected)`
-- `adapter.render(captured, mode)`
-- core snapshot policy decides pass/update/report persistence
-
-Minimal adapter contract:
+### Adapter contract
 
 ```ts
 interface DomainSnapshotAdapter<Captured, Expected, Options> {
   name: string
-  capture(received: unknown, context: DomainContext, options?: Options): Captured
-  render(captured: Captured, context: DomainContext, mode: 'assert' | 'update', options?: Options): string
-  parseExpected?(input: string, context: DomainContext, options?: Options): Expected
-  match?(captured: Captured, expected: Expected | string, context: DomainContext, options?: Options): { pass: boolean }
+  capture(received: unknown, context: DomainSnapshotContext, options?: Options): Captured
+  render(captured: Captured, context: DomainSnapshotContext, options?: Options): string
+  parseExpected(input: string, context: DomainSnapshotContext, options?: Options): Expected
+  match(captured: Captured, expected: Expected | string, context: DomainSnapshotContext, options?: Options): DomainMatchResult
 }
 ```
 
-## Runtime policy
+Design decisions:
 
-- Do not attempt to align outputs across `jsdom`, `happy-dom`, and browsers.
-- Determinism target is per-runtime, not cross-runtime identity.
-- Divergence is runtime/user choice, not a Vitest normalization responsibility.
+- `parseExpected` and `match` are **required**, not optional. If you register a domain adapter, you commit to the full contract. No half-baked adapters that silently fall back to string comparison.
+- `render` has no `mode` parameter. There is one canonical rendering. Presentation concerns (e.g. wrapping newlines for snapshot file readability) belong in the adapter, not the core type.
 
-## Initial API direction
+### Snapshot lifecycle for domain snapshots
 
-- Generic matcher shapes:
-  - `expect(value).toMatchDomainSnapshot(domain, hint?: string)`
-  - `expect(value).toMatchDomainInlineSnapshot(domain, template?: string, hint?: string)`
-- Extension API shape: `expect.addSnapshotDomain(adapter)`
-- Domain-specific sugar matchers (e.g. `toMatchAriaSnapshot`) can be optional follow-ups.
+```
+received
+  → adapter.capture()     → domain model (Captured)
+  → adapter.render()      → canonical string (for storage on first run / update)
 
-Current draft extension contract:
+stored snapshot string
+  → adapter.parseExpected() → parsed template (Expected)
+  → adapter.match(captured, parsed) → DomainMatchResult
 
-```ts
-expect.addSnapshotDomain({
-  name: 'my-domain',
-  capture(received, context, options) {
-    return received
-  },
-  render(captured, context, mode, options) {
-    return String(captured)
-  },
-  parseExpected(input, context, options) {
-    return input
-  },
-  match(captured, expected, context, options) {
-    return { pass: captured === expected }
-  },
-})
-
-expect(value).toMatchDomainSnapshot('my-domain')
-expect(value).toMatchDomainInlineSnapshot('my-domain', 'expected')
+DomainMatchResult
+  → pass: snapshot core records matched
+  → fail: snapshot core reports mismatch, using adapter-provided diff hints
 ```
 
-Current draft `DomainMatchResult` (now included):
+Key difference from regular snapshots: **comparison is delegated to the adapter**, not done by string `===`. This is what makes domain snapshots meaningful — an ARIA adapter can match semantically (contain semantics, regex patterns, attribute subset) rather than requiring byte-identical strings.
+
+### Snapshot state integration (`matchDomain`)
+
+Added `matchDomain()` on `SnapshotState` alongside the existing `match()`. It reuses all existing snapshot state machinery (key counters, unchecked tracking, update/add logic, stats) but replaces the comparison step:
+
+- Regular `match()`: serializes received, compares with `===`.
+- `matchDomain()`: takes an `isEqual(existingSnapshot) => boolean` callback. The caller (`assertDomain`) wires this to `adapter.parseExpected` + `adapter.match`.
+
+Critical behavior difference: **on pass, `matchDomain` does not overwrite the stored snapshot**. Regular snapshots refresh the stored value to fix escaping drift. Domain snapshots must preserve hand-edited patterns (regex, wildcards) that differ from the rendered output.
+
+### `assertDomain` flow in `SnapshotClient`
+
+```ts
+assertDomain(options):
+  captured = adapter.capture(received, context)
+  rendered = adapter.render(captured, context)
+
+  snapshotState.matchDomain({
+    received: rendered,
+    isEqual: (existingSnapshot) => {
+      parsed = adapter.parseExpected(existingSnapshot, context)
+      result = adapter.match(captured, parsed, context)
+      return result.pass
+    },
+  })
+```
+
+Domain snapshots bypass the regular `serialize()` / `prettyFormat()` path entirely. The rendered string is stored and loaded as-is in the snapshot file (backtick-wrapped, no quote wrapping).
+
+## `DomainMatchResult` and diff quality
+
+### Current state
 
 ```ts
 interface DomainMatchResult {
   pass: boolean
   message?: string
-  expected?: string // normalized expected-for-diff
-  actual?: string // normalized actual-for-diff
+  expected?: string   // adapter-adjusted expected for diff
+  actual?: string     // adapter-adjusted actual for diff
   mismatches?: Array<{
     path: string
     reason: string
@@ -129,84 +118,141 @@ interface DomainMatchResult {
 }
 ```
 
-Behavior in current draft:
+The type is defined but **`expected`/`actual` are not yet wired into the failure path**. Currently on failure, `matchDomain` returns the raw rendered string as `actual` and the raw stored snapshot as `expected`. This produces noisy diffs when the stored snapshot contains regex/pattern tokens.
 
-- `actual` / `expected` can be used to normalize display diff input.
-- `message` is appended to assertion failure message when mismatch happens.
-- `mismatches` is attached on thrown error as `error.domainMatchResult` for reporter consumption.
+### The problem
 
-## Implementation status in this branch (draft)
+When a stored snapshot contains semantic patterns:
 
-Implemented:
+```yaml
+- button /User \d+/: Profile
+- paragraph: /You have \d+ notifications/
+```
 
-- Added domain adapter concept and `assertDomain` path in `@vitest/snapshot`.
-- Wired `toMatchAriaSnapshot` to domain path (no longer plain serializer-only wiring).
-- Added a simple first ARIA adapter and jsdom test coverage as draft.
+And the test fails on an unrelated change (say the paragraph text changed), the diff shows every regex token as a mismatch because the rendered actual (`button "User 42"`) differs textually from the pattern (`button /User \d+/`).
 
-Meaning:
+### The solution (next step)
 
-- Foundation is now adapter-based; current ARIA semantics are intentionally simplified.
+The adapter's `match()` already traverses both trees and knows which nodes matched (including via regex). It should return adjusted `actual`/`expected` strings in `DomainMatchResult`:
 
-## Known limitations (accepted for v1)
+1. **Greedy match mapping**: during semantic matching, record which template nodes matched which captured nodes.
+2. **Adjusted actual**: for matched regex/pattern tokens, substitute the actual value with the template token form. Only genuinely mismatched nodes show their real actual value.
+3. **Adjusted expected**: optionally normalize the expected side for cleaner diff alignment.
 
-Accepted initial limitation (same class seen in Playwright issue):
+The plumbing change needed in vitest core:
 
-- Semantic matching can support pattern-like expected input, but failure output can still be text-diff dominated.
-- This can produce noisy diffs where matcher tokens look "wrong" despite not being the root mismatch.
-- Reference example: `https://github.com/microsoft/playwright/issues/34555`
+- `isEqual` callback (or a replacement) must return the full `DomainMatchResult`, not just `boolean`.
+- `assertDomain` uses `result.actual` / `result.expected` (when provided) instead of raw rendered/stored strings for the error.
+- `matchDomain` needs access to these adjusted strings for the failure return value.
 
-Why acceptable initially:
+This is a presentation improvement, not a matching logic change. The match decision stays the same; only the failure output gets smarter.
 
-- Unblocks shipping domain adapter foundation.
-- Keeps scope tight while validating adapter API.
+## API surface
 
-## Note on diff-noise difficulty and practical fix
+### Current (implemented)
 
-This limitation is not fundamentally hard to solve.
+```ts
+// Register adapter
+expect.addSnapshotDomain(adapter)
 
-- Matching already happens on a semantic node model (captured domain model vs expected template model).
-- The noisy output comes later, when failure UI falls back to plain text diff of rendered snapshots.
+// File-backed domain snapshot
+expect(value).toMatchDomainSnapshot('domain-name')
+expect(value).toMatchDomainSnapshot('domain-name', 'hint')
+```
 
-Practical fix (reporter-layer, no major matcher rewrite):
+### Deferred (commented out, not yet wired)
 
-1. During semantic matching, produce a deterministic match mapping.
-- Map expected matcher tokens (e.g. regex/pattern tokens) to matched actual nodes/values.
-- Reuse existing traversal order and matching decisions; no global optimization needed.
+```ts
+// Inline domain snapshot
+expect(value).toMatchDomainInlineSnapshot('domain-name', 'template')
+```
 
-2. Build a display-oriented actual snapshot.
-- For locations that matched dynamic tokens, rewrite actual value to expected token form (or a stable marker).
-- Keep true mismatches unchanged.
+### Possible future sugar
 
-3. Diff expected vs display-oriented actual.
-- Matched regex/wildcard tokens stop showing as false-positive diffs.
-- Real mismatch remains highlighted and easier to identify.
+```ts
+// Domain-specific matchers (e.g. for ARIA)
+expect(element).toMatchAriaSnapshot()
+```
 
-Why this should work well:
+## Runtime policy
 
-- Domain match is already structural (similar in spirit to `toEqual` object matching).
-- We only improve presentation by carrying semantic match information into diff rendering.
-- Determinism follows matcher traversal order; ambiguous regex spans do not require complex global matching.
+- Do not attempt to align outputs across `jsdom`, `happy-dom`, and browsers.
+- Determinism target is per-runtime, not cross-runtime identity.
+- Divergence is runtime/user choice, not a Vitest normalization responsibility.
 
-## Near-term follow-ups after v1
+## ARIA adapter prototype
 
-1. Expand `DomainMatchResult`
-- Include mismatch path, reason code, expected token kind, actual value.
+A prototype ARIA adapter exists as test fixtures (not shipped code) to validate the domain snapshot design:
 
-2. Domain-aware reporter formatting
-- Show semantic mismatch first, text context second.
-- Avoid flagging wildcard/regex tokens as hard diffs when they matched.
+### File structure
 
-3. Standard parser diagnostics
-- Unified shape: error code, line/column, source frame.
+```
+test/snapshots/test/fixtures/domain/
+  aria.ts                 — standalone aria pipeline (no vitest dependency)
+  aria.test.ts            — unit tests for capture/render/parse/match
+  aria-snapshot.ts         — adapter wiring (imports aria.ts, implements DomainSnapshotAdapter)
+  aria-snapshot.test.ts    — integration tests using toMatchDomainSnapshot
+```
 
-4. Better update UX for semantic snapshots
-- Communicate whether update came from strict mismatch vs tolerated matcher patterns.
+### Separation of concerns
 
-5. Optional artifact strategy polish
-- Domain-specific extensions/path templates if needed later.
+`aria.ts` is a pure aria pipeline with four exported functions:
 
-## Bottom line
+- `captureAriaTree(root: Element) → AriaNode` — walks DOM, builds accessibility tree
+- `renderAriaTree(node: AriaNode) → string` — serializes to Playwright-compatible YAML format
+- `parseAriaTemplate(text: string) → AriaTemplateRoleNode` — parses YAML template with regex/attribute support
+- `matchAriaTree(root: AriaNode, template: AriaTemplateNode) → boolean` — semantic matching with contain semantics and deep search
 
-- Copying Playwright fully is feasible, but not the best long-term fit.
-- Domain snapshots let Vitest absorb the concept at framework level and naturally support ARIA.
-- Start with adapter foundation + simple ARIA draft, accept known reporting limits, then iterate quickly on semantic diagnostics/reporting.
+`aria-snapshot.ts` is the thin adapter layer:
+
+- `capture` — accepts `Element` or HTML string, calls `captureAriaTree`
+- `render` — calls `renderAriaTree`, adds newline wrapping for snapshot readability
+- `parseExpected` — calls `parseAriaTemplate`
+- `match` — calls `matchAriaTree`, returns `DomainMatchResult`
+
+### What the prototype covers
+
+Capture: implicit ARIA roles from HTML elements (subset of Playwright's mapping), explicit `role` attribute, `aria-label`/`aria-labelledby` for name, `aria-checked`/`disabled`/`expanded`/`pressed`/`selected` states, heading levels, hidden element exclusion, text normalization.
+
+Render: Playwright-compatible YAML-like format (`- role "name" [attrs]: text`), nested indentation, inline text children.
+
+Parse: role entries with quoted or regex names, `[attr]`/`[attr=value]` syntax, inline text children (string or regex), nested children via indentation.
+
+Match: contain semantics (template children match in order, can skip), deep subtree search, regex name/text matching, attribute constraints.
+
+### What it does not cover (intentionally)
+
+- Full accessible name computation (only `aria-label`, `aria-labelledby`, `<label for>`, `alt`)
+- `aria-owns` relationship traversal
+- CSS visibility checks (relies on `aria-hidden`/`hidden` attributes only)
+- `/children: equal | deep-equal` container modes (only contain mode)
+- Shadow DOM / slot traversal
+- `/url`, `/placeholder` and other property directives
+- Regex codegen mode for dynamic content
+- Diff-aware rendering (the `DomainMatchResult.actual`/`expected` path described above)
+
+## Implementation status
+
+### Done
+
+- `DomainSnapshotAdapter` interface with all four methods required
+- `DomainMatchResult` type with `pass`, `message`, `expected`, `actual`, `mismatches`
+- `matchDomain()` on `SnapshotState` — snapshot state management with adapter-delegated comparison
+- `assertDomain()` on `SnapshotClient` — orchestrates capture/render/match flow
+- `toMatchDomainSnapshot` matcher wired in chai plugin
+- `expect.addSnapshotDomain()` registration API
+- ARIA adapter prototype with full unit test coverage (33 tests) and integration tests (6 tests)
+- Stored snapshots with hand-edited regex patterns are preserved across runs
+
+### Next
+
+- Wire `DomainMatchResult.actual`/`expected` into failure diff path (diff quality)
+- Inline snapshot support (`toMatchDomainInlineSnapshot`)
+- Consider whether `DomainMatchResult.mismatches` should influence reporter output
+
+### Deferred
+
+- Domain-specific sugar matchers (`toMatchAriaSnapshot`)
+- Standard parser diagnostics (error code, line/column)
+- Domain-aware reporter formatting
+- Update UX for semantic snapshots (communicating why an update happened)
