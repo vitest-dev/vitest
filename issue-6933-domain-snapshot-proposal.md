@@ -106,8 +106,8 @@ Domain snapshots bypass the regular `serialize()` / `prettyFormat()` path entire
 interface DomainMatchResult {
   pass: boolean
   message?: string
-  expected?: string      // adapter-adjusted expected for diff
-  actual?: string        // adapter-adjusted actual for diff
+  expected?: string // adapter-adjusted expected for diff
+  actual?: string // adapter-adjusted actual for diff
   mergedExpected?: string // pattern-preserving merge for updates
   mismatches?: Array<{
     path: string

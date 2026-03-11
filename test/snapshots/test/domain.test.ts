@@ -78,8 +78,8 @@ test('domain snapshot', async () => {
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
-  // TODO: matching regex key/value shouldn't show up as diff
   // 5. run without update — status mismatch causes failure
+  // NOTE: score=/\\d+/ vs score='42' doesn't show up as diff.
   result = await runVitest({ root })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
@@ -92,18 +92,17 @@ test('domain snapshot', async () => {
     + Received
 
       name=bob
-    - score=/\\d+/
-    + score=42
+      score=/\\d+/
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:102:60
-        100|
-        101| test('with regex', () => {
-        102|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
+     ❯ basic.test.ts:116:60
+        114|
+        115| test('with regex', () => {
+        116|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
            |                                                            ^
-        103| })
-        104|
+        117| })
+        118|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -120,7 +119,6 @@ test('domain snapshot', async () => {
     }
   `)
 
-  // TODO: update should keep matching regex pattern
   // 6. run with update — should preserve score regex (matched),
   //    overwrite status with literal (didn't match)
   result = await runVitest({ root, update: 'all' })
@@ -133,6 +131,7 @@ test('domain snapshot', async () => {
       },
     }
   `)
+  // NOTE
   // score regex matched '42' -> preserved as /\d+/
   // status literal 'active' != 'inactive' -> overwritten with literal
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
