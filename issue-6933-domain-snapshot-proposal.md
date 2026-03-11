@@ -109,12 +109,6 @@ interface DomainMatchResult {
   mergedExpected?: string // pattern-preserving merge for updates
   expected?: string // adapter-adjusted expected for diff
   actual?: string // adapter-adjusted actual for diff
-  mismatches?: Array<{
-    path: string
-    reason: string
-    expected?: string
-    actual?: string
-  }>
 }
 ```
 
@@ -257,7 +251,7 @@ Runtime policy: no attempt to align outputs across `jsdom`, `happy-dom`, and bro
 ### Done
 
 - `DomainSnapshotAdapter` interface with all four methods required
-- `DomainMatchResult` type with `pass`, `message`, `expected`, `actual`, `mergedExpected`, `mismatches`
+- `DomainMatchResult` type with `pass`, `message`, `expected`, `actual`, `mergedExpected`
 - `matchDomain()` on `SnapshotState` — adapter-delegated comparison, pattern-preserving updates via `mergedExpected`
 - `assertDomain()` on `SnapshotClient` — orchestrates capture/render/match flow, passes full `DomainMatchResult` through
 - `isEqual` callback returns full `DomainMatchResult` (not just `boolean`)
@@ -270,15 +264,8 @@ Runtime policy: no attempt to align outputs across `jsdom`, `happy-dom`, and bro
 - ARIA adapter prototype with unit tests (39 tests) and integration tests (6 tests)
 - Integration test (`domain.test.ts`) covering full lifecycle: create → hand-edit regex → pass preserves → partial mismatch → pattern-preserving update
 
-### Next
+### TODO
 
-- ARIA adapter: implement greedy match mapping + `mergedExpected` + adjusted `actual`/`expected` (currently only returns `pass`/`message`)
 - Inline snapshot support (`toMatchDomainInlineSnapshot`)
-- Consider whether `DomainMatchResult.mismatches` should influence reporter output
-
-### Deferred
-
-- Domain-specific sugar matchers (`toMatchAriaSnapshot`)
-- Standard parser diagnostics (error code, line/column)
-- Domain-aware reporter formatting
-- Update UX for semantic snapshots (communicating why an update happened)
+- ARIA adapter: implement greedy match mapping + `mergedExpected` + adjusted `actual`/`expected` (currently only returns `pass`/`message`)
+  - Domain-specific sugar matchers (`toMatchAriaSnapshot`)

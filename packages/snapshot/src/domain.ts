@@ -4,20 +4,12 @@ export interface DomainSnapshotContext {
   testId: string
 }
 
-export interface DomainSnapshotMismatch {
-  path: string
-  reason: string
-  expected?: string
-  actual?: string
-}
-
 export interface DomainMatchResult {
   pass: boolean
   message?: string
   expected?: string
   actual?: string
   mergedExpected?: string
-  mismatches?: DomainSnapshotMismatch[]
 }
 
 export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, Options = unknown> {

@@ -5,7 +5,6 @@ export type {
   DomainMatchResult,
   DomainSnapshotAdapter,
   DomainSnapshotContext,
-  DomainSnapshotMismatch,
 } from './domain'
 
 export { stripSnapshotIndentation } from './port/inlineSnapshot'
