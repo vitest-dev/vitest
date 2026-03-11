@@ -50,7 +50,13 @@
     "test:ui": "vitest --browser"
   },
   "peerDependencies": {
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0-0",
     "vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",

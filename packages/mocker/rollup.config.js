@@ -1,13 +1,9 @@
-import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import oxc from 'unplugin-oxc/rollup'
-import { createDtsUtils } from '../../scripts/build-utils.js'
-
-const require = createRequire(import.meta.url)
-const pkg = require('./package.json')
+import { createDtsUtils, externalDependencies, nodejsBuiltinModules } from '../../scripts/build-utils.js'
 
 const entries = {
   'index': 'src/index.ts',
@@ -21,10 +17,8 @@ const entries = {
 }
 
 const external = [
-  ...builtinModules,
-  ...Object.keys(pkg.dependencies || {}),
-  ...Object.keys(pkg.peerDependencies || {}),
-  /^msw/,
+  ...nodejsBuiltinModules,
+  ...externalDependencies(import.meta.url),
 ]
 
 const dtsUtils = createDtsUtils()

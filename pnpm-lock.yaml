@@ -1187,16 +1187,16 @@ importers:
       birpc:
         specifier: 'catalog:'
         version: 4.0.0
-      flatted:
-        specifier: 'catalog:'
-        version: 3.4.2
-      ws:
-        specifier: 'catalog:'
-        version: 8.19.0
+      vitest:
+        specifier: workspace:*
+        version: link:../vitest
     devDependencies:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
+      flatted:
+        specifier: 'catalog:'
+        version: 3.4.2
 
   test/browser:
     devDependencies:
