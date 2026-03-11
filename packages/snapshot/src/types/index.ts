@@ -41,6 +41,9 @@ export interface SnapshotDomainMatchOptions {
   received: string
   key?: string
   isEqual: (expected: string) => DomainMatchResult
+  isInline?: boolean
+  inlineSnapshot?: string
+  error?: Error
 }
 
 export interface SnapshotResult {

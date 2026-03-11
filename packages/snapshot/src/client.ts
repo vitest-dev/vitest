@@ -186,6 +186,9 @@ export class SnapshotClient {
       message,
       adapter,
       adapterOptions,
+      isInline = false,
+      inlineSnapshot,
+      error,
     } = options
 
     if (!filepath) {
@@ -208,6 +211,9 @@ export class SnapshotClient {
       testId,
       testName,
       received: rendered,
+      isInline,
+      inlineSnapshot,
+      error,
       isEqual: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot, context, adapterOptions)
         return adapter.match(captured, parsed, context, adapterOptions)

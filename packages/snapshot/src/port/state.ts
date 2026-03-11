@@ -461,6 +461,9 @@ export default class SnapshotState {
     received,
     key,
     isEqual,
+    isInline,
+    inlineSnapshot,
+    error,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
     this._counters.increment(testName)
     const count = this._counters.get(testName)
@@ -471,16 +474,41 @@ export default class SnapshotState {
     this._testIdToKeys.get(testId).push(key)
     this._uncheckedKeys.delete(key)
 
-    const expected = this._snapshotData[key]
-    const hasSnapshot = expected !== undefined
-    const snapshotIsPersisted = this._fileExists
+    let expected: string | undefined
+    if (isInline) {
+      expected = inlineSnapshot
+    }
+    else {
+      expected = this._snapshotData[key]
+    }
+    const hasSnapshot = expected !== undefined && expected.length > 0
+    const snapshotIsPersisted = isInline ? true : this._fileExists
 
-    const matchResult = hasSnapshot ? isEqual(expected) : undefined
+    const matchResult = hasSnapshot ? isEqual(expected!) : undefined
     const pass = matchResult?.pass ?? false
 
     // Unlike regular match, do NOT overwrite snapshot data on pass.
     // Domain snapshots may contain semantic patterns (e.g. regex)
     // that differ from the rendered output but still match.
+
+    // find call site for inline snapshot rewriting
+    let stack: ParsedStack | undefined
+    if (isInline) {
+      const stacks = parseErrorStacktrace(
+        error || new Error('snapshot'),
+        { ignoreStackEntries: [] },
+      )
+      const _stack = this._inferInlineSnapshotStack(stacks)
+      if (!_stack) {
+        throw new Error(
+          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
+            stacks,
+          )}`,
+        )
+      }
+      stack = this.environment.processStackTrace?.(_stack) || _stack
+      stack.column--
+    }
 
     if (
       (hasSnapshot && this._updateSnapshot === 'all')
@@ -498,14 +526,14 @@ export default class SnapshotState {
           // Use mergedExpected from adapter if available — preserves
           // matched patterns (e.g. regex) while updating changed parts.
           const updateValue = matchResult?.mergedExpected ?? received
-          this._addSnapshot(key, updateValue, { testId })
+          this._addSnapshot(key, updateValue, { stack, testId })
         }
         else {
           this.matched.increment(testId)
         }
       }
       else {
-        this._addSnapshot(key, received, { testId })
+        this._addSnapshot(key, received, { stack, testId })
         this.added.increment(testId)
       }
 
