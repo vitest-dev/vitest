@@ -640,3 +640,136 @@ describe('builder pattern with non-function values', () => {
     expect(chainedSync).toBe('HELLO WORLD')
   })
 })
+
+// https://github.com/vitest-dev/vitest/issues/9810
+describe('override auto fixture with outer beforeEach', () => {
+  const myTest = test
+    .extend('base', { auto: true }, () => 'base:default')
+    .extend('derived', { auto: true }, ({ base }) => {
+      return `derived:${base}`
+    })
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  describe('with override', () => {
+    myTest.override('base', 'base:override')
+
+    myTest('auto fixture sees overridden dependency', ({ base, derived }) => {
+      expect(base).toBe('base:override')
+      expect(derived).toBe('derived:base:override')
+    })
+  })
+})
+
+describe('override auto fixture with co-located beforeEach', () => {
+  const myTest = test
+    .extend('base', { auto: true }, () => 'base:default')
+    .extend('derived', { auto: true }, ({ base }) => {
+      return `derived:${base}`
+    })
+
+  myTest.override('base', 'base:override')
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  myTest('override applies when beforeEach is co-located', ({ base, derived }) => {
+    expect(base).toBe('base:override')
+    expect(derived).toBe('derived:base:override')
+  })
+})
+
+describe('override non-auto fixture with outer beforeEach', () => {
+  const myTest = test
+    .extend('base', () => 'base:default')
+    .extend('derived', ({ base }) => `derived:${base}`)
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  describe('with override', () => {
+    myTest.override('base', 'base:override')
+
+    myTest('override applies to non-auto dependency', ({ base, derived }) => {
+      expect(base).toBe('base:override')
+      expect(derived).toBe('derived:base:override')
+    })
+  })
+})
+
+describe('override fixture accessed in outer beforeEach', () => {
+  const myTest = test
+    .extend('base', () => 'base:default')
+    .extend('derived', ({ base }) => `derived:${base}`)
+
+  const hookValues: string[] = []
+
+  myTest.beforeEach(({ base }) => {
+    hookValues.push(base)
+  })
+
+  describe('with override', () => {
+    myTest.override('base', 'base:override')
+
+    myTest('beforeEach sees overridden fixture', ({ derived }) => {
+      expect(hookValues).toEqual(['base:override'])
+      expect(derived).toBe('derived:base:override')
+    })
+  })
+})
+
+describe('nested overrides with outer beforeEach', () => {
+  const myTest = test
+    .extend('base', { auto: true }, () => 'base:default')
+    .extend('derived', { auto: true }, ({ base }) => {
+      return `derived:${base}`
+    })
+
+  beforeEach(({ task }) => {
+    expect(task).toBeTruthy()
+  })
+
+  describe('outer', () => {
+    myTest.override('base', 'base:outer')
+
+    myTest('outer override', ({ base, derived }) => {
+      expect(base).toBe('base:outer')
+      expect(derived).toBe('derived:base:outer')
+    })
+
+    describe('inner', () => {
+      myTest.override('base', 'base:inner')
+
+      myTest('inner override wins', ({ base, derived }) => {
+        expect(base).toBe('base:inner')
+        expect(derived).toBe('derived:base:inner')
+      })
+    })
+  })
+})
+
+describe('override fixture accessed in aroundEach', () => {
+  const myTest = test
+    .extend('base', () => 'base:default')
+    .extend('derived', ({ base }) => `derived:${base}`)
+
+  const hookValues: string[] = []
+
+  myTest.aroundEach(async (runTest, { base }) => {
+    hookValues.push(base)
+    await runTest()
+  })
+
+  describe('with override', () => {
+    myTest.override('base', 'base:override')
+
+    myTest('aroundEach sees overridden fixture', ({ derived }) => {
+      expect(hookValues).toEqual(['base:override'])
+      expect(derived).toBe('derived:base:override')
+    })
+  })
+})

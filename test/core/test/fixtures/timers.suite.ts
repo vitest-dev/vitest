@@ -1494,7 +1494,7 @@ describe('FakeTimers', () => {
 
       expect(Date.now()).toBe(timeStrMs)
 
-      expect(() => timers.useFakeTimers()).not.toThrowError()
+      expect(() => timers.useFakeTimers()).not.toThrow()
 
       expect(Date.now()).toBe(timeStrMs)
 

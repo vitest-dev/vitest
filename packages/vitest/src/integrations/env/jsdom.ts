@@ -232,7 +232,7 @@ export default <Environment>{
 }
 
 function createCompatRequest(utils: CompatUtils) {
-  return class Request extends NodeRequest_ {
+  class Request extends NodeRequest_ {
     constructor(...args: [input: RequestInfo, init?: RequestInit]) {
       const [input, init] = args
       if (init?.body != null) {
@@ -254,10 +254,11 @@ function createCompatRequest(utils: CompatUtils) {
       return instance instanceof NodeRequest_
     }
   }
+  return Request
 }
 
 function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
-  return class URL extends NodeURL {
+  class URL extends NodeURL {
     static createObjectURL(blob: any): string {
       if (blob instanceof utils.window.Blob) {
         const compatBlob = utils.makeCompatBlob(blob)
@@ -269,7 +270,8 @@ function createJSDOMCompatURL(utils: CompatUtils): typeof URL {
     static [Symbol.hasInstance](instance: unknown): boolean {
       return instance instanceof NodeURL
     }
-  } as typeof URL
+  }
+  return URL
 }
 
 interface CompatUtils {

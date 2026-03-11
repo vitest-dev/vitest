@@ -31,32 +31,32 @@ test('.toBeRequired', () => {
   // negative test cases wrapped in throwError assertions for coverage.
   expect(() =>
     expect(queryByTestId('required-input')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('aria-required-input')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('conflicted-input')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('not-required-input')).toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('basic-input')).toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('unsupported-type')).toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('select')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('textarea')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('supported-role')).toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('supported-role-aria')).not.toBeRequired(),
-  ).toThrowError()
+  ).toThrow()
 })

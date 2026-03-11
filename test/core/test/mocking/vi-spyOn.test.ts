@@ -120,7 +120,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync calls', () => {
+  test('vi.spyOn() spies and tracks overridden sync calls', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(() => 100)
@@ -153,7 +153,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(() => 100)
@@ -187,7 +187,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync prototype calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync prototype calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'method')
     mock.mockImplementation(function (this: any) {
@@ -224,7 +224,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden sync class calls with context', () => {
+  test('vi.spyOn() spies and tracks overridden sync class calls with context', () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'Class')
     mock.mockImplementation(class {
@@ -262,7 +262,7 @@ describe('vi.spyOn() state', () => {
     assertStateEmpty(state)
   })
 
-  test('vi.spyOn() spies and tracks overriden async calls', async () => {
+  test('vi.spyOn() spies and tracks overridden async calls', async () => {
     const object = createObject()
     const mock = vi.spyOn(object, 'async')
     mock.mockImplementation(() => Promise.resolve(100))
@@ -446,11 +446,11 @@ describe('vi.spyOn() settings', () => {
     // foo.bar setter is inherited from Bar, so we can set it
     expect(() => {
       foo.bar = 'baz'
-    }).not.toThrowError()
+    }).not.toThrow()
     expect(foo.bar).toEqual('foo')
   })
 
-  test('vi.spyOn() inherits overriden methods', () => {
+  test('vi.spyOn() inherits overridden methods', () => {
     class Bar {
       _bar = 'bar'
       get bar(): string {
@@ -472,9 +472,9 @@ describe('vi.spyOn() settings', () => {
     expect(foo.bar).toEqual('foo')
     // foo.bar setter is not inherited from Bar
     expect(() => {
-      // @ts-expect-error bar cannot be overriden
+      // @ts-expect-error bar cannot be overridden
       foo.bar = 'baz'
-    }).toThrowError()
+    }).toThrow()
     expect(foo.bar).toEqual('foo')
   })
 
@@ -542,20 +542,20 @@ describe('vi.spyOn() settings', () => {
 
 describe('vi.spyOn() restoration', () => {
   test('vi.spyOn() cannot spy on undefined or null', () => {
-    expect(() => vi.spyOn(undefined as any, 'test')).toThrowError('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
-    expect(() => vi.spyOn(null as any, 'test')).toThrowError('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(undefined as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
+    expect(() => vi.spyOn(null as any, 'test')).toThrow('The vi.spyOn() function could not find an object to spy upon. The first argument must be defined.')
   })
 
   test('vi.spyOn() cannot spy on a primitive value', () => {
-    expect(() => vi.spyOn('string' as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(0 as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(true as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(1n as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
-    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrowError('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn('string' as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(0 as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(true as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(1n as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
+    expect(() => vi.spyOn(Symbol.toStringTag as any, 'toString')).toThrow('Vitest cannot spy on a primitive value.')
   })
 
   test('vi.spyOn() cannot spy on non-existing property', () => {
-    expect(() => vi.spyOn({} as any, 'never')).toThrowError('The property "never" is not defined on the object.')
+    expect(() => vi.spyOn({} as any, 'never')).toThrow('The property "never" is not defined on the object.')
   })
 
   test('vi.spyOn() restores the original method when .mockRestore() is called', () => {
@@ -642,7 +642,7 @@ describe('vi.spyOn() restoration', () => {
 
     object.getter = 100
 
-    expect(object.getter).toBe(42) // getter was not overriden
+    expect(object.getter).toBe(42) // getter was not overridden
     expect(spy.mock.calls).toHaveLength(1)
     spy.mockRestore()
 
@@ -660,7 +660,7 @@ describe('vi.spyOn() restoration', () => {
 
     object.getter = 100
 
-    expect(object.getter).toBe(42) // getter was not overriden
+    expect(object.getter).toBe(42) // getter was not overridden
     expect(spy.mock.calls).toHaveLength(1)
     vi.restoreAllMocks()
 
@@ -708,7 +708,7 @@ describe('vi.spyOn() on Vite SSR', () => {
     expect(() => {
       // @ts-expect-error types recognize it's not a function
       vi.spyOn(module, 'primitive')
-    }).toThrowError('vi.spyOn() can only spy on a function. Received number.')
+    }).toThrow('vi.spyOn() can only spy on a function. Received number.')
   })
 
   test('vi.spyOn() assigns the method on a getter', () => {

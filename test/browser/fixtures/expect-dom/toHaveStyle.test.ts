@@ -26,7 +26,7 @@ describe('.toHaveStyle', () => {
     // border: fakefake doesn't exist
     expect(() => {
       expect(container.querySelector('.label')).toHaveStyle('border: fakefake')
-    }).toThrowError()
+    }).toThrow()
 
     expect(container.querySelector('.label')).toHaveStyle(`
           height: 100%;
@@ -86,36 +86,36 @@ describe('.toHaveStyle', () => {
     //   expect(container.querySelector('.label')).not.toHaveStyle(
     //     'font-weight bold',
     //   ),
-    // ).toThrowError()
+    // ).toThrow()
 
     expect(() =>
       expect(container.querySelector('.label')).toHaveStyle(
         'font-weight: bold',
       ),
-    ).toThrowError()
+    ).toThrow()
 
     expect(() =>
       expect(container.querySelector('.label')).not.toHaveStyle('color: white'),
-    ).toThrowError()
+    ).toThrow()
 
     expect(() =>
       expect(container.querySelector('.label')).toHaveStyle(
         'transition: all 0.7s ease, width 1.0s cubic-bezier(3, 4, 5, 6);',
       ),
-    ).toThrowError()
+    ).toThrow()
 
     // Custom property names are case sensitive
     expect(() =>
       expect(container.querySelector('.label')).toHaveStyle('--VAR-NAME: 0px;'),
-    ).toThrowError()
+    ).toThrow()
 
     expect(() =>
       expect(container.querySelector('.label')).toHaveStyle('color white'),
-    ).toThrowError()
+    ).toThrow()
 
     expect(() =>
       expect(container.querySelector('.label')).toHaveStyle('--color: black'),
-    ).toThrowError()
+    ).toThrow()
     document.body.removeChild(style)
     document.body.removeChild(container)
   })
@@ -250,7 +250,7 @@ describe('.toHaveStyle', () => {
       `)
       expect(() => {
         expect(queryByTestId('color-example')).toHaveStyle({ fontSize: '12px' })
-      }).toThrowError()
+      }).toThrow()
     })
 
     test('supports dash-cased property names', () => {

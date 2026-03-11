@@ -1,11 +1,11 @@
 # @vitest/browser-preview
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/browser-preview?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/browser-preview)
+[![NPM version](https://img.shields.io/npm/v/@vitest/browser-preview?color=a1b858&label=)](https://npmx.dev/package/@vitest/browser-preview)
 
 See how your tests look like in a real browser. For proper and stable browser testing, we recommend running tests in a headless browser in your CI instead. For this, you should use either:
 
-- [@vitest/browser-playwright](https://www.npmjs.com/package/@vitest/browser-playwright) - run tests using [playwright](https://playwright.dev/)
-- [@vitest/browser-webdriverio](https://www.npmjs.com/package/@vitest/browser-webdriverio) - run tests using [webdriverio](https://webdriver.io/)
+- [@vitest/browser-playwright](https://npmx.dev/package/@vitest/browser-playwright) - run tests using [playwright](https://playwright.dev/)
+- [@vitest/browser-webdriverio](https://npmx.dev/package/@vitest/browser-webdriverio) - run tests using [webdriverio](https://webdriver.io/)
 
 ## Installation
 

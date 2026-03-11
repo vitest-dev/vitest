@@ -37,5 +37,5 @@ test('can pass down a simple form data', async () => {
       body: formData,
     })
     await req.formData()
-  })()).resolves.not.toThrowError()
+  })()).resolves.not.toThrow()
 })

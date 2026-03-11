@@ -59,15 +59,15 @@ vi.mock('../../src/mocks/default.ts', () => null)
 
 describe('mocking with factory', () => {
   test('missing exports on mock', () => {
-    expect(() => example.default).toThrowError('[vitest] No "default" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.boolean).toThrowError('[vitest] No "boolean" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.object).toThrowError('[vitest] No "object" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.array).toThrowError('[vitest] No "array" export is defined on the "../../src/mocks/example" mock')
-    expect(() => example.someClasses).toThrowError('[vitest] No "someClasses" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.default).toThrow('[vitest] No "default" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.boolean).toThrow('[vitest] No "boolean" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.object).toThrow('[vitest] No "object" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.array).toThrow('[vitest] No "array" export is defined on the "../../src/mocks/example" mock')
+    expect(() => example.someClasses).toThrow('[vitest] No "someClasses" export is defined on the "../../src/mocks/example" mock')
   })
 
   it('non-object return on factory gives error', async () => {
-    await expect(() => import('../../src/mocks/default.js').then(m => m.default)).rejects.toThrowError('[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+    await expect(() => import('../../src/mocks/default.js').then(m => m.default)).rejects.toThrow('[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
   })
 
   test('defined exports on mock', async () => {

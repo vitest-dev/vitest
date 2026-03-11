@@ -18,7 +18,8 @@ import type { TestRunResult } from './types/tests'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
@@ -606,14 +607,17 @@ export class Vitest {
         specifications.push(specification)
       }
 
-      await this._testRun.start(specifications).catch(noop)
+      await this._testRun.start(specifications)
+      await this.coverageProvider?.onTestRunStart?.()
 
       for (const file of files) {
         await this._reportFileTask(file)
       }
 
-      this._checkUnhandledErrors(errors)
-      await this._testRun.end(specifications, errors).catch(noop)
+      // append errors thrown during reporter event replay during merge reports
+      const unhandledErrors = [...errors, ...this.state.getUnhandledErrors()]
+      this._checkUnhandledErrors(unhandledErrors)
+      await this._testRun.end(specifications, unhandledErrors)
       await this.initCoverageProvider()
       await this.coverageProvider?.mergeReports?.(coverages)
 
@@ -634,8 +638,12 @@ export class Vitest {
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
-    await this._testRun.enqueued(project, file).catch(noop)
-    await this._testRun.collected(project, [file]).catch(noop)
+    await this._testRun.enqueued(project, file).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
+    await this._testRun.collected(project, [file]).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
 
     const logs: UserConsoleLog[] = []
 
@@ -648,10 +656,14 @@ export class Vitest {
     logs.sort((log1, log2) => log1.time - log2.time)
 
     for (const log of logs) {
-      await this._testRun.log(log).catch(noop)
+      await this._testRun.log(log).catch((error) => {
+        this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+      })
     }
 
-    await this._testRun.updated(packs, events).catch(noop)
+    await this._testRun.updated(packs, events).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
   }
 
   async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
@@ -749,6 +761,7 @@ export class Vitest {
       if (!specifications.length) {
         await this._traces.$('vitest.test_run', async () => {
           await this._testRun.start([])
+          await this.coverageProvider?.onTestRunStart?.()
           const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
           await this._testRun.end([], [], coverage)
@@ -880,6 +893,7 @@ export class Vitest {
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
+      await this.coverageProvider?.onTestRunStart?.()
 
       // previous run
       await this.cancelPromise

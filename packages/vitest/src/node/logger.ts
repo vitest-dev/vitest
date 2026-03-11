@@ -301,7 +301,7 @@ export class Logger {
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
         type: (err as any).type || 'Unhandled Error',
       })
     })

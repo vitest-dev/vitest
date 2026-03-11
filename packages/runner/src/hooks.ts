@@ -157,11 +157,17 @@ export function beforeEach<ExtraContext = object>(
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
+
+  const wrapper: BeforeEachListener<ExtraContext> = (context, suite) => {
+    const fixtureResolver = withFixtures(fn, { suite })
+    return fixtureResolver(context)
+  }
+
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
       withTimeout(
-        withFixtures(fn),
+        wrapper,
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
@@ -197,10 +203,15 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
+  const wrapper: AfterEachListener<ExtraContext> = (context, suite) => {
+    const fixtureResolver = withFixtures(fn, { suite })
+    return fixtureResolver(context)
+  }
+
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(
-      withFixtures(fn),
+      wrapper,
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),
@@ -375,7 +386,7 @@ export function aroundEach<ExtraContext = object>(
     const innerFn = (ctx: any) => fn(runTest, ctx, suite)
     configureProps(innerFn, { index: 1, original: fn })
 
-    const fixtureResolver = withFixtures(innerFn)
+    const fixtureResolver = withFixtures(innerFn, { suite })
     return fixtureResolver(context)
   }
 

@@ -319,6 +319,28 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    */
   mockReturnValueOnce(value: MockReturnType<T>): this
   /**
+   * Accepts a value that will be thrown whenever the mock function is called.
+   * @see https://vitest.dev/api/mock#mockthrow
+   * @example
+   * const myMockFn = vi.fn().mockThrow(new Error('error'))
+   * myMockFn() // throws 'error'
+   */
+  mockThrow(value: unknown): this
+  /**
+   * Accepts a value that will be thrown during the next function call. If chained, every consecutive call will throw the specified value.
+   * @example
+   * const myMockFn = vi
+   *   .fn()
+   *   .mockReturnValue('default')
+   *   .mockThrowOnce(new Error('first call error'))
+   *   .mockThrowOnce('second call error')
+   *
+   * expect(() => myMockFn()).toThrowError('first call error')
+   * expect(() => myMockFn()).toThrowError('second call error')
+   * expect(myMockFn()).toEqual('default')
+   */
+  mockThrowOnce(value: unknown): this
+  /**
    * Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)

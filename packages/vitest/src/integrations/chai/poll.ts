@@ -95,6 +95,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             chai.util.flag(assertion, '_name', key)
 
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+
             try {
               while (true) {
                 const isLastAttempt = hasTimedOut
@@ -110,11 +112,13 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
                   executionPhase = 'assertion'
                   const output = await assertionFunction.call(assertion, ...args)
+                  await onSettled?.({ assertion, status: 'pass' })
 
                   return output
                 }
                 catch (err) {
                   if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
+                    await onSettled?.({ assertion, status: 'fail' })
                     throwWithCause(err, STACK_TRACE_ERROR)
                   }
 
@@ -148,9 +152,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               return (resultPromise ||= promise()).then(onFulfilled, onRejected)
             },
             catch(onRejected) {
+              awaited = true
               return (resultPromise ||= promise()).catch(onRejected)
             },
             finally(onFinally) {
+              awaited = true
               return (resultPromise ||= promise()).finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',

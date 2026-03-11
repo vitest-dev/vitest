@@ -8,7 +8,7 @@ outline: deep
 - **Type:** `boolean`
 - **Default:** `false`
 
-Should `location` property be included when Vitest API receives tasks in [reporters](#reporters). If you have a lot of tests, this might cause a small performance regression.
+Should `location` property be included when Vitest API receives tasks in [reporters](/config/reporters). If you have a lot of tests, this might cause a small performance regression.
 
 The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
 

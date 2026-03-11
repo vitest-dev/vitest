@@ -47,7 +47,7 @@ This option will be removed completely in a future major, replaced by `projects`
 
 The new [annotation API](/guide/test-annotations) allows you to annotate any test with a custom message and attachment. These annotations are visible in the UI, HTML, junit, tap and GitHub Actions reporters. Vitest will also print related annotation in the CLI if the test fails.
 
-<img src="/annotation-api-cute-puppy-example.png" />
+<img src="/annotation-api-cute-puppy-example.png" alt="an example of annotation with a cute puppy" />
 
 ## Scoped Fixtures
 
@@ -106,7 +106,7 @@ export default defineConfig({
 ```
 :::
 
-<img src="/v3-2-custom-colors.png" />
+<img src="/v3-2-custom-colors.png" alt="an example of project names with custom backgrounds" />
 
 ## Custom Browser Locators API
 

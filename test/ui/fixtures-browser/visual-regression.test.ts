@@ -10,7 +10,7 @@ test('visual regression test', async ({ expect, onTestFinished }) => {
     }
   })
 
-  await expect(expect(document.body).toMatchScreenshot(screenshotName)).rejects.toThrowError(
+  await expect(expect(document.body).toMatchScreenshot(screenshotName)).rejects.toThrow(
     'No existing reference screenshot found',
   )
 })

@@ -110,8 +110,8 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     }
     aDisplay = truncate(aDisplay)
     bDisplay = truncate(bDisplay)
-    const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
-    const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
+    const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)}\n${aDisplay}`
+    const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)}\n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
   }
 

@@ -176,7 +176,7 @@ describe('jest mock compat layer', () => {
     spy.mockRestore()
 
     // Sicne Vitest 4 this is a special case where
-    // vi.fn(impl) will always return impl, unless overriden
+    // vi.fn(impl) will always return impl, unless overridden
     expect(spy.getMockImplementation()).toBe(originalFn)
 
     expect(spy.mock.results).toEqual([])
@@ -602,7 +602,7 @@ describe('jest mock compat layer', () => {
 
     Spy.mockImplementation(() => {})
 
-    expect(() => new Spy()).toThrowError(TypeError)
+    expect(() => new Spy()).toThrow(TypeError)
 
     Spy.mockImplementation(function () {
       expectTypeOf(this.test).toEqualTypeOf<() => void>()
@@ -703,7 +703,7 @@ describe('jest mock compat layer', () => {
     // foo.bar setter is inherited from Bar, so we can set it
     expect(() => {
       foo.bar = 'baz'
-    }).not.toThrowError()
+    }).not.toThrow()
     expect(foo.bar).toEqual('foo')
   })
 
@@ -731,7 +731,7 @@ describe('jest mock compat layer', () => {
     expect(() => {
       // @ts-expect-error bar is readonly
       foo.bar = 'baz'
-    }).toThrowError()
+    }).toThrow()
     expect(foo.bar).toEqual('foo')
   })
 

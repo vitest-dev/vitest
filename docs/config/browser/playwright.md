@@ -1,6 +1,6 @@
 # Configuring Playwright
 
-To run tests using playwright, you need to install the [`@vitest/browser-playwright`](https://www.npmjs.com/package/@vitest/browser-playwright) npm package and specify its `playwright` export in the `test.browser.provider` property of your config:
+To run tests using playwright, you need to install the [`@vitest/browser-playwright`](https://npmx.dev/package/@vitest/browser-playwright) npm package and specify its `playwright` export in the `test.browser.provider` property of your config:
 
 ```ts [vitest.config.js]
 import { playwright } from '@vitest/browser-playwright'
@@ -74,7 +74,9 @@ These options are directly passed down to `playwright[browser].connect` command.
 Use `connectOptions.wsEndpoint` to connect to an existing Playwright server instead of launching browsers locally. This is useful for running browsers in Docker, in CI, or on a remote machine.
 
 ::: warning
-Since this command connects to an existing Playwright server, any `launch` options will be ignored.
+
+Vitest forwards `launchOptions` to Playwright server via the `x-playwright-launch-options` header. This works only if the remote Playwright server supports this header, for example when using the `playwright run-server` CLI.
+
 :::
 
 ::: details Example: Running a Playwright Server in Docker

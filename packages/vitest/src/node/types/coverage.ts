@@ -28,7 +28,10 @@ export interface CoverageProvider {
   /** Called with coverage results after a single test file has been run */
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void | Promise<void>
 
-  /** Callback called when test run fails */
+  /** Callback called when test run starts */
+  onTestRunStart?: () => void | Promise<void>
+
+  /** Callback called when test run fails due to test failures */
   onTestFailure?: () => void | Promise<void>
 
   /** Callback to generate final coverage results */
@@ -274,6 +277,14 @@ export interface BaseCoverageOptions {
    * Use this option to override with custom coverage reporting location.
    */
   htmlDir?: string
+
+  /**
+   * Collect coverage only for files changed since a specified commit or branch.
+   * Inherits the default value from `test.changed`.
+   *
+   * @default false
+   */
+  changed?: boolean | string
 }
 
 export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
@@ -281,7 +292,7 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
 export interface CoverageV8Options extends BaseCoverageOptions {}
 
 export interface CustomProviderOptions
-  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues> {
+  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues | 'changed'> {
   /** Name of the module or path to a file to load the custom provider from */
   customProviderModule: string
 }

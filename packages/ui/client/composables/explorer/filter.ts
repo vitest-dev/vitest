@@ -1,6 +1,6 @@
 import type { Task } from '@vitest/runner'
 import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
-import { client, findById } from '~/composables/client'
+import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
 import {
@@ -220,6 +220,15 @@ function* filterParents(
 }
 
 function matchState(task: Task, filter: Filter) {
+  if (filter.slow) {
+    if (task.type === 'test') {
+      const threshold = config.value.slowTestThreshold
+      if (typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold) {
+        return true
+      }
+    }
+  }
+
   if (filter.success || filter.failed) {
     if ('result' in task) {
       if (filter.success && task.result?.state === 'pass') {
@@ -245,7 +254,8 @@ function matchTask(
 ) {
   // search and filter will apply together
   if (search(task)) {
-    if (filter.success || filter.failed || filter.skipped) {
+    const hasStatusFilter = filter.success || filter.failed || filter.skipped || filter.slow
+    if (hasStatusFilter) {
       if (matchState(task, filter)) {
         return true
       }
