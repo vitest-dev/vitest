@@ -34,6 +34,14 @@ export interface SnapshotMatchOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
+export interface SnapshotDomainMatchOptions {
+  testId: string
+  testName: string
+  received: string
+  key?: string
+  isEqual: (expected: string) => boolean
+}
+
 export interface SnapshotResult {
   filepath: string
   added: number

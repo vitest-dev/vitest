@@ -29,7 +29,6 @@ export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, O
   render: (
     captured: Captured,
     context: DomainSnapshotContext,
-    mode: 'assert' | 'update',
     options?: Options,
   ) => string
   parseExpected: (

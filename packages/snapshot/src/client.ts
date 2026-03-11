@@ -183,10 +183,14 @@ export class SnapshotClient {
       filepath,
       name,
       testId = name,
-      inlineSnapshot,
+      message,
       adapter,
       adapterOptions,
     } = options
+
+    if (!filepath) {
+      throw new Error('Snapshot cannot be used outside of test')
+    }
 
     const context = {
       filepath,
@@ -195,30 +199,30 @@ export class SnapshotClient {
     }
 
     const captured = adapter.capture(received, context, adapterOptions)
-    const rendered = adapter.render(captured, context, 'assert', adapterOptions)
+    const rendered = adapter.render(captured, context, adapterOptions)
 
-    // TODO: inline snapshot path
-    // let snapshotInput = rendered
-    // let normalizedInlineSnapshot = inlineSnapshot
-    // let domainMatchResult: DomainMatchResult | undefined
-    // if (inlineSnapshot) {
-    //   const expected = adapter.parseExpected(inlineSnapshot, context, adapterOptions)
-    //   domainMatchResult = adapter.match(captured, expected, context, adapterOptions)
-    //   if (domainMatchResult.expected !== undefined) {
-    //     normalizedInlineSnapshot = domainMatchResult.expected
-    //   }
-    //   if (domainMatchResult.pass) {
-    //     snapshotInput = normalizedInlineSnapshot ?? inlineSnapshot
-    //   }
-    //   else if (domainMatchResult.actual !== undefined) {
-    //     snapshotInput = domainMatchResult.actual
-    //   }
-    // }
+    const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
 
-    this.assert({
-      ...options,
+    const { actual, expected, key, pass } = snapshotState.matchDomain({
+      testId,
+      testName,
       received: rendered,
+      isEqual: (existingSnapshot) => {
+        const parsed = adapter.parseExpected(existingSnapshot, context, adapterOptions)
+        const result = adapter.match(captured, parsed, context, adapterOptions)
+        return result.pass
+      },
     })
+
+    if (!pass) {
+      throw createMismatchError(
+        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        snapshotState.expand,
+        actual?.trim(),
+        expected?.trim(),
+      )
+    }
   }
 
   async assertRaw(options: AssertOptions): Promise<void> {

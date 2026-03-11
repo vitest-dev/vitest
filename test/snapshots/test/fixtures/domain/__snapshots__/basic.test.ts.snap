@@ -1,3 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`toMatchDomainSnapshot simple 1`] = `"value:hello 456"`;
+exports[`toMatchDomainSnapshot regex match 1`] = `custom:/world \\d+/`;
+
+exports[`toMatchDomainSnapshot simple 1`] = `custom:hello 123`;

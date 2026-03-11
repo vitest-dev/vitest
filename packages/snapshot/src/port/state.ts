@@ -9,6 +9,7 @@ import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-form
 import type { ParsedStack } from '@vitest/utils'
 import type {
   SnapshotData,
+  SnapshotDomainMatchOptions,
   SnapshotEnvironment,
   SnapshotMatchOptions,
   SnapshotResult,
@@ -437,6 +438,90 @@ export default class SnapshotState {
             expectedTrimmed !== undefined
               ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
               : undefined,
+          key,
+          pass: false,
+        }
+      }
+      else {
+        this.matched.increment(testId)
+        return {
+          actual: '',
+          count,
+          expected: '',
+          key,
+          pass: true,
+        }
+      }
+    }
+  }
+
+  matchDomain({
+    testId,
+    testName,
+    received,
+    key,
+    isEqual,
+  }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
+    this._counters.increment(testName)
+    const count = this._counters.get(testName)
+
+    if (!key) {
+      key = testNameToKey(testName, count)
+    }
+    this._testIdToKeys.get(testId).push(key)
+    this._uncheckedKeys.delete(key)
+
+    const expected = this._snapshotData[key]
+    const hasSnapshot = expected !== undefined
+    const snapshotIsPersisted = this._fileExists
+
+    const pass = hasSnapshot ? isEqual(expected) : false
+
+    // Unlike regular match, do NOT overwrite snapshot data on pass.
+    // Domain snapshots may contain semantic patterns (e.g. regex)
+    // that differ from the rendered output but still match.
+
+    if (
+      (hasSnapshot && this._updateSnapshot === 'all')
+      || ((!hasSnapshot || !snapshotIsPersisted)
+        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+    ) {
+      if (this._updateSnapshot === 'all') {
+        if (!pass) {
+          if (hasSnapshot) {
+            this.updated.increment(testId)
+          }
+          else {
+            this.added.increment(testId)
+          }
+          this._addSnapshot(key, received, { testId })
+        }
+        else {
+          this.matched.increment(testId)
+        }
+      }
+      else {
+        this._addSnapshot(key, received, { testId })
+        this.added.increment(testId)
+      }
+
+      return {
+        actual: '',
+        count,
+        expected: '',
+        key,
+        pass: true,
+      }
+    }
+    else {
+      if (!pass) {
+        this.unmatched.increment(testId)
+        return {
+          actual: removeExtraLineBreaks(received),
+          count,
+          expected: expected !== undefined
+            ? removeExtraLineBreaks(expected)
+            : undefined,
           key,
           pass: false,
         }
