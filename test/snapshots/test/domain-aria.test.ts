@@ -5,8 +5,8 @@ import { editFile, runVitest } from '../../test-utils'
 
 test('aria snapshot', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria')
-  const testFile = join(root, 'aria-snapshot.test.ts')
-  const snapshotFile = join(root, '__snapshots__/aria-snapshot.test.ts.snap')
+  const testFile = join(root, 'basic.test.ts')
+  const snapshotFile = join(root, '__snapshots__/basic.test.ts.snap')
 
   // clean slate
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
@@ -16,7 +16,7 @@ test('aria snapshot', async () => {
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
+      "basic.test.ts": Object {
         "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
@@ -57,7 +57,7 @@ test('aria snapshot', async () => {
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
+      "basic.test.ts": Object {
         "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
@@ -100,7 +100,7 @@ test('aria snapshot', async () => {
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  aria-snapshot.test.ts > semantic match with regex in snapshot
+     FAIL  basic.test.ts > semantic match with regex in snapshot
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
 
     - Expected
@@ -110,7 +110,7 @@ test('aria snapshot', async () => {
       - paragraph: You have 3 messages
     - - paragraph: You have 7 notifications
 
-     ❯ aria-snapshot.test.ts:28:25
+     ❯ basic.test.ts:28:25
          26|     <p>You have 3 messages</p>
          27|   \`
          28|   expect(document.body).toMatchAriaSnapshot()
@@ -124,7 +124,7 @@ test('aria snapshot', async () => {
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
+      "basic.test.ts": Object {
         "nested structure": "passed",
         "semantic match with regex in snapshot": Array [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
@@ -140,7 +140,7 @@ test('aria snapshot', async () => {
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
-      "aria-snapshot.test.ts": Object {
+      "basic.test.ts": Object {
         "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
