@@ -39,61 +39,20 @@ test('domain snapshot', async () => {
 
   // 2. hand-edit snapshot to introduce regex patterns
   editFile(snapshotFile, s => s
-    .replace('custom:world 456', 'custom:/world \\d+/')
-    .replace('custom:foo 789', 'custom:/foo \\d+/')
+    .replace('custom:world 456', 'custom:/world \\\\d+/')
+    .replace('custom:foo 789', 'custom:/foo \\\\d+/')
   )
 
   // 3. re-run without update — regex patterns match, snapshot unchanged
   const snapWithRegex = readFileSync(snapshotFile, 'utf-8')
   result = await runVitest({ root })
-  expect(result.stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > regex
-    Error: Snapshot \`regex 1\` mismatched
-
-    Expected: "custom:/world d+/"
-    Received: "custom:world 456"
-
-     ❯ basic.test.ts:40:23
-         38|
-         39| test('regex', () => {
-         40|   expect('world 456').toMatchDomainSnapshot('test-domain')
-           |                       ^
-         41| })
-         42|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-     FAIL  basic.test.ts > mixed
-    Error: Snapshot \`mixed 1\` mismatched
-
-    Expected: "custom:/foo d+/"
-    Received: "custom:foo 789"
-
-     ❯ basic.test.ts:44:21
-         42|
-         43| test('mixed', () => {
-         44|   expect('foo 789').toMatchDomainSnapshot('test-domain')
-           |                     ^
-         45|   expect('bar 012').toMatchDomainSnapshot('test-domain')
-         46| })
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
-
-    "
-  `)
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
         "literal": "passed",
-        "mixed": Array [
-          "Snapshot \`mixed 1\` mismatched",
-        ],
-        "regex": Array [
-          "Snapshot \`regex 1\` mismatched",
-        ],
+        "mixed": "passed",
+        "regex": "passed",
       },
     }
   `)
@@ -102,11 +61,11 @@ test('domain snapshot', async () => {
 
     exports[\`literal 1\`] = \`custom:hello 123\`;
 
-    exports[\`mixed 1\`] = \`custom:/foo d+/\`;
+    exports[\`mixed 1\`] = \`custom:/foo \\\\d+/\`;
 
     exports[\`mixed 2\`] = \`custom:bar 012\`;
 
-    exports[\`regex 1\`] = \`custom:/world d+/\`;
+    exports[\`regex 1\`] = \`custom:/world \\\\d+/\`;
     "
   `)
 
@@ -124,39 +83,23 @@ test('domain snapshot', async () => {
   result = await runVitest({ root })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > regex
-    Error: Snapshot \`regex 1\` mismatched
-
-    Expected: "custom:/world d+/"
-    Received: "custom:world 999"
-
-     ❯ basic.test.ts:40:23
-         38|
-         39| test('regex', () => {
-         40|   expect('world 999').toMatchDomainSnapshot('test-domain')
-           |                       ^
-         41| })
-         42|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > mixed
-    Error: Snapshot \`mixed 1\` mismatched
+    Error: Snapshot \`mixed 2\` mismatched
 
-    Expected: "custom:/foo d+/"
-    Received: "custom:foo 999"
+    Expected: "custom:bar 012"
+    Received: "custom:baz 345"
 
-     ❯ basic.test.ts:44:21
-         42|
+     ❯ basic.test.ts:45:21
          43| test('mixed', () => {
          44|   expect('foo 999').toMatchDomainSnapshot('test-domain')
-           |                     ^
          45|   expect('baz 345').toMatchDomainSnapshot('test-domain')
+           |                     ^
          46| })
+         47|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
   `)
@@ -165,11 +108,9 @@ test('domain snapshot', async () => {
       "basic.test.ts": Object {
         "literal": "passed",
         "mixed": Array [
-          "Snapshot \`mixed 1\` mismatched",
+          "Snapshot \`mixed 2\` mismatched",
         ],
-        "regex": Array [
-          "Snapshot \`regex 1\` mismatched",
-        ],
+        "regex": "passed",
       },
     }
   `)
@@ -193,11 +134,11 @@ test('domain snapshot', async () => {
 
     exports[\`literal 1\`] = \`custom:hello 123\`;
 
-    exports[\`mixed 1\`] = \`custom:foo 999\`;
+    exports[\`mixed 1\`] = \`custom:/foo \\\\d+/\`;
 
     exports[\`mixed 2\`] = \`custom:baz 345\`;
 
-    exports[\`regex 1\`] = \`custom:world 999\`;
+    exports[\`regex 1\`] = \`custom:/world \\\\d+/\`;
     "
   `)
 })
