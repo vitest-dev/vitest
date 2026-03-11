@@ -82,7 +82,7 @@ Critical behavior difference: **on pass, `matchDomain` does not overwrite the st
 
 ### `assertDomain` flow in `SnapshotClient`
 
-```ts
+```
 assertDomain(options):
   captured = adapter.capture(received, context)
   rendered = adapter.render(captured, context)
@@ -98,17 +98,17 @@ assertDomain(options):
 
 Domain snapshots bypass the regular `serialize()` / `prettyFormat()` path entirely. The rendered string is stored and loaded as-is in the snapshot file (backtick-wrapped, no quote wrapping).
 
-## `DomainMatchResult` and diff quality
+## `DomainMatchResult`: semantic matching, updates, and diffs
 
-### Current state
+### The type
 
 ```ts
 interface DomainMatchResult {
   pass: boolean
   message?: string
+  mergedExpected?: string // pattern-preserving merge for updates
   expected?: string // adapter-adjusted expected for diff
   actual?: string // adapter-adjusted actual for diff
-  mergedExpected?: string // pattern-preserving merge for updates
   mismatches?: Array<{
     path: string
     reason: string
@@ -120,54 +120,51 @@ interface DomainMatchResult {
 
 `isEqual` returns the full `DomainMatchResult`. `matchDomain` uses it as follows:
 
+- **On pass**: stored snapshot is preserved (not overwritten). Semantic patterns survive.
 - **On update (`!pass`)**: stores `mergedExpected ?? received` — preserving matched patterns instead of overwriting with raw rendered output.
 - **On failure (no update)**: uses `actual`/`expected` from the result if provided, falling back to raw rendered/stored strings.
 
-### The problem
+### Pattern-preserving updates (`mergedExpected`)
 
-When a stored snapshot contains semantic patterns:
+Domain snapshots support richer-than-literal matching (regex, wildcards). Without `mergedExpected`, `--update` would destroy hand-edited semantic patterns by overwriting with the raw rendered output.
 
-```yaml
-- button /User \d+/: Profile
-- paragraph: /You have \d+ notifications/
+The adapter's `match()` traverses both trees and knows which nodes matched (including via regex). It returns `mergedExpected` — a merge of the old template and the new rendered output where matched patterns are kept and only genuinely changed nodes get literal values.
+
+Example with a key-value adapter:
+
+```
+Stored snapshot (hand-edited):     score=/\d+/   status=active
+Actual captured values:            score=42      status=inactive
+
+score: regex /\d+/ matches "42"    → keep pattern   → score=/\d+/
+status: literal "active" ≠ "inactive" → use literal  → status=inactive
+
+mergedExpected:                    score=/\d+/   status=inactive
 ```
 
-And the test fails on an unrelated change (say the paragraph text changed), the diff shows every regex token as a mismatch because the rendered actual (`button "User 42"`) differs textually from the pattern (`button /User \d+/`).
+On `--update`, `matchDomain` stores `mergedExpected` instead of the raw rendered `score=42 status=inactive`.
 
-### The solution (next steps)
+### Diff quality (`actual`/`expected`)
 
-The adapter's `match()` already traverses both trees and knows which nodes matched (including via regex). It should return adjusted `actual`/`expected` strings in `DomainMatchResult`. This serves **two distinct purposes**:
+Without adjusted diffs, every regex token appears as a mismatch because the rendered value (`score=42`) differs textually from the stored pattern (`score=/\d+/`), even when the regex matched.
 
-#### 1. Pattern-preserving updates
+The adapter produces adjusted `actual`/`expected` strings where matched patterns appear identically on both sides, so only genuinely mismatched entries show in the diff:
 
-When `--update` is used and the adapter provides a greedy match mapping, the **update value** should be a merge of the old template and the new rendered output — not a full overwrite. Nodes where the old regex/pattern matched the new captured value should keep their pattern form; only genuinely changed nodes get their literal rendered value.
+```diff
+  name=bob
+  score=/\d+/        ← regex matched, identical on both sides, no diff noise
+- status=active      ← only the actual mismatch shows
++ status=inactive
+```
 
-Example: stored snapshot has `- button /User \d+/: Profile`. The actual DOM now has `button "User 99"`. The regex matches, so on update the stored snapshot keeps `- button /User \d+/: Profile` instead of replacing it with `- button "User 99": Profile`.
+### How the core uses it
 
-Without this, `--update` destroys hand-edited semantic patterns, which defeats the purpose of domain snapshots supporting richer-than-literal matching.
+`matchDomain` in `SnapshotState` receives the full `DomainMatchResult` from the `isEqual` callback:
 
-The mechanism:
+- `mergedExpected` → used as the value for `_addSnapshot()` on update (instead of raw `received`)
+- `actual` / `expected` → used in the failure return value (instead of raw rendered/stored strings)
 
-1. **Greedy match mapping**: during semantic matching, record which template nodes matched which captured nodes.
-2. **Merged rendering**: produce a string that preserves template tokens (regex, wildcards) for matched nodes, and substitutes literal rendered values only for unmatched/new nodes.
-3. The merged string becomes the value written to the snapshot file on update, instead of the raw `rendered` output.
-
-#### 2. Diff quality on failure
-
-When a test fails, the diff should not show every regex token as a mismatch. The same greedy match mapping can produce adjusted `actual`/`expected` strings where matched regex tokens are substituted so only genuinely mismatched nodes appear as differences.
-
-This is a presentation concern — the match decision stays the same; only the failure output gets cleaner.
-
-#### Plumbing (done)
-
-The core plumbing is implemented:
-
-- `isEqual` callback returns the full `DomainMatchResult`, not just `boolean`.
-- `DomainMatchResult` carries `mergedExpected` (pattern-preserving merge for updates) and `actual`/`expected` (adjusted strings for diffs).
-- `matchDomain` uses `mergedExpected` as the stored value on update instead of raw rendered string.
-- `matchDomain` uses `actual`/`expected` from the result for failure diff output.
-
-Pattern-preserving updates and diff quality are separable at the adapter level — each adapter decides what to put in `mergedExpected` and `actual`/`expected`. The core passes them through.
+The core is adapter-agnostic — it passes these fields through without interpreting them. Each adapter decides its own greedy match mapping strategy.
 
 ## API surface
 
@@ -195,12 +192,6 @@ expect(value).toMatchDomainInlineSnapshot('domain-name', 'template')
 // Domain-specific matchers (e.g. for ARIA)
 expect(element).toMatchAriaSnapshot()
 ```
-
-## Runtime policy
-
-- Do not attempt to align outputs across `jsdom`, `happy-dom`, and browsers.
-- Determinism target is per-runtime, not cross-runtime identity.
-- Divergence is runtime/user choice, not a Vitest normalization responsibility.
 
 ## ARIA adapter prototype
 
@@ -248,6 +239,8 @@ Parse: role entries with quoted or regex names, `[attr]`/`[attr=value]` syntax, 
 
 Match: contain semantics (template children match in order, can skip), deep subtree search, regex name/text matching, attribute constraints.
 
+Runtime policy: no attempt to align outputs across `jsdom`, `happy-dom`, and browsers. Determinism target is per-runtime, not cross-runtime identity.
+
 ### What it does not cover (intentionally)
 
 - Full accessible name computation (only `aria-label`, `aria-labelledby`, `<label for>`, `alt`)
@@ -257,7 +250,7 @@ Match: contain semantics (template children match in order, can skip), deep subt
 - Shadow DOM / slot traversal
 - `/url`, `/placeholder` and other property directives
 - Regex codegen mode for dynamic content
-- Diff-aware rendering (the `DomainMatchResult.actual`/`expected` path described above)
+- Greedy match mapping / `mergedExpected` / adjusted diffs (implemented in kv toy adapter, not yet in ARIA adapter)
 
 ## Implementation status
 
@@ -273,14 +266,13 @@ Match: contain semantics (template children match in order, can skip), deep subt
 - Stored snapshots with hand-edited regex patterns are preserved on pass (no overwrite)
 - Pattern-preserving updates: on `--update`, `mergedExpected` from adapter used instead of raw rendered output
 - `DomainMatchResult.actual`/`expected` wired into failure diff path
-- Key-value toy adapter (`kv`) with regex support and `mergedExpected` — validates pattern-preserving updates
+- Key-value toy adapter (`kv`) with regex support, `mergedExpected`, and adjusted `actual`/`expected` — validates pattern-preserving updates and clean diffs
 - ARIA adapter prototype with unit tests (39 tests) and integration tests (6 tests)
 - Integration test (`domain.test.ts`) covering full lifecycle: create → hand-edit regex → pass preserves → partial mismatch → pattern-preserving update
 
 ### Next
 
-- Adapter-side diff quality: populate `DomainMatchResult.actual`/`expected` with adjusted strings so matched regex tokens don't appear as diff noise (plumbing is done, adapters need to use it)
-- ARIA adapter: implement greedy match mapping + `mergedExpected` (currently only returns `pass`/`message`)
+- ARIA adapter: implement greedy match mapping + `mergedExpected` + adjusted `actual`/`expected` (currently only returns `pass`/`message`)
 - Inline snapshot support (`toMatchDomainInlineSnapshot`)
 - Consider whether `DomainMatchResult.mismatches` should influence reporter output
 
