@@ -214,16 +214,16 @@ test('domain snapshot with poll', async () => {
     + name=a
       age=23
 
-     ❯ basic.test.ts:136:24
-        134|     // --- STABLE TEST POLL ---
-        135|     return { name: 'a', age: '23' }
-        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:12:24
+         10|     // --- STABLE TEST POLL ---
+         11|     return { name: 'a', age: '23' }
+         12|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
            |                        ^
-        137|   expect(trial).toBe(1)
-        138| })
+         13|   expect(trial).toBe(1)
+         14| })
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:132:3
+     ❯ basic.test.ts:8:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -256,16 +256,16 @@ test('domain snapshot with poll', async () => {
 
      FAIL  basic.test.ts > stable
     Error: STABLE TEST ERROR
-     ❯ basic.test.ts:136:24
-        134|     throw new Error("STABLE TEST ERROR")
-        135|     return { name: 'a', age: '23' }
-        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:12:24
+         10|     throw new Error("STABLE TEST ERROR")
+         11|     return { name: 'a', age: '23' }
+         12|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
            |                        ^
-        137|   expect(trial).toBe(1)
-        138| })
+         13|   expect(trial).toBe(1)
+         14| })
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:132:3
+     ❯ basic.test.ts:8:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -296,16 +296,16 @@ test('domain snapshot with poll', async () => {
 
      FAIL  basic.test.ts > stable
     Error: poll() never returned a value within the timeout
-     ❯ basic.test.ts:136:24
-        134|     return new Promise(r => setTimeout(r, 1000))
-        135|     return { name: 'a', age: '23' }
-        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:12:24
+         10|     return new Promise(r => setTimeout(r, 1000))
+         11|     return { name: 'a', age: '23' }
+         12|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
            |                        ^
-        137|   expect(trial).toBe(1)
-        138| })
+         13|   expect(trial).toBe(1)
+         14| })
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:132:3
+     ❯ basic.test.ts:8:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

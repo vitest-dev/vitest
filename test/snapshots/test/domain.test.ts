@@ -96,13 +96,13 @@ test('domain snapshot', async () => {
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:112:60
-        110|
-        111| test('with regex', () => {
-        112|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
+     ❯ basic.test.ts:11:60
+          9|
+         10| test('with regex', () => {
+         11|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
            |                                                            ^
-        113| })
-        114|
+         12| })
+         13|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
