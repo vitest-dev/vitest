@@ -16,6 +16,7 @@ export interface DomainMatchResult {
   message?: string
   expected?: string
   actual?: string
+  mergedExpected?: string
   mismatches?: DomainSnapshotMismatch[]
 }
 

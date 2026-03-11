@@ -17,87 +17,93 @@ test('domain snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "literal": "passed",
-        "mixed": "passed",
-        "regex": "passed",
-      },
-    }
-  `)
-  let snap = readFileSync(snapshotFile, 'utf-8')
-  expect(snap).toMatchInlineSnapshot(`
-    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-    exports[\`literal 1\`] = \`custom:hello 123\`;
-
-    exports[\`mixed 1\`] = \`custom:foo 789\`;
-
-    exports[\`mixed 2\`] = \`custom:bar 012\`;
-
-    exports[\`regex 1\`] = \`custom:world 456\`;
-    "
-  `)
-
-  // 2. hand-edit snapshot to introduce regex patterns
-  editFile(snapshotFile, s => s
-    .replace('custom:world 456', 'custom:/world \\\\d+/')
-    .replace('custom:foo 789', 'custom:/foo \\\\d+/')
-  )
-
-  // 3. re-run without update — regex patterns match, snapshot unchanged
-  const snapWithRegex = readFileSync(snapshotFile, 'utf-8')
-  result = await runVitest({ root })
-  expect(result.stderr).toMatchInlineSnapshot(`""`)
-  expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "literal": "passed",
-        "mixed": "passed",
-        "regex": "passed",
+        "all literal": "passed",
+        "with regex": "passed",
       },
     }
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`literal 1\`] = \`custom:hello 123\`;
+    exports[\`all literal 1\`] = \`
+    name=alice
+    age=30
+    \`;
 
-    exports[\`mixed 1\`] = \`custom:/foo \\\\d+/\`;
-
-    exports[\`mixed 2\`] = \`custom:bar 012\`;
-
-    exports[\`regex 1\`] = \`custom:/world \\\\d+/\`;
+    exports[\`with regex 1\`] = \`
+    name=bob
+    score=999
+    status=active
+    \`;
     "
   `)
 
-  // 4. edit test: change values so regex still matches some, not others
-  //    - 'world 456' -> 'world 999' (regex /world \d+/ still matches)
-  //    - 'foo 789' -> 'foo 999' (regex /foo \d+/ still matches)
-  //    - 'bar 012' -> 'baz 345' (literal 'bar 012' does NOT match)
-  editFile(testFile, s => s
-    .replace(`'world 456'`, `'world 999'`)
-    .replace(`'foo 789'`, `'foo 999'`)
-    .replace(`'bar 012'`, `'baz 345'`)
-  )
+  // 2. hand-edit snapshot to introduce regex patterns for "with regex" test
+  //    score=999 -> score=/\\d+/   (regex, should match any number)
+  //    status stays literal
+  editFile(snapshotFile, s => s
+    .replace('score=999', 'score=/\\\\d+/'))
 
-  // 5. run without update — 'bar 012' mismatch causes failure
+  // 3. re-run without update — regex pattern matches, all pass, snapshot unchanged
+  result = await runVitest({ root })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "all literal": "passed",
+        "with regex": "passed",
+      },
+    }
+  `)
+  expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`all literal 1\`] = \`
+    name=alice
+    age=30
+    \`;
+
+    exports[\`with regex 1\`] = \`
+    name=bob
+    score=/\\\\d+/
+    status=active
+    \`;
+    "
+  `)
+
+  // 4. edit test: change values within "with regex"
+  //    - score: '999' -> '42'  (regex /\d+/ still matches)
+  //    - status: 'active' -> 'inactive'  (literal does NOT match)
+  editFile(testFile, s => s
+    .replace(`score: '999'`, `score: '42'`)
+    .replace(`status: 'active'`, `status: 'inactive'`))
+
+  // TODO: matching regex key/value shouldn't show up as diff
+  // 5. run without update — status mismatch causes failure
   result = await runVitest({ root })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts > mixed
-    Error: Snapshot \`mixed 2\` mismatched
+     FAIL  basic.test.ts > with regex
+    Error: Snapshot \`with regex 1\` mismatched
 
-    Expected: "custom:bar 012"
-    Received: "custom:baz 345"
+    - Expected
+    + Received
 
-     ❯ basic.test.ts:45:21
-         43| test('mixed', () => {
-         44|   expect('foo 999').toMatchDomainSnapshot('test-domain')
-         45|   expect('baz 345').toMatchDomainSnapshot('test-domain')
-           |                     ^
-         46| })
-         47|
+      name=bob
+    - score=/\\d+/
+    + score=42
+    - status=active
+    + status=inactive
+
+     ❯ basic.test.ts:102:60
+        100|
+        101| test('with regex', () => {
+        102|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
+           |                                                            ^
+        103| })
+        104|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -106,39 +112,42 @@ test('domain snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "literal": "passed",
-        "mixed": Array [
-          "Snapshot \`mixed 2\` mismatched",
+        "all literal": "passed",
+        "with regex": Array [
+          "Snapshot \`with regex 1\` mismatched",
         ],
-        "regex": "passed",
       },
     }
   `)
 
-  // 6. run with update — should preserve regex where it matched,
-  //    overwrite literal where it didn't
+  // TODO: update should keep matching regex pattern
+  // 6. run with update — should preserve score regex (matched),
+  //    overwrite status with literal (didn't match)
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "literal": "passed",
-        "mixed": "passed",
-        "regex": "passed",
+        "all literal": "passed",
+        "with regex": "passed",
       },
     }
   `)
-  snap = readFileSync(snapshotFile, 'utf-8')
-  expect(snap).toMatchInlineSnapshot(`
+  // score regex matched '42' -> preserved as /\d+/
+  // status literal 'active' != 'inactive' -> overwritten with literal
+  expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`literal 1\`] = \`custom:hello 123\`;
+    exports[\`all literal 1\`] = \`
+    name=alice
+    age=30
+    \`;
 
-    exports[\`mixed 1\`] = \`custom:/foo \\\\d+/\`;
-
-    exports[\`mixed 2\`] = \`custom:baz 345\`;
-
-    exports[\`regex 1\`] = \`custom:/world \\\\d+/\`;
+    exports[\`with regex 1\`] = \`
+    name=bob
+    score=42
+    status=inactive
+    \`;
     "
   `)
 })

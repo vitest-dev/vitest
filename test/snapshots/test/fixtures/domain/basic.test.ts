@@ -1,46 +1,103 @@
-import type { DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 import { expect, test } from 'vitest'
 
-const testDomainAdapter: DomainSnapshotAdapter<string, string> = {
-  name: 'test-domain',
+// Key-value domain adapter: each snapshot is multiple lines of `key=value`.
+// Values can be literal strings or `/regex/` patterns in the stored snapshot.
+// On match, each line is checked independently — regex lines use RegExp.test().
+// On partial match, `mergedExpected` preserves regex for matched lines
+// and substitutes literal rendered values for unmatched lines.
+
+interface KVCaptured {
+  entries: { key: string; value: string }[]
+}
+
+interface KVExpected {
+  entries: { key: string; value: string | RegExp }[]
+}
+
+const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
+  name: 'kv',
+
   capture(received) {
-    if (typeof received !== 'string') {
-      throw new TypeError('test-domain expects a string')
+    if (typeof received !== 'object' || received === null) {
+      throw new TypeError('kv adapter expects a plain object')
     }
-    return received
+    const entries = Object.entries(received as Record<string, string>)
+      .map(([key, value]) => ({ key, value: String(value) }))
+    return { entries }
   },
+
   render(captured) {
-    return `custom:${captured}`
+    return `\n${captured.entries.map(e => `${e.key}=${e.value}`).join('\n')}\n`
   },
+
   parseExpected(input) {
-    const trimmed = input.trim()
-    return trimmed.startsWith('custom:') ? trimmed.slice('custom:'.length) : trimmed
+    const entries = input.trim().split('\n').map((line) => {
+      const eq = line.indexOf('=')
+      const key = line.slice(0, eq)
+      const raw = line.slice(eq + 1)
+      const value = (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1)
+        ? new RegExp(raw.slice(1, -1))
+        : raw
+      return { key, value }
+    })
+    return { entries }
   },
-  match(captured, expected) {
-    if (typeof expected === 'string' && expected.startsWith('/') && expected.endsWith('/')) {
-      const pass = new RegExp(expected.slice(1, -1)).test(captured)
-      return {
-        pass,
-        message: pass ? undefined : `Domain mismatch: expected ${expected}, got ${captured}`,
+
+  match(captured, expected): DomainMatchResult {
+    if (typeof expected === 'string') {
+      expected = this.parseExpected(expected, {} as any)
+    }
+
+    const mergedLines: string[] = []
+    let allPass = true
+
+    for (let i = 0; i < captured.entries.length; i++) {
+      const cap = captured.entries[i]
+      const exp = expected.entries[i]
+
+      if (!exp) {
+        mergedLines.push(`${cap.key}=${cap.value}`)
+        allPass = false
+        continue
+      }
+
+      if (exp.value instanceof RegExp) {
+        if (exp.value.test(cap.value)) {
+          // regex matched — preserve the pattern form
+          mergedLines.push(`${exp.key}=/${exp.value.source}/`)
+        }
+        else {
+          // regex did NOT match — use literal
+          mergedLines.push(`${cap.key}=${cap.value}`)
+          allPass = false
+        }
+      }
+      else {
+        if (cap.value === exp.value) {
+          mergedLines.push(`${exp.key}=${exp.value}`)
+        }
+        else {
+          mergedLines.push(`${cap.key}=${cap.value}`)
+          allPass = false
+        }
       }
     }
+
     return {
-      pass: captured === expected,
+      pass: allPass,
+      message: allPass ? undefined : 'KV entries do not match',
+      mergedExpected: `\n${mergedLines.join('\n')}\n`,
     }
   },
 }
 
-expect.addSnapshotDomain(testDomainAdapter)
+expect.addSnapshotDomain(kvAdapter)
 
-test('literal', () => {
-  expect('hello 123').toMatchDomainSnapshot('test-domain')
+test('all literal', () => {
+  expect({ name: 'alice', age: '30' }).toMatchDomainSnapshot('kv')
 })
 
-test('regex', () => {
-  expect('world 456').toMatchDomainSnapshot('test-domain')
-})
-
-test('mixed', () => {
-  expect('foo 789').toMatchDomainSnapshot('test-domain')
-  expect('bar 012').toMatchDomainSnapshot('test-domain')
+test('with regex', () => {
+  expect({ name: 'bob', score: '999', status: 'active' }).toMatchDomainSnapshot('kv')
 })
