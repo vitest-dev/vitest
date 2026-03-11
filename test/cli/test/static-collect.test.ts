@@ -1046,6 +1046,103 @@ test('collects tags with other options', async () => {
   `)
 })
 
+test('collects tests with concurrent modifier in different order', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.skip.concurrent('concurrent suite', () => {
+      test('test in concurrent suite', () => {})
+    })
+
+    test('test outside concurrent suite', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "test in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > test in concurrent suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+      "test outside concurrent suite": {
+        "errors": [],
+        "fullName": "test outside concurrent suite",
+        "id": "-1732721377_1",
+        "location": "8:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
+test('collects tests with options object modifiers', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe('options tests', () => {
+      test('skipped via options', { skip: true }, () => {})
+      test('only via options', { only: true }, () => {})
+      test('todo via options', { todo: true }, () => {})
+      test('concurrent via options', { concurrent: true }, () => {})
+      test('skip and concurrent via options', { skip: true, concurrent: true }, () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "options tests": {
+        "concurrent via options": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "options tests > concurrent via options",
+          "id": "-1732721377_0_3",
+          "location": "8:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "only via options": {
+          "errors": [],
+          "fullName": "options tests > only via options",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "skip and concurrent via options": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "options tests > skip and concurrent via options",
+          "id": "-1732721377_0_4",
+          "location": "9:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "skipped via options": {
+          "errors": [],
+          "fullName": "options tests > skipped via options",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "todo via options": {
+          "errors": [],
+          "fullName": "options tests > todo via options",
+          "id": "-1732721377_0_2",
+          "location": "7:6",
+          "mode": "todo",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
 test('collects tests with concurrent modifier', async () => {
   const testModule = await collectTests(`
     import { test, describe } from 'vitest'

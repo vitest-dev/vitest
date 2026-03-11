@@ -1,5 +1,4 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
-import type { Property } from 'estree'
 import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
@@ -153,15 +152,21 @@ function astParseFile(filepath: string, code: string) {
       }
       const properties = getProperties(callee)
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
-      // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(mode)) {
+      // intermediate calls like .each(), .for() will be picked up in the next iteration
+      if (property && ['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(property)) {
         return
       }
-      const isConcurrent = properties.includes('concurrent')
-      if (mode === 'concurrent' || mode === 'sequential') {
-        mode = 'run'
+      // derive mode from the full chain (handles any order like .skip.concurrent or .concurrent.skip)
+      let mode: 'run' | 'skip' | 'only' | 'todo' = 'run'
+      for (const prop of properties) {
+        if (prop === 'skip' || prop === 'only' || prop === 'todo') {
+          mode = prop
+        }
+        else if (prop === 'skipIf' || prop === 'runIf') {
+          mode = 'skip'
+        }
       }
+      let isConcurrent = properties.includes('concurrent')
 
       let start: number
       const end = node.end
@@ -208,11 +213,6 @@ function astParseFile(filepath: string, code: string) {
         // Vitest module mocker injects these
         .replace(/__vi_import_\d+__\./g, '')
 
-      // cannot statically analyze, so we always skip it
-      if (mode === 'skipIf' || mode === 'runIf') {
-        mode = 'skip'
-      }
-
       const parentCalleeName = typeof callee?.callee === 'object' && callee?.callee.type === 'MemberExpression' && callee?.callee.property?.name
       let isDynamicEach = parentCalleeName === 'each' || parentCalleeName === 'for'
       if (!isDynamicEach && callee.type === 'TaggedTemplateExpression') {
@@ -220,25 +220,34 @@ function astParseFile(filepath: string, code: string) {
         isDynamicEach = property === 'each' || property === 'for'
       }
 
-      // Extract tags from the second argument if it's an options object
+      // Extract options from the second argument if it's an options object
       const tags: string[] = []
       const secondArg = node.arguments?.[1]
       if (secondArg?.type === 'ObjectExpression') {
-        const tagsProperty = secondArg.properties?.find(
-          (p: any) => p.type === 'Property' && p.key?.type === 'Identifier' && p.key.name === 'tags',
-        ) as Property | undefined
-        if (tagsProperty) {
-          const tagsValue = tagsProperty.value
-          if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
-            // tags: 'single-tag'
-            tags.push(tagsValue.value)
+        for (const prop of (secondArg.properties || []) as any[]) {
+          if (prop.type !== 'Property' || prop.key?.type !== 'Identifier') {
+            continue
           }
-          else if (tagsValue?.type === 'ArrayExpression') {
-            // tags: ['tag1', 'tag2']
-            for (const element of tagsValue.elements || []) {
-              if (element?.type === 'Literal' && typeof element.value === 'string') {
-                tags.push(element.value)
+          const keyName = prop.key.name
+          if (keyName === 'tags') {
+            const tagsValue = prop.value
+            if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
+              tags.push(tagsValue.value)
+            }
+            else if (tagsValue?.type === 'ArrayExpression') {
+              for (const element of tagsValue.elements || []) {
+                if (element?.type === 'Literal' && typeof element.value === 'string') {
+                  tags.push(element.value)
+                }
               }
+            }
+          }
+          else if (prop.value?.type === 'Literal' && prop.value.value === true) {
+            if (keyName === 'skip' || keyName === 'only' || keyName === 'todo') {
+              mode = keyName
+            }
+            else if (keyName === 'concurrent') {
+              isConcurrent = true
             }
           }
         }
