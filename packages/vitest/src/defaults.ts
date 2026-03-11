@@ -5,7 +5,7 @@ import type {
   UserConfig,
 } from './node/types/config'
 import os from 'node:os'
-import { isCI } from './utils/env'
+import { isAgent, isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
@@ -93,7 +93,7 @@ export const configDefaults: Readonly<{
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI && process.stdin.isTTY,
+  watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
   environment: 'node' as const,
   clearMocks: false,

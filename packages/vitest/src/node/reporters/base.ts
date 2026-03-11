@@ -37,6 +37,7 @@ const BADGE_PADDING = '       '
 
 export interface BaseOptions {
   isTTY?: boolean
+  silent?: boolean | 'passed-only'
 }
 
 export abstract class BaseReporter implements Reporter {
@@ -49,16 +50,19 @@ export abstract class BaseReporter implements Reporter {
   renderSucceed = false
 
   protected verbose = false
+  protected silent?: boolean | 'passed-only'
 
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
+    this.silent = options.silent
   }
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
+    this.silent ??= this.ctx.config.silent
 
     this.ctx.logger.printBanner()
   }
@@ -117,8 +121,8 @@ export abstract class BaseReporter implements Reporter {
     this.printTestModule(testModule)
   }
 
-  private logFailedTask(task: Task) {
-    if (this.ctx.config.silent === 'passed-only') {
+  protected logFailedTask(task: Task): void {
+    if (this.silent === 'passed-only') {
       for (const log of task.logs || []) {
         this.onUserConsoleLog(log, 'failed')
       }
@@ -504,11 +508,11 @@ export abstract class BaseReporter implements Reporter {
   }
 
   shouldLog(log: UserConsoleLog, taskState?: TestResult['state']): boolean {
-    if (this.ctx.config.silent === true) {
+    if (this.silent === true) {
       return false
     }
 
-    if (this.ctx.config.silent === 'passed-only' && taskState !== 'failed') {
+    if (this.silent === 'passed-only' && taskState !== 'failed') {
       return false
     }
 

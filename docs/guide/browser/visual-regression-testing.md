@@ -606,7 +606,6 @@ screenshots should use the service.
 
 The cleanest approach is using [Test Projects](/guide/projects):
 
-
 ```ts [vitest.config.ts]
 import { env } from 'node:process'
 import { defineConfig } from 'vitest/config'
@@ -662,7 +661,6 @@ export default defineConfig({
   },
 })
 ```
-
 
 Follow the [official guide to create a Playwright Workspace](https://learn.microsoft.com/en-us/azure/app-testing/playwright-workspaces/quickstart-run-end-to-end-tests?tabs=playwrightcli&pivots=playwright-test-runner#create-a-workspace).
 
