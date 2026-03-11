@@ -96,8 +96,7 @@ test('exclude can exclude covered files #2', async () => {
       reporter: 'json',
       include: ['fixtures/src/{math,even}.ts'],
 
-      // pattern that's recognized by picomatch but not by tinyglobby
-      exclude: ['math'],
+      exclude: ['**/math.ts'],
     },
   })
 
@@ -105,6 +104,25 @@ test('exclude can exclude covered files #2', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`
     [
       "<process-cwd>/fixtures/src/even.ts",
+    ]
+  `)
+})
+
+test('exclude globs don\'t filter out cwd', async () => {
+  await runVitest({
+    include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
+    coverage: {
+      reporter: 'json',
+      include: ['fixtures/src/{math,even}.ts'],
+      exclude: ['**/vitest/**'],
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/even.ts",
+      "<process-cwd>/fixtures/src/math.ts",
     ]
   `)
 })
