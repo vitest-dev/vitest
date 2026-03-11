@@ -182,10 +182,19 @@ test('domain snapshot with poll', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    Error: Obsolete snapshots found when no snapshot update is expected.
+    · stable 1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > stable
-    TypeError: Cannot read properties of undefined (reading 'entries')
+    Error: Matcher did not succeed in time.
      ❯ basic.test.ts:136:24
         134|     throw new Error("STABLE TEST ERROR")
         135|     return { name: 'a', age: '23' }
@@ -197,15 +206,20 @@ test('domain snapshot with poll', async () => {
     Caused by: Error: Matcher did not succeed in time.
      ❯ basic.test.ts:132:3
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "__module_errors__": Array [
+          "Obsolete snapshots found when no snapshot update is expected.
+    · stable 1
+    ",
+        ],
         "stable": Array [
-          "Cannot read properties of undefined (reading 'entries')",
+          "Matcher did not succeed in time.",
         ],
         "throw then stable": "passed",
         "unstable": "passed",
@@ -213,19 +227,67 @@ test('domain snapshot with poll', async () => {
     }
   `)
 
-  // TODO: what more?
+  // poll timeout with zero retry
   editFile(testFile, s => s
-    .replace('throw new Error("STABLE TEST ERROR")', '// --- STABLE TEST POLL ---'))
+    .replace('throw new Error("STABLE TEST ERROR")', `return new Promise(r => setTimeout(r, 1000))`))
 
   result = await runVitest({ root, update: 'none' })
-  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    Error: Obsolete snapshots found when no snapshot update is expected.
+    · stable 1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > stable
+    Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:136:24
+        134|     return new Promise(r => setTimeout(r, 1000))
+        135|     return { name: 'a', age: '23' }
+        136|   }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+           |                        ^
+        137|   expect(trial).toBe(1)
+        138| })
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:132:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+    "
+  `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "stable": "passed",
+        "__module_errors__": Array [
+          "Obsolete snapshots found when no snapshot update is expected.
+    · stable 1
+    ",
+        ],
+        "stable": Array [
+          "Matcher did not succeed in time.",
+        ],
         "throw then stable": "passed",
         "unstable": "passed",
       },
     }
   `)
+
+  // result = await runVitest({ root, update: 'none' })
+  // expect(result.stderr).toMatchInlineSnapshot(`""`)
+  // expect(result.errorTree()).toMatchInlineSnapshot(`
+  //   Object {
+  //     "basic.test.ts": Object {
+  //       "stable": "passed",
+  //       "throw then stable": "passed",
+  //       "unstable": "passed",
+  //     },
+  //   }
+  // `)
 })

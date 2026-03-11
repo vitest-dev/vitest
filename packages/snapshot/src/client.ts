@@ -320,6 +320,11 @@ export class SnapshotClient {
       }
     }
 
+    // TODO: probed key should be consumed to avoid obsolete snapshot deletion
+    if (typeof lastRendered === 'undefined') {
+      throw new TypeError('Matcher did not succeed in time.')
+    }
+
     // Commit: single matchDomain call
     const { actual, expected, key, pass } = snapshotState.matchDomain({
       testId,
