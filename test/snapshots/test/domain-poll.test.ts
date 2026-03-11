@@ -182,19 +182,10 @@ test('domain snapshot with poll', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts [ basic.test.ts ]
-    Error: Obsolete snapshots found when no snapshot update is expected.
-    · stable 1
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > stable
-    Error: Matcher did not succeed in time.
+    Error: STABLE TEST ERROR
      ❯ basic.test.ts:136:24
         134|     throw new Error("STABLE TEST ERROR")
         135|     return { name: 'a', age: '23' }
@@ -206,20 +197,15 @@ test('domain snapshot with poll', async () => {
     Caused by: Error: Matcher did not succeed in time.
      ❯ basic.test.ts:132:3
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "__module_errors__": Array [
-          "Obsolete snapshots found when no snapshot update is expected.
-    · stable 1
-    ",
-        ],
         "stable": Array [
-          "Matcher did not succeed in time.",
+          "STABLE TEST ERROR",
         ],
         "throw then stable": "passed",
         "unstable": "passed",
@@ -227,26 +213,17 @@ test('domain snapshot with poll', async () => {
     }
   `)
 
-  // poll timeout with zero retry
+  // poll timeout hangs
   editFile(testFile, s => s
     .replace('throw new Error("STABLE TEST ERROR")', `return new Promise(r => setTimeout(r, 1000))`))
 
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts [ basic.test.ts ]
-    Error: Obsolete snapshots found when no snapshot update is expected.
-    · stable 1
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > stable
-    Error: Matcher did not succeed in time.
+    TypeError: kv adapter expects a plain object
      ❯ basic.test.ts:136:24
         134|     return new Promise(r => setTimeout(r, 1000))
         135|     return { name: 'a', age: '23' }
@@ -258,20 +235,15 @@ test('domain snapshot with poll', async () => {
     Caused by: Error: Matcher did not succeed in time.
      ❯ basic.test.ts:132:3
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "__module_errors__": Array [
-          "Obsolete snapshots found when no snapshot update is expected.
-    · stable 1
-    ",
-        ],
         "stable": Array [
-          "Matcher did not succeed in time.",
+          "kv adapter expects a plain object",
         ],
         "throw then stable": "passed",
         "unstable": "passed",

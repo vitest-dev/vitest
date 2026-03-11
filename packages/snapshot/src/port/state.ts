@@ -46,6 +46,8 @@ interface SnapshotReturnOptions {
 export interface SnapshotProbeResult {
   expected: string | undefined
   updateSnapshot: SnapshotUpdateState
+  /** Consume the probed key (increment counter, mark as checked) without matching. */
+  consume: () => void
 }
 
 interface SaveStatus {
@@ -460,7 +462,7 @@ export default class SnapshotState {
     }
   }
 
-  probe(testName: string, options?: { isInline?: boolean; inlineSnapshot?: string }): SnapshotProbeResult {
+  probe(testName: string, testId: string, options?: { isInline?: boolean; inlineSnapshot?: string }): SnapshotProbeResult {
     // Peek at the counter WITHOUT incrementing — compute the same key
     // that the subsequent match/matchDomain call will use.
     const count = this._counters.get(testName) + 1
@@ -477,6 +479,11 @@ export default class SnapshotState {
     return {
       expected,
       updateSnapshot: this._updateSnapshot,
+      consume: () => {
+        this._counters.increment(testName)
+        this._testIdToKeys.get(testId).push(key)
+        this._uncheckedKeys.delete(key)
+      },
     }
   }
 

@@ -262,7 +262,7 @@ export class SnapshotClient {
     const context = { filepath, name, testId }
 
     // Probe: read existing snapshot without mutating state
-    const { expected: existingSnapshot, updateSnapshot } = snapshotState.probe(testName, {
+    const { expected: existingSnapshot, updateSnapshot, consume } = snapshotState.probe(testName, testId, {
       isInline,
       inlineSnapshot,
     })
@@ -273,6 +273,7 @@ export class SnapshotClient {
     let lastCaptured: any
     let lastRendered: string | undefined
     let lastResult: DomainMatchResult | undefined
+    let lastPollError: unknown
 
     if (shouldRetryMatch) {
       // Parse expected once — it doesn't change between retries
@@ -290,8 +291,9 @@ export class SnapshotClient {
             break
           }
         }
-        catch {
+        catch (e) {
           // poll() threw — value not ready, keep retrying
+          lastPollError = e
         }
 
         if (Date.now() >= deadline) {
@@ -320,9 +322,11 @@ export class SnapshotClient {
       }
     }
 
-    // TODO: probed key should be consumed to avoid obsolete snapshot deletion
-    if (typeof lastRendered === 'undefined') {
-      throw new TypeError('Matcher did not succeed in time.')
+    // poll() never succeeded — consume the probed key to prevent
+    // the snapshot from being deleted as obsolete, then throw.
+    if (lastRendered == null) {
+      consume()
+      throw lastPollError || new Error('poll() never returned a value within the timeout')
     }
 
     // Commit: single matchDomain call
