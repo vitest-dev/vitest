@@ -32,12 +32,12 @@ export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, O
     mode: 'assert' | 'update',
     options?: Options,
   ) => string
-  parseExpected?: (
+  parseExpected: (
     input: string,
     context: DomainSnapshotContext,
     options?: Options,
   ) => Expected
-  match?: (
+  match: (
     captured: Captured,
     expected: Expected | string,
     context: DomainSnapshotContext,

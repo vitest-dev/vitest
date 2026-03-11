@@ -170,54 +170,55 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }),
   )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchDomainInlineSnapshot',
-    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      domain: string,
-      inlineSnapshot?: string,
-      message?: string,
-    ) {
-      utils.flag(this, '_name', 'toMatchDomainInlineSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchDomainInlineSnapshot cannot be used with "not"')
-      }
-      const test = getTest('toMatchDomainInlineSnapshot', this)
-      const expected = utils.flag(this, 'object')
-      const error = utils.flag(this, 'error')
-      const errorMessage = utils.flag(this, 'message')
+  // TODO: inline snapshot path
+  // utils.addMethod(
+  //   chai.Assertion.prototype,
+  //   'toMatchDomainInlineSnapshot',
+  //   wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+  //     this,
+  //     domain: string,
+  //     inlineSnapshot?: string,
+  //     message?: string,
+  //   ) {
+  //     utils.flag(this, '_name', 'toMatchDomainInlineSnapshot')
+  //     const isNot = utils.flag(this, 'negate')
+  //     if (isNot) {
+  //       throw new Error('toMatchDomainInlineSnapshot cannot be used with "not"')
+  //     }
+  //     const test = getTest('toMatchDomainInlineSnapshot', this)
+  //     const expected = utils.flag(this, 'object')
+  //     const error = utils.flag(this, 'error')
+  //     const errorMessage = utils.flag(this, 'message')
 
-      if (typeof domain !== 'string' || !domain) {
-        throw new Error('toMatchDomainInlineSnapshot expects a non-empty domain name as the first argument')
-      }
+  //     if (typeof domain !== 'string' || !domain) {
+  //       throw new Error('toMatchDomainInlineSnapshot expects a non-empty domain name as the first argument')
+  //     }
 
-      if (inlineSnapshot) {
-        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      }
+  //     if (inlineSnapshot) {
+  //       inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+  //     }
 
-      const adapter = getDomain(domain)
-      if (!adapter) {
-        const available = getDomains().map(item => item.name)
-        const suggestion = available.length
-          ? `Available domains: ${available.join(', ')}`
-          : 'No domains registered. Use expect.addSnapshotDomain(adapter) first.'
-        throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
-      }
+  //     const adapter = getDomain(domain)
+  //     if (!adapter) {
+  //       const available = getDomains().map(item => item.name)
+  //       const suggestion = available.length
+  //         ? `Available domains: ${available.join(', ')}`
+  //         : 'No domains registered. Use expect.addSnapshotDomain(adapter) first.'
+  //       throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
+  //     }
 
-      getSnapshotClient().assertDomain({
-        received: expected,
-        adapter,
-        message,
-        inlineSnapshot,
-        isInline: true,
-        error,
-        errorMessage,
-        ...getTestNames(test),
-      })
-    }),
-  )
+  //     getSnapshotClient().assertDomain({
+  //       received: expected,
+  //       adapter,
+  //       message,
+  //       inlineSnapshot,
+  //       isInline: true,
+  //       error,
+  //       errorMessage,
+  //       ...getTestNames(test),
+  //     })
+  //   }),
+  // )
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchDomainSnapshot',
