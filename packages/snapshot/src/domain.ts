@@ -1,9 +1,3 @@
-export interface DomainSnapshotContext {
-  filepath: string
-  name: string
-  testId: string
-}
-
 export interface DomainMatchResult {
   pass: boolean
   message?: string
@@ -12,40 +6,22 @@ export interface DomainMatchResult {
   mergedExpected?: string
 }
 
-// TODO: is context/options needed or slop?
-export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, Options = unknown> {
+export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown> {
   name: string
-  capture: (
-    received: unknown,
-    context: DomainSnapshotContext,
-    options?: Options,
-  ) => Captured
-  render: (
-    captured: Captured,
-    context: DomainSnapshotContext,
-    options?: Options,
-  ) => string
-  parseExpected: (
-    input: string,
-    context: DomainSnapshotContext,
-    options?: Options,
-  ) => Expected
-  match: (
-    captured: Captured,
-    expected: Expected,
-    context: DomainSnapshotContext,
-    options?: Options,
-  ) => DomainMatchResult
+  capture: (received: unknown) => Captured
+  render: (captured: Captured) => string
+  parseExpected: (input: string) => Expected
+  match: (captured: Captured, expected: Expected) => DomainMatchResult
 }
 
-const domains = new Map<string, DomainSnapshotAdapter<any, any, any>>()
+const domains = new Map<string, DomainSnapshotAdapter<any, any>>()
 
-export function addDomain<Captured = unknown, Expected = unknown, Options = unknown>(
-  adapter: DomainSnapshotAdapter<Captured, Expected, Options>,
+export function addDomain<Captured = unknown, Expected = unknown>(
+  adapter: DomainSnapshotAdapter<Captured, Expected>,
 ): void {
   domains.set(adapter.name, adapter)
 }
 
-export function getDomain(name: string): DomainSnapshotAdapter<any, any, any> | undefined {
+export function getDomain(name: string): DomainSnapshotAdapter<any, any> | undefined {
   return domains.get(name)
 }

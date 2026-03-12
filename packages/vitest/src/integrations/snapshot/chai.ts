@@ -172,7 +172,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
 
-  function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any, any> {
+  function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
     if (typeof domain !== 'string' || !domain) {
       throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
     }
@@ -183,7 +183,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     return adapter
   }
 
-  function assertDomainSnapshot(self: object, name: string, adapter: DomainSnapshotAdapter<any, any, any>, opts: {
+  function assertDomainSnapshot(self: object, name: string, adapter: DomainSnapshotAdapter<any, any>, opts: {
     inline: boolean
     inlineSnapshot?: string
     message?: string

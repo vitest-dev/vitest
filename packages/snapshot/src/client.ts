@@ -51,13 +51,12 @@ interface AssertOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
-interface AssertDomainOptions<Options = unknown> extends Omit<AssertOptions, 'received'> {
+interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
   received: unknown
-  adapter: DomainSnapshotAdapter<any, any, Options>
-  adapterOptions?: Options
+  adapter: DomainSnapshotAdapter<any, any>
 }
 
-interface AssertDomainPollOptions<Options = unknown> extends Omit<AssertDomainOptions<Options>, 'received'> {
+interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
   poll: () => Promise<unknown> | unknown
   timeout?: number
   interval?: number
@@ -183,7 +182,7 @@ export class SnapshotClient {
     }
   }
 
-  assertDomain<Options = unknown>(options: AssertDomainOptions<Options>): void {
+  assertDomain(options: AssertDomainOptions): void {
     const {
       received,
       filepath,
@@ -191,7 +190,6 @@ export class SnapshotClient {
       testId = name,
       message,
       adapter,
-      adapterOptions,
       isInline = false,
       inlineSnapshot,
       error,
@@ -201,14 +199,8 @@ export class SnapshotClient {
       throw new Error('Snapshot cannot be used outside of test')
     }
 
-    const context = {
-      filepath,
-      name,
-      testId,
-    }
-
-    const captured = adapter.capture(received, context, adapterOptions)
-    const rendered = adapter.render(captured, context, adapterOptions)
+    const captured = adapter.capture(received)
+    const rendered = adapter.render(captured)
 
     const snapshotState = this.getSnapshotState(filepath)
     const testName = [name, ...(message ? [message] : [])].join(' > ')
@@ -221,8 +213,8 @@ export class SnapshotClient {
       inlineSnapshot,
       error,
       isEqual: (existingSnapshot) => {
-        const parsed = adapter.parseExpected(existingSnapshot, context, adapterOptions)
-        return adapter.match(captured, parsed, context, adapterOptions)
+        const parsed = adapter.parseExpected(existingSnapshot)
+        return adapter.match(captured, parsed)
       },
     })
 
@@ -237,7 +229,7 @@ export class SnapshotClient {
   }
 
   // TODO: consolidate with expect.poll logic
-  async assertDomainWithRetry<Options = unknown>(options: AssertDomainPollOptions<Options>): Promise<void> {
+  async assertDomainWithRetry(options: AssertDomainPollOptions): Promise<void> {
     const {
       poll,
       filepath,
@@ -245,7 +237,6 @@ export class SnapshotClient {
       testId = name,
       message,
       adapter,
-      adapterOptions,
       isInline = false,
       inlineSnapshot,
       error,
@@ -259,7 +250,6 @@ export class SnapshotClient {
 
     const snapshotState = this.getSnapshotState(filepath)
     const testName = [name, ...(message ? [message] : [])].join(' > ')
-    const context = { filepath, name, testId }
 
     // Probe: read existing snapshot without mutating state
     const expectedSnapshot = snapshotState.probeExpectedSnapshot({
@@ -290,7 +280,7 @@ export class SnapshotClient {
 
     if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
       // Parse expected once — it doesn't change between retries
-      const parsedExpected = adapter.parseExpected(expectedSnapshot.data, context, adapterOptions)
+      const parsedExpected = adapter.parseExpected(expectedSnapshot.data)
 
       // Retry loop: capture + match, no state mutation
       while (true) {
@@ -299,9 +289,9 @@ export class SnapshotClient {
           if (received === TIMEOUT) {
             break
           }
-          lastCaptured = adapter.capture(received, context, adapterOptions)
-          lastRendered = adapter.render(lastCaptured, context, adapterOptions)
-          lastResult = adapter.match(lastCaptured, parsedExpected, context, adapterOptions)
+          lastCaptured = adapter.capture(received)
+          lastRendered = adapter.render(lastCaptured)
+          lastResult = adapter.match(lastCaptured, parsedExpected)
           if (lastResult.pass) {
             break
           }
@@ -326,8 +316,8 @@ export class SnapshotClient {
           if (received === TIMEOUT) {
             throw new Error('poll() timed out')
           }
-          lastCaptured = adapter.capture(received, context, adapterOptions)
-          lastRendered = adapter.render(lastCaptured, context, adapterOptions)
+          lastCaptured = adapter.capture(received)
+          lastRendered = adapter.render(lastCaptured)
           break
         }
         catch (e) {
@@ -360,8 +350,8 @@ export class SnapshotClient {
           return lastResult
         }
         // Otherwise (no-retry path), compare now
-        const parsed = adapter.parseExpected(snapshot, context, adapterOptions)
-        return adapter.match(lastCaptured, parsed, context, adapterOptions)
+        const parsed = adapter.parseExpected(snapshot)
+        return adapter.match(lastCaptured, parsed)
       },
     })
 

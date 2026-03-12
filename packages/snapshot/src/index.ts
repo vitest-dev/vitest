@@ -4,7 +4,6 @@ export { addDomain, getDomain } from './domain'
 export type {
   DomainMatchResult,
   DomainSnapshotAdapter,
-  DomainSnapshotContext,
 } from './domain'
 
 export { stripSnapshotIndentation } from './port/inlineSnapshot'
