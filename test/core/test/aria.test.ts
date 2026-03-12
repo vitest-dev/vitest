@@ -1703,15 +1703,15 @@ describe('matchAriaTree', () => {
         "actual": "
       - link:
         - text: Link
-        - /url: https://example.com
+        - /url: /.*example.com/
       ",
         "expected": "
       - link:
-        - /url: https://example.com
+        - /url: /.*example.com/
       ",
         "mergedExpected": "
       - link:
-        - /url: https://example.com
+        - /url: /.*example.com/
       ",
         "pass": true,
       }
@@ -1732,7 +1732,8 @@ describe('matchAriaTree', () => {
         - /url: https://example.com
       ",
         "expected": "
-      - link
+      - link:
+        - /url: /.*other.com/
       ",
         "mergedExpected": "
       - link:
@@ -1784,7 +1785,8 @@ describe('matchAriaTree', () => {
         - /placeholder: Enter name
       ",
         "expected": "
-      - textbox
+      - textbox:
+        - /placeholder: Wrong
       ",
         "mergedExpected": "
       - textbox:

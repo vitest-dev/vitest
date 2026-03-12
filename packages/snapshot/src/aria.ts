@@ -857,11 +857,20 @@ function renderTemplateNode(tmpl: AriaTemplateRoleNode, indent: string, lines: s
   const key = renderTemplateKey(tmpl)
   const children = tmpl.children || []
 
-  if (children.length === 0) {
+  // Pseudo-attribute lines from template
+  const pseudoLines: string[] = []
+  if (tmpl.url !== undefined) {
+    pseudoLines.push(`${indent}  - /url: ${tmpl.url instanceof RegExp ? `/${tmpl.url.source}/` : tmpl.url}`)
+  }
+  if (tmpl.placeholder !== undefined) {
+    pseudoLines.push(`${indent}  - /placeholder: ${tmpl.placeholder instanceof RegExp ? `/${tmpl.placeholder.source}/` : tmpl.placeholder}`)
+  }
+
+  if (children.length === 0 && pseudoLines.length === 0) {
     lines.push(`${indent}- ${key}`)
     return
   }
-  if (children.length === 1 && children[0].kind === 'text') {
+  if (children.length === 1 && children[0].kind === 'text' && pseudoLines.length === 0) {
     lines.push(`${indent}- ${key}: ${formatText(children[0].text)}`)
     return
   }
@@ -874,6 +883,7 @@ function renderTemplateNode(tmpl: AriaTemplateRoleNode, indent: string, lines: s
       renderTemplateNode(child, `${indent}  `, lines)
     }
   }
+  lines.push(...pseudoLines)
 }
 
 function mergeNode(
@@ -958,12 +968,38 @@ function mergeNode(
   )
 
   // Build pseudo-child lines for /url: and /placeholder:
-  const pseudoLines: string[] = []
-  if (node.url !== undefined) {
-    pseudoLines.push(`${indent}  - /url: ${node.url}`)
+  // Each output gets its own pseudo lines:
+  //   actual   → node's actual values (regex form when template regex matched, to cancel in diff)
+  //   expected → template's values (regex pattern or literal)
+  //   merged   → template's value when matched (preserve regex), actual when not
+  function formatPseudoValue(name: string | RegExp): string {
+    return name instanceof RegExp ? `/${name.source}/` : name
   }
-  if (node.placeholder !== undefined) {
-    pseudoLines.push(`${indent}  - /placeholder: ${node.placeholder}`)
+
+  const actualPseudo: string[] = []
+  const expectedPseudo: string[] = []
+  const mergedPseudo: string[] = []
+
+  for (const prop of ['url', 'placeholder'] as const) {
+    const nodeVal = node[prop]
+    const tmplVal = template[prop]
+    if (nodeVal !== undefined || tmplVal !== undefined) {
+      const matched = tmplVal === undefined || matchesName(nodeVal || '', tmplVal)
+      // actual: show node value, but use regex form when template regex matched (cancels in diff)
+      if (nodeVal !== undefined) {
+        const actualDisplay = matched && tmplVal instanceof RegExp ? formatPseudoValue(tmplVal) : nodeVal
+        actualPseudo.push(`${indent}  - /${prop}: ${actualDisplay}`)
+      }
+      // expected: show template value (only when template specified it)
+      if (tmplVal !== undefined) {
+        expectedPseudo.push(`${indent}  - /${prop}: ${formatPseudoValue(tmplVal)}`)
+      }
+      // merged: preserve template value when matched, otherwise actual
+      if (nodeVal !== undefined) {
+        const mergedDisplay = matched && tmplVal !== undefined ? formatPseudoValue(tmplVal) : nodeVal
+        mergedPseudo.push(`${indent}  - /${prop}: ${mergedDisplay}`)
+      }
+    }
   }
 
   const pass = namePass && attrPass && childResult.pass
@@ -972,47 +1008,47 @@ function mergeNode(
   const expected: string[] = []
   const merged: string[] = []
 
-  const hasActualChildren = childResult.actual.length > 0 || pseudoLines.length > 0
-  const hasExpectedChildren = childResult.expected.length > 0 || pseudoLines.length > 0
-  const hasMergedChildren = childResult.merged.length > 0 || pseudoLines.length > 0
+  const hasActualChildren = childResult.actual.length > 0 || actualPseudo.length > 0
+  const hasExpectedChildren = childResult.expected.length > 0 || expectedPseudo.length > 0
+  const hasMergedChildren = childResult.merged.length > 0 || mergedPseudo.length > 0
 
   if (!hasActualChildren) {
     actual.push(`${indent}- ${actualKey}`)
   }
-  else if (childResult.actual.length === 1 && !pseudoLines.length && childResult.actual[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.actual.length === 1 && !actualPseudo.length && childResult.actual[0].trimStart().startsWith('- text: ')) {
     const text = childResult.actual[0].trimStart().slice('- text: '.length)
     actual.push(`${indent}- ${actualKey}: ${text}`)
   }
   else {
     actual.push(`${indent}- ${actualKey}:`)
     actual.push(...childResult.actual)
-    actual.push(...pseudoLines)
+    actual.push(...actualPseudo)
   }
 
   if (!hasExpectedChildren) {
     expected.push(`${indent}- ${expectedKey}`)
   }
-  else if (childResult.expected.length === 1 && !pseudoLines.length && childResult.expected[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.expected.length === 1 && !expectedPseudo.length && childResult.expected[0].trimStart().startsWith('- text: ')) {
     const text = childResult.expected[0].trimStart().slice('- text: '.length)
     expected.push(`${indent}- ${expectedKey}: ${text}`)
   }
   else {
     expected.push(`${indent}- ${expectedKey}:`)
     expected.push(...childResult.expected)
-    expected.push(...pseudoLines)
+    expected.push(...expectedPseudo)
   }
 
   if (!hasMergedChildren) {
     merged.push(`${indent}- ${mergedKey}`)
   }
-  else if (childResult.merged.length === 1 && !pseudoLines.length && childResult.merged[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.merged.length === 1 && !mergedPseudo.length && childResult.merged[0].trimStart().startsWith('- text: ')) {
     const text = childResult.merged[0].trimStart().slice('- text: '.length)
     merged.push(`${indent}- ${mergedKey}: ${text}`)
   }
   else {
     merged.push(`${indent}- ${mergedKey}:`)
     merged.push(...childResult.merged)
-    merged.push(...pseudoLines)
+    merged.push(...mergedPseudo)
   }
 
   return { actual, expected, merged, pass }
