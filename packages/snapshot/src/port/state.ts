@@ -178,7 +178,12 @@ export default class SnapshotState {
       i.method.match(/__VITEST_POLL_PROMISE__/),
     )
     if (pollPromiseIndex !== -1) {
-      return stacks[pollPromiseIndex + 1]
+      const stack = stacks[pollPromiseIndex + 1]
+      if (stack.method === 'then') {
+        // skip one more stack (expect.poll `then` wrapper) on browser mode firefox
+        return stacks[pollPromiseIndex + 2]
+      }
+      return stack
     }
 
     // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
