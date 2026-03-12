@@ -45,6 +45,7 @@ declare module '@vitest/expect' {
     assertions: (expected: number) => void
     hasAssertions: () => void
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
+    /** @experimental */
     addSnapshotDomain: <Captured = unknown, Expected = unknown, Options = unknown>(
       adapter: DomainSnapshotAdapter<Captured, Expected, Options>,
     ) => void
@@ -94,7 +95,9 @@ declare module '@vitest/expect' {
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
 
+    /** @experimental */
     toMatchDomainSnapshot: (domain: string, hint?: string) => void
+    /** @experimental */
     toMatchDomainInlineSnapshot: (snapshot: string, domain: string, hint?: string) => void
 
     toMatchAriaSnapshot: () => void

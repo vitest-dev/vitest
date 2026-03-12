@@ -43,6 +43,7 @@ interface SnapshotReturnOptions {
   pass: boolean
 }
 
+/** @experimental */
 export interface SnapshotProbeResult {
   expected: string | undefined
   updateSnapshot: SnapshotUpdateState
@@ -470,6 +471,7 @@ export default class SnapshotState {
     }
   }
 
+  /** @experimental */
   probe(testName: string, testId: string, options?: { isInline?: boolean; inlineSnapshot?: string }): SnapshotProbeResult {
     // Peek at the counter WITHOUT incrementing — compute the same key
     // that the subsequent match/matchDomain call will use.
@@ -495,6 +497,7 @@ export default class SnapshotState {
     }
   }
 
+  /** @experimental */
   matchDomain({
     testId,
     testName,
