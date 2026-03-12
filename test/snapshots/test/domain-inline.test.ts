@@ -87,13 +87,13 @@ test('domain inline snapshot', async () => {
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:110:60
-        108|
-        109| test('with regex', () => {
-        110|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
+     ❯ basic.test.ts:15:60
+         13|
+         14| test('with regex', () => {
+         15|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
            |                                                            ^
-        111|     name=bob
-        112|     score=/\\\\d+/
+         16|     name=bob
+         17|     score=/\\\\d+/
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
