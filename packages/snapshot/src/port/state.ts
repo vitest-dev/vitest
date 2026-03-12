@@ -232,14 +232,15 @@ export default class SnapshotState {
     return { key, count }
   }
 
-  private _resolveInlineStack(
-    testId: string,
-    snapshot: string,
-    methodName: string,
-    error?: Error,
-  ): ParsedStack {
+  private _resolveInlineStack(options: {
+    testId: string
+    snapshot: string
+    methodName: string
+    error: Error
+  }): ParsedStack {
+    const { testId, snapshot, methodName, error } = options
     const stacks = parseErrorStacktrace(
-      error || new Error('snapshot'),
+      error,
       { ignoreStackEntries: [] },
     )
     const _stack = this._inferInlineSnapshotStack(stacks)
@@ -485,7 +486,12 @@ export default class SnapshotState {
     }
 
     const stack = isInline
-      ? this._resolveInlineStack(testId, receivedSerialized, 'toMatchInlineSnapshot', error)
+      ? this._resolveInlineStack({
+          testId,
+          snapshot: receivedSerialized,
+          methodName: 'toMatchInlineSnapshot',
+          error: error || new Error('snapshot'),
+        })
       : undefined
 
     return this._reconcile({
@@ -553,7 +559,12 @@ export default class SnapshotState {
     const hasSnapshot = !!expected
     const matchResult = hasSnapshot ? isEqual(expected) : undefined
     const stack = isInline
-      ? this._resolveInlineStack(testId, received, 'toMatchDomainInlineSnapshot', error)
+      ? this._resolveInlineStack({
+          testId,
+          snapshot: received,
+          methodName: 'toMatchDomainInlineSnapshot',
+          error: error || new Error('snapshot'),
+        })
       : undefined
 
     return this._reconcile({
