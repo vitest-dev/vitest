@@ -1118,14 +1118,40 @@ describe('matchAriaTree', () => {
     expect(match(
       '<button aria-disabled="true">Click me</button>',
       '- button [disabled]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [disabled]: Click me
+      ",
+        "expected": "
+      - button [disabled]: Click me
+      ",
+        "mergedExpected": "
+      - button [disabled]: Click me
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — disabled expected but not present', () => {
     expect(match(
       '<button>Click me</button>',
       '- button [disabled]',
-    ).pass).toBe(false)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button: Click me
+      ",
+        "expected": "
+      - button [disabled]: Click me
+      ",
+        "mergedExpected": "
+      - button: Click me
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "expanded attribute"
@@ -1133,14 +1159,40 @@ describe('matchAriaTree', () => {
     expect(match(
       '<button aria-expanded="true">Toggle</button>',
       '- button [expanded]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [expanded]: Toggle
+      ",
+        "expected": "
+      - button [expanded]: Toggle
+      ",
+        "mergedExpected": "
+      - button [expanded]: Toggle
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — expanded=false vs expanded=true', () => {
     expect(match(
       '<button aria-expanded="true">Toggle</button>',
       '- button [expanded=false]',
-    ).pass).toBe(false)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [expanded]: Toggle
+      ",
+        "expected": "
+      - button [expanded=false]: Toggle
+      ",
+        "mergedExpected": "
+      - button [expanded]: Toggle
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "pressed attribute"
@@ -1148,21 +1200,60 @@ describe('matchAriaTree', () => {
     expect(match(
       '<button aria-pressed="true">Like</button>',
       '- button [pressed]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [pressed]: Like
+      ",
+        "expected": "
+      - button [pressed]: Like
+      ",
+        "mergedExpected": "
+      - button [pressed]: Like
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute match — pressed=mixed', () => {
     expect(match(
       '<button aria-pressed="mixed">Like</button>',
       '- button [pressed=mixed]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [pressed=mixed]: Like
+      ",
+        "expected": "
+      - button [pressed=mixed]: Like
+      ",
+        "mergedExpected": "
+      - button [pressed=mixed]: Like
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — pressed=true vs pressed=mixed', () => {
     expect(match(
       '<button aria-pressed="mixed">Like</button>',
       '- button [pressed]',
-    ).pass).toBe(false)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button [pressed=mixed]: Like
+      ",
+        "expected": "
+      - button [pressed]: Like
+      ",
+        "mergedExpected": "
+      - button [pressed=mixed]: Like
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "selected attribute"
@@ -1170,14 +1261,40 @@ describe('matchAriaTree', () => {
     expect(match(
       '<div role="option" aria-selected="true">Row</div>',
       '- option [selected]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - option [selected]: Row
+      ",
+        "expected": "
+      - option [selected]: Row
+      ",
+        "mergedExpected": "
+      - option [selected]: Row
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — selected expected but not present', () => {
     expect(match(
       '<div role="option">Row</div>',
       '- option [selected]',
-    ).pass).toBe(false)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - option: Row
+      ",
+        "expected": "
+      - option [selected]: Row
+      ",
+        "mergedExpected": "
+      - option: Row
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "checked attribute"
@@ -1185,39 +1302,93 @@ describe('matchAriaTree', () => {
     expect(match(
       '<div role="checkbox" aria-checked="mixed" aria-label="A"></div>',
       '- checkbox "A" [checked=mixed]',
-    ).pass).toBe(true)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - checkbox "A" [checked=mixed]
+      ",
+        "expected": "
+      - checkbox "A" [checked=mixed]
+      ",
+        "mergedExpected": "
+      - checkbox "A" [checked=mixed]
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('attribute mismatch — checked vs checked=mixed', () => {
     expect(match(
       '<div role="checkbox" aria-checked="mixed" aria-label="A"></div>',
       '- checkbox "A" [checked]',
-    ).pass).toBe(false)
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - checkbox "A" [checked=mixed]
+      ",
+        "expected": "
+      - checkbox "A" [checked]
+      ",
+        "mergedExpected": "
+      - checkbox "A" [checked=mixed]
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "should match in list"
   test('contain semantics — matches subset of siblings', () => {
-    const r = match(`
-      <h1>title</h1>
-      <h1>title 2</h1>
-    `, `
-      - heading "title"
-    `)
     // Template asks for a heading with name "title" which is not set via aria-label,
     // so name is "" on both headings. Template name "title" won't match "" → fails.
     // This differs from Playwright which uses accessible name computation that
     // includes text content in the name.
-    expect(r.pass).toBe(false)
+    expect(match(`
+      <h1>title</h1>
+      <h1>title 2</h1>
+    `, `
+      - heading "title"
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - heading [level=1]: title
+      - heading [level=1]: title 2
+      ",
+        "expected": "
+      - heading "title": title
+      - heading [level=1]: title 2
+      ",
+        "mergedExpected": "
+      - heading [level=1]: title
+      - heading [level=1]: title 2
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Gap: empty template matches anything
   test('empty template matches anything', () => {
-    expect(match('<p>anything</p>', '').pass).toBe(true)
+    expect(match('<p>anything</p>', '')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - paragraph: anything
+      ",
+        "expected": "
+      - paragraph: anything
+      ",
+        "mergedExpected": "
+      - paragraph: anything
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   // -- Gap: deeply nested mismatch
   test('deeply nested text mismatch', () => {
-    const r = match(`
+    expect(match(`
       <nav aria-label="Main">
         <ul>
           <li><a href="/a">Home</a></li>
@@ -1228,49 +1399,157 @@ describe('matchAriaTree', () => {
         - list:
           - listitem:
             - link: Away
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Home
+              - /url: /a
+      ",
+        "expected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Away
+              - /url: /a
+      ",
+        "mergedExpected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Home
+              - /url: /a
+      ",
+        "pass": false,
+      }
     `)
-    expect(r.pass).toBe(false)
   })
 
   // -- Gap: top-level text template node
   test('top-level text template node', () => {
     const tree = capture('<p>hello</p>')
     const textTemplate = { kind: 'text' as const, text: 'hello' }
-    const result = matchAriaTree(tree, textTemplate)
-    expect(result.pass).toBe(false)
+    expect(matchAriaTree(tree, textTemplate)).toMatchInlineSnapshot(`
+      {
+        "actual": "- paragraph: hello",
+        "expected": "hello",
+        "mergedExpected": "- paragraph: hello",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "should match url"
   test('/url: pseudo-attribute matches', () => {
-    const r = match(
+    expect(match(
       '<a href="https://example.com">Link</a>',
-      '- link:\n  - /url: /.*example.com/',
-    )
-    expect(r.pass).toBe(true)
+      `\
+- link:
+  - /url: /.*example.com/
+`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('/url: pseudo-attribute mismatch', () => {
-    const r = match(
+    expect(match(
       '<a href="https://example.com">Link</a>',
-      '- link:\n  - /url: /.*other.com/',
-    )
-    expect(r.pass).toBe(false)
+      `\
+- link:
+  - /url: /.*other.com/`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Link
+        - /url: https://example.com
+      ",
+        "pass": false,
+      }
+    `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder"
   test('/placeholder: pseudo-attribute matches', () => {
-    const r = match(
+    expect(match(
       '<input placeholder="Enter name">',
-      '- textbox:\n  - /placeholder: Enter name',
-    )
-    expect(r.pass).toBe(true)
+      `\
+- textbox:
+  - /placeholder: Enter name`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "expected": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "mergedExpected": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "pass": true,
+      }
+    `)
   })
 
   test('/placeholder: pseudo-attribute mismatch', () => {
-    const r = match(
+    expect(match(
       '<input placeholder="Enter name">',
-      '- textbox:\n  - /placeholder: Wrong',
-    )
-    expect(r.pass).toBe(false)
+      `
+- textbox:
+  - /placeholder: Wrong`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "expected": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "mergedExpected": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+        "pass": false,
+      }
+    `)
   })
 })

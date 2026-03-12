@@ -526,7 +526,7 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
       node.level = Number(val)
     }
     else if (attr === 'checked') {
-      node.checked = val === 'mixed' ? 'mixed' : val === 'false' ? false : true
+      node.checked = val === 'mixed' ? 'mixed' : val !== 'false'
     }
     else if (attr === 'disabled') {
       node.disabled = val !== 'false'
@@ -535,7 +535,7 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
       node.expanded = val !== 'false'
     }
     else if (attr === 'pressed') {
-      node.pressed = val === 'mixed' ? 'mixed' : val === 'false' ? false : true
+      node.pressed = val === 'mixed' ? 'mixed' : val !== 'false'
     }
     else if (attr === 'selected') {
       node.selected = val !== 'false'
