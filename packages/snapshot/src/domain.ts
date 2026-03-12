@@ -1,11 +1,9 @@
-/** @experimental */
 export interface DomainSnapshotContext {
   filepath: string
   name: string
   testId: string
 }
 
-/** @experimental */
 export interface DomainMatchResult {
   pass: boolean
   message?: string
@@ -14,9 +12,6 @@ export interface DomainMatchResult {
   mergedExpected?: string
 }
 
-/**
- * @experimental
- */
 // TODO: is context/options needed or slop?
 export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, Options = unknown> {
   name: string
@@ -45,14 +40,12 @@ export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown, O
 
 const domains = new Map<string, DomainSnapshotAdapter<any, any, any>>()
 
-/** @experimental */
 export function addDomain<Captured = unknown, Expected = unknown, Options = unknown>(
   adapter: DomainSnapshotAdapter<Captured, Expected, Options>,
 ): void {
   domains.set(adapter.name, adapter)
 }
 
-/** @experimental */
 export function getDomain(name: string): DomainSnapshotAdapter<any, any, any> | undefined {
   return domains.get(name)
 }

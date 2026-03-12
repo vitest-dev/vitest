@@ -183,7 +183,6 @@ export class SnapshotClient {
     }
   }
 
-  /** @experimental */
   assertDomain<Options = unknown>(options: AssertDomainOptions<Options>): void {
     const {
       received,
@@ -237,9 +236,6 @@ export class SnapshotClient {
     }
   }
 
-  /**
-   * @experimental
-   */
   // TODO: consolidate with expect.poll logic
   async assertDomainWithRetry<Options = unknown>(options: AssertDomainPollOptions<Options>): Promise<void> {
     const {
