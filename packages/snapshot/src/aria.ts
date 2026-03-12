@@ -6,6 +6,26 @@
  *   renderAriaTree   – serialize tree to YAML-like text
  *   parseAriaTemplate – parse YAML-like template back into AriaTemplateNode tree
  *   matchAriaTree    – compare captured tree against template (contain semantics + regex names)
+ *
+ * Based on Playwright v1.58.2:
+ *   Capture & render: https://github.com/microsoft/playwright/blob/v1.58.2/packages/injected/src/ariaSnapshot.ts
+ *   Parse & match:    https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/utils/isomorphic/ariaSnapshot.ts
+ *   Tests:            https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/to-match-aria-snapshot.spec.ts
+ *                     https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/page-aria-snapshot.spec.ts
+ *
+ * Not yet implemented (vs Playwright v1.58.2):
+ *   - /url: pseudo-attribute for links
+ *   - /placeholder: pseudo-attribute for inputs
+ *   - /children: equal|deep-equal|contain directives
+ *   - Shadow DOM / slots / aria-owns support
+ *   - CSS pseudo-elements (::before, ::after) text inclusion
+ *   - CSS visibility:hidden checks (we only check aria-hidden and hidden attr)
+ *   - YAML block scalars (| multiline syntax)
+ *   - YAML quoting/escaping (we use simplified parser, not full YAML)
+ *   - [checked=false], [disabled=false], [selected=false], [pressed=false] explicit false syntax
+ *   - Input value as text content
+ *   - Textarea value tracking
+ *   - Parse error reporting with source location
  */
 
 // ---------------------------------------------------------------------------
