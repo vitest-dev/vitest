@@ -4,6 +4,10 @@ import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
 import { deepMergeSnapshot } from './port/utils'
 
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
+
 function createMismatchError(
   message: string,
   expand: boolean | undefined,
@@ -264,12 +268,11 @@ export class SnapshotClient {
     let lastResult: DomainMatchResult | undefined
     let lastPollError: unknown
 
-    // TODO: use performance.now
     const TIMEOUT = Symbol('timeout')
-    const deadline = Date.now() + timeout
+    const startTime = now()
 
     function raceTimeout<T>(promise: Promise<T>): Promise<T | typeof TIMEOUT> {
-      const remaining = deadline - Date.now()
+      const remaining = timeout - (now() - startTime)
       if (remaining <= 0) {
         return Promise.resolve(TIMEOUT)
       }
@@ -277,6 +280,10 @@ export class SnapshotClient {
         promise,
         new Promise<typeof TIMEOUT>(r => setTimeout(() => r(TIMEOUT), remaining)),
       ])
+    }
+
+    async function delayWithTimeout(): Promise<typeof TIMEOUT | void> {
+      return raceTimeout(new Promise<void>(r => setTimeout(r, interval)))
     }
 
     if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
@@ -302,10 +309,9 @@ export class SnapshotClient {
           lastPollError = e
         }
 
-        if (Date.now() >= deadline) {
+        if (await delayWithTimeout() === TIMEOUT) {
           break
         }
-        await new Promise(r => setTimeout(r, interval))
       }
     }
     else {
@@ -322,10 +328,9 @@ export class SnapshotClient {
           break
         }
         catch (e) {
-          if (Date.now() >= deadline) {
+          if (await delayWithTimeout() === TIMEOUT) {
             throw e
           }
-          await new Promise(r => setTimeout(r, interval))
         }
       }
     }
