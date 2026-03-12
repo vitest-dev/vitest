@@ -952,6 +952,55 @@ it('render basic', async () => {
 
 Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
+## toMatchAriaSnapshot {#tomatcharisnapshot}
+
+- **Type:** `() => void`
+
+Captures the accessibility tree of a DOM element and compares it against a stored snapshot. Inspired by [Playwright's aria snapshots](https://playwright.dev/docs/aria-snapshots).
+
+The snapshot uses a YAML-like format describing the accessible roles, names, and states of the element tree.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('navigation accessibility', () => {
+  document.body.innerHTML = `
+    <nav aria-label="Actions">
+      <button>Save</button>
+      <button>Cancel</button>
+    </nav>
+  `
+  expect(document.querySelector('nav')).toMatchAriaSnapshot()
+})
+```
+
+On first run, Vitest generates a snapshot entry like:
+
+```
+- navigation "Actions":
+  - button: Save
+  - button: Cancel
+```
+
+See the [Aria Snapshots guide](/guide/snapshot#aria-snapshots) for more details.
+
+## toMatchAriaInlineSnapshot {#tomatchariaInlinesnapshot}
+
+- **Type:** `(snapshot?: string) => void`
+
+Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('user profile', () => {
+  expect(document.body).toMatchAriaInlineSnapshot(`
+    - heading "Dashboard" [level=1]
+    - button /User \\d+/: Profile
+  `)
+})
+```
+
 ## toThrowErrorMatchingSnapshot
 
 - **Type:** `(hint?: string) => void`

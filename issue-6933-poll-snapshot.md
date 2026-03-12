@@ -352,6 +352,49 @@ Integration test at `test/snapshots/test/domain-poll.test.ts`:
 4. **Update (update: "all")**: run with `--update` → poll calls once, snapshot overwritten.
 5. **Pattern-preserving update**: hand-edit snapshot with regex → run with `--update` → `mergedExpected` preserves matched patterns.
 
+## Aria + `expect.element` retry
+
+Aria snapshots are domain snapshots, so the same probe/commit model applies. The entry points:
+
+- `expect.poll(() => el).toMatchAriaInlineSnapshot(...)` — explicit poll
+- `await expect.element(locator).toMatchAriaInlineSnapshot(...)` — Browser Mode, `expect.element` is sugar for `expect.poll`
+
+Both reach the same path: `poll.ts` detects the matcher name in `snapshotPollMatchers` and delegates the entire lifecycle to the matcher itself (no fn()/retry loop in poll.ts). The matcher calls `assertDomainWithRetry` which does the probe/commit split with the aria adapter.
+
+### What happens per update mode
+
+| Mode | `poll()` retry | Match retry | What gets written |
+|------|---------------|-------------|-------------------|
+| `"new"` — first run, no snapshot exists | Yes, until element available | No | Captures once → `adapter.render()` → new snapshot |
+| `"none"` — CI / normal run | Yes | Yes, until aria tree matches or timeout | Nothing written (pass) or throws mismatch (fail) |
+| `"all"` — `vitest -u` | Yes, until element available | No | Captures once → overwrites. `mergedExpected` preserves hand-edited regex patterns |
+
+### Why no match retry on create/update
+
+On `"new"`: there is no expected snapshot to compare against. The first successful capture is the snapshot.
+
+On `"all"`: the user asked to overwrite. Retrying until it matches the old snapshot and then overwriting with the same value is pointless. And making every assertion wait for its full timeout makes `vitest -u` unusably slow.
+
+### `expect.element` flow (Browser Mode)
+
+```
+expect.element(locator)
+  → expect.poll(() => locator, { timeout, interval })
+    → poll.ts proxy handler
+      → key is 'toMatchAriaInlineSnapshot' → in snapshotPollMatchers
+        → calls assertionFunction.call(assertion, ...args) directly
+          → chai matcher (toMatchAriaInlineSnapshot)
+            → assertDomainSnapshot() detects _poll.fn flag
+              → snapshotClient.assertDomainWithRetry({
+                  poll: pollFn,              // the original fn(), re-queries locator each call
+                  adapter: ariaDomainAdapter,
+                  timeout, interval,
+                  ...
+                })
+```
+
+The key difference from regular `expect.poll` matchers: `poll.ts` does NOT run its own retry loop. It calls the matcher once and lets the matcher manage the entire lifecycle. This is because snapshot matchers need the probe/commit split — they can't be naively retried from outside.
+
 ## Open questions
 
 - **`probe` peeking at counters**: `probe` computes `counter + 1` without incrementing. This assumes no other snapshot calls interleave between `probe` and the subsequent `matchDomain`. True for our use case — the retry loop is a single async operation within one test. Worth noting as an invariant.
