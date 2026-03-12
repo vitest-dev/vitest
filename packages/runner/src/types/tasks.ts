@@ -1350,7 +1350,6 @@ interface FailureScreenshotArtifactAttachment extends TestAttachment {
   path: string
   /** Original file system path to the screenshot, before attachment resolution */
   originalPath: string
-  body?: undefined
 }
 
 /**

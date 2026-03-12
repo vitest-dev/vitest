@@ -165,6 +165,7 @@ export default ({ watch }) =>
           `${normalize(chunk.name).replace('src/', '')}.d.ts`,
         format: 'esm',
         chunkFileNames: 'chunks/[name].[hash].d.ts',
+        banner: '/// <reference lib="esnext.disposable" />',
       },
       watch: false,
       external,

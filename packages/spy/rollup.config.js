@@ -40,6 +40,7 @@ export default defineConfig([
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
+      banner: '/// <reference lib="esnext.disposable" />',
     },
     watch: false,
     external,
