@@ -1,11 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`snapshot 1`] = `1`;
-
-exports[`toMatchAriaSnapshot simple 1`] = `
-- main:
-  - heading [level=1]: Dashboard
-  - navigation "Actions":
-    - button: Save
-    - button: Cancel
-`;
