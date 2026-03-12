@@ -95,7 +95,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          const promise = async () => {
+          const promise = async function __VITEST_POLL_PROMISE__() {
             chai.util.flag(assertion, '_name', key)
 
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined

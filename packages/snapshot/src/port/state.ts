@@ -176,6 +176,14 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
+    // support poll + domain snapshot
+    const pollPromiseIndex = stacks.findIndex(i =>
+      i.method.match(/__VITEST_POLL_PROMISE__/),
+    )
+    if (pollPromiseIndex !== -1) {
+      return stacks[pollPromiseIndex + 1]
+    }
+
     // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
     // to specify a custom stack offset
     for (let i = 0; i < stacks.length; i++) {
