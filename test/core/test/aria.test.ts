@@ -1009,8 +1009,6 @@ describe('matchAriaTree', () => {
     `)
   })
 
-
-
   test('contain semantics — match non-first child of same role by text', () => {
     expect(match(`
       <ul>
@@ -1333,7 +1331,7 @@ describe('matchAriaTree', () => {
     `)
   })
 
- test('flipped regex match', () => {
+  test('flipped regex match', () => {
     expect(match(`
       <button>Submit</button>
       <button>Cancel</button>
@@ -1691,7 +1689,6 @@ describe('matchAriaTree', () => {
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "should match url"
   test('/url: pseudo-attribute matches', () => {
-    // TODO: why mergedExpected got stricter if pass?
     expect(match(
       '<a href="https://example.com">Link</a>',
       `\
@@ -1772,7 +1769,6 @@ describe('matchAriaTree', () => {
   })
 
   test('/placeholder: pseudo-attribute mismatch', () => {
-    // TODO: why expected dropped /placeholder?
     expect(match(
       '<input placeholder="Enter name">',
       `
@@ -1791,6 +1787,171 @@ describe('matchAriaTree', () => {
         "mergedExpected": "
       - textbox:
         - /placeholder: Enter name
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
+  // -- /url: with inner children (link with child elements)
+  test('/url: regex match with inner children', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - /url: /.*example.com/`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: /.*example.com/
+      ",
+        "expected": "
+      - link:
+        - /url: /.*example.com/
+      ",
+        "mergedExpected": "
+      - link:
+        - /url: /.*example.com/
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('/url: regex mismatch with inner children', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - /url: /.*other.com/`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - /url: /.*other.com/
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
+  test('/url: regex match with inner children and text template', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - text: Click here
+  - /url: /.*example.com/`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: /.*example.com/
+      ",
+        "expected": "
+      - link:
+        - text: Click here
+        - /url: /.*example.com/
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Click here
+        - /url: /.*example.com/
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('/url: regex match with inner children and wrong text template', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - text: Wrong text
+  - /url: /.*example.com/`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - text: Wrong text
+        - /url: /.*example.com/
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
+  test('/url: literal match with inner children', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - /url: https://example.com`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - /url: https://example.com
+      ",
+        "mergedExpected": "
+      - link:
+        - /url: https://example.com
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('/url: literal mismatch with inner children', () => {
+    expect(match(
+      '<a href="https://example.com"><strong>Click</strong> here</a>',
+      `\
+- link:
+  - /url: https://other.com`,
+    )).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
+      ",
+        "expected": "
+      - link:
+        - /url: https://other.com
+      ",
+        "mergedExpected": "
+      - link:
+        - text: Click here
+        - /url: https://example.com
       ",
         "pass": false,
       }
