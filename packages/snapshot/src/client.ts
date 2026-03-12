@@ -229,7 +229,7 @@ export class SnapshotClient {
   }
 
   // TODO: consolidate with expect.poll logic
-  async assertDomainWithRetry(options: AssertDomainPollOptions): Promise<void> {
+  async pollAssertDomain(options: AssertDomainPollOptions): Promise<void> {
     const {
       poll,
       filepath,

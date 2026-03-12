@@ -100,8 +100,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
-            // Snapshot matchers own their entire poll lifecycle (probe/commit split).
-            // They handle timeout, retry, and poll() internally via assertDomainWithRetry.
+            // for now, domain snapshot owns polling logic. to be consolidated later.
             if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
               try {
                 const output = await assertionFunction.call(assertion, ...args)

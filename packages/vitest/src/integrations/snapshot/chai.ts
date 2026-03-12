@@ -200,10 +200,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
     }
 
-    // Detect poll context — use retry-aware path
     const pollFn = utils.flag(self, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
     if (pollFn) {
-      return getSnapshotClient().assertDomainWithRetry({
+      return getSnapshotClient().pollAssertDomain({
         poll: pollFn,
         adapter,
         message: opts.message,
