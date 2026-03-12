@@ -266,13 +266,12 @@ export class SnapshotClient {
     const context = { filepath, name, testId }
 
     // Probe: read existing snapshot without mutating state
-    const { expected: existingSnapshot, updateSnapshot, consume } = snapshotState.probe(testName, testId, {
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+      testName,
+      testId,
       isInline,
       inlineSnapshot,
     })
-
-    const hasSnapshot = existingSnapshot != null && existingSnapshot.length > 0
-    const shouldRetryMatch = hasSnapshot && updateSnapshot !== 'all'
 
     let lastCaptured: any
     let lastRendered: string | undefined
@@ -293,9 +292,9 @@ export class SnapshotClient {
       ])
     }
 
-    if (shouldRetryMatch) {
+    if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
       // Parse expected once — it doesn't change between retries
-      const parsedExpected = adapter.parseExpected(existingSnapshot!, context, adapterOptions)
+      const parsedExpected = adapter.parseExpected(expectedSnapshot.data, context, adapterOptions)
 
       // Retry loop: capture + match, no state mutation
       while (true) {
@@ -347,12 +346,12 @@ export class SnapshotClient {
     // poll() never succeeded — consume the probed key to prevent
     // the snapshot from being deleted as obsolete, then throw.
     if (lastRendered == null) {
-      consume()
+      expectedSnapshot.markAsChecked()
       throw lastPollError || new Error('poll() never returned a value within the timeout')
     }
 
     // Commit: single matchDomain call
-    const { actual, expected, key, pass } = snapshotState.matchDomain({
+    const matchResult = snapshotState.matchDomain({
       testId,
       testName,
       received: lastRendered!,
@@ -370,12 +369,12 @@ export class SnapshotClient {
       },
     })
 
-    if (!pass) {
+    if (!matchResult.pass) {
       throw createMismatchError(
-        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        `Snapshot \`${matchResult.key || 'unknown'}\` mismatched`,
         snapshotState.expand,
-        actual?.trim(),
-        expected?.trim(),
+        matchResult.actual?.trim(),
+        matchResult.expected?.trim(),
       )
     }
   }

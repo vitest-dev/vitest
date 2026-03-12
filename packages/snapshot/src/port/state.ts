@@ -43,14 +43,6 @@ interface SnapshotReturnOptions {
   pass: boolean
 }
 
-/** @experimental */
-export interface SnapshotProbeResult {
-  expected: string | undefined
-  updateSnapshot: SnapshotUpdateState
-  /** Consume the probed key (increment counter, mark as checked) without matching. */
-  consume: () => void
-}
-
 interface SaveStatus {
   deleted: boolean
   saved: boolean
@@ -128,6 +120,10 @@ export default class SnapshotState {
     return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
+  get snapshotUpdateState(): SnapshotUpdateState {
+    return this._updateSnapshot
+  }
+
   get environment(): SnapshotEnvironment {
     return this._environment
   }
@@ -177,7 +173,7 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
-    // support poll + domain snapshot
+    // support poll + domain inline snapshot
     const pollPromiseIndex = stacks.findIndex(i =>
       i.method.match(/__VITEST_POLL_PROMISE__/),
     )
@@ -471,33 +467,32 @@ export default class SnapshotState {
     }
   }
 
-  /** @experimental */
-  probe(testName: string, testId: string, options?: { isInline?: boolean; inlineSnapshot?: string }): SnapshotProbeResult {
+  probeExpectedSnapshot(options: { testName: string; testId: string; isInline?: boolean; inlineSnapshot?: string }): {
+    data?: string
+    markAsChecked: () => void
+  } {
     // Peek at the counter WITHOUT incrementing — compute the same key
     // that the subsequent match/matchDomain call will use.
-    const count = this._counters.get(testName) + 1
-    const key = testNameToKey(testName, count)
-
-    let expected: string | undefined
+    const count = this._counters.get(options.testName) + 1
+    const key = testNameToKey(options.testName, count)
+    let data: string | undefined
     if (options?.isInline) {
-      expected = options.inlineSnapshot
+      data = options.inlineSnapshot
     }
     else {
-      expected = this._snapshotData[key]
+      data = this._snapshotData[key]
     }
 
     return {
-      expected,
-      updateSnapshot: this._updateSnapshot,
-      consume: () => {
-        this._counters.increment(testName)
-        this._testIdToKeys.get(testId).push(key)
+      data,
+      markAsChecked: () => {
+        this._counters.increment(options.testName)
+        this._testIdToKeys.get(options.testId).push(key)
         this._uncheckedKeys.delete(key)
       },
     }
   }
 
-  /** @experimental */
   matchDomain({
     testId,
     testName,
