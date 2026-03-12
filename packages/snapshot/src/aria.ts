@@ -787,17 +787,32 @@ function mergeChildLists(
 
   if (!allTemplatesMatched) {
     // BAIL OUT: some template had no match — render full actual (maximally strict).
-    // Never produce a looser template; full re-render is safe.
-    for (const child of children) {
-      const rendered = renderChild(child)
-      actual.push(...rendered)
-      merged.push(...rendered)
+    // For paired children, use mergeNode to preserve regex patterns in merged.
+    // For unpaired actuals, render from actual (strict).
+    const mergeResults = new Map<number, MergeLines>()
+    for (let ci = 0; ci < children.length; ci++) {
+      const child = children[ci]
+      const ti = pairs.get(ci)
+      if (ti !== undefined) {
+        const r = mergeNode(child, templates[ti], indent)
+        mergeResults.set(ti, r)
+        actual.push(...r.actual)
+        merged.push(...r.merged)
+      }
+      else {
+        const rendered = renderChild(child)
+        actual.push(...rendered)
+        merged.push(...rendered)
+      }
     }
 
-    // Unmatched templates → expected only (for diff display)
+    // Build expected in template order (matched and unmatched interleaved).
     for (let ti = 0; ti < templates.length; ti++) {
-      const matched = [...pairs.values()].includes(ti)
-      if (!matched) {
+      const r = mergeResults.get(ti)
+      if (r) {
+        expected.push(...r.expected)
+      }
+      else {
         const tmpl = templates[ti]
         if (tmpl.kind === 'text') {
           expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
@@ -807,15 +822,6 @@ function mergeChildLists(
           renderTemplateNode(tmpl, indent, tmplLines)
           expected.push(...tmplLines)
         }
-      }
-    }
-
-    // Matched templates → expected from their perspective
-    for (let ci = 0; ci < children.length; ci++) {
-      const ti = pairs.get(ci)
-      if (ti !== undefined) {
-        const r = mergeNode(children[ci], templates[ti], indent)
-        expected.push(...r.expected)
       }
     }
 

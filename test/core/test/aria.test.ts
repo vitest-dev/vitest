@@ -1306,6 +1306,33 @@ describe('matchAriaTree', () => {
     `)
   })
 
+  // TODO: this cause full update. how to preserve second regex?
+  test('literal mismatch first and regex match second', () => {
+    expect(match(`
+      <p>You have 3 messages</p>
+      <button aria-label="User 99">Profile</button>
+    `, `
+      - paragraph: You have 7 notifications
+      - button /User \\d+/: Profile
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - paragraph: You have 3 messages
+      - button "User 99": Profile
+      ",
+        "expected": "
+      - paragraph: You have 7 notifications
+      - button /User \\d+/: Profile
+      ",
+        "mergedExpected": "
+      - paragraph: You have 3 messages
+      - button "User 99": Profile
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "disabled attribute"
   test('attribute match — disabled', () => {
     expect(match(
