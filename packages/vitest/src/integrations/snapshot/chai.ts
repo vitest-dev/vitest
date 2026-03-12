@@ -1,12 +1,12 @@
 import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
+import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addDomain,
   addSerializer,
   getDomain,
-  getDomains,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
@@ -171,54 +171,62 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }),
   )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchDomainInlineSnapshot',
-    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      inlineSnapshot?: string,
-      domain?: string,
-      message?: string,
-    ) {
-      utils.flag(this, '_name', 'toMatchDomainInlineSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchDomainInlineSnapshot cannot be used with "not"')
-      }
-      const test = getTest('toMatchDomainInlineSnapshot', this)
-      const expected = utils.flag(this, 'object')
-      const error = utils.flag(this, 'error')
-      const errorMessage = utils.flag(this, 'message')
 
-      if (typeof domain !== 'string' || !domain) {
-        throw new Error('toMatchDomainInlineSnapshot expects a domain name argument')
-      }
+  function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any, any> {
+    if (typeof domain !== 'string' || !domain) {
+      throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
+    }
+    const adapter = getDomain(domain)
+    if (!adapter) {
+      throw new Error(`Snapshot domain "${domain}" is not registered.`)
+    }
+    return adapter
+  }
 
-      if (inlineSnapshot) {
-        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      }
+  function assertDomainSnapshot(self: object, name: string, adapter: DomainSnapshotAdapter<any, any, any>, opts: {
+    inline: boolean
+    inlineSnapshot?: string
+    message?: string
+  }) {
+    utils.flag(self, '_name', name)
+    const isNot = utils.flag(self, 'negate')
+    if (isNot) {
+      throw new Error(`${name} cannot be used with "not"`)
+    }
+    const test = getTest(name, self)
 
-      const adapter = getDomain(domain)
-      if (!adapter) {
-        const available = getDomains().map(item => item.name)
-        const suggestion = available.length
-          ? `Available domains: ${available.join(', ')}`
-          : 'No domains registered. Use expect.addSnapshotDomain(adapter) first.'
-        throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
-      }
+    let { inlineSnapshot } = opts
+    if (inlineSnapshot) {
+      inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+    }
 
-      getSnapshotClient().assertDomain({
-        received: expected,
+    // Detect poll context — use retry-aware path
+    const pollFn = utils.flag(self, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
+    if (pollFn) {
+      return getSnapshotClient().assertDomainWithRetry({
+        poll: pollFn,
         adapter,
-        message,
-        inlineSnapshot,
-        isInline: true,
-        error,
-        errorMessage,
+        message: opts.message,
+        isInline: opts.inline,
+        errorMessage: utils.flag(self, 'message'),
+        timeout: utils.flag(self, '_poll.timeout') as number | undefined,
+        interval: utils.flag(self, '_poll.interval') as number | undefined,
+        ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
         ...getTestNames(test),
       })
-    }),
-  )
+    }
+
+    return getSnapshotClient().assertDomain({
+      received: utils.flag(self, 'object'),
+      adapter,
+      message: opts.message,
+      isInline: opts.inline,
+      errorMessage: utils.flag(self, 'message'),
+      ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
+      ...getTestNames(test),
+    })
+  }
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchDomainSnapshot',
@@ -227,76 +235,43 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       domain: string,
       message?: string,
     ) {
-      utils.flag(this, '_name', 'toMatchDomainSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchDomainSnapshot cannot be used with "not"')
-      }
-      const test = getTest('toMatchDomainSnapshot', this)
-      const errorMessage = utils.flag(this, 'message')
-
-      if (typeof domain !== 'string' || !domain) {
-        throw new Error('toMatchDomainSnapshot expects a non-empty domain name as the first argument')
-      }
-
-      const adapter = getDomain(domain)
-      if (!adapter) {
-        const available = getDomains().map(item => item.name)
-        const suggestion = available.length
-          ? `Available domains: ${available.join(', ')}`
-          : 'No domains registered. Use expect.addSnapshotDomain(adapter) first.'
-        throw new Error(`Snapshot domain "${domain}" is not registered. ${suggestion}`)
-      }
-
-      // Detect poll context — use retry-aware path
-      const pollFn = utils.flag(this, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
-      if (pollFn) {
-        utils.flag(this, '_poll.assert_once', true)
-        return getSnapshotClient().assertDomainWithRetry({
-          poll: pollFn,
-          adapter,
-          message,
-          isInline: false,
-          errorMessage,
-          timeout: utils.flag(this, '_poll.timeout') as number | undefined,
-          interval: utils.flag(this, '_poll.interval') as number | undefined,
-          ...getTestNames(test),
-        })
-      }
-
-      const expected = utils.flag(this, 'object')
-      getSnapshotClient().assertDomain({
-        received: expected,
-        adapter,
-        message,
-        isInline: false,
-        errorMessage,
-        ...getTestNames(test),
-      })
+      return assertDomainSnapshot(
+        this,
+        'toMatchDomainSnapshot',
+        resolveDomainAdapter(domain, 'toMatchDomainSnapshot'),
+        { inline: false, message },
+      )
+    }),
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchDomainInlineSnapshot',
+    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
+      inlineSnapshot: string,
+      domain: string,
+      message?: string,
+    ) {
+      return assertDomainSnapshot(
+        this,
+        'toMatchDomainInlineSnapshot',
+        resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
+        { inline: true, inlineSnapshot, message },
+      )
     }),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchAriaSnapshot',
     wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
-      utils.flag(this, '_name', 'toMatchAriaSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchAriaSnapshot cannot be used with "not"')
-      }
-      const expected = utils.flag(this, 'object')
-      const test = getTest('toMatchAriaSnapshot', this)
-      const errorMessage = utils.flag(this, 'message')
-      getSnapshotClient().assertDomain({
-        received: expected,
-        adapter: ariaDomainAdapter,
-        isInline: false,
-        errorMessage,
-        ...getTestNames(test),
-      })
+      return assertDomainSnapshot(
+        this,
+        'toMatchAriaSnapshot',
+        ariaDomainAdapter,
+        { inline: false },
+      )
     }),
   )
-
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchAriaInlineSnapshot',
@@ -304,27 +279,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       this,
       inlineSnapshot?: string,
     ) {
-      utils.flag(this, '_name', 'toMatchAriaInlineSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchAriaInlineSnapshot cannot be used with "not"')
-      }
-      const test = getTest('toMatchAriaInlineSnapshot', this)
-      const expected = utils.flag(this, 'object')
-      const error = utils.flag(this, 'error')
-      const errorMessage = utils.flag(this, 'message')
-      if (inlineSnapshot) {
-        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-      }
-      getSnapshotClient().assertDomain({
-        received: expected,
-        adapter: ariaDomainAdapter,
-        isInline: true,
-        inlineSnapshot,
-        error,
-        errorMessage,
-        ...getTestNames(test),
-      })
+      return assertDomainSnapshot(
+        this,
+        'toMatchAriaInlineSnapshot',
+        ariaDomainAdapter,
+        { inline: true, inlineSnapshot },
+      )
     }),
   )
 

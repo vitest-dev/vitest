@@ -95,7 +95,7 @@ declare module '@vitest/expect' {
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
 
     toMatchDomainSnapshot: (domain: string, hint?: string) => void
-    toMatchDomainInlineSnapshot: (snapshot?: string, domain?: string, hint?: string) => void
+    toMatchDomainInlineSnapshot: (snapshot: string, domain: string, hint?: string) => void
 
     toMatchAriaSnapshot: () => void
     toMatchAriaInlineSnapshot: (snapshot?: string) => void
