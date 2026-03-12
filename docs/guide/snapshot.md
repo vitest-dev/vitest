@@ -275,16 +275,16 @@ const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
   name: 'my-domain',
 
   // Extract structured data from the received value
-  capture(received, context) { /* ... */ },
+  capture(received) { /* ... */ },
 
   // Render captured data as the snapshot string (what gets stored)
-  render(captured, context) { /* ... */ },
+  render(captured) { /* ... */ },
 
   // Parse a stored snapshot string into a structured expected value
-  parseExpected(input, context) { /* ... */ },
+  parseExpected(input) { /* ... */ },
 
   // Compare captured vs expected, return pass/fail and diff info
-  match(captured, expected, context) { /* ... */ },
+  match(captured, expected) { /* ... */ },
 }
 ```
 
