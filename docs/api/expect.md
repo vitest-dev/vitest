@@ -952,6 +952,29 @@ it('render basic', async () => {
 
 Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
+## toMatchDomainSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomainsnapshot}
+
+- **Type:** `(domain: string, hint?: string) => void`
+
+Matches a value against a stored snapshot using a registered [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain). The `domain` argument is the adapter's `name`.
+
+```ts
+expect(value).toMatchDomainSnapshot('kv')
+```
+
+## toMatchDomainInlineSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomaininlinesnapshot}
+
+- **Type:** `(snapshot: string, domain: string, hint?: string) => void`
+
+Same as [`toMatchDomainSnapshot`](#tomatchdomainsnapshot), but stores the snapshot inline in the test file.
+
+```ts
+expect(value).toMatchDomainInlineSnapshot(`
+  name=Alice
+  score=42
+`, 'kv')
+```
+
 ## toMatchAriaSnapshot {#tomatcharisnapshot}
 
 - **Type:** `() => void`
@@ -2164,6 +2187,19 @@ If you are adding custom serializers, you should call this method inside [`setup
 :::tip
 If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
+
+## expect.addSnapshotDomain <Badge type="warning">experimental</Badge> {#expect-addsnapshotdomain}
+
+- **Type:** `(adapter: DomainSnapshotAdapter) => void`
+
+Registers a [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain) for use with `toMatchDomainSnapshot` and `toMatchDomainInlineSnapshot`. Call this in [`setupFiles`](/config/setupfiles).
+
+```ts
+import { expect } from 'vitest'
+import { kvAdapter } from './kv-adapter'
+
+expect.addSnapshotDomain(kvAdapter)
+```
 
 ## expect.extend
 

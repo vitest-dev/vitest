@@ -258,6 +258,148 @@ Pretty foo: Object {
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
 
+## Custom Snapshot Domain <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
+
+Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further — it owns the entire comparison pipeline: how to capture a value, render it, parse a stored snapshot, and match them semantically.
+
+This is useful when snapshot comparison needs to be smarter than `===`. For example, the built-in [aria snapshots](#aria-snapshots) use a domain adapter to support regex patterns and preserve hand-edited patterns when running with `--update` — the adapter's `match` method can return a `mergedExpected` string so only the changed literal parts are overwritten.
+
+### The adapter interface
+
+A domain adapter implements four methods:
+
+```ts
+import type { DomainSnapshotAdapter } from '@vitest/snapshot'
+
+const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
+  name: 'my-domain',
+
+  // Extract structured data from the received value
+  capture(received, context) { /* ... */ },
+
+  // Render captured data as the snapshot string (what gets stored)
+  render(captured, context) { /* ... */ },
+
+  // Parse a stored snapshot string into a structured expected value
+  parseExpected(input, context) { /* ... */ },
+
+  // Compare captured vs expected, return pass/fail and diff info
+  match(captured, expected, context) { /* ... */ },
+}
+```
+
+### Registration
+
+Register an adapter in your test setup file:
+
+```ts [setup.ts]
+import { expect } from 'vitest'
+
+expect.addSnapshotDomain(myAdapter)
+```
+
+Then use it in tests via [`toMatchDomainSnapshot`](/api/expect#tomatchdomainsnapshot) or [`toMatchDomainInlineSnapshot`](/api/expect#tomatchdomaininlinesnapshot):
+
+```ts
+expect(value).toMatchDomainSnapshot('my-domain')
+expect(value).toMatchDomainInlineSnapshot(`key=value`, 'my-domain')
+```
+
+### Example: key-value adapter
+
+A minimal adapter that stores objects as `key=value` lines, with regex pattern support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
+
+```ts [kv-adapter.ts]
+import type {
+  DomainMatchResult,
+  DomainSnapshotAdapter,
+} from '@vitest/snapshot'
+
+interface KVCaptured {
+  entries: { key: string; value: string }[]
+}
+
+interface KVExpected {
+  entries: { key: string; value: string | RegExp }[]
+}
+
+export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
+  name: 'kv',
+
+  capture(received) {
+    const entries = Object.entries(received as Record<string, string>)
+      .map(([key, value]) => ({ key, value: String(value) }))
+    return { entries }
+  },
+
+  render(captured) {
+    return captured.entries.map(e => `${e.key}=${e.value}`).join('\n')
+  },
+
+  parseExpected(input) {
+    const entries = input.trim().split('\n').map((line) => {
+      const eq = line.indexOf('=')
+      const key = line.slice(0, eq)
+      const raw = line.slice(eq + 1)
+      const value = (raw.startsWith('/') && raw.endsWith('/'))
+        ? new RegExp(raw.slice(1, -1))
+        : raw
+      return { key, value }
+    })
+    return { entries }
+  },
+
+  match(captured, expected): DomainMatchResult {
+    let allPass = true
+    for (let i = 0; i < captured.entries.length; i++) {
+      const cap = captured.entries[i]
+      const exp = expected.entries[i]
+      if (!exp) {
+        allPass = false
+      }
+      else if (exp.value instanceof RegExp) {
+        if (!exp.value.test(cap.value)) allPass = false
+      }
+      else if (cap.value !== exp.value) {
+        allPass = false
+      }
+    }
+    return {
+      pass: allPass,
+      // Optionally return mergedExpected, actual, expected for diffs
+      // and pattern-preserving updates
+      // actual: "...",
+      // expected: "...",
+      // mergedExpected: "...",
+    }
+  },
+}
+```
+
+```ts [setup.ts]
+import { expect } from 'vitest'
+import { kvAdapter } from './kv-adapter'
+
+expect.addSnapshotDomain(kvAdapter)
+```
+
+```ts [example.test.ts]
+import { expect, test } from 'vitest'
+
+test('user data', () => {
+  const user = { name: 'Alice', score: '42' }
+  expect(user).toMatchDomainSnapshot('kv')
+})
+
+test('user data inline', () => {
+  const user = { name: 'Alice', score: '42' }
+  expect(user).toMatchDomainInlineSnapshot(`
+    name=Alice
+    score=/\\d+/
+  `, 'kv')
+})
+```
+
 ## Difference from Jest
 
 Vitest provides an almost compatible Snapshot feature with [Jest's](https://jestjs.io/docs/snapshot-testing) with a few exceptions:
