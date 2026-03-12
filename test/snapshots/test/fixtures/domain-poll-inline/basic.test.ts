@@ -3,6 +3,7 @@ import { kvAdapter } from '../domain/basic'
 
 expect.addSnapshotDomain(kvAdapter)
 
+// --- TEST CASES ---
 test('stable', async () => {
   let trial = 0
   await expect.poll(() => {
