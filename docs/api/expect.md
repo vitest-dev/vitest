@@ -952,28 +952,17 @@ it('render basic', async () => {
 
 Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
-## toMatchDomainSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomainsnapshot}
+## toThrowErrorMatchingSnapshot
 
-- **Type:** `(domain: string, hint?: string) => void`
+- **Type:** `(hint?: string) => void`
 
-Matches a value against a stored snapshot using a registered [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain). The `domain` argument is the adapter's `name`.
+The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrow`](#tothrow).
 
-```ts
-expect(value).toMatchDomainSnapshot('kv')
-```
+## toThrowErrorMatchingInlineSnapshot
 
-## toMatchDomainInlineSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomaininlinesnapshot}
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
-- **Type:** `(snapshot: string, domain: string, hint?: string) => void`
-
-Same as [`toMatchDomainSnapshot`](#tomatchdomainsnapshot), but stores the snapshot inline in the test file.
-
-```ts
-expect(value).toMatchDomainInlineSnapshot(`
-  name=Alice
-  score=42
-`, 'kv')
-```
+The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
 ## toMatchAriaSnapshot {#tomatcharisnapshot}
 
@@ -1024,17 +1013,25 @@ test('user profile', () => {
 })
 ```
 
-## toThrowErrorMatchingSnapshot
+## toMatchDomainSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomainsnapshot}
 
-- **Type:** `(hint?: string) => void`
+- **Type:** `(domain: string, hint?: string) => void`
 
-The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrow`](#tothrow).
+Matches a value against a stored snapshot using a registered [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain). The `domain` argument is the adapter's `name`.
 
-## toThrowErrorMatchingInlineSnapshot
+```ts
+expect(value).toMatchDomainSnapshot('my-domain')
+```
 
-- **Type:** `(snapshot?: string, hint?: string) => void`
+## toMatchDomainInlineSnapshot <Badge type="warning">experimental</Badge> {#tomatchdomaininlinesnapshot}
 
-The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
+- **Type:** `(snapshot: string, domain: string, hint?: string) => void`
+
+Same as [`toMatchDomainSnapshot`](#tomatchdomainsnapshot), but stores the snapshot inline in the test file.
+
+```ts
+expect(value).toMatchDomainInlineSnapshot(`...`, `my-domain`)
+```
 
 ## toHaveBeenCalled
 
