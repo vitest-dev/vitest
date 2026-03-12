@@ -55,8 +55,8 @@ describe('expect.soft', () => {
   test('promise resolved instead of rejecting', async () => {
     const { stderr } = await run()
     // both assertions should execute
-    expect.soft(stderr).toContain('promise resolved "value 1" instead of rejecting')
-    expect.soft(stderr).toContain('promise resolved "value 2" instead of rejecting')
+    expect.soft(stderr).toContain('promise resolved "\'value 1\'" instead of rejecting')
+    expect.soft(stderr).toContain('promise resolved "\'value 2\'" instead of rejecting')
   })
 
   test('passed', async () => {
