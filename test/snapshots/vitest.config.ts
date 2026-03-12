@@ -3,7 +3,7 @@ import { defaultExclude } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    exclude: [...defaultExclude, '**/fixtures'],
+    exclude: [...defaultExclude, '**/fixtures', '**/vitest-test-*/**'],
     snapshotFormat: {
       printBasicPrototype: true,
     },

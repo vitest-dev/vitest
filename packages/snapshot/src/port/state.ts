@@ -525,12 +525,6 @@ export default class SnapshotState {
     const matchResult = hasSnapshot ? isEqual(expected!) : undefined
     const pass = matchResult?.pass ?? false
 
-    // TODO: what?
-    // Unlike regular match, do NOT overwrite snapshot data on pass.
-    // Domain snapshots may contain semantic patterns (e.g. regex)
-    // that differ from the rendered output but still match.
-
-    // TODO: should support multiple snapshots in same location like `match` does.
     // find call site for inline snapshot rewriting
     let stack: ParsedStack | undefined
     if (isInline) {
@@ -548,6 +542,27 @@ export default class SnapshotState {
       }
       stack = this.environment.processStackTrace?.(_stack) || _stack
       stack.column--
+
+      // reject multiple inline snapshots at the same location if snapshot is different
+      const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack!))
+      if (snapshotsWithSameStack.length > 0) {
+        // ensure only one snapshot will be written at the same location
+        this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
+
+        const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== received)
+        if (differentSnapshot) {
+          throw Object.assign(
+            new Error(
+              'toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location',
+            ),
+            {
+              actual: received,
+              expected: differentSnapshot.snapshot,
+            },
+          )
+        }
+      }
+      this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: received })
     }
 
     if (
