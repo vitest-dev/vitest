@@ -62,6 +62,7 @@ describe('captureAriaTree', () => {
           ],
           "name": "",
           "role": "link",
+          "url": "/foo",
         },
       ]
     `)
@@ -365,20 +366,44 @@ describe('captureAriaTree', () => {
     expect((capture('<h6>x</h6>').children[0] as AriaNode).level).toBe(6)
   })
 
-  // -- Not yet implemented: input value as text content
-  // Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
-  test.skip('input value as text content', () => {
+  // -- Ported from Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
+  test('input value as text content', () => {
     const tree = capture('<input value="hello world">')
     const input = tree.children[0] as AriaNode
     expect(input.children).toEqual(['hello world'])
   })
 
-  // -- Not yet implemented: textarea value tracking
-  // Playwright: page-aria-snapshot.spec.ts "should not report textarea textContent"
-  test.skip('textarea value tracking', () => {
+  // -- Ported from Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
+  test('checkbox and radio do not capture value as text', () => {
+    const tree = capture('<input type="checkbox" checked><input type="radio" checked>')
+    const [cb, radio] = tree.children as AriaNode[]
+    expect(cb.children).toEqual([])
+    expect(radio.children).toEqual([])
+  })
+
+  // -- Ported from Playwright: page-aria-snapshot.spec.ts "should not report textarea textContent"
+  test('textarea value tracking', () => {
     const tree = capture('<textarea>Before</textarea>')
     const input = tree.children[0] as AriaNode
     expect(input.children).toEqual(['Before'])
+  })
+
+  // -- /placeholder: pseudo-attribute for inputs
+  // Ported from Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder"
+  test('input captures placeholder', () => {
+    const tree = capture('<input placeholder="Enter name">')
+    const input = tree.children[0] as AriaNode
+    expect(input.name).toBe('')
+    expect(input.placeholder).toBe('Enter name')
+  })
+
+  test('placeholder not captured when same as name', () => {
+    // When placeholder is used as the accessible name (via happy-dom/browser),
+    // we don't duplicate it. Our code checks placeholder !== name.
+    const tree = capture('<input placeholder="Name" aria-label="Name">')
+    const input = tree.children[0] as AriaNode
+    expect(input.name).toBe('Name')
+    expect(input.placeholder).toBeUndefined()
   })
 
   // -- Not yet implemented: CSS visibility:hidden checks
@@ -427,9 +452,13 @@ describe('renderAriaTree', () => {
       "- navigation "Main":
         - list:
           - listitem:
-            - link: A
+            - link:
+              - text: A
+              - /url: /a
           - listitem:
-            - link: B"
+            - link:
+              - text: B
+              - /url: /b"
     `)
   })
 
@@ -497,6 +526,20 @@ describe('renderAriaTree', () => {
   // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
   test.skip('whitespace normalization across spans', () => {
     expect(render('<span>One</span> <span>Two</span> <span>Three</span>')).toBe('- text: One Two Three')
+  })
+
+  // -- /url: renders as pseudo-child
+  test('link url renders as pseudo-child', () => {
+    expect(render('<a href="/foo">Click</a>')).toBe('- link:\n  - text: Click\n  - /url: /foo')
+  })
+
+  test('link url with no text children', () => {
+    expect(render('<a href="/foo" aria-label="Go"></a>')).toBe('- link "Go":\n  - /url: /foo')
+  })
+
+  // -- /placeholder: renders as pseudo-child
+  test('input placeholder renders as pseudo-child', () => {
+    expect(render('<input placeholder="Enter name">')).toBe('- textbox:\n  - /placeholder: Enter name')
   })
 
   // -- Not yet implemented: YAML escaping
@@ -641,13 +684,41 @@ describe('parseAriaTemplate', () => {
     expect(() => parseAriaTemplate('- !@#')).toThrow('Cannot parse aria template entry')
   })
 
-  // -- Not yet implemented: [checked=false], [disabled=false] explicit false syntax
-  // Playwright: to-match-aria-snapshot.spec.ts "checked attribute" [checked=false]
-  test.skip('[checked=false] explicit false syntax', () => {
-    // Our parser treats [checked] as true and [checked=mixed] as 'mixed',
-    // but [checked=false] incorrectly parses as true
+  // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "checked attribute" [checked=false]
+  test('[checked=false] explicit false syntax', () => {
     const t = parseAriaTemplate('- checkbox [checked=false]')
     expect((t.children![0] as AriaTemplateRoleNode).checked).toBe(false)
+  })
+
+  test('[disabled=false] explicit false syntax', () => {
+    const t = parseAriaTemplate('- button [disabled=false]')
+    expect((t.children![0] as AriaTemplateRoleNode).disabled).toBe(false)
+  })
+
+  test('[pressed=false] explicit false syntax', () => {
+    const t = parseAriaTemplate('- button [pressed=false]')
+    expect((t.children![0] as AriaTemplateRoleNode).pressed).toBe(false)
+  })
+
+  test('[selected=false] explicit false syntax', () => {
+    const t = parseAriaTemplate('- option [selected=false]')
+    expect((t.children![0] as AriaTemplateRoleNode).selected).toBe(false)
+  })
+
+  // -- /url: and /placeholder: pseudo-children in templates
+  test('/url: pseudo-child parses as string', () => {
+    const t = parseAriaTemplate('- link:\n  - /url: /foo')
+    expect((t.children![0] as AriaTemplateRoleNode).url).toBe('/foo')
+  })
+
+  test('/url: pseudo-child parses as regex', () => {
+    const t = parseAriaTemplate('- link:\n  - /url: /.*example.com/')
+    expect((t.children![0] as AriaTemplateRoleNode).url).toBeInstanceOf(RegExp)
+  })
+
+  test('/placeholder: pseudo-child parses', () => {
+    const t = parseAriaTemplate('- textbox:\n  - /placeholder: Enter name')
+    expect((t.children![0] as AriaTemplateRoleNode).placeholder).toBe('Enter name')
   })
 
   // -- Not yet implemented: YAML block scalars
@@ -1169,15 +1240,37 @@ describe('matchAriaTree', () => {
     expect(result.pass).toBe(false)
   })
 
-  // -- Not yet implemented: /url: pseudo-attribute
-  // Playwright: to-match-aria-snapshot.spec.ts "should match url"
-  test.skip('/url: pseudo-attribute for links', () => {
-    // /url: pseudo-attribute not yet implemented
+  // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "should match url"
+  test('/url: pseudo-attribute matches', () => {
+    const r = match(
+      '<a href="https://example.com">Link</a>',
+      '- link:\n  - /url: /.*example.com/',
+    )
+    expect(r.pass).toBe(true)
   })
 
-  // -- Not yet implemented: /placeholder: pseudo-attribute
-  // Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder when different from the name"
-  test.skip('/placeholder: pseudo-attribute for inputs', () => {
-    // /placeholder: pseudo-attribute not yet implemented
+  test('/url: pseudo-attribute mismatch', () => {
+    const r = match(
+      '<a href="https://example.com">Link</a>',
+      '- link:\n  - /url: /.*other.com/',
+    )
+    expect(r.pass).toBe(false)
+  })
+
+  // -- Ported from Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder"
+  test('/placeholder: pseudo-attribute matches', () => {
+    const r = match(
+      '<input placeholder="Enter name">',
+      '- textbox:\n  - /placeholder: Enter name',
+    )
+    expect(r.pass).toBe(true)
+  })
+
+  test('/placeholder: pseudo-attribute mismatch', () => {
+    const r = match(
+      '<input placeholder="Enter name">',
+      '- textbox:\n  - /placeholder: Wrong',
+    )
+    expect(r.pass).toBe(false)
   })
 })

@@ -14,18 +14,39 @@
  *                     https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/page-aria-snapshot.spec.ts
  *
  * Not yet implemented (vs Playwright v1.58.2):
- *   - /url: pseudo-attribute for links
- *   - /placeholder: pseudo-attribute for inputs
+ *
+ *   Moderate:
  *   - /children: equal|deep-equal|contain directives
- *   - Shadow DOM / slots / aria-owns support
- *   - CSS pseudo-elements (::before, ::after) text inclusion
- *   - CSS visibility:hidden checks (we only check aria-hidden and hidden attr)
- *   - YAML block scalars (| multiline syntax)
+ *     → add matching mode flag threaded through containsList/mergeChildLists (~50 lines)
+ *   - Role/attribute parse error reporting with source location
+ *     → track position in parseRoleEntry for unterminated strings/regex, invalid
+ *       attribute values, unsupported attributes, unexpected text; format error
+ *       message with caret like Playwright does (~30 lines)
  *   - YAML quoting/escaping (we use simplified parser, not full YAML)
- *   - [checked=false], [disabled=false], [selected=false], [pressed=false] explicit false syntax
- *   - Input value as text content
- *   - Textarea value tracking
- *   - Parse error reporting with source location
+ *     → quote names containing :, ", #, YAML-special values in render; unquote in parse (~60 lines)
+ *   - YAML block scalars (| multiline syntax)
+ *     → extend parser to detect | and read indented continuation lines (~20 lines)
+ *
+ *   Moderate (requires careful DOM traversal work):
+ *   - CSS visibility:hidden checks (we only check aria-hidden and hidden attr)
+ *     → call getComputedStyle(el) in isHidden(), check visibility/display/opacity.
+ *       Runs in real browser so API is available. Main concern: getComputedStyle()
+ *       forces layout; calling it per-element during tree walk may be slow on large
+ *       DOMs. Playwright batches visibility checks. ~15 lines for basic support.
+ *   - CSS pseudo-elements (::before, ::after) text inclusion
+ *     → call getComputedStyle(el, '::before').content in captureNode(), prepend/append
+ *       the text to children. Need to handle 'none'/'normal'/quoted-string values and
+ *       strip quotes. Same perf concern as visibility. ~20 lines.
+ *   - Shadow DOM / slots
+ *     → in captureNode(), check el.shadowRoot and walk it instead of light DOM children.
+ *       For slots: walk slot.assignedNodes() (or fallback content if none assigned).
+ *       Must avoid double-counting slotted content (skip slotted nodes in light DOM
+ *       walk, only visit them via slot). ~40 lines.
+ *   - aria-owns
+ *     → need a pre-pass before tree walk: parse aria-owns attrs to build a Map<id, owner>.
+ *       During captureNode(), append owned elements as children of the owner instead of
+ *       their DOM parent. Must detect and break cycles. First valid owner wins per spec.
+ *       ~50 lines + changes to captureAriaTree entry point.
  */
 
 // ---------------------------------------------------------------------------
@@ -48,6 +69,8 @@ export interface AriaNode {
   expanded?: boolean
   pressed?: boolean | 'mixed'
   selected?: boolean
+  url?: string
+  placeholder?: string
 }
 
 export interface AriaTemplateRoleNode {
@@ -61,6 +84,8 @@ export interface AriaTemplateRoleNode {
   level?: number
   pressed?: boolean | 'mixed'
   selected?: boolean
+  url?: string | RegExp
+  placeholder?: string | RegExp
 }
 
 export interface AriaTemplateTextNode {
@@ -246,6 +271,36 @@ function captureNode(node: Node): (AriaNode | string)[] {
     ariaNode.selected = true
   }
 
+  // Capture URL for links
+  if (el.tagName === 'A' && el.hasAttribute('href')) {
+    ariaNode.url = el.getAttribute('href')!
+  }
+
+  // Capture placeholder for inputs
+  if ((el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.hasAttribute('placeholder')) {
+    const placeholder = el.getAttribute('placeholder')!
+    if (placeholder && placeholder !== ariaNode.name) {
+      ariaNode.placeholder = placeholder
+    }
+  }
+
+  // Capture input/textarea value as text content
+  if (el.tagName === 'INPUT') {
+    const type = (el as HTMLInputElement).type?.toLowerCase() || 'text'
+    if (type !== 'checkbox' && type !== 'radio' && type !== 'file') {
+      const value = (el as HTMLInputElement).value
+      if (value) {
+        ariaNode.children = [value]
+      }
+    }
+  }
+  else if (el.tagName === 'TEXTAREA') {
+    const value = (el as HTMLTextAreaElement).value
+    if (value) {
+      ariaNode.children = [value]
+    }
+  }
+
   if (ariaNode.children.length === 1 && ariaNode.children[0] === ariaNode.name) {
     ariaNode.children = []
   }
@@ -336,12 +391,20 @@ function renderNode(node: AriaNode, indent: string, lines: string[]): void {
     key += ' [selected]'
   }
 
-  if (!node.children.length) {
+  const pseudoChildren: string[] = []
+  if (node.url !== undefined) {
+    pseudoChildren.push(`${indent}  - /url: ${node.url}`)
+  }
+  if (node.placeholder !== undefined) {
+    pseudoChildren.push(`${indent}  - /placeholder: ${node.placeholder}`)
+  }
+
+  if (!node.children.length && !pseudoChildren.length) {
     lines.push(`${indent}- ${key}`)
     return
   }
 
-  if (node.children.length === 1 && typeof node.children[0] === 'string') {
+  if (node.children.length === 1 && typeof node.children[0] === 'string' && !pseudoChildren.length) {
     lines.push(`${indent}- ${key}: ${node.children[0]}`)
     return
   }
@@ -355,6 +418,7 @@ function renderNode(node: AriaNode, indent: string, lines: string[]): void {
       renderNode(child, `${indent}  `, lines)
     }
   }
+  lines.push(...pseudoChildren)
 }
 
 // ---------------------------------------------------------------------------
@@ -389,6 +453,18 @@ export function parseAriaTemplate(text: string): AriaTemplateRoleNode {
         kind: 'text',
         text: parseTextValue(textValue),
       })
+      continue
+    }
+
+    if (entry.startsWith('/url: ')) {
+      const val = entry.slice(6).trim()
+      parent.url = parseTextValue(val)
+      continue
+    }
+
+    if (entry.startsWith('/placeholder: ')) {
+      const val = entry.slice(14).trim()
+      parent.placeholder = parseTextValue(val)
       continue
     }
 
@@ -450,19 +526,19 @@ function parseRoleEntry(entry: string): { node: AriaTemplateRoleNode; hasChildre
       node.level = Number(val)
     }
     else if (attr === 'checked') {
-      node.checked = val === 'mixed' ? 'mixed' : true
+      node.checked = val === 'mixed' ? 'mixed' : val === 'false' ? false : true
     }
     else if (attr === 'disabled') {
-      node.disabled = true
+      node.disabled = val !== 'false'
     }
     else if (attr === 'expanded') {
       node.expanded = val !== 'false'
     }
     else if (attr === 'pressed') {
-      node.pressed = val === 'mixed' ? 'mixed' : true
+      node.pressed = val === 'mixed' ? 'mixed' : val === 'false' ? false : true
     }
     else if (attr === 'selected') {
-      node.selected = true
+      node.selected = val !== 'false'
     }
   }
 
@@ -539,6 +615,12 @@ function matchesNode(node: AriaNode | string, template: AriaTemplateNode): boole
     return false
   }
   if (template.selected !== undefined && template.selected !== node.selected) {
+    return false
+  }
+  if (template.url !== undefined && !matchesName(node.url || '', template.url)) {
+    return false
+  }
+  if (template.placeholder !== undefined && !matchesName(node.placeholder || '', template.placeholder)) {
     return false
   }
 
@@ -843,6 +925,8 @@ function mergeNode(
     && (template.expanded === undefined || template.expanded === node.expanded)
     && (template.pressed === undefined || template.pressed === node.pressed)
     && (template.selected === undefined || template.selected === node.selected)
+    && (template.url === undefined || matchesName(node.url || '', template.url))
+    && (template.placeholder === undefined || matchesName(node.placeholder || '', template.placeholder))
 
   // Build the key line for each output
   // When name regex matched, use pattern form in actual too (so it cancels in diff)
@@ -859,50 +943,62 @@ function mergeNode(
     `${indent}  `,
   )
 
+  // Build pseudo-child lines for /url: and /placeholder:
+  const pseudoLines: string[] = []
+  if (node.url !== undefined) {
+    pseudoLines.push(`${indent}  - /url: ${node.url}`)
+  }
+  if (node.placeholder !== undefined) {
+    pseudoLines.push(`${indent}  - /placeholder: ${node.placeholder}`)
+  }
+
   const pass = namePass && attrPass && childResult.pass
 
   const actual: string[] = []
   const expected: string[] = []
   const merged: string[] = []
 
-  const hasActualChildren = childResult.actual.length > 0
-  const hasExpectedChildren = childResult.expected.length > 0
-  const hasMergedChildren = childResult.merged.length > 0
+  const hasActualChildren = childResult.actual.length > 0 || pseudoLines.length > 0
+  const hasExpectedChildren = childResult.expected.length > 0 || pseudoLines.length > 0
+  const hasMergedChildren = childResult.merged.length > 0 || pseudoLines.length > 0
 
   if (!hasActualChildren) {
     actual.push(`${indent}- ${actualKey}`)
   }
-  else if (childResult.actual.length === 1 && childResult.actual[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.actual.length === 1 && !pseudoLines.length && childResult.actual[0].trimStart().startsWith('- text: ')) {
     const text = childResult.actual[0].trimStart().slice('- text: '.length)
     actual.push(`${indent}- ${actualKey}: ${text}`)
   }
   else {
     actual.push(`${indent}- ${actualKey}:`)
     actual.push(...childResult.actual)
+    actual.push(...pseudoLines)
   }
 
   if (!hasExpectedChildren) {
     expected.push(`${indent}- ${expectedKey}`)
   }
-  else if (childResult.expected.length === 1 && childResult.expected[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.expected.length === 1 && !pseudoLines.length && childResult.expected[0].trimStart().startsWith('- text: ')) {
     const text = childResult.expected[0].trimStart().slice('- text: '.length)
     expected.push(`${indent}- ${expectedKey}: ${text}`)
   }
   else {
     expected.push(`${indent}- ${expectedKey}:`)
     expected.push(...childResult.expected)
+    expected.push(...pseudoLines)
   }
 
   if (!hasMergedChildren) {
     merged.push(`${indent}- ${mergedKey}`)
   }
-  else if (childResult.merged.length === 1 && childResult.merged[0].trimStart().startsWith('- text: ')) {
+  else if (childResult.merged.length === 1 && !pseudoLines.length && childResult.merged[0].trimStart().startsWith('- text: ')) {
     const text = childResult.merged[0].trimStart().slice('- text: '.length)
     merged.push(`${indent}- ${mergedKey}: ${text}`)
   }
   else {
     merged.push(`${indent}- ${mergedKey}:`)
     merged.push(...childResult.merged)
+    merged.push(...pseudoLines)
   }
 
   return { actual, expected, merged, pass }
