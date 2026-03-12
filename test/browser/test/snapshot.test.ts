@@ -35,8 +35,7 @@ test('toMatchAriaSnapshot simple', () => {
   expect(document.body).toMatchAriaSnapshot()
 })
 
-// TODO: non-poll inline should work on webkit?
-test.skipIf(server.browser === 'webkit')('toMatchAriaInlineSnapshot simple', () => {
+test('toMatchAriaInlineSnapshot simple', () => {
   document.body.innerHTML = `
     <button aria-label="User 42">Profile</button>
     <p>You have 7 notifications</p>

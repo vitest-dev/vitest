@@ -252,12 +252,19 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       domain: string,
       message?: string,
     ) {
-      return assertDomainSnapshot(
-        this,
-        'toMatchDomainInlineSnapshot',
-        resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
-        { inline: true, inlineSnapshot, message },
-      )
+      // try/finally prevents WebKit proper tail call from eliminating this frame
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      try {
+        return assertDomainSnapshot(
+          this,
+          'toMatchDomainInlineSnapshot',
+          resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
+          { inline: true, inlineSnapshot, message },
+        )
+      }
+      finally {
+        // for webkit
+      }
     }),
   )
   utils.addMethod(
@@ -279,12 +286,19 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       this,
       inlineSnapshot?: string,
     ) {
-      return assertDomainSnapshot(
-        this,
-        'toMatchAriaInlineSnapshot',
-        ariaDomainAdapter,
-        { inline: true, inlineSnapshot },
-      )
+      // try/finally prevents WebKit proper tail call from eliminating this frame
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      try {
+        return assertDomainSnapshot(
+          this,
+          'toMatchAriaInlineSnapshot',
+          ariaDomainAdapter,
+          { inline: true, inlineSnapshot },
+        )
+      }
+      finally {
+        // for webkit
+      }
     }),
   )
 
