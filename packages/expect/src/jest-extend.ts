@@ -65,8 +65,19 @@ function getMatcherState(
 }
 
 class JestExtendError extends Error {
-  constructor(message: string, public actual?: any, public expected?: any, public meta?: object) {
+  context?: {
+    assertionName: string
+    meta?: object
+  }
+
+  constructor(message: string, public actual?: any, public expected?: any) {
     super(message)
+  }
+
+  setContext(assertionName: string, meta?: object): this {
+    this.context = { assertionName, meta }
+
+    return this
   }
 }
 
@@ -97,7 +108,7 @@ function JestExtendPlugin(
                 const errorMessage = customMessage != null
                   ? customMessage
                   : message()
-                throw new JestExtendError(errorMessage, actual, expected, meta)
+                throw new JestExtendError(errorMessage, actual, expected).setContext(expectAssertionName, meta)
               }
             })
           }
@@ -108,7 +119,7 @@ function JestExtendPlugin(
             const errorMessage = customMessage != null
               ? customMessage
               : message()
-            throw new JestExtendError(errorMessage, actual, expected, meta)
+            throw new JestExtendError(errorMessage, actual, expected).setContext(expectAssertionName, meta)
           }
         }
 

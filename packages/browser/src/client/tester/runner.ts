@@ -156,16 +156,16 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      const lastErrorMeta = task.result?.errors?.at(-1)?.meta
+      const lastErrorContext = task.result?.errors?.at(-1)?.context
       if (
         this.config.browser.screenshotFailures
         && document.body.clientHeight > 0
         && task.result?.state === 'fail'
         && task.type === 'test'
         && !(
-          lastErrorMeta
-          && Reflect.get(lastErrorMeta, 'assertion') === 'toMatchScreenshot'
-          && Reflect.get(lastErrorMeta, 'outcome') !== 'unstable-screenshot')
+          lastErrorContext
+          && Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot'
+          && Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot')
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
