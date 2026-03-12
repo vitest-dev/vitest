@@ -45,6 +45,28 @@ test('timeout', async () => {
   }))
 })
 
+test('timeout aborts slow fn() calls early', async () => {
+  // When fn() takes longer than the configured timeout, expect.poll() should
+  // fail within roughly `timeout` ms rather than waiting for the slow fn() to
+  // complete each iteration.
+  const start = Date.now()
+  await expect(async () => {
+    await expect
+      .poll(
+        async () => {
+          // fn() deliberately takes much longer than the timeout
+          await new Promise(r => setTimeout(r, 5000))
+          return undefined
+        },
+        { timeout: 100 },
+      )
+      .toBe(1)
+  }).rejects.toThrow()
+  const elapsed = Date.now() - start
+  // Should fail well within 1s, not after waiting for each 5-second fn() call
+  expect(elapsed).toBeLessThan(1000)
+})
+
 test('interval', async () => {
   const fn = vi.fn(() => true)
   await expect(async () => {

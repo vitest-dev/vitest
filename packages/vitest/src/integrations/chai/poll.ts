@@ -89,8 +89,19 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             let executionPhase: 'fn' | 'assertion' = 'fn'
             let hasTimedOut = false
 
+            // A promise that rejects when the timeout fires. Raced against fn()
+            // so that a slow fn() is aborted early rather than allowed to block
+            // beyond the configured timeout.
+            let _rejectOnTimeout!: (e: Error) => void
+            const timeoutAbortPromise = new Promise<never>((_, reject) => {
+              _rejectOnTimeout = reject
+            })
+
             const timerId = setTimeout(() => {
               hasTimedOut = true
+              _rejectOnTimeout(
+                new Error(`expect.poll() timed out after ${timeout}ms`),
+              )
             }, timeout)
 
             chai.util.flag(assertion, '_name', key)
@@ -107,7 +118,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
                 try {
                   executionPhase = 'fn'
-                  const obj = await fn()
+                  // Race fn() against the timeout so that a slow fn() doesn't
+                  // block the loop past the configured timeout.
+                  const obj = await Promise.race([fn(), timeoutAbortPromise])
                   chai.util.flag(assertion, 'object', obj)
 
                   executionPhase = 'assertion'
@@ -117,7 +130,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 }
                 catch (err) {
-                  if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
+                  if (isLastAttempt || hasTimedOut || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
                     await onSettled?.({ assertion, status: 'fail' })
                     throwWithCause(err, STACK_TRACE_ERROR)
                   }
