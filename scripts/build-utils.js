@@ -52,15 +52,6 @@ export function createDtsUtils({
           extraOutdir: isolatedDeclDir,
           inputBase,
         }),
-        {
-          name: 'isolated-decl-dts-extra',
-          resolveId(source) {
-            // silence node-resolve error by isolated-decl transform of type import
-            if (source.startsWith('vite/types/')) {
-              return { id: '/node_modules/', external: true }
-            }
-          },
-        },
       ]
     },
     /**
