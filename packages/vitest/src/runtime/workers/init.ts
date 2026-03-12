@@ -7,6 +7,7 @@ import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
+import { disableDefaultColors } from 'tinyrainbow'
 
 interface Options extends VitestWorker {
   teardown?: () => void
@@ -48,6 +49,10 @@ export function init(worker: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
+
+        if (message.context.config.isAgent) {
+          disableDefaultColors()
+        }
 
         traces ??= await new Traces({
           enabled: message.traces.enabled,

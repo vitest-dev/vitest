@@ -52,6 +52,8 @@ import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
+import { disableDefaultColors } from 'tinyrainbow'
+import { isAgent } from '../utils/env'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -137,6 +139,10 @@ export class Vitest {
     cliOptions: UserConfig,
     options: VitestOptions = {},
   ) {
+    if (isAgent) {
+      disableDefaultColors()
+    }
+
     this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
