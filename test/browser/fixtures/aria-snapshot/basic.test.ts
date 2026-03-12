@@ -19,9 +19,8 @@ test('toMatchAriaInlineSnapshot simple', () => {
     <button aria-label="User 42">Profile</button>
     <p>You have 7 notifications</p>
   `
-  // manually updated regex pattern from "User 42" to /User \\d+/
   expect(document.body).toMatchAriaInlineSnapshot(`
-    - button /User \\d+/: Profile
+    - button "User 42": Profile
     - paragraph: You have 7 notifications
   `)
 })
