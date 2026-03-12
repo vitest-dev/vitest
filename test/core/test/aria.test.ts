@@ -1333,6 +1333,32 @@ describe('matchAriaTree', () => {
     `)
   })
 
+ test('flipped regex match', () => {
+    expect(match(`
+      <button>Submit</button>
+      <button>Cancel</button>
+    `, `
+      - button: Cancel
+      - paragraph: /\w+/
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - button: Submit
+      - button: Cancel
+      ",
+        "expected": "
+      - button: Cancel
+      - paragraph: /w+/
+      ",
+        "mergedExpected": "
+      - button: Submit
+      - button: Cancel
+      ",
+        "pass": false,
+      }
+    `)
+  })
+
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "disabled attribute"
   test('attribute match — disabled', () => {
     expect(match(
