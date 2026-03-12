@@ -57,7 +57,7 @@ This release adds support for the new Vite 8 version. Additionally, Vitest now u
 
 ## Test Tags
 
-[Tags](/guide/test-tags) let you label tests to organize them into groups. Once tagged, you can filter tests by tag or apply shared options - like a longer timeout or automatic retries - to every test with a given tag.
+[Tags](/guide/test-tags) let you label tests to organize them into groups. Once tagged, you can filter tests by tag or apply shared options — like a longer timeout or automatic retries — to every test with a given tag.
 
 To use tags, define them in your configuration file. Each tag requires a `name` and can optionally include test options that apply to every test marked with that tag. For the full list of available options, see [`tags`](/config/tags).
 
@@ -209,7 +209,7 @@ Read more in the [Trace View guide](/guide/browser/trace-view).
 
 ## Type-Inference in `test.extend` - New Builder Pattern
 
-Vitest 4.1 introduces a new [`test.extend`](/guide/test-context) pattern that supports type inference. You can return a value from the factory instead of calling the `use` function - TypeScript infers the type of each fixture from its return value, so you don't need to declare types manually.
+Vitest 4.1 introduces a new [`test.extend`](/guide/test-context) pattern that supports type inference. You can return a value from the factory instead of calling the `use` function — TypeScript infers the type of each fixture from its return value, so you don't need to declare types manually.
 
 ```ts
 import { test as baseTest } from 'vitest'
@@ -260,7 +260,7 @@ test.afterAll(async ({ db }) => {
 ```
 
 ::: warning
-This change could be considered breaking - previously Vitest passed down undocumented `Suite` as the first argument. The team decided that the usage was small enough to not disrupt the ecosystem.
+This change could be considered breaking. Previously Vitest passed down undocumented `Suite` as the first argument. The team decided that the usage was small enough to not disrupt the ecosystem.
 :::
 
 ## New `aroundAll` and `aroundEach` Hooks
@@ -295,7 +295,7 @@ test('insert user', async ({ db }) => {
 
 ## Helper for Better Stack Traces
 
-When a test fails inside a shared utility function, the stack trace usually points to the line inside that helper - not where it was called. This makes it harder to find which test actually failed, especially when the same helper is used across many tests.
+When a test fails inside a shared utility function, the stack trace usually points to the line inside that helper — not where it was called. This makes it harder to find which test actually failed, especially when the same helper is used across many tests.
 
 [`vi.defineHelper`](/api/vi#vi-definehelper) wraps a function so that Vitest removes its internals from the stack trace and points the error back to the call site instead:
 
