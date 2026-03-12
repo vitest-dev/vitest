@@ -56,8 +56,3 @@ export function addDomain<Captured = unknown, Expected = unknown, Options = unkn
 export function getDomain(name: string): DomainSnapshotAdapter<any, any, any> | undefined {
   return domains.get(name)
 }
-
-/** @experimental */
-export function getDomains(): DomainSnapshotAdapter<any, any, any>[] {
-  return [...domains.values()]
-}
