@@ -1009,74 +1009,7 @@ describe('matchAriaTree', () => {
     `)
   })
 
-  test('contain semantics — nested partial match', () => {
-    // Match a deeply nested structure, only mentioning the first listitem.
-    expect(match(`
-      <nav aria-label="Main">
-        <ul>
-          <li><button>Home</button></li>
-          <li><button>About</button></li>
-          <li><button>Contact</button></li>
-        </ul>
-      </nav>
-    `, `
-      - navigation "Main":
-        - list:
-          - listitem:
-            - button: Home
-    `)).toMatchInlineSnapshot(`
-      {
-        "actual": "
-      - navigation "Main":
-        - list:
-          - listitem:
-            - button: Home
-          - listitem:
-            - button: About
-          - listitem:
-            - button: Contact
-      ",
-        "expected": "
-      - navigation "Main":
-        - list:
-          - listitem:
-            - button: Home
-      ",
-        "mergedExpected": "
-      - navigation "Main":
-        - list:
-          - listitem:
-            - button: Home
-      ",
-        "pass": true,
-      }
-    `)
-  })
 
-  test('contain semantics — template with no children matches any node', () => {
-    // Template says "there's a list" without specifying children.
-    expect(match(`
-      <ul>
-        <li>One</li>
-        <li>Two</li>
-      </ul>
-    `, '- list')).toMatchInlineSnapshot(`
-      {
-        "actual": "
-      - list:
-        - listitem: One
-        - listitem: Two
-      ",
-        "expected": "
-      - list
-      ",
-        "mergedExpected": "
-      - list
-      ",
-        "pass": true,
-      }
-    `)
-  })
 
   test('contain semantics — match non-first child of same role by text', () => {
     expect(match(`
@@ -1137,6 +1070,75 @@ describe('matchAriaTree', () => {
       - list:
         - listitem: A
         - listitem: C
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — template with no children matches any node', () => {
+    // Template says "there's a list" without specifying children.
+    expect(match(`
+      <ul>
+        <li>One</li>
+        <li>Two</li>
+      </ul>
+    `, '- list')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: One
+        - listitem: Two
+      ",
+        "expected": "
+      - list
+      ",
+        "mergedExpected": "
+      - list
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — nested partial match', () => {
+    // Match a deeply nested structure, only mentioning the first listitem.
+    expect(match(`
+      <nav aria-label="Main">
+        <ul>
+          <li><button>Home</button></li>
+          <li><button>About</button></li>
+          <li><button>Contact</button></li>
+        </ul>
+      </nav>
+    `, `
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+          - listitem:
+            - button: About
+          - listitem:
+            - button: Contact
+      ",
+        "expected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+      ",
+        "mergedExpected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
       ",
         "pass": true,
       }
@@ -1716,6 +1718,7 @@ describe('matchAriaTree', () => {
   })
 
   test('/placeholder: pseudo-attribute mismatch', () => {
+    // TODO: why expected dropped /placeholder?
     expect(match(
       '<input placeholder="Enter name">',
       `
