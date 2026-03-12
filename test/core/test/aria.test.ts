@@ -854,10 +854,10 @@ describe('matchAriaTree', () => {
       - heading [level=1]: Hello
       ",
         "expected": "
-      - heading [level=1]: Hello
+      - heading [level=1]
       ",
         "mergedExpected": "
-      - heading [level=1]: Hello
+      - heading [level=1]
       ",
         "pass": true,
       }
@@ -874,10 +874,10 @@ describe('matchAriaTree', () => {
       - button "Submit": Go
       ",
         "expected": "
-      - button "Submit": Go
+      - button "Submit"
       ",
         "mergedExpected": "
-      - button "Submit": Go
+      - button "Submit"
       ",
         "pass": true,
       }
@@ -894,7 +894,7 @@ describe('matchAriaTree', () => {
       - button "Submit": Go
       ",
         "expected": "
-      - button "Cancel": Go
+      - button "Cancel"
       ",
         "mergedExpected": "
       - button "Submit": Go
@@ -914,10 +914,10 @@ describe('matchAriaTree', () => {
       - button /User \\d+/: Go
       ",
         "expected": "
-      - button /User \\d+/: Go
+      - button /User \\d+/
       ",
         "mergedExpected": "
-      - button /User \\d+/: Go
+      - button /User \\d+/
       ",
         "pass": true,
       }
@@ -934,7 +934,7 @@ describe('matchAriaTree', () => {
       - button "User 42": Go
       ",
         "expected": "
-      - button /Goodbye/: Go
+      - button /Goodbye/
       ",
         "mergedExpected": "
       - button "User 42": Go
@@ -965,14 +965,12 @@ describe('matchAriaTree', () => {
       - button: Submit
       ",
         "expected": "
-      - heading [level=1]: Title
-      - paragraph: Body text
-      - button: Submit
+      - heading [level=1]
+      - button
       ",
         "mergedExpected": "
-      - heading [level=1]: Title
-      - paragraph: Body text
-      - button: Submit
+      - heading [level=1]
+      - button
       ",
         "pass": true,
       }
@@ -1001,14 +999,10 @@ describe('matchAriaTree', () => {
         "expected": "
       - list:
         - listitem: One
-        - listitem: Two
-        - listitem: Three
       ",
         "mergedExpected": "
       - list:
         - listitem: One
-        - listitem: Two
-        - listitem: Three
       ",
         "pass": true,
       }
@@ -1047,20 +1041,12 @@ describe('matchAriaTree', () => {
         - list:
           - listitem:
             - button: Home
-          - listitem:
-            - button: About
-          - listitem:
-            - button: Contact
       ",
         "mergedExpected": "
       - navigation "Main":
         - list:
           - listitem:
             - button: Home
-          - listitem:
-            - button: About
-          - listitem:
-            - button: Contact
       ",
         "pass": true,
       }
@@ -1082,26 +1068,17 @@ describe('matchAriaTree', () => {
         - listitem: Two
       ",
         "expected": "
-      - list:
-        - listitem: One
-        - listitem: Two
+      - list
       ",
         "mergedExpected": "
-      - list:
-        - listitem: One
-        - listitem: Two
+      - list
       ",
         "pass": true,
       }
     `)
   })
 
-  // TODO: pairChildren uses shallow (role-only) matching, so when multiple
-  // children share the same role, the template is paired with the first one
-  // regardless of text content. Fix: pairChildren should use matchesNode
-  // (deep match) instead of matchesNodeShallow. Both tests below should
-  // have pass: true once fixed.
-  test('contain semantics — known bug: cannot match non-first child of same role by text', () => {
+  test('contain semantics — match non-first child of same role by text', () => {
     expect(match(`
       <ul>
         <li>One</li>
@@ -1122,22 +1099,17 @@ describe('matchAriaTree', () => {
         "expected": "
       - list:
         - listitem: Two
-        - listitem: Two
-        - listitem: Three
       ",
         "mergedExpected": "
       - list:
-        - listitem: One
         - listitem: Two
-        - listitem: Three
       ",
-        "pass": false,
+        "pass": true,
       }
     `)
   })
 
-  // TODO: same pairChildren shallow matching bug as above
-  test('contain semantics — known bug: subsequence by text fails', () => {
+  test('contain semantics — subsequence by text', () => {
     expect(match(`
       <ul>
         <li>A</li>
@@ -1160,13 +1132,52 @@ describe('matchAriaTree', () => {
       - list:
         - listitem: A
         - listitem: C
-        - listitem: C
       ",
         "mergedExpected": "
       - list:
         - listitem: A
-        - listitem: B
         - listitem: C
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — bail out to full re-render when sibling fails', () => {
+    // Two lists: first partially matches (template asks for A only, B is unmentioned),
+    // second fails (template says WRONG but actual is X).
+    // Because list2 can't pair, bail-out renders ALL actuals at this level.
+    // List1's partial form is lost (B included) — that's the Attempt 1 tradeoff.
+    expect(match(`
+      <ul><li>A</li><li>B</li></ul>
+      <ul><li>X</li><li>Y</li></ul>
+    `, `
+      - list:
+        - listitem: A
+      - list:
+        - listitem: WRONG
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: A
+        - listitem: B
+      - list:
+        - listitem: X
+        - listitem: Y
+      ",
+        "expected": "
+      - list:
+        - listitem: A
+      - list:
+        - listitem: WRONG
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: A
+      - list:
+        - listitem: X
+        - listitem: Y
       ",
         "pass": false,
       }
@@ -1200,7 +1211,7 @@ describe('matchAriaTree', () => {
       - heading [level=2]: Title
       ",
         "expected": "
-      - heading [level=1]: Title
+      - heading [level=1]
       ",
         "mergedExpected": "
       - heading [level=2]: Title
@@ -1217,7 +1228,6 @@ describe('matchAriaTree', () => {
       - button: Click
       ",
         "expected": "
-      - button: Click
       - link
       ",
         "mergedExpected": "
@@ -1305,10 +1315,10 @@ describe('matchAriaTree', () => {
       - button [disabled]: Click me
       ",
         "expected": "
-      - button [disabled]: Click me
+      - button [disabled]
       ",
         "mergedExpected": "
-      - button [disabled]: Click me
+      - button [disabled]
       ",
         "pass": true,
       }
@@ -1325,7 +1335,7 @@ describe('matchAriaTree', () => {
       - button: Click me
       ",
         "expected": "
-      - button [disabled]: Click me
+      - button [disabled]
       ",
         "mergedExpected": "
       - button: Click me
@@ -1346,10 +1356,10 @@ describe('matchAriaTree', () => {
       - button [expanded]: Toggle
       ",
         "expected": "
-      - button [expanded]: Toggle
+      - button [expanded]
       ",
         "mergedExpected": "
-      - button [expanded]: Toggle
+      - button [expanded]
       ",
         "pass": true,
       }
@@ -1366,7 +1376,7 @@ describe('matchAriaTree', () => {
       - button [expanded]: Toggle
       ",
         "expected": "
-      - button [expanded=false]: Toggle
+      - button [expanded=false]
       ",
         "mergedExpected": "
       - button [expanded]: Toggle
@@ -1387,10 +1397,10 @@ describe('matchAriaTree', () => {
       - button [pressed]: Like
       ",
         "expected": "
-      - button [pressed]: Like
+      - button [pressed]
       ",
         "mergedExpected": "
-      - button [pressed]: Like
+      - button [pressed]
       ",
         "pass": true,
       }
@@ -1407,10 +1417,10 @@ describe('matchAriaTree', () => {
       - button [pressed=mixed]: Like
       ",
         "expected": "
-      - button [pressed=mixed]: Like
+      - button [pressed=mixed]
       ",
         "mergedExpected": "
-      - button [pressed=mixed]: Like
+      - button [pressed=mixed]
       ",
         "pass": true,
       }
@@ -1427,7 +1437,7 @@ describe('matchAriaTree', () => {
       - button [pressed=mixed]: Like
       ",
         "expected": "
-      - button [pressed]: Like
+      - button [pressed]
       ",
         "mergedExpected": "
       - button [pressed=mixed]: Like
@@ -1448,10 +1458,10 @@ describe('matchAriaTree', () => {
       - option [selected]: Row
       ",
         "expected": "
-      - option [selected]: Row
+      - option [selected]
       ",
         "mergedExpected": "
-      - option [selected]: Row
+      - option [selected]
       ",
         "pass": true,
       }
@@ -1468,7 +1478,7 @@ describe('matchAriaTree', () => {
       - option: Row
       ",
         "expected": "
-      - option [selected]: Row
+      - option [selected]
       ",
         "mergedExpected": "
       - option: Row
@@ -1537,8 +1547,7 @@ describe('matchAriaTree', () => {
       - heading [level=1]: title 2
       ",
         "expected": "
-      - heading "title": title
-      - heading [level=1]: title 2
+      - heading "title"
       ",
         "mergedExpected": "
       - heading [level=1]: title
@@ -1559,10 +1568,10 @@ describe('matchAriaTree', () => {
       - paragraph: anything
       ",
         "expected": "
-      - paragraph: anything
+
       ",
         "mergedExpected": "
-      - paragraph: anything
+
       ",
         "pass": true,
       }
@@ -1596,9 +1605,7 @@ describe('matchAriaTree', () => {
       - navigation "Main":
         - list:
           - listitem:
-            - link:
-              - text: Away
-              - /url: /a
+            - link: Away
       ",
         "mergedExpected": "
       - navigation "Main":
@@ -1629,6 +1636,7 @@ describe('matchAriaTree', () => {
 
   // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "should match url"
   test('/url: pseudo-attribute matches', () => {
+    // TODO: why mergedExpected got stricter if pass?
     expect(match(
       '<a href="https://example.com">Link</a>',
       `\
@@ -1644,12 +1652,10 @@ describe('matchAriaTree', () => {
       ",
         "expected": "
       - link:
-        - text: Link
         - /url: https://example.com
       ",
         "mergedExpected": "
       - link:
-        - text: Link
         - /url: https://example.com
       ",
         "pass": true,
@@ -1671,9 +1677,7 @@ describe('matchAriaTree', () => {
         - /url: https://example.com
       ",
         "expected": "
-      - link:
-        - text: Link
-        - /url: https://example.com
+      - link
       ",
         "mergedExpected": "
       - link:
@@ -1724,8 +1728,7 @@ describe('matchAriaTree', () => {
         - /placeholder: Enter name
       ",
         "expected": "
-      - textbox:
-        - /placeholder: Enter name
+      - textbox
       ",
         "mergedExpected": "
       - textbox:

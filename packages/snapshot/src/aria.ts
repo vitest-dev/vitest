@@ -746,19 +746,6 @@ interface MergeLines {
   pass: boolean
 }
 
-function matchesNodeShallow(node: AriaNode | string, template: AriaTemplateNode): boolean {
-  if (typeof node === 'string' && template.kind === 'text') {
-    return true
-  }
-  if (typeof node === 'string' || template.kind !== 'role') {
-    return false
-  }
-  if (template.role !== 'fragment' && template.role !== node.role) {
-    return false
-  }
-  return true
-}
-
 function pairChildren(
   children: (AriaNode | string)[],
   templates: AriaTemplateNode[],
@@ -766,7 +753,7 @@ function pairChildren(
   const pairs = new Map<number, number>()
   let ti = 0
   for (let ci = 0; ci < children.length && ti < templates.length; ci++) {
-    if (matchesNodeShallow(children[ci], templates[ti])) {
+    if (matchesNode(children[ci], templates[ti])) {
       pairs.set(ci, ti)
       ti++
     }
@@ -782,21 +769,67 @@ function mergeChildLists(
   const actual: string[] = []
   const expected: string[] = []
   const merged: string[] = []
-  let allPass = true
 
   const pairs = pairChildren(children, templates)
   const allTemplatesMatched = pairs.size === templates.length
 
-  if (!allTemplatesMatched) {
-    allPass = false
+  // Render all actual children (used in both branches)
+  function renderChild(child: AriaNode | string): string[] {
+    const lines: string[] = []
+    if (typeof child === 'string') {
+      lines.push(`${indent}- text: ${child}`)
+    }
+    else {
+      renderNode(child, indent, lines)
+    }
+    return lines
   }
 
+  if (!allTemplatesMatched) {
+    // BAIL OUT: some template had no match — render full actual (maximally strict).
+    // Never produce a looser template; full re-render is safe.
+    for (const child of children) {
+      const rendered = renderChild(child)
+      actual.push(...rendered)
+      merged.push(...rendered)
+    }
+
+    // Unmatched templates → expected only (for diff display)
+    for (let ti = 0; ti < templates.length; ti++) {
+      const matched = [...pairs.values()].includes(ti)
+      if (!matched) {
+        const tmpl = templates[ti]
+        if (tmpl.kind === 'text') {
+          expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
+        }
+        else {
+          const tmplLines: string[] = []
+          renderTemplateNode(tmpl, indent, tmplLines)
+          expected.push(...tmplLines)
+        }
+      }
+    }
+
+    // Matched templates → expected from their perspective
+    for (let ci = 0; ci < children.length; ci++) {
+      const ti = pairs.get(ci)
+      if (ti !== undefined) {
+        const r = mergeNode(children[ci], templates[ti], indent)
+        expected.push(...r.expected)
+      }
+    }
+
+    return { actual, expected, merged, pass: false }
+  }
+
+  // PARTIAL MERGE: all templates matched — preserve partial structure.
+  // Unpaired actuals are omitted from merged (user intentionally omitted them).
+  let allPass = true
   for (let ci = 0; ci < children.length; ci++) {
     const child = children[ci]
     const ti = pairs.get(ci)
 
     if (ti !== undefined) {
-      // Paired — detailed merge
       const r = mergeNode(child, templates[ti], indent)
       actual.push(...r.actual)
       expected.push(...r.expected)
@@ -806,33 +839,8 @@ function mergeChildLists(
       }
     }
     else {
-      // Unpaired captured child — render in actual/merged, also expected (context)
-      const rendered: string[] = []
-      if (typeof child === 'string') {
-        rendered.push(`${indent}- text: ${child}`)
-      }
-      else {
-        renderNode(child, indent, rendered)
-      }
-      actual.push(...rendered)
-      expected.push(...rendered)
-      merged.push(...rendered)
-    }
-  }
-
-  // Remaining unmatched template nodes — append to expected only
-  for (let ti = 0; ti < templates.length; ti++) {
-    const matched = [...pairs.values()].includes(ti)
-    if (!matched) {
-      const tmpl = templates[ti]
-      if (tmpl.kind === 'text') {
-        expected.push(`${indent}- text: ${formatText(tmpl.text)}`)
-      }
-      else {
-        const tmplLines: string[] = []
-        renderTemplateNode(tmpl, indent, tmplLines)
-        expected.push(...tmplLines)
-      }
+      // Unpaired actual — in actual only, keep out of merged (preserve partial)
+      actual.push(...renderChild(child))
     }
   }
 
