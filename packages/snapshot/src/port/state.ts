@@ -525,10 +525,12 @@ export default class SnapshotState {
     const matchResult = hasSnapshot ? isEqual(expected!) : undefined
     const pass = matchResult?.pass ?? false
 
+    // TODO: what?
     // Unlike regular match, do NOT overwrite snapshot data on pass.
     // Domain snapshots may contain semantic patterns (e.g. regex)
     // that differ from the rendered output but still match.
 
+    // TODO: should support multiple snapshots in same location like `match` does.
     // find call site for inline snapshot rewriting
     let stack: ParsedStack | undefined
     if (isInline) {
