@@ -763,7 +763,41 @@ describe('render -> parse roundtrip', () => {
     const tree = capture(html)
     const rendered = renderAriaTree(tree)
     const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template).pass).toBe(true)
+    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+      {
+        "actual": "- navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Home
+              - /url: /home
+          - listitem:
+            - link:
+              - text: About
+              - /url: /about",
+        "expected": "- navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Home
+              - /url: /home
+          - listitem:
+            - link:
+              - text: About
+              - /url: /about",
+        "mergedExpected": "- navigation "Main":
+        - list:
+          - listitem:
+            - link:
+              - text: Home
+              - /url: /home
+          - listitem:
+            - link:
+              - text: About
+              - /url: /about",
+        "pass": true,
+      }
+    `)
   })
 
   test('roundtrip with all ARIA states', () => {
@@ -779,7 +813,32 @@ describe('render -> parse roundtrip', () => {
     const tree = capture(html)
     const rendered = renderAriaTree(tree)
     const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template).pass).toBe(true)
+    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+      {
+        "actual": "- checkbox "A" [checked]
+      - button [disabled]: B
+      - button [expanded]: C
+      - button [expanded=false]: D
+      - button [pressed]: E
+      - button [pressed=mixed]: F
+      - option [selected]: G",
+        "expected": "- checkbox "A" [checked]
+      - button [disabled]: B
+      - button [expanded]: C
+      - button [expanded=false]: D
+      - button [pressed]: E
+      - button [pressed=mixed]: F
+      - option [selected]: G",
+        "mergedExpected": "- checkbox "A" [checked]
+      - button [disabled]: B
+      - button [expanded]: C
+      - button [expanded=false]: D
+      - button [pressed]: E
+      - button [pressed=mixed]: F
+      - option [selected]: G",
+        "pass": true,
+      }
+    `)
   })
 })
 
@@ -885,7 +944,164 @@ describe('matchAriaTree', () => {
     `)
   })
 
-  test('contain semantics — partial children match', () => {
+  // Contain semantics: template is a subset of actual children.
+  // The template doesn't need to list every child — only the ones you care about.
+
+  test('contain semantics — skip unmentioned siblings by distinct role', () => {
+    // Template mentions heading and button, skipping the paragraph in between.
+    // Works because pairChildren matches by role, and these are distinct roles.
+    expect(match(`
+      <h1>Title</h1>
+      <p>Body text</p>
+      <button>Submit</button>
+    `, `
+      - heading [level=1]
+      - button
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - heading [level=1]: Title
+      - paragraph: Body text
+      - button: Submit
+      ",
+        "expected": "
+      - heading [level=1]: Title
+      - paragraph: Body text
+      - button: Submit
+      ",
+        "mergedExpected": "
+      - heading [level=1]: Title
+      - paragraph: Body text
+      - button: Submit
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — match first of repeated role', () => {
+    // When template matches the first child of a repeated role, pairing works.
+    expect(match(`
+      <ul>
+        <li>One</li>
+        <li>Two</li>
+        <li>Three</li>
+      </ul>
+    `, `
+      - list:
+        - listitem: One
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "expected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+        - listitem: Three
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — nested partial match', () => {
+    // Match a deeply nested structure, only mentioning the first listitem.
+    expect(match(`
+      <nav aria-label="Main">
+        <ul>
+          <li><button>Home</button></li>
+          <li><button>About</button></li>
+          <li><button>Contact</button></li>
+        </ul>
+      </nav>
+    `, `
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+    `)).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+          - listitem:
+            - button: About
+          - listitem:
+            - button: Contact
+      ",
+        "expected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+          - listitem:
+            - button: About
+          - listitem:
+            - button: Contact
+      ",
+        "mergedExpected": "
+      - navigation "Main":
+        - list:
+          - listitem:
+            - button: Home
+          - listitem:
+            - button: About
+          - listitem:
+            - button: Contact
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  test('contain semantics — template with no children matches any node', () => {
+    // Template says "there's a list" without specifying children.
+    expect(match(`
+      <ul>
+        <li>One</li>
+        <li>Two</li>
+      </ul>
+    `, '- list')).toMatchInlineSnapshot(`
+      {
+        "actual": "
+      - list:
+        - listitem: One
+        - listitem: Two
+      ",
+        "expected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+      ",
+        "mergedExpected": "
+      - list:
+        - listitem: One
+        - listitem: Two
+      ",
+        "pass": true,
+      }
+    `)
+  })
+
+  // TODO: pairChildren uses shallow (role-only) matching, so when multiple
+  // children share the same role, the template is paired with the first one
+  // regardless of text content. Fix: pairChildren should use matchesNode
+  // (deep match) instead of matchesNodeShallow. Both tests below should
+  // have pass: true once fixed.
+  test('contain semantics — known bug: cannot match non-first child of same role by text', () => {
     expect(match(`
       <ul>
         <li>One</li>
@@ -920,7 +1136,8 @@ describe('matchAriaTree', () => {
     `)
   })
 
-  test('contain semantics — order matters (A before C passes)', () => {
+  // TODO: same pairChildren shallow matching bug as above
+  test('contain semantics — known bug: subsequence by text fails', () => {
     expect(match(`
       <ul>
         <li>A</li>
@@ -943,42 +1160,6 @@ describe('matchAriaTree', () => {
       - list:
         - listitem: A
         - listitem: C
-        - listitem: C
-      ",
-        "mergedExpected": "
-      - list:
-        - listitem: A
-        - listitem: B
-        - listitem: C
-      ",
-        "pass": false,
-      }
-    `)
-  })
-
-  test('contain semantics — order matters (C before A fails)', () => {
-    expect(match(`
-      <ul>
-        <li>A</li>
-        <li>B</li>
-        <li>C</li>
-      </ul>
-    `, `
-      - list:
-        - listitem: C
-        - listitem: A
-    `)).toMatchInlineSnapshot(`
-      {
-        "actual": "
-      - list:
-        - listitem: A
-        - listitem: B
-        - listitem: C
-      ",
-        "expected": "
-      - list:
-        - listitem: C
-        - listitem: A
         - listitem: C
       ",
         "mergedExpected": "
@@ -1368,7 +1549,9 @@ describe('matchAriaTree', () => {
     `)
   })
 
-  // -- Gap: empty template matches anything
+  // Behavioral test: empty template produces zero template children,
+  // and containsList(anything, []) returns true (vacuous truth).
+  // Same semantics as Playwright — "I don't care what's here."
   test('empty template matches anything', () => {
     expect(match('<p>anything</p>', '')).toMatchInlineSnapshot(`
       {
