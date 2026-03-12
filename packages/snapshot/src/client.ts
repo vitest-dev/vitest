@@ -264,6 +264,7 @@ export class SnapshotClient {
     let lastResult: DomainMatchResult | undefined
     let lastPollError: unknown
 
+    // TODO: use performance.now
     const TIMEOUT = Symbol('timeout')
     const deadline = Date.now() + timeout
 
@@ -340,7 +341,7 @@ export class SnapshotClient {
     const matchResult = snapshotState.matchDomain({
       testId,
       testName,
-      received: lastRendered!,
+      received: lastRendered,
       isInline,
       inlineSnapshot,
       error,
