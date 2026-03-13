@@ -1250,10 +1250,82 @@ describe('capture and render', () => {
     `)
   })
 
-  // TODO
-  // Playwright: page-aria-snapshot.spec.ts "should escape yaml text in text nodes", "should escape special yaml characters/values"
+  // TODO: YAML quoting/escaping not yet implemented (see aria.ts)
+  // Playwright: page-aria-snapshot.spec.ts "should escape yaml text in text nodes",
+  //   "should escape special yaml characters", "should escape special yaml values"
+  // Current render does NOT quote/escape — these snapshots document the unescaped output.
   test('YAML escaping of special characters', () => {
-    // Our simplified parser does not handle YAML escaping
+    const tree = capture(`
+<p>one: two</p>
+<p>"quoted"</p>
+<p>#comment</p>
+<p>@at</p>
+<p>[bracket]</p>
+<p>true</p>
+<p>123</p>
+`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            "one: two",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            ""quoted"",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            "#comment",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            "@at",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            "[bracket]",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            "true",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+        {
+          "children": [
+            "123",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- paragraph: one: two
+      - paragraph: "quoted"
+      - paragraph: #comment
+      - paragraph: @at
+      - paragraph: [bracket]
+      - paragraph: true
+      - paragraph: 123"
+    `)
   })
 })
 
