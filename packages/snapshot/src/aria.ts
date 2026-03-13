@@ -9,44 +9,67 @@
  *
  * Based on Playwright v1.58.2:
  *   Capture & render: https://github.com/microsoft/playwright/blob/v1.58.2/packages/injected/src/ariaSnapshot.ts
+ *     — generateAriaTree (capture), renderAriaTree, compareSnapshots / filterSnapshotDiff
+ *       (incremental diffing), convertToBestGuessRegex (codegen heuristics)
  *   Parse & match:    https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/utils/isomorphic/ariaSnapshot.ts
+ *     — parseAriaSnapshot (yaml library), KeyParser, AriaRegex / AriaTextValue types,
+ *       containerMode (equal/deep-equal/contain), matchesNodeDeep, cachedRegex
  *   Tests:            https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/to-match-aria-snapshot.spec.ts
  *                     https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/page-aria-snapshot.spec.ts
  *
- * Not yet implemented (vs Playwright v1.58.2):
+ * ─── Algorithmic differences from Playwright ───
  *
- *   Moderate:
- *   - /children: equal|deep-equal|contain directives
- *     → add matching mode flag threaded through containsList/mergeChildLists (~50 lines)
+ *   Novel additions:
+ *   - Three-way merge output (mergeNode / mergeChildLists)
+ *     Playwright's matcher returns a boolean pass/fail. We produce three parallel
+ *     line arrays — actual, expected, merged — so the snapshot system can generate
+ *     optimal diffs and do partial snapshot updates. When all template children
+ *     find a match, unmatched actual children are omitted from "merged" (preserving
+ *     the user's partial template). When some template children fail to match, we
+ *     bail out and include every actual child in "merged" (maximally strict).
+ *   - Regex-transparent diffing
+ *     When a regex pattern in the template matches an actual value, we render the
+ *     regex form in both actual and expected outputs so it cancels out in diffs,
+ *     keeping diff output focused on real mismatches.
+ *
+ *   Simplifications (vs Playwright):
+ *   - Hand-rolled line-based YAML parser instead of the `yaml` library.
+ *     Playwright delegates to a full YAML parser (yaml.parseDocument) with
+ *     LineCounter for source-mapped errors. We use a simpler indent-tracking
+ *     stack approach — no dependency, but no block scalars, no YAML escaping,
+ *     and no source-location error reporting.
+ *   - Regex as native RegExp objects instead of { pattern: string }.
+ *     Playwright uses a JSON-serializable AriaRegex type because templates
+ *     cross process boundaries. We keep native RegExp since everything runs
+ *     in-process. No regex compilation cache.
+ *   - Flat text representation (string | RegExp) instead of AriaTextValue
+ *     { raw, normalized }. Playwright normalizes whitespace separately from
+ *     regex detection; we normalize eagerly during capture.
+ *   - Root-level matching only.
+ *     Playwright's matchesNodeDeep walks the tree depth-first to find any
+ *     subtree matching the template (used for locator targeting). We only
+ *     match at the root, since we always capture from a known root element.
+ *
+ *   Not yet implemented (vs Playwright v1.58.2):
+ *   - /children: equal|deep-equal|contain container mode directives
+ *   - Codegen regex heuristics (convertToBestGuessRegex)
+ *     Playwright's "codegen" mode scans rendered text for dynamic-looking
+ *     content (UUIDs, multi-digit numbers, byte sizes like "2mb", durations
+ *     like "20s") and replaces them with regex patterns, so auto-generated
+ *     assertions are resilient to changing values.
+ *   - Incremental snapshot diffing (compareSnapshots / filterSnapshotDiff)
+ *     Not part of toMatchAriaSnapshot — this is Playwright's AI/computer-use
+ *     mode (mode: 'ai'), a separate rendering pipeline. It diffs two successive
+ *     snapshots using ref-based identity: compareSnapshots walks both trees in
+ *     parallel, marking each node as "same" / "skip" (children changed but
+ *     node itself didn't) / "changed". filterSnapshotDiff then prunes unchanged
+ *     subtrees from the render output, so only the delta is streamed to the LLM.
  *   - Role/attribute parse error reporting with source location
- *     → track position in parseRoleEntry for unterminated strings/regex, invalid
- *       attribute values, unsupported attributes, unexpected text; format error
- *       message with caret like Playwright does (~30 lines)
- *   - YAML quoting/escaping (we use simplified parser, not full YAML)
- *     → quote names containing :, ", #, YAML-special values in render; unquote in parse (~60 lines)
- *   - YAML block scalars (| multiline syntax)
- *     → extend parser to detect | and read indented continuation lines (~20 lines)
- *
- *   Moderate (requires careful DOM traversal work):
+ *   - YAML quoting/escaping and block scalars (| multiline syntax)
  *   - CSS visibility:hidden checks (we only check aria-hidden and hidden attr)
- *     → call getComputedStyle(el) in isHidden(), check visibility/display/opacity.
- *       Runs in real browser so API is available. Main concern: getComputedStyle()
- *       forces layout; calling it per-element during tree walk may be slow on large
- *       DOMs. Playwright batches visibility checks. ~15 lines for basic support.
  *   - CSS pseudo-elements (::before, ::after) text inclusion
- *     → call getComputedStyle(el, '::before').content in captureNode(), prepend/append
- *       the text to children. Need to handle 'none'/'normal'/quoted-string values and
- *       strip quotes. Same perf concern as visibility. ~20 lines.
  *   - Shadow DOM / slots
- *     → in captureNode(), check el.shadowRoot and walk it instead of light DOM children.
- *       For slots: walk slot.assignedNodes() (or fallback content if none assigned).
- *       Must avoid double-counting slotted content (skip slotted nodes in light DOM
- *       walk, only visit them via slot). ~40 lines.
  *   - aria-owns
- *     → need a pre-pass before tree walk: parse aria-owns attrs to build a Map<id, owner>.
- *       During captureNode(), append owned elements as children of the owner instead of
- *       their DOM parent. Must detect and break cycles. First valid owner wins per spec.
- *       ~50 lines + changes to captureAriaTree entry point.
  */
 
 // ---------------------------------------------------------------------------
