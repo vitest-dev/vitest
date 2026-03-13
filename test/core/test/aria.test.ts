@@ -27,11 +27,7 @@ function match(html: string, template: string) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// capture and render
-// ---------------------------------------------------------------------------
-
-describe('capture and render', () => {
+describe('basic', () => {
   test('heading', () => {
     const tree = capture('<h1>Hello</h1>')
     expect(tree.children).toMatchInlineSnapshot(`
@@ -46,7 +42,17 @@ describe('capture and render', () => {
         },
       ]
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- heading [level=1]: Hello"`)
+    const rendered = renderAriaTree(tree)
+    expect(rendered).toMatchInlineSnapshot(`"- heading [level=1]: Hello"`)
+    const template = parseAriaTemplate(rendered)
+    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+      {
+        "actual": "- heading [level=1]: Hello",
+        "expected": "- heading [level=1]: Hello",
+        "mergedExpected": "- heading [level=1]: Hello",
+        "pass": true,
+      }
+    `)
   })
 
   test('link with href', () => {
