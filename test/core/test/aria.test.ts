@@ -907,29 +907,71 @@ describe('captureAriaTree', () => {
     `)
   })
 
-  // TODO: write test case with same pattern. don't skip
   // -- Not yet implemented: CSS visibility:hidden checks
   // Playwright: page-aria-snapshot.spec.ts "should not show visible children of hidden elements"
-  test.skip('CSS visibility:hidden excludes element', () => {
-    // We only check aria-hidden and hidden attr, not CSS visibility
+  // We only check aria-hidden and hidden attr, not CSS visibility (see aria.ts)
+  test('CSS visibility:hidden is not excluded (not yet implemented)', () => {
+    const tree = capture('<div style="visibility:hidden">Hidden</div><p>Visible</p>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        "Hidden",
+        {
+          "children": [
+            "Visible",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+      ]
+    `)
   })
 
   // -- Not yet implemented: Shadow DOM / slots
   // Playwright: page-aria-snapshot.spec.ts "should work with slots"
-  test.skip('shadow DOM slots', () => {
-    // Shadow DOM / slots not yet implemented
+  // Shadow DOM traversal not yet implemented in captureNode (see aria.ts)
+  test('shadow DOM slots are not traversed (not yet implemented)', () => {
+    const tree = capture('<div id="host"></div>')
+    expect(tree.children).toMatchInlineSnapshot(`[]`)
   })
 
   // -- Not yet implemented: CSS pseudo-elements
   // Playwright: page-aria-snapshot.spec.ts "should include pseudo in text"
-  test.skip('CSS pseudo-elements (::before, ::after) text', () => {
-    // CSS pseudo-elements not yet implemented
+  // getComputedStyle(el, '::before') not yet called in captureNode (see aria.ts)
+  test('CSS pseudo-elements are not captured (not yet implemented)', () => {
+    const tree = capture('<p>Hello</p>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            "Hello",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+      ]
+    `)
   })
 
   // -- Not yet implemented: aria-owns
   // Playwright: page-aria-snapshot.spec.ts "should respect aria-owns"
-  test.skip('aria-owns', () => {
-    // aria-owns support not yet implemented
+  test('aria-owns is not yet supported', () => {
+    const tree = capture('<div role="list" aria-owns="item1"></div><div id="item1" role="listitem">Owned</div>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "",
+          "role": "list",
+        },
+        {
+          "children": [
+            "Owned",
+          ],
+          "name": "",
+          "role": "listitem",
+        },
+      ]
+    `)
   })
 })
 
