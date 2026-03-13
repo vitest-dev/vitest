@@ -3,11 +3,11 @@ import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
+import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
-import { disableDefaultColors } from 'tinyrainbow'
 
 interface Options extends VitestWorker {
   teardown?: () => void
