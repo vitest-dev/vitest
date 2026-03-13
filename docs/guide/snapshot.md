@@ -137,67 +137,22 @@ For example, given this HTML:
 You can assert its accessibility tree:
 
 ```ts
-await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-  - heading "Welcome" [level=1]
-  - navigation:
-    - link "Home":
-      - /url: /
-    - link "About":
-      - /url: /about
-`)
-```
-
-See the dedicated [ARIA Snapshots guide](/guide/browser/aria) for syntax details and Browser Mode examples.
-
-### File snapshots
-
-```ts
 import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
 
-test('navigation structure', () => {
-  const nav = document.querySelector('nav')
-  expect(nav).toMatchAriaSnapshot()
-})
-```
-
-On first run, Vitest generates a snapshot file entry like:
-
-```yaml
-- navigation "Actions":
-  - button: Save
-  - button: Cancel
-```
-
-### Inline snapshots
-
-```ts
-import { expect, test } from 'vitest'
-
-test('navigation structure', () => {
-  expect(document.body).toMatchAriaInlineSnapshot(`
-    - navigation "Actions":
-      - button: Save
-      - button: Cancel
+test('navigation structure', async () => {
+  await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
+    - heading "Welcome" [level=1]
+    - navigation:
+      - link "Home":
+        - /url: /
+      - link "About":
+        - /url: /about
   `)
 })
 ```
 
-### Browser Mode
-
-In [Browser Mode](/guide/browser/), use `expect.element()` to automatically retry until the DOM accessibility tree matches the snapshot:
-
-```ts
-await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
-  - button: Save
-  - button: Cancel
-`)
-```
-
-The matcher re-queries the element and re-captures the accessibility tree on each attempt until it matches or the timeout is reached.
-
-Retry only applies when comparing against an existing snapshot. On first run (snapshot creation) or with `--update`, the matcher captures once and writes immediately — no timeout wait.
-
-See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference, or read the dedicated [ARIA Snapshots guide](/guide/browser/aria).
+See the dedicated [ARIA Snapshots guide](/guide/browser/aria) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference.
 
 ## Custom Serializer
 

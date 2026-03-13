@@ -34,6 +34,16 @@ await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
 
 This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss.
 
+## Snapshot Ergonomics
+
+ARIA snapshots use the same Vitest snapshot workflow as other snapshot assertions:
+
+- `toMatchAriaSnapshot()` writes to a `.snap` file alongside your test
+- `toMatchAriaInlineSnapshot()` stores the snapshot inline in the test file
+- `--update` / `-u`, watch mode updates, and CI snapshot behavior work the same way
+
+See the main [Snapshot guide](/guide/snapshot) for the general snapshot workflow, update behavior, and review guidelines.
+
 ## Basic Usage
 
 Given a page with this HTML:
@@ -85,6 +95,25 @@ test('login form', async () => {
 })
 ```
 
+## Browser Mode Retry Behavior
+
+In [Browser Mode](/guide/browser/), `expect.element()` automatically retries ARIA snapshot assertions until the accessibility tree matches or the timeout is reached:
+
+```ts
+await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
+  - heading "Log In" [level=1]
+  - textbox "Email"
+  - textbox "Password"
+  - button "Submit"
+`)
+```
+
+The matcher re-queries the element and re-captures the accessibility tree on each attempt.
+
+Retry only applies when comparing against an existing snapshot. On first run, or when using `--update`, the matcher captures once and writes immediately.
+
+Aside from this Browser Mode retry behavior, ARIA snapshots follow the same update flow as other Vitest snapshots. See the main [Snapshot guide](/guide/snapshot#updating-snapshots) for the general update workflow.
+
 ## Preserving Hand-Edited Patterns
 
 When you hand-edit a snapshot to use regex patterns, those patterns survive `--update`. Only the literal parts that changed are overwritten. This lets you write flexible assertions that don't break when content changes.
@@ -94,7 +123,7 @@ When you hand-edit a snapshot to use regex patterns, those patterns survive `--u
 **Step 1.** Your shopping cart page renders this HTML:
 
 ```html
-<heading aria-level="1">Your Cart</heading>
+<h1>Your Cart</h1>
 <ul aria-label="Cart Items">
   <li>Wireless Headphones — $79.99</li>
 </ul>
@@ -277,8 +306,8 @@ The `/placeholder:` pseudo-attribute only appears when the placeholder text is *
 ```
 
 ```yaml
-- textbox "Search products"
-  - /placeholder: Search
+- textbox "Search products":
+    - /placeholder: Search
 ```
 
 :::
