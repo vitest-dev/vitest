@@ -34,13 +34,9 @@ await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
 
 This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss.
 
-## Snapshot Ergonomics
+## Snapshot Workflow
 
-ARIA snapshots use the same Vitest snapshot workflow as other snapshot assertions:
-
-- `toMatchAriaSnapshot()` writes to a `.snap` file alongside your test
-- `toMatchAriaInlineSnapshot()` stores the snapshot inline in the test file
-- `--update` / `-u`, watch mode updates, and CI snapshot behavior work the same way
+ARIA snapshots use the same Vitest snapshot workflow as other snapshot assertions. File snapshots, inline snapshots, `--update` / `-u`, watch mode updates, and CI snapshot behavior all work the same way.
 
 See the main [Snapshot guide](/guide/snapshot) for the general snapshot workflow, update behavior, and review guidelines.
 
@@ -111,8 +107,6 @@ await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
 The matcher re-queries the element and re-captures the accessibility tree on each attempt.
 
 Retry only applies when comparing against an existing snapshot. On first run, or when using `--update`, the matcher captures once and writes immediately.
-
-Aside from this Browser Mode retry behavior, ARIA snapshots follow the same update flow as other Vitest snapshots. See the main [Snapshot guide](/guide/snapshot#updating-snapshots) for the general update workflow.
 
 ## Preserving Hand-Edited Patterns
 
