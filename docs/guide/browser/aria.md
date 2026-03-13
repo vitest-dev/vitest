@@ -161,9 +161,21 @@ The merge works by matching nodes in order. If a literal mismatch appears _befor
 
 ARIA snapshots use a YAML-like syntax. Each line represents a node in the accessibility tree.
 
-### Roles and Names
+Each accessible element in the tree is represented as a YAML node:
 
-Every accessible element has a **role** and optionally a **name**:
+```yaml
+- role "name" [attribute=value]
+```
+
+- `role`: The ARIA or implicit HTML role of the element, such as `heading`, `list`, `listitem`, or `button`
+- `"name"`: The [accessible name](https://w3c.github.io/accname/), when present. Quoted strings match exact values, and `/patterns/` match regular expressions
+- `[attribute=value]`: Accessibility states and properties such as `checked`, `disabled`, `expanded`, `level`, `pressed`, or `selected`
+
+These values come from ARIA attributes and the browser's accessibility tree, including semantics inferred from native HTML elements.
+
+### Roles and Accessible Names
+
+For example:
 
 ```html
 <button>Submit</button>
@@ -179,9 +191,9 @@ Every accessible element has a **role** and optionally a **name**:
 - textbox "Email"
 ```
 
-The role comes from the element's semantics (e.g., `<button>` has role `button`). The name comes from the element's text content, `aria-label`, `aria-labelledby`, or other mechanisms.
+The role usually comes from the element's native semantics, though it can also be defined with ARIA. The accessible name is computed from text content, associated labels, `aria-label`, `aria-labelledby`, and related naming rules.
 
-Elements without a meaningful role appear as their text content:
+Some content appears in the snapshot as a text node instead of a role-based element:
 
 ```html
 <span>Hello world</span>
@@ -193,7 +205,7 @@ Elements without a meaningful role appear as their text content:
 
 ### Children
 
-Nesting represents parent-child relationships in the tree:
+Child elements appear nested under their parent:
 
 ```html
 <ul>
@@ -210,7 +222,7 @@ Nesting represents parent-child relationships in the tree:
     - listitem: Third
 ```
 
-When an element has a name and children, the name is quoted and children are indented:
+If the parent has an accessible name, the snapshot includes it before the nested children:
 
 ```html
 <nav aria-label="Main">
@@ -225,7 +237,7 @@ When an element has a name and children, the name is quoted and children are ind
     - link "About"
 ```
 
-When an element has a single text child and no other properties, it's inlined:
+If an element only contains a single text child and has no other properties, the text is rendered inline:
 
 ```html
 <p>Hello world</p>
@@ -283,10 +295,12 @@ Textboxes can include their placeholder text:
 ```
 
 ::: tip When does `/placeholder:` appear?
-The `/placeholder:` pseudo-attribute only appears when the placeholder text is **different from the accessible name**. When an input has a placeholder but no `aria-label` or associated `<label>`, the browser uses the placeholder as the accessible name. In that case, the placeholder information is already in the name and is not duplicated:
+
+The `/placeholder:` pseudo-attribute only appears when the placeholder text is **different from the accessible name**. When an input has a placeholder but no `aria-label` or associated `<label>`, the browser uses the placeholder as the accessible name. In that case, the placeholder information is already in the name and is not duplicated.
+
+- When placeholder is the accessible name:
 
 ```html
-<!-- placeholder IS the accessible name -->
 <input placeholder="Search" />
 ```
 
@@ -294,8 +308,9 @@ The `/placeholder:` pseudo-attribute only appears when the placeholder text is *
 - textbox "Search"
 ```
 
+- When placeholder differs from the accessible name:
+
 ```html
-<!-- placeholder differs from the accessible name -->
 <input placeholder="Search" aria-label="Search products" />
 ```
 
