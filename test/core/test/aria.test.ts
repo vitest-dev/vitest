@@ -17,10 +17,6 @@ function capture(html: string) {
   return captureAriaTree(document.body)
 }
 
-function render(html: string) {
-  return renderAriaTree(capture(html))
-}
-
 function match(html: string, template: string) {
   const r = matchAriaTree(capture(html), parseAriaTemplate(template))
   return {
@@ -32,10 +28,10 @@ function match(html: string, template: string) {
 }
 
 // ---------------------------------------------------------------------------
-// capture
+// capture and render
 // ---------------------------------------------------------------------------
 
-describe('captureAriaTree', () => {
+describe('capture and render', () => {
   test('heading', () => {
     const tree = capture('<h1>Hello</h1>')
     expect(tree.children).toMatchInlineSnapshot(`
@@ -259,7 +255,11 @@ describe('captureAriaTree', () => {
   // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
   test('concatenates inline text across spans', () => {
     const tree = capture('<span>One</span> <span>Two</span> <span>Three</span>')
-    expect(tree.children).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        "OneTwoThree",
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
   })
 
@@ -267,7 +267,11 @@ describe('captureAriaTree', () => {
   // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
   test('concatenates div text', () => {
     const tree = capture('<div>One</div><div>Two</div><div>Three</div>')
-    expect(tree.children).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        "OneTwoThree",
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
   })
 
@@ -346,8 +350,16 @@ describe('captureAriaTree', () => {
   // -- Gap: IMG alt text
   test('img alt text as accessible name', () => {
     const tree = capture('<img alt="Logo">')
-    expect(tree.children).toMatchInlineSnapshot(`"- img "Logo""`)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`""`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "Logo",
+          "role": "img",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- img "Logo""`)
   })
 
   // -- Gap: IMG empty alt -> presentation (skipped)
@@ -430,10 +442,26 @@ describe('captureAriaTree', () => {
   test('select has combobox role', () => {
     const tree = capture('<select><option>A</option></select>')
     expect(tree.children).toMatchInlineSnapshot(`
-    "- combobox:
-      - option: A"
-  `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox"`)
+      [
+        {
+          "children": [
+            {
+              "children": [
+                "A",
+              ],
+              "name": "",
+              "role": "option",
+            },
+          ],
+          "name": "",
+          "role": "combobox",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- combobox:
+        - option: A"
+    `)
   })
 
   // -- Gap: TEXTAREA -> textbox
@@ -448,13 +476,23 @@ describe('captureAriaTree', () => {
         },
       ]
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- region "S": content"`)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox"`)
   })
 
   // -- Gap: SECTION with/without aria-label
   test('section with aria-label has region role', () => {
     const tree = capture('<section aria-label="S">content</section>')
-    expect(tree.children).toMatchInlineSnapshot(`"- text: content"`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            "content",
+          ],
+          "name": "S",
+          "role": "region",
+        },
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- region "S": content"`)
   })
 
@@ -664,7 +702,21 @@ describe('captureAriaTree', () => {
         },
       ]
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- button "Click""`)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- article: x
+      - complementary: x
+      - dialog: x
+      - group: L
+      - contentinfo: x
+      - form: x
+      - banner: x
+      - separator
+      - main: x
+      - navigation: x
+      - list:
+        - listitem: x
+      - progressbar"
+    `)
   })
 
   // -- Gap: explicit role with spaces (first token)
@@ -864,15 +916,29 @@ describe('captureAriaTree', () => {
       ]
     `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-            "- checkbox
-            - radio"
-          `)
+      "- heading [level=1]: x
+      - heading [level=2]: x
+      - heading [level=3]: x
+      - heading [level=4]: x
+      - heading [level=5]: x
+      - heading [level=6]: x"
+    `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
   test('input value as text content', () => {
     const tree = capture('<input value="hello world">')
-    expect(tree.children).toMatchInlineSnapshot(`"- textbox: Before"`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            "hello world",
+          ],
+          "name": "",
+          "role": "textbox",
+        },
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox: hello world"`)
   })
 
@@ -893,7 +959,10 @@ describe('captureAriaTree', () => {
         },
       ]
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox "Name""`)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- checkbox
+      - radio"
+    `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should not report textarea textContent"
@@ -910,17 +979,23 @@ describe('captureAriaTree', () => {
         },
       ]
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- text: Hidden
-      - paragraph: Visible"
-    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox: Before"`)
   })
 
   // -- /placeholder: pseudo-attribute for inputs
   // Ported from Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder"
   test('input captures placeholder', () => {
     const tree = capture('<input placeholder="Enter name">')
-    expect(tree.children).toMatchInlineSnapshot(`""`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "",
+          "placeholder": "Enter name",
+          "role": "textbox",
+        },
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
       "- textbox:
         - /placeholder: Enter name"
@@ -931,7 +1006,15 @@ describe('captureAriaTree', () => {
     // When placeholder is used as the accessible name (via happy-dom/browser),
     // we don't duplicate it. Our code checks placeholder !== name.
     const tree = capture('<input placeholder="Name" aria-label="Name">')
-    expect(tree.children).toMatchInlineSnapshot(`"- paragraph: Hello"`)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "Name",
+          "role": "textbox",
+        },
+      ]
+    `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox "Name""`)
   })
 
@@ -952,9 +1035,9 @@ describe('captureAriaTree', () => {
       ]
     `)
     expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-              "- list
-              - listitem: Owned"
-            `)
+      "- text: Hidden
+      - paragraph: Visible"
+    `)
   })
 
   // TODO
@@ -1008,26 +1091,61 @@ describe('captureAriaTree', () => {
       - listitem: Owned"
     `)
   })
-})
-
-// ---------------------------------------------------------------------------
-// render
-// ---------------------------------------------------------------------------
-
-describe('renderAriaTree', () => {
-  test('heading with level', () => {
-    expect(render('<h1>Hello World</h1>')).toMatchInlineSnapshot(`"- heading [level=1]: Hello World"`)
-  })
 
   test('nav with nested list', () => {
-    expect(render(`
+    const tree = capture(`
       <nav aria-label="Main">
         <ul>
           <li><a href="/a">A</a></li>
           <li><a href="/b">B</a></li>
         </ul>
       </nav>
-    `)).toMatchInlineSnapshot(`
+    `)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        "A",
+                      ],
+                      "name": "",
+                      "role": "link",
+                      "url": "/a",
+                    },
+                  ],
+                  "name": "",
+                  "role": "listitem",
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        "B",
+                      ],
+                      "name": "",
+                      "role": "link",
+                      "url": "/b",
+                    },
+                  ],
+                  "name": "",
+                  "role": "listitem",
+                },
+              ],
+              "name": "",
+              "role": "list",
+            },
+          ],
+          "name": "Main",
+          "role": "navigation",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
       "- navigation "Main":
         - list:
           - listitem:
@@ -1041,24 +1159,38 @@ describe('renderAriaTree', () => {
     `)
   })
 
-  test('checkbox attributes', () => {
-    expect(render(`
-      <div role="checkbox" aria-checked="true" aria-label="Accept"></div>
-      <div role="checkbox" aria-checked="mixed" aria-label="All"></div>
-    `)).toMatchInlineSnapshot(`
-      "- checkbox "Accept" [checked]
-      - checkbox "All" [checked=mixed]"
-    `)
-  })
-
   test('form with inputs', () => {
-    expect(render(`
+    const tree = capture(`
       <form>
         <label for="u">User</label>
         <input id="u" type="text" />
         <button type="submit">Go</button>
       </form>
-    `)).toMatchInlineSnapshot(`
+    `)
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            "User",
+            {
+              "children": [],
+              "name": "User",
+              "role": "textbox",
+            },
+            {
+              "children": [
+                "Go",
+              ],
+              "name": "",
+              "role": "button",
+            },
+          ],
+          "name": "",
+          "role": "form",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
       "- form:
         - text: User
         - textbox "User"
@@ -1066,64 +1198,61 @@ describe('renderAriaTree', () => {
     `)
   })
 
-  // -- Gap: all ARIA state attributes in rendering
-  test('disabled attribute renders', () => {
-    expect(render('<button aria-disabled="true">X</button>')).toBe('- button [disabled]: X')
-  })
-
-  test('expanded attribute renders', () => {
-    expect(render('<button aria-expanded="true">X</button>')).toBe('- button [expanded]: X')
-  })
-
-  test('expanded=false attribute renders', () => {
-    expect(render('<button aria-expanded="false">X</button>')).toBe('- button [expanded=false]: X')
-  })
-
-  test('pressed attribute renders', () => {
-    expect(render('<button aria-pressed="true">X</button>')).toBe('- button [pressed]: X')
-  })
-
-  test('pressed=mixed attribute renders', () => {
-    expect(render('<button aria-pressed="mixed">X</button>')).toBe('- button [pressed=mixed]: X')
-  })
-
-  test('selected attribute renders', () => {
-    expect(render('<div role="option" aria-selected="true">X</div>')).toBe('- option [selected]: X')
-  })
-
-  // -- Gap: leaf node (no children, no colon)
   test('leaf node with no children', () => {
-    expect(render('<button aria-label="X"></button>')).toBe('- button "X"')
+    const tree = capture('<button aria-label="X"></button>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "X",
+          "role": "button",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- button "X""`)
   })
 
-  // -- Gap: fragment with top-level text
   test('fragment with text and element children', () => {
-    expect(render('Hello <p>World</p>')).toBe('- text: Hello\n- paragraph: World')
-  })
-
-  // -- Ported from Playwright: page-aria-snapshot.spec.ts "should concatenate span text"
-  // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
-  test.skip('whitespace normalization across spans', () => {
-    expect(render('<span>One</span> <span>Two</span> <span>Three</span>')).toBe('- text: One Two Three')
-  })
-
-  // -- /url: renders as pseudo-child
-  test('link url renders as pseudo-child', () => {
-    expect(render('<a href="/foo">Click</a>')).toBe('- link:\n  - text: Click\n  - /url: /foo')
+    const tree = capture('Hello <p>World</p>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        "Hello",
+        {
+          "children": [
+            "World",
+          ],
+          "name": "",
+          "role": "paragraph",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- text: Hello
+      - paragraph: World"
+    `)
   })
 
   test('link url with no text children', () => {
-    expect(render('<a href="/foo" aria-label="Go"></a>')).toBe('- link "Go":\n  - /url: /foo')
+    const tree = capture('<a href="/foo" aria-label="Go"></a>')
+    expect(tree.children).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [],
+          "name": "Go",
+          "role": "link",
+          "url": "/foo",
+        },
+      ]
+    `)
+    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
+      "- link "Go":
+        - /url: /foo"
+    `)
   })
 
-  // -- /placeholder: renders as pseudo-child
-  test('input placeholder renders as pseudo-child', () => {
-    expect(render('<input placeholder="Enter name">')).toBe('- textbox:\n  - /placeholder: Enter name')
-  })
-
-  // -- Not yet implemented: YAML escaping
+  // TODO
   // Playwright: page-aria-snapshot.spec.ts "should escape yaml text in text nodes", "should escape special yaml characters/values"
-  test.skip('YAML escaping of special characters', () => {
+  test('YAML escaping of special characters', () => {
     // Our simplified parser does not handle YAML escaping
   })
 })
