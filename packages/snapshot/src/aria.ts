@@ -70,6 +70,83 @@
  *   - CSS pseudo-elements (::before, ::after) text inclusion
  *   - Shadow DOM / slots
  *   - aria-owns
+ *
+ * ─── Porting plan: replacing with a closer Playwright port ───
+ *
+ *   Current state:
+ *   This file reimplements Playwright's capture/render/parse/match from scratch
+ *   with a simplified DOM walker (getRole, getAccessibleName, isHidden) that
+ *   duplicates logic already ported faithfully in the `ivya` package. The ivya
+ *   package (~/code/others/ivya) contains direct copies of Playwright's:
+ *     - roleUtils.ts  (1564 lines) — full WAI-ARIA 1.2: getAriaRole,
+ *       getElementAccessibleName, checked/disabled/expanded/pressed/selected
+ *       state, isElementHiddenForAria, aria caching infra
+ *     - domUtils.ts   (173 lines)  — getComputedStyle, isElementVisible,
+ *       shadow DOM traversal, visibility checks
+ *   Vitest browser mode already depends on ivya (locators, toBeChecked, etc.).
+ *
+ *   What to port (Playwright → this file):
+ *   1. Capture: replace our getRole/getAccessibleName/isHidden/captureNode
+ *      with a port of Playwright's generateAriaTree + toAriaNode from
+ *      packages/injected/src/ariaSnapshot.ts. This delegates role resolution,
+ *      accessible name computation, and visibility to ivya's roleUtils/domUtils
+ *      instead of our simplified inline versions. Gains: shadow DOM, aria-owns,
+ *      CSS visibility, pseudo-elements, proper implicit role resolution, block
+ *      vs inline whitespace handling — all for free via already-ported code.
+ *   2. Render: replace our renderAriaTree/renderNode with Playwright's
+ *      renderAriaTree from the same file. Gains: YAML escaping (yamlEscapeKey/
+ *      ValueIfNeeded from ivya's stringUtils), correct name length truncation.
+ *   3. Parse: replace our parseAriaTemplate with Playwright's parseAriaSnapshot
+ *      from packages/playwright-core/src/utils/isomorphic/ariaSnapshot.ts.
+ *      Gains: full YAML parsing (via `yaml` library), source-located errors,
+ *      block scalars, containerMode directives (equal/deep-equal/contain).
+ *      Trade-off: adds `yaml` dependency to @vitest/snapshot.
+ *   4. Match: replace our containsList with Playwright's containsList + listEqual,
+ *      threading containerMode. Gains: equal/deep-equal matching modes.
+ *
+ *   What NOT to port (our additions that Playwright doesn't have):
+ *   - Three-way merge output (mergeNode / mergeChildLists / mergeChildLists)
+ *     → keep as our extension layer on top of the ported match logic
+ *   - Regex-transparent diffing in merge output
+ *     → keep, same reason
+ *   - DomainSnapshotAdapter wiring (ariaDomainAdapter)
+ *     → keep, this is vitest's snapshot integration interface
+ *
+ *   Proposed code organization:
+ *     src/aria/
+ *     ├── folk/                        ← fork of Playwright, mirror its paths
+ *     │   ├── injected/
+ *     │   │   └── ariaSnapshot.ts      ← generateAriaTree, toAriaNode, renderAriaTree
+ *     │   │                              imports roleUtils/domUtils from ivya
+ *     │   └── isomorphic/
+ *     │       └── ariaSnapshot.ts      ← parseAriaSnapshot, KeyParser, types,
+ *     │                                  matchesNode, containsList, listEqual
+ *     └── index.ts                     ← vitest-specific glue:
+ *                                        three-way merge layer (mergeNode,
+ *                                        mergeChildLists, pairChildren),
+ *                                        regex-transparent diffing,
+ *                                        ariaDomainAdapter wiring
+ *
+ *   folk/ files stay as close to Playwright source as possible (easy diff
+ *   against upstream). All vitest-specific divergence lives in index.ts.
+ *
+ *   What this enables:
+ *   - DOM fidelity parity with Playwright (shadow DOM, aria-owns, CSS
+ *     visibility, pseudo-elements, block/inline whitespace) without
+ *     reimplementing any of it — ivya already has it.
+ *   - Container modes (/children: equal|deep-equal) in templates.
+ *   - Full YAML compatibility (escaping, block scalars, error reporting).
+ *   - Easy upstream tracking: ported files stay close to Playwright source,
+ *     our novel merge logic is isolated in aria-match.ts.
+ *
+ *   Migration path:
+ *   - Phase 1: swap capture — import ivya's roleUtils/domUtils, port
+ *     generateAriaTree. Tests should still pass (same tree, better fidelity).
+ *   - Phase 2: swap parse — add `yaml` dep, port parseAriaSnapshot. Existing
+ *     templates remain valid (YAML is a superset of our format).
+ *   - Phase 3: swap match — port containerMode-aware matching, re-layer
+ *     merge logic on top. Three-way merge output stays identical for
+ *     existing contain-mode tests.
  */
 
 // ---------------------------------------------------------------------------
