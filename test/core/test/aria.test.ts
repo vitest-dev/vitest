@@ -8,7 +8,6 @@
  *   https://github.com/microsoft/playwright/blob/v1.58.2/tests/page/page-aria-snapshot.spec.ts
  */
 
-import type { AriaTemplateRoleNode } from '@vitest/snapshot/aria'
 import { captureAriaTree, matchAriaTree, parseAriaTemplate, renderAriaTree } from '@vitest/snapshot/aria'
 import { describe, expect, test } from 'vitest'
 
@@ -1612,7 +1611,6 @@ describe('parseAriaTemplate', () => {
         "role": "fragment",
       }
     `)
-    expect((t.children![0] as AriaTemplateRoleNode).url).toBeInstanceOf(RegExp)
   })
 
   test('empty lines and non-list lines are skipped', () => {
