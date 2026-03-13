@@ -500,6 +500,15 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
+  }).then(() => {
+    // fixture returned without calling use()
+    if (!isUseFnArgResolved) {
+      useFnArgPromise.reject(
+        new Error(
+          'Fixture returned without calling "use". Make sure to call "use" in every code path of the fixture function.',
+        ),
+      )
+    }
   }).catch((e: unknown) => {
     // treat fixture setup error as test failure
     if (!isUseFnArgResolved) {
