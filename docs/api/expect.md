@@ -994,13 +994,15 @@ On first run, Vitest generates a snapshot entry like:
   - button: Cancel
 ```
 
-See the [Aria Snapshots guide](/guide/snapshot#aria-snapshots) for more details.
+See the [ARIA Snapshots guide](/guide/browser/aria) for more details.
 
 ## toMatchAriaInlineSnapshot {#tomatchariaInlinesnapshot}
 
 - **Type:** `(snapshot?: string) => void`
 
 Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file.
+
+See the [ARIA Snapshots guide](/guide/browser/aria) for more details.
 
 ```ts
 import { expect, test } from 'vitest'

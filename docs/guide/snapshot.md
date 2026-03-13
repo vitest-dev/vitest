@@ -122,9 +122,32 @@ This captures screenshots and compares them against reference images to detect u
 
 Aria snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Inspired by [Playwright's aria snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to visual regression testing — asserting structure and meaning rather than pixels.
 
-- Works in jsdom, happy-dom, and [Browser Mode](/guide/browser/)
-- Supports regex patterns in names and text (`/User \d+/`)
-- Hand-edited patterns survive `--update` on partial match
+For example, given this HTML:
+
+```html
+<body>
+  <h1>Welcome</h1>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+  </nav>
+</body>
+```
+
+You can assert its accessibility tree:
+
+```ts
+await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
+  - heading "Welcome" [level=1]
+  - navigation:
+    - link "Home":
+      - /url: /
+    - link "About":
+      - /url: /about
+`)
+```
+
+See the dedicated [ARIA Snapshots guide](/guide/browser/aria) for syntax details and Browser Mode examples.
 
 ### File snapshots
 
@@ -139,7 +162,7 @@ test('navigation structure', () => {
 
 On first run, Vitest generates a snapshot file entry like:
 
-```
+```yaml
 - navigation "Actions":
   - button: Save
   - button: Cancel
@@ -174,7 +197,7 @@ The matcher re-queries the element and re-captures the accessibility tree on eac
 
 Retry only applies when comparing against an existing snapshot. On first run (snapshot creation) or with `--update`, the matcher captures once and writes immediately — no timeout wait.
 
-See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference.
+See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference, or read the dedicated [ARIA Snapshots guide](/guide/browser/aria).
 
 ## Custom Serializer
 
