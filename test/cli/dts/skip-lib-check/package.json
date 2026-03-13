@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-integration-dts-skip-lib-check",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "tsc -b"
+  },
+  "devDependencies": {
+    "@vitest/runner": "workspace:*",
+    "@vitest/spy": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

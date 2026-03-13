@@ -1354,6 +1354,18 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/vitest
 
+  test/cli/dts/skip-lib-check:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
+      '@vitest/spy':
+        specifier: workspace:*
+        version: link:../../../../packages/spy
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
   test/config:
     devDependencies:
       '@test/test-dep-config':
