@@ -107,7 +107,7 @@ describe.runIf(provider.name === 'playwright')('screenshotDirectory', () => {
       expect(referencePath).not.toContain('custom-screenshots/Users')
       expect(referencePath).not.toContain('custom-screenshots/home')
 
-      expect(fs.existsFile(referencePath)).toBe(true)
+      expect(() => fs.statFile(referencePath)).not.toThrow()
 
       fs.editFile(testFilename, content => `${content}\n`)
 
