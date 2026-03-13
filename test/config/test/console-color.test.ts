@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 test('with color', async () => {
   const { stdout } = await runVitest({
@@ -28,6 +28,20 @@ test('without color', async () => {
 
   expect(stdout).toContain('true\n')
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
+})
+
+test('agent', async () => {
+  // Agent check is done on module import, so new process is needed
+  const { stdout } = await runVitestCli({
+    preserveAnsi: true,
+    nodeOptions: { env: { AI_AGENT: 'copilot' } },
+  }, '--root', 'fixtures/console-color', '--reporter', 'default')
+
+  expect.soft(stdout).toContain('true\n')
+  expect.soft(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
+
+  expect.soft(stdout).toContain(' RUN')
+  expect.soft(stdout).not.toContain('\x1B[46m RUN')
 })
 
 test.skipIf(process.platform === 'win32')('without color, forks pool in non-TTY parent', async () => {
