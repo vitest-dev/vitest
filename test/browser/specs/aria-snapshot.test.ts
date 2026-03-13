@@ -1,6 +1,7 @@
 import fs, { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 import { editFile } from '../../test-utils'
 import { instances, runBrowserTests } from './utils'
 
@@ -242,23 +243,44 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     update: 'none',
   })
   if (browser === 'webkit') {
-    expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "skipped",
-          "expect.element aria retry": "skipped",
-          "poll aria once": "skipped",
-          "toMatchAriaInlineSnapshot simple": [
-            "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
-          at basic.test.ts:22:50",
-          ],
-          "toMatchAriaSnapshot simple": [
-            "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
-          at basic.test.ts:14:44",
-          ],
-        },
-      }
-    `)
+    if (rolldownVersion) {
+      expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "expect.element aria once": "skipped",
+            "expect.element aria retry": "skipped",
+            "poll aria once": "skipped",
+            "toMatchAriaInlineSnapshot simple": [
+              "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+            at basic.test.ts:22:50",
+            ],
+            "toMatchAriaSnapshot simple": [
+              "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+            at basic.test.ts:14:24",
+            ],
+          },
+        }
+      `)
+    }
+    else {
+      expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "expect.element aria once": "skipped",
+            "expect.element aria retry": "skipped",
+            "poll aria once": "skipped",
+            "toMatchAriaInlineSnapshot simple": [
+              "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+            at basic.test.ts:22:50",
+            ],
+            "toMatchAriaSnapshot simple": [
+              "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+            at basic.test.ts:14:44",
+            ],
+          },
+        }
+      `)
+    }
   }
   else {
     expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
