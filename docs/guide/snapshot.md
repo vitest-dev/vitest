@@ -152,7 +152,7 @@ test('navigation structure', async () => {
 })
 ```
 
-See the dedicated [ARIA Snapshots guide](/guide/browser/aria) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference.
+See the dedicated [ARIA Snapshots guide](/guide/browser/aria-snapshots) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference.
 
 ## Custom Serializer
 
