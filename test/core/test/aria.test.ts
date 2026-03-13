@@ -1535,120 +1535,86 @@ describe('basic', () => {
   })
 })
 
-// TODO: consolidate with above
+// Edge cases not covered by runPipeline (which tests render→parse→match roundtrip)
 describe('parseAriaTemplate', () => {
-  test('simple role', () => {
-    const t = parseAriaTemplate('- button')
-    expect(t.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "kind": "role",
-          "role": "button",
-        },
-      ]
-    `)
-  })
-
-  test('role with quoted name', () => {
-    const t = parseAriaTemplate('- button "Submit"')
-    expect(t.children![0]).toMatchObject({ role: 'button', name: 'Submit' })
-  })
-
-  test('role with regex name', () => {
+  test('regex name', () => {
     const t = parseAriaTemplate('- heading /Welcome \\d+/')
-    const child = t.children![0] as any
-    expect(child.name).toBeInstanceOf(RegExp)
-    expect(child.name.test('Welcome 42')).toBe(true)
-    expect(child.name.test('Goodbye')).toBe(false)
-  })
-
-  test('role with attributes', () => {
-    const t = parseAriaTemplate('- checkbox "Accept" [checked] [disabled]')
-    expect(t.children![0]).toMatchObject({ role: 'checkbox', name: 'Accept', checked: true, disabled: true })
-  })
-
-  test('heading with level', () => {
-    const t = parseAriaTemplate('- heading [level=2]')
-    expect(t.children![0]).toMatchObject({ role: 'heading', level: 2 })
-  })
-
-  test('inline text child', () => {
-    const t = parseAriaTemplate('- button: Click me')
-    const btn = t.children![0] as any
-    expect(btn.children).toHaveLength(1)
-    expect(btn.children[0]).toEqual({ kind: 'text', text: 'Click me' })
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "kind": "role",
+            "name": /Welcome \\\\d\\+/,
+            "role": "heading",
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
   })
 
   test('inline regex text child', () => {
     const t = parseAriaTemplate('- paragraph: /item \\d+/')
-    const p = t.children![0] as any
-    expect(p.children[0].text).toBeInstanceOf(RegExp)
-  })
-
-  test('nested children', () => {
-    const t = parseAriaTemplate(`
-      - list:
-        - listitem:
-          - link: Home
-        - listitem:
-          - link: About
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "kind": "text",
+                "text": /item \\\\d\\+/,
+              },
+            ],
+            "kind": "role",
+            "role": "paragraph",
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
     `)
-    const list = t.children![0] as any
-    expect(list.role).toBe('list')
-    expect(list.children).toHaveLength(2)
-    expect(list.children[0].children[0].children[0].text).toBe('Home')
   })
 
-  test('text node', () => {
-    const t = parseAriaTemplate('- text: hello world')
-    expect(t.children![0]).toEqual({ kind: 'text', text: 'hello world' })
-  })
-
-  // -- Gap: expanded attribute parsing
-  test('expanded attribute', () => {
-    const t = parseAriaTemplate('- button [expanded]')
-    expect((t.children![0] as AriaTemplateRoleNode).expanded).toBe(true)
-  })
-
-  test('expanded=false attribute', () => {
-    const t = parseAriaTemplate('- button [expanded=false]')
-    expect((t.children![0] as AriaTemplateRoleNode).expanded).toBe(false)
-  })
-
-  // -- Gap: pressed attribute parsing
-  test('pressed attribute', () => {
-    const t = parseAriaTemplate('- button [pressed]')
-    expect((t.children![0] as AriaTemplateRoleNode).pressed).toBe(true)
-  })
-
-  test('pressed=mixed attribute', () => {
-    const t = parseAriaTemplate('- button [pressed=mixed]')
-    expect((t.children![0] as AriaTemplateRoleNode).pressed).toBe('mixed')
-  })
-
-  // -- Gap: selected attribute parsing
-  test('selected attribute', () => {
-    const t = parseAriaTemplate('- option [selected]')
-    expect((t.children![0] as AriaTemplateRoleNode).selected).toBe(true)
-  })
-
-  // -- Gap: checked=mixed attribute parsing
-  test('checked=mixed attribute', () => {
-    const t = parseAriaTemplate('- checkbox [checked=mixed]')
-    expect((t.children![0] as AriaTemplateRoleNode).checked).toBe('mixed')
-  })
-
-  // -- Gap: regex text node
-  test('text node with regex', () => {
+  test('regex text node', () => {
     const t = parseAriaTemplate('- text: /hello \\d+/')
-    const node = t.children![0] as any
-    expect(node.kind).toBe('text')
-    expect(node.text).toBeInstanceOf(RegExp)
-    expect(node.text.test('hello 42')).toBe(true)
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "kind": "text",
+            "text": /hello \\\\d\\+/,
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
   })
 
-  // -- Gap: empty lines and non-list lines skipped
+  test('/url: pseudo-child parses as regex', () => {
+    const t = parseAriaTemplate(`
+      - link:
+        - /url: /.*example.com/
+    `)
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "kind": "role",
+            "role": "link",
+            "url": /\\.\\*example\\.com/,
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
+    expect((t.children![0] as AriaTemplateRoleNode).url).toBeInstanceOf(RegExp)
+  })
+
   test('empty lines and non-list lines are skipped', () => {
     const t = parseAriaTemplate(`
 
@@ -1657,75 +1623,103 @@ describe('parseAriaTemplate', () => {
       not a list item
       - link
     `)
-    expect(t.children).toHaveLength(2)
-    expect((t.children![0] as AriaTemplateRoleNode).role).toBe('button')
-    expect((t.children![1] as AriaTemplateRoleNode).role).toBe('link')
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "kind": "role",
+            "role": "button",
+          },
+          {
+            "children": [],
+            "kind": "role",
+            "role": "link",
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
   })
 
-  // -- Gap: error on invalid entry
   test('throws on invalid role entry', () => {
-    expect(() => parseAriaTemplate('- !@#')).toThrow('Cannot parse aria template entry')
+    expect(() => parseAriaTemplate('- !@#'))
+      .toThrowErrorMatchingInlineSnapshot(`[Error: Cannot parse aria template entry: !@#]`)
   })
 
-  // -- Ported from Playwright: to-match-aria-snapshot.spec.ts "checked attribute" [checked=false]
-  test('[checked=false] explicit false syntax', () => {
-    const t = parseAriaTemplate('- checkbox [checked=false]')
-    expect((t.children![0] as AriaTemplateRoleNode).checked).toBe(false)
-  })
-
-  test('[disabled=false] explicit false syntax', () => {
-    const t = parseAriaTemplate('- button [disabled=false]')
-    expect((t.children![0] as AriaTemplateRoleNode).disabled).toBe(false)
-  })
-
-  test('[pressed=false] explicit false syntax', () => {
-    const t = parseAriaTemplate('- button [pressed=false]')
-    expect((t.children![0] as AriaTemplateRoleNode).pressed).toBe(false)
-  })
-
-  test('[selected=false] explicit false syntax', () => {
-    const t = parseAriaTemplate('- option [selected=false]')
-    expect((t.children![0] as AriaTemplateRoleNode).selected).toBe(false)
-  })
-
-  // -- /url: and /placeholder: pseudo-children in templates
-  test('/url: pseudo-child parses as string', () => {
-    const t = parseAriaTemplate('- link:\n  - /url: /foo')
-    expect((t.children![0] as AriaTemplateRoleNode).url).toBe('/foo')
-  })
-
-  test('/url: pseudo-child parses as regex', () => {
-    const t = parseAriaTemplate('- link:\n  - /url: /.*example.com/')
-    expect((t.children![0] as AriaTemplateRoleNode).url).toBeInstanceOf(RegExp)
-  })
-
-  test('/placeholder: pseudo-child parses', () => {
-    const t = parseAriaTemplate('- textbox:\n  - /placeholder: Enter name')
-    expect((t.children![0] as AriaTemplateRoleNode).placeholder).toBe('Enter name')
-  })
-
-  // -- Not yet implemented: YAML block scalars
+  // -- Not yet implemented: these tests document current (broken) behavior.
   // Playwright: page-aria-snapshot.spec.ts "should support multiline text" (| syntax)
-  test.skip('YAML block scalar (| multiline)', () => {
-    // YAML block scalar syntax not yet implemented
+  test('YAML block scalar (| multiline)', () => {
+    // Parser should support YAML block scalar syntax for multiline text.
+    // Currently the | line and continuation lines are silently skipped.
+    const t = parseAriaTemplate(`
+      - paragraph: |
+          Line one
+          Line two
+    `)
+    expect(t).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "kind": "text",
+                "text": "|",
+              },
+            ],
+            "kind": "role",
+            "role": "paragraph",
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
   })
 
-  // -- Not yet implemented: parse error reporting with source location
+  // TODO
   // Playwright: to-match-aria-snapshot.spec.ts "should report error in YAML keys"
-  test.skip('parse error with source location', () => {
-    // Our parser does not report error location like Playwright does
+  test('parse error with source location', () => {
+    // Parser should report the position of the error in the template string.
+    // Currently throws a generic message without source location.
+    expect(parseAriaTemplate('- button [invalid_attr]')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "kind": "role",
+            "role": "button",
+          },
+        ],
+        "kind": "role",
+        "role": "fragment",
+      }
+    `)
   })
 
-  // -- Not yet implemented: YAML quoting/escaping
   // Playwright: to-match-aria-snapshot.spec.ts "should unpack escaped names"
-  test.skip('YAML quoting/escaping in names', () => {
-    // Our simplified parser does not handle YAML quoting
+  test('YAML quoting/escaping in names', () => {
+    // Rendered output should quote names that contain YAML-special characters,
+    // and the parser should unquote them back.
+    const result = runPipeline('<button aria-label="one: two">X</button>')
+    // render should produce: - button "one: two": X
+    // parse should read name as "one: two" — currently the colon breaks parsing
+    expect(result.matched.pass).toBe(true)
   })
 
-  // -- Not yet implemented: /children: equal|deep-equal|contain directives
   // Playwright: to-match-aria-snapshot.spec.ts "should detect unexpected children: equal"
-  test.skip('/children: equal|deep-equal|contain directives', () => {
-    // Containment mode directives not yet implemented
+  test('/children: equal|deep-equal|contain directives', () => {
+    // Template should support /children: equal to require exact child matching
+    // (no extra children allowed). Currently the directive is ignored.
+    const r = match(`
+      <ul><li>A</li><li>B</li></ul>
+    `, `
+      - list [/children: equal]:
+        - listitem: A
+    `)
+    // With /children: equal, having an extra <li>B</li> should fail
+    expect(r.pass).toBe(false)
   })
 })
 
