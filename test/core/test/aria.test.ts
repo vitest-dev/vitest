@@ -28,23 +28,17 @@ function match(html: string, template: string) {
 }
 
 function runPipeline(html: string) {
-  document.body.innerHTML = html
-  const tree = captureAriaTree(document.body)
-  const rendered = renderAriaTree(tree)
+  const captured = capture(html)
+  const rendered = renderAriaTree(captured)
   const parsed = parseAriaTemplate(rendered)
-  const matched = matchAriaTree(tree, parsed)
+  const matched = matchAriaTree(captured, parsed)
   return {
-    captured: tree,
-    rendered: `\n${rendered}\n`,
+    captured,
+    rendered,
     parsed,
-    matched: {
-      ...matched,
-      actual: `\n${matched.actual}\n`,
-      expected: `\n${matched.expected}\n`,
-      mergedExpected: `\n${matched.mergedExpected}\n`,
-    },
+    matched,
     snapshot: {
-      captured: tree.children,
+      captured: captured.children,
       rendered: `\n${rendered}\n`,
       pass: matched.pass,
     },
@@ -75,185 +69,222 @@ describe('basic', () => {
   })
 
   test('link with href', () => {
-    const tree = capture('<a href="/foo">Click</a>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Click",
-          ],
-          "name": "",
-          "role": "link",
-          "url": "/foo",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- link:
+    const result = runPipeline('<a href="/foo">Click</a>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Click",
+            ],
+            "name": "",
+            "role": "link",
+            "url": "/foo",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - link:
         - text: Click
-        - /url: /foo"
+        - /url: /foo
+      ",
+      }
     `)
   })
 
   test('anchor without href has no role', () => {
-    const tree = capture('<a>Not a link</a>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "Not a link",
-      ]
+    const result = runPipeline('<a>Not a link</a>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "Not a link",
+        ],
+        "pass": true,
+        "rendered": "
+      - text: Not a link
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: Not a link"`)
   })
 
   test('aria-label sets name', () => {
-    const tree = capture('<button aria-label="Close">X</button>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "X",
-          ],
-          "name": "Close",
-          "role": "button",
-        },
-      ]
+    const result = runPipeline('<button aria-label="Close">X</button>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "X",
+            ],
+            "name": "Close",
+            "role": "button",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - button "Close": X
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- button "Close": X"`)
   })
 
   test('explicit role overrides implicit', () => {
-    const tree = capture('<div role="alert">Warning!</div>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Warning!",
-          ],
-          "name": "",
-          "role": "alert",
-        },
-      ]
+    const result = runPipeline('<div role="alert">Warning!</div>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Warning!",
+            ],
+            "name": "",
+            "role": "alert",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - alert: Warning!
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- alert: Warning!"`)
   })
 
   test('aria-hidden elements are excluded', () => {
-    const tree = capture('<div aria-hidden="true">Hidden</div><p>Visible</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Visible",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<div aria-hidden="true">Hidden</div><p>Visible</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Visible",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: Visible
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: Visible"`)
   })
 
   test('checkbox states', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <div role="checkbox" aria-checked="true" aria-label="A"></div>
       <div role="checkbox" aria-checked="false" aria-label="B"></div>
       <div role="checkbox" aria-checked="mixed" aria-label="C"></div>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "checked": true,
-          "children": [],
-          "name": "A",
-          "role": "checkbox",
-        },
-        {
-          "checked": false,
-          "children": [],
-          "name": "B",
-          "role": "checkbox",
-        },
-        {
-          "checked": "mixed",
-          "children": [],
-          "name": "C",
-          "role": "checkbox",
-        },
-      ]
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "checked": true,
+            "children": [],
+            "name": "A",
+            "role": "checkbox",
+          },
+          {
+            "checked": false,
+            "children": [],
+            "name": "B",
+            "role": "checkbox",
+          },
+          {
+            "checked": "mixed",
+            "children": [],
+            "name": "C",
+            "role": "checkbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - checkbox "A" [checked]
+      - checkbox "B"
+      - checkbox "C" [checked=mixed]
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-          "- checkbox "A" [checked]
-          - checkbox "B"
-          - checkbox "C" [checked=mixed]"
-        `)
   })
 
   test('nested list structure', () => {
-    const tree = capture('<ul><li>One</li><li>Two</li></ul>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                "One",
-              ],
-              "name": "",
-              "role": "listitem",
-            },
-            {
-              "children": [
-                "Two",
-              ],
-              "name": "",
-              "role": "listitem",
-            },
-          ],
-          "name": "",
-          "role": "list",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- list:
+    const result = runPipeline('<ul><li>One</li><li>Two</li></ul>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              {
+                "children": [
+                  "One",
+                ],
+                "name": "",
+                "role": "listitem",
+              },
+              {
+                "children": [
+                  "Two",
+                ],
+                "name": "",
+                "role": "listitem",
+              },
+            ],
+            "name": "",
+            "role": "list",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - list:
         - listitem: One
-        - listitem: Two"
+        - listitem: Two
+      ",
+      }
     `)
   })
 
   test('label for input', () => {
-    const tree = capture('<label for="x">Name</label><input id="x" type="text" />')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "Name",
-        {
-          "children": [],
-          "name": "Name",
-          "role": "textbox",
-        },
-      ]
+    const result = runPipeline('<label for="x">Name</label><input id="x" type="text" />')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "Name",
+          {
+            "children": [],
+            "name": "Name",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - text: Name
+      - textbox "Name"
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-          "- text: Name
-          - textbox "Name""
-        `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "check aria-hidden text"
   test('aria-hidden nested children excluded', () => {
-    const tree = capture('<p><span>hello</span><span aria-hidden="true">world</span></p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "hello",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<p><span>hello</span><span aria-hidden="true">world</span></p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "hello",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: hello
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: hello"`)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should ignore presentation and none roles"
@@ -261,143 +292,188 @@ describe('basic', () => {
   // so inter-element spacing is lost. Verified logic works: presentation/none roles
   // are correctly skipped in getRole() and children are promoted.
   test('role="presentation" and role="none" promote children', () => {
-    const tree = capture('<ul><li role="presentation">hello</li><li role="none">world</li></ul>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "helloworld",
-          ],
-          "name": "",
-          "role": "list",
-        },
-      ]
+    const result = runPipeline('<ul><li role="presentation">hello</li><li role="none">world</li></ul>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "helloworld",
+            ],
+            "name": "",
+            "role": "list",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - list: helloworld
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- list: helloworld"`)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should concatenate span text"
   // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
   test('concatenates inline text across spans', () => {
-    const tree = capture('<span>One</span> <span>Two</span> <span>Three</span>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "OneTwoThree",
-      ]
+    const result = runPipeline('<span>One</span> <span>Two</span> <span>Three</span>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "OneTwoThree",
+        ],
+        "pass": true,
+        "rendered": "
+      - text: OneTwoThree
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should concatenate div text with spaces"
   // happy-dom strips trailing whitespace from text nodes during innerHTML parsing
   test('concatenates div text', () => {
-    const tree = capture('<div>One</div><div>Two</div><div>Three</div>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "OneTwoThree",
-      ]
+    const result = runPipeline('<div>One</div><div>Two</div><div>Three</div>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "OneTwoThree",
+        ],
+        "pass": true,
+        "rendered": "
+      - text: OneTwoThree
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: OneTwoThree"`)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should support multiline text"
   test('multiline text collapses whitespace', () => {
-    const tree = capture('<p>Line 1\n      Line 2\n      Line 3</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Line 1 Line 2 Line 3",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<p>Line 1\n      Line 2\n      Line 3</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Line 1 Line 2 Line 3",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: Line 1 Line 2 Line 3
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: Line 1 Line 2 Line 3"`)
   })
 
   // -- Gap: hidden HTML attribute
   test('hidden attribute excludes element', () => {
-    const tree = capture('<div hidden>Hidden</div><p>Visible</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Visible",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<div hidden>Hidden</div><p>Visible</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Visible",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: Visible
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: Visible"`)
   })
 
   // -- Gap: style/script/noscript/template tags
   test('style, script, noscript, template tags are excluded', () => {
-    const tree = capture('<style>.x{}</style><script>var x</script><noscript>No JS</noscript><template><p>T</p></template><p>Visible</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Visible",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<style>.x{}</style><script>var x</script><noscript>No JS</noscript><template><p>T</p></template><p>Visible</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Visible",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: Visible
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: Visible"`)
   })
 
   // -- Gap: aria-labelledby
   test('aria-labelledby resolves name from referenced elements', () => {
-    const tree = capture('<span id="a">Hello</span><span id="b">World</span><button aria-labelledby="a b">X</button>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "HelloWorld",
-        {
-          "children": [
-            "X",
-          ],
-          "name": "Hello World",
-          "role": "button",
-        },
-      ]
+    const result = runPipeline('<span id="a">Hello</span><span id="b">World</span><button aria-labelledby="a b">X</button>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "HelloWorld",
+          {
+            "children": [
+              "X",
+            ],
+            "name": "Hello World",
+            "role": "button",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - text: HelloWorld
+      - button "Hello World": X
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-            "- text: HelloWorld
-            - button "Hello World": X"
-          `)
   })
 
   // -- Gap: IMG alt text
   test('img alt text as accessible name', () => {
-    const tree = capture('<img alt="Logo">')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "Logo",
-          "role": "img",
-        },
-      ]
+    const result = runPipeline('<img alt="Logo">')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "Logo",
+            "role": "img",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - img "Logo"
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- img "Logo""`)
   })
 
   // -- Gap: IMG empty alt -> presentation (skipped)
   test('img with empty alt has presentation role (children promoted)', () => {
-    const tree = capture('<img alt="">')
+    const result = runPipeline('<img alt="">')
     // Empty alt = presentation role, which is skipped (no node emitted)
-    expect(tree.children).toMatchInlineSnapshot(`[]`)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`""`)
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [],
+        "pass": true,
+        "rendered": "
+
+      ",
+      }
+    `)
   })
 
   // -- Gap: INPUT type variants
   test('input type variants', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <input type="radio">
       <input type="submit">
       <input type="reset">
@@ -407,223 +483,247 @@ describe('basic', () => {
       <input type="checkbox">
       <input>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "",
-          "role": "radio",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "slider",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "searchbox",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "checkbox",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "textbox",
-        },
-      ]
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "",
+            "role": "radio",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "slider",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "searchbox",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "checkbox",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - radio
+      - button
+      - button
+      - button
+      - slider
+      - searchbox
+      - checkbox
+      - textbox
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-            "- radio
-            - button
-            - button
-            - button
-            - slider
-            - searchbox
-            - checkbox
-            - textbox"
-          `)
   })
 
   // -- Gap: SELECT -> combobox
   test('select has combobox role', () => {
-    const tree = capture('<select><option>A</option></select>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                "A",
-              ],
-              "name": "",
-              "role": "option",
-            },
-          ],
-          "name": "",
-          "role": "combobox",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- combobox:
-        - option: A"
+    const result = runPipeline('<select><option>A</option></select>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              {
+                "children": [
+                  "A",
+                ],
+                "name": "",
+                "role": "option",
+              },
+            ],
+            "name": "",
+            "role": "combobox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - combobox:
+        - option: A
+      ",
+      }
     `)
   })
 
   // -- Gap: TEXTAREA -> textbox
   test('textarea has textbox role', () => {
-    const tree = capture('<textarea></textarea>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "",
-          "role": "textbox",
-        },
-      ]
+    const result = runPipeline('<textarea></textarea>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - textbox
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox"`)
   })
 
   // -- Gap: SECTION with/without aria-label
   test('section with aria-label has region role', () => {
-    const tree = capture('<section aria-label="S">content</section>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "content",
-          ],
-          "name": "S",
-          "role": "region",
-        },
-      ]
+    const result = runPipeline('<section aria-label="S">content</section>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "content",
+            ],
+            "name": "S",
+            "role": "region",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - region "S": content
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- region "S": content"`)
   })
 
   test('section without aria-label has no role', () => {
-    const tree = capture('<section>content</section>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "content",
-      ]
+    const result = runPipeline('<section>content</section>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "content",
+        ],
+        "pass": true,
+        "rendered": "
+      - text: content
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- text: content"`)
   })
 
   // -- Gap: table elements
   test('table structure roles', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <table>
         <thead><tr><th>H</th></tr></thead>
         <tbody><tr><td>D</td></tr></tbody>
         <tfoot><tr><td>F</td></tr></tfoot>
       </table>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "H",
-                      ],
-                      "name": "",
-                      "role": "columnheader",
-                    },
-                  ],
-                  "name": "",
-                  "role": "row",
-                },
-              ],
-              "name": "",
-              "role": "rowgroup",
-            },
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "D",
-                      ],
-                      "name": "",
-                      "role": "cell",
-                    },
-                  ],
-                  "name": "",
-                  "role": "row",
-                },
-              ],
-              "name": "",
-              "role": "rowgroup",
-            },
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "F",
-                      ],
-                      "name": "",
-                      "role": "cell",
-                    },
-                  ],
-                  "name": "",
-                  "role": "row",
-                },
-              ],
-              "name": "",
-              "role": "rowgroup",
-            },
-          ],
-          "name": "",
-          "role": "table",
-        },
-      ]
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "H",
+                        ],
+                        "name": "",
+                        "role": "columnheader",
+                      },
+                    ],
+                    "name": "",
+                    "role": "row",
+                  },
+                ],
+                "name": "",
+                "role": "rowgroup",
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "D",
+                        ],
+                        "name": "",
+                        "role": "cell",
+                      },
+                    ],
+                    "name": "",
+                    "role": "row",
+                  },
+                ],
+                "name": "",
+                "role": "rowgroup",
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "F",
+                        ],
+                        "name": "",
+                        "role": "cell",
+                      },
+                    ],
+                    "name": "",
+                    "role": "row",
+                  },
+                ],
+                "name": "",
+                "role": "rowgroup",
+              },
+            ],
+            "name": "",
+            "role": "table",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - table:
+        - rowgroup:
+          - row:
+            - columnheader: H
+        - rowgroup:
+          - row:
+            - cell: D
+        - rowgroup:
+          - row:
+            - cell: F
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-                      "- table:
-                        - rowgroup:
-                          - row:
-                            - columnheader: H
-                        - rowgroup:
-                          - row:
-                            - cell: D
-                        - rowgroup:
-                          - row:
-                            - cell: F"
-                    `)
   })
 
   // -- Gap: other implicit roles
   test('other implicit roles', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <article>x</article>
       <aside>x</aside>
       <dialog open>x</dialog>
@@ -637,98 +737,99 @@ describe('basic', () => {
       <ol><li>x</li></ol>
       <progress></progress>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "article",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "complementary",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "dialog",
-        },
-        {
-          "children": [
-            "L",
-          ],
-          "name": "",
-          "role": "group",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "contentinfo",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "form",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "banner",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "separator",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "main",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "name": "",
-          "role": "navigation",
-        },
-        {
-          "children": [
-            {
-              "children": [
-                "x",
-              ],
-              "name": "",
-              "role": "listitem",
-            },
-          ],
-          "name": "",
-          "role": "list",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "progressbar",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- article: x
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "article",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "complementary",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "dialog",
+          },
+          {
+            "children": [
+              "L",
+            ],
+            "name": "",
+            "role": "group",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "contentinfo",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "form",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "banner",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "separator",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "main",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "name": "",
+            "role": "navigation",
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  "x",
+                ],
+                "name": "",
+                "role": "listitem",
+              },
+            ],
+            "name": "",
+            "role": "list",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "progressbar",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - article: x
       - complementary: x
       - dialog: x
       - group: L
@@ -740,147 +841,165 @@ describe('basic', () => {
       - navigation: x
       - list:
         - listitem: x
-      - progressbar"
+      - progressbar
+      ",
+      }
     `)
   })
 
   // -- Gap: explicit role with spaces (first token)
   test('explicit role with spaces takes first token', () => {
-    const tree = capture('<div role="alert dialog">content</div>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "content",
-          ],
-          "name": "",
-          "role": "alert",
-        },
-      ]
+    const result = runPipeline('<div role="alert dialog">content</div>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "content",
+            ],
+            "name": "",
+            "role": "alert",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - alert: content
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- alert: content"`)
   })
 
   // -- Gap: name dedup
   test('sole child text matching name is deduplicated', () => {
-    const tree = capture('<button aria-label="Click">Click</button>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "Click",
-          "role": "button",
-        },
-      ]
+    const result = runPipeline('<button aria-label="Click">Click</button>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "Click",
+            "role": "button",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - button "Click"
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- button "Click""`)
   })
 
   // -- Gap: aria-disabled, aria-expanded, aria-pressed, aria-selected capture
   test('aria-*', () => {
-    const tree = capture(`
+    const result = runPipeline(`
 <button aria-disabled="true">X</button>
 <button aria-expanded="true">X</button>
 <button aria-expanded="false">X</button>
 <button aria-pressed="true">X</button>
 <button aria-pressed="mixed">X</button>
 `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "X",
-          ],
-          "disabled": true,
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [
-            "X",
-          ],
-          "expanded": true,
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [
-            "X",
-          ],
-          "expanded": false,
-          "name": "",
-          "role": "button",
-        },
-        {
-          "children": [
-            "X",
-          ],
-          "name": "",
-          "pressed": true,
-          "role": "button",
-        },
-        {
-          "children": [
-            "X",
-          ],
-          "name": "",
-          "pressed": "mixed",
-          "role": "button",
-        },
-      ]
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "X",
+            ],
+            "disabled": true,
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [
+              "X",
+            ],
+            "expanded": true,
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [
+              "X",
+            ],
+            "expanded": false,
+            "name": "",
+            "role": "button",
+          },
+          {
+            "children": [
+              "X",
+            ],
+            "name": "",
+            "pressed": true,
+            "role": "button",
+          },
+          {
+            "children": [
+              "X",
+            ],
+            "name": "",
+            "pressed": "mixed",
+            "role": "button",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - button [disabled]: X
+      - button [expanded]: X
+      - button [expanded=false]: X
+      - button [pressed]: X
+      - button [pressed=mixed]: X
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-            "- button [disabled]: X
-            - button [expanded]: X
-            - button [expanded=false]: X
-            - button [pressed]: X
-            - button [pressed=mixed]: X"
-          `)
   })
 
   test('aria-selected captured', () => {
-    const tree = capture('<table><tr aria-selected="true"><td>X</td></tr></table>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "X",
-                      ],
-                      "name": "",
-                      "role": "cell",
-                    },
-                  ],
-                  "name": "",
-                  "role": "row",
-                  "selected": true,
-                },
-              ],
-              "name": "",
-              "role": "rowgroup",
-            },
-          ],
-          "name": "",
-          "role": "table",
-        },
-      ]
+    const result = runPipeline('<table><tr aria-selected="true"><td>X</td></tr></table>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "X",
+                        ],
+                        "name": "",
+                        "role": "cell",
+                      },
+                    ],
+                    "name": "",
+                    "role": "row",
+                    "selected": true,
+                  },
+                ],
+                "name": "",
+                "role": "rowgroup",
+              },
+            ],
+            "name": "",
+            "role": "table",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - table:
+        - rowgroup:
+          - row [selected]:
+            - cell: X
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-                    "- table:
-                      - rowgroup:
-                        - row [selected]:
-                          - cell: X"
-                  `)
   })
 
   // -- Gap: heading levels h2-h6
   test('heading levels h2 through h6', () => {
-    const tree = capture(`
+    const result = runPipeline(`
 <h1>x</h1>
 <h2>x</h2>
 <h3>x</h3>
@@ -888,237 +1007,279 @@ describe('basic', () => {
 <h5>x</h5>
 <h6>x</h6>
 `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "x",
-          ],
-          "level": 1,
-          "name": "",
-          "role": "heading",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "level": 2,
-          "name": "",
-          "role": "heading",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "level": 3,
-          "name": "",
-          "role": "heading",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "level": 4,
-          "name": "",
-          "role": "heading",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "level": 5,
-          "name": "",
-          "role": "heading",
-        },
-        {
-          "children": [
-            "x",
-          ],
-          "level": 6,
-          "name": "",
-          "role": "heading",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- heading [level=1]: x
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "x",
+            ],
+            "level": 1,
+            "name": "",
+            "role": "heading",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "level": 2,
+            "name": "",
+            "role": "heading",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "level": 3,
+            "name": "",
+            "role": "heading",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "level": 4,
+            "name": "",
+            "role": "heading",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "level": 5,
+            "name": "",
+            "role": "heading",
+          },
+          {
+            "children": [
+              "x",
+            ],
+            "level": 6,
+            "name": "",
+            "role": "heading",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - heading [level=1]: x
       - heading [level=2]: x
       - heading [level=3]: x
       - heading [level=4]: x
       - heading [level=5]: x
-      - heading [level=6]: x"
+      - heading [level=6]: x
+      ",
+      }
     `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
   test('input value as text content', () => {
-    const tree = capture('<input value="hello world">')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "hello world",
-          ],
-          "name": "",
-          "role": "textbox",
-        },
-      ]
+    const result = runPipeline('<input value="hello world">')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "hello world",
+            ],
+            "name": "",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - textbox: hello world
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox: hello world"`)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should treat input value as text in templates"
   test('checkbox and radio do not capture value as text', () => {
-    const tree = capture('<input type="checkbox" checked><input type="radio" checked>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "",
-          "role": "checkbox",
-        },
-        {
-          "children": [],
-          "name": "",
-          "role": "radio",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- checkbox
-      - radio"
+    const result = runPipeline('<input type="checkbox" checked><input type="radio" checked>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "",
+            "role": "checkbox",
+          },
+          {
+            "children": [],
+            "name": "",
+            "role": "radio",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - checkbox
+      - radio
+      ",
+      }
     `)
   })
 
   // -- Ported from Playwright: page-aria-snapshot.spec.ts "should not report textarea textContent"
   test('textarea value tracking', () => {
-    const tree = capture('<textarea>Before</textarea>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Before",
-          ],
-          "name": "",
-          "role": "textbox",
-        },
-      ]
+    const result = runPipeline('<textarea>Before</textarea>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Before",
+            ],
+            "name": "",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - textbox: Before
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox: Before"`)
   })
 
   // -- /placeholder: pseudo-attribute for inputs
   // Ported from Playwright: page-aria-snapshot.spec.ts "should snapshot placeholder"
   test('input captures placeholder', () => {
-    const tree = capture('<input placeholder="Enter name">')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "",
-          "placeholder": "Enter name",
-          "role": "textbox",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- textbox:
-        - /placeholder: Enter name"
+    const result = runPipeline('<input placeholder="Enter name">')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "",
+            "placeholder": "Enter name",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - textbox:
+        - /placeholder: Enter name
+      ",
+      }
     `)
   })
 
   test('placeholder not captured when same as name', () => {
     // When placeholder is used as the accessible name (via happy-dom/browser),
     // we don't duplicate it. Our code checks placeholder !== name.
-    const tree = capture('<input placeholder="Name" aria-label="Name">')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "Name",
-          "role": "textbox",
-        },
-      ]
+    const result = runPipeline('<input placeholder="Name" aria-label="Name">')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "Name",
+            "role": "textbox",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - textbox "Name"
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- textbox "Name""`)
   })
 
   // TODO
   // Playwright: page-aria-snapshot.spec.ts "should not show visible children of hidden elements"
   test('CSS visibility:hidden', () => {
-    const tree = capture('<div style="visibility:hidden">Hidden</div><p>Visible</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "Hidden",
-        {
-          "children": [
-            "Visible",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- text: Hidden
-      - paragraph: Visible"
+    const result = runPipeline('<div style="visibility:hidden">Hidden</div><p>Visible</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "Hidden",
+          {
+            "children": [
+              "Visible",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - text: Hidden
+      - paragraph: Visible
+      ",
+      }
     `)
   })
 
   // TODO
   // Playwright: page-aria-snapshot.spec.ts "should work with slots"
   test('shadow DOM slots', () => {
-    const tree = capture('<div id="host"></div>')
-    expect(tree.children).toMatchInlineSnapshot(`[]`)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`""`)
+    const result = runPipeline('<div id="host"></div>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [],
+        "pass": true,
+        "rendered": "
+
+      ",
+      }
+    `)
   })
 
   // TODO
   // Playwright: page-aria-snapshot.spec.ts "should include pseudo in text"
   test('CSS pseudo-elements', () => {
-    const tree = capture('<p>Hello</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Hello",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
+    const result = runPipeline('<p>Hello</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "Hello",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: Hello
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- paragraph: Hello"`)
   })
 
   // TODO
   // Playwright: page-aria-snapshot.spec.ts "should respect aria-owns"
   test('aria-owns', () => {
-    const tree = capture('<div role="list" aria-owns="item1"></div><div id="item1" role="listitem">Owned</div>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "",
-          "role": "list",
-        },
-        {
-          "children": [
-            "Owned",
-          ],
-          "name": "",
-          "role": "listitem",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- list
-      - listitem: Owned"
+    const result = runPipeline('<div role="list" aria-owns="item1"></div><div id="item1" role="listitem">Owned</div>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "",
+            "role": "list",
+          },
+          {
+            "children": [
+              "Owned",
+            ],
+            "name": "",
+            "role": "listitem",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - list
+      - listitem: Owned
+      ",
+      }
     `)
   })
 
   test('nav with nested list', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <nav aria-label="Main">
         <ul>
           <li><a href="/a">A</a></li>
@@ -1126,52 +1287,53 @@ describe('basic', () => {
         </ul>
       </nav>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "A",
-                      ],
-                      "name": "",
-                      "role": "link",
-                      "url": "/a",
-                    },
-                  ],
-                  "name": "",
-                  "role": "listitem",
-                },
-                {
-                  "children": [
-                    {
-                      "children": [
-                        "B",
-                      ],
-                      "name": "",
-                      "role": "link",
-                      "url": "/b",
-                    },
-                  ],
-                  "name": "",
-                  "role": "listitem",
-                },
-              ],
-              "name": "",
-              "role": "list",
-            },
-          ],
-          "name": "Main",
-          "role": "navigation",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- navigation "Main":
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "A",
+                        ],
+                        "name": "",
+                        "role": "link",
+                        "url": "/a",
+                      },
+                    ],
+                    "name": "",
+                    "role": "listitem",
+                  },
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          "B",
+                        ],
+                        "name": "",
+                        "role": "link",
+                        "url": "/b",
+                      },
+                    ],
+                    "name": "",
+                    "role": "listitem",
+                  },
+                ],
+                "name": "",
+                "role": "list",
+              },
+            ],
+            "name": "Main",
+            "role": "navigation",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - navigation "Main":
         - list:
           - listitem:
             - link:
@@ -1180,98 +1342,114 @@ describe('basic', () => {
           - listitem:
             - link:
               - text: B
-              - /url: /b"
+              - /url: /b
+      ",
+      }
     `)
   })
 
   test('form with inputs', () => {
-    const tree = capture(`
+    const result = runPipeline(`
       <form>
         <label for="u">User</label>
         <input id="u" type="text" />
         <button type="submit">Go</button>
       </form>
     `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "User",
-            {
-              "children": [],
-              "name": "User",
-              "role": "textbox",
-            },
-            {
-              "children": [
-                "Go",
-              ],
-              "name": "",
-              "role": "button",
-            },
-          ],
-          "name": "",
-          "role": "form",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- form:
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "User",
+              {
+                "children": [],
+                "name": "User",
+                "role": "textbox",
+              },
+              {
+                "children": [
+                  "Go",
+                ],
+                "name": "",
+                "role": "button",
+              },
+            ],
+            "name": "",
+            "role": "form",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - form:
         - text: User
         - textbox "User"
-        - button: Go"
+        - button: Go
+      ",
+      }
     `)
   })
 
   test('leaf node with no children', () => {
-    const tree = capture('<button aria-label="X"></button>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "X",
-          "role": "button",
-        },
-      ]
+    const result = runPipeline('<button aria-label="X"></button>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "X",
+            "role": "button",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - button "X"
+      ",
+      }
     `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`"- button "X""`)
   })
 
   test('fragment with text and element children', () => {
-    const tree = capture('Hello <p>World</p>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        "Hello",
-        {
-          "children": [
-            "World",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- text: Hello
-      - paragraph: World"
+    const result = runPipeline('Hello <p>World</p>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          "Hello",
+          {
+            "children": [
+              "World",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - text: Hello
+      - paragraph: World
+      ",
+      }
     `)
   })
 
   test('link url with no text children', () => {
-    const tree = capture('<a href="/foo" aria-label="Go"></a>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [],
-          "name": "Go",
-          "role": "link",
-          "url": "/foo",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- link "Go":
-        - /url: /foo"
+    const result = runPipeline('<a href="/foo" aria-label="Go"></a>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [],
+            "name": "Go",
+            "role": "link",
+            "url": "/foo",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - link "Go":
+        - /url: /foo
+      ",
+      }
     `)
   })
 
@@ -1280,7 +1458,7 @@ describe('basic', () => {
   //   "should escape special yaml characters", "should escape special yaml values"
   // Current render does NOT quote/escape — these snapshots document the unescaped output.
   test('YAML escaping of special characters', () => {
-    const tree = capture(`
+    const result = runPipeline(`
 <p>one: two</p>
 <p>"quoted"</p>
 <p>#comment</p>
@@ -1289,75 +1467,75 @@ describe('basic', () => {
 <p>true</p>
 <p>123</p>
 `)
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "one: two",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            ""quoted"",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            "#comment",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            "@at",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            "[bracket]",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            "true",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-        {
-          "children": [
-            "123",
-          ],
-          "name": "",
-          "role": "paragraph",
-        },
-      ]
-    `)
-    expect(renderAriaTree(tree)).toMatchInlineSnapshot(`
-      "- paragraph: one: two
+    expect(result.snapshot).toMatchInlineSnapshot(`
+      {
+        "captured": [
+          {
+            "children": [
+              "one: two",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              ""quoted"",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              "#comment",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              "@at",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              "[bracket]",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              "true",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+          {
+            "children": [
+              "123",
+            ],
+            "name": "",
+            "role": "paragraph",
+          },
+        ],
+        "pass": true,
+        "rendered": "
+      - paragraph: one: two
       - paragraph: "quoted"
       - paragraph: #comment
       - paragraph: @at
       - paragraph: [bracket]
       - paragraph: true
-      - paragraph: 123"
+      - paragraph: 123
+      ",
+      }
     `)
   })
 })
 
-// ---------------------------------------------------------------------------
-// parseAriaTemplate
-// ---------------------------------------------------------------------------
-
+// TODO: consolidate with above
 describe('parseAriaTemplate', () => {
   test('simple role', () => {
     const t = parseAriaTemplate('- button')
@@ -1552,11 +1730,11 @@ describe('parseAriaTemplate', () => {
 })
 
 // ---------------------------------------------------------------------------
-// render -> parse roundtrip
+// match
 // ---------------------------------------------------------------------------
 
-describe('render -> parse roundtrip', () => {
-  test('rendered output parses back to matching template', () => {
+describe('matchAriaTree', () => {
+  test('roundtrip 1', () => {
     const html = `
       <nav aria-label="Main">
         <ul>
@@ -1565,12 +1743,10 @@ describe('render -> parse roundtrip', () => {
         </ul>
       </nav>
     `
-    const tree = capture(html)
-    const rendered = renderAriaTree(tree)
-    const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+    expect(match(html, renderAriaTree(capture(html)))).toMatchInlineSnapshot(`
       {
-        "actual": "- navigation "Main":
+        "actual": "
+      - navigation "Main":
         - list:
           - listitem:
             - link:
@@ -1579,8 +1755,10 @@ describe('render -> parse roundtrip', () => {
           - listitem:
             - link:
               - text: About
-              - /url: /about",
-        "expected": "- navigation "Main":
+              - /url: /about
+      ",
+        "expected": "
+      - navigation "Main":
         - list:
           - listitem:
             - link:
@@ -1589,8 +1767,10 @@ describe('render -> parse roundtrip', () => {
           - listitem:
             - link:
               - text: About
-              - /url: /about",
-        "mergedExpected": "- navigation "Main":
+              - /url: /about
+      ",
+        "mergedExpected": "
+      - navigation "Main":
         - list:
           - listitem:
             - link:
@@ -1599,13 +1779,14 @@ describe('render -> parse roundtrip', () => {
           - listitem:
             - link:
               - text: About
-              - /url: /about",
+              - /url: /about
+      ",
         "pass": true,
       }
     `)
   })
 
-  test('roundtrip with all ARIA states', () => {
+  test('roundtrip 2', () => {
     const html = `
       <div role="checkbox" aria-checked="true" aria-label="A"></div>
       <button aria-disabled="true">B</button>
@@ -1615,43 +1796,40 @@ describe('render -> parse roundtrip', () => {
       <button aria-pressed="mixed">F</button>
       <div role="option" aria-selected="true">G</div>
     `
-    const tree = capture(html)
-    const rendered = renderAriaTree(tree)
-    const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+    expect(match(html, renderAriaTree(capture(html)))).toMatchInlineSnapshot(`
       {
-        "actual": "- checkbox "A" [checked]
+        "actual": "
+      - checkbox "A" [checked]
       - button [disabled]: B
       - button [expanded]: C
       - button [expanded=false]: D
       - button [pressed]: E
       - button [pressed=mixed]: F
-      - option [selected]: G",
-        "expected": "- checkbox "A" [checked]
+      - option [selected]: G
+      ",
+        "expected": "
+      - checkbox "A" [checked]
       - button [disabled]: B
       - button [expanded]: C
       - button [expanded=false]: D
       - button [pressed]: E
       - button [pressed=mixed]: F
-      - option [selected]: G",
-        "mergedExpected": "- checkbox "A" [checked]
+      - option [selected]: G
+      ",
+        "mergedExpected": "
+      - checkbox "A" [checked]
       - button [disabled]: B
       - button [expanded]: C
       - button [expanded=false]: D
       - button [pressed]: E
       - button [pressed=mixed]: F
-      - option [selected]: G",
+      - option [selected]: G
+      ",
         "pass": true,
       }
     `)
   })
-})
 
-// ---------------------------------------------------------------------------
-// match
-// ---------------------------------------------------------------------------
-
-describe('matchAriaTree', () => {
   test('exact match', () => {
     expect(match('<h1>Hello</h1>', '- heading [level=1]')).toMatchInlineSnapshot(`
       {
