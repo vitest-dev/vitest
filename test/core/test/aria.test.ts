@@ -27,30 +27,49 @@ function match(html: string, template: string) {
   }
 }
 
+function runPipeline(html: string) {
+  document.body.innerHTML = html
+  const tree = captureAriaTree(document.body)
+  const rendered = renderAriaTree(tree)
+  const parsed = parseAriaTemplate(rendered)
+  const matched = matchAriaTree(tree, parsed)
+  return {
+    captured: tree,
+    rendered: `\n${rendered}\n`,
+    parsed,
+    matched: {
+      ...matched,
+      actual: `\n${matched.actual}\n`,
+      expected: `\n${matched.expected}\n`,
+      mergedExpected: `\n${matched.mergedExpected}\n`,
+    },
+    snapshot: {
+      captured: tree.children,
+      rendered: `\n${rendered}\n`,
+      pass: matched.pass,
+    },
+  }
+}
+
 describe('basic', () => {
   test('heading', () => {
-    const tree = capture('<h1>Hello</h1>')
-    expect(tree.children).toMatchInlineSnapshot(`
-      [
-        {
-          "children": [
-            "Hello",
-          ],
-          "level": 1,
-          "name": "",
-          "role": "heading",
-        },
-      ]
-    `)
-    const rendered = renderAriaTree(tree)
-    expect(rendered).toMatchInlineSnapshot(`"- heading [level=1]: Hello"`)
-    const template = parseAriaTemplate(rendered)
-    expect(matchAriaTree(tree, template)).toMatchInlineSnapshot(`
+    const result = runPipeline('<h1>Hello</h1>')
+    expect(result.snapshot).toMatchInlineSnapshot(`
       {
-        "actual": "- heading [level=1]: Hello",
-        "expected": "- heading [level=1]: Hello",
-        "mergedExpected": "- heading [level=1]: Hello",
+        "captured": [
+          {
+            "children": [
+              "Hello",
+            ],
+            "level": 1,
+            "name": "",
+            "role": "heading",
+          },
+        ],
         "pass": true,
+        "rendered": "
+      - heading [level=1]: Hello
+      ",
       }
     `)
   })
