@@ -173,6 +173,8 @@ Each accessible element in the tree is represented as a YAML node:
 
 These values come from ARIA attributes and the browser's accessibility tree, including semantics inferred from native HTML elements.
 
+Because ARIA snapshots reflect the browser's accessibility tree, content excluded from that tree, such as `aria-hidden="true"` or `display: none`, does not appear in the snapshot.
+
 ### Roles and Accessible Names
 
 For example:
@@ -192,6 +194,8 @@ For example:
 ```
 
 The role usually comes from the element's native semantics, though it can also be defined with ARIA. The accessible name is computed from text content, associated labels, `aria-label`, `aria-labelledby`, and related naming rules.
+
+For a closer look at how names are computed, see [Accessible Names](#accessible-names).
 
 Some content appears in the snapshot as a text node instead of a role-based element:
 
@@ -367,121 +371,3 @@ Regex also works in pseudo-attribute values:
 - textbox "Search":
     - /placeholder: /Type .*/
 ```
-
-## Accessible Names
-
-The accessible name of an element is determined by a set of rules from the [ARIA specification](https://w3c.github.io/accname/). Understanding the basics helps you write better snapshots.
-
-### Text Content
-
-By default, an element's name comes from its text content:
-
-```html
-<button>Submit</button>
-```
-
-```yaml
-- button "Submit"
-```
-
-### `aria-label`
-
-`aria-label` overrides the text content as the accessible name:
-
-```html
-<button aria-label="Close">X</button>
-```
-
-```yaml
-- button "Close": X
-```
-
-Note that "X" still appears as a text child, but the name is "Close".
-
-### `aria-labelledby`
-
-`aria-labelledby` references another element by ID:
-
-```html
-<h2 id="section-title">Settings</h2>
-<form aria-labelledby="section-title">...</form>
-```
-
-```yaml
-- heading "Settings" [level=2]
-- form "Settings": ...
-```
-
-### Placeholder as Name
-
-When an input has no label, the placeholder serves as the accessible name:
-
-```html
-<input placeholder="Search" />
-```
-
-```yaml
-- textbox "Search"
-```
-
-## Common HTML-to-Role Mappings
-
-| HTML              | ARIA Role    | Notes                            |
-| ----------------- | ------------ | -------------------------------- |
-| `<h1>` ... `<h6>` | `heading`    | Includes `[level=N]`             |
-| `<button>`        | `button`     |                                  |
-| `<a href="...">`  | `link`       | `<a>` without `href` has no role |
-| `<input>`         | `textbox`    | For text-like inputs             |
-| `<select>`        | `combobox`   |                                  |
-| `<ul>`, `<ol>`    | `list`       |                                  |
-| `<li>`            | `listitem`   |                                  |
-| `<table>`         | `table`      |                                  |
-| `<tr>`            | `row`        |                                  |
-| `<td>`            | `cell`       |                                  |
-| `<nav>`           | `navigation` |                                  |
-| `<main>`          | `main`       |                                  |
-| `<p>`             | `paragraph`  |                                  |
-| `<img alt="...">` | `img`        |                                  |
-
-An explicit `role="..."` attribute overrides the implicit role:
-
-```html
-<div role="alert">Warning!</div>
-```
-
-```yaml
-- alert: Warning!
-```
-
-## What Gets Excluded
-
-The following elements are excluded from the ARIA snapshot, matching how assistive technologies handle them:
-
-- **`aria-hidden="true"`** — explicitly hidden from the accessibility tree
-- **`display: none`** — not rendered at all
-- **`visibility: hidden`** — rendered but invisible
-- **`role="presentation"` / `role="none"`** — semantics explicitly removed
-
-```html
-<div aria-hidden="true">Hidden from AT</div>
-<p>Visible to AT</p>
-```
-
-```yaml
-- paragraph: Visible to AT
-```
-
-## Pseudo-Elements
-
-CSS `::before` and `::after` pseudo-elements contribute to both the accessible name and the text content in the tree:
-
-```html
-<style>
-  .required::after {
-    content: ' *';
-  }
-</style>
-<label class="required">Name</label>
-```
-
-The generated content "` *`" is included in the accessible name computation, just as assistive technologies would encounter it.
