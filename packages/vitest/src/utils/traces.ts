@@ -51,7 +51,11 @@ export class Traces {
 
   constructor(options: TracesOptions) {
     if (options.enabled) {
-      const apiInit = import('@opentelemetry/api').then((api) => {
+      // @ts-expect-error injected global
+			const id = typeof __vitest_browser__ === 'undefined'
+        ? '@opentelemetry/api'
+        : '/@id/@opentelemetry/api'
+      const apiInit = import(/* @vite-ignore */ id).then((api) => {
         const otel = {
           tracer: api.trace.getTracer(options.tracerName || 'vitest'),
           context: api.context,
