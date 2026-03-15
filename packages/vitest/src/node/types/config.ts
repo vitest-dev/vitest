@@ -990,6 +990,10 @@ export interface TypecheckConfig {
    */
   ignoreSourceErrors?: boolean
   /**
+   * Use TypeScript build mode.
+   */
+  build?: boolean
+  /**
    * Path to tsconfig, relative to the project root.
    */
   tsconfig?: string
