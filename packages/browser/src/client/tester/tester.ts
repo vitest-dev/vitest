@@ -101,8 +101,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   const state = getWorkerState()
 
-  // @ts-expect-error replaced with `import.meta.env` by transform
-  state.metaEnv = __vitest_browser_import_meta_env_init__
+  state.metaEnv = import.meta.env
   state.onCancel = onCancel
   state.ctx.rpc = rpc as any
   state.rpc = rpc as any

@@ -87,7 +87,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
     },
   }
 
-  const birpcHandlers = {
+  const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
     post: msg => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
     serialize: e =>
@@ -103,7 +103,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
       }),
     deserialize: parse,
     timeout: -1,
-  } satisfies BirpcOptions<WebSocketHandlers>
+  }
 
   ctx.rpc = createBirpc<WebSocketHandlers, WebSocketEvents>(
     functions,

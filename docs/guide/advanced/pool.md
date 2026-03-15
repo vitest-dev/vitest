@@ -120,7 +120,7 @@ Your `CustomPoolRunner` will be controlling how your custom test runner worker l
 In your worker file, you can import helper utilities from `vitest/worker`:
 
 ```ts [my-worker.ts]
-import { init, runBaseTests, setupEnvironment } from 'vitest/worker'
+import { init, runBaseTests } from 'vitest/worker'
 
 init({
   post: (response) => {
@@ -141,8 +141,7 @@ init({
   deserialize: (value) => {
     // Optional, provide custom deserializer for `on` callbacks
   },
-  runTests: (state, traces) => runBaseTests('run', state, traces),
-  collectTests: (state, traces) => runBaseTests('collect', state, traces),
-  setup: setupEnvironment,
+  runTests: state => runBaseTests('run', state),
+  collectTests: state => runBaseTests('collect', state),
 })
 ```
