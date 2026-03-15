@@ -718,7 +718,7 @@ export interface TestContext {
   readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
-   * Extract hooks on test failed
+   * Register a callback that runs when the current test finishes (regardless of success or failure).
    * @see {@link https://vitest.dev/guide/test-context#ontestfinished}
    */
   readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
