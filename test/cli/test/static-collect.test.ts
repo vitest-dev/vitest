@@ -1407,6 +1407,159 @@ test('invalid @module-tag throws and error', async () => {
   `)
 })
 
+test('collects tests with runIf modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('runIf tests', () => {
+      test.runIf(true)('runs conditionally', () => {})
+      test.runIf(false)('also conditional', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "runIf tests": {
+        "also conditional": {
+          "errors": [],
+          "fullName": "runIf tests > also conditional",
+          "id": "-1732721377_0_1",
+          "location": "6:22",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "runs conditionally": {
+          "errors": [],
+          "fullName": "runIf tests > runs conditionally",
+          "id": "-1732721377_0_0",
+          "location": "5:21",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with skipIf modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('skipIf tests', () => {
+      test.skipIf(true)('skips conditionally', () => {})
+      test.skipIf(false)('also conditional skip', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "skipIf tests": {
+        "also conditional skip": {
+          "errors": [],
+          "fullName": "skipIf tests > also conditional skip",
+          "id": "-1732721377_0_1",
+          "location": "6:23",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "skips conditionally": {
+          "errors": [],
+          "fullName": "skipIf tests > skips conditionally",
+          "id": "-1732721377_0_0",
+          "location": "5:22",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with for modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('for tests', () => {
+      test.for([1, 2, 3])('test with for %i', (num) => {})
+      test.skip.for([1, 2])('skipped for %i', (num) => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "for tests": {
+        "skipped for %i": {
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "for tests > skipped for %i",
+          "id": "-1732721377_0_1-dynamic",
+          "location": "6:26",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "test with for %i": {
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "for tests > test with for %i",
+          "id": "-1732721377_0_0-dynamic",
+          "location": "5:24",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('properties on test don\'t generate tests', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    test('actual test', () => {}).withProp(true).withProp(false)
+    test.for([])('actual 2 test', () => {}).withProp('a2').withProp('a3')
+    testContext('actual 3 test', () => {}).withProp('q4').withProp('q5')
+    test('actual 4 test', () => {}).skip('hello world')
+    testContext().withProp('q6').withProp('q7')
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "actual 2 test": {
+        "dynamic": true,
+        "each": true,
+        "errors": [],
+        "fullName": "actual 2 test",
+        "id": "-1732721377_1-dynamic",
+        "location": "5:15",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual 3 test": {
+        "errors": [],
+        "fullName": "actual 3 test",
+        "id": "-1732721377_2",
+        "location": "6:4",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual 4 test": {
+        "errors": [],
+        "fullName": "actual 4 test",
+        "id": "-1732721377_3",
+        "location": "7:4",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual test": {
+        "errors": [],
+        "fullName": "actual test",
+        "id": "-1732721377_0",
+        "location": "4:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',
