@@ -121,3 +121,11 @@ export default defineConfig({
 vitest --pool=forks
 ```
 :::
+## Unhandled Promise Rejection
+
+This error happens when a Promise is rejected but no error handler
+(`.catch` or `await`) is attached before the event loop finishes.
+
+This behavior comes from JavaScript itself and is not specific to Vitest.
+
+Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
