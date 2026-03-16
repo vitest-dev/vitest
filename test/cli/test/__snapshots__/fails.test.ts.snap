@@ -91,8 +91,6 @@ exports[`should fail test-extend/fixture-rest-props.test.ts 1`] = `"FixtureParse
 
 exports[`should fail test-extend/fixture-without-destructuring.test.ts 1`] = `"FixtureParseError: The 1st argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). Instead, received "context"."`;
 
-exports[`should fail test-extend/fixture-without-use.test.ts 1`] = `"Error: Fixture returned without calling "use". Make sure to call "use" in every code path of the fixture function."`;
-
 exports[`should fail test-extend/test-rest-params.test.ts 1`] = `"FixtureParseError: The 1st argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). Instead, received "...rest"."`;
 
 exports[`should fail test-extend/test-rest-props.test.ts 1`] = `"FixtureParseError: Rest parameters are not supported in fixtures, received "...rest"."`;
