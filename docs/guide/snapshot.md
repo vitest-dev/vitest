@@ -240,31 +240,49 @@ We are using Jest's `pretty-format` for serializing snapshots. You can read more
 
 Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further — it owns the entire comparison pipeline: how to capture a value, render it, parse a stored snapshot, and match them semantically.
 
-This is useful when snapshot comparison needs to be smarter than `===`. For example, the built-in [aria snapshots](#aria-snapshots) use a domain adapter to support regex patterns and preserve hand-edited patterns when running with `--update` — the adapter's `match` method can return a `mergedExpected` string so only the changed literal parts are overwritten.
-
 ### The adapter interface
 
-A domain adapter implements four methods:
+A domain adapter implements four methods and is generic over two types — `Captured` (what the value actually is) and `Expected` (what the stored snapshot parses into):
 
 ```ts
-import type { DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 
 const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
   name: 'my-domain',
 
   // Extract structured data from the received value
-  capture(received) { /* ... */ },
+  capture(received: unknown): Captured { /* ... */ },
 
   // Render captured data as the snapshot string (what gets stored)
-  render(captured) { /* ... */ },
+  render(captured: Captured): string { /* ... */ },
 
   // Parse a stored snapshot string into a structured expected value
-  parseExpected(input) { /* ... */ },
+  parseExpected(input: string): Expected { /* ... */ },
 
   // Compare captured vs expected, return pass/fail and diff info
-  match(captured, expected) { /* ... */ },
+  match(captured: Captured, expected: Expected): DomainMatchResult { /* ... */ },
 }
 ```
+
+:::details Why are `Captured` and `Expected` separate types?
+
+When a snapshot is first generated, `render(captured)` produces a plain string that gets stored. But once stored, the user can **hand-edit** it — replacing literals with regex patterns, relaxing assertions, or adding domain-specific query syntax. After editing, `parseExpected(input)` parses this modified string into a type that is _richer_ than what `capture` produces.
+
+For example, in the [key-value adapter](#example-key-value-adapter) below, `Captured` values are always `string`, but `Expected` values can be `string | RegExp`:
+
+```ts
+interface KVCaptured {
+  entries: { key: string; value: string }[]
+}
+
+interface KVExpected {
+  entries: { key: string; value: string | RegExp }[]
+}
+```
+
+This asymmetry is what makes `--update` work correctly: `match` can return a `mergedExpected` string that updates changed literal parts while **preserving** the user's hand-edited patterns. If both sides were the same type, there would be no way to distinguish "what the value actually is" from "what the user chose to assert" — and every update would overwrite the user's patterns.
+
+:::
 
 ### Registration
 
@@ -288,10 +306,7 @@ expect(value).toMatchDomainInlineSnapshot(`key=value`, 'my-domain')
 A minimal adapter that stores objects as `key=value` lines, with regex pattern support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
 
 ```ts [kv-adapter.ts]
-import type {
-  DomainMatchResult,
-  DomainSnapshotAdapter,
-} from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 
 interface KVCaptured {
   entries: { key: string; value: string }[]
@@ -304,17 +319,17 @@ interface KVExpected {
 export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   name: 'kv',
 
-  capture(received) {
+  capture(received: unknown): KVCaptured {
     const entries = Object.entries(received as Record<string, string>)
       .map(([key, value]) => ({ key, value: String(value) }))
     return { entries }
   },
 
-  render(captured) {
+  render(captured: KVCaptured): string {
     return captured.entries.map(e => `${e.key}=${e.value}`).join('\n')
   },
 
-  parseExpected(input) {
+  parseExpected(input: string): KVExpected {
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
       const key = line.slice(0, eq)
@@ -327,7 +342,7 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
     return { entries }
   },
 
-  match(captured, expected): DomainMatchResult {
+  match(captured: KVCaptured, expected: KVExpected): DomainMatchResult {
     let allPass = true
     for (let i = 0; i < captured.entries.length; i++) {
       const cap = captured.entries[i]

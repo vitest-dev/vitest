@@ -17,7 +17,7 @@ interface KVExpected {
 export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   name: 'kv',
 
-  capture(received) {
+  capture(received: unknown): KVCaptured {
     if (typeof received !== 'object' || received === null) {
       throw new TypeError('kv adapter expects a plain object')
     }
@@ -26,11 +26,11 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
     return { entries }
   },
 
-  render(captured) {
+  render(captured: KVCaptured): string {
     return `\n${captured.entries.map(e => `${e.key}=${e.value}`).join('\n')}\n`
   },
 
-  parseExpected(input) {
+  parseExpected(input: string): KVExpected {
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
       const key = line.slice(0, eq)
@@ -43,7 +43,7 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
     return { entries }
   },
 
-  match(captured, expected): DomainMatchResult {
+  match(captured: KVCaptured, expected: KVExpected): DomainMatchResult {
     const mergedLines: string[] = []
     const actualLines: string[] = []
     const expectedLines: string[] = []
