@@ -1,3 +1,12 @@
+/**
+ * Represents a resource that has a `dispose` method.
+ * Used to provide a common interface for objects that can be released or cleaned up.
+ * @see https://github.com/microsoft/TypeScript/blob/main/src/lib/es2022.disposable.d.ts
+ */
+interface Disposable {
+  [Symbol.dispose](): void
+}
+
 export interface MockResultReturn<T> {
   type: 'return'
   /**
