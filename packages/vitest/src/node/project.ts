@@ -69,7 +69,7 @@ export class TestProject {
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
-  /** @inetrnal */ testFilesList: string[] | null = null
+  /** @internal */ testFilesList: string[] | null = null
 
   private runner!: ModuleRunner
 

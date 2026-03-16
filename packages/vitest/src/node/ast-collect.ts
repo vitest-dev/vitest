@@ -157,6 +157,10 @@ function astParseFile(filepath: string, code: string) {
       if (property && ['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(property)) {
         return
       }
+      // skip properties on return values of calls - e.g., test('name', fn).skip()
+      if (callee.type === 'MemberExpression' && callee.object?.type === 'CallExpression') {
+        return
+      }
       // derive mode from the full chain (handles any order like .skip.concurrent or .concurrent.skip)
       let mode: 'run' | 'skip' | 'only' | 'todo' = 'run'
       for (const prop of properties) {
