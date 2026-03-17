@@ -135,10 +135,15 @@ Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#ev
 test('unhandled rejection example', async () => {
   Promise.reject(new Error('Test error'))
 })
+
+
 This may result in an error like:
 
 UnhandledPromiseRejectionWarning: Error: Test error
+
+
 Fix
+
 test('handled rejection example', async () => {
   await Promise.reject(new Error('Test error')).catch(() => {})
 })
