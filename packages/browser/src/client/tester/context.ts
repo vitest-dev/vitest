@@ -2,7 +2,7 @@ import type {
   Options as TestingLibraryOptions,
   UserEvent as TestingLibraryUserEvent,
 } from '@testing-library/user-event'
-import { vi, type RunnerTask } from 'vitest'
+import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
   BrowserPage,
@@ -16,6 +16,7 @@ import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
+import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
@@ -144,7 +145,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
 function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
   let userEvent = userEventBase.setup({
-    advanceTimers: (delay) => vi.advanceTimersByTimeAsync(delay),
+    advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
     ...options,
   })
   let clipboardData: DataTransfer | undefined
@@ -159,7 +160,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?
     },
     async cleanup() {
       userEvent = userEventBase.setup({
-        advanceTimers: (delay) => vi.advanceTimersByTimeAsync(delay),
+        advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
         ...options,
       })
     },
