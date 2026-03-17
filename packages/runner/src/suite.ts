@@ -32,6 +32,7 @@ import {
   collectTask,
   createTestContext,
   runWithSuite,
+  withCancel,
   withTimeout,
 } from './context'
 import { configureProps, TestFixtures, withFixtures } from './fixture'
@@ -412,7 +413,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
+          withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), task.context.signal),
           timeout,
           false,
           stackTraceError,

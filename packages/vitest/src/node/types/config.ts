@@ -397,10 +397,10 @@ export interface InlineConfig {
   root?: string
 
   /**
-   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * Custom reporter for output. Can contain one or more built-in reporter names, reporter instances,
    * and/or paths to custom reporters.
    *
-   * @default []
+   * @default ['default'] (or ['default', 'github-actions'] when `process.env.GITHUB_ACTIONS === 'true'`)
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>

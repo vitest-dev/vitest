@@ -172,6 +172,7 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,
       },
@@ -241,7 +242,15 @@ export async function runVitest(
       return ctx?.state.getTestModules() || []
     },
     errorTree() {
-      return buildErrorTree(ctx?.state.getTestModules() || [])
+      const tree = buildErrorTree(ctx?.state.getTestModules() || [])
+      const errors = ctx?.state.getUnhandledErrors()
+      if (errors && errors.length > 0) {
+        tree.__unhandled_errors__ = errors.map((e: any) => e.message)
+      }
+      return tree
+    },
+    errorProjectTree() {
+      return buildErrorProjectTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
@@ -273,7 +282,13 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     args.push('--maxWorkers=1')
   }
 
-  const subprocess = x(command, args, options as Options).process!
+  const subprocess = x(command, args, {
+    ...options as Options,
+    nodeOptions: {
+      ...(options as Options)?.nodeOptions,
+      env: { ...process.env, AI_AGENT: '', ...(options as Options)?.nodeOptions?.env },
+    },
+  }).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -639,6 +654,20 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
     projectTree[projectName] = {
       ...projectTree[projectName],
       ...buildTestTree([testModule], onTestCase),
+    }
+  }
+
+  return projectTree
+}
+
+export function buildErrorProjectTree(testModules: TestModule[]) {
+  const projectTree: Record<string, Record<string, any>> = {}
+
+  for (const testModule of testModules) {
+    const projectName = testModule.project.name
+    projectTree[projectName] = {
+      ...projectTree[projectName],
+      ...buildErrorTree([testModule]),
     }
   }
 

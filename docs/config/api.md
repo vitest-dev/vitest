@@ -16,7 +16,7 @@ Listen to port and serve API for [the UI](/guide/ui) or [browser server](/guide/
 - **Type:** `boolean`
 - **Default:** `true` if not exposed to the network, `false` otherwise
 
-Vitest server can save test files or snapshot files via the API. This allows anyone who can connect to the API the ability to run any arbitary code on your machine.
+Vitest server can save test files or snapshot files via the API. This allows anyone who can connect to the API the ability to run any arbitrary code on your machine.
 
 ::: danger SECURITY ADVICE
 Vitest does not expose the API to the internet by default and only listens on `localhost`. However if `host` is manually exposed to the network, anyone who connects to it can run arbitrary code on your machine, unless `api.allowWrite` and `api.allowExec` are set to `false`.

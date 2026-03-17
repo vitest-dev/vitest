@@ -53,6 +53,12 @@ test('project level pool options overwrites top-level', async () => {
   expect(config.maxWorkers).toBe(1)
 })
 
+test('serialized config includes slowTestThreshold', async () => {
+  const config = await getConfig({})
+
+  expect(config.slowTestThreshold).toBe(300)
+})
+
 test('isolated single worker pool receives single testfile at once', async () => {
   const files = await getConfig<string[]>({
     maxWorkers: 1,

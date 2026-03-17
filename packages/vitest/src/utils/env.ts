@@ -12,4 +12,4 @@ export const isDeno: boolean
 export const isWindows: boolean = (isNode || isDeno) && process.platform === 'win32'
 export const isBrowser: boolean = typeof window !== 'undefined'
 export const isTTY: boolean = ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
-export { isCI, provider as stdProvider } from 'std-env'
+export { isAgent, isCI, provider as stdProvider } from 'std-env'

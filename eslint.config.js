@@ -61,6 +61,10 @@ export default antfu(
       'ts/ban-types': 'off',
       'ts/no-unsafe-function-type': 'off',
 
+      'markdown/fenced-code-language': 'off',
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
+
       'no-restricted-imports': [
         'error',
         {

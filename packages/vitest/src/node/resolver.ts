@@ -12,7 +12,7 @@ import { isWindows } from '../utils/env'
 export class VitestResolver {
   public readonly options: ExternalizeOptions
   private externalizeConcurrentCache = new Map<string, Promise<string | false | undefined>>()
-  private externalizeCache = new Map<string, string | false | undefined>()
+  public externalizeCache: Map<string, string | false | undefined> = new Map()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
     // sorting to make cache consistent

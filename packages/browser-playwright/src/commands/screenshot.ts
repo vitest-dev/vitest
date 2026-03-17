@@ -3,6 +3,7 @@ import type { BrowserCommandContext } from 'vitest/node'
 import { mkdir } from 'node:fs/promises'
 import { resolveScreenshotPath } from '@vitest/browser'
 import { dirname, normalize } from 'pathe'
+import { getDescribedLocator } from './utils'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
   element?: string
@@ -41,11 +42,11 @@ export async function takeScreenshot(
     await mkdir(dirname(savePath), { recursive: true })
   }
 
-  const mask = options.mask?.map(selector => context.iframe.locator(selector))
+  const mask = options.mask?.map(selector => getDescribedLocator(context, selector))
 
   if (options.element) {
     const { element: selector, ...config } = options
-    const element = context.iframe.locator(selector)
+    const element = getDescribedLocator(context, selector)
     const buffer = await element.screenshot({
       ...config,
       mask,
@@ -54,7 +55,7 @@ export async function takeScreenshot(
     return { buffer, path }
   }
 
-  const buffer = await context.iframe.locator('body').screenshot({
+  const buffer = await getDescribedLocator(context, 'body').screenshot({
     ...options,
     mask,
     path: savePath,

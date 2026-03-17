@@ -114,7 +114,7 @@ export class ModuleMocker implements TestModuleMocker {
       const url = new URL(`/@id/${resolvedId}`, this.getBaseUrl())
       const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
       const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}&mock=${mock.type}${url.hash}`)
-      return this.mockObject(moduleObject, undefined, mock.type) as T
+      return this.mockObject(moduleObject, mock.type) as T
     }
 
     return import(/* @vite-ignore */ mock.redirect)
@@ -122,9 +122,27 @@ export class ModuleMocker implements TestModuleMocker {
 
   public mockObject(
     object: Record<string | symbol, any>,
+    moduleType?: 'automock' | 'autospy',
+  ): Record<string | symbol, any>
+  public mockObject(
+    object: Record<string | symbol, any>,
     mockExports: Record<string | symbol, any> | undefined,
-    moduleType: 'automock' | 'autospy' = 'automock',
+    moduleType?: 'automock' | 'autospy',
+  ): Record<string | symbol, any>
+  public mockObject(
+    object: Record<string | symbol, any>,
+    mockExportsOrModuleType?: Record<string | symbol, any> | 'automock' | 'autospy',
+    moduleType?: 'automock' | 'autospy',
   ): Record<string | symbol, any> {
+    let mockExports: Record<string | symbol, any> | undefined
+    if (mockExportsOrModuleType === 'automock' || mockExportsOrModuleType === 'autospy') {
+      moduleType = mockExportsOrModuleType
+      mockExports = undefined
+    }
+    else {
+      mockExports = mockExportsOrModuleType
+    }
+    moduleType ??= 'automock'
     const result = mockObject(
       {
         globalConstructors: {

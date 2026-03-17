@@ -1046,6 +1046,289 @@ test('collects tags with other options', async () => {
   `)
 })
 
+test('sequential cancels inherited concurrent', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent('concurrent suite', () => {
+      test('inherits concurrent', () => {})
+
+      describe.sequential('sequential nested', () => {
+        test('not concurrent', () => {})
+      })
+
+      describe('regular nested', () => {
+        test('still concurrent', () => {})
+      })
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "inherits concurrent": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > inherits concurrent",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "regular nested": {
+          "still concurrent": {
+            "concurrent": true,
+            "errors": [],
+            "fullName": "concurrent suite > regular nested > still concurrent",
+            "id": "-1732721377_0_2_0",
+            "location": "12:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+        "sequential nested": {
+          "not concurrent": {
+            "errors": [],
+            "fullName": "concurrent suite > sequential nested > not concurrent",
+            "id": "-1732721377_0_1_0",
+            "location": "8:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with sequential modifier', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.sequential('sequential suite', () => {
+      test('test in sequential suite', () => {})
+    })
+
+    test.sequential('sequential test', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "sequential suite": {
+        "test in sequential suite": {
+          "errors": [],
+          "fullName": "sequential suite > test in sequential suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "sequential test": {
+        "errors": [],
+        "fullName": "sequential test",
+        "id": "-1732721377_1",
+        "location": "8:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
+test('collects tests with concurrent modifier in different order', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.skip.concurrent('concurrent suite', () => {
+      test('test in concurrent suite', () => {})
+    })
+
+    test('test outside concurrent suite', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "test in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > test in concurrent suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+      "test outside concurrent suite": {
+        "errors": [],
+        "fullName": "test outside concurrent suite",
+        "id": "-1732721377_1",
+        "location": "8:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
+test('collects tests with options object modifiers', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe('options tests', () => {
+      test('skipped via options', { skip: true }, () => {})
+      test('only via options', { only: true }, () => {})
+      test('todo via options', { todo: true }, () => {})
+      test('concurrent via options', { concurrent: true }, () => {})
+      test('skip and concurrent via options', { skip: true, concurrent: true }, () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "options tests": {
+        "concurrent via options": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "options tests > concurrent via options",
+          "id": "-1732721377_0_3",
+          "location": "8:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "only via options": {
+          "errors": [],
+          "fullName": "options tests > only via options",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "skip and concurrent via options": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "options tests > skip and concurrent via options",
+          "id": "-1732721377_0_4",
+          "location": "9:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "skipped via options": {
+          "errors": [],
+          "fullName": "options tests > skipped via options",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "todo via options": {
+          "errors": [],
+          "fullName": "options tests > todo via options",
+          "id": "-1732721377_0_2",
+          "location": "7:6",
+          "mode": "todo",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with concurrent modifier', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent('concurrent suite', () => {
+      test('test in concurrent suite', () => {})
+      test.skip('skipped in concurrent suite', () => {})
+    })
+
+    test.concurrent('concurrent test', () => {})
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent suite": {
+        "skipped in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > skipped in concurrent suite",
+          "id": "-1732721377_0_1",
+          "location": "6:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "test in concurrent suite": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent suite > test in concurrent suite",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "concurrent test": {
+        "concurrent": true,
+        "errors": [],
+        "fullName": "concurrent test",
+        "id": "-1732721377_1",
+        "location": "9:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
+test('collects tests with describe.concurrent.each', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    describe.concurrent.each([1, 2, 3])('concurrent each %i', (num) => {
+      test('test inside concurrent each', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "concurrent each %i": {
+        "test inside concurrent each": {
+          "concurrent": true,
+          "errors": [],
+          "fullName": "concurrent each %i > test inside concurrent each",
+          "id": "-1732721377_0_0",
+          "location": "5:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with test.concurrent.each', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('suite', () => {
+      test.concurrent.each([1, 2, 3])('concurrent each test %i', (num) => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "suite": {
+        "concurrent each test %i": {
+          "concurrent": true,
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "suite > concurrent each test %i",
+          "id": "-1732721377_0_0-dynamic",
+          "location": "5:36",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
 test('reports error when using undefined tag', async () => {
   const testModule = await collectTestModule(`
     import { test } from 'vitest'
@@ -1124,6 +1407,159 @@ test('invalid @module-tag throws and error', async () => {
   `)
 })
 
+test('collects tests with runIf modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('runIf tests', () => {
+      test.runIf(true)('runs conditionally', () => {})
+      test.runIf(false)('also conditional', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "runIf tests": {
+        "also conditional": {
+          "errors": [],
+          "fullName": "runIf tests > also conditional",
+          "id": "-1732721377_0_1",
+          "location": "6:22",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "runs conditionally": {
+          "errors": [],
+          "fullName": "runIf tests > runs conditionally",
+          "id": "-1732721377_0_0",
+          "location": "5:21",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with skipIf modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('skipIf tests', () => {
+      test.skipIf(true)('skips conditionally', () => {})
+      test.skipIf(false)('also conditional skip', () => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "skipIf tests": {
+        "also conditional skip": {
+          "errors": [],
+          "fullName": "skipIf tests > also conditional skip",
+          "id": "-1732721377_0_1",
+          "location": "6:23",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "skips conditionally": {
+          "errors": [],
+          "fullName": "skipIf tests > skips conditionally",
+          "id": "-1732721377_0_0",
+          "location": "5:22",
+          "mode": "skip",
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests with for modifier', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+
+    describe('for tests', () => {
+      test.for([1, 2, 3])('test with for %i', (num) => {})
+      test.skip.for([1, 2])('skipped for %i', (num) => {})
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "for tests": {
+        "skipped for %i": {
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "for tests > skipped for %i",
+          "id": "-1732721377_0_1-dynamic",
+          "location": "6:26",
+          "mode": "skip",
+          "state": "skipped",
+        },
+        "test with for %i": {
+          "dynamic": true,
+          "each": true,
+          "errors": [],
+          "fullName": "for tests > test with for %i",
+          "id": "-1732721377_0_0-dynamic",
+          "location": "5:24",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+    }
+  `)
+})
+
+test('properties on test don\'t generate tests', async () => {
+  const testModule = await collectTests(`
+    import { test, describe } from 'vitest'
+
+    test('actual test', () => {}).withProp(true).withProp(false)
+    test.for([])('actual 2 test', () => {}).withProp('a2').withProp('a3')
+    testContext('actual 3 test', () => {}).withProp('q4').withProp('q5')
+    test('actual 4 test', () => {}).skip('hello world')
+    testContext().withProp('q6').withProp('q7')
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "actual 2 test": {
+        "dynamic": true,
+        "each": true,
+        "errors": [],
+        "fullName": "actual 2 test",
+        "id": "-1732721377_1-dynamic",
+        "location": "5:15",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual 3 test": {
+        "errors": [],
+        "fullName": "actual 3 test",
+        "id": "-1732721377_2",
+        "location": "6:4",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual 4 test": {
+        "errors": [],
+        "fullName": "actual 4 test",
+        "id": "-1732721377_3",
+        "location": "7:4",
+        "mode": "run",
+        "state": "pending",
+      },
+      "actual test": {
+        "errors": [],
+        "fullName": "actual test",
+        "id": "-1732721377_0",
+        "location": "4:4",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',
@@ -1192,6 +1628,7 @@ function testItem(testCase: TestCase) {
     errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
     ...(testCase.options.each ? { each: true } : {}),
+    ...(testCase.options.concurrent ? { concurrent: true } : {}),
     ...(testCase.task.tags?.length ? { tags: testCase.task.tags } : {}),
   }
 }

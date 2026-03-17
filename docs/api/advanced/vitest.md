@@ -349,7 +349,7 @@ This makes this method very slow, unless you disable isolation before collecting
 function cancelCurrentRun(reason: CancelReason): Promise<void>
 ```
 
-This method will gracefully cancel all ongoing tests. It will wait for started tests to finish running and will not run tests that were scheduled to run but haven't started yet.
+This method will gracefully cancel all ongoing tests. It will stop the on-going tests and will not run tests that were scheduled to run but haven't started yet.
 
 ## setGlobalTestNamePattern
 
