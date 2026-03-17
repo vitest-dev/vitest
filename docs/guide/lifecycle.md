@@ -347,7 +347,7 @@ Understanding where code executes is crucial for avoiding common pitfalls:
 
 In watch mode, the lifecycle repeats with some differences:
 
-1. **Initial run** - Full lifecycle as described above
+1. **Initial run:** Full lifecycle as described above
 2. **On file change:**
    - New [test run](/api/advanced/reporters#ontestrunstart) starts
    - Only affected test files are re-run
@@ -361,11 +361,11 @@ In watch mode, the lifecycle repeats with some differences:
 
 Understanding the lifecycle helps optimize test performance:
 
-- **Global setup:** is ideal for expensive one-time operations (database seeding, server startup)
-- **Setup files:** run before each test file - avoid heavy operations here if you have many test files
-- **`beforeAll`:** `beforeAll` is better than `beforeEach` for expensive setup that doesn't need isolation
-- **Disabling [isolation](/config/isolate):** improves performance, but setup files still execute before each file
-- **[Pool configuration](/config/pool):** affects parallelization and available APIs
+- **Global setup** is ideal for expensive one-time operations (database seeding, server startup)
+- **Setup files** run before each test file - avoid heavy operations here if you have many test files
+- **`beforeAll`** is better than `beforeEach` for expensive setup that doesn't need isolation
+- **Disabling [isolation](/config/isolate)** improves performance, but setup files still execute before each file
+- **[Pool configuration](/config/pool)** affects parallelization and available APIs
 
 For tips on how to improve performance, read the [Improving Performance](/guide/improving-performance) guide.
 
