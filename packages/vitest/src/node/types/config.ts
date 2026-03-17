@@ -419,6 +419,12 @@ export interface InlineConfig {
     | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
+   * Include console output for each test in the JUnit reporter.
+   * @default true
+   */
+  junitIncludeConsoleOutput?: boolean
+
+  /**
    * Default timeout of a test in milliseconds
    *
    * @default 5000

@@ -737,6 +737,15 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.junitIncludeConsoleOutput != null) {
+    for (const reporter of resolved.reporters) {
+      if (Array.isArray(reporter) && reporter[0] === 'junit') {
+        const reporterOptions = reporter[1] as Record<string, unknown>
+        reporterOptions.includeConsoleOutput ??= resolved.junitIncludeConsoleOutput
+      }
+    }
+  }
+
   if (resolved.changed) {
     resolved.passWithNoTests ??= true
   }

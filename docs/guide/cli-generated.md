@@ -111,6 +111,13 @@ Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, juni
 
 Write test results to a file when supporter reporter is also specified, use cac's dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)
 
+### junitIncludeConsoleOutput
+
+- **CLI:** `--junitIncludeConsoleOutput`
+- **Config:** [junitIncludeConsoleOutput](/config/#junitincludeconsoleoutput)
+
+Include console output for each test in the JUnit reporter
+
 ### coverage.provider
 
 - **CLI:** `--coverage.provider <name>`
