@@ -44,7 +44,6 @@ export default defineConfig({
               plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
             }),
             rolldown: {
-              // filter: { code: "@" },
               filter: {
                 id: ['**/esnext-decorator.test.ts'],
               },
