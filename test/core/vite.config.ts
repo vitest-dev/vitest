@@ -1,8 +1,7 @@
 import type { LabelColor } from 'vitest'
-import type { Pool } from 'vitest/node'
+import { rolldownVersion, type Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
-import { rolldownVersion } from 'vitest/node'
 
 export default defineConfig({
   // tests should not fail when base is set
@@ -33,6 +32,26 @@ export default defineConfig({
         }
       },
     },
+    // Use babel plugin since Oxc (Vite 8) doens't support ecma decorators
+    // https://github.com/oxc-project/oxc/issues/9170#issuecomment-4072166491
+    !!rolldownVersion &&
+      (import("@rolldown/plugin-babel").then(({ default: babel }) =>
+        babel({
+          presets: [
+            {
+              preset: () => ({
+                plugins: [["@babel/plugin-proposal-decorators", { version: "2023-11" }]],
+              }),
+              rolldown: {
+                // filter: { code: "@" },
+                filter: {
+                  id: ['**/esnext-decorator.test.ts'],
+                }
+              },
+            },
+          ],
+        }),
+      ) as any),
   ],
   define: {
     'process': {},
@@ -85,9 +104,6 @@ export default defineConfig({
     exclude: [
       '**/fixtures/**',
       ...defaultExclude,
-      // FIXME: wait for ecma decorator support in rolldown/oxc
-      // https://github.com/oxc-project/oxc/issues/9170
-      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
     ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
