@@ -1415,7 +1415,7 @@ test('collects tests with runIf modifier', async () => {
       test.runIf(true)('runs conditionally', () => {})
       test.runIf(false)('also conditional', () => {})
     })
-`)
+`, { fnFn: true })
   expect(testModule).toMatchInlineSnapshot(`
     {
       "runIf tests": {
@@ -1448,7 +1448,7 @@ test('collects tests with skipIf modifier', async () => {
       test.skipIf(true)('skips conditionally', () => {})
       test.skipIf(false)('also conditional skip', () => {})
     })
-`)
+`, { fnFn: true })
   expect(testModule).toMatchInlineSnapshot(`
     {
       "skipIf tests": {
@@ -1593,28 +1593,34 @@ async function collectTestModule(code: string, options?: CliOptions) {
   )
 }
 
-async function collectTests(code: string, options?: CliOptions) {
-  return testTree(await collectTestModule(code, options))
+async function collectTests(code: string, options?: CliOptions & { fnFn?: boolean }) {
+  return testTree(await collectTestModule(code, options), {}, options?.fnFn)
 }
 
-function testTree(module: TestModule | TestSuite, tree: any = {}) {
+function testTree(module: TestModule | TestSuite, tree: any = {}, fnFn?: boolean) {
   for (const item of module.children) {
     if (item.type === 'test') {
-      tree[item.name] = testItem(item)
+      tree[item.name] = testItem(item, fnFn)
     }
     else {
       tree[item.name] ??= {}
-      testTree(item, tree[item.name])
+      testTree(item, tree[item.name], fnFn)
     }
   }
   return tree
 }
 
-function testItem(testCase: TestCase) {
+function testItem(
+  testCase: TestCase,
+  // A function returning a function (like test.runIf()('name'))
+  // rolldown's column is moved by 1 in that case
+  fnFn?: boolean,
+) {
   let location: string | undefined
+  const state = testCase.result().state
   if (testCase.location) {
     // rolldown's column is moved by 1 when using test.each/test.for
-    const column = rolldownVersion && testCase.options.each
+    const column = rolldownVersion && (testCase.options.each || fnFn)
       ? testCase.location.column - 1
       : testCase.location.column
     location = `${testCase.location.line}:${column}`
@@ -1624,7 +1630,7 @@ function testItem(testCase: TestCase) {
     location,
     mode: testCase.options.mode,
     fullName: testCase.fullName,
-    state: testCase.result().state,
+    state,
     errors: testCase.result().errors || [],
     ...(testCase.task.dynamic ? { dynamic: true } : {}),
     ...(testCase.options.each ? { each: true } : {}),
