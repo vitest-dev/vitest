@@ -1,9 +1,6 @@
 catalogMode: prefer
-
 shellEmulator: true
-
 trustPolicy: no-downgrade
-
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
@@ -37,20 +34,21 @@ overrides:
   rollup: $rollup
   vite: $vite
   vitest: workspace:*
-
 patchedDependencies:
   '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
-
 catalog:
+  '@babel/core': ^7.29.0
+  '@babel/plugin-proposal-decorators': ^7.29.0
   '@iconify-json/carbon': ^1.2.19
   '@iconify-json/logos': ^1.2.10
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
+  '@rolldown/plugin-babel': ^0.2.1
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.8
   '@types/istanbul-lib-coverage': ^2.0.6
