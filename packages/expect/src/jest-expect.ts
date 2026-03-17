@@ -107,7 +107,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toEqual', function (expected) {
     const actual = utils.flag(this, 'object')
 
-    if (isNonPlainEmptyObject(actual)) {
+    if (isNonPlainEmptyObject(actual) && isNonPlainEmptyObject(expected)) {
       console.warn(
         `toEqual: comparing two non-plain objects whose Object.keys() returns []. This may result in a false-negative — the objects are not actually compared. Consider using a custom matcher or accessing the properties explicitly.`,
       )

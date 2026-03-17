@@ -741,6 +741,7 @@ export function isPlainObject(value: unknown): value is Record<string | symbol, 
 export function isNonPlainEmptyObject(value: unknown): boolean {
   return value != null
     && typeof value === 'object'
+    && !Array.isArray(value)
     && !isPlainObject(value)
     && Object.keys(value).length === 0
 }

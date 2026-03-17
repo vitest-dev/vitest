@@ -76,6 +76,10 @@ describe('isNonPlainEmptyObject', () => {
     expect(isNonPlainEmptyObject(new Foo())).toBe(false)
   })
 
+  it('returns false for empty arrays', () => {
+    expect(isNonPlainEmptyObject([])).toBe(false)
+  })
+
   it('returns false for null', () => {
     expect(isNonPlainEmptyObject(null)).toBe(false)
   })
