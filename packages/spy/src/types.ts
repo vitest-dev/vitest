@@ -462,12 +462,10 @@ type DeepPartialMock<T extends Procedure | Constructable = Procedure> = Mock<
 export type MaybeMockedConstructor<T> = T extends Constructable
   ? Mock<T>
   : T
-export type MockedFunction<T extends Procedure | Constructable> = Mock<T> & {
-  [K in keyof T]: T[K];
-}
-export type PartiallyMockedFunction<T extends Procedure | Constructable> = PartialMock<T> & {
-  [K in keyof T]: T[K];
-}
+export type MockedFunction<T extends Procedure | Constructable> = Mock<T>
+  & MockedObject<T>
+export type PartiallyMockedFunction<T extends Procedure | Constructable> = PartialMock<T>
+  & MockedObject<T>
 export type MockedFunctionDeep<T extends Procedure | Constructable> = Mock<T>
   & MockedObjectDeep<T>
 export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = DeepPartialMock<T>
