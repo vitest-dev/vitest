@@ -53,7 +53,12 @@ describe('isPlainObject', () => {
 
 describe('isNonPlainEmptyObject', () => {
   it('returns true for a non-plain object with no enumerable keys', () => {
-    expect(isNonPlainEmptyObject(new Response('a', { status: 200 }))).toBe(true)
+    class HiddenState {
+      // eslint-disable-next-line ts/no-unused-private-class-members
+      #value: string
+      constructor(value: string) { this.#value = value }
+    }
+    expect(isNonPlainEmptyObject(new HiddenState('a'))).toBe(true)
   })
 
   it('returns true for a class instance with no enumerable keys', () => {

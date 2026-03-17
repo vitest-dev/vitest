@@ -2105,6 +2105,12 @@ it('diff', () => {
 })
 
 describe('toEqual warns on non-plain objects with empty Object.keys', () => {
+  // Uses private fields to guarantee Object.keys() === [] on all platforms
+  class HiddenState {
+    #value: string
+    constructor(value: string) { this.#value = value }
+  }
+
   let warnSpy: ReturnType<typeof vi.spyOn>
 
   beforeAll(() => {
@@ -2113,9 +2119,7 @@ describe('toEqual warns on non-plain objects with empty Object.keys', () => {
   })
 
   it('warns with a message mentioning toEqual and false-negative when comparing two non-plain objects with no enumerable keys', () => {
-    const r1 = new Response('a', { status: 200 })
-    const r2 = new Response('b', { status: 404 })
-    expect(r1).toEqual(r2)
+    expect(new HiddenState('a')).toEqual(new HiddenState('b'))
     expect(warnSpy).toHaveBeenCalledOnce()
     expect(warnSpy.mock.calls[0][0]).toContain('toEqual')
     expect(warnSpy.mock.calls[0][0]).toContain('false-negative')
@@ -2135,8 +2139,7 @@ describe('toEqual warns on non-plain objects with empty Object.keys', () => {
 
   it('does not warn when only one side is a non-plain empty object', () => {
     warnSpy.mockClear()
-    const r = new Response('a', { status: 200 })
-    expect(() => expect(r).toEqual({})).toThrow()
+    expect(() => expect(new HiddenState('a')).toEqual({ key: 'value' })).toThrow()
     expect(warnSpy).not.toHaveBeenCalled()
   })
 
