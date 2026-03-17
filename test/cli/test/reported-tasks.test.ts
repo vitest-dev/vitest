@@ -2,7 +2,7 @@ import type { RunnerTestFile } from 'vitest'
 import type { TestCase, TestCollection, TestModule, TestProject, Vitest } from 'vitest/node'
 import { resolve } from 'pathe'
 import { it as baseTest, expect } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '..', 'fixtures', 'reported-tasks')
 
@@ -364,3 +364,26 @@ function findTest(children: TestCollection, name: string): TestCase {
   }
   return testCase
 }
+
+it('logHeapUsage does not throw when process.memoryUsage is unavailable', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'setup.ts': `
+        // Simulate browser environment where process.memoryUsage is not available
+        process.memoryUsage = undefined as any
+      `,
+      'basic.test.ts': `
+        import { test, expect } from 'vitest'
+        test('basic', () => {
+          expect(1 + 1).toBe(2)
+        })
+      `,
+    },
+    {
+      logHeapUsage: true,
+      setupFiles: ['setup.ts'],
+    },
+  )
+
+  expect(stderr).toBe('')
+})
