@@ -53,6 +53,48 @@ test('test fixture cannot import from file fixture', async () => {
   `)
 })
 
+test('fixture returned without calling use', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        value: string | undefined
+        setup: void
+      }>({
+        value: undefined,
+        setup: [
+          async ({ value }, use) => {
+            if (!value) {
+              return
+            }
+            await use(undefined)
+          },
+          { auto: true },
+        ],
+      })
+
+      extendedTest('should fail with descriptive error', () => {})
+    },
+  }, { globals: true })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > should fail with descriptive error
+    Error: Fixture "setup" returned without calling "use". Make sure to call "use" in every code path of the fixture function.
+     ❯ basic.test.ts:2:27
+          1| await (() => {
+          2|   const extendedTest = it.extend({
+           |                           ^
+          3|     value: void 0,
+          4|     setup: [
+     ❯ basic.test.ts:16:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
 test('can import file fixture inside the local fixture', async () => {
   const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
     file: string
