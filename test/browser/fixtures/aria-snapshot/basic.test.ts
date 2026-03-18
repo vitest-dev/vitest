@@ -16,16 +16,16 @@ test('toMatchAriaSnapshot simple', () => {
 
 test('toMatchAriaInlineSnapshot simple', () => {
   document.body.innerHTML = `
-    <button aria-label="User 42">Profile</button>
-    <p>You have 7 notifications</p>
+    <p>Original</p>
+    <button aria-label="1234">Pattern</button>
   `
   expect(document.body).toMatchAriaInlineSnapshot(`
-    - button "User 42": Profile
-    - paragraph: You have 7 notifications
+    - paragraph: Original
+    - button "1234": Pattern
   `)
 })
 
-// NOTE: webkit async stack traces is poor. should be fixed on next playwright/webkit release.
+// NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
 test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
   await expect.poll(async () => {
     document.body.innerHTML = `<p>poll once</p>`
@@ -35,39 +35,27 @@ test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
 
 test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
   document.body.innerHTML = `
-    <main>
-      <h1>Dashboard</h1>
-      <nav data-testid="nav">
-        <button>Save</button>
-        <button>Cancel</button>
-      </nav>
-    </main>
+    <h1>Hello</h1>
+    <p>World</p>
   `
-  await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(`
-    - button: Save
-    - button: Cancel
+  document.body.setAttribute('data-testid', 'body')
+  await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(`
+    - heading "Hello" [level=1]
+    - paragraph: World
   `)
 })
 
 test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
   document.body.innerHTML = `
-    <main>
-      <h1>Dashboard</h1>
-    </main>
+    <h1>Hello</h1>
   `
+  document.body.setAttribute('data-testid', 'body')
   setTimeout(() => {
     document.body.innerHTML = `
-      <main>
-        <h1>Dashboard</h1>
-        <nav data-testid="nav">
-          <button>Save</button>
-          <button>Cancel</button>
-        </nav>
-      </main>
+      <h1>Hello</h1>
+      <p>World</p>
     `
   }, 100)
-  await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(`
-    - button: Save
-    - button: Cancel
-  `)
+  await expect.element(page.getByTestId('body'))
+    .toMatchAriaInlineSnapshot(`- heading "Hello" [level=1]`)
 })

@@ -54,16 +54,16 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test('toMatchAriaInlineSnapshot simple', () => {
         document.body.innerHTML = \`
-          <button aria-label="User 42">Profile</button>
-          <p>You have 7 notifications</p>
+          <p>Original</p>
+          <button aria-label="1234">Pattern</button>
         \`
         expect(document.body).toMatchAriaInlineSnapshot(\`
-          - button "User 42": Profile
-          - paragraph: You have 7 notifications
+          - paragraph: Original
+          - button "1234": Pattern
         \`)
       })
 
-      // NOTE: webkit async stack traces is poor. should be fixed on next playwright/webkit release.
+      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
       test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
         await expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
@@ -73,35 +73,26 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav data-testid="nav">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
+          <h1>Hello</h1>
+          <p>World</p>
         \`
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot()
+        document.body.setAttribute('data-testid', 'body')
+        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot()
       })
 
       test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-          </main>
+          <h1>Hello</h1>
         \`
+        document.body.setAttribute('data-testid', 'body')
         setTimeout(() => {
           document.body.innerHTML = \`
-            <main>
-              <h1>Dashboard</h1>
-              <nav data-testid="nav">
-                <button>Save</button>
-                <button>Cancel</button>
-              </nav>
-            </main>
+            <h1>Hello</h1>
+            <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot()
+        await expect.element(page.getByTestId('body'))
+          .toMatchAriaInlineSnapshot()
       })
       "
     `)
@@ -138,16 +129,16 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test('toMatchAriaInlineSnapshot simple', () => {
         document.body.innerHTML = \`
-          <button aria-label="User 42">Profile</button>
-          <p>You have 7 notifications</p>
+          <p>Original</p>
+          <button aria-label="1234">Pattern</button>
         \`
         expect(document.body).toMatchAriaInlineSnapshot(\`
-          - button "User 42": Profile
-          - paragraph: You have 7 notifications
+          - paragraph: Original
+          - button "1234": Pattern
         \`)
       })
 
-      // NOTE: webkit async stack traces is poor. should be fixed on next playwright/webkit release.
+      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
       test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
         await expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
@@ -157,41 +148,29 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav data-testid="nav">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
+          <h1>Hello</h1>
+          <p>World</p>
         \`
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(\`
-          - button: Save
-          - button: Cancel
+        document.body.setAttribute('data-testid', 'body')
+        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
         \`)
       })
 
       test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-          </main>
+          <h1>Hello</h1>
         \`
+        document.body.setAttribute('data-testid', 'body')
         setTimeout(() => {
           document.body.innerHTML = \`
-            <main>
-              <h1>Dashboard</h1>
-              <nav data-testid="nav">
-                <button>Save</button>
-                <button>Cancel</button>
-              </nav>
-            </main>
+            <h1>Hello</h1>
+            <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(\`
-          - button: Save
-          - button: Cancel
-        \`)
+        await expect.element(page.getByTestId('body'))
+          .toMatchAriaInlineSnapshot(\`- heading "Hello" [level=1]\`)
       })
       "
     `)
@@ -202,10 +181,10 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
     exports[\`toMatchAriaSnapshot simple 1\`] = \`
     - main:
-      - heading [level=1]: Dashboard
+      - heading "Dashboard" [level=1]
       - navigation "Actions":
-        - button: Save
-        - button: Cancel
+        - button "Save"
+        - button "Cancel"
     \`;
     "
   `)
@@ -220,10 +199,8 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
   expect(result2.errorTree()).toEqual(result.errorTree())
 
   // edit snapshots to add regex patterns, run with none — should still pass
-  // file snapshot: "Actions" -> /Actions/
-  editFile(snapshotFile, s => s.replace('"Actions"', '/A\\\\w+/'))
-  // inline snapshot: "User 42" -> /User \d+/
-  editFile(testFile, s => s.replace('- button "User 42"', '- button /User \\\\d+/'))
+  editFile(snapshotFile, s => s.replace(`navigation "Actions"`, 'navigation /A\\\\w+/'))
+  editFile(testFile, s => s.replace(`- button "1234"`, '- button /\\\\d+/'))
 
   const result3 = await runBrowserTests({
     root: './fixtures/aria-snapshot',
@@ -235,7 +212,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
   // edit test HTML to break a literal match, run with none — should fail
   editFile(testFile, s => s.replace(`aria-label="Actions"`, `aria-label="EDITED"`))
-  editFile(testFile, s => s.replace('<p>You have 7 notifications</p>', '<p>You have EDITED</p>'))
+  editFile(testFile, s => s.replace('<p>Original</p>', '<p>Changed</p>'))
 
   result = await runBrowserTests({
     root: './fixtures/aria-snapshot',
@@ -283,7 +260,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     }
   }
   else {
-    expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+    expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
       {
         "basic.test.ts": {
           "expect.element aria once": "passed",
@@ -291,10 +268,25 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
           "poll aria once": "passed",
           "toMatchAriaInlineSnapshot simple": [
             "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+      - Expected
+      + Received
+
+      - - paragraph: Original
+      + - paragraph: Changed
+        - button /\\d+/: Pattern
           at basic.test.ts:22:24",
           ],
           "toMatchAriaSnapshot simple": [
             "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+      - Expected
+      + Received
+
+        - main:
+          - heading "Dashboard" [level=1]
+      -   - navigation /A\\w+/:
+      +   - navigation "EDITED":
+            - button "Save"
+            - button "Cancel"
           at basic.test.ts:14:24",
           ],
         },
@@ -340,16 +332,16 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test('toMatchAriaInlineSnapshot simple', () => {
         document.body.innerHTML = \`
-          <button aria-label="User 42">Profile</button>
-          <p>You have EDITED</p>
+          <p>Changed</p>
+          <button aria-label="1234">Pattern</button>
         \`
         expect(document.body).toMatchAriaInlineSnapshot(\`
-          - button /User \\\\d+/: Profile
-          - paragraph: You have EDITED
+          - paragraph: Changed
+          - button /\\\\d+/: Pattern
         \`)
       })
 
-      // NOTE: webkit async stack traces is poor. should be fixed on next playwright/webkit release.
+      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
       test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
         await expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
@@ -359,35 +351,26 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav data-testid="nav">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
+          <h1>Hello</h1>
+          <p>World</p>
         \`
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot()
+        document.body.setAttribute('data-testid', 'body')
+        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot()
       })
 
       test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-          </main>
+          <h1>Hello</h1>
         \`
+        document.body.setAttribute('data-testid', 'body')
         setTimeout(() => {
           document.body.innerHTML = \`
-            <main>
-              <h1>Dashboard</h1>
-              <nav data-testid="nav">
-                <button>Save</button>
-                <button>Cancel</button>
-              </nav>
-            </main>
+            <h1>Hello</h1>
+            <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot()
+        await expect.element(page.getByTestId('body'))
+          .toMatchAriaInlineSnapshot()
       })
       "
     `)
@@ -424,16 +407,16 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test('toMatchAriaInlineSnapshot simple', () => {
         document.body.innerHTML = \`
-          <button aria-label="User 42">Profile</button>
-          <p>You have EDITED</p>
+          <p>Changed</p>
+          <button aria-label="1234">Pattern</button>
         \`
         expect(document.body).toMatchAriaInlineSnapshot(\`
-          - button /User \\\\d+/: Profile
-          - paragraph: You have EDITED
+          - paragraph: Changed
+          - button /\\\\d+/: Pattern
         \`)
       })
 
-      // NOTE: webkit async stack traces is poor. should be fixed on next playwright/webkit release.
+      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
       test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
         await expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
@@ -443,41 +426,29 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
       test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav data-testid="nav">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
+          <h1>Hello</h1>
+          <p>World</p>
         \`
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(\`
-          - button: Save
-          - button: Cancel
+        document.body.setAttribute('data-testid', 'body')
+        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
         \`)
       })
 
       test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
         document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-          </main>
+          <h1>Hello</h1>
         \`
+        document.body.setAttribute('data-testid', 'body')
         setTimeout(() => {
           document.body.innerHTML = \`
-            <main>
-              <h1>Dashboard</h1>
-              <nav data-testid="nav">
-                <button>Save</button>
-                <button>Cancel</button>
-              </nav>
-            </main>
+            <h1>Hello</h1>
+            <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('nav')).toMatchAriaInlineSnapshot(\`
-          - button: Save
-          - button: Cancel
-        \`)
+        await expect.element(page.getByTestId('body'))
+          .toMatchAriaInlineSnapshot(\`- heading "Hello" [level=1]\`)
       })
       "
     `)
@@ -487,10 +458,10 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
 
     exports[\`toMatchAriaSnapshot simple 1\`] = \`
     - main:
-      - heading [level=1]: Dashboard
+      - heading "Dashboard" [level=1]
       - navigation "EDITED":
-        - button: Save
-        - button: Cancel
+        - button "Save"
+        - button "Cancel"
     \`;
     "
   `)

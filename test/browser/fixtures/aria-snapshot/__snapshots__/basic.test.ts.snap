@@ -2,8 +2,8 @@
 
 exports[`toMatchAriaSnapshot simple 1`] = `
 - main:
-  - heading [level=1]: Dashboard
+  - heading "Dashboard" [level=1]
   - navigation "Actions":
-    - button: Save
-    - button: Cancel
+    - button "Save"
+    - button "Cancel"
 `;
