@@ -10,21 +10,17 @@ ARIA snapshots let you test the accessibility structure of your pages. Instead o
 Given this HTML:
 
 ```html
-<body>
-  <h1>Welcome</h1>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/about">About</a>
-  </nav>
-</body>
+<nav aria-label="Main">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+</nav>
 ```
 
 You can assert its accessibility tree:
 
 ```ts
-await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-  - heading "Welcome" [level=1]
-  - navigation:
+await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
+  - navigation "Main":
     - link "Home":
       - /url: /
     - link "About":
@@ -45,12 +41,11 @@ See the main [Snapshot guide](/guide/snapshot) for the general snapshot workflow
 Given a page with this HTML:
 
 ```html
-<body>
-  <h1>Log In</h1>
+<form aria-label="Log In">
   <input aria-label="Email" />
   <input aria-label="Password" type="password" />
   <button>Submit</button>
-</body>
+</form>
 ```
 
 ### File Snapshots
@@ -61,17 +56,17 @@ Use `toMatchAriaSnapshot()` to store the snapshot in a `.snap` file alongside yo
 import { expect, test } from 'vitest'
 
 test('login form', async () => {
-  await expect.element(page.getByRole('main')).toMatchAriaSnapshot()
+  await expect.element(page.getByRole('form')).toMatchAriaSnapshot()
 })
 ```
 
 On first run, Vitest generates a snapshot file entry:
 
 ```yaml
-- heading "Log In" [level=1]
-- textbox "Email"
-- textbox "Password"
-- button "Submit"
+- form "Log In":
+    - textbox "Email"
+    - textbox "Password"
+    - button "Submit"
 ```
 
 ### Inline Snapshots
@@ -82,11 +77,11 @@ Use `toMatchAriaInlineSnapshot()` to store the snapshot directly in the test fil
 import { expect, test } from 'vitest'
 
 test('login form', async () => {
-  await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-    - heading "Log In" [level=1]
-    - textbox "Email"
-    - textbox "Password"
-    - button "Submit"
+  await expect.element(page.getByRole('form')).toMatchAriaInlineSnapshot(`
+    - form "Log In":
+      - textbox "Email"
+      - textbox "Password"
+      - button "Submit"
   `)
 })
 ```
@@ -96,11 +91,11 @@ test('login form', async () => {
 In [Browser Mode](/guide/browser/), `expect.element()` automatically retries ARIA snapshot assertions until the accessibility tree matches or the timeout is reached:
 
 ```ts
-await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-  - heading "Log In" [level=1]
-  - textbox "Email"
-  - textbox "Password"
-  - button "Submit"
+await expect.element(page.getByRole('form')).toMatchAriaInlineSnapshot(`
+  - form "Log In":
+    - textbox "Email"
+    - textbox "Password"
+    - button "Submit"
 `)
 ```
 
@@ -195,7 +190,7 @@ For example:
 
 The role usually comes from the element's native semantics, though it can also be defined with ARIA. The accessible name is computed from text content, associated labels, `aria-label`, `aria-labelledby`, and related naming rules.
 
-For a closer look at how names are computed, see [Accessible Names](#accessible-names).
+For a closer look at how names are computed, see [Accessible Name and Description Computation](https://w3c.github.io/accname/).
 
 Some content appears in the snapshot as a text node instead of a role-based element:
 
@@ -332,17 +327,18 @@ The `/placeholder:` pseudo-attribute only appears when the placeholder text is *
 Templates match partially by default — you don't need to list every node. Only the nodes you include are checked:
 
 ```html
-<body>
+<main>
   <h1>Welcome</h1>
   <p>Some intro text</p>
   <button>Get Started</button>
-</body>
+</main>
 ```
 
 ```ts
-// This passes even if the page has other elements
+// This passes even though the main element has other children
 await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-  - heading "Welcome" [level=1]
+  - main:
+    - heading "Welcome" [level=1]
 `)
 ```
 

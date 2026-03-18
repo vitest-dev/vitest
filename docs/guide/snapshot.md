@@ -125,13 +125,10 @@ Aria snapshots capture the accessibility tree of a DOM element and compare it ag
 For example, given this HTML:
 
 ```html
-<body>
-  <h1>Welcome</h1>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/about">About</a>
-  </nav>
-</body>
+<nav aria-label="Main">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+</nav>
 ```
 
 You can assert its accessibility tree:
@@ -142,8 +139,7 @@ import { page } from 'vitest/browser'
 
 test('navigation structure', async () => {
   await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
-    - heading "Welcome" [level=1]
-    - navigation:
+    - navigation "Main":
       - link "Home":
         - /url: /
       - link "About":

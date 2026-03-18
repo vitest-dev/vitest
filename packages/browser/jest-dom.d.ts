@@ -723,8 +723,62 @@ export interface TestingLibraryMatchers<E, R> {
   ): Promise<R>
 
   /**
-   * TODO
+   * @description
+   * Captures the accessibility tree of an element and compares it against a stored
+   * snapshot file. The snapshot uses a YAML-like format describing roles, names, and
+   * states of the accessibility tree.
+   *
+   * In Browser Mode, `expect.element()` automatically retries until the tree matches
+   * or the timeout is reached. On first run or with `--update`, the snapshot is
+   * written immediately.
+   *
+   * @example
+   * <nav aria-label="Main">
+   *   <a href="/">Home</a>
+   *   <a href="/about">About</a>
+   * </nav>
+   *
+   * await expect.element(page.getByRole('navigation')).toMatchAriaSnapshot()
+   *
+   * // Generates a snapshot entry like:
+   * // - navigation "Main":
+   * //   - link "Home":
+   * //     - /url: /
+   * //   - link "About":
+   * //     - /url: /about
+   *
+   * @see https://vitest.dev/guide/browser/aria-snapshots
+   * @see https://vitest.dev/api/expect#tomatcharisnapshot
    */
   toMatchAriaSnapshot: () => void
+  /**
+   * @description
+   * Captures the accessibility tree of an element and compares it against an inline
+   * snapshot stored directly in the test file. The snapshot uses a YAML-like format
+   * describing roles, names, and states of the accessibility tree.
+   *
+   * Supports partial matching (only listed nodes are checked) and regex patterns
+   * for flexible assertions. Hand-edited regex patterns are preserved on `--update`.
+   *
+   * In Browser Mode, `expect.element()` automatically retries until the tree matches
+   * or the timeout is reached.
+   *
+   * @example
+   * <form aria-label="Log In">
+   *   <input aria-label="Email" />
+   *   <input aria-label="Password" type="password" />
+   *   <button>Submit</button>
+   * </form>
+   *
+   * await expect.element(page.getByRole('form')).toMatchAriaInlineSnapshot(`
+   *   - form "Log In":
+   *     - textbox "Email"
+   *     - textbox "Password"
+   *     - button "Submit"
+   * `)
+   *
+   * @see https://vitest.dev/guide/browser/aria-snapshots
+   * @see https://vitest.dev/api/expect#tomatchariaInlinesnapshot
+   */
   toMatchAriaInlineSnapshot: (inlineSnapshot?: string) => void
 }
