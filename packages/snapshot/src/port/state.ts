@@ -290,7 +290,6 @@ export default class SnapshotState {
     pass: boolean
     hasSnapshot: boolean
     snapshotIsPersisted: boolean
-    updateValue: string
     addValue: string
     actualDisplay: string
     expectedDisplay?: string
@@ -317,7 +316,7 @@ export default class SnapshotState {
           else {
             this.added.increment(opts.testId)
           }
-          this._addSnapshot(opts.key, opts.updateValue, {
+          this._addSnapshot(opts.key, opts.addValue, {
             stack: opts.stack,
             testId: opts.testId,
             rawSnapshot: opts.rawSnapshot,
@@ -506,7 +505,6 @@ export default class SnapshotState {
       pass,
       hasSnapshot,
       snapshotIsPersisted: !!snapshotIsPersisted,
-      updateValue: receivedSerialized,
       addValue: receivedSerialized,
       actualDisplay: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
       expectedDisplay: expectedTrimmed !== undefined
@@ -567,11 +565,13 @@ export default class SnapshotState {
       ? this._resolveInlineStack({
           testId,
           snapshot: received,
+          // TODO: can be toMatchAriaInlineSnapshot
           methodName: 'toMatchDomainInlineSnapshot',
           error: error || new Error('snapshot'),
         })
       : undefined
-
+    const actualResolved = matchResult?.resolved ?? received
+    const expectedResolved = matchResult?.expected ?? expected
     return this._reconcile({
       testId,
       key,
@@ -579,12 +579,10 @@ export default class SnapshotState {
       pass: matchResult?.pass ?? false,
       hasSnapshot,
       snapshotIsPersisted: isInline ? true : this._fileExists,
-      // adapter can customize new snapshot value instead of full update by returning mergedExpected
-      updateValue: matchResult?.resolved ?? received,
-      addValue: received, // TODO: resolved?
-      actualDisplay: removeExtraLineBreaks(matchResult?.resolved ?? received),
-      expectedDisplay: expected !== undefined
-        ? removeExtraLineBreaks(matchResult?.expected ?? expected)
+      addValue: actualResolved,
+      actualDisplay: removeExtraLineBreaks(actualResolved),
+      expectedDisplay: expectedResolved !== undefined
+        ? removeExtraLineBreaks(expectedResolved)
         : undefined,
       stack,
     })
