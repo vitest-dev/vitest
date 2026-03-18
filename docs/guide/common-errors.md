@@ -121,29 +121,27 @@ export default defineConfig({
 vitest --pool=forks
 ```
 :::
+
 ## Unhandled Promise Rejection
 
-This error happens when a Promise is rejected but no error handler
-(`.catch` or `await`) is attached before the event loop finishes.
+This error happens when a Promise is rejected but no error handler (`.catch` or `await`) is attached before the event loop finishes.
 
 This behavior comes from JavaScript itself and is not specific to Vitest.
 
 Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
+
 ### Example
 
 ```ts
 test('unhandled rejection example', async () => {
   Promise.reject(new Error('Test error'))
 })
+```
 
+This may result in an `UnhandledPromiseRejectionWarning` error. To fix this, catch the error inside the test body:
 
-This may result in an error like:
-
-UnhandledPromiseRejectionWarning: Error: Test error
-
-
-Fix
-
+```ts
 test('handled rejection example', async () => {
   await Promise.reject(new Error('Test error')).catch(() => {})
 })
+```
