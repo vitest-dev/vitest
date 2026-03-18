@@ -756,6 +756,13 @@ Path to a custom tsconfig file
 
 Minimum time in milliseconds it takes to spawn the typechecker
 
+### typecheck.ignoreExperimentalWarning
+
+- **CLI:** `--typecheck.ignoreExperimentalWarning`
+- **Config:** [typecheck.ignoreExperimentalWarning](/config/typecheck#typecheck-ignoreexperimentalwarning)
+
+Suppress the "Testing types is an experimental feature" warning
+
 ### project
 
 - **CLI:** `--project <name>`
