@@ -234,8 +234,6 @@ We are using Jest's `pretty-format` for serializing snapshots. You can read more
 
 ## Custom Snapshot Domain <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
 
-TODO: update to align with latest API and example
-
 Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further — it owns the entire comparison pipeline: how to capture a value, render it, parse a stored snapshot, and match them semantically.
 
 ### The adapter interface
@@ -257,10 +255,18 @@ const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
   // Parse a stored snapshot string into a structured expected value
   parseExpected(input: string): Expected { /* ... */ },
 
-  // Compare captured vs expected, return pass/fail and diff info
+  // Compare captured vs expected, return pass/fail and resolved output
   match(captured: Captured, expected: Expected): DomainMatchResult { /* ... */ },
 }
 ```
+
+#### `DomainMatchResult`
+
+The `match` method returns a `DomainMatchResult` with two optional string fields beyond `pass`:
+
+- **`resolved`** — the captured value viewed through the template's lens. Where the template uses patterns (e.g. regexes) or omits details, the resolved string adopts those patterns. Where the template doesn't match, it uses literal captured values. This serves as both the actual side of diffs and the value written on `--update`. When omitted, falls back to `render(capture(received))`.
+
+- **`expected`** — the stored template re-rendered as a string. Used as the expected side of diffs. When omitted, falls back to the raw snapshot string from the snap file or inline snapshot.
 
 :::details Why are `Captured` and `Expected` separate types?
 
@@ -269,16 +275,11 @@ When a snapshot is first generated, `render(captured)` produces a plain string t
 For example, in the [key-value adapter](#example-key-value-adapter) below, `Captured` values are always `string`, but `Expected` values can be `string | RegExp`:
 
 ```ts
-interface KVCaptured {
-  entries: { key: string; value: string }[]
-}
-
-interface KVExpected {
-  entries: { key: string; value: string | RegExp }[]
-}
+type KVCaptured = Record<string, string>
+type KVExpected = Record<string, string | RegExp>
 ```
 
-This asymmetry is what makes `--update` work correctly: `match` can return a `mergedExpected` string that updates changed literal parts while **preserving** the user's hand-edited patterns. If both sides were the same type, there would be no way to distinguish "what the value actually is" from "what the user chose to assert" — and every update would overwrite the user's patterns.
+This asymmetry is what makes `--update` work correctly: `match` returns a `resolved` string that updates changed literal parts while **preserving** the user's hand-edited patterns. If both sides were the same type, there would be no way to distinguish "what the value actually is" from "what the user chose to assert" — and every update would overwrite the user's patterns.
 
 :::
 
@@ -301,30 +302,32 @@ expect(value).toMatchDomainInlineSnapshot(`key=value`, 'my-domain')
 
 ### Example: key-value adapter
 
-A minimal adapter that stores objects as `key=value` lines, with regex pattern support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
+A minimal adapter that stores objects as `key=value` lines, with regex pattern and subset key match support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
 
 ```ts [kv-adapter.ts]
 import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 
-interface KVCaptured {
-  entries: { key: string; value: string }[]
-}
+type KVCaptured = Record<string, string>
+type KVExpected = Record<string, string | RegExp>
 
-interface KVExpected {
-  entries: { key: string; value: string | RegExp }[]
+function renderKV(obj: Record<string, unknown>) {
+  return `\n${Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n')}\n`
 }
 
 export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   name: 'kv',
 
   capture(received: unknown): KVCaptured {
-    const entries = Object.entries(received as Record<string, string>)
-      .map(([key, value]) => ({ key, value: String(value) }))
-    return { entries }
+    if (received && typeof received === 'object') {
+      return Object.fromEntries(
+        Object.entries(received).map(([k, v]) => [k, String(v)]),
+      )
+    }
+    throw new TypeError('kv adapter expects a plain object')
   },
 
   render(captured: KVCaptured): string {
-    return captured.entries.map(e => `${e.key}=${e.value}`).join('\n')
+    return renderKV(captured)
   },
 
   parseExpected(input: string): KVExpected {
@@ -332,36 +335,41 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
       const eq = line.indexOf('=')
       const key = line.slice(0, eq)
       const raw = line.slice(eq + 1)
-      const value = (raw.startsWith('/') && raw.endsWith('/'))
+      const value = (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1)
         ? new RegExp(raw.slice(1, -1))
         : raw
-      return { key, value }
+      return [key, value]
     })
-    return { entries }
+    return Object.fromEntries(entries)
   },
 
   match(captured: KVCaptured, expected: KVExpected): DomainMatchResult {
-    let allPass = true
-    for (let i = 0; i < captured.entries.length; i++) {
-      const cap = captured.entries[i]
-      const exp = expected.entries[i]
-      if (!exp) {
-        allPass = false
+    const resolvedLines: string[] = []
+    let pass = true
+
+    for (const [key, actualValue] of Object.entries(captured)) {
+      const expectedValue = expected[key]
+
+      // non-asserted keys are skipped (works as subset match)
+      if (typeof expectedValue === 'undefined') {
+        continue
       }
-      else if (exp.value instanceof RegExp) {
-        if (!exp.value.test(cap.value)) allPass = false
+
+      // preserve matched pattern for normalized diff and partial update
+      if (expectedValue instanceof RegExp && expectedValue.test(actualValue)) {
+        resolvedLines.push(`${key}=/${expectedValue.source}/`)
+        continue
       }
-      else if (cap.value !== exp.value) {
-        allPass = false
-      }
+
+      resolvedLines.push(`${key}=${actualValue}`)
+      pass &&= actualValue === expectedValue
     }
+
     return {
-      pass: allPass,
-      // Optionally return mergedExpected, actual, expected for diffs
-      // and pattern-preserving updates
-      // actual: "...",
-      // expected: "...",
-      // mergedExpected: "...",
+      pass,
+      message: pass ? undefined : 'KV entries do not match',
+      resolved: `\n${resolvedLines.join('\n')}\n`,
+      expected: `\n${renderKV(expected)}\n`,
     }
   },
 }
@@ -383,7 +391,7 @@ test('user data', () => {
 })
 
 test('user data inline', () => {
-  const user = { name: 'Alice', score: '42' }
+  const user = { name: 'Alice', age: 100, score: '42' }
   expect(user).toMatchDomainInlineSnapshot(`
     name=Alice
     score=/\\d+/

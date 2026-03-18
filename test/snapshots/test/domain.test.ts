@@ -43,8 +43,7 @@ test('domain snapshot', async () => {
   editFile(snapshotFile, s => s
     // match any numbers match for score
     .replace('score=999', 'score=/\\\\d+/')
-    .replace('age=24\n', '')
-  )
+    .replace('age=24\n', ''))
 
   // re-run without update
   result = await runVitest({ root, update: 'none' })
