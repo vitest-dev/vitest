@@ -25,10 +25,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./aria": {
-      "types": "./dist/aria.d.ts",
-      "default": "./dist/aria.js"
-    },
     "./environment": {
       "types": "./dist/environment.d.ts",
       "default": "./dist/environment.js"

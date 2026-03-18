@@ -23,7 +23,6 @@
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
-    "@vitest/snapshot": "workspace:*",
     "@vitest/test-dep-cjs": "file:./deps/dep-cjs",
     "@vitest/test-dep-nested-cjs": "file:./deps/dep-nested-cjs",
     "@vitest/test-dep1": "file:./deps/dep1",
