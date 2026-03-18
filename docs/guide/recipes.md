@@ -15,15 +15,19 @@ export default defineConfig({
   test: {
     projects: [
       {
-        // Non-isolated unit tests
-        name: 'Unit tests',
-        isolate: false,
-        exclude: ['**.integration.test.ts'],
+        test: {
+          // Non-isolated unit tests
+          name: 'Unit tests',
+          isolate: false,
+          exclude: ['**.integration.test.ts'],
+        },
       },
       {
-        // Isolated integration tests
-        name: 'Integration tests',
-        include: ['**.integration.test.ts'],
+        test: {
+          // Isolated integration tests
+          name: 'Integration tests',
+          include: ['**.integration.test.ts'],
+        },
       },
     ],
   },
@@ -41,13 +45,17 @@ export default defineConfig({
   test: {
     projects: [
       {
-        name: 'Parallel',
-        exclude: ['**.sequential.test.ts'],
+        test: {
+          name: 'Parallel',
+          exclude: ['**.sequential.test.ts'],
+        },
       },
       {
-        name: 'Sequential',
-        include: ['**.sequential.test.ts'],
-        fileParallelism: false,
+        test: {
+          name: 'Sequential',
+          include: ['**.sequential.test.ts'],
+          fileParallelism: false,
+        },
       },
     ],
   },
