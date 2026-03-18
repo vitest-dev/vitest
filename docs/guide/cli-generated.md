@@ -114,7 +114,7 @@ Write test results to a file when supporter reporter is also specified, use cac'
 ### junitIncludeConsoleOutput
 
 - **CLI:** `--junitIncludeConsoleOutput`
-- **Config:** [junitIncludeConsoleOutput](/config/#junitincludeconsoleoutput)
+- **Config:** [junitIncludeConsoleOutput](/config/junitincludeconsoleoutput)
 
 Include console output for each test in the JUnit reporter
 
