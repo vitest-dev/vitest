@@ -3,6 +3,7 @@ import type { Locator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
+import { ariaSnapshotAdapter } from './aria'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
 
@@ -82,5 +83,6 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   return expectElement
 }
 
+expect.addSnapshotDomain(ariaSnapshotAdapter)
 expect.extend(matchers)
 expect.element = element

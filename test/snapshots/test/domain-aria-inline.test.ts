@@ -36,10 +36,10 @@ test('aria inline snapshot', async () => {
         <h1>Hello World</h1>
         <p>Some description</p>
       \`
-      expect(document.body).toMatchDomainInlineSnapshot(\`
+      expect(document.body).toMatchAriaInlineSnapshot(\`
         - heading "Hello World" [level=1]
         - paragraph: Some description
-      \`, 'aria')
+      \`)
     })
 
     test('semantic match with regex in snapshot', () => {
@@ -47,10 +47,10 @@ test('aria inline snapshot', async () => {
         <p>Original</p>
         <button aria-label="1234">Pattern</button>
       \`
-      expect(document.body).toMatchDomainInlineSnapshot(\`
+      expect(document.body).toMatchAriaInlineSnapshot(\`
         - paragraph: Original
         - button "1234": Pattern
-      \`, 'aria')
+      \`)
     })
     "
   `)
@@ -114,13 +114,13 @@ test('aria inline snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:23:24
-         21|     <button aria-label="9999">Pattern</button>
-         22|   \`
-         23|   expect(document.body).toMatchDomainInlineSnapshot(\`
+     ❯ basic.test.ts:20:24
+         18|     <button aria-label="9999">Pattern</button>
+         19|   \`
+         20|   expect(document.body).toMatchAriaInlineSnapshot(\`
            |                        ^
-         24|     - paragraph: Original
-         25|     - button /\\\\d+/: Pattern
+         21|     - paragraph: Original
+         22|     - button /\\\\d+/: Pattern
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -157,10 +157,10 @@ test('aria inline snapshot', async () => {
         <h1>Hello World</h1>
         <p>Some description</p>
       \`
-      expect(document.body).toMatchDomainInlineSnapshot(\`
+      expect(document.body).toMatchAriaInlineSnapshot(\`
         - heading "Hello World" [level=1]
         - paragraph: Some description
-      \`, 'aria')
+      \`)
     })
 
     test('semantic match with regex in snapshot', () => {
@@ -168,10 +168,10 @@ test('aria inline snapshot', async () => {
         <p>Changed</p>
         <button aria-label="9999">Pattern</button>
       \`
-      expect(document.body).toMatchDomainInlineSnapshot(\`
+      expect(document.body).toMatchAriaInlineSnapshot(\`
         - paragraph: Changed
         - button /\\\\d+/: Pattern
-      \`, 'aria')
+      \`)
     })
     "
   `)

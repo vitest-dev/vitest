@@ -109,13 +109,13 @@ test('aria snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:19:24
-         17|     <button aria-label="9999">Pattern</button>
-         18|   \`
-         19|   expect(document.body).toMatchDomainSnapshot("aria")
+     ❯ basic.test.ts:16:24
+         14|     <button aria-label="9999">Pattern</button>
+         15|   \`
+         16|   expect(document.body).toMatchAriaSnapshot()
            |                        ^
-         20| })
-         21|
+         17| })
+         18|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

@@ -721,4 +721,10 @@ export interface TestingLibraryMatchers<E, R> {
     name?: string,
     options?: ScreenshotMatcherOptions<ComparatorName>,
   ): Promise<R>
+
+  /**
+   * TODO
+   */
+  toMatchAriaSnapshot: () => void
+  toMatchAriaInlineSnapshot: (inlineSnapshot?: string) => void
 }

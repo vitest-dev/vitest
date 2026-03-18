@@ -1,14 +1,11 @@
 import { expect, test } from 'vitest'
-import { ariaAdapter } from './basic'
-
-expect.addSnapshotDomain(ariaAdapter)
 
 test('simple heading and paragraph', () => {
   document.body.innerHTML = `
 <h1>Hello World</h1>
 <p>Some description</p>
 `
-  expect(document.body).toMatchDomainSnapshot("aria")
+  expect(document.body).toMatchAriaSnapshot()
 })
 
 test('semantic match with regex in snapshot', () => {
@@ -16,5 +13,5 @@ test('semantic match with regex in snapshot', () => {
     <p>Original</p>
     <button aria-label="1234">Pattern</button>
   `
-  expect(document.body).toMatchDomainSnapshot("aria")
+  expect(document.body).toMatchAriaSnapshot()
 })

@@ -563,6 +563,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../vitest
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
 
   packages/browser-playwright:
     dependencies:

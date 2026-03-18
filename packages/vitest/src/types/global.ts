@@ -99,9 +99,6 @@ declare module '@vitest/expect' {
     toMatchDomainSnapshot: (domain: string, hint?: string) => void
     /** @experimental */
     toMatchDomainInlineSnapshot: (snapshot: string, domain: string, hint?: string) => void
-
-    toMatchAriaSnapshot: () => void
-    toMatchAriaInlineSnapshot: (snapshot?: string) => void
   }
 }
 

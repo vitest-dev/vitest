@@ -10,7 +10,6 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { ariaDomainAdapter } from '@vitest/snapshot/aria'
 
 let _client: SnapshotClient
 
@@ -266,6 +265,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
     }),
   )
+  // aria snapshot domain is registered on browser mode
+  // packages/browser/src/client/tester/aria.ts
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchAriaSnapshot',
@@ -273,7 +274,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       return assertDomainSnapshot(
         this,
         'toMatchAriaSnapshot',
-        ariaDomainAdapter,
+        resolveDomainAdapter('aria', 'toMatchAriaSnapshot'),
         { inline: false },
       )
     }),
@@ -291,7 +292,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         return assertDomainSnapshot(
           this,
           'toMatchAriaInlineSnapshot',
-          ariaDomainAdapter,
+          resolveDomainAdapter('aria', 'toMatchAriaInlineSnapshot'),
           { inline: true, inlineSnapshot },
         )
       }
@@ -361,5 +362,4 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
   utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
-  // addDomain(ariaDomainAdapter)
 }
