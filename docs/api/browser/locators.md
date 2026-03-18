@@ -13,6 +13,29 @@ The locator API uses a fork of [Playwright's locators](https://playwright.dev/do
 This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
 :::
 
+## How locators differ from testing-library
+
+Vitest's `page.getBy*` methods return a locator object, not a DOM element. This makes locator queries composable and allows Vitest to retry interactions and assertions when needed.
+
+Compared to testing-library queries:
+
+- Use locator chaining (`.getBy*`, `.filter`, `.nth`) instead of `within(...)`.
+- Keep locators around and interact with them later (`await locator.click()`), instead of resolving elements up front.
+- Single-element escape hatches like `.element()` and `.query()` are strict and throw if multiple elements match.
+
+```ts
+import { expect } from 'vitest'
+import { page } from 'vitest/browser'
+
+const deleteButton = page
+  .getByRole('row')
+  .filter({ hasText: 'Vitest' })
+  .getByRole('button', { name: /delete/i })
+
+await deleteButton.click()
+await expect.element(deleteButton).toBeEnabled()
+```
+
 ## getByRole
 
 ```ts
