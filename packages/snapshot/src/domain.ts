@@ -2,10 +2,11 @@ export interface DomainMatchResult {
   pass: boolean
   message?: string
   expected?: string
-  actual?: string
-  // TODO: rename to `resolved`? (align with AriaMatchResult)
-  // or also drop `expected` in favor of `resolved`?
-  mergedExpected?: string
+  /**
+   * See ivya's `matchAriaTree` for what `resolved` means
+   * https://github.com/sheremet-va/ivya/pull/8
+   */
+  resolved?: string
 }
 
 export interface DomainSnapshotAdapter<Captured = unknown, Expected = unknown> {

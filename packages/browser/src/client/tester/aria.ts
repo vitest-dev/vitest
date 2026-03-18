@@ -32,13 +32,11 @@ export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNo
 
   match(captured, expected): DomainMatchResult {
     const r = matchAriaTree(captured, expected)
-    const resolved = wrapNewlines(r.resolved)
     return {
       pass: r.pass,
       message: r.pass ? undefined : 'ARIA tree does not match expected template',
-      actual: r.pass ? undefined : resolved,
+      resolved: r.pass ? undefined : wrapNewlines(r.resolved),
       expected: r.pass ? undefined : wrapNewlines(renderAriaTemplate(expected)),
-      mergedExpected: r.pass ? undefined : resolved,
     }
   },
 }

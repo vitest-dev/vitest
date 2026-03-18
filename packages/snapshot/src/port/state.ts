@@ -580,9 +580,9 @@ export default class SnapshotState {
       hasSnapshot,
       snapshotIsPersisted: isInline ? true : this._fileExists,
       // adapter can customize new snapshot value instead of full update by returning mergedExpected
-      updateValue: matchResult?.mergedExpected ?? received,
-      addValue: received,
-      actualDisplay: removeExtraLineBreaks(matchResult?.actual ?? received),
+      updateValue: matchResult?.resolved ?? received,
+      addValue: received, // TODO: resolved?
+      actualDisplay: removeExtraLineBreaks(matchResult?.resolved ?? received),
       expectedDisplay: expected !== undefined
         ? removeExtraLineBreaks(matchResult?.expected ?? expected)
         : undefined,
