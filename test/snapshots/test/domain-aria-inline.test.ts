@@ -15,6 +15,7 @@ test('aria inline snapshot', async () => {
 
   // purge inline snapshots to empty strings, restore test values
   editFile(testFile, s => s
+    .replace(/toMatchDomainInlineSnapshot\(`[^`]*`/g, 'toMatchDomainInlineSnapshot(``')
     .replace(/toMatchAriaInlineSnapshot\(`[^`]*`/g, 'toMatchAriaInlineSnapshot('))
 
   // create snapshots from scratch
@@ -31,30 +32,51 @@ test('aria inline snapshot', async () => {
   expect(readTestCases(testFile)).toMatchInlineSnapshot(`
     "
     test('simple heading', () => {
-      document.body.innerHTML = '<h1>Hello World</h1><p>Some description</p>'
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-        - heading [level=1]: Hello World
+      document.body.innerHTML = \`
+        <h1>Hello World</h1>
+        <p>Some description</p>
+      \`
+      expect(document.body).toMatchDomainInlineSnapshot(\`
+        - heading "Hello World" [level=1]
         - paragraph: Some description
-      \`)
+      \`, 'aria')
     })
 
     test('semantic match with regex in snapshot', () => {
       document.body.innerHTML = \`
-        <button aria-label="User 42">Profile</button>
-        <p>You have 7 notifications</p>
+        <p>Original</p>
+        <button aria-label="1234">Pattern</button>
       \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-        - button "User 42": Profile
-        - paragraph: You have 7 notifications
-      \`)
+      expect(document.body).toMatchDomainInlineSnapshot(\`
+        - paragraph: Original
+        - button "1234": Pattern
+      \`, 'aria')
     })
     "
   `)
+  expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+    Object {
+      "added": 2,
+      "didUpdate": false,
+      "failure": false,
+      "filesAdded": 1,
+      "filesRemoved": 0,
+      "filesRemovedList": Array [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 2,
+      "unchecked": 0,
+      "uncheckedKeysByFile": Array [],
+      "unmatched": 0,
+      "updated": 0,
+    }
+  `)
 
   // hand-edit inline snapshot to introduce regex pattern
-  //    "User 42" -> /User \\d+/
+  //    "1234" -> /\\d+/
   editFile(testFile, s => s
-    .replace(`- button "User 42"`, '- button /User \\\\d+/'))
+    .replace(`- button "1234"`, '- button /\\\\d+/'))
 
   // run without update — regex matches, all pass
   result = await runVitest({ root, update: 'none' })
@@ -68,11 +90,10 @@ test('aria inline snapshot', async () => {
     }
   `)
 
-  // edit test values: User 42 -> User 99 (regex still matches),
-  //    7 notifications -> 3 messages (literal mismatch)
+  // edit test
   editFile(testFile, s => s
-    .replace(`aria-label="User 42"`, `aria-label="User 99"`)
-    .replace(`<p>You have 7 notifications</p>`, `<p>You have 3 messages</p>`))
+    .replace('<p>Original</p>', '<p>Changed</p>')
+    .replace(`aria-label="1234"`, `aria-label="9999"`))
 
   // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
@@ -80,23 +101,26 @@ test('aria inline snapshot', async () => {
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts > semantic match with regex in snapshot
+     FAIL  |chromium| basic.test.ts > semantic match with regex in snapshot
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
+
+    Failure screenshot:
+      - test/fixtures/domain-aria-inline/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
 
     - Expected
     + Received
 
-      - button /User \\d+/: Profile
-    - - paragraph: You have 7 notifications
-    + - paragraph: You have 3 messages
+    - - paragraph: Original
+    + - paragraph: Changed
+      - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:19:25
-         17|     <p>You have 3 messages</p>
-         18|   \`
-         19|   expect(document.body).toMatchAriaInlineSnapshot(\`
-           |                         ^
-         20|     - button /User \\\\d+/: Profile
-         21|     - paragraph: You have 7 notifications
+     ❯ basic.test.ts:23:24
+         21|     <button aria-label="9999">Pattern</button>
+         22|   \`
+         23|   expect(document.body).toMatchDomainInlineSnapshot(\`
+           |                        ^
+         24|     - paragraph: Original
+         25|     - button /\\\\d+/: Pattern
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -129,22 +153,25 @@ test('aria inline snapshot', async () => {
   expect(readTestCases(testFile)).toMatchInlineSnapshot(`
     "
     test('simple heading', () => {
-      document.body.innerHTML = '<h1>Hello World</h1><p>Some description</p>'
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-        - heading [level=1]: Hello World
+      document.body.innerHTML = \`
+        <h1>Hello World</h1>
+        <p>Some description</p>
+      \`
+      expect(document.body).toMatchDomainInlineSnapshot(\`
+        - heading "Hello World" [level=1]
         - paragraph: Some description
-      \`)
+      \`, 'aria')
     })
 
     test('semantic match with regex in snapshot', () => {
       document.body.innerHTML = \`
-        <button aria-label="User 99">Profile</button>
-        <p>You have 3 messages</p>
+        <p>Changed</p>
+        <button aria-label="9999">Pattern</button>
       \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-        - button /User \\\\d+/: Profile
-        - paragraph: You have 3 messages
-      \`)
+      expect(document.body).toMatchDomainInlineSnapshot(\`
+        - paragraph: Changed
+        - button /\\\\d+/: Pattern
+      \`, 'aria')
     })
     "
   `)

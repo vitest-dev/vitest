@@ -9,10 +9,10 @@
     "vitest": "workspace:*"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "workspace:*",
     "happy-dom": "latest",
     "ivya": "file:../../ivya-1.7.1.tgz",
     "jest-image-snapshot": "^6.5.1",
-    "@vitest/browser-playwright": "workspace:*",
     "yaml": "catalog:"
   }
 }

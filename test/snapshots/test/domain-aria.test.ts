@@ -17,7 +17,6 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -25,14 +24,6 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-    exports[\`nested structure 1\`] = \`
-    - main:
-      - heading "Dashboard" [level=1]
-      - navigation "Actions":
-        - button "Save"
-        - button "Cancel"
-    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Original
@@ -45,6 +36,24 @@ test('aria snapshot', async () => {
     \`;
     "
   `)
+  expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
+    Object {
+      "added": 2,
+      "didUpdate": false,
+      "failure": false,
+      "filesAdded": 1,
+      "filesRemoved": 0,
+      "filesRemovedList": Array [],
+      "filesUnmatched": 0,
+      "filesUpdated": 0,
+      "matched": 0,
+      "total": 2,
+      "unchecked": 0,
+      "uncheckedKeysByFile": Array [],
+      "unmatched": 0,
+      "updated": 0,
+    }
+  `)
 
   // hand-edit snapshot to introduce regex patterns for "semantic match" test
   editFile(snapshotFile, s => s
@@ -56,7 +65,6 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -64,14 +72,6 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-    exports[\`nested structure 1\`] = \`
-    - main:
-      - heading "Dashboard" [level=1]
-      - navigation "Actions":
-        - button "Save"
-        - button "Cancel"
-    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Original
@@ -88,8 +88,7 @@ test('aria snapshot', async () => {
   // edit test
   editFile(testFile, s => s
     .replace('<p>Original</p>', '<p>Changed</p>')
-    .replace(`aria-label="1234"`, `aria-label="9999"`)
-  )
+    .replace(`aria-label="1234"`, `aria-label="9999"`))
 
   // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
@@ -110,13 +109,13 @@ test('aria snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:35:24
-         33|   \`
-         34|   // expect(document.body).toMatchAriaSnapshot()
-         35|   expect(document.body).toMatchDomainSnapshot("aria")
+     ❯ basic.test.ts:19:24
+         17|     <button aria-label="9999">Pattern</button>
+         18|   \`
+         19|   expect(document.body).toMatchDomainSnapshot("aria")
            |                        ^
-         36| })
-         37|
+         20| })
+         21|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -125,7 +124,6 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "nested structure": "passed",
         "semantic match with regex in snapshot": Array [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
         ],
@@ -140,7 +138,6 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "nested structure": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -148,14 +145,6 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-    exports[\`nested structure 1\`] = \`
-    - main:
-      - heading "Dashboard" [level=1]
-      - navigation "Actions":
-        - button "Save"
-        - button "Cancel"
-    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Changed
