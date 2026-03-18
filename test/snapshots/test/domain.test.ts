@@ -11,7 +11,7 @@ test('domain snapshot', async () => {
   // clean slate
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
 
-  // 1. create snapshots from scratch — literal rendered values
+  // create snapshots from scratch — literal rendered values
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -38,13 +38,13 @@ test('domain snapshot', async () => {
     "
   `)
 
-  // 2. hand-edit snapshot to introduce regex patterns for "with regex" test
+  // hand-edit snapshot to introduce regex patterns for "with regex" test
   //    score=999 -> score=/\\d+/   (regex, should match any number)
   //    status stays literal
   editFile(snapshotFile, s => s
     .replace('score=999', 'score=/\\\\d+/'))
 
-  // 3. re-run without update — regex pattern matches, all pass, snapshot unchanged
+  // re-run without update — regex pattern matches, all pass, snapshot unchanged
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -71,14 +71,14 @@ test('domain snapshot', async () => {
     "
   `)
 
-  // 4. edit test: change values within "with regex"
+  // edit test: change values within "with regex"
   //    - score: '999' -> '42'  (regex /\d+/ still matches)
   //    - status: 'active' -> 'inactive'  (literal does NOT match)
   editFile(testFile, s => s
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
-  // 5. run without update — status mismatch causes failure
+  // run without update — status mismatch causes failure
   // NOTE: score=/\\d+/ vs score='42' doesn't show up as diff.
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
@@ -119,7 +119,7 @@ test('domain snapshot', async () => {
     }
   `)
 
-  // 6. run with update — should preserve score regex (matched),
+  // run with update — should preserve score regex (matched),
   //    overwrite status with literal (didn't match)
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)

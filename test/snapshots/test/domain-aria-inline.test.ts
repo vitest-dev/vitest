@@ -13,11 +13,11 @@ test('aria inline snapshot', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria-inline')
   const testFile = join(root, 'basic.test.ts')
 
-  // 1. purge inline snapshots to empty strings, restore test values
+  // purge inline snapshots to empty strings, restore test values
   editFile(testFile, s => s
     .replace(/toMatchAriaInlineSnapshot\(`[^`]*`/g, 'toMatchAriaInlineSnapshot('))
 
-  // 2. create snapshots from scratch
+  // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -51,12 +51,12 @@ test('aria inline snapshot', async () => {
     "
   `)
 
-  // 3. hand-edit inline snapshot to introduce regex pattern
+  // hand-edit inline snapshot to introduce regex pattern
   //    "User 42" -> /User \\d+/
   editFile(testFile, s => s
     .replace(`- button "User 42"`, '- button /User \\\\d+/'))
 
-  // 4. run without update — regex matches, all pass
+  // run without update — regex matches, all pass
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -68,13 +68,13 @@ test('aria inline snapshot', async () => {
     }
   `)
 
-  // 5. edit test values: User 42 -> User 99 (regex still matches),
+  // edit test values: User 42 -> User 99 (regex still matches),
   //    7 notifications -> 3 messages (literal mismatch)
   editFile(testFile, s => s
     .replace(`aria-label="User 42"`, `aria-label="User 99"`)
     .replace(`<p>You have 7 notifications</p>`, `<p>You have 3 messages</p>`))
 
-  // 6. run without update — literal mismatch causes failure
+  // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
@@ -113,7 +113,7 @@ test('aria inline snapshot', async () => {
     }
   `)
 
-  // 7. run with update — should overwrite inline snapshot
+  // run with update — should overwrite inline snapshot
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -125,7 +125,7 @@ test('aria inline snapshot', async () => {
     }
   `)
 
-  // 8. verify inline snapshot in source was rewritten correctly
+  // verify inline snapshot in source was rewritten correctly
   expect(readTestCases(testFile)).toMatchInlineSnapshot(`
     "
     test('simple heading', () => {

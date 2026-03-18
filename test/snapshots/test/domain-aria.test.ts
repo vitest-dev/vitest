@@ -11,7 +11,7 @@ test('aria snapshot', async () => {
   // clean slate
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
 
-  // 1. create snapshots from scratch — literal rendered values
+  // create snapshots from scratch — literal rendered values
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -46,11 +46,11 @@ test('aria snapshot', async () => {
     "
   `)
 
-  // 2. hand-edit snapshot to introduce regex patterns for "semantic match" test
+  // hand-edit snapshot to introduce regex patterns for "semantic match" test
   editFile(snapshotFile, s => s
     .replace(`- button "1234"`, `- button /\\\\d+/`))
 
-  // 3. re-run without update — regex pattern matches, all pass, snapshot unchanged
+  // re-run without update — regex pattern matches, all pass, snapshot unchanged
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -85,13 +85,13 @@ test('aria snapshot', async () => {
     "
   `)
 
-  // 4. edit test
+  // edit test
   editFile(testFile, s => s
     .replace('<p>Original</p>', '<p>Changed</p>')
     .replace(`aria-label="1234"`, `aria-label="9999"`)
   )
 
-  // 5. run without update — literal mismatch causes failure
+  // run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
@@ -134,7 +134,7 @@ test('aria snapshot', async () => {
     }
   `)
 
-  // 6. run with update
+  // run with update
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
