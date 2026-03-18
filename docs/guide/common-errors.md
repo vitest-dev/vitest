@@ -124,24 +124,44 @@ vitest --pool=forks
 
 ## Unhandled Promise Rejection
 
-This error happens when a Promise is rejected but no error handler (`.catch` or `await`) is attached before the event loop finishes.
+This error happens when a Promise rejects but no `.catch()` handler or `await` is attached to it before the microtask queue flushes. This behavior comes from JavaScript itself and is not specific to Vitest. Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
 
-This behavior comes from JavaScript itself and is not specific to Vitest.
-
-Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
-
-### Example
+A common cause is calling an async function without `await`ing it:
 
 ```ts
-test('unhandled rejection example', async () => {
-  Promise.reject(new Error('Test error'))
+async function fetchUser(id) {
+  const res = await fetch(`/api/users/${id}`)
+  if (!res.ok) {
+    throw new Error(`User ${id} not found`) // [!code highlight]
+  }
+  return res.json()
+}
+
+test('fetches user', async () => {
+  fetchUser(123) // [!code error]
 })
 ```
 
-This may result in an `UnhandledPromiseRejectionWarning` error. To fix this, catch the error inside the test body:
+Because `fetchUser()` is not `await`ed, its rejection has no handler and Vitest reports:
+
+```
+Unhandled Rejection: Error: User 123 not found
+```
+
+### Fix
+
+`await` the promise so Vitest can catch the error:
 
 ```ts
-test('handled rejection example', async () => {
-  await Promise.reject(new Error('Test error')).catch(() => {})
+test('fetches user', async () => {
+  await fetchUser(123) // [!code ++]
+})
+```
+
+If you expect the call to throw, use [`expect().rejects`](/api/expect#rejects):
+
+```ts
+test('rejects for missing user', async () => {
+  await expect(fetchUser(123)).rejects.toThrow('User 123 not found')
 })
 ```
