@@ -32,19 +32,21 @@ test('domain snapshot', async () => {
 
     exports[\`with regex 1\`] = \`
     name=bob
+    age=24
     score=999
     status=active
     \`;
     "
   `)
 
-  // hand-edit snapshot to introduce regex patterns for "with regex" test
-  //    score=999 -> score=/\\d+/   (regex, should match any number)
-  //    status stays literal
+  // hand-edit snapshot
   editFile(snapshotFile, s => s
-    .replace('score=999', 'score=/\\\\d+/'))
+    // match any numbers match for score
+    .replace('score=999', 'score=/\\\\d+/')
+    .replace('age=24\n', '')
+  )
 
-  // re-run without update — regex pattern matches, all pass, snapshot unchanged
+  // re-run without update
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -71,15 +73,13 @@ test('domain snapshot', async () => {
     "
   `)
 
-  // edit test: change values within "with regex"
-  //    - score: '999' -> '42'  (regex /\d+/ still matches)
-  //    - status: 'active' -> 'inactive'  (literal does NOT match)
+  // edit test
   editFile(testFile, s => s
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
-  // run without update — status mismatch causes failure
-  // NOTE: score=/\\d+/ vs score='42' doesn't show up as diff.
+  // run without update
+  // (note that `age` and `score` is not in diff)
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
@@ -96,11 +96,11 @@ test('domain snapshot', async () => {
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:11:60
+     ❯ basic.test.ts:11:71
           9|
          10| test('with regex', () => {
-         11|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
-           |                                                            ^
+         11|   expect({ name: 'bob', age: '24', score: '42', status: 'inactive' }).…
+           |                                                                       ^
          12| })
          13|
 
