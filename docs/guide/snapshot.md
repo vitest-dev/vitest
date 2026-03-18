@@ -234,6 +234,8 @@ We are using Jest's `pretty-format` for serializing snapshots. You can read more
 
 ## Custom Snapshot Domain <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
 
+TODO: update to align with latest API and example
+
 Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further — it owns the entire comparison pipeline: how to capture a value, render it, parse a stored snapshot, and match them semantically.
 
 ### The adapter interface

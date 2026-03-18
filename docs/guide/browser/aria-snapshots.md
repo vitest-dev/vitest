@@ -148,10 +148,6 @@ You run your test for the first time with `--update`. Vitest generates the snaps
 
 The regex patterns you wrote in step 2 are preserved because they still match the actual content. Only the mismatched literal "Checkout" was updated to "Place Order".
 
-::: warning Merge limitations
-The merge works by matching nodes in order. If a literal mismatch appears _before_ a regex node, the merge may fall back to a full update and lose subsequent regex patterns. To avoid this, place regex patterns on nodes that are likely to change, and keep stable literal nodes before them.
-:::
-
 ## Snapshot Format
 
 ARIA snapshots use a YAML-like syntax. Each line represents a node in the accessibility tree.
