@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
@@ -158,7 +159,16 @@ test('basic', () => {
 });
 `,
   }, {
-    environment: 'happy-dom',
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+    },
     update: 'new',
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
@@ -196,14 +206,24 @@ test('basic', () => {
 });
 `,
   }, {
-    environment: 'happy-dom',
+    browser: {
+      enabled: true,
+      headless: true,
+      screenshotFailures: false,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+    },
     update: 'new',
   })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts > basic
+     FAIL  |chromium| basic.test.ts > basic
     Error: toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location
 
     - Expected
@@ -214,11 +234,11 @@ test('basic', () => {
     + - paragraph: count - 1
 
 
-     ❯ basic.test.ts:7:27
+     ❯ basic.test.ts:7:26
           5|   for (let i = 0; i < 3; i++) {
           6|     document.body.innerHTML = "<p>count - " + i + "</p>";
           7|     expect(document.body).toMatchAriaInlineSnapshot();
-           |                           ^
+           |                          ^
           8|   }
           9| });
 
