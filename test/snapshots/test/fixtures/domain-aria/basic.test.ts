@@ -1,10 +1,15 @@
-// @vitest-environment happy-dom
-
 import { expect, test } from 'vitest'
+import { ariaAdapter } from './basic'
+
+expect.addSnapshotDomain(ariaAdapter)
 
 test('simple heading and paragraph', () => {
-  document.body.innerHTML = '<h1>Hello World</h1><p>Some description</p>'
-  expect(document.body).toMatchAriaSnapshot()
+  document.body.innerHTML = `
+<h1>Hello World</h1>
+<p>Some description</p>
+`
+  // expect(document.body).toMatchAriaSnapshot()
+  expect(document.body).toMatchDomainSnapshot("aria")
 })
 
 test('nested structure', () => {
@@ -17,13 +22,15 @@ test('nested structure', () => {
       </nav>
     </main>
   `
-  expect(document.body).toMatchAriaSnapshot()
+  // expect(document.body).toMatchAriaSnapshot()
+  expect(document.body).toMatchDomainSnapshot("aria")
 })
 
 test('semantic match with regex in snapshot', () => {
   document.body.innerHTML = `
-    <button aria-label="User 42">Profile</button>
-    <p>You have 7 notifications</p>
+    <p>Original</p>
+    <button aria-label="1234">Pattern</button>
   `
-  expect(document.body).toMatchAriaSnapshot()
+  // expect(document.body).toMatchAriaSnapshot()
+  expect(document.body).toMatchDomainSnapshot("aria")
 })

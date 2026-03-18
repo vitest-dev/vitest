@@ -361,5 +361,5 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
   utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
-  addDomain(ariaDomainAdapter)
+  // addDomain(ariaDomainAdapter)
 }

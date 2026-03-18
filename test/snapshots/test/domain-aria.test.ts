@@ -28,29 +28,27 @@ test('aria snapshot', async () => {
 
     exports[\`nested structure 1\`] = \`
     - main:
-      - heading [level=1]: Dashboard
+      - heading "Dashboard" [level=1]
       - navigation "Actions":
-        - button: Save
-        - button: Cancel
+        - button "Save"
+        - button "Cancel"
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button "User 42": Profile
-    - paragraph: You have 7 notifications
+    - paragraph: Original
+    - button "1234": Pattern
     \`;
 
     exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
+    - heading "Hello World" [level=1]
     - paragraph: Some description
     \`;
     "
   `)
 
   // 2. hand-edit snapshot to introduce regex patterns for "semantic match" test
-  //    "User 42" -> /User \\d+/  (regex, should match any user number)
-  //    "7 notifications" stays literal
   editFile(snapshotFile, s => s
-    .replace('"User 42"', '/User \\\\d+/'))
+    .replace(`- button "1234"`, `- button /\\\\d+/`))
 
   // 3. re-run without update — regex pattern matches, all pass, snapshot unchanged
   result = await runVitest({ root, update: 'none' })
@@ -69,30 +67,29 @@ test('aria snapshot', async () => {
 
     exports[\`nested structure 1\`] = \`
     - main:
-      - heading [level=1]: Dashboard
+      - heading "Dashboard" [level=1]
       - navigation "Actions":
-        - button: Save
-        - button: Cancel
+        - button "Save"
+        - button "Cancel"
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button /User \\\\d+/: Profile
-    - paragraph: You have 7 notifications
+    - paragraph: Original
+    - button /\\\\d+/: Pattern
     \`;
 
     exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
+    - heading "Hello World" [level=1]
     - paragraph: Some description
     \`;
     "
   `)
 
-  // 4. edit test: change values within "semantic match"
-  //    - User 42 -> User 99  (regex /User \d+/ still matches)
-  //    - 7 notifications -> 3 messages  (literal does NOT match)
+  // 4. edit test
   editFile(testFile, s => s
-    .replace('User 42', 'User 99')
-    .replace('You have 7 notifications', 'You have 3 messages'))
+    .replace('<p>Original</p>', '<p>Changed</p>')
+    .replace(`aria-label="1234"`, `aria-label="9999"`)
+  )
 
   // 5. run without update — literal mismatch causes failure
   result = await runVitest({ root, update: 'none' })
@@ -100,23 +97,26 @@ test('aria snapshot', async () => {
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts > semantic match with regex in snapshot
+     FAIL  |chromium| basic.test.ts > semantic match with regex in snapshot
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
+
+    Failure screenshot:
+      - test/fixtures/domain-aria/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
 
     - Expected
     + Received
 
-      - button /User \\d+/: Profile
-    - - paragraph: You have 7 notifications
-    + - paragraph: You have 3 messages
+    - - paragraph: Original
+    + - paragraph: Changed
+      - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:28:25
-         26|     <p>You have 3 messages</p>
-         27|   \`
-         28|   expect(document.body).toMatchAriaSnapshot()
-           |                         ^
-         29| })
-         30|
+     ❯ basic.test.ts:35:24
+         33|   \`
+         34|   // expect(document.body).toMatchAriaSnapshot()
+         35|   expect(document.body).toMatchDomainSnapshot("aria")
+           |                        ^
+         36| })
+         37|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -134,8 +134,7 @@ test('aria snapshot', async () => {
     }
   `)
 
-  // 6. run with update — should preserve button name regex (matched),
-  //    overwrite paragraph text with literal (didn't match)
+  // 6. run with update
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -147,27 +146,24 @@ test('aria snapshot', async () => {
       },
     }
   `)
-  // NOTE
-  // button name regex matched 'User 99' -> preserved as /User \d+/
-  // paragraph literal 'You have 7 notifications' != 'You have 3 messages' -> overwritten
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`nested structure 1\`] = \`
     - main:
-      - heading [level=1]: Dashboard
+      - heading "Dashboard" [level=1]
       - navigation "Actions":
-        - button: Save
-        - button: Cancel
+        - button "Save"
+        - button "Cancel"
     \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
-    - button /User \\\\d+/: Profile
-    - paragraph: You have 3 messages
+    - paragraph: Changed
+    - button /\\\\d+/: Pattern
     \`;
 
     exports[\`simple heading and paragraph 1\`] = \`
-    - heading [level=1]: Hello World
+    - heading "Hello World" [level=1]
     - paragraph: Some description
     \`;
     "

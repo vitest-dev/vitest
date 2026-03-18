@@ -1,5 +1,7 @@
 import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 
+// TODO: refactor slop
+
 // Key-value domain adapter: each snapshot is multiple lines of `key=value`.
 // Values can be literal strings or `/regex/` patterns in the stored snapshot.
 // On match, each line is checked independently — regex lines use RegExp.test().

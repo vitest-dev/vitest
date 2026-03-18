@@ -10,6 +10,9 @@
   },
   "devDependencies": {
     "happy-dom": "latest",
-    "jest-image-snapshot": "^6.5.1"
+    "ivya": "file:../../ivya-1.7.1.tgz",
+    "jest-image-snapshot": "^6.5.1",
+    "@vitest/browser-playwright": "workspace:*",
+    "yaml": "catalog:"
   }
 }

@@ -138,6 +138,9 @@ catalogs:
     ws:
       specifier: ^8.19.0
       version: 8.19.0
+    yaml:
+      specifier: ^2.8.2
+      version: 2.8.2
     yauzl:
       specifier: ^3.2.0
       version: 3.2.0
@@ -1572,12 +1575,21 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
     devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       happy-dom:
         specifier: latest
         version: 20.8.3
+      ivya:
+        specifier: file:../../ivya-1.7.1.tgz
+        version: file:ivya-1.7.1.tgz
       jest-image-snapshot:
         specifier: ^6.5.1
         version: 6.5.1
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
 
   test/test-utils:
     devDependencies:

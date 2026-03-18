@@ -3,6 +3,8 @@ export interface DomainMatchResult {
   message?: string
   expected?: string
   actual?: string
+  // TODO: rename to `resolved`? (align with AriaMatchResult)
+  // or also drop `expected` in favor of `resolved`?
   mergedExpected?: string
 }
 
