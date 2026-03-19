@@ -33,6 +33,7 @@ export default antfu(
       // uses invalid js example
       'docs/api/advanced/import-example.md',
       'docs/guide/examples/*.md',
+      '.sisyphus/**',
     ],
   },
   {
