@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 const SPLITTER = '// --- TEST CASES ---'
 
@@ -173,6 +174,129 @@ test('aria inline snapshot', async () => {
         - button /\\\\d+/: Pattern
       \`)
     })
+    "
+  `)
+})
+
+test('domain multiple inline at same location - success', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest';
+
+test('basic', () => {
+  for (let i = 0; i < 3; i++) {
+    document.body.innerHTML = "<p>OK</p>";
+    expect(document.body).toMatchAriaInlineSnapshot();
+  }
+});
+`,
+  }, {
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+    },
+    update: 'new',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "basic": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
+    "
+    import { expect, test } from 'vitest';
+
+    test('basic', () => {
+      for (let i = 0; i < 3; i++) {
+        document.body.innerHTML = "<p>OK</p>";
+        expect(document.body).toMatchAriaInlineSnapshot(\`- paragraph: OK\`);
+      }
+    });
+    "
+  `)
+})
+
+test('domain multiple inline at same location - fail', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest';
+
+test('basic', () => {
+  for (let i = 0; i < 3; i++) {
+    document.body.innerHTML = "<p>count - " + i + "</p>";
+    expect(document.body).toMatchAriaInlineSnapshot();
+  }
+});
+`,
+  }, {
+    browser: {
+      enabled: true,
+      headless: true,
+      screenshotFailures: false,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+    },
+    update: 'new',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  |chromium| basic.test.ts > basic
+    Error: toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location
+
+    - Expected
+    + Received
+
+
+    - - paragraph: count - 0
+    + - paragraph: count - 1
+
+
+     ❯ basic.test.ts:7:26
+          5|   for (let i = 0; i < 3; i++) {
+          6|     document.body.innerHTML = "<p>count - " + i + "</p>";
+          7|     expect(document.body).toMatchAriaInlineSnapshot();
+           |                          ^
+          8|   }
+          9| });
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "basic": Array [
+          "toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location",
+        ],
+      },
+    }
+  `)
+  expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
+    "
+    import { expect, test } from 'vitest';
+
+    test('basic', () => {
+      for (let i = 0; i < 3; i++) {
+        document.body.innerHTML = "<p>count - " + i + "</p>";
+        expect(document.body).toMatchAriaInlineSnapshot();
+      }
+    });
     "
   `)
 })
