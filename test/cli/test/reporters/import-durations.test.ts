@@ -34,7 +34,7 @@ describe('import durations', () => {
       root,
       include: ['**/import-durations.test.ts'],
       experimental: { importDurations: { limit: 10 } },
-    })
+    }, [], { printExitCode: true })
 
     expect(exitCode, `Expected exit code 0 but got ${exitCode}. stderr: ${stderr}`).toBe(0)
 
