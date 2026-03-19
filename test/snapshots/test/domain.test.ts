@@ -149,3 +149,52 @@ test('domain snapshot', async () => {
     "
   `)
 })
+
+test('domain parseExpected error', async () => {
+  const root = join(import.meta.dirname, 'fixtures/domain-error')
+  const result = await runVitest({ root, update: 'none' })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > file
+    Error: Invalid KV Format: 'file-broken'
+     ❯ ../domain/basic.ts:34:15
+         32|       const eq = line.indexOf('=')
+         33|       if (eq === -1) {
+         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+           |               ^
+         35|       }
+         36|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:31:46
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  basic.test.ts > inline
+    Error: Invalid KV Format: 'inine-broken'
+     ❯ ../domain/basic.ts:34:15
+         32|       const eq = line.indexOf('=')
+         33|       if (eq === -1) {
+         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+           |               ^
+         35|       }
+         36|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:31:46
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "file": Array [
+          "Invalid KV Format: 'file-broken'",
+        ],
+        "inline": Array [
+          "Invalid KV Format: 'inine-broken'",
+        ],
+      },
+    }
+  `)
+})

@@ -30,6 +30,9 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   parseExpected(input: string): KVExpected {
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
+      if (eq === -1) {
+        throw new Error(`Invalid KV Format: '${line}'`)
+      }
       const key = line.slice(0, eq)
       const raw = line.slice(eq + 1)
       const value = (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1)
