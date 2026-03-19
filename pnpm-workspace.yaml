@@ -88,7 +88,6 @@ catalog:
   vitest-sonar-reporter: 3.0.0
   vue: ^3.5.29
   ws: ^8.19.0
-  yaml: ^2.8.2
   yauzl: ^3.2.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'

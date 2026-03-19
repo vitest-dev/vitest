@@ -10,8 +10,6 @@
   },
   "devDependencies": {
     "@vitest/browser-playwright": "workspace:*",
-    "happy-dom": "latest",
-    "jest-image-snapshot": "^6.5.1",
-    "yaml": "catalog:"
+    "jest-image-snapshot": "^6.5.1"
   }
 }

@@ -147,9 +147,6 @@ catalogs:
     ws:
       specifier: ^8.19.0
       version: 8.19.0
-    yaml:
-      specifier: ^2.8.2
-      version: 2.8.2
     yauzl:
       specifier: ^3.2.0
       version: 3.2.0
@@ -1596,15 +1593,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
-      happy-dom:
-        specifier: latest
-        version: 20.8.3
       jest-image-snapshot:
         specifier: ^6.5.1
         version: 6.5.1
-      yaml:
-        specifier: 'catalog:'
-        version: 2.8.2
 
   test/test-utils:
     devDependencies:
@@ -7785,7 +7776,7 @@ packages:
     engines: {node: '>=8'}
 
   ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735:
-    resolution: {integrity: sha512-qsQhvvNzkxQcT/zPhhqSiMOM7uP+mACSI8aFC40UP3+19AfUgCo6vJEaCrQnyAqFL4jKHe2xkUMxVl+gYEaXbQ==}
+    resolution: {tarball: https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735}
     version: 1.7.1
 
   jackspeak@3.4.0:
