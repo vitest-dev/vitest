@@ -172,6 +172,7 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,
       },
@@ -240,16 +241,16 @@ export async function runVitest(
     get results() {
       return ctx?.state.getTestModules() || []
     },
-    errorTree() {
-      const tree = buildErrorTree(ctx?.state.getTestModules() || [])
+    errorTree(options?: { project?: boolean; stackTrace?: boolean }) {
+      const modules = ctx?.state.getTestModules() || []
+      const tree = options?.project
+        ? buildErrorProjectTree(modules, options)
+        : buildErrorTree(modules, options)
       const errors = ctx?.state.getUnhandledErrors()
       if (errors && errors.length > 0) {
         tree.__unhandled_errors__ = errors.map((e: any) => e.message)
       }
       return tree
-    },
-    errorProjectTree() {
-      return buildErrorProjectTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
@@ -281,7 +282,13 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     args.push('--maxWorkers=1')
   }
 
-  const subprocess = x(command, args, options as Options).process!
+  const subprocess = x(command, args, {
+    ...options as Options,
+    nodeOptions: {
+      ...(options as Options)?.nodeOptions,
+      env: { ...process.env, AI_AGENT: '', ...(options as Options)?.nodeOptions?.env },
+    },
+  }).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -563,32 +570,45 @@ export class StableTestFileOrderSorter {
   }
 }
 
-export function buildErrorTree(testModules: TestModule[]) {
+export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
+  const root = testModules[0]?.project.config.root
+
+  function mapError(e: { message: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+    if (options?.stackTrace) {
+      const stacks = (e.stacks || []).map((s) => {
+        const loc = `${relative(root, s.file)}:${s.line}:${s.column}`
+        return s.method ? `    at ${s.method} (${loc})` : `    at ${loc}`
+      })
+      return [e.message, ...stacks].join('\n')
+    }
+    return e.message
+  }
+
   return buildTestTree(
     testModules,
     (testCase) => {
       const result = testCase.result()
       if (result.state === 'failed') {
-        return result.errors.map(e => e.message)
+        return result.errors.map(e => mapError(e))
       }
       return result.state
     },
     (testSuite, suiteChildren) => {
-      const errors = testSuite.errors().map(error => error.message)
+      const errors = testSuite.errors()
       if (errors.length > 0) {
         return {
           ...suiteChildren,
-          __suite_errors__: errors,
+          __suite_errors__: errors.map(e => mapError(e)),
         }
       }
       return suiteChildren
     },
     (testModule, moduleChildren) => {
-      const errors = testModule.errors().map(error => error.message)
+      const errors = testModule.errors()
       if (errors.length > 0) {
         return {
           ...moduleChildren,
-          __module_errors__: errors,
+          __module_errors__: errors.map(e => mapError(e)),
         }
       }
       return moduleChildren
@@ -653,14 +673,14 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
   return projectTree
 }
 
-export function buildErrorProjectTree(testModules: TestModule[]) {
+export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {
     const projectName = testModule.project.name
     projectTree[projectName] = {
       ...projectTree[projectName],
-      ...buildErrorTree([testModule]),
+      ...buildErrorTree([testModule], options),
     }
   }
 

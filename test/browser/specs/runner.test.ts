@@ -209,7 +209,7 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
-  expect.assertions(29)
+  expect.assertions(30)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
     reporters: [
@@ -273,6 +273,9 @@ test(`stack trace points to correct file in every browser when failed`, async ()
 
   // index() is called from a bundled file
   expect(stderr).toMatch(/failing.test.ts:39:(2|8)/)
+
+  // "not awaited but with then/catch/finally" test should not produce warnings
+  expect(stderr).not.toMatch(/failing.test.ts:4[3-8]/)
 })
 
 test('user-event', async () => {

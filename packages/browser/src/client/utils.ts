@@ -54,9 +54,11 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
       return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).catch(onRejected)
     },
     finally(onFinally) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
