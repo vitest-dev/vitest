@@ -638,7 +638,7 @@ exports[`error equality 10`] = `
   Error {
 -   "message": "world",
 +   "message": "hello",
-    "cause": [circular Error],
+    "cause": [Circular],
   }",
   "expected": "[Error: world]",
   "message": "expected Error: hello to deeply equal Error: world",

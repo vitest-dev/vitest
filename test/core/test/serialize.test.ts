@@ -196,4 +196,64 @@ describe('error serialize', () => {
       },
     })
   })
+
+  it('should not infinitely expand circular references in toJSON', () => {
+    // Regression: serializeValue was checking toJSON before seen, so objects
+    // with toJSON that returned circular structures caused infinite recursion
+    const circular: Record<string, any> = { name: 'test' }
+    circular.self = circular
+    circular.toJSON = function () {
+      return { name: this.name, self: this.self }
+    }
+
+    expect(serializeValue(circular)).toEqual({
+      name: 'test',
+      self: '[Circular]',
+    })
+  })
+
+  it('should handle circular references via toJSON on class instances (e.g. Game→RoomItem→Game)', () => {
+    // Regression: expect(circularObject).toBeUndefined() caused memory exhaustion
+    // when the object's toJSON triggered exponential serialization expansion
+    class Game {
+      roomItems: any[]
+      constructor() {
+        this.roomItems = []
+      }
+
+      toJSON() {
+        return { type: 'Game', items: this.roomItems }
+      }
+    }
+    class RoomItem {
+      game: Game
+      name: string
+      constructor(game: Game, name: string) {
+        this.game = game
+        this.name = name
+      }
+
+      toJSON() {
+        return { type: 'RoomItem', game: this.game, name: this.name }
+      }
+    }
+
+    const game = new Game()
+    const item = new RoomItem(game, 'sword')
+    game.roomItems.push(item)
+
+    const serialized = serializeValue(item)
+    expect(serialized).toMatchInlineSnapshot(`
+      {
+        "game": {
+          "items": [
+            "[Circular]",
+          ],
+          "type": "Game",
+        },
+        "name": "sword",
+        "type": "RoomItem",
+      }
+    `)
+  })
 })

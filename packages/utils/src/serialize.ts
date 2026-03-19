@@ -28,6 +28,10 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
     return val
   }
   if (val instanceof Error && 'toJSON' in val && typeof val.toJSON === 'function') {
+    if (seen.has(val)) {
+      return seen.get(val)
+    }
+    seen.set(val, '[Circular]')
     const jsonValue = val.toJSON()
 
     if (jsonValue && jsonValue !== val && typeof jsonValue === 'object') {
@@ -44,7 +48,9 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
         safe(() => jsonValue.cause ??= serializeValue(val.cause, seen))
       }
     }
-    return serializeValue(jsonValue, seen)
+    const serialized = serializeValue(jsonValue, seen)
+    seen.set(val, serialized)
+    return serialized
   }
   if (typeof val === 'function') {
     return `Function<${val.name || 'anonymous'}>`
@@ -63,7 +69,13 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
   // cannot serialize immutables as immutables
   if (isImmutable(val)) {
-    return serializeValue(val.toJSON(), seen)
+    if (seen.has(val)) {
+      return seen.get(val)
+    }
+    seen.set(val, '[Circular]')
+    const serialized = serializeValue(val.toJSON(), seen)
+    seen.set(val, serialized)
+    return serialized
   }
   if (
     val instanceof Promise
@@ -74,12 +86,15 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   if (typeof Element !== 'undefined' && val instanceof Element) {
     return val.tagName
   }
-  if (typeof val.toJSON === 'function') {
-    return serializeValue(val.toJSON(), seen)
-  }
-
   if (seen.has(val)) {
     return seen.get(val)
+  }
+
+  if (typeof val.toJSON === 'function') {
+    seen.set(val, '[Circular]')
+    const serialized = serializeValue(val.toJSON(), seen)
+    seen.set(val, serialized)
+    return serialized
   }
 
   if (Array.isArray(val)) {
