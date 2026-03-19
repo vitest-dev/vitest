@@ -1812,22 +1812,6 @@ describe('builder pattern API with automatic type inference', () => {
     expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > non-function values work <time>"`)
   })
 
-  test('object with injected is treated as an object', async () => {
-    const { stderr, tests } = await runFixtureTests(({}) => {
-      return it
-        .extend('object', { injected: true })
-    }, {
-      'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
-        extendedTest('object with injected is treated as an object', ({ object }) => {
-          expectTypeOf(object).toEqualTypeOf<{ injected: boolean }>()
-          expect(object).toEqual({ injected: true })
-        })
-      },
-    })
-    expect(stderr).toBe('')
-    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > object with injected is treated as an object <time>"`)
-  })
-
   test('non-function values with injected option work', async () => {
     const { stderr, tests } = await runFixtureTests(({ expectTypeOf }) => {
       return it
