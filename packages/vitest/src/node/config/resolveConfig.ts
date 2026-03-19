@@ -741,6 +741,14 @@ export function resolveConfig(
     resolved.passWithNoTests ??= true
   }
 
+  if (resolved.stale) {
+    resolved.passWithNoTests ??= true
+  }
+
+  if (resolved.stale && resolved.changed) {
+    throw new Error('Cannot use both --stale and --changed options at the same time')
+  }
+
   resolved.css ??= {}
   if (typeof resolved.css === 'object') {
     resolved.css.modules ??= {}
