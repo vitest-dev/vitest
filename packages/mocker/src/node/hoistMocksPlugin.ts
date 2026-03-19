@@ -1,7 +1,6 @@
 import type { SourceMap } from 'magic-string'
 import type { Plugin, Rollup } from 'vite'
 import type { HoistMocksOptions } from './hoistMocks'
-import { createFilter } from 'vite'
 import { cleanUrl } from '../utils'
 import { hoistMocks } from './hoistMocks'
 
@@ -15,7 +14,7 @@ export interface HoistMocksPluginOptions extends Omit<HoistMocksOptions, 'regexp
 }
 
 export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin {
-  const filter = options.filter || createFilter(options.include, options.exclude)
+  let filter: ((id: string) => boolean) | undefined = options.filter
 
   const {
     hoistableMockMethodNames = ['mock', 'unmock'],
@@ -37,8 +36,14 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   return {
     name: 'vitest:mocks',
     enforce: 'post',
+    async buildStart() {
+      if (!filter) {
+        const { createFilter } = await import('vite')
+        filter = createFilter(options.include, options.exclude)
+      }
+    },
     transform(code, id) {
-      if (!filter(id)) {
+      if (filter && !filter(id)) {
         return
       }
       const s = hoistMocks(code, id, this.parse, {
