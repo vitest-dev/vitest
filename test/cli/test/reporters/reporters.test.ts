@@ -1,5 +1,5 @@
-import type { TestModule } from 'vitest/node'
 import type { RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
+import type { TestModule } from 'vitest/node'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { createFileTask } from '@vitest/runner/utils'
 import { normalize, resolve } from 'pathe'
