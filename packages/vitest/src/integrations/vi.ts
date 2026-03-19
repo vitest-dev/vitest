@@ -6,6 +6,7 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from '@vitest/spy'
+import type { Disposable } from 'vitest/optional-types.js'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/moduleRunner/moduleMocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
@@ -17,12 +18,6 @@ import { FakeTimers } from './mock/timers'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
-
-interface Disposable {
-  // eslint-disable-next-line ts/ban-ts-comment
-  // @ts-ignore -- Symbol.dispose might not be in user types
-  [Symbol.dispose]: () => void
-}
 
 export interface VitestUtils {
   /**

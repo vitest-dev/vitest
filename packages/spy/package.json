@@ -27,13 +27,17 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./optional-types.js": {
+      "types": "./optional-types.d.ts"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "optional-types.d.ts"
   ],
   "scripts": {
     "build": "premove dist && rollup -c",
