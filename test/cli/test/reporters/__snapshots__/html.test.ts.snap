@@ -7,7 +7,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
     {
       "collectDuration": 0,
       "environmentLoad": 0,
-      "file": [Circular],
+      "file": [circular Object],
       "filepath": "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
       "fullName": "json-fail.test.ts",
       "id": 0,
@@ -29,7 +29,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         {
           "annotations": [],
           "artifacts": [],
-          "file": [Circular],
+          "file": [circular Object],
           "fullName": "json-fail.test.ts > should fail",
           "fullTestName": "should fail",
           "id": 0,
@@ -135,7 +135,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
     {
       "collectDuration": 0,
       "environmentLoad": 0,
-      "file": [Circular],
+      "file": [circular Object],
       "filepath": "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
       "fullName": "all-passing-or-skipped.test.ts",
       "id": 0,
@@ -157,7 +157,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "annotations": [],
           "artifacts": [],
-          "file": [Circular],
+          "file": [circular Object],
           "fullName": "all-passing-or-skipped.test.ts > 2 + 3 = 5",
           "fullTestName": "2 + 3 = 5",
           "id": 0,
@@ -182,7 +182,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "annotations": [],
           "artifacts": [],
-          "file": [Circular],
+          "file": [circular Object],
           "fullName": "all-passing-or-skipped.test.ts > 3 + 3 = 6",
           "fullTestName": "3 + 3 = 6",
           "id": "1111755131_1",

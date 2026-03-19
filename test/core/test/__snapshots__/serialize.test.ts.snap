@@ -3,14 +3,14 @@
 exports[`error serialize > Should skip circular references to prevent hit the call stack limit 1`] = `
 {
   "toString": "Function<toString>",
-  "whatever": [Circular],
+  "whatever": [circular Object],
   "whateverArray": [
-    [Circular],
-    [Circular],
+    [circular Object],
+    [circular Object],
   ],
   "whateverArrayClone": [
-    [Circular],
-    [Circular],
+    [circular Object],
+    [circular Object],
   ],
 }
 `;

@@ -194,7 +194,7 @@ function printComplexValue(
   hasCalledToJSON?: boolean,
 ): string {
   if (refs.includes(val)) {
-    return '[Circular]'
+    return `[circular ${getConstructorName(val)}]`
   }
   refs = [...refs]
   refs.push(val)
@@ -286,7 +286,8 @@ const ErrorPlugin: NewPlugin = {
   test: val => val && val instanceof Error,
   serialize(val: Error, config, indentation, depth, refs, printer) {
     if (refs.includes(val)) {
-      return '[Circular]'
+      const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+      return `[circular ${name}]`
     }
     refs = [...refs, val]
     const hitMaxDepth = ++depth > config.maxDepth
