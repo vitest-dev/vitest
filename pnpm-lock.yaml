@@ -161,7 +161,6 @@ overrides:
   '@vitest/browser-preview': workspace:*
   '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
-  ivya: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: ^4.59.0
@@ -562,8 +561,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.0
       ivya:
-        specifier: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
-        version: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
+        specifier: https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735
+        version: https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735
       mime:
         specifier: ^4.1.0
         version: 4.1.0
@@ -7785,8 +7784,8 @@ packages:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
-  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374:
-    resolution: {tarball: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374}
+  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735:
+    resolution: {integrity: sha512-qsQhvvNzkxQcT/zPhhqSiMOM7uP+mACSI8aFC40UP3+19AfUgCo6vJEaCrQnyAqFL4jKHe2xkUMxVl+gYEaXbQ==}
     version: 1.7.1
 
   jackspeak@3.4.0:
@@ -16706,7 +16705,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374: {}
+  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735: {}
 
   jackspeak@3.4.0:
     dependencies:
