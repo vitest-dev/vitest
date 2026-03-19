@@ -202,6 +202,21 @@ When used with code coverage the report will contain only the files that were re
 
 If paired with the [`forceRerunTriggers`](/config/forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
 
+### stale
+
+- **Type**: `boolean`
+- **Default**: false
+
+Run only tests that are stale. A test is considered stale when it or any of its dependencies (recursively) have been modified since the last time tests were run with `--stale`.
+
+The first time tests are run with `--stale`, all tests are executed and a manifest is generated. On subsequent runs, only stale tests are executed. If no tests are stale, Vitest exits with code 0.
+
+This option is useful for fast iteration during development, allowing you to run only the tests affected by your recent changes without relying on git.
+
+Cannot be used together with [`--changed`](#changed).
+
+If paired with the [`forceRerunTriggers`](/config/forcereruntriggers) config option, changes to matched files will cause the entire test suite to run.
+
 ### shard
 
 - **Type**: `string`

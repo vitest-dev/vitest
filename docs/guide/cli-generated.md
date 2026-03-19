@@ -492,6 +492,13 @@ Allow tests and suites that are marked as only (default: `!process.env.CI`)
 
 Ignore any unhandled errors that occur
 
+### stale
+
+- **CLI:** `--stale`
+- **Config:** [stale](/config/stale)
+
+Run only tests that are stale. A test is stale when it or any of its dependencies have changed since the last run with --stale (default: `false`)
+
 ### sequence.shuffle.files
 
 - **CLI:** `--sequence.shuffle.files`
