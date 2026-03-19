@@ -302,13 +302,11 @@ test('basic', () => {
 })
 
 test('template parse error', async () => {
-  // TODO: need to extend Error.stackTraceLimit to capture parse error location in test file
   const result = await runInlineTests({
     'basic.test.ts': `
 import { expect, test } from 'vitest';
 
 test('basic', () => {
-  Error.stackTraceLimit = 20
   expect(document.body).toMatchAriaInlineSnapshot(\`x: y\`);
 });
 `,
@@ -332,13 +330,13 @@ test('basic', () => {
 
      FAIL  |chromium| basic.test.ts > basic
     Error: Aria snapshot must be a YAML sequence, elements starting with " -"
-     ❯ basic.test.ts:6:24
+     ❯ basic.test.ts:5:24
+          3|
           4| test('basic', () => {
-          5|   Error.stackTraceLimit = 20
-          6|   expect(document.body).toMatchAriaInlineSnapshot(\`x: y\`);
+          5|   expect(document.body).toMatchAriaInlineSnapshot(\`x: y\`);
            |                        ^
-          7| });
-          8|
+          6| });
+          7|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

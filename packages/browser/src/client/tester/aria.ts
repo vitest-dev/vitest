@@ -27,7 +27,15 @@ export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNo
   },
 
   parseExpected(input) {
-    return parseAriaTemplate(yaml, input.trim())
+    // increase limit so that yaml parse error can reach `toMatchAriaSnapshot` callsite in user test files
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = limit + 20
+    try {
+      return parseAriaTemplate(yaml, input.trim())
+    }
+    finally {
+      Error.stackTraceLimit = limit
+    }
   },
 
   match(captured, expected): DomainMatchResult {
