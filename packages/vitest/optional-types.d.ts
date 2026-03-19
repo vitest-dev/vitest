@@ -5,8 +5,3 @@ export type * as jsdomTypes from 'jsdom'
 
 // @ts-ignore optional peer dep
 export type * as happyDomTypes from 'happy-dom'
-
-export interface Disposable {
-  // @ts-ignore -- Symbol.dispose might not be in user types
-  [Symbol.dispose]: () => void
-}
