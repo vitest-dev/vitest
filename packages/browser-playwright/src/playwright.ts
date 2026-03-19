@@ -136,19 +136,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     // make sure the traces are finished if the test hangs
-    process.on('SIGTERM', () => {
-      if (!this.browser) {
-        return
-      }
-      const promises = []
-      for (const [trace, contextId] of this.pendingTraces.entries()) {
-        promises.push((() => {
-          const context = this.contexts.get(contextId)
-          return context?.tracing.stopChunk({ path: trace })
-        })())
-      }
-      return Promise.allSettled(promises)
-    })
+    process.on('SIGTERM', this.onSIGTERM)
+  }
+
+  private onSIGTERM = () => {
+    if (!this.browser) {
+      return
+    }
+    const promises = []
+    for (const [trace, contextId] of this.pendingTraces.entries()) {
+      promises.push((() => {
+        const context = this.contexts.get(contextId)
+        return context?.tracing.stopChunk({ path: trace })
+      })())
+    }
+    return Promise.allSettled(promises)
   }
 
   private async openBrowser(openBrowserOptions: { parallel: boolean }) {
@@ -545,6 +547,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    process.off('SIGTERM', this.onSIGTERM)
+
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     if (this.browserPromise) {
