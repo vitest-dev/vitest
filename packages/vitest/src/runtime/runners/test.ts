@@ -22,7 +22,7 @@ import {
   getFn,
   getHooks,
 } from '@vitest/runner'
-import { createChainable, getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { createChainable, getNames, getTestName, getTests, matchesTagsFilter } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
@@ -278,6 +278,7 @@ export class TestRunner implements VitestTestRunner {
   static getTestFn: typeof getFn = getFn
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
+  static matchesTagsFilter: typeof matchesTagsFilter = matchesTagsFilter
 
   /**
    * @deprecated
