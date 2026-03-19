@@ -10,7 +10,6 @@ import {
   renderAriaTemplate,
   renderAriaTree,
 } from 'ivya/aria'
-import * as yaml from 'yaml'
 
 export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',
@@ -31,7 +30,7 @@ export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNo
     const limit = Error.stackTraceLimit
     Error.stackTraceLimit = limit + 20
     try {
-      return parseAriaTemplate(yaml, input.trim())
+      return parseAriaTemplate(input.trim())
     }
     finally {
       Error.stackTraceLimit = limit

@@ -29,6 +29,7 @@ overrides:
   '@vitest/browser-preview': workspace:*
   '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
+  ivya: "https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374"
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup

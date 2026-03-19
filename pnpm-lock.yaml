@@ -161,6 +161,7 @@ overrides:
   '@vitest/browser-preview': workspace:*
   '@vitest/browser-webdriverio': workspace:*
   '@vitest/ui': workspace:*
+  ivya: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: ^4.59.0
@@ -572,9 +573,6 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../vitest
-      yaml:
-        specifier: 'catalog:'
-        version: 2.8.2
 
   packages/browser-playwright:
     dependencies:
@@ -7788,7 +7786,7 @@ packages:
     engines: {node: '>=8'}
 
   ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374:
-    resolution: {integrity: sha512-qsQhvvNzkxQcT/zPhhqSiMOM7uP+mACSI8aFC40UP3+19AfUgCo6vJEaCrQnyAqFL4jKHe2xkUMxVl+gYEaXbQ==}
+    resolution: {tarball: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374}
     version: 1.7.1
 
   jackspeak@3.4.0:
