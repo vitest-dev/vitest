@@ -263,10 +263,11 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    let lastCaptured: any
+    // TODO: refactor slop
+    let lastCaptured: unknown
     let lastRendered: string | undefined
     let lastResult: DomainMatchResult | undefined
-    let lastPollError: unknown
+    let lastPollError: unknown // TODO: rename?
 
     const TIMEOUT = Symbol('timeout')
     const startTime = now()
@@ -315,29 +316,47 @@ export class SnapshotClient {
       }
     }
     else {
-      // No match retry, but still retry poll() until it succeeds.
-      // The value may not be available yet (e.g. element doesn't exist).
+      // No existing snapshot or update mode.
+      // Poll until the rendered value stabilizes (two consecutive
+      // iterations produce the same output) so that a flaky result
+      // won't be captured as an initial snapshot nor an new snapshot
+      // with --update
       while (true) {
         try {
           const received = await raceTimeout(Promise.resolve(poll()))
           if (received === TIMEOUT) {
-            throw new Error('poll() timed out')
+            lastPollError ??= new Error('poll() timed out')
+            break
           }
-          lastCaptured = adapter.capture(received)
-          lastRendered = adapter.render(lastCaptured)
-          break
+          const captured = adapter.capture(received)
+          const rendered = adapter.render(captured)
+          const isStable = rendered === lastRendered
+          lastCaptured = captured
+          lastRendered = rendered
+          if (isStable) {
+            lastPollError = undefined
+            break
+          }
+          lastPollError ??= new Error('poll() did not produce a stable snapshot')
         }
         catch (e) {
-          if (await delayWithTimeout() === TIMEOUT) {
-            throw e
-          }
+          // poll() threw — value not ready, reset stability and retry.
+          lastRendered = undefined
+          lastCaptured = undefined
+          lastPollError = e
+        }
+        // retry after delay
+        if (await delayWithTimeout() === TIMEOUT) {
+          lastPollError ??= new Error('poll() timed out')
+          break
         }
       }
     }
 
-    // poll() never succeeded — consume the probed key to prevent
-    // the snapshot from being deleted as obsolete, then throw.
-    if (lastRendered == null) {
+    // poll() never succeeded or new snapshot is unstable
+    if (lastPollError || lastRendered == null) {
+      // consume the probed key to prevent
+      // the snapshot from being deleted as obsolete
       expectedSnapshot.markAsChecked()
       throw lastPollError || new Error('poll() never returned a value within the timeout')
     }
