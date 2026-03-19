@@ -43,6 +43,7 @@ export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
 export type { SerializedTestProject, TestProject } from '../node/project'
 
 export {
+  AgentReporter,
   BenchmarkReporter,
   BenchmarkReportsMap,
   DefaultReporter,

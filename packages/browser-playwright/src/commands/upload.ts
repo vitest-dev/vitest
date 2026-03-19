@@ -1,6 +1,7 @@
 import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
+import { getDescribedLocator } from './utils'
 
 export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string
@@ -18,7 +19,6 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
   }
   const root = context.project.config.root
 
-  const { iframe } = context
   const playwrightFiles = files.map((file) => {
     if (typeof file === 'string') {
       return resolve(root, file)
@@ -29,5 +29,5 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
       buffer: Buffer.from(file.base64, 'base64'),
     }
   })
-  await iframe.locator(selector).setInputFiles(playwrightFiles as string[], options)
+  await getDescribedLocator(context, selector).setInputFiles(playwrightFiles as string[], options)
 }

@@ -67,7 +67,7 @@ Alongside this change, we also redesign the public reporter API (the `reporters`
 You can follow the design process in [#7069](https://github.com/vitest-dev/vitest/pull/7069) PR. It was a hard fight trying to reverse-engineer the previous `onTaskUpdate` API to make this new elegant lifecycle possible.
 
 <div class="flex align-center justify-center">
-  <img src="/on-task-update.gif" />
+  <img src="/on-task-update.gif" alt="a gif from it's always sunny with a drawing board" />
 </div>
 
 ## Inline Workspace

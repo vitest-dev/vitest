@@ -11,7 +11,7 @@ test('vi.fn() calls implementation if it was passed down', () => {
   expect(mock()).toBe(3)
 })
 
-test('vi.fn().mock cannot be overriden', () => {
+test('vi.fn().mock cannot be overridden', () => {
   const mock = vi.fn()
   expect(() => mock.mock = {} as any).toThrow()
   expect(() => {

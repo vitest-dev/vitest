@@ -319,6 +319,11 @@ test('URL.createObjectUrl works properly', () => {
   }).not.toThrow()
 })
 
+test('compat classes preserve their .name property', () => {
+  expect(URL.name).toBe('URL')
+  expect(Request.name).toBe('Request')
+})
+
 test('jsdom global is exposed', () => {
   // @ts-expect-error -- jsdom is not exposed in our types because we use a single tsconfig for all
   const dom = jsdom

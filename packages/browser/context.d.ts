@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
+import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -17,9 +17,7 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export interface CDPSession {
-  // methods are defined by the provider type augmentation
-}
+export { CDPSession };
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
@@ -41,6 +39,14 @@ export interface ScreenshotOptions extends SelectorOptions {
    * @default true
    */
   save?: boolean
+}
+
+export interface MarkOptions {
+  /**
+   * Optional stack string used to resolve marker location.
+   * Useful for wrapper libraries that need to forward the end-user callsite.
+   */
+  stack?: string
 }
 
 interface StandardScreenshotComparators {
@@ -489,7 +495,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
   selected?: boolean
 }
 
-interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
+export interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface LocatorSelectors {
   /**
@@ -654,6 +660,12 @@ export interface Locator extends LocatorSelectors {
   screenshot(options?: LocatorScreenshotOptions): Promise<string>
 
   /**
+   * Add a trace marker for this locator when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/locators#mark}
+   */
+  mark(name: string, options?: MarkOptions): Promise<void>
+
+  /**
    * Returns an element matching the selector.
    *
    * - If multiple elements match the selector, an error is thrown.
@@ -816,6 +828,16 @@ export interface BrowserPage extends LocatorSelectors {
     path: string
     base64: string
   }>
+  /**
+   * Add a trace marker when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/context#mark}
+   */
+  mark(name: string, options?: MarkOptions): Promise<void>
+  /**
+   * Group multiple operations under a trace marker when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/context#mark}
+   */
+  mark<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
   /**
    * Extend default `page` object with custom methods.
    */

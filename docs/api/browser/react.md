@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-react
 
-The community [`vitest-browser-react`](https://www.npmjs.com/package/vitest-browser-react) package renders [React](https://react.dev/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-react`](https://npmx.dev/package/vitest-browser-react) package renders [React](https://react.dev/) components in [Browser Mode](/guide/browser/).
 
 ```jsx
 import { render } from 'vitest-browser-react'
@@ -38,6 +38,8 @@ export function render(
   options?: ComponentRenderOptions,
 ): Promise<RenderResult>
 ```
+
+The `render` function records a `react.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
 
 :::warning
 Note that `render` is asynchronous, unlike in other packages. This is to support [`Suspense`](https://react.dev/reference/react/Suspense) correctly.
@@ -154,6 +156,8 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 function rerender(ui: React.ReactNode): Promise<void>
 ```
 
+Also records a `react.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
+
 It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
 
 ```jsx
@@ -170,6 +174,8 @@ await rerender(<NumberDisplay number={2} />)
 ```ts
 function unmount(): Promise<void>
 ```
+
+Also records a `react.unmount` trace mark in the [Trace View](/guide/browser/trace-view).
 
 This will cause the rendered component to be unmounted. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
 

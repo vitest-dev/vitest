@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { File, Task } from '@vitest/runner'
-import { useResizeObserver } from '@vueuse/core'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 
@@ -28,6 +27,14 @@ const emit = defineEmits<{
 }>()
 
 const includeTaskLocation = computed(() => config.value.includeTaskLocation)
+const slowTime = computed(() => {
+  const threshold = config.value.slowTestThreshold
+  if (typeof threshold === 'number') {
+    return ` (>${threshold}ms)`
+  }
+
+  return ''
+})
 
 const searchBox = ref<HTMLInputElement | undefined>()
 const selectProjectRef = ref<HTMLSelectElement | undefined>()
@@ -56,25 +63,10 @@ const {
   disableClearProjectSort,
   searchMatcher,
 } = useSearch(searchBox, selectProjectRef, sortProjectRef)
-
-const filterClass = ref<string>('grid-cols-2')
-const filterHeaderClass = ref<string>('grid-col-span-2')
-
-const testExplorerRef = ref<HTMLElement | undefined>()
-useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
-  if (contentRect.width < 420) {
-    filterClass.value = 'grid-cols-2'
-    filterHeaderClass.value = 'grid-col-span-2'
-  }
-  else {
-    filterClass.value = 'grid-cols-4'
-    filterHeaderClass.value = 'grid-col-span-4'
-  }
-})
 </script>
 
 <template>
-  <div ref="testExplorerRef" h="full" flex="~ col">
+  <div h="full" flex="~ col">
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <slot name="header" :filtered-files="isFiltered || isFilteredByStatus ? filteredFiles : undefined" />
@@ -222,18 +214,17 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         items-center
         bg-header
         border="b-2 base"
-        grid="~ items-center gap-x-2 rows-[auto_auto]"
-        :class="filterClass"
+        flex="~ wrap gap-x-4 justify-between"
       >
-        <div :class="filterHeaderClass" flex="~ gap-2 items-center">
-          <div aria-hidden="true" class="i-carbon:filter" />
+        <div min-w-full flex="~ gap-2 items-center">
+          <div aria-hidden="true" class="i-carbon:filter" flex-shrink-0 />
           <div flex-grow-1 text-sm>
             Filter
           </div>
           <IconButton
             v-tooltip.bottom="'Clear Filter'"
             :disabled="disableFilter"
-            title="Clear search"
+            title="Clear filter"
             icon="i-carbon:filter-remove"
             @click.passive="clearFilter(false)"
           />
@@ -242,24 +233,25 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
         <FilterStatus v-model="filter.success" label="Pass" />
         <FilterStatus v-model="filter.skipped" label="Skip" />
         <FilterStatus v-model="filter.onlyTests" label="Only Tests" />
+        <FilterStatus v-model="filter.slow" :label="`Slow${slowTime}`" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
       <ResultsPanel>
         <template v-if="initialized" #summary>
           <div grid="~ items-center gap-x-1 cols-[auto_min-content_auto] rows-[min-content_min-content]">
-            <span text-red5>
+            <span text-red-700 dark:text-red-500>
               FAIL ({{ testsTotal.failed }})
             </span>
             <span>/</span>
-            <span text-yellow5>
+            <span text-yellow-700 dark:text-yellow-500>
               RUNNING ({{ testsTotal.running }})
             </span>
-            <span text-green5>
+            <span text-green-700 dark:text-green-500>
               PASS ({{ testsTotal.success }})
             </span>
             <span>/</span>
-            <span class="text-purple5:50">
+            <span class="text-purple-700 dark:text-purple-400">
               SKIP ({{ filter.onlyTests ? testsTotal.skipped : '--' }})
             </span>
           </div>
@@ -343,6 +335,7 @@ useResizeObserver(() => testExplorerRef.value, ([{ contentRect }]) => {
                 :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
                 :duration="item.duration"
+                :slow="item.slow === true"
                 :opened="item.expanded"
                 :disable-task-location="!includeTaskLocation"
                 :class="selectedTest === item.id || (!selectedTest && activeFileId === item.id) ? 'bg-active' : ''"

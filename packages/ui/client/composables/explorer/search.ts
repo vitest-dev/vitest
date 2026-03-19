@@ -62,6 +62,7 @@ export function useSearch(
     filter.failed = false
     filter.success = false
     filter.skipped = false
+    filter.slow = false
     filter.onlyTests = false
     if (focus) {
       searchBox.value?.focus()
@@ -94,6 +95,7 @@ export function useSearch(
     failedValue: boolean,
     successValue: boolean,
     skippedValue: boolean,
+    slowValue: boolean,
     onlyTestsValue: boolean,
     projectValue: string,
     projectSortValue: SortUIType,
@@ -106,6 +108,7 @@ export function useSearch(
     treeFilter.value.failed = failedValue
     treeFilter.value.success = successValue
     treeFilter.value.skipped = skippedValue
+    treeFilter.value.slow = slowValue
     treeFilter.value.onlyTests = onlyTestsValue
     treeFilter.value.project = projectValue
     treeFilter.value.projectSort = projectSortValue === 'default' ? undefined : projectSortValue
@@ -117,16 +120,18 @@ export function useSearch(
       filter.failed,
       filter.success,
       filter.skipped,
+      filter.slow,
       filter.onlyTests,
       currentProject.value,
       projectSort.value,
     ] as const,
-    ([search, failed, success, skipped, onlyTests, project, projectSort]) => {
+    ([search, failed, success, skipped, slow, onlyTests, project, projectSort]) => {
       updateFilterStorage(
         search,
         failed,
         success,
         skipped,
+        slow,
         onlyTests,
         project,
         projectSort,

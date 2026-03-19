@@ -81,7 +81,7 @@ test('instance mocks are independently tracked, but prototype shares the state',
   vi.mocked(t1.method).mockReturnValue(100)
   t1.method()
   expect(t1.method).toHaveBeenCalledTimes(2)
-  // tracks methods even when t1.method implementation is overriden
+  // tracks methods even when t1.method implementation is overridden
   expect(Class.prototype.method).toHaveBeenCalledTimes(3)
 })
 

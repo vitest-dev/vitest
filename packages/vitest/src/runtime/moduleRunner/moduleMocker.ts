@@ -7,6 +7,7 @@ import vm from 'node:vm'
 import { AutomockedModule, RedirectedModule } from '@vitest/mocker'
 import { distDir } from '../../paths'
 import { BareModuleMocker } from './bareModuleMocker'
+import { injectQuery } from './utils'
 
 const spyModulePath = resolve(distDir, 'spy.js')
 
@@ -130,7 +131,8 @@ export class VitestMocker extends BareModuleMocker {
     callstack?: string[] | null,
   ): Promise<T> {
     const { url } = await this.resolveId(rawId, importer)
-    const node = await this.moduleRunner.fetchModule(url, importer)
+    const actualUrl = injectQuery(url, '_vitest_original')
+    const node = await this.moduleRunner.fetchModule(actualUrl, importer)
     const result = await this.moduleRunner.cachedRequest(
       node.url,
       node,

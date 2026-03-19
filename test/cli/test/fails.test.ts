@@ -117,6 +117,119 @@ it('prints a warning if the assertion is not awaited', async () => {
   `)
 })
 
+it('no async tracking after then/catch/finally', async () => {
+  // resolve + then/catch/finally
+  // rejects + then/catch/finally
+  // expect.poll + then/catch/finally
+  const { stderr, errorTree } = await runInlineTests({
+    'await.test.js': ts`
+      import { expect, test } from 'vitest';
+
+      test('resolves + then', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).then()
+      })
+
+      test('resolves + catch', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).catch()
+      })
+
+      test('resolves + finally', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).finally()
+      })
+
+      test('rejects + then', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).then()
+      })
+
+      test('rejects + catch', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).catch()
+      })
+
+      test('rejects + finally', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).finally()
+      })
+
+      test('expect.poll + then', async () => {
+        await expect.poll(() => 2).toBe(2).then()
+      })
+
+      test('expect.poll + catch', async () => {
+        await expect.poll(() => 2).toBe(2).catch()
+      })
+
+      test('expect.poll + finally', async () => {
+        await expect.poll(() => 2).toBe(2).finally()
+      })
+    `,
+    'hang.test.js': ts`
+      import { expect, test } from 'vitest';
+
+      test('resolves + then', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).then()
+      })
+
+      test('resolves + catch', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).catch()
+      })
+
+      test('resolves + finally', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).finally()
+      })
+
+      test('rejects + then', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).then()
+      })
+
+      test('rejects + catch', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).catch()
+      })
+
+      test('rejects + finally', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).finally()
+      })
+
+      test('expect.poll + then', async () => {
+        expect.poll(() => 2).toBe(2).then()
+      })
+
+      test('expect.poll + catch', async () => {
+        expect.poll(() => 2).toBe(2).catch()
+      })
+
+      test('expect.poll + finally', async () => {
+        expect.poll(() => 2).toBe(2).finally()
+      })
+    `,
+  })
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "await.test.js": {
+        "expect.poll + catch": "passed",
+        "expect.poll + finally": "passed",
+        "expect.poll + then": "passed",
+        "rejects + catch": "passed",
+        "rejects + finally": "passed",
+        "rejects + then": "passed",
+        "resolves + catch": "passed",
+        "resolves + finally": "passed",
+        "resolves + then": "passed",
+      },
+      "hang.test.js": {
+        "expect.poll + catch": "passed",
+        "expect.poll + finally": "passed",
+        "expect.poll + then": "passed",
+        "rejects + catch": "passed",
+        "rejects + finally": "passed",
+        "rejects + then": "passed",
+        "resolves + catch": "passed",
+        "resolves + finally": "passed",
+        "resolves + then": "passed",
+      },
+    }
+  `)
+})
+
 it('prints a warning if the assertion is not awaited in the browser mode', async () => {
   const { stderr } = await runInlineTests({
     'base.test.js': ts`

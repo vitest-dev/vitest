@@ -8,6 +8,7 @@ import type {
   BrowserPage,
   Locator,
   LocatorSelectors,
+  MarkOptions,
   UserEvent,
   UserEventWheelOptions,
 } from 'vitest/browser'
@@ -51,10 +52,10 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     setup() {
       return createUserEvent()
     },
-    async cleanup() {
+    cleanup() {
       // avoid cleanup rpc call if there is nothing to cleanup
       if (!keyboard.unreleased.length) {
-        return
+        return Promise.resolve()
       }
       return ensureAwaited(async (error) => {
         await triggerCommand('__vitest_cleanup', [keyboard], error)
@@ -100,7 +101,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
 
     // testing-library user-event
-    async type(element, text, options) {
+    type(element, text, options) {
       return ensureAwaited(async (error) => {
         const selector = await convertToSelector(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
@@ -118,7 +119,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     tab(options = {}) {
       return ensureAwaited(error => triggerCommand('__vitest_tab', [options], error))
     },
-    async keyboard(text) {
+    keyboard(text) {
       return ensureAwaited(async (error) => {
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_keyboard',
@@ -128,14 +129,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard.unreleased = unreleased
       })
     },
-    async copy() {
-      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    copy() {
+      return userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
     },
-    async cut() {
-      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    cut() {
+      return userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
     },
-    async paste() {
-      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
+    paste() {
+      return userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
     },
   }
   return userEvent
@@ -343,6 +344,50 @@ export const page: BrowserPage = {
           element,
         } as any /** TODO */),
       ],
+      error,
+    ))
+  },
+  mark<T>(
+    name: string,
+    bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
+    options?: MarkOptions,
+  ): any {
+    const currentTest = getWorkerState().current
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+
+    if (typeof bodyOrOptions === 'function') {
+      return ensureAwaited(async (error) => {
+        if (hasActiveTrace) {
+          await triggerCommand(
+            '__vitest_groupTraceStart',
+            [{
+              name,
+              stack: options?.stack ?? error?.stack,
+            }],
+            error,
+          )
+        }
+        try {
+          return await bodyOrOptions()
+        }
+        finally {
+          if (hasActiveTrace) {
+            await triggerCommand('__vitest_groupTraceEnd', [], error)
+          }
+        }
+      })
+    }
+
+    if (!hasActiveTrace) {
+      return Promise.resolve()
+    }
+
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_markTrace',
+      [{
+        name,
+        stack: bodyOrOptions?.stack ?? error?.stack,
+      }],
       error,
     ))
   },

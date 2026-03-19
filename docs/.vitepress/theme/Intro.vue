@@ -21,7 +21,7 @@
           transform pipelines.
         </p>
         <p class="text-pretty">
-          You can also use Vitest even if you are not using Vite. It is Jest-comptible
+          You can also use Vitest even if you are not using Vite. It is Jest-compatible
           and works for backend code too.
         </p>
         <a href="/guide/why" target="_blank" class="button w-fit mt-8 block lg:hidden">Learn more</a>

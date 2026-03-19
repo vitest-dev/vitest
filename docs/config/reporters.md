@@ -14,7 +14,7 @@ interface UserConfig {
 type ConfigReporter = string | Reporter | [string, object?]
 ```
 
-- **Default:** [`'default'`](/guide/reporters#default-reporter)
+- **Default:** [`'default'`](/guide/reporters#default-reporter) (or <code>[['default'](/guide/reporters#default-reporter), ['github-actions'](/guide/reporters#github-actions-reporter)]</code> when `process.env.GITHUB_ACTIONS === 'true'`)
 - **CLI:**
   - `--reporter=tap` for a single reporter
   - `--reporter=verbose --reporter=github-actions` for multiple reporters
@@ -42,6 +42,7 @@ Note that the [coverage](/guide/coverage) feature uses a different [`coverage.re
 - [`tap-flat`](/guide/reporters#tap-flat-reporter)
 - [`hanging-process`](/guide/reporters#hanging-process-reporter)
 - [`github-actions`](/guide/reporters#github-actions-reporter)
+- [`agent`](/guide/reporters#agent-reporter)
 - [`blob`](/guide/reporters#blob-reporter)
 
 ## Example
