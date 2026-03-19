@@ -1,23 +1,12 @@
-import path from 'node:path'
 import { expect, test } from 'vitest'
-import { buildTestProjectTree } from '../../test-utils'
 import { instances, runBrowserTests } from './utils'
 
 test('vi.defineHelper hides internal stack traces', async () => {
-  const { results, ctx } = await runBrowserTests({
+  const { errorTree } = await runBrowserTests({
     root: './fixtures/assertion-helper',
   })
 
-  const projectTree = buildTestProjectTree(results, (testCase) => {
-    const result = testCase.result()
-    return result.errors.map((e) => {
-      const stacks = e.stacks.map(s => ({
-        ...s,
-        file: path.relative(ctx.config.root, s.file),
-      }))
-      return ({ message: e.message, stacks })
-    })
-  })
+  const projectTree = errorTree({ project: true, stackTrace: true })
   expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
 
   for (const [name, tree] of Object.entries(projectTree)) {
@@ -26,56 +15,20 @@ test('vi.defineHelper hides internal stack traces', async () => {
         {
           "basic.test.ts": {
             "async": [
-              {
-                "message": "expected 'async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 8,
-                    "file": "basic.test.ts",
-                    "line": 26,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:26:8",
             ],
             "soft": [
-              {
-                "message": "expected 'soft' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 14,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:14",
             ],
             "soft async": [
-              {
-                "message": "expected 'soft async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 8,
-                    "file": "basic.test.ts",
-                    "line": 34,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:34:8",
             ],
             "sync": [
-              {
-                "message": "expected 'sync' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 10,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:10",
             ],
           },
         }
@@ -89,56 +42,20 @@ test('vi.defineHelper hides internal stack traces', async () => {
         {
           "basic.test.ts": {
             "async": [
-              {
-                "message": "expected 'async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 20,
-                    "file": "basic.test.ts",
-                    "line": 9,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:9:20",
             ],
             "soft": [
-              {
-                "message": "expected 'soft' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 14,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:14",
             ],
             "soft async": [
-              {
-                "message": "expected 'soft async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 25,
-                    "file": "basic.test.ts",
-                    "line": 18,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:18:25",
             ],
             "sync": [
-              {
-                "message": "expected 'sync' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 10,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:10",
             ],
           },
         }
@@ -149,56 +66,20 @@ test('vi.defineHelper hides internal stack traces', async () => {
         {
           "basic.test.ts": {
             "async": [
-              {
-                "message": "expected 'async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 26,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:26:2",
             ],
             "soft": [
-              {
-                "message": "expected 'soft' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 30,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:2",
             ],
             "soft async": [
-              {
-                "message": "expected 'soft async' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 34,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:34:2",
             ],
             "sync": [
-              {
-                "message": "expected 'sync' to deeply equal 'x'",
-                "stacks": [
-                  {
-                    "column": 2,
-                    "file": "basic.test.ts",
-                    "line": 22,
-                    "method": "",
-                  },
-                ],
-              },
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:2",
             ],
           },
         }
