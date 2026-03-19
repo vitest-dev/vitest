@@ -1,4 +1,14 @@
 import type { TestTagDefinition, VitestRunnerConfig } from '../types/runner'
+import { getRunner } from '../suite'
+
+export function matchesTagsFilter(testTags: string[]): boolean {
+  const runner = getRunner()
+  if (!runner.config.tagsFilter) {
+    return true
+  }
+  const tagsFilter = createTagsFilter(runner.config.tagsFilter, runner.config.tags)
+  return tagsFilter(testTags)
+}
 
 export function validateTags(config: VitestRunnerConfig, tags: string[]): void {
   if (!config.strictTags) {

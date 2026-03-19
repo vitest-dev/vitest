@@ -150,6 +150,7 @@ export type {
 } from '@vitest/runner'
 
 export type { CancelReason } from '@vitest/runner'
+export { matchesTagsFilter } from '@vitest/runner/utils'
 
 export type {
   SnapshotData,
