@@ -57,7 +57,7 @@ export type MockProcedureContext<T extends Procedure | Constructable> = T extend
   ? InstanceType<T>
   : ThisParameterType<T>
 
-export interface MockContext<T extends Procedure | Constructable = Procedure> extends Disposable {
+export interface MockContext<T extends Procedure | Constructable = Procedure> {
   /**
    * This is an array containing all arguments for each call. One item of the array is the arguments of that call.
    *
@@ -208,7 +208,7 @@ Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows 
   const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
-export interface MockInstance<T extends Procedure | Constructable = Procedure> {
+export interface MockInstance<T extends Procedure | Constructable = Procedure> extends Disposable {
   /**
    * Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
    * @see https://vitest.dev/api/mock#getmockname
