@@ -41,18 +41,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
     debug?.('creating pool for project %s', project.name)
 
-    const resolvedUrls = project.browser!.vite.resolvedUrls
-    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-
-    if (!origin) {
-      throw new Error(
-        `Can't find browser origin URL for project "${project.name}"`,
-      )
-    }
-
     const pool: BrowserPool = new BrowserPool(project, {
       maxWorkers: getThreadsCount(project),
-      origin,
     })
     projectPools.set(project, pool)
     vitest.onCancel(() => {
@@ -198,7 +188,7 @@ class BrowserPool {
   private _promise: DeferPromise<void> | undefined
   private _providedContext: string | undefined
 
-  private readySessions = new Set<string>()
+  private readySessions: Set<string>
 
   private _traces: Traces
   private _otel: {
@@ -210,7 +200,6 @@ class BrowserPool {
     private project: TestProject,
     private options: {
       maxWorkers: number
-      origin: string
     },
   ) {
     this._traces = project.vitest._traces
@@ -219,6 +208,7 @@ class BrowserPool {
       'vitest.project': project.name,
       'vitest.browser.provider': this.project.browser!.provider.name,
     })
+    this.readySessions = project._browserReadySessions
   }
 
   public cancel(): void {
@@ -296,24 +286,10 @@ class BrowserPool {
   }
 
   private async openPage(sessionId: string, options: { parallel: boolean }): Promise<void> {
-    const sessionPromise = this.project.vitest._browserSessions.createSession(
-      sessionId,
-      this.project,
-      this,
-    )
-    const browser = this.project.browser!
-    const url = new URL('/__vitest_test__/', this.options.origin)
-    url.searchParams.set('sessionId', sessionId)
-    const otelCarrier = this._traces.getContextCarrier()
-    if (otelCarrier) {
-      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
-    }
-    const pagePromise = browser.provider.openPage(
-      sessionId,
-      url.toString(),
-      options,
-    )
-    await Promise.all([sessionPromise, pagePromise])
+    await this.project._openBrowserPage(sessionId, {
+      reject: error => this.reject(error),
+      parallel: options.parallel,
+    })
   }
 
   private getOrchestrator(sessionId: string) {
