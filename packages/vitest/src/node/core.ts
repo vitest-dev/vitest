@@ -21,12 +21,10 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
-import { disableDefaultColors } from 'tinyrainbow'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
-import { isAgent } from '../utils/env'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
@@ -139,10 +137,6 @@ export class Vitest {
     cliOptions: UserConfig,
     options: VitestOptions = {},
   ) {
-    if (isAgent) {
-      disableDefaultColors()
-    }
-
     this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
