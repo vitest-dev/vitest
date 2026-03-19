@@ -206,7 +206,10 @@ Jest uses the latter for `MockInstance.mockImplementation` etc... and it allows 
   const boolFn: Jest.Mock<() => boolean> = jest.fn<() => true>(() => true)
 */
 /* eslint-disable ts/method-signature-style */
-export interface MockInstance<T extends Procedure | Constructable = Procedure> extends Disposable {
+export interface MockInstance<T extends Procedure | Constructable = Procedure> {
+  // eslint-disable-next-line ts/ban-ts-comment
+  // @ts-ignore -- Symbol.dispose might not be in user types
+  [Symbol.dispose](): void
   /**
    * Use it to return the name assigned to the mock with the `.mockName(name)` method. By default, it will return `vi.fn()`.
    * @see https://vitest.dev/api/mock#getmockname

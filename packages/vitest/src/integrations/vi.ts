@@ -18,6 +18,12 @@ import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
 
+interface Disposable {
+  // eslint-disable-next-line ts/ban-ts-comment
+  // @ts-ignore -- Symbol.dispose might not be in user types
+  [Symbol.dispose]: () => void
+}
+
 export interface VitestUtils {
   /**
    * Checks if fake timers are enabled.
