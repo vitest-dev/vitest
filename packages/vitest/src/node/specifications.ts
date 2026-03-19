@@ -1,7 +1,7 @@
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
-import { existsSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { isWindows } from '../utils/env'
@@ -120,6 +120,72 @@ export class VitestSpecifications {
   }
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
+    if (this.vitest.config.stale) {
+      const root = this.vitest.config.root
+      const testGraphs = await Promise.all(
+        specs.map(async (spec) => {
+          const deps = await this.getTestDependencies(spec)
+          return [spec, deps] as const
+        }),
+      )
+
+      const allScannedFiles = new Set<string>()
+      const staleSpecs: TestSpecification[] = []
+      const staleManifest = this.vitest.cache.stale
+      const shouldRunAllByManifest = !staleManifest.hasManifest()
+
+      const forceRerunTriggers = this.vitest.config.forceRerunTriggers
+      const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+      let shouldRunAllByTrigger = false
+
+      const isFileStale = (filePath: string) => {
+        const relativePath = relative(root, filePath)
+        const manifestMtime = staleManifest.getFileMtime(relativePath)
+
+        if (manifestMtime === undefined) {
+          return true
+        }
+
+        if (!existsSync(filePath)) {
+          return true
+        }
+
+        const currentMtime = statSync(filePath).mtimeMs
+        return currentMtime > manifestMtime
+      }
+
+      for (const [spec, deps] of testGraphs) {
+        const files = [spec.moduleId, ...deps]
+        let isSpecStale = false
+
+        for (const filePath of files) {
+          allScannedFiles.add(filePath)
+
+          const fileChanged = isFileStale(filePath)
+
+          if (!shouldRunAllByTrigger && matcher && fileChanged && matcher(filePath)) {
+            shouldRunAllByTrigger = true
+          }
+
+          if (!isSpecStale && fileChanged) {
+            isSpecStale = true
+          }
+        }
+
+        if (isSpecStale) {
+          staleSpecs.push(spec)
+        }
+      }
+
+      await staleManifest.updateFiles(root, Array.from(allScannedFiles))
+
+      if (shouldRunAllByManifest || shouldRunAllByTrigger) {
+        return specs
+      }
+
+      return staleSpecs
+    }
+
     if (this.vitest.config.changed && !this.vitest.config.related) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.vitest.config.root)
