@@ -561,8 +561,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.0
       ivya:
-        specifier: file:../../ivya-1.7.1.tgz
-        version: file:ivya-1.7.1.tgz
+        specifier: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
+        version: https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374
       mime:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1602,9 +1602,6 @@ importers:
       happy-dom:
         specifier: latest
         version: 20.8.3
-      ivya:
-        specifier: file:../../ivya-1.7.1.tgz
-        version: file:ivya-1.7.1.tgz
       jest-image-snapshot:
         specifier: ^6.5.1
         version: 6.5.1
@@ -7790,8 +7787,8 @@ packages:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
-  ivya@file:ivya-1.7.1.tgz:
-    resolution: {integrity: sha512-oeItgP4vuyhS2Dbx7F9nFq4TT+i79myeaXhRxJMu+2mm8dLoawARiNMD1kgMeVBB5df5uXTN8OZPcHNxzvIGrw==}
+  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374:
+    resolution: {integrity: sha512-qsQhvvNzkxQcT/zPhhqSiMOM7uP+mACSI8aFC40UP3+19AfUgCo6vJEaCrQnyAqFL4jKHe2xkUMxVl+gYEaXbQ==}
     version: 1.7.1
 
   jackspeak@3.4.0:
@@ -16711,7 +16708,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@file:ivya-1.7.1.tgz: {}
+  ivya@https://pkg.pr.new/vitest-dev/ivya/ivya@afc8374: {}
 
   jackspeak@3.4.0:
     dependencies:
