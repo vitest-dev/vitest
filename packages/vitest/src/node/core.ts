@@ -103,7 +103,12 @@ export class Vitest {
    * Vitest behaviour.
    */
   public readonly watcher: VitestWatcher
-
+  /**
+   * The version control system provider used to detect changed files.
+   * This is used with the `--changed` flag to determine which test files to run.
+   * By default, Vitest uses Git. You can provide a custom implementation via
+   * `experimental.vcsProvider` in your config.
+   */
   public vcs!: VCSProvider
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}

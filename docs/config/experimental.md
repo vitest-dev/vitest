@@ -410,7 +410,7 @@ export default defineConfig({
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
 :::
 
-## experimental.vcsProvider <Version type="experimental">4.1.0</Version> {#experimental-vcsprovider}
+## experimental.vcsProvider <Version type="experimental">4.1.1</Version> {#experimental-vcsprovider}
 
 - **Type:**
 
