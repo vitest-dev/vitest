@@ -795,10 +795,18 @@ export class Vitest {
   }
 
   /**
+   * @deprecated use `standalone()` instead
+   */
+  init(): Promise<void> {
+    this.logger.deprecate('`vitest.init()` is deprecated. Use `vitest.standalone()` instead.')
+    return this.standalone()
+  }
+
+  /**
    * Initialize reporters and the coverage provider. This method doesn't run any tests.
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
-  async init(): Promise<void> {
+  async standalone(): Promise<void> {
     await this._traces.$('vitest.init', async () => {
       try {
         await this.initCoverageProvider()
@@ -810,6 +818,8 @@ export class Vitest {
 
       // populate test files cache so watch mode can trigger a file rerun
       await this.globTestSpecifications()
+
+      await Promise.all(this.projects.map(project => project._standalone()))
 
       if (this.config.watch) {
         await this.report('onWatcherStart')
