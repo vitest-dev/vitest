@@ -88,9 +88,18 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             let executionPhase: 'fn' | 'assertion' = 'fn'
             let hasTimedOut = false
+            let lastAssertionError: unknown = null
+
+            let rejectOnTimeout!: (err: Error & { _isPollTimeout: true }) => void
+            const deadlinePromise = new Promise<never>((_, reject) => {
+              rejectOnTimeout = reject
+            })
 
             const timerId = setTimeout(() => {
               hasTimedOut = true
+              rejectOnTimeout(
+                Object.assign(new Error('Matcher did not succeed in time.'), { _isPollTimeout: true as const }),
+              )
             }, timeout)
 
             chai.util.flag(assertion, '_name', key)
@@ -107,7 +116,12 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
                 try {
                   executionPhase = 'fn'
-                  const obj = await fn()
+                  // On non-last attempts, race fn() against the deadline so a slow
+                  // async poll function cannot outlive the configured timeout.
+                  // On the last attempt we let fn() run to give it one final chance.
+                  const obj = isLastAttempt
+                    ? await fn()
+                    : await Promise.race([fn(), deadlinePromise])
                   chai.util.flag(assertion, 'object', obj)
 
                   executionPhase = 'assertion'
@@ -117,6 +131,16 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 }
                 catch (err) {
+                  if ((err as any)?._isPollTimeout === true) {
+                    await onSettled?.({ assertion, status: 'fail' })
+                    if (lastAssertionError != null) {
+                      throwWithCause(lastAssertionError, STACK_TRACE_ERROR)
+                    }
+                    throw copyStackTrace(err as Error, STACK_TRACE_ERROR)
+                  }
+
+                  lastAssertionError = err
+
                   if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
                     await onSettled?.({ assertion, status: 'fail' })
                     throwWithCause(err, STACK_TRACE_ERROR)
