@@ -371,6 +371,7 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
+      // TODO: looks sloppy
       isEqual: (snapshot) => {
         // If we already have a result from the probe loop, return it
         if (lastResult) {
