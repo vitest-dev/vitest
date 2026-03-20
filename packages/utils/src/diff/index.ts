@@ -97,7 +97,11 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
   if (expectedType !== getType(b)) {
     const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
       = normalizeDiffOptions(options)
-    const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
+    // depth can be minimized when diffing different type of values
+    // since the difference would manifest at the top level.
+    // this heuristics can help avoiding printing large objects for assertion failure patterns such as:
+    //   expect(shouldBeNullButMaybeHugeObject).toBeFalsy()
+    const formatOptions = getFormatOptions({ ...FALLBACK_FORMAT_OPTIONS, maxDepth: 1 }, options)
     let aDisplay = prettyFormat(a, formatOptions)
     let bDisplay = prettyFormat(b, formatOptions)
     // even if prettyFormat prints successfully big objects,
