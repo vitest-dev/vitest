@@ -254,6 +254,90 @@ test('domain snapshot with poll', async () => {
   `)
 })
 
+test('poll until stable match when "none"', async () => {
+  const result = await runInlineTests({
+    '__snapshots__/basic.test.ts.snap': `\
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[\`stable wrong then right 1\`] = \`
+phase=complete
+\`;
+`,
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+import { kvAdapter } from '../test/fixtures/domain/basic'
+
+expect.addSnapshotDomain(kvAdapter)
+
+test('stable wrong then right', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    if (trial <= 4) return { phase: 'pending' }
+    return { phase: 'complete' }
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(6)
+})
+`,
+  }, {
+    update: 'none',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "stable wrong then right": "passed",
+      },
+    }
+  `)
+})
+
+test('poll until stable when "all"', async () => {
+  const result = await runInlineTests({
+    '__snapshots__/basic.test.ts.snap': `\
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[\`stable wrong then right 1\`] = \`
+phase=complete
+\`;
+`,
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+import { kvAdapter } from '../test/fixtures/domain/basic'
+
+expect.addSnapshotDomain(kvAdapter)
+
+test('stable wrong then right', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    if (trial <= 4) return { phase: 'pending' }
+    return { phase: 'complete' }
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(2)
+})
+`,
+  }, {
+    update: 'all',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "stable wrong then right": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`stable wrong then right 1\`] = \`
+    phase=pending
+    \`;
+    "
+  `)
+})
+
 test('errors', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
