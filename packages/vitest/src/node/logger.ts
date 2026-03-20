@@ -258,7 +258,7 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
     }
     else {
       this.log()
