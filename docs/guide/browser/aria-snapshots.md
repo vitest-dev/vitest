@@ -88,7 +88,7 @@ test('login form', async () => {
 
 ## Browser Mode Retry Behavior
 
-In [Browser Mode](/guide/browser/), `expect.element()` automatically retries ARIA snapshot assertions until the accessibility tree matches or the timeout is reached:
+In [Browser Mode](/guide/browser/), `expect.element()` polls the DOM and waits for the accessibility tree to **stabilize** before evaluating the result. On each poll, the matcher re-queries the element and re-captures the accessibility tree. The snapshot is considered stable when two consecutive polls produce the same output.
 
 ```ts
 await expect.element(page.getByRole('form')).toMatchAriaInlineSnapshot(`
@@ -99,9 +99,9 @@ await expect.element(page.getByRole('form')).toMatchAriaInlineSnapshot(`
 `)
 ```
 
-The matcher re-queries the element and re-captures the accessibility tree on each attempt.
+On first run or with `--update`, the stable result is written as the new snapshot.
 
-Retry only applies when comparing against an existing snapshot. On first run, or when using `--update`, the matcher captures once and writes immediately.
+When an existing snapshot is present, the matcher also checks whether the stable result matches. If it does not, polling resets and continues — giving the DOM time to reach the expected state. This handles cases like animations, async rendering, or delayed state updates where the tree may briefly stabilize in an intermediate state before settling into its final form.
 
 ## Preserving Hand-Edited Patterns
 
