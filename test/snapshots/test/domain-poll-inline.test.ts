@@ -9,6 +9,7 @@ function readTestCases(file: string) {
   return readFileSync(file, 'utf-8').split(SPLITTER)[1]
 }
 
+// TODO: inline version of test/snapshots/test/domain-poll.test.ts
 test('domain inline snapshot with poll', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-poll-inline')
   const testFile = join(root, 'basic.test.ts')

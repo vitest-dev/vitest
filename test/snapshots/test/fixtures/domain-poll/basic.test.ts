@@ -6,11 +6,10 @@ expect.addSnapshotDomain(kvAdapter)
 test('stable', async () => {
   let trial = 0
   await expect.poll(() => {
-    trial++;
-    // --- STABLE TEST POLL ---
+    trial++
     return { name: 'a', age: '23' }
-  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
-  expect(trial).toBe(1)
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(2)
 })
 
 test('throw then stable', async () => {
@@ -21,36 +20,54 @@ test('throw then stable', async () => {
       throw new Error(`Fail at ${trial}`)
     }
     return { name: 'b', age: '23' }
-  }).toMatchDomainSnapshot('kv')
-  expect(trial).toBe(2)
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(3)
 })
 
-test('unstable', async () => {
+test('transitional then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    return { name: 'c', __UNSTABLE_TRIAL__: trial }
-  }).toMatchDomainSnapshot('kv')
+    if (trial <= 2) return { status: 'loading' }
+    return { status: 'done' }
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
 })
 
-// #6: multiple poll+snapshot in same test — verifies probe peek counter invariant
+// TODO: move out simple always-failing test as own runInlineTests
+// test('never stabilizes', async () => {
+//   let trial = 0
+//   await expect.poll(() => {
+//     trial++
+//     return { name: 'x', counter: String(trial) }
+//   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+// })
+
+// validates match rides through wrong stable state
+test('stable wrong then right', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    if (trial <= 3) return { status: 'loading' }
+    return { status: 'done' }
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+})
+
 test('multiple poll snapshots', async () => {
   await expect.poll(() => {
     return { x: '1' }
-  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
 
   await expect.poll(() => {
     return { y: '2' }
-  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
 })
 
-// #7: non-poll alongside poll — verifies no interference
 test('non-poll alongside poll', async () => {
   expect({ static: 'value' }).toMatchDomainSnapshot('kv')
 
   await expect.poll(() => {
     return { polled: 'value' }
-  }, { timeout: 100 }).toMatchDomainSnapshot('kv')
+  }, { interval: 10 }).toMatchDomainSnapshot('kv')
 
   expect({ another: 'static' }).toMatchDomainSnapshot('kv')
 })
