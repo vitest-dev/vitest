@@ -152,6 +152,10 @@ The regex patterns you wrote in step 2 are preserved because they still match th
 
 ARIA snapshots use a YAML-like syntax. Each line represents a node in the accessibility tree.
 
+::: info
+ARIA snapshot templates use a **subset of YAML** syntax. Only the features needed for accessibility trees are supported: scalar values, nested mappings via indentation, and sequences (`- item`). Advanced YAML features like anchors, tags, flow collections, and multi-line scalars are not supported.
+:::
+
 Each accessible element in the tree is represented as a YAML node:
 
 ```yaml
@@ -318,26 +322,6 @@ The `/placeholder:` pseudo-attribute only appears when the placeholder text is *
 
 ## Matching
 
-### Partial Matching
-
-Templates match partially by default — you don't need to list every node. Only the nodes you include are checked:
-
-```html
-<main>
-  <h1>Welcome</h1>
-  <p>Some intro text</p>
-  <button>Get Started</button>
-</main>
-```
-
-```ts
-// This passes even though the main element has other children
-await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
-  - main:
-    - heading "Welcome" [level=1]
-`)
-```
-
 ### Regular Expressions
 
 Use regex patterns to match names flexibly:
@@ -363,3 +347,109 @@ Regex also works in pseudo-attribute values:
 - textbox "Search":
     - /placeholder: /Type .*/
 ```
+
+::: warning Escaping backslashes in regex patterns
+Snapshots are stored as JavaScript strings — in backtick-delimited template literals for inline snapshots and in `.snap` files. Because of this, backslashes need to be **doubled** when you hand-edit a snapshot to add a regex pattern.
+
+For example, to match one or more digits with `\d+`:
+
+```ts
+// ✅ Correct — double backslash
+await expect.element(button).toMatchAriaInlineSnapshot(`
+  - button: /item \\d+/
+`)
+
+// ❌ Wrong — single backslash is consumed by JS, regex sees "d+" instead of "\d+"
+await expect.element(button).toMatchAriaInlineSnapshot(`
+  - button: /item \d+/
+`)
+```
+
+This applies to both inline snapshots and `.snap` files. When Vitest **auto-generates** or **updates** a snapshot, escaping is handled automatically — you only need to worry about this when hand-editing regex patterns.
+:::
+
+### Child Matching
+
+The `/children` directive controls how a node's children are compared against the template. There are three modes:
+
+#### Partial Matching (default)
+
+By default (no `/children` directive), templates use **contain** semantics — extra children in the actual tree are allowed as long as all template children appear as an ordered subsequence. This is the same as `/children: contain`.
+
+```html
+<main>
+  <h1>Welcome</h1>
+  <p>Some intro text</p>
+  <button>Get Started</button>
+</main>
+```
+
+```ts
+// This passes — the template children are a subset of the actual children
+await expect.element(page.getByRole('main')).toMatchAriaInlineSnapshot(`
+  - main:
+    - heading "Welcome" [level=1]
+`)
+```
+
+This is useful for focused, resilient tests that don't break when unrelated content is added.
+
+#### Exact Matching (`/children: equal`)
+
+Requires that the node's immediate children match the template exactly — same count, same order. No extra children are allowed at this level.
+
+```html
+<ul aria-label="Features">
+  <li>Feature A</li>
+  <li>Feature B</li>
+  <li>Feature C</li>
+</ul>
+```
+
+```ts
+// This FAILS — the list has 3 items but the template only lists 2
+await expect.element(page.getByRole('list')).toMatchAriaInlineSnapshot(`
+  - list "Features":
+    - /children: equal
+    - listitem: Feature A
+    - listitem: Feature B
+`)
+```
+
+```ts
+// This PASSES — all 3 items are listed
+await expect.element(page.getByRole('list')).toMatchAriaInlineSnapshot(`
+  - list "Features":
+    - /children: equal
+    - listitem: Feature A
+    - listitem: Feature B
+    - listitem: Feature C
+`)
+```
+
+The strict matching only applies at the level where `/children` is placed. Descendants of each `listitem` still use the default contain semantics.
+
+#### Deep Exact Matching (`/children: deep-equal`)
+
+Like `equal`, but the strict matching **propagates to all descendants**. Every level of nesting must match exactly — same count, same order, no extra nodes at any depth.
+
+```ts
+await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
+  - navigation "Main":
+    - /children: deep-equal
+    - link "Home":
+      - /url: /
+    - link "About":
+      - /url: /about
+`)
+```
+
+With `deep-equal`, every child of each `link` must also match exactly. If a link had an extra child node not listed in the template, the assertion would fail.
+
+#### Comparison
+
+| Mode | Directive | Behavior |
+| --- | --- | --- |
+| Partial | _(default)_ or `/children: contain` | Template children are an ordered subsequence — extra actual children are ignored |
+| Exact | `/children: equal` | Immediate children must match exactly; descendants still use partial matching |
+| Deep exact | `/children: deep-equal` | All children at every depth must match exactly |
