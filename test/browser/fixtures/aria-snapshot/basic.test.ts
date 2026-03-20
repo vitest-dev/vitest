@@ -55,8 +55,8 @@ test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () =
       <h1>Hello</h1>
       <p>World</p>
     `
-  }, 100)
-  await expect.element(page.getByTestId('body'), { interval: 150 })
+  }, 10)
+  await expect.element(page.getByTestId('body'), { interval: 20 })
     .toMatchAriaInlineSnapshot(`
     - heading "Hello" [level=1]
     - paragraph: World
