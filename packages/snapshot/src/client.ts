@@ -1,12 +1,8 @@
 import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
-import type { SnapshotResult, SnapshotStateOptions } from './types'
+import type { SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from './types'
 import SnapshotState from './port/state'
 import { deepMergeSnapshot } from './port/utils'
-
-const now = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 function createMismatchError(
   message: string,
@@ -232,7 +228,6 @@ export class SnapshotClient {
     }
   }
 
-  // TODO: consolidate with expect.poll logic
   async pollAssertDomain(options: AssertDomainPollOptions): Promise<void> {
     const {
       poll,
@@ -255,7 +250,6 @@ export class SnapshotClient {
     const snapshotState = this.getSnapshotState(filepath)
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
-    // Probe: read existing snapshot without mutating state
     const expectedSnapshot = snapshotState.probeExpectedSnapshot({
       testName,
       testId,
@@ -263,133 +257,59 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    // TODO: refactor slop
-    let lastCaptured: unknown
-    let lastRendered: string | undefined
-    let lastResult: DomainMatchResult | undefined
-    let lastPollError: unknown // TODO: rename?
+    const stableResult = await waitForStableSnapshot({
+      adapter,
+      poll,
+      interval,
+    }, timeout)
 
-    const TIMEOUT = Symbol('timeout')
-    const startTime = now()
-
-    function raceTimeout<T>(promise: Promise<T>): Promise<T | typeof TIMEOUT> {
-      const remaining = timeout - (now() - startTime)
-      if (remaining <= 0) {
-        return Promise.resolve(TIMEOUT)
-      }
-      return Promise.race([
-        promise,
-        new Promise<typeof TIMEOUT>(r => setTimeout(() => r(TIMEOUT), remaining)),
-      ])
-    }
-
-    async function delayWithTimeout(): Promise<typeof TIMEOUT | void> {
-      return raceTimeout(new Promise<void>(r => setTimeout(r, interval)))
-    }
-
-    // TODO: stability should be always required
-    // otherwise existing unstable snapshots can pass without `--update` and fails with `--update`
-    if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
-      // Parse expected once — it doesn't change between retries
-      const parsedExpected = adapter.parseExpected(expectedSnapshot.data)
-
-      // Retry loop: capture + match, no state mutation
-      while (true) {
-        try {
-          const received = await raceTimeout(Promise.resolve(poll()))
-          if (received === TIMEOUT) {
-            break
-          }
-          lastCaptured = adapter.capture(received)
-          lastRendered = adapter.render(lastCaptured)
-          lastResult = adapter.match(lastCaptured, parsedExpected)
-          if (lastResult.pass) {
-            break
-          }
+    const reference = expectedSnapshot.data
+      ? {
+          data: expectedSnapshot.data,
+          parsed: adapter.parseExpected(expectedSnapshot.data),
         }
-        catch (e) {
-          // poll() threw — value not ready, keep retrying
-          lastPollError = e
-        }
+      : undefined
 
-        if (await delayWithTimeout() === TIMEOUT) {
-          break
-        }
-      }
-    }
-    else {
-      // No existing snapshot or update mode.
-      // Poll until the rendered value stabilizes (two consecutive
-      // iterations produce the same output) so that a flaky result
-      // won't be captured as an initial snapshot nor an new snapshot
-      // with --update
-      while (true) {
-        try {
-          const received = await raceTimeout(Promise.resolve(poll()))
-          if (received === TIMEOUT) {
-            lastPollError ??= new Error('poll() timed out')
-            break
-          }
-          const captured = adapter.capture(received)
-          const rendered = adapter.render(captured)
-          const isStable = rendered === lastRendered
-          lastCaptured = captured
-          lastRendered = rendered
-          if (isStable) {
-            lastPollError = undefined
-            break
-          }
-          lastPollError ??= new Error('poll() did not produce a stable snapshot')
-        }
-        catch (e) {
-          // poll() threw — value not ready, reset stability and retry.
-          lastRendered = undefined
-          lastCaptured = undefined
-          lastPollError = e
-        }
-        // retry after delay
-        if (await delayWithTimeout() === TIMEOUT) {
-          lastPollError ??= new Error('poll() timed out')
-          break
-        }
-      }
-    }
-
-    // poll() never succeeded or new snapshot is unstable
-    if (lastPollError || lastRendered == null) {
-      // consume the probed key to prevent
-      // the snapshot from being deleted as obsolete
-      expectedSnapshot.markAsChecked()
-      throw lastPollError || new Error('poll() never returned a value within the timeout')
-    }
-
-    // Commit: single matchDomain call
-    const matchResult = snapshotState.matchDomain({
-      testId,
-      testName,
-      received: lastRendered,
-      isInline,
-      inlineSnapshot,
-      error,
-      // TODO: looks sloppy
-      isEqual: (snapshot) => {
-        // If we already have a result from the probe loop, return it
-        if (lastResult) {
-          return lastResult
-        }
-        // Otherwise (no-retry path), compare now
-        const parsed = adapter.parseExpected(snapshot)
-        return adapter.match(lastCaptured, parsed)
-      },
+    const outcome = determinePollOutcome({
+      snapshot: stableResult,
+      reference,
+      adapter,
+      updateSnapshot: snapshotState.snapshotUpdateState,
     })
 
-    if (!matchResult.pass) {
-      throw createMismatchError(
-        `Snapshot \`${matchResult.key || 'unknown'}\` mismatched`,
-        snapshotState.expand,
-        matchResult.actual?.trim(),
-        matchResult.expected?.trim(),
-      )
+    switch (outcome.type) {
+      case 'unstable': {
+        expectedSnapshot.markAsChecked()
+        throw outcome.error
+      }
+
+      case 'matched-after-comparison':
+      case 'needs-commit': {
+        const matchResult = snapshotState.matchDomain({
+          testId,
+          testName,
+          received: outcome.rendered,
+          isInline,
+          inlineSnapshot,
+          error,
+          isEqual: 'matchResult' in outcome
+            ? () => outcome.matchResult
+            : snapshot => adapter.match(outcome.captured, adapter.parseExpected(snapshot)),
+        })
+        if (!matchResult.pass) {
+          throw createMismatchError(
+            `Snapshot \`${matchResult.key || 'unknown'}\` mismatched`,
+            snapshotState.expand,
+            matchResult.actual?.trim(),
+            matchResult.expected?.trim(),
+          )
+        }
+        return
+      }
+
+      default: {
+        outcome satisfies never
+      }
     }
   }
 
@@ -424,5 +344,152 @@ export class SnapshotClient {
 
   clear(): void {
     this.snapshotStateMap.clear()
+  }
+}
+
+// ── Poll-stable snapshot helpers ─────────────────────────────────────────────
+// inspired by packages/browser/src/node/commands/screenshotMatcher/index.ts
+
+/**
+ * Discriminated union representing all possible outcomes of a poll snapshot.
+ *
+ * - `unstable`: polled value never stabilized within timeout
+ * - `matched-after-comparison`: stable value matched after full comparison
+ * - `needs-commit`: stable value needs to be committed (new, update, or mismatch)
+ */
+type PollOutcome
+  = | { type: 'unstable'; error: unknown }
+    | {
+      type: 'matched-after-comparison'
+      captured: unknown
+      rendered: string
+      matchResult: DomainMatchResult
+    }
+    | {
+      type: 'needs-commit'
+      captured: unknown
+      rendered: string
+    }
+
+interface StablePollOptions {
+  adapter: DomainSnapshotAdapter<any, any>
+  poll: () => Promise<unknown> | unknown
+  interval: number
+}
+
+/**
+ * Polls until the rendered value stabilizes, with timeout handling.
+ *
+ * Wraps {@linkcode getStableSnapshot} with an abort controller that
+ * triggers when the timeout expires. Returns `undefined` if the value never stabilizes.
+ */
+async function waitForStableSnapshot(
+  options: StablePollOptions,
+  timeout: number,
+): Promise<{ captured: unknown; rendered: string } | undefined> {
+  const abortController = new AbortController()
+  const stable = getStableSnapshot(options, abortController.signal)
+  if (timeout === 0) {
+    return stable
+  }
+  const timeoutPromise = new Promise<undefined>((resolve) => {
+    setTimeout(() => {
+      abortController.abort()
+      resolve(undefined)
+    }, timeout)
+  })
+  return Promise.race([stable, timeoutPromise])
+}
+
+/**
+ * Polls repeatedly until the value reaches a stable state.
+ *
+ * Compares consecutive rendered outputs from the current session —
+ * when two consecutive polls produce the same rendered string,
+ * the value is considered stable.
+ */
+async function getStableSnapshot(
+  { adapter, poll, interval }: StablePollOptions,
+  signal: AbortSignal,
+): Promise<{ captured: unknown; rendered: string }> {
+  let baselineRendered: string | undefined
+
+  let lastCaptured: unknown
+  let lastRendered: string | undefined
+
+  while (!signal.aborted) {
+    try {
+      const received = await poll()
+      lastCaptured = adapter.capture(received)
+      lastRendered = adapter.render(lastCaptured)
+
+      if (baselineRendered !== undefined && lastRendered === baselineRendered) {
+        break
+      }
+
+      baselineRendered = lastRendered
+    }
+    catch {
+      // TODO: error should be surfaced together with `unstable` result. (use Error.cause?)
+      // poll() threw — reset stability baseline and retry
+      baselineRendered = undefined
+      lastCaptured = undefined
+      lastRendered = undefined
+    }
+
+    await new Promise<void>(r => setTimeout(r, interval))
+  }
+
+  return { captured: lastCaptured, rendered: lastRendered! }
+}
+
+/**
+ * Determines the outcome of a poll snapshot based on capture results and context.
+ *
+ * All branching logic lives here — single source of truth for "what happened".
+ */
+function determinePollOutcome({
+  snapshot,
+  reference,
+  adapter,
+  updateSnapshot,
+}: {
+  snapshot?: { captured: unknown; rendered: string }
+  reference?: { data: string; parsed: unknown }
+  adapter: DomainSnapshotAdapter<any, any>
+  updateSnapshot: SnapshotUpdateState
+}): PollOutcome {
+  if (!snapshot) {
+    return {
+      type: 'unstable',
+      error: new Error('poll() did not produce a stable snapshot within the timeout'),
+    }
+  }
+
+  // No reference or update mode — commit the stable value as-is
+  if (!reference || updateSnapshot === 'all') {
+    return {
+      type: 'needs-commit',
+      captured: snapshot.captured,
+      rendered: snapshot.rendered,
+    }
+  }
+
+  // Compare stable value against reference
+  const matchResult = adapter.match(snapshot.captured, reference.parsed)
+
+  if (matchResult.pass) {
+    return {
+      type: 'matched-after-comparison',
+      captured: snapshot.captured,
+      rendered: snapshot.rendered,
+      matchResult,
+    }
+  }
+
+  return {
+    type: 'needs-commit',
+    captured: snapshot.captured,
+    rendered: snapshot.rendered,
   }
 }
