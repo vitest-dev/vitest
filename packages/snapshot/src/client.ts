@@ -1,6 +1,6 @@
 import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
-import type { SnapshotResult, SnapshotStateOptions, SnapshotUpdateState } from './types'
+import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
 import { deepMergeSnapshot } from './port/utils'
 
@@ -257,59 +257,55 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    const stableResult = await waitForStableSnapshot({
-      adapter,
-      poll,
-      interval,
-    }, timeout)
+    const abortController = new AbortController()
+    const stable = getStableSnapshot({ adapter, poll, interval, signal: abortController.signal })
+    const stableResult = timeout === 0
+      ? await stable
+      : await Promise.race([
+          stable,
+          new Promise<undefined>((resolve) => {
+            setTimeout(() => {
+              abortController.abort()
+              resolve(undefined)
+            }, timeout)
+          }),
+        ])
 
-    const reference = expectedSnapshot.data
-      ? {
-          data: expectedSnapshot.data,
-          parsed: adapter.parseExpected(expectedSnapshot.data),
-        }
-      : undefined
+    if (!stableResult?.rendered) {
+      expectedSnapshot.markAsChecked()
+      const error = new Error('poll() did not produce a stable snapshot within the timeout')
+      if (stableResult?.lastPollError) {
+        error.cause = stableResult.lastPollError
+      }
+      throw error
+    }
 
-    const outcome = determinePollOutcome({
-      snapshot: stableResult,
-      reference,
-      adapter,
-      updateSnapshot: snapshotState.snapshotUpdateState,
+    // Pre-compare against reference if available and not in update mode
+    let preCompared: DomainMatchResult | undefined
+    if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
+      const parsed = adapter.parseExpected(expectedSnapshot.data)
+      preCompared = adapter.match(stableResult.captured, parsed)
+    }
+
+    const { actual, expected, key, pass } = snapshotState.matchDomain({
+      testId,
+      testName,
+      received: stableResult.rendered,
+      isInline,
+      inlineSnapshot,
+      error,
+      isEqual: preCompared
+        ? () => preCompared
+        : snapshot => adapter.match(stableResult.captured, adapter.parseExpected(snapshot)),
     })
 
-    switch (outcome.type) {
-      case 'unstable': {
-        expectedSnapshot.markAsChecked()
-        throw outcome.error
-      }
-
-      case 'matched-after-comparison':
-      case 'needs-commit': {
-        const matchResult = snapshotState.matchDomain({
-          testId,
-          testName,
-          received: outcome.rendered,
-          isInline,
-          inlineSnapshot,
-          error,
-          isEqual: 'matchResult' in outcome
-            ? () => outcome.matchResult
-            : snapshot => adapter.match(outcome.captured, adapter.parseExpected(snapshot)),
-        })
-        if (!matchResult.pass) {
-          throw createMismatchError(
-            `Snapshot \`${matchResult.key || 'unknown'}\` mismatched`,
-            snapshotState.expand,
-            matchResult.actual?.trim(),
-            matchResult.expected?.trim(),
-          )
-        }
-        return
-      }
-
-      default: {
-        outcome satisfies never
-      }
+    if (!pass) {
+      throw createMismatchError(
+        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        snapshotState.expand,
+        actual?.trim(),
+        expected?.trim(),
+      )
     }
   }
 
@@ -347,60 +343,6 @@ export class SnapshotClient {
   }
 }
 
-// ── Poll-stable snapshot helpers ─────────────────────────────────────────────
-// inspired by packages/browser/src/node/commands/screenshotMatcher/index.ts
-
-/**
- * Discriminated union representing all possible outcomes of a poll snapshot.
- *
- * - `unstable`: polled value never stabilized within timeout
- * - `matched-after-comparison`: stable value matched after full comparison
- * - `needs-commit`: stable value needs to be committed (new, update, or mismatch)
- */
-type PollOutcome
-  = | { type: 'unstable'; error: unknown }
-    | {
-      type: 'matched-after-comparison'
-      captured: unknown
-      rendered: string
-      matchResult: DomainMatchResult
-    }
-    | {
-      type: 'needs-commit'
-      captured: unknown
-      rendered: string
-    }
-
-interface StablePollOptions {
-  adapter: DomainSnapshotAdapter<any, any>
-  poll: () => Promise<unknown> | unknown
-  interval: number
-}
-
-/**
- * Polls until the rendered value stabilizes, with timeout handling.
- *
- * Wraps {@linkcode getStableSnapshot} with an abort controller that
- * triggers when the timeout expires. Returns `undefined` if the value never stabilizes.
- */
-async function waitForStableSnapshot(
-  options: StablePollOptions,
-  timeout: number,
-): Promise<{ captured: unknown; rendered: string } | undefined> {
-  const abortController = new AbortController()
-  const stable = getStableSnapshot(options, abortController.signal)
-  if (timeout === 0) {
-    return stable
-  }
-  const timeoutPromise = new Promise<undefined>((resolve) => {
-    setTimeout(() => {
-      abortController.abort()
-      resolve(undefined)
-    }, timeout)
-  })
-  return Promise.race([stable, timeoutPromise])
-}
-
 /**
  * Polls repeatedly until the value reaches a stable state.
  *
@@ -409,87 +351,33 @@ async function waitForStableSnapshot(
  * the value is considered stable.
  */
 async function getStableSnapshot(
-  { adapter, poll, interval }: StablePollOptions,
-  signal: AbortSignal,
-): Promise<{ captured: unknown; rendered: string }> {
-  let baselineRendered: string | undefined
-
-  let lastCaptured: unknown
+  { adapter, poll, interval, signal }: {
+    adapter: DomainSnapshotAdapter<any, any>
+    poll: () => Promise<unknown> | unknown
+    interval: number
+    signal: AbortSignal
+  },
+) {
   let lastRendered: string | undefined
+  let lastPollError: unknown
 
   while (!signal.aborted) {
     try {
       const received = await poll()
-      lastCaptured = adapter.capture(received)
-      lastRendered = adapter.render(lastCaptured)
-
-      if (baselineRendered !== undefined && lastRendered === baselineRendered) {
-        break
+      const captured = adapter.capture(received)
+      const rendered = adapter.render(captured)
+      if (lastRendered !== undefined && rendered === lastRendered) {
+        return { captured, rendered }
       }
-
-      baselineRendered = lastRendered
+      lastRendered = rendered
     }
-    catch {
-      // TODO: error should be surfaced together with `unstable` result. (use Error.cause?)
+    catch (pollError) {
       // poll() threw — reset stability baseline and retry
-      baselineRendered = undefined
-      lastCaptured = undefined
       lastRendered = undefined
+      lastPollError = pollError
     }
-
     await new Promise<void>(r => setTimeout(r, interval))
   }
 
-  return { captured: lastCaptured, rendered: lastRendered! }
-}
-
-/**
- * Determines the outcome of a poll snapshot based on capture results and context.
- *
- * All branching logic lives here — single source of truth for "what happened".
- */
-function determinePollOutcome({
-  snapshot,
-  reference,
-  adapter,
-  updateSnapshot,
-}: {
-  snapshot?: { captured: unknown; rendered: string }
-  reference?: { data: string; parsed: unknown }
-  adapter: DomainSnapshotAdapter<any, any>
-  updateSnapshot: SnapshotUpdateState
-}): PollOutcome {
-  if (!snapshot) {
-    return {
-      type: 'unstable',
-      error: new Error('poll() did not produce a stable snapshot within the timeout'),
-    }
-  }
-
-  // No reference or update mode — commit the stable value as-is
-  if (!reference || updateSnapshot === 'all') {
-    return {
-      type: 'needs-commit',
-      captured: snapshot.captured,
-      rendered: snapshot.rendered,
-    }
-  }
-
-  // Compare stable value against reference
-  const matchResult = adapter.match(snapshot.captured, reference.parsed)
-
-  if (matchResult.pass) {
-    return {
-      type: 'matched-after-comparison',
-      captured: snapshot.captured,
-      rendered: snapshot.rendered,
-      matchResult,
-    }
-  }
-
-  return {
-    type: 'needs-commit',
-    captured: snapshot.captured,
-    rendered: snapshot.rendered,
-  }
+  return { captured: undefined, rendered: undefined, lastPollError }
 }
