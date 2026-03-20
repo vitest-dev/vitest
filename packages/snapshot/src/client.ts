@@ -287,6 +287,8 @@ export class SnapshotClient {
       return raceTimeout(new Promise<void>(r => setTimeout(r, interval)))
     }
 
+    // TODO: stability should be always required
+    // otherwise existing unstable snapshots can pass without `--update` and fails with `--update`
     if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
       // Parse expected once — it doesn't change between retries
       const parsedExpected = adapter.parseExpected(expectedSnapshot.data)

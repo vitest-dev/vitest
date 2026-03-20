@@ -546,6 +546,7 @@ export default class SnapshotState {
     testName,
     received,
     key,
+    // TODO: is this slop?
     isEqual,
     isInline,
     inlineSnapshot,
