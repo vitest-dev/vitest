@@ -5,15 +5,16 @@ const filterMap = new WeakMap<string[], (testTags: string[]) => boolean>()
 
 export function matchesTagsFilter(testTags: string[]): boolean {
   const runner = getRunner()
-  if (!runner.config.tagsFilter) {
+  const tagsFilter = runner._currentSpecification?.testTagsFilter ?? runner.config.tagsFilter
+  if (!tagsFilter) {
     return true
   }
-  let tagsFilter = filterMap.get(runner.config.tagsFilter)
-  if (!tagsFilter) {
-    tagsFilter = createTagsFilter(runner.config.tagsFilter, runner.config.tags)
-    filterMap.set(runner.config.tagsFilter, tagsFilter)
+  let tagsFilterPredicate = filterMap.get(tagsFilter)
+  if (!tagsFilterPredicate) {
+    tagsFilterPredicate = createTagsFilter(tagsFilter, runner.config.tags)
+    filterMap.set(tagsFilter, tagsFilterPredicate)
   }
-  return tagsFilter(testTags)
+  return tagsFilterPredicate(testTags)
 }
 
 export function validateTags(config: VitestRunnerConfig, tags: string[]): void {
