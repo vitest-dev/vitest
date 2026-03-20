@@ -44,6 +44,7 @@ export interface SnapshotDomainMatchOptions {
   isInline?: boolean
   inlineSnapshot?: string
   error?: Error
+  assertionName?: string
 }
 
 export interface SnapshotResult {

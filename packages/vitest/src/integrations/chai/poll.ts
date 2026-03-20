@@ -68,6 +68,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    // injected so that snapshot pollAssertDomain can take over poll implementation.
     chai.util.flag(assertion, '_poll.fn', fn)
     chai.util.flag(assertion, '_poll.timeout', timeout)
     chai.util.flag(assertion, '_poll.interval', interval)

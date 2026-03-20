@@ -256,7 +256,7 @@ test('basic', () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  |chromium| basic.test.ts > basic
-    Error: toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location
+    Error: toMatchAriaInlineSnapshot with different snapshots cannot be called at the same location
 
     - Expected
     + Received
@@ -282,7 +282,7 @@ test('basic', () => {
     Object {
       "basic.test.ts": Object {
         "basic": Array [
-          "toMatchDomainInlineSnapshot with different snapshots cannot be called at the same location",
+          "toMatchAriaInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
     }

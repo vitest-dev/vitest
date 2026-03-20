@@ -209,6 +209,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         errorMessage: utils.flag(self, 'message'),
         timeout: utils.flag(self, '_poll.timeout') as number | undefined,
         interval: utils.flag(self, '_poll.interval') as number | undefined,
+        assertionName: name,
         ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
         ...getTestNames(test),
       })
@@ -220,6 +221,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       message: opts.message,
       isInline: opts.inline,
       errorMessage: utils.flag(self, 'message'),
+      assertionName: name,
       ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
       ...getTestNames(test),
     })

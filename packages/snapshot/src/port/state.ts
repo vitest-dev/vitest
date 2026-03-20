@@ -240,10 +240,10 @@ export default class SnapshotState {
   private _resolveInlineStack(options: {
     testId: string
     snapshot: string
-    methodName: string
+    assertionName: string
     error: Error
   }): ParsedStack {
-    const { testId, snapshot, methodName, error } = options
+    const { testId, snapshot, assertionName, error } = options
     const stacks = parseErrorStacktrace(
       error,
       { ignoreStackEntries: [] },
@@ -270,7 +270,7 @@ export default class SnapshotState {
       if (differentSnapshot) {
         throw Object.assign(
           new Error(
-            `${methodName} with different snapshots cannot be called at the same location`,
+            `${assertionName} with different snapshots cannot be called at the same location`,
           ),
           {
             actual: snapshot,
@@ -493,7 +493,7 @@ export default class SnapshotState {
       ? this._resolveInlineStack({
           testId,
           snapshot: receivedSerialized,
-          methodName: 'toMatchInlineSnapshot',
+          assertionName: 'toMatchInlineSnapshot',
           error: error || new Error('snapshot'),
         })
       : undefined
@@ -550,6 +550,7 @@ export default class SnapshotState {
     isInline,
     inlineSnapshot,
     error,
+    assertionName,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
     const resolved = this._resolveKey(testId, testName, key)
     key = resolved.key
@@ -565,8 +566,7 @@ export default class SnapshotState {
       ? this._resolveInlineStack({
           testId,
           snapshot: received,
-          // TODO: can be toMatchAriaInlineSnapshot
-          methodName: 'toMatchDomainInlineSnapshot',
+          assertionName: assertionName!,
           error: error || new Error('snapshot'),
         })
       : undefined

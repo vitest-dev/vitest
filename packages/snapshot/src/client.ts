@@ -49,6 +49,8 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+  // this is used for inline snapshot location validation error message
+  assertionName?: string
 }
 
 interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
@@ -212,6 +214,7 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
+      assertionName: options.assertionName,
       match: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot)
         return adapter.match(captured, parsed)
@@ -290,6 +293,7 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
+      assertionName: options.assertionName,
       match: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot)
         return adapter.match(stableResult.captured, parsed)
