@@ -52,7 +52,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
-import { VitestGit } from './vcs/git'
+import { loadVCSProvider } from './vcs/vcs'
 import { VitestWatcher } from './watcher'
 
 const WATCHER_DEBOUNCE = 100
@@ -223,7 +223,6 @@ export class Vitest {
     const resolved = resolveConfig(this, options, server.config)
 
     this._config = resolved
-    this.vcs = resolved.experimental.vcsProvider || new VitestGit()
     this._state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
@@ -273,6 +272,7 @@ export class Vitest {
         configurable: true,
       })
     }
+    this.vcs = await loadVCSProvider(this.runner, resolved.experimental.vcsProvider)
 
     if (this.config.watch) {
       // hijack server restart

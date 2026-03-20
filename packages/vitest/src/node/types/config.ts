@@ -946,7 +946,7 @@ export interface InlineConfig {
      * By default, Vitest uses Git to detect changed files. You can provide a custom
      * implementation of the `VCSProvider` interface to use a different version control system.
      */
-    vcsProvider?: VCSProvider
+    vcsProvider?: VCSProvider | string
   }
 
   /**

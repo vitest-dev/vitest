@@ -412,7 +412,7 @@ If you are running tests in Deno, TypeScript files are processed by the runtime 
 
 ## experimental.vcsProvider <Version type="experimental">4.1.1</Version> {#experimental-vcsprovider}
 
-- **Type:**
+- **Type:** `VCSProvider | string`
 
 ```ts
 interface VCSProvider {
@@ -425,7 +425,7 @@ interface VCSProviderOptions {
 }
 ```
 
-- **Default:** `undefined` (uses Git)
+- **Default:** `'git'`
 
 Custom provider for detecting changed files. Used with the [`--changed`](/guide/cli#changed) flag to determine which files have been modified.
 
@@ -446,6 +446,29 @@ export default defineConfig({
     },
   },
 })
+```
+
+You can also pass a string path to a module with a default export that implements the `VCSProvider` interface:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      vcsProvider: './my-vcs-provider.ts',
+    },
+  },
+})
+```
+
+```ts [my-vcs-provider.ts]
+export default {
+  async findChangedFiles({ root, changedSince }) {
+    // return absolute paths of changed files
+    return []
+  },
+}
 ```
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}

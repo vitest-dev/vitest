@@ -4,7 +4,7 @@ import { resolve } from 'pathe'
 import { x } from 'tinyexec'
 import { GitNotFoundError } from '../errors'
 
-export class VitestGit implements VCSProvider {
+export class GitVCSProvider implements VCSProvider {
   private root!: string
 
   private async resolveFilesWithGitCommand(args: string[]): Promise<string[]> {

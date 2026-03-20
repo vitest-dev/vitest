@@ -894,7 +894,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       nodeLoader: {
         description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
       },
-      vcsProvider: null,
+      vcsProvider: {
+        argument: '<path>',
+        description: 'Custom provider for detecting changed files. (default: `git`)',
+        subcommands: null,
+      },
     },
   },
   // disable CLI options
