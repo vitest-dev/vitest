@@ -349,6 +349,10 @@ export class SnapshotClient {
  * Compares consecutive rendered outputs from the current session —
  * when two consecutive polls produce the same rendered string,
  * the value is considered stable.
+ *
+ * Note that this doesn't use existing snapshot as baseline,
+ * which is different from `toMatchScreenshot`.
+ * Current rational is because poll is optional mechanism of simple snapshot.
  */
 async function getStableSnapshot(
   { adapter, poll, interval, signal }: {
