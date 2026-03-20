@@ -25,7 +25,7 @@
 import fs, { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test('domain snapshot with poll', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-poll')
@@ -143,7 +143,7 @@ test('domain snapshot with poll', async () => {
   `)
 
   // TODO
-  if (1) return;
+  if (1) { return }
 
   // --- update mode (update: all) ---
   // Rewrite snapshots with current stable values
@@ -179,4 +179,107 @@ test('domain snapshot with poll', async () => {
   expect(result.stderr).toMatchInlineSnapshot()
   expect(result.errorTree()).toMatchInlineSnapshot()
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot()
+})
+
+test('errors', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+import { kvAdapter } from '../test/fixtures/domain/basic'
+
+expect.addSnapshotDomain(kvAdapter)
+
+test('unstable', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    return { name: 'x', counter: String(trial) }
+  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+})
+
+test('hanging', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    return new Promise(() => {})
+  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+})
+
+test('throwing', async () => {
+  let trial = 0
+  await expect.poll(() => {
+    trial++
+    throw new Error("ALWAYS_THROWS")
+  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+})
+`,
+  }, {
+    update: 'all',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > unstable
+    Error: poll() did not produce a stable snapshot within the timeout
+     ❯ basic.test.ts:12:38
+         10|     trial++
+         11|     return { name: 'x', counter: String(trial) }
+         12|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+           |                                      ^
+         13| })
+         14|
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:9:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+     FAIL  basic.test.ts > hanging
+    Error: poll() did not produce a stable snapshot within the timeout
+     ❯ basic.test.ts:20:38
+         18|     trial++
+         19|     return new Promise(() => {})
+         20|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+           |                                      ^
+         21| })
+         22|
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:17:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+     FAIL  basic.test.ts > throwing
+    Error: poll() did not produce a stable snapshot within the timeout
+     ❯ basic.test.ts:28:38
+         26|     trial++
+         27|     throw new Error("ALWAYS_THROWS")
+         28|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+           |                                      ^
+         29| })
+         30|
+
+    Caused by: Error: Matcher did not succeed in time.
+     ❯ basic.test.ts:25:3
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "hanging": Array [
+          "poll() did not produce a stable snapshot within the timeout",
+        ],
+        "throwing": Array [
+          "poll() did not produce a stable snapshot within the timeout",
+        ],
+        "unstable": Array [
+          "poll() did not produce a stable snapshot within the timeout",
+        ],
+      },
+    }
+  `)
 })

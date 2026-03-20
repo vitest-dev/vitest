@@ -33,15 +33,6 @@ test('transitional then stable', async () => {
   }, { interval: 10 }).toMatchDomainSnapshot('kv')
 })
 
-// TODO: move out simple always-failing test as own runInlineTests
-// test('never stabilizes', async () => {
-//   let trial = 0
-//   await expect.poll(() => {
-//     trial++
-//     return { name: 'x', counter: String(trial) }
-//   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
-// })
-
 // validates match rides through wrong stable state
 test('stable wrong then right', async () => {
   let trial = 0
