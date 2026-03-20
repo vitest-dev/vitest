@@ -7,38 +7,68 @@ expect.addSnapshotDomain(kvAdapter)
 test('stable', async () => {
   let trial = 0
   await expect.poll(() => {
-    trial++;
-    // --- STABLE TEST POLL ---
+    trial++
     return { name: 'a', age: '23' }
-  }, { timeout: 100 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
     name=a
     age=23
   `, 'kv')
-  expect(trial).toBe(1)
+  expect(trial).toBe(2)
 })
 
 test('throw then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    if (trial <= 1) {
+    if (trial <= 3) {
       throw new Error(`Fail at ${trial}`)
     }
     return { name: 'b', age: '23' }
-  }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
     name=b
     age=23
   `, 'kv')
-  expect(trial).toBe(2)
+  expect(trial).toBe(5)
 })
 
-test('unstable', async () => {
+test('unstable then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    return { name: 'c', __UNSTABLE_TRIAL__: trial }
-  }).toMatchDomainInlineSnapshot(`
-    name=c
-    __UNSTABLE_TRIAL__=1
+    if (trial <= 3) return { status: 'loading', trial } // unstable
+    return { status: 'done' } // then stable
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+    status=done
+  `, 'kv')
+  expect(trial).toBe(5)
+})
+
+test('multiple poll snapshots', async () => {
+  await expect.poll(() => {
+    return { x: '1' }
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+    x=1
+  `, 'kv')
+
+  await expect.poll(() => {
+    return { y: '2' }
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+    y=2
+  `, 'kv')
+})
+
+test('non-poll alongside poll', async () => {
+  expect({ static: 'value' }).toMatchDomainInlineSnapshot(`
+    static=value
+  `, 'kv')
+
+  await expect.poll(() => {
+    return { polled: 'value' }
+  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+    polled=value
+  `, 'kv')
+
+  expect({ another: 'static' }).toMatchDomainInlineSnapshot(`
+    another=static
   `, 'kv')
 })
