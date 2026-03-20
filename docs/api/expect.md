@@ -996,7 +996,7 @@ On first run, Vitest generates a snapshot entry like:
 
 See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
 
-## toMatchAriaInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchariaInlinesnapshot}
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchariainlinesnapshot}
 
 - **Type:** `(snapshot?: string) => void`
 

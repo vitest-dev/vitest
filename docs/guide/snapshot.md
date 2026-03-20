@@ -118,7 +118,7 @@ test('button looks correct', async () => {
 
 This captures screenshots and compares them against reference images to detect unintended visual changes. Learn more in the [Visual Regression Testing guide](/guide/browser/visual-regression-testing).
 
-## Aria Snapshots
+## ARIA Snapshots
 
 Aria snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Inspired by [Playwright's aria snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to visual regression testing — asserting structure and meaning rather than pixels.
 
@@ -148,7 +148,7 @@ test('navigation structure', async () => {
 })
 ```
 
-See the dedicated [ARIA Snapshots guide](/guide/browser/aria-snapshots) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariaInlinesnapshot) for the full API reference.
+See the dedicated [ARIA Snapshots guide](/guide/browser/aria-snapshots) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariainlinesnapshot) for the full API reference.
 
 ## Custom Serializer
 
