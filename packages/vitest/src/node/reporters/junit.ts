@@ -288,7 +288,7 @@ export class JUnitReporter implements Reporter {
               for (const artifact of task.artifacts) {
                 if (artifact.type === 'internal:failureScreenshot' && artifact.attachments.length) {
                   await this.writeElement('system-out', {}, async () => {
-                    await this.baseLog(`[[ATTACHMENT|${artifact.attachments[0].originalPath}]]`)
+                    await this.baseLog(`[[ATTACHMENT|${artifact.attachments[0]!.originalPath}]]`)
                   })
                 }
               }
