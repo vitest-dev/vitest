@@ -1,4 +1,4 @@
-import type { DomainMatchResult, DomainSnapshotAdapter } from './domain'
+import type { DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -280,13 +280,6 @@ export class SnapshotClient {
       throw error
     }
 
-    // Pre-compare against reference if available and not in update mode
-    let preCompared: DomainMatchResult | undefined
-    if (expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all') {
-      const parsed = adapter.parseExpected(expectedSnapshot.data)
-      preCompared = adapter.match(stableResult.captured, parsed)
-    }
-
     const { actual, expected, key, pass } = snapshotState.matchDomain({
       testId,
       testName,
@@ -294,9 +287,10 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
-      isEqual: preCompared
-        ? () => preCompared
-        : snapshot => adapter.match(stableResult.captured, adapter.parseExpected(snapshot)),
+      isEqual: (existingSnapshot) => {
+        const parsed = adapter.parseExpected(existingSnapshot)
+        return adapter.match(stableResult.captured, parsed)
+      },
     })
 
     if (!pass) {
