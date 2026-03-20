@@ -1,12 +1,18 @@
 import type { TestTagDefinition, VitestRunnerConfig } from '../types/runner'
 import { getRunner } from '../suite'
 
+const filterMap = new WeakMap<string[], (testTags: string[]) => boolean>()
+
 export function matchesTagsFilter(testTags: string[]): boolean {
   const runner = getRunner()
   if (!runner.config.tagsFilter) {
     return true
   }
-  const tagsFilter = createTagsFilter(runner.config.tagsFilter, runner.config.tags)
+  let tagsFilter = filterMap.get(runner.config.tagsFilter)
+  if (!tagsFilter) {
+    tagsFilter = createTagsFilter(runner.config.tagsFilter, runner.config.tags)
+    filterMap.set(runner.config.tagsFilter, tagsFilter)
+  }
   return tagsFilter(testTags)
 }
 
