@@ -16,31 +16,22 @@ test('throw then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    if (trial <= 1) {
+    if (trial <= 3) {
       throw new Error(`Fail at ${trial}`)
     }
     return { name: 'b', age: '23' }
   }, { interval: 10 }).toMatchDomainSnapshot('kv')
-  expect(trial).toBe(3)
+  expect(trial).toBe(5)
 })
 
-test('transitional then stable', async () => {
+test('unstable then stable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
-    if (trial <= 2) return { status: 'loading' }
-    return { status: 'done' }
+    if (trial <= 3) return { status: 'loading', trial } // unstable
+    return { status: 'done' } // then stable
   }, { interval: 10 }).toMatchDomainSnapshot('kv')
-})
-
-// validates match rides through wrong stable state
-test('stable wrong then right', async () => {
-  let trial = 0
-  await expect.poll(() => {
-    trial++
-    if (trial <= 3) return { status: 'loading' }
-    return { status: 'done' }
-  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  expect(trial).toBe(5)
 })
 
 test('multiple poll snapshots', async () => {
