@@ -169,8 +169,11 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
             <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('body'))
-          .toMatchAriaInlineSnapshot(\`- heading "Hello" [level=1]\`)
+        await expect.element(page.getByTestId('body'), { interval: 150 })
+          .toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
       })
       "
     `)
@@ -447,8 +450,11 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
             <p>World</p>
           \`
         }, 100)
-        await expect.element(page.getByTestId('body'))
-          .toMatchAriaInlineSnapshot(\`- heading "Hello" [level=1]\`)
+        await expect.element(page.getByTestId('body'), { interval: 150 })
+          .toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
       })
       "
     `)
