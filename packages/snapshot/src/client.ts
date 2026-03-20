@@ -260,35 +260,27 @@ export class SnapshotClient {
     const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
-    const abortController = new AbortController()
-    const stable = getStableSnapshot({
+    const timedOut = timeout > 0
+      ? new Promise<void>(r => setTimeout(r, timeout))
+      : undefined
+    const stableResult = await getStableSnapshot({
       adapter,
       poll,
       interval,
-      signal: abortController.signal,
+      timedOut,
       match: reference
         ? captured => adapter.match(captured, reference).pass
         : undefined,
     })
-    const stableResult = timeout === 0
-      ? await stable
-      : await Promise.race([
-          stable,
-          new Promise<undefined>((resolve) => {
-            setTimeout(() => {
-              abortController.abort()
-              resolve(undefined)
-            }, timeout)
-          }),
-        ])
 
     if (!stableResult?.rendered) {
       expectedSnapshot.markAsChecked()
-      const unstableError = new Error('poll() did not produce a stable snapshot within the timeout')
+      // upper `expect.poll` manipulates error via `throwWithCause`,
+      // so here we can directly throw `lastPollError` if exists.
       if (stableResult?.lastPollError) {
-        Object.assign(unstableError, { cause: stableResult.lastPollError })
+        throw stableResult.lastPollError
       }
-      throw unstableError
+      throw new Error('poll() did not produce a stable snapshot within the timeout')
     }
 
     const { actual, expected, key, pass } = snapshotState.matchDomain({
@@ -355,16 +347,15 @@ export class SnapshotClient {
  * when two consecutive polls produce the same rendered string,
  * the value is considered stable.
  *
- * Note that this doesn't use existing snapshot as `lastRendered` baseline,
- * which is different from `toMatchScreenshot`.
- * Current rational is because poll is opt-in over simple domain snapshot.
+ * Every `await` (poll call, interval delay) races against `timedOut`
+ * so that hanging polls and delays are interrupted.
  */
 async function getStableSnapshot(
-  { adapter, poll, interval, signal, match }: {
+  { adapter, poll, interval, timedOut, match }: {
     adapter: DomainSnapshotAdapter<any, any>
     poll: () => Promise<unknown> | unknown
     interval: number
-    signal: AbortSignal
+    timedOut?: Promise<void>
     match?: (captured: unknown) => boolean
   },
 ) {
@@ -372,10 +363,13 @@ async function getStableSnapshot(
   let lastPollError: unknown
   let lastStable: { captured: unknown; rendered: string } | undefined
 
-  while (!signal.aborted) {
+  while (true) {
     try {
-      const received = await poll()
-      const captured = adapter.capture(received)
+      const pollResult = await raceWith(Promise.resolve(poll()), timedOut)
+      if (!pollResult.ok) {
+        break
+      }
+      const captured = adapter.capture(pollResult.value)
       const rendered = adapter.render(captured)
       if (lastRendered !== undefined && rendered === lastRendered) {
         lastStable = { captured, rendered }
@@ -396,10 +390,29 @@ async function getStableSnapshot(
       lastStable = undefined
       lastPollError = pollError
     }
-    await new Promise<void>(r => setTimeout(r, interval))
+    const delayed = await raceWith(
+      new Promise<void>(r => setTimeout(r, interval)),
+      timedOut,
+    )
+    if (!delayed.ok) {
+      break
+    }
   }
 
-  // Return last stable result (even if rejected) so caller can produce a proper mismatch error.
-  // undefined only when poll never stabilized at all.
   return { ...lastStable, lastPollError }
+}
+
+/** Type-safe `Promise.race` — tells you which promise won. */
+function raceWith<A, B>(
+  promise: Promise<A>,
+  other?: Promise<B>,
+): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
+  const left = promise.then(value => ({ ok: true as const, value }))
+  if (!other) {
+    return left
+  }
+  return Promise.race([
+    left,
+    other.then(value => ({ ok: false as const, value })),
+  ])
 }

@@ -251,7 +251,7 @@ test('throwing', async () => {
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
 
      FAIL  basic.test.ts > throwing
-    Error: poll() did not produce a stable snapshot within the timeout
+    Error: ALWAYS_THROWS
      ❯ basic.test.ts:28:38
          26|     trial++
          27|     throw new Error("ALWAYS_THROWS")
@@ -274,7 +274,7 @@ test('throwing', async () => {
           "poll() did not produce a stable snapshot within the timeout",
         ],
         "throwing": Array [
-          "poll() did not produce a stable snapshot within the timeout",
+          "ALWAYS_THROWS",
         ],
         "unstable": Array [
           "poll() did not produce a stable snapshot within the timeout",
