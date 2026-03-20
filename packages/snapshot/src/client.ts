@@ -257,8 +257,19 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
+    const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
+      ? adapter.parseExpected(expectedSnapshot.data)
+      : undefined
     const abortController = new AbortController()
-    const stable = getStableSnapshot({ adapter, poll, interval, signal: abortController.signal })
+    const stable = getStableSnapshot({
+      adapter,
+      poll,
+      interval,
+      signal: abortController.signal,
+      match: reference
+        ? captured => adapter.match(captured, reference).pass
+        : undefined,
+    })
     const stableResult = timeout === 0
       ? await stable
       : await Promise.race([
@@ -273,11 +284,11 @@ export class SnapshotClient {
 
     if (!stableResult?.rendered) {
       expectedSnapshot.markAsChecked()
-      const error = new Error('poll() did not produce a stable snapshot within the timeout')
+      const unstableError = new Error('poll() did not produce a stable snapshot within the timeout')
       if (stableResult?.lastPollError) {
-        error.cause = stableResult.lastPollError
+        Object.assign(unstableError, { cause: stableResult.lastPollError })
       }
-      throw error
+      throw unstableError
     }
 
     const { actual, expected, key, pass } = snapshotState.matchDomain({
@@ -344,20 +355,22 @@ export class SnapshotClient {
  * when two consecutive polls produce the same rendered string,
  * the value is considered stable.
  *
- * Note that this doesn't use existing snapshot as baseline,
+ * Note that this doesn't use existing snapshot as `lastRendered` baseline,
  * which is different from `toMatchScreenshot`.
- * Current rational is because poll is optional mechanism of simple snapshot.
+ * Current rational is because poll is opt-in over simple domain snapshot.
  */
 async function getStableSnapshot(
-  { adapter, poll, interval, signal }: {
+  { adapter, poll, interval, signal, match }: {
     adapter: DomainSnapshotAdapter<any, any>
     poll: () => Promise<unknown> | unknown
     interval: number
     signal: AbortSignal
+    match?: (captured: unknown) => boolean
   },
 ) {
   let lastRendered: string | undefined
   let lastPollError: unknown
+  let lastStable: { captured: unknown; rendered: string } | undefined
 
   while (!signal.aborted) {
     try {
@@ -365,17 +378,28 @@ async function getStableSnapshot(
       const captured = adapter.capture(received)
       const rendered = adapter.render(captured)
       if (lastRendered !== undefined && rendered === lastRendered) {
-        return { captured, rendered }
+        lastStable = { captured, rendered }
+        if (!match || match(captured)) {
+          break
+        }
+        // Stable but not acceptable — reset and ride through
+        lastRendered = undefined
       }
-      lastRendered = rendered
+      else {
+        lastRendered = rendered
+        lastStable = undefined
+      }
     }
     catch (pollError) {
       // poll() threw — reset stability baseline and retry
       lastRendered = undefined
+      lastStable = undefined
       lastPollError = pollError
     }
     await new Promise<void>(r => setTimeout(r, interval))
   }
 
-  return { captured: undefined, rendered: undefined, lastPollError }
+  // Return last stable result (even if rejected) so caller can produce a proper mismatch error.
+  // undefined only when poll never stabilized at all.
+  return { ...lastStable, lastPollError }
 }
