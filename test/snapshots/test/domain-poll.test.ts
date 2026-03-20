@@ -111,7 +111,15 @@ test('domain snapshot with poll', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > stable
-    Error: poll() did not produce a stable snapshot within the timeout
+    Error: Snapshot \`stable 1\` mismatched
+
+    - Expected
+    + Received
+
+    - name=a-changed
+    + name=a
+      age=23
+
      ❯ basic.test.ts:11:24
           9|     trial++
          10|     return { name: 'a', age: '23' }
@@ -133,7 +141,7 @@ test('domain snapshot with poll', async () => {
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": Array [
-          "poll() did not produce a stable snapshot within the timeout",
+          "Snapshot \`stable 1\` mismatched",
         ],
         "stable wrong then right": "passed",
         "throw then stable": "passed",

@@ -376,8 +376,6 @@ async function getStableSnapshot(
         if (!match || match(captured)) {
           break
         }
-        // Stable but not acceptable — reset and ride through
-        lastRendered = undefined
       }
       else {
         lastRendered = rendered
