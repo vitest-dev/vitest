@@ -546,8 +546,7 @@ export default class SnapshotState {
     testName,
     received,
     key,
-    // TODO: is this slop?
-    isEqual,
+    match,
     isInline,
     inlineSnapshot,
     error,
@@ -561,7 +560,7 @@ export default class SnapshotState {
 
     const expected = isInline ? inlineSnapshot : this._snapshotData[key]
     const hasSnapshot = !!expected
-    const matchResult = hasSnapshot ? isEqual(expected) : undefined
+    const matchResult = hasSnapshot ? match(expected) : undefined
     const stack = isInline
       ? this._resolveInlineStack({
           testId,

@@ -40,7 +40,7 @@ export interface SnapshotDomainMatchOptions {
   testName: string
   received: string
   key?: string
-  isEqual: (expected: string) => DomainMatchResult
+  match: (existingSnapshot: string) => DomainMatchResult
   isInline?: boolean
   inlineSnapshot?: string
   error?: Error

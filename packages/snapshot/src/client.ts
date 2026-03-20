@@ -212,7 +212,7 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
-      isEqual: (existingSnapshot) => {
+      match: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot)
         return adapter.match(captured, parsed)
       },
@@ -290,7 +290,7 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
       error,
-      isEqual: (existingSnapshot) => {
+      match: (existingSnapshot) => {
         const parsed = adapter.parseExpected(existingSnapshot)
         return adapter.match(stableResult.captured, parsed)
       },
