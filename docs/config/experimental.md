@@ -410,6 +410,44 @@ export default defineConfig({
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
 :::
 
+## experimental.vcsProvider <Version type="experimental">4.1.0</Version> {#experimental-vcsprovider}
+
+- **Type:**
+
+```ts
+interface VCSProvider {
+  findChangedFiles(options: VCSProviderOptions): Promise<string[]>
+}
+
+interface VCSProviderOptions {
+  root: string
+  changedSince?: string | boolean
+}
+```
+
+- **Default:** `undefined` (uses Git)
+
+Custom provider for detecting changed files. Used with the [`--changed`](/guide/cli#changed) flag to determine which files have been modified.
+
+By default, Vitest uses Git to detect changed files. You can provide a custom implementation of the `VCSProvider` interface to use a different version control system:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      vcsProvider: {
+        async findChangedFiles({ root, changedSince }) {
+          // return absolute paths of changed files
+          return []
+        },
+      },
+    },
+  },
+})
+```
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`

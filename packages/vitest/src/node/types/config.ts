@@ -17,6 +17,7 @@ import type {
 } from '../reporters'
 import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
+import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
@@ -937,6 +938,15 @@ export interface InlineConfig {
      * This option only affects `loader.load` method, Vitest always defines a `loader.resolve` to populate the module graph.
      */
     nodeLoader?: boolean
+
+    /**
+     * Custom provider for detecting changed files. Used with the `--changed` flag
+     * to determine which files have been modified.
+     *
+     * By default, Vitest uses Git to detect changed files. You can provide a custom
+     * implementation of the `VCSProvider` interface to use a different version control system.
+     */
+    vcsProvider?: VCSProvider
   }
 
   /**

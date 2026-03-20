@@ -1,15 +1,11 @@
 import type { Output } from 'tinyexec'
+import type { VCSProvider, VCSProviderOptions } from './vcs'
 import { resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { GitNotFoundError } from '../errors'
 
-export interface GitOptions {
-  changedSince?: string | boolean
-}
-
-export class VitestGit {
+export class VitestGit implements VCSProvider {
   private root!: string
-
-  constructor(private cwd: string) {}
 
   private async resolveFilesWithGitCommand(args: string[]): Promise<string[]> {
     let result: Output
@@ -29,10 +25,10 @@ export class VitestGit {
       .map(changedPath => resolve(this.root, changedPath))
   }
 
-  async findChangedFiles(options: GitOptions): Promise<string[] | null> {
-    const root = await this.getRoot(this.cwd)
+  async findChangedFiles(options: VCSProviderOptions): Promise<string[]> {
+    const root = this.root || await this.getRoot(options.root)
     if (!root) {
-      return null
+      throw new GitNotFoundError()
     }
 
     this.root = root

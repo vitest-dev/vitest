@@ -15,6 +15,7 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
+import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -51,6 +52,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
+import { VitestGit } from './vcs/git'
 import { VitestWatcher } from './watcher'
 
 const WATCHER_DEBOUNCE = 100
@@ -101,6 +103,8 @@ export class Vitest {
    * Vitest behaviour.
    */
   public readonly watcher: VitestWatcher
+
+  public vcs!: VCSProvider
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
@@ -214,6 +218,7 @@ export class Vitest {
     const resolved = resolveConfig(this, options, server.config)
 
     this._config = resolved
+    this.vcs = resolved.experimental.vcsProvider || new VitestGit()
     this._state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
