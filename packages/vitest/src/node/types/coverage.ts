@@ -95,24 +95,10 @@ export type CoverageReporterWithOptions<
 
 export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
-export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName>
-  = T extends 'istanbul'
-    ? { provider: T } & CoverageIstanbulOptions
-    : T extends 'v8' ? {
-      /**
-       * Provider to use for coverage collection.
-       *
-       * @default 'v8'
-       */
-      provider: T
-    } & CoverageV8Options
-      : T extends 'custom'
-        ? { provider: T } & CustomProviderOptions
-        : { provider?: T } & CoverageV8Options
-
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues
-  = | 'enabled'
+  = | 'provider'
+    | 'enabled'
     | 'clean'
     | 'cleanOnRerun'
     | 'reportsDirectory'
@@ -121,14 +107,23 @@ type FieldsWithDefaultValues
     | 'allowExternal'
     | 'processingConcurrency'
 
-export type ResolvedCoverageOptions<T extends CoverageProviderName = CoverageProviderName>
-  = CoverageOptions<T>
-    & Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
+export type ResolvedCoverageOptions
+  = CoverageOptions
+    & Required<Pick<CoverageOptions, FieldsWithDefaultValues>>
+    & {
+    // Resolved fields which may have different typings as public configuration API has
       reporter: CoverageReporterWithOptions[]
       htmlDir?: string
     }
 
-export interface BaseCoverageOptions {
+export interface CoverageOptions {
+  /**
+   * Coverage provider to use.
+   *
+   * @default 'v8'
+   */
+  provider?: 'v8' | 'istanbul' | 'custom'
+
   /**
    * Enables coverage collection. Can be overridden using `--coverage` CLI option.
    *
@@ -285,16 +280,11 @@ export interface BaseCoverageOptions {
    * @default false
    */
   changed?: boolean | string
-}
 
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
-
-export interface CoverageV8Options extends BaseCoverageOptions {}
-
-export interface CustomProviderOptions
-  extends Pick<BaseCoverageOptions, FieldsWithDefaultValues | 'changed'> {
-  /** Name of the module or path to a file to load the custom provider from */
-  customProviderModule: string
+  /**
+   * Name of the module or path to a file to load the custom provider from
+   */
+  customProviderModule?: string
 }
 
 interface Thresholds {
@@ -324,3 +314,15 @@ interface Thresholds {
   /** Thresholds for lines */
   lines?: number
 }
+
+/** @deprecated Use `CoverageOptions` instead */
+export interface CoverageV8Options extends CoverageOptions {}
+
+/** @deprecated Use `CoverageOptions` instead */
+export interface CoverageIstanbulOptions extends CoverageOptions {}
+
+/** @deprecated Use `CoverageOptions` instead */
+export interface BaseCoverageOptions extends CoverageOptions {}
+
+/** @deprecated Use `CoverageOptions` instead */
+export interface CustomProviderOptions extends CoverageOptions {}
