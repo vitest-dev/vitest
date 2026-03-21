@@ -206,6 +206,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Collect coverage of files outside the project root (default: `false`)',
       },
+      excludeAfterRemap: {
+        description:
+          'Apply exclusions again after coverage has been remapped to original sources. This is useful when your source files are transpiled and may contain source maps of non-source files. Use this option when you are seeing files that show up in report even if they match your coverage.exclude patterns. (default: `false`)',
+      },
       skipFull: {
         description:
           'Do not show files with 100% statement, branch, and function coverage (default: `false`)',
@@ -319,6 +323,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
           }
           return value
         },
+      },
+      htmlDir: {
+        description:
+          'Directory of HTML coverage output to be served in UI mode and HTML reporter. This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters). Use this option to override with custom coverage reporting location.',
+        argument: '<path>',
+        normalize: true,
       },
     },
   },

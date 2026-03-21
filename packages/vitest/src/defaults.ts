@@ -1,7 +1,6 @@
 import type {
   BenchmarkUserOptions,
   CoverageV8Options,
-  ResolvedCoverageOptions,
   UserConfig,
 } from './node/types/config'
 import os from 'node:os'
@@ -25,7 +24,7 @@ export const benchmarkConfigDefaults: Required<
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: ResolvedCoverageOptions = {
+export const coverageConfigDefaults: Required<Omit<CoverageV8Options, 'include' | 'skipFull' | 'thresholds' | 'watermarks' | 'ignoreClassMethods' | 'htmlDir' | 'changed'>> = {
   provider: 'v8',
   enabled: false,
   clean: true,
@@ -34,10 +33,10 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   exclude: [],
   reportOnFailure: false,
   reporter: [
-    ['text', {}],
-    ['html', {}],
-    ['clover', {}],
-    ['json', {}],
+    'text',
+    'html',
+    'clover',
+    'json',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
@@ -95,7 +94,7 @@ export const configDefaults: Readonly<{
   isolate: true,
   watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
-  environment: 'node' as const,
+  environment: 'node',
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -116,7 +115,7 @@ export const configDefaults: Readonly<{
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults as CoverageV8Options,
+  coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,

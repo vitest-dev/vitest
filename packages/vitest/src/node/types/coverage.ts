@@ -97,18 +97,11 @@ export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
 export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName>
   = T extends 'istanbul'
-    ? { provider: T } & CoverageIstanbulOptions
-    : T extends 'v8' ? {
-      /**
-       * Provider to use for coverage collection.
-       *
-       * @default 'v8'
-       */
-      provider: T
-    } & CoverageV8Options
+    ? CoverageIstanbulOptions
+    : T extends 'v8' ? CoverageV8Options
       : T extends 'custom'
-        ? { provider: T } & CustomProviderOptions
-        : { provider?: T } & CoverageV8Options
+        ? CustomProviderOptions
+        : { provider?: T } & BaseCoverageOptions
 
 /** Fields that have default values. Internally these will always be defined. */
 type FieldsWithDefaultValues
@@ -287,12 +280,17 @@ export interface BaseCoverageOptions {
   changed?: boolean | string
 }
 
-export interface CoverageIstanbulOptions extends BaseCoverageOptions {}
+export interface CoverageIstanbulOptions extends BaseCoverageOptions {
+  provider: 'istanbul'
+}
 
-export interface CoverageV8Options extends BaseCoverageOptions {}
+export interface CoverageV8Options extends BaseCoverageOptions {
+  provider: 'v8'
+}
 
 export interface CustomProviderOptions
   extends Pick<BaseCoverageOptions, FieldsWithDefaultValues | 'changed'> {
+  provider: 'custom'
   /** Name of the module or path to a file to load the custom provider from */
   customProviderModule: string
 }
