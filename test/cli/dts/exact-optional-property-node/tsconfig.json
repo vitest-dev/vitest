@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "types": [],
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "declaration": true,

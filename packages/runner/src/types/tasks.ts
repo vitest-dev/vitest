@@ -1262,7 +1262,7 @@ export interface TestAttachment {
   /** File system path to the attachment */
   path?: string
   /** Inline attachment content as a string or raw binary data */
-  body?: string | Uint8Array
+  body?: string | Uint8Array | undefined
 }
 
 export interface Location {
