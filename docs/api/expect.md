@@ -1786,6 +1786,23 @@ test('buyApples throws an error when no id provided', async () => {
 })
 ```
 
+> [!NOTE]
+> If the promise can reject before the next line runs, attach the `rejects` assertion before advancing fake timers or awaiting other async work. Otherwise, JavaScript can report an `unhandledRejection` before the matcher is attached. For more background, see [Unhandled Promise Rejection](/guide/common-errors#unhandled-promise-rejection).
+>
+> ```ts
+> test('rejects after advancing timers', async () => {
+>   const promise = new Promise((_, reject) => {
+>     setTimeout(() => reject(new Error('no id')), 100)
+>   })
+>   const rejection = expect(promise).rejects.toThrow('no id')
+>
+>   // assuming fake timers are enabled
+>   await vi.advanceTimersByTimeAsync(100)
+>
+>   await rejection
+> })
+> ```
+
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
 
