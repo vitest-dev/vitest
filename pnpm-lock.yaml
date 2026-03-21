@@ -1351,7 +1351,16 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/vitest
 
-  test/cli/dts/exact-optional-property:
+  test/cli/dts/exact-optional-property-no-node:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/exact-optional-property-node:
     devDependencies:
       '@vitest/runner':
         specifier: workspace:*
@@ -1362,6 +1371,15 @@ importers:
 
   test/cli/dts/fixture-extend:
     devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/no-dispose:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
       vitest:
         specifier: workspace:*
         version: link:../../../../packages/vitest

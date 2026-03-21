@@ -48,6 +48,9 @@
     "./optional-types.js": {
       "types": "./optional-types.d.ts"
     },
+    "./optional-runtime-types.js": {
+      "types": "./optional-runtime-types.d.ts"
+    },
     "./src/*": "./src/*",
     "./globals": {
       "types": "./globals.d.ts"
