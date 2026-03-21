@@ -5,12 +5,14 @@ import { webdriverio } from '@vitest/browser-webdriverio'
 
 const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
 
+const wsEndpoint = process.env.BROWSER_WS_ENDPOINT === 'true' ? 'ws://127.0.0.1:6677/' : process.env.BROWSER_WS_ENDPOINT
+
 export const providers = {
-  playwright: (options?: Parameters<typeof playwright>[0]) => playwright(process.env.BROWSER_WS_ENDPOINT
+  playwright: (options?: Parameters<typeof playwright>[0]) => playwright(wsEndpoint
     ? {
         ...options,
         connectOptions: {
-          wsEndpoint: process.env.BROWSER_WS_ENDPOINT,
+          wsEndpoint,
           exposeNetwork: '<loopback>',
         },
       }

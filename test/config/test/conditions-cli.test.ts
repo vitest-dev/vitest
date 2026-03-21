@@ -104,11 +104,11 @@ test('conditions (inline indirect)', async () => {
 })
 
 test('project resolve.conditions', async () => {
-  const { stderr, errorProjectTree } = await runVitest({
+  const { stderr, errorTree } = await runVitest({
     root: 'fixtures/conditions-projects',
   })
   expect(stderr).toBe('')
-  expect(errorProjectTree()).toMatchInlineSnapshot(`
+  expect(errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "project-a": {
         "basic.test.js": {

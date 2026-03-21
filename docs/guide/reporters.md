@@ -98,6 +98,10 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 By default (i.e. if no reporter is specified), Vitest will display summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
 
+::: tip
+When Vitest detects it is running inside an AI coding agent, the [`agent`](#agent-reporter) reporter is used instead to reduce output and minimize token usage. You can override this by explicitly configuring the [`reporters`](/config/reporters) option.
+:::
+
 You can disable the summary by configuring the reporter:
 
 :::code-group
@@ -575,6 +579,87 @@ export default defineConfig({
   },
 })
 ```
+
+The GitHub Actions reporter automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries.
+
+<img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
+<img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">
+
+The job summary is enabled by default and writes to the path specified by `$GITHUB_STEP_SUMMARY`. You can override it by using the `jobSummary.outputPath` option:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          outputPath: '/home/runner/jobs/summary/step',
+        },
+      }],
+    ],
+  },
+})
+```
+
+To disable the job summary:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', { jobSummary: { enabled: false } }],
+    ],
+  },
+})
+```
+
+The flaky tests section of the summary includes permalink URLs that link test names directly to the relevant source lines on GitHub. These links are generated automatically using environment variables that GitHub Actions provides (`$GITHUB_REPOSITORY`, `$GITHUB_SHA`, and `$GITHUB_WORKSPACE`), so no configuration is needed in most cases.
+
+If you need to override these values — for example, when running in a container or a custom environment — you can customize them via the `fileLinks` option:
+
+- `repository`: the GitHub repository in `owner/repo` format. Defaults to `process.env.GITHUB_REPOSITORY`.
+- `commitHash`: the commit SHA to use in permalink URLs. Defaults to `process.env.GITHUB_SHA`.
+- `workspacePath`: the absolute path to the root of the repository on disk. Used to compute relative file paths for the permalink URLs. Defaults to `process.env.GITHUB_WORKSPACE`.
+
+All three values must be available for the links to be generated.
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['github-actions', {
+        jobSummary: {
+          fileLinks: {
+            repository: 'owner/repo',
+            commitHash: 'abcdefg',
+            workspacePath: '/home/runner/work/repo/',
+          },
+        },
+      }],
+    ],
+  },
+})
+```
+
+### Agent Reporter
+
+Outputs a minimal report optimized for AI coding assistants and LLM-based workflows. Only failed tests and their error messages are displayed. Console logs from passing tests and the summary section are suppressed to reduce token usage.
+
+This reporter is automatically enabled when no `reporters` option is configured and Vitest detects it is running inside an AI coding agent. If you configure custom reporters, you can explicitly add `agent`:
+
+:::code-group
+```bash [CLI]
+npx vitest --reporter=agent
+```
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: ['agent']
+  },
+})
+```
+:::
 
 ### Blob Reporter
 

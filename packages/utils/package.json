@@ -1,11 +1,11 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "4.1.0-beta.5",
+  "version": "4.1.0",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",

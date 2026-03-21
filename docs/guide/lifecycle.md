@@ -11,13 +11,13 @@ Understanding the test run lifecycle is essential for writing effective tests, d
 
 A typical Vitest test run goes through these main phases:
 
-1. **Initialization** - Configuration loading and project setup
-2. **Global Setup** - One-time setup before any tests run
-3. **Worker Creation** - Test workers are spawned based on the [pool](/config/pool) configuration
-4. **Test File Collection** - Test files are discovered and organized
-5. **Test Execution** - Tests run with their hooks and assertions
-6. **Reporting** - Results are collected and reported
-7. **Global Teardown** - Final cleanup after all tests complete
+1. **Initialization:** Configuration loading and project setup
+2. **Global Setup:** One-time setup before any tests run
+3. **Worker Creation:** Test workers are spawned based on the [pool](/config/pool) configuration
+4. **Test File Collection:** Test files are discovered and organized
+5. **Test Execution:** Tests run with their hooks and assertions
+6. **Reporting:** Results are collected and reported
+7. **Global Teardown:** Final cleanup after all tests complete
 
 Phases 4–6 run once for each test file, so across your test suite they will execute multiple times and may also run in parallel across different files when you use more than [1 worker](/config/maxworkers).
 
@@ -124,10 +124,10 @@ Test files are executed based on your configuration:
 
 The execution follows this order:
 
-1. **File-level code** - All code outside `describe` blocks runs immediately
-2. **Test collection** - `describe` blocks are processed, and tests are registered as side effects of importing the test file
-3. **[`aroundAll`](/api/hooks#aroundall) hooks** - Wrap around all tests in the suite (must call `runSuite()`)
-4. **[`beforeAll`](/api/hooks#beforeall) hooks** - Run once before any tests in the suite
+1. **File-level code:** All code outside `describe` blocks runs immediately
+2. **Test collection:** `describe` blocks are processed, and tests are registered as side effects of importing the test file
+3. **[`aroundAll`](/api/hooks#aroundall) hooks:** Wrap around all tests in the suite (must call `runSuite()`)
+4. **[`beforeAll`](/api/hooks#beforeall) hooks:** Run once before any tests in the suite
 5. **For each test:**
    - [`aroundEach`](/api/hooks#aroundeach) hooks wrap around the test (must call `runTest()`)
    - `beforeEach` hooks execute (in order defined, or based on [`sequence.hooks`](/config/sequence#sequence-hooks))
@@ -136,7 +136,7 @@ The execution follows this order:
    - [`onTestFinished`](/api/hooks#ontestfinished) callbacks run (always in reverse order)
    - If test failed: [`onTestFailed`](/api/hooks#ontestfailed) callbacks run
    - Note: if `repeats` or `retry` are set, all of these steps are executed again
-6. **[`afterAll`](/api/hooks#afterall) hooks** - Run once after all tests in the suite complete
+6. **[`afterAll`](/api/hooks#afterall) hooks:** Run once after all tests in the suite complete
 
 **Example execution flow:**
 
@@ -347,7 +347,7 @@ Understanding where code executes is crucial for avoiding common pitfalls:
 
 In watch mode, the lifecycle repeats with some differences:
 
-1. **Initial run** - Full lifecycle as described above
+1. **Initial run:** Full lifecycle as described above
 2. **On file change:**
    - New [test run](/api/advanced/reporters#ontestrunstart) starts
    - Only affected test files are re-run

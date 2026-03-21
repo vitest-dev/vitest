@@ -1,4 +1,5 @@
 export {
+  AgentReporter,
   BenchmarkReporter,
   BenchmarkReportsMap,
   DefaultReporter,

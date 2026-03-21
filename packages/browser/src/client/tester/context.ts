@@ -8,6 +8,7 @@ import type {
   BrowserPage,
   Locator,
   LocatorSelectors,
+  MarkOptions,
   UserEvent,
   UserEventWheelOptions,
 } from 'vitest/browser'
@@ -15,6 +16,7 @@ import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
+import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
@@ -141,8 +143,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   return userEvent
 }
 
-function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
-  let userEvent = userEventBase.setup(options)
+function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+  let userEvent = userEventBase.setup({
+    advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+    ...options,
+  })
   let clipboardData: DataTransfer | undefined
 
   function toElement(element: Element | Locator) {
@@ -154,7 +159,10 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
       return createPreviewUserEvent(userEventBase, options)
     },
     async cleanup() {
-      userEvent = userEventBase.setup(options ?? {})
+      userEvent = userEventBase.setup({
+        advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+        ...options,
+      })
     },
     async click(element) {
       await userEvent.click(toElement(element))
@@ -343,6 +351,50 @@ export const page: BrowserPage = {
           element,
         } as any /** TODO */),
       ],
+      error,
+    ))
+  },
+  mark<T>(
+    name: string,
+    bodyOrOptions?: MarkOptions | (() => T | Promise<T>),
+    options?: MarkOptions,
+  ): any {
+    const currentTest = getWorkerState().current
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+
+    if (typeof bodyOrOptions === 'function') {
+      return ensureAwaited(async (error) => {
+        if (hasActiveTrace) {
+          await triggerCommand(
+            '__vitest_groupTraceStart',
+            [{
+              name,
+              stack: options?.stack ?? error?.stack,
+            }],
+            error,
+          )
+        }
+        try {
+          return await bodyOrOptions()
+        }
+        finally {
+          if (hasActiveTrace) {
+            await triggerCommand('__vitest_groupTraceEnd', [], error)
+          }
+        }
+      })
+    }
+
+    if (!hasActiveTrace) {
+      return Promise.resolve()
+    }
+
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_markTrace',
+      [{
+        name,
+        stack: bodyOrOptions?.stack ?? error?.stack,
+      }],
       error,
     ))
   },

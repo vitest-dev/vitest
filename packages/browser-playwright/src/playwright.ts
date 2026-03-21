@@ -136,19 +136,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     // make sure the traces are finished if the test hangs
-    process.on('SIGTERM', () => {
-      if (!this.browser) {
-        return
-      }
-      const promises = []
-      for (const [trace, contextId] of this.pendingTraces.entries()) {
-        promises.push((() => {
-          const context = this.contexts.get(contextId)
-          return context?.tracing.stopChunk({ path: trace })
-        })())
-      }
-      return Promise.allSettled(promises)
-    })
+    process.on('SIGTERM', this.onSIGTERM)
+  }
+
+  private onSIGTERM = () => {
+    if (!this.browser) {
+      return
+    }
+    const promises = []
+    for (const [trace, contextId] of this.pendingTraces.entries()) {
+      promises.push((() => {
+        const context = this.contexts.get(contextId)
+        return context?.tracing.stopChunk({ path: trace })
+      })())
+    }
+    return Promise.allSettled(promises)
   }
 
   private async openBrowser(openBrowserOptions: { parallel: boolean }) {
@@ -529,23 +531,24 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
-      async send(method: string, params: any) {
-        const result = await cdp.send(method as 'DOM.querySelector', params)
-        return result as unknown
+      send(method, params) {
+        return cdp.send(method as any, params)
       },
-      on(event: string, listener: (...args: any[]) => void) {
-        cdp.on(event as 'Accessibility.loadComplete', listener)
+      on(event, listener) {
+        return cdp.on(event as any, listener)
       },
-      off(event: string, listener: (...args: any[]) => void) {
-        cdp.off(event as 'Accessibility.loadComplete', listener)
+      off(event, listener) {
+        return cdp.off(event as any, listener)
       },
-      once(event: string, listener: (...args: any[]) => void) {
-        cdp.once(event as 'Accessibility.loadComplete', listener)
+      once(event, listener) {
+        return cdp.once(event as any, listener)
       },
     }
   }
 
   async close(): Promise<void> {
+    process.off('SIGTERM', this.onSIGTERM)
+
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     if (this.browserPromise) {
@@ -638,7 +641,9 @@ type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 // Must be re-aliased here or rollup-plugin-dts removes the import alias and you end up with a circular reference
-type PWCDPSession = PlaywrightCDPSession
+type PWCDPSession = Pick<PlaywrightCDPSession, 'send' | 'on' | 'off' | 'once'>
+
+export { type PWCDPSession as CDPSession }
 
 declare module 'vitest/browser' {
   export interface UserEventHoverOptions extends PWHoverOptions {}

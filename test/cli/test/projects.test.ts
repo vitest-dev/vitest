@@ -181,6 +181,34 @@ describe('the config file names', () => {
     expect(exitCode).toBe(0)
   })
 
+  it('[glob] the name has "unit-test" (with hyphen) between "vitest" and "config" and works', async () => {
+    const { exitCode } = await runInlineTests({
+      'vitest.unit-test.config.js': {},
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./vitest.*.config.js'],
+        },
+      },
+    })
+
+    expect(exitCode).toBe(0)
+  })
+
+  it('[file] the name has "unit-test" (with hyphen) between "vitest" and "config" and works', async () => {
+    const { exitCode } = await runInlineTests({
+      'vitest.unit-test.config.js': {},
+      'vitest.config.js': {
+        test: {
+          passWithNoTests: true,
+          projects: ['./vitest.unit-test.config.js'],
+        },
+      },
+    })
+
+    expect(exitCode).toBe(0)
+  })
+
   it('[file] the name does not start with "vite"/"vitest" and throws an error', async () => {
     const { stderr } = await runInlineTests({
       'unit.config.js': {},

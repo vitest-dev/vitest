@@ -807,7 +807,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. If browser mode is enabled, the UI will be opened automatically. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:

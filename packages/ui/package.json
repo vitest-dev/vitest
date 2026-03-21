@@ -1,11 +1,11 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "4.1.0-beta.5",
+  "version": "4.1.0",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/ui#readme",
+  "homepage": "https://vitest.dev/guide/ui",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,11 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "html",
+    "reporter"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {

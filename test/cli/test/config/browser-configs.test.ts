@@ -660,7 +660,7 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
     {
       nodeOptions: {
         env: {
-          CI: 'false',
+          CI: '',
           GITHUB_ACTIONS: undefined,
         },
       },

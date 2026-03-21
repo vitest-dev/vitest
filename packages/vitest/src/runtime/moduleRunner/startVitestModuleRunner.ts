@@ -12,6 +12,7 @@ import { getCachedVitestImport } from './cachedResolver'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
 import { VitestMocker } from './moduleMocker'
 import { VitestModuleRunner } from './moduleRunner'
+import { removeQuery } from './utils'
 
 const { readFileSync } = fs
 
@@ -95,6 +96,13 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           return vitest
         }
 
+        // strip _vitest_original query added by importActual so that
+        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook)
+        const isImportActual = id.includes('_vitest_original')
+        if (isImportActual) {
+          id = removeQuery(id, '_vitest_original')
+        }
+
         const rawId = unwrapId(id)
         resolvingModules.add(rawId)
 
@@ -103,15 +111,17 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             await moduleRunner.mocker.resolveMocks()
           }
 
-          const resolvedMock = moduleRunner.mocker.getDependencyMock(rawId)
-          if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
-            return {
-              code: '',
-              file: null,
-              id: resolvedMock.id,
-              url: resolvedMock.url,
-              invalidate: false,
-              mockedModule: resolvedMock,
+          if (!isImportActual) {
+            const resolvedMock = moduleRunner.mocker.getDependencyMockByUrl(id)
+            if (resolvedMock?.type === 'manual' || resolvedMock?.type === 'redirect') {
+              return {
+                code: '',
+                file: null,
+                id: resolvedMock.id,
+                url: resolvedMock.url,
+                invalidate: false,
+                mockedModule: resolvedMock,
+              }
             }
           }
 
@@ -125,7 +135,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
           // if module is invalidated, the worker will be recreated,
           // so cached is always true in a single worker
-          if (options?.cached) {
+          if (!isImportActual && options?.cached) {
             return { cache: true }
           }
 
