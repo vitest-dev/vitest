@@ -1,7 +1,7 @@
 catalogMode: prefer
+ignoreWorkspaceRootCheck: true
 shellEmulator: true
 trustPolicy: no-downgrade
-ignoreWorkspaceRootCheck: true
 strictPeerDependencies: false
 trustPolicyExclude:
   - semver@6.3.1
