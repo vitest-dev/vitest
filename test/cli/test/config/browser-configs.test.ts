@@ -69,6 +69,17 @@ test('filters projects with a wildcard', async () => {
   ])
 })
 
+test('allows browser mode without projects', async () => {
+  await vitest({}, {
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }],
+    },
+  })
+})
+
 test('assigns names as browsers in a custom project', async () => {
   const { projects } = await vitest({}, {
     projects: [
