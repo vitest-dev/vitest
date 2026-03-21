@@ -150,9 +150,10 @@ export class VitestSpecifications {
       return []
     }
 
+    const transformCache = new Map<string, string[]>()
     const testGraphs = await Promise.all(
       specs.map(async (spec) => {
-        const deps = await this.getTestDependencies(spec)
+        const deps = await this.getTestDependencies(spec, transformCache)
         return [spec, deps] as const
       }),
     )
@@ -169,19 +170,31 @@ export class VitestSpecifications {
     return runningTests
   }
 
-  private async getTestDependencies(spec: TestSpecification, deps = new Set<string>()): Promise<Set<string>> {
+  private async getTestDependencies(
+    spec: TestSpecification,
+    transformCache?: Map<string, string[]>,
+    deps = new Set<string>(),
+  ): Promise<Set<string>> {
     const addImports = async (project: TestProject, filepath: string) => {
       if (deps.has(filepath)) {
         return
       }
       deps.add(filepath)
 
-      const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
-      const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
-      if (!transformed) {
-        return
+      let dependencies: string[]
+      const cached = transformCache?.get(filepath)
+      if (cached) {
+        dependencies = cached
       }
-      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+      else {
+        const mod = project.vite.environments.ssr.moduleGraph.getModuleById(filepath)
+        const transformed = mod?.transformResult || await project.vite.environments.ssr.transformRequest(filepath)
+        if (!transformed) {
+          return
+        }
+        dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+        transformCache?.set(filepath, dependencies)
+      }
       await Promise.all(dependencies.map(async (dep) => {
         const fsPath = dep.startsWith('/@fs/')
           ? dep.slice(isWindows ? 5 : 4)
