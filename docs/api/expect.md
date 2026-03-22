@@ -1561,7 +1561,7 @@ test('spy nth called with', () => {
 
 - **Type:** `(value: any) => void`
 
-Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`, following [sinon-chai](https://github.com/chaijs/sinon-chai) conventions.
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
