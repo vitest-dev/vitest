@@ -1,5 +1,5 @@
+import { runInlineTests, StableTestFileOrderSorter } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests, StableTestFileOrderSorter } from '../../test-utils'
 
 test.each([
   1,

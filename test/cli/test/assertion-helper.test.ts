@@ -1,6 +1,6 @@
+import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 it('assertion helper', async () => {
   const { stderr, errorTree } = await runVitest({

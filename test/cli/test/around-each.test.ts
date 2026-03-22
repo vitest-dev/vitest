@@ -1,5 +1,5 @@
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 function extractLogs(stdout: string): string {
   return stdout.split('\n').filter(l => l.includes('>>')).join('\n')

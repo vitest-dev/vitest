@@ -1,5 +1,5 @@
+import { runInlineTests as base } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests as base } from '../../test-utils'
 
 test('does not report leaks when disabled', async () => {
   const { stdout, stderr } = await runInlineTests({

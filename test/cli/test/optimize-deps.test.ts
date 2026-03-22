@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 test('optimize deps optimizes them into node_modules/.vite', async () => {
   const { errorTree, stderr } = await runVitest({

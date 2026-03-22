@@ -1,7 +1,7 @@
 import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
+import { runVitest } from '#test-utils'
 import { describe, expect, test, TestRunner } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
   const run = (config?: TestUserConfig) => runVitest({

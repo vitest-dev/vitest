@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 test('test run is not started when --standalone', async () => {
   const { vitest } = await runVitest({

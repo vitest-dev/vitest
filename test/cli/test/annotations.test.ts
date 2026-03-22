@@ -1,8 +1,8 @@
 import type { TestArtifact } from '@vitest/runner'
 import type { TestAnnotation } from 'vitest'
+import { runInlineTests } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 const test3Content = /* ts */`
 export async function externalAnnotate(annotate) {

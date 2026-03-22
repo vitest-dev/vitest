@@ -1,9 +1,9 @@
 import type { TaskMeta } from '@vitest/runner'
 import type { TestModule, TestUserConfig } from 'vitest/node'
+import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runVitest } from '../../test-utils'
 
 it.each([
   { name: 'threads are enabled', pool: 'threads' },

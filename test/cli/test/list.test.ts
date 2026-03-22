@@ -1,6 +1,6 @@
 import { readFileSync, rmSync } from 'node:fs'
+import { runVitestCli } from '#test-utils'
 import { expect, onTestFinished, test } from 'vitest'
-import { runVitestCli } from '../../test-utils'
 
 test.each([
   ['--pool=threads'],

@@ -1,5 +1,5 @@
+import { runVitest, useFS } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runVitest, useFS } from '../../test-utils'
 
 test('if file has import.meta.glob, it\'s not cached', async () => {
   const { createFile } = useFS('./fixtures/caching/import-meta-glob/generated', {

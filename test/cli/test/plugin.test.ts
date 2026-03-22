@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 it('plugin hooks', async () => {
   await runVitest({ root: './fixtures/plugin' })

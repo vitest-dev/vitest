@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {
   const vitest = await runVitest({

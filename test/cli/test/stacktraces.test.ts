@@ -1,8 +1,8 @@
+import { runInlineTests, runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runInlineTests, runVitest } from '../../test-utils'
 
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)

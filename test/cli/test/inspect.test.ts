@@ -1,9 +1,8 @@
 import type { InspectorNotification } from 'node:inspector'
+import { runVitestCli } from '#test-utils'
 import { version as viteVersion } from 'vite'
 import { expect, test } from 'vitest'
 import WebSocket from 'ws'
-
-import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 

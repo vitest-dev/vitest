@@ -1,9 +1,8 @@
+import { runInlineTests, runVitest, ts } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
-
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
-import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 const root = resolve(import.meta.dirname, '../fixtures/fails')
 const files = await glob(['**/*.test.{ts,js}'], { cwd: root, dot: true, expandDirectories: false })

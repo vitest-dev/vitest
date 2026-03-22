@@ -1,7 +1,7 @@
 import type { UserConsoleLog } from 'vitest'
 import type { Reporter, Vitest } from 'vitest/node'
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 test('timeout aborts the signal without fixtures', async () => {
   const { stderr, results } = await runInlineTests({

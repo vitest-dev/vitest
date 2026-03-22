@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 test('run mode does not get stuck when TTY', async () => {
   const { vitest } = await runVitest({

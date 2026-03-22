@@ -1,6 +1,6 @@
 import type { TestSpecificationOptions } from 'vitest/node'
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 test.each(
   [

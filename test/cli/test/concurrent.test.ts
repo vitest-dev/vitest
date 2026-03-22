@@ -1,5 +1,5 @@
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 // 3 tests depend on each other,
 // so they will deadlock when maxConcurrency < 3

@@ -1,7 +1,6 @@
+import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
-
-import { runVitest } from '../../test-utils'
 
 it('should fail', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/global-setup-fail')

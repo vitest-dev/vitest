@@ -1,5 +1,5 @@
+import { runInlineTests } from '#test-utils'
 import { describe, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 const toMatchTest = /* ts */`
 export function toMatchTest(this, expected) {

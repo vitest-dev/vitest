@@ -1,5 +1,5 @@
+import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
 
 test('tests run according to the group order', async () => {
   const { stdout, stderr } = await runInlineTests({

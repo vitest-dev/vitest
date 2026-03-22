@@ -1,5 +1,5 @@
+import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 
 const isTypeStrippingSupported = !!process.features.typescript
 
