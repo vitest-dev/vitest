@@ -181,13 +181,6 @@ Generate coverage report even when tests fail (default: `false`)
 
 Collect coverage of files outside the project root (default: `false`)
 
-### coverage.excludeAfterRemap
-
-- **CLI:** `--coverage.excludeAfterRemap`
-- **Config:** [coverage.excludeAfterRemap](/config/coverage#coverage-excludeafterremap)
-
-Apply exclusions again after coverage has been remapped to original sources. This is useful when your source files are transpiled and may contain source maps of non-source files. Use this option when you are seeing files that show up in report even if they match your coverage.exclude patterns. (default: `false`)
-
 ### coverage.skipFull
 
 - **CLI:** `--coverage.skipFull`
@@ -292,12 +285,19 @@ High and low watermarks for functions in the format of `<high>,<low>`
 
 Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.
 
+### coverage.excludeAfterRemap
+
+- **CLI:** `--coverage.excludeAfterRemap`
+- **Config:** [coverage.excludeAfterRemap](/config/coverage#coverage-excludeafterremap)
+
+Apply exclusions again after coverage has been remapped to original sources. (default: false)
+
 ### coverage.htmlDir
 
 - **CLI:** `--coverage.htmlDir <path>`
 - **Config:** [coverage.htmlDir](/config/coverage#coverage-htmldir)
 
-Directory of HTML coverage output to be served in UI mode and HTML reporter. This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters). Use this option to override with custom coverage reporting location.
+Directory of HTML coverage output to be served in UI mode and HTML reporter.
 
 ### mode
 
