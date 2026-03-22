@@ -1,9 +1,9 @@
 /* eslint-disable ts/no-unused-expressions */
-import { chai, describe, expect, it } from 'vitest'
 // @ts-expect-error no type override otherwise vitest ones broken
 import sinon from 'sinon'
-// @ts-expect-error no
+// @ts-expect-error same
 import sinonChai from 'sinon-chai'
+import { chai, describe, expect, it } from 'vitest'
 
 chai.use(sinonChai)
 

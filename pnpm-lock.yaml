@@ -257,12 +257,6 @@ importers:
       rollup-plugin-license:
         specifier: ^3.7.0
         version: 3.7.0(picomatch@4.0.3)(rollup@4.59.0)
-      sinon:
-        specifier: 'catalog:'
-        version: 21.0.3
-      sinon-chai:
-        specifier: 'catalog:'
-        version: 4.0.1(chai@6.2.2)(sinon@21.0.3)
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.15
@@ -1521,6 +1515,12 @@ importers:
       react-18:
         specifier: npm:react@18.3.1
         version: react@18.3.1
+      sinon:
+        specifier: 'catalog:'
+        version: 21.0.3
+      sinon-chai:
+        specifier: 'catalog:'
+        version: 4.0.1(chai@6.2.2)(sinon@21.0.3)
       temporal-polyfill:
         specifier: ~0.3.0
         version: 0.3.0

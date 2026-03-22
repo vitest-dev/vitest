@@ -3,7 +3,7 @@
   "type": "module",
   "version": "4.1.0",
   "private": true,
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@10.31.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
@@ -62,8 +62,6 @@
     "rollup": "^4.59.0",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-license": "^3.7.0",
-    "sinon": "catalog:",
-    "sinon-chai": "catalog:",
     "tinyglobby": "catalog:",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
