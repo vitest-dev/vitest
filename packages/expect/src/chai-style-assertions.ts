@@ -59,7 +59,8 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
     )
   }
 
-  // API to mirror https://github.com/chaijs/sinon-chai
+  // API to (somewhat) mirror sinon-chai
+  // https://github.com/chaijs/sinon-chai
   defProperty('called', 'toHaveBeenCalled')
   defProperty('calledOnce', 'toHaveBeenCalledOnce')
   defPropertyWithArgs('calledTwice', 'toHaveBeenCalledTimes', 2)
