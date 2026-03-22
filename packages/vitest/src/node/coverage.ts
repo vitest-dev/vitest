@@ -74,11 +74,11 @@ export async function getCoverageProvider(
   return null
 }
 
-export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istanbul' | 'v8'>> {
+export class BaseCoverageProvider {
   ctx!: Vitest
   readonly name!: 'v8' | 'istanbul'
   version!: string
-  options!: Options
+  options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
 
@@ -101,7 +101,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       )
     }
 
-    const config = ctx._coverageOptions as Options
+    const config = ctx._coverageOptions
 
     this.options = {
       ...coverageConfigDefaults,
@@ -228,7 +228,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     throw new Error('BaseReporter\'s parseConfigModule was not overwritten')
   }
 
-  resolveOptions(): Options {
+  resolveOptions(): ResolvedCoverageOptions {
     return this.options
   }
 

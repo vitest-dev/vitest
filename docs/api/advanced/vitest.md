@@ -233,16 +233,18 @@ function start(filters?: string[]): Promise<TestRunResult>
 Initialize reporters, the coverage provider, and run tests. This method accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 ::: warning
-This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
+This method should not be called if [`vitest.standalone()`](#standalone) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
 :::
 
 This method is called automatically by [`startVitest`](/guide/advanced/tests) if `config.mergeReports` and `config.standalone` are not set.
 
-## init
+## standalone <Version type="experimental">4.1.1</Version> {#standalone}
 
 ```ts
-function init(): Promise<void>
+function standalone(): Promise<void>
 ```
+
+- **Alias**: `init` <Deprecated />
 
 Initialize reporters and the coverage provider. This method doesn't run any tests. If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
 
@@ -545,7 +547,7 @@ If there is a test run happening, returns a promise that will resolve when the t
 function createCoverageProvider(): Promise<CoverageProvider | null>
 ```
 
-Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
+Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`standalone`](#standalone) methods.
 
 ::: warning
 This method will also clean all previous reports if [`coverage.clean`](/config/coverage#coverage-clean) is not set to `false`.

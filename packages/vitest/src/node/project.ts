@@ -15,6 +15,7 @@ import type {
   TestProjectInlineConfiguration,
   UserConfig,
 } from './types/config'
+import crypto from 'node:crypto'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -70,6 +71,7 @@ export class TestProject {
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
   /** @internal */ testFilesList: string[] | null = null
+  /** @internal */ _browserReadySessions = new Set<string>()
 
   private runner!: ModuleRunner
 
@@ -602,6 +604,66 @@ export class TestProject {
       ...Object.values(this.browser?.vite.environments || {}),
       ...Object.values(this.vite.environments || {}),
     ]
+  }
+
+  /** @internal */
+  public async _openBrowserPage(sessionId: string, pool: {
+    reject: (error: Error) => void
+    parallel?: boolean
+  }): Promise<void> {
+    if (!this.browser) {
+      throw new Error(`browser is not initialized`)
+    }
+
+    const resolvedUrls = this.browser.vite.resolvedUrls
+    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+    if (!origin) {
+      throw new Error(
+        `Can't find browser origin URL for project "${this.name}"`,
+      )
+    }
+
+    const url = new URL('/__vitest_test__/', origin)
+    url.searchParams.set('sessionId', sessionId)
+    const otelCarrier = this.vitest._traces.getContextCarrier()
+    if (otelCarrier) {
+      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
+    }
+    this.vitest._browserSessions.sessionIds.add(sessionId)
+    const sessionPromise = this.vitest._browserSessions.createSession(
+      sessionId,
+      this,
+      pool,
+    )
+    const pagePromise = this.browser.provider.openPage(
+      sessionId,
+      url.toString(),
+      { parallel: pool.parallel ?? false },
+    )
+    await Promise.all([
+      sessionPromise,
+      pagePromise,
+    ])
+  }
+
+  /** @internal */
+  public async _standalone(): Promise<void> {
+    if (!this.isBrowserEnabled()) {
+      return
+    }
+
+    await this._initBrowserProvider()
+    if (!this.browser) {
+      return
+    }
+
+    const sessionId = crypto.randomUUID()
+    await this._openBrowserPage(sessionId, {
+      reject: (error) => {
+        this.vitest.state.catchError(error, 'Browser Error')
+      },
+    })
+    this._browserReadySessions.add(sessionId)
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {

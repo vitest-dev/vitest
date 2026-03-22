@@ -1150,7 +1150,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWit
+## toHaveBeenCalledExactlyOnceWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
