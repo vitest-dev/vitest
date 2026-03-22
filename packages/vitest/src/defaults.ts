@@ -1,6 +1,6 @@
 import type {
   BenchmarkUserOptions,
-  CoverageV8Options,
+  CoverageOptions,
   UserConfig,
 } from './node/types/config'
 import os from 'node:os'
@@ -24,7 +24,7 @@ export const benchmarkConfigDefaults: Required<
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: Required<Omit<CoverageV8Options, 'include' | 'skipFull' | 'thresholds' | 'watermarks' | 'ignoreClassMethods' | 'htmlDir' | 'changed'>> = {
+export const coverageConfigDefaults: Required<Omit<CoverageOptions, 'include' | 'skipFull' | 'thresholds' | 'watermarks' | 'ignoreClassMethods' | 'htmlDir' | 'changed' | 'customProviderModule'>> = {
   provider: 'v8',
   enabled: false,
   clean: true,
@@ -77,7 +77,7 @@ export const configDefaults: Readonly<{
   css: {
     include: never[]
   }
-  coverage: CoverageV8Options
+  coverage: CoverageOptions
   fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
