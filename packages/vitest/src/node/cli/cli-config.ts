@@ -320,6 +320,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return value
         },
       },
+      excludeAfterRemap: {
+        description: 'Apply exclusions again after coverage has been remapped to original sources. (default: false)',
+      },
+      htmlDir: {
+        description: 'Directory of HTML coverage output to be served in UI mode and HTML reporter.',
+        argument: '<path>',
+      },
     },
   },
   mode: {
