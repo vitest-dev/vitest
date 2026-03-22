@@ -1,6 +1,5 @@
 import { join } from 'node:path'
 import { createFile, editFile, resolvePath, runVitest } from '#test-utils'
-
 import { describe, expect, it } from 'vitest'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
