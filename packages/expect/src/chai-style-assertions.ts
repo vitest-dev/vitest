@@ -78,4 +78,7 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
   defMethod('nthReturnedWith', 'toHaveNthReturnedWith')
   defMethod('calledBefore', 'toHaveBeenCalledBefore')
   defMethod('calledAfter', 'toHaveBeenCalledAfter')
+
+  // TODO: implement
+  // defMethod('thrown', 'toHaveThrown')
 }
