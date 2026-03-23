@@ -182,8 +182,7 @@ export class VitestSpecifications {
       deps.add(filepath)
 
       let dependencies: string[]
-      const cacheKey = `${project.name}:${filepath}`
-      const cached = transformCache?.get(cacheKey)
+      const cached = transformCache?.get(filepath)
       if (cached) {
         dependencies = cached
       }
@@ -194,7 +193,7 @@ export class VitestSpecifications {
           return
         }
         dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-        transformCache?.set(cacheKey, dependencies)
+        transformCache?.set(filepath, dependencies)
       }
       await Promise.all(dependencies.map(async (dep) => {
         const fsPath = dep.startsWith('/@fs/')
