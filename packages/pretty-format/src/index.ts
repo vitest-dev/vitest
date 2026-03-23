@@ -311,7 +311,7 @@ const ErrorPlugin: NewPlugin = {
       ...rest,
     }
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
-    const result = hitMaxDepth
+    return hitMaxDepth
       ? `[${name}]`
       : `${name} {${printIteratorEntries(
         Object.entries(entries).values(),
@@ -321,11 +321,6 @@ const ErrorPlugin: NewPlugin = {
         refs,
         printer,
       )}}`
-    config.budget.used += result.length
-    if (config.budget.used > config.budget.max) {
-      config.maxDepth = 0
-    }
-    return result
   },
 }
 
