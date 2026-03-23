@@ -125,6 +125,7 @@ export class VitestSpecifications {
         root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
       })
+      console.error('VCS RELATED', related)
       this.vitest.config.related = Array.from(new Set(related))
     }
 
@@ -152,6 +153,7 @@ export class VitestSpecifications {
       }),
     )
 
+    console.error('VCS TEST_GRAPH', testGraphs)
     const runningTests: TestSpecification[] = []
 
     for (const [specification, deps] of testGraphs) {

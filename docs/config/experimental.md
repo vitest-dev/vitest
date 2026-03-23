@@ -439,7 +439,7 @@ export default defineConfig({
     experimental: {
       vcsProvider: {
         async findChangedFiles({ root, changedSince }) {
-          // return absolute paths of changed files
+          // return paths of changed files
           return []
         },
       },
@@ -450,22 +450,22 @@ export default defineConfig({
 
 You can also pass a string path to a module with a default export that implements the `VCSProvider` interface:
 
-```ts [vitest.config.ts]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     experimental: {
-      vcsProvider: './my-vcs-provider.ts',
+      vcsProvider: './my-vcs-provider.js',
     },
   },
 })
 ```
 
-```ts [my-vcs-provider.ts]
+```js [my-vcs-provider.js]
 export default {
   async findChangedFiles({ root, changedSince }) {
-    // return absolute paths of changed files
+    // return paths of changed files
     return []
   },
 }
