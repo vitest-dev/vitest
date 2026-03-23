@@ -441,7 +441,7 @@ export const DEFAULT_OPTIONS: Options = {
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
   // Practical default hard-limit to avoid too long string being generated
-  // (Node's limit is 512MB)
+  // (Node's limit is buffer.constants.MAX_STRING_LENGTH ~ 512MB)
   maxOutputLength: 1_000_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
