@@ -1,7 +1,7 @@
 import { format } from '@vitest/pretty-format'
 import { describe, expect, test } from 'vitest'
 
-describe('maxOutputLength budget', () => {
+describe('maxOutputLength', () => {
   function createObjectGraph(n: number) {
     // owner
     //  |-> cats
