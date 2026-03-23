@@ -443,10 +443,8 @@ export const DEFAULT_OPTIONS: Options = {
   highlight: false,
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
-  // Prevent hitting Node's string length limit (~512MB) on pathological object
-  // graphs with shared references that fan out exponentially. 100K is generous
-  // enough for normal formatting but well below the ~2**27 danger zone.
-  maxOutputLength: 100_000,
+  // Prevent hitting Node's string length limit (~512MB)
+  maxOutputLength: 1_000_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
   plugins: [],

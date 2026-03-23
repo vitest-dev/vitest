@@ -139,23 +139,22 @@ describe('maxOutputLength', () => {
 
   test('budget prevents blowup on large graphs', () => {
     // quickly hit the kill switch due to quadratic growth
-    expect([1, 5, 10, 15, 20, 30, 100].map(n => format(createObjectGraph(n).cats).length))
+    expect([10, 20, 30, 1000, 2000, 3000].map(n => format(createObjectGraph(n).cats).length))
       .toMatchInlineSnapshot(`
-      [
-        216,
-        2744,
-        9729,
-        21044,
-        27554,
-        27169,
-        27309,
-      ]
-    `)
+        [
+          9729,
+          36659,
+          80789,
+          273009,
+          374009,
+          299009,
+        ]
+      `)
 
-    // depending on object/array shape, output can exceed the limit 100_000,
+    // depending on object/array shape, output can exceed the limit 1mb
     // but the output size is proportional to the amount of objects and the size of array.
-    expect(format(createObjectGraph(1000).cats).length).toMatchInlineSnapshot(`99009`)
-    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`389799`)
+    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`999009`)
+    expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1497738`)
   })
 
   test('early elements expanded, later elements folded after budget trips', () => {
