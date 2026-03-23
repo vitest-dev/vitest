@@ -45,6 +45,7 @@ export interface PrettyFormatOptions {
   indent?: number
   maxDepth?: number
   maxWidth?: number
+  maxOutputLength?: number
   min?: boolean
   printBasicPrototype?: boolean
   printFunctionName?: boolean
@@ -71,6 +72,7 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
+  budget: { used: number; max: number }
 }
 
 export type Printer = (

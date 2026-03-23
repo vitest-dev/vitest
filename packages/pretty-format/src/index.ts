@@ -212,9 +212,11 @@ function printComplexValue(
     return printer(val.toJSON(), config, indentation, depth, refs, true)
   }
 
+  let result: string
+
   const toStringed = toString.call(val)
   if (toStringed === '[object Arguments]') {
-    return hitMaxDepth
+    result = hitMaxDepth
       ? '[Arguments]'
       : `${min ? '' : 'Arguments '}[${printListItems(
         val,
@@ -225,8 +227,8 @@ function printComplexValue(
         printer,
       )}]`
   }
-  if (isToStringedArrayType(toStringed)) {
-    return hitMaxDepth
+  else if (isToStringedArrayType(toStringed)) {
+    result = hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
         min
@@ -236,8 +238,8 @@ function printComplexValue(
               : `${val.constructor.name} `
       }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
-  if (toStringed === '[object Map]') {
-    return hitMaxDepth
+  else if (toStringed === '[object Map]') {
+    result = hitMaxDepth
       ? '[Map]'
       : `Map {${printIteratorEntries(
         val.entries(),
@@ -249,8 +251,8 @@ function printComplexValue(
         ' => ',
       )}}`
   }
-  if (toStringed === '[object Set]') {
-    return hitMaxDepth
+  else if (toStringed === '[object Set]') {
+    result = hitMaxDepth
       ? '[Set]'
       : `Set {${printIteratorValues(
         val.values(),
@@ -261,25 +263,36 @@ function printComplexValue(
         printer,
       )}}`
   }
-
   // Avoid failure to serialize global window object in jsdom test environment.
   // For example, not even relevant if window is prop of React element.
-  return hitMaxDepth || isWindow(val)
-    ? `[${getConstructorName(val)}]`
-    : `${
-      min
-        ? ''
-        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
-            ? ''
-            : `${getConstructorName(val)} `
-    }{${printObjectProperties(
-      val,
-      config,
-      indentation,
-      depth,
-      refs,
-      printer,
-    )}}`
+  else {
+    result = hitMaxDepth || isWindow(val)
+      ? `[${getConstructorName(val)}]`
+      : `${
+        min
+          ? ''
+          : !config.printBasicPrototype && getConstructorName(val) === 'Object'
+              ? ''
+              : `${getConstructorName(val)} `
+      }{${printObjectProperties(
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
+  }
+
+  // Post-hoc budget check
+  // Accumulate output length and if exceeded, force no recursion by patching maxDepth.
+  // Inspired by node's util.inspect bail out heuristics.
+  config.budget.used += result.length
+  if (config.budget.used > config.budget.max) {
+    config.maxDepth = -1
+  }
+
+  return result
 }
 
 const ErrorPlugin: NewPlugin = {
@@ -298,7 +311,7 @@ const ErrorPlugin: NewPlugin = {
       ...rest,
     }
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
-    return hitMaxDepth
+    const result = hitMaxDepth
       ? `[${name}]`
       : `${name} {${printIteratorEntries(
         Object.entries(entries).values(),
@@ -308,6 +321,11 @@ const ErrorPlugin: NewPlugin = {
         refs,
         printer,
       )}}`
+    config.budget.used += result.length
+    if (config.budget.used > config.budget.max) {
+      config.maxDepth = -1
+    }
+    return result
   },
 }
 
@@ -425,6 +443,10 @@ export const DEFAULT_OPTIONS: Options = {
   highlight: false,
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
+  // Prevent hitting Node's string length limit (~512MB) on pathological object
+  // graphs with shared references that fan out exponentially. 100K is generous
+  // enough for normal formatting but well below the ~2**27 danger zone.
+  maxOutputLength: 100_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
   plugins: [],
@@ -509,6 +531,7 @@ function getConfig(options?: OptionsReceived): Config {
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
+    budget: { used: 0, max: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength },
   }
 }
 
