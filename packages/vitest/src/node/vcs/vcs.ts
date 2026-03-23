@@ -1,4 +1,5 @@
 import type { ModuleRunner } from 'vite/module-runner'
+import { resolve } from 'pathe'
 import { GitVCSProvider } from './git'
 
 export interface VCSProviderOptions {
@@ -22,5 +23,10 @@ export async function loadVCSProvider(runner: ModuleRunner, vcsProvider: string 
   if (!module.default || typeof module.default !== 'object' || typeof module.default.findChangedFiles !== 'function') {
     throw new Error(`The vcsProvider module '${vcsProvider}' doesn't have a default export with \`findChangedFiles\` method.`)
   }
-  return module.default
+  return {
+    async findChangedFiles(options) {
+      const changedFiles = await module.default.findChangedFiles(options)
+      return changedFiles.map(file => resolve(options.root, file))
+    },
+  }
 }
