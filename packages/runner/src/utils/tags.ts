@@ -6,7 +6,7 @@ const filterMap = new WeakMap<string[], (testTags: string[]) => boolean>()
 /**
  * @experimental
  */
-export function matchesTagsFilter(testTags: string[]): boolean {
+export function matchesTags(testTags: string[]): boolean {
   const runner = getRunner()
   const tagsFilter = runner._currentSpecification?.testTagsFilter ?? runner.config.tagsFilter
   if (!tagsFilter) {

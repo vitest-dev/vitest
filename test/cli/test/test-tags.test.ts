@@ -1361,7 +1361,7 @@ test('test meta overrides tag meta', async () => {
   `)
 })
 
-test('matchesTagsFilter returns true when no filter is configured', async () => {
+test('matchesTags returns true when no filter is configured', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, describe, expect, test } from 'vitest'
@@ -1369,7 +1369,7 @@ test('matchesTagsFilter returns true when no filter is configured', async () => 
       let matchResult
 
       beforeAll(() => {
-        matchResult = TestRunner.matchesTagsFilter(['unit'])
+        matchResult = TestRunner.matchesTags(['unit'])
       })
 
       test('test 1', { tags: ['unit'] }, () => {
@@ -1392,7 +1392,7 @@ test('matchesTagsFilter returns true when no filter is configured', async () => 
   `)
 })
 
-test('matchesTagsFilter returns true when tags match the filter', async () => {
+test('matchesTags returns true when tags match the filter', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1400,8 +1400,8 @@ test('matchesTagsFilter returns true when tags match the filter', async () => {
       let matchUnit, matchE2e
 
       beforeAll(() => {
-        matchUnit = TestRunner.matchesTagsFilter(['unit'])
-        matchE2e = TestRunner.matchesTagsFilter(['e2e'])
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchE2e = TestRunner.matchesTags(['e2e'])
       })
 
       test('unit matches', { tags: ['unit'] }, () => {
@@ -1427,7 +1427,7 @@ test('matchesTagsFilter returns true when tags match the filter', async () => {
   `)
 })
 
-test('matchesTagsFilter supports NOT expressions', async () => {
+test('matchesTags supports NOT expressions', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1435,8 +1435,8 @@ test('matchesTagsFilter supports NOT expressions', async () => {
       let matchUnit, matchSlow
 
       beforeAll(() => {
-        matchUnit = TestRunner.matchesTagsFilter(['unit'])
-        matchSlow = TestRunner.matchesTagsFilter(['slow'])
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchSlow = TestRunner.matchesTags(['slow'])
       })
 
       test('unit passes NOT slow', { tags: ['unit'] }, () => {
@@ -1462,7 +1462,7 @@ test('matchesTagsFilter supports NOT expressions', async () => {
   `)
 })
 
-test('matchesTagsFilter supports AND/OR expressions', async () => {
+test('matchesTags supports AND/OR expressions', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1470,10 +1470,10 @@ test('matchesTagsFilter supports AND/OR expressions', async () => {
       let matchUnitFast, matchUnitSlow, matchE2eFast, matchEmpty
 
       beforeAll(() => {
-        matchUnitFast = TestRunner.matchesTagsFilter(['unit', 'fast'])
-        matchUnitSlow = TestRunner.matchesTagsFilter(['unit', 'slow'])
-        matchE2eFast = TestRunner.matchesTagsFilter(['e2e', 'fast'])
-        matchEmpty = TestRunner.matchesTagsFilter([])
+        matchUnitFast = TestRunner.matchesTags(['unit', 'fast'])
+        matchUnitSlow = TestRunner.matchesTags(['unit', 'slow'])
+        matchE2eFast = TestRunner.matchesTags(['e2e', 'fast'])
+        matchEmpty = TestRunner.matchesTags([])
       })
 
       test('matches complex expression', { tags: ['unit', 'fast'] }, () => {
@@ -1506,7 +1506,7 @@ test('matchesTagsFilter supports AND/OR expressions', async () => {
   `)
 })
 
-test('matchesTagsFilter supports wildcard patterns', async () => {
+test('matchesTags supports wildcard patterns', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1514,8 +1514,8 @@ test('matchesTagsFilter supports wildcard patterns', async () => {
       let matchBrowserChrome, matchNode
 
       beforeAll(() => {
-        matchBrowserChrome = TestRunner.matchesTagsFilter(['browser-chrome'])
-        matchNode = TestRunner.matchesTagsFilter(['node'])
+        matchBrowserChrome = TestRunner.matchesTags(['browser-chrome'])
+        matchNode = TestRunner.matchesTags(['node'])
       })
 
       test('wildcard matches', { tags: ['browser-chrome'] }, () => {
@@ -1545,7 +1545,7 @@ test('matchesTagsFilter supports wildcard patterns', async () => {
   `)
 })
 
-test('matchesTagsFilter with empty tags array and no filter returns true', async () => {
+test('matchesTags with empty tags array and no filter returns true', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1553,7 +1553,7 @@ test('matchesTagsFilter with empty tags array and no filter returns true', async
       let matchEmpty
 
       beforeAll(() => {
-        matchEmpty = TestRunner.matchesTagsFilter([])
+        matchEmpty = TestRunner.matchesTags([])
       })
 
       test('empty tags no filter', () => {
@@ -1651,7 +1651,7 @@ test('per-specification testTagsFilter with complex expression', async () => {
   })
 })
 
-test('matchesTagsFilter uses per-specification filter instead of global filter', async () => {
+test('matchesTags uses per-specification filter instead of global filter', async () => {
   const { fs, ctx, errorTree } = await runInlineTests({
     'basic.test.js': `
       import { TestRunner, beforeAll, expect, test } from 'vitest'
@@ -1659,8 +1659,8 @@ test('matchesTagsFilter uses per-specification filter instead of global filter',
       let matchUnit, matchE2e
 
       beforeAll(() => {
-        matchUnit = TestRunner.matchesTagsFilter(['unit'])
-        matchE2e = TestRunner.matchesTagsFilter(['e2e'])
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchE2e = TestRunner.matchesTags(['e2e'])
       })
 
       test('check filter', { tags: ['e2e'] }, () => {
