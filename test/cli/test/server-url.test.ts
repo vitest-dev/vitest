@@ -1,6 +1,7 @@
-import { runInlineTests } from '#test-utils'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { expect, it } from 'vitest'
+
+import { runInlineTests } from '../../test-utils'
 
 it('api server-url http', async () => {
   const { stdout, stderr } = await runInlineTests(

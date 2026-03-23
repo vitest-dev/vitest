@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 test('extendTaskContext provides correct context.task.suite', async () => {
   const vitest = await runVitest({

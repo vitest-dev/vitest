@@ -1,11 +1,11 @@
-import type { TestFsStructure } from '#test-utils'
 import type { afterAll, beforeAll, ExpectStatic, expectTypeOf as ExpectTypeOfFn, SuiteAPI, TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestSpecification, TestUserConfig } from 'vitest/node'
-import { runInlineTests, stripIndent } from '#test-utils'
+import type { TestFsStructure } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { beforeEach, describe, expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { runInlineTests, stripIndent } from '../../test-utils'
 
 // "it" is used inside subtests, we can't "import" it because vitest will inject __vite_ssr_import__
 declare const it: TestAPI

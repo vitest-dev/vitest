@@ -1,5 +1,5 @@
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, test } from 'vitest'
+import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 // Test to detect that there are no unexpected logs, like NodeJS MaxListenersExceededWarning
 

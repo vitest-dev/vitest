@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, it } from 'vitest'
+import { runInlineTests } from '../../../test-utils'
 
 it('vitest doesnt fail when running empty files', async () => {
   const { exitCode } = await runInlineTests(

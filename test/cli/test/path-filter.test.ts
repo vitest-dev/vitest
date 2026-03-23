@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { test } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 test('test path is shown when filtering', async () => {
   const { vitest } = await runVitest({

@@ -1,5 +1,5 @@
-import { runVitestCli } from '#test-utils'
 import { describe, expect, test } from 'vitest'
+import { runVitestCli } from '../../test-utils'
 
 const fixturePath = './fixtures/location-filters'
 

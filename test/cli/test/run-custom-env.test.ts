@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+
+import { runVitest } from '../../test-utils'
 
 test('correctly runs tests if custom env is a file', async () => {
   const { stderr, exitCode } = await runVitest({

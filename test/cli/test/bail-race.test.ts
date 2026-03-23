@@ -1,7 +1,7 @@
-import { StableTestFileOrderSorter } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
+import { StableTestFileOrderSorter } from '../../test-utils'
 
 test('cancels previous run before starting new one', async () => {
   const errors: unknown[] = []

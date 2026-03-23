@@ -1,8 +1,8 @@
 import type { createBenchmarkJsonReport } from 'vitest/src/node/reporters/benchmark/json-formatter.js'
 import fs from 'node:fs'
-import { runVitest } from '#test-utils'
 import * as pathe from 'pathe'
 import { assert, expect, it } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 it('sequential', async () => {
   const root = pathe.join(import.meta.dirname, '../fixtures/benchmarking/sequential')

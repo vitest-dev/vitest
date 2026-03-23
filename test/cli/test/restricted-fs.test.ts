@@ -1,5 +1,6 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+
+import { runVitest } from '../../test-utils'
 
 test('importing files in restricted fs works correctly', async () => {
   const { stderr, exitCode } = await runVitest({

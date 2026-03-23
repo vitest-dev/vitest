@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { editFile, runVitest } from '#test-utils'
 import { describe, expect, it, test } from 'vitest'
+import { editFile, runVitest } from '../../test-utils'
 
 test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
   const { stdout, stderr } = await runVitest({

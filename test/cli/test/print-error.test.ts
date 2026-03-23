@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 
 test('prints a custom error stack', async () => {
   const { stderr } = await runInlineTests({

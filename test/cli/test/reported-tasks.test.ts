@@ -1,8 +1,8 @@
 import type { RunnerTestFile } from 'vitest'
 import type { TestCase, TestCollection, TestModule, TestProject, Vitest } from 'vitest/node'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { it as baseTest, expect } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '..', 'fixtures', 'reported-tasks')
 

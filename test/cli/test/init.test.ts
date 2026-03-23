@@ -1,7 +1,7 @@
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { runVitestCli } from '#test-utils'
 import { beforeEach, expect, test } from 'vitest'
+import { runVitestCli } from '../../test-utils'
 
 const ARROW_DOWN = '\u001B[B'
 const ENTER = '\n'

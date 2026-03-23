@@ -1,5 +1,6 @@
-import { createFile, resolvePath, runInlineTests, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+
+import { createFile, resolvePath, runInlineTests, runVitest } from '../../test-utils'
 
 test('importing files in restricted fs works correctly', async () => {
   createFile(

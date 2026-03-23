@@ -1,6 +1,6 @@
-import { runVitestCli } from '#test-utils'
 import { join } from 'pathe'
 import { expect, test } from 'vitest'
+import { runVitestCli } from '../../test-utils'
 
 const _DRIVE_LETTER_START_RE = /^[A-Z]:\//i
 const root = join(import.meta.dirname, '../fixtures/windows-drive-case')

@@ -1,11 +1,11 @@
-import type { RunVitestConfig } from '#test-utils'
+import type { RunVitestConfig } from '../../test-utils'
 import { setDefaultResultOrder } from 'node:dns'
 import path from 'node:path'
-import { runInlineTests, runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { webdriverio } from '@vitest/browser-webdriverio'
 import { afterAll, expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 // webdriver@9 sets dns.setDefaultResultOrder("ipv4first") on import,
 // which makes Vite resolve localhost to 127.0.0.1 and breaks other tests asserting "localhost"

@@ -1,7 +1,8 @@
 import type { Vitest } from 'vitest/node'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
+
 import { expect, it, onTestFinished, vi } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 it('automatically assigns the port', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/browser-multiple')
