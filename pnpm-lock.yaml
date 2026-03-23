@@ -108,6 +108,12 @@ catalogs:
     playwright:
       specifier: ^1.58.2
       version: 1.58.2
+    sinon:
+      specifier: ^21.0.3
+      version: 21.0.3
+    sinon-chai:
+      specifier: ^4.0.1
+      version: 4.0.1
     sirv:
       specifier: ^3.0.2
       version: 3.0.2
@@ -1351,7 +1357,16 @@ importers:
         specifier: workspace:*
         version: link:../../../../packages/vitest
 
-  test/cli/dts/exact-optional-property:
+  test/cli/dts/exact-optional-property-no-node:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/exact-optional-property-node:
     devDependencies:
       '@vitest/runner':
         specifier: workspace:*
@@ -1362,6 +1377,15 @@ importers:
 
   test/cli/dts/fixture-extend:
     devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../../../packages/vitest
+
+  test/cli/dts/no-dispose:
+    devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../../../packages/runner
       vitest:
         specifier: workspace:*
         version: link:../../../../packages/vitest
@@ -1446,6 +1470,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker
+      '@vitest/pretty-format':
+        specifier: workspace:*
+        version: link:../../packages/pretty-format
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
@@ -1491,6 +1518,12 @@ importers:
       react-18:
         specifier: npm:react@18.3.1
         version: react@18.3.1
+      sinon:
+        specifier: 'catalog:'
+        version: 21.0.3
+      sinon-chai:
+        specifier: 'catalog:'
+        version: 4.0.1(chai@6.2.2)(sinon@21.0.3)
       temporal-polyfill:
         specifier: ~0.3.0
         version: 0.3.0
@@ -4950,6 +4983,12 @@ packages:
   '@sinonjs/fake-timers@15.0.0':
     resolution: {integrity: sha512-dlUB2oL+hDIYkIq/OWFBDhQAuU6kDey3eeMiYpVb7UXHhkMq/r1HloKXAbJwJZpYWkFWsydLjMqDpueMUEOjXQ==}
 
+  '@sinonjs/fake-timers@15.1.1':
+    resolution: {integrity: sha512-cO5W33JgAPbOh07tvZjUOJ7oWhtaqGHiZw+11DPbyqh2kHTBc3eF/CjJDeQ4205RLQsX6rxCuYOroFQwl7JDRw==}
+
+  '@sinonjs/samsam@9.0.3':
+    resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
+
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -6617,6 +6656,10 @@ packages:
   diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+
+  diff@8.0.3:
+    resolution: {integrity: sha512-qejHi7bcSD4hQAZE0tNAawRK1ZtafHDmMTMkrrIGgSLl7hTnQHmKCeB45xAcbfTqK2zowkM3j3bHt/4b/ARbYQ==}
+    engines: {node: '>=0.3.1'}
 
   dom-accessibility-api@0.5.16:
     resolution: {integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==}
@@ -9481,6 +9524,15 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
+  sinon-chai@4.0.1:
+    resolution: {integrity: sha512-xMKEEV3cYHC1G+boyr7QEqi80gHznYsxVdC9CdjP5JnCWz/jPGuXQzJz3PtBcb0CcHAxar15Y5sjLBoAs6a0yA==}
+    peerDependencies:
+      chai: ^5.0.0 || ^6.0.0
+      sinon: '>=4.0.0'
+
+  sinon@21.0.3:
+    resolution: {integrity: sha512-0x8TQFr8EjADhSME01u1ZK31yv2+bd6Z5NrBCHVM+n4qL1wFqbxftmeyi3bwlr49FbbzRfrqSFOpyHCOh/YmYA==}
+
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
@@ -9929,6 +9981,10 @@ packages:
 
   type-detect@4.0.8:
     resolution: {integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==}
+    engines: {node: '>=4'}
+
+  type-detect@4.1.0:
+    resolution: {integrity: sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw==}
     engines: {node: '>=4'}
 
   type-fest@0.16.0:
@@ -13395,6 +13451,15 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
+  '@sinonjs/fake-timers@15.1.1':
+    dependencies:
+      '@sinonjs/commons': 3.0.1
+
+  '@sinonjs/samsam@9.0.3':
+    dependencies:
+      '@sinonjs/commons': 3.0.1
+      type-detect: 4.1.0
+
   '@standard-schema/spec@1.1.0': {}
 
   '@stylistic/eslint-plugin@5.9.0(eslint@10.0.3(jiti@2.6.1))':
@@ -15254,6 +15319,8 @@ snapshots:
       wrappy: 1.0.2
 
   diff-sequences@29.6.3: {}
+
+  diff@8.0.3: {}
 
   dom-accessibility-api@0.5.16: {}
 
@@ -18818,6 +18885,19 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
+  sinon-chai@4.0.1(chai@6.2.2)(sinon@21.0.3):
+    dependencies:
+      chai: 6.2.2
+      sinon: 21.0.3
+
+  sinon@21.0.3:
+    dependencies:
+      '@sinonjs/commons': 3.0.1
+      '@sinonjs/fake-timers': 15.1.1
+      '@sinonjs/samsam': 9.0.3
+      diff: 8.0.3
+      supports-color: 7.2.0
+
   sirv@3.0.2:
     dependencies:
       '@polka/url': 1.0.0-next.24
@@ -19295,6 +19375,8 @@ snapshots:
       prelude-ls: 1.2.1
 
   type-detect@4.0.8: {}
+
+  type-detect@4.1.0: {}
 
   type-fest@0.16.0: {}
 

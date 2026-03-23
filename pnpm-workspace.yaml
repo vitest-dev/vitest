@@ -1,6 +1,8 @@
 catalogMode: prefer
+ignoreWorkspaceRootCheck: true
 shellEmulator: true
 trustPolicy: no-downgrade
+strictPeerDependencies: false
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
@@ -75,6 +77,8 @@ catalog:
   obug: ^2.1.1
   pathe: ^2.0.3
   playwright: ^1.58.2
+  sinon: ^21.0.3
+  sinon-chai: ^4.0.1
   sirv: ^3.0.2
   std-env: ^4.0.0-rc.1
   strip-literal: ^3.1.0

@@ -1,3 +1,5 @@
+import type { Disposable } from '@vitest/spy/optional-types.js'
+
 export interface MockResultReturn<T> {
   type: 'return'
   /**

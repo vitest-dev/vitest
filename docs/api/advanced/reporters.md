@@ -55,7 +55,7 @@ function onInit(vitest: Vitest): Awaitable<void>
 This method is called when [Vitest](/api/advanced/vitest) was initiated or started, but before the tests were filtered.
 
 ::: info
-Internally this method is called inside [`vitest.start`](/api/advanced/vitest#start), [`vitest.init`](/api/advanced/vitest#init) or [`vitest.mergeReports`](/api/advanced/vitest#mergereports). If you are using programmatic API, make sure to call either one depending on your needs before calling [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
+Internally this method is called inside [`vitest.start`](/api/advanced/vitest#start), [`vitest.standalone`](/api/advanced/vitest#standalone) or [`vitest.mergeReports`](/api/advanced/vitest#mergereports). If you are using programmatic API, make sure to call either one depending on your needs before calling [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
 :::
 
 Note that you can also get access to `vitest` instance from test cases, suites and test modules via a [`project`](/api/advanced/test-project) property, but it might also be useful to store a reference to `vitest` in this method.

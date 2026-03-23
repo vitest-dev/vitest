@@ -320,6 +320,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return value
         },
       },
+      excludeAfterRemap: {
+        description: 'Apply exclusions again after coverage has been remapped to original sources. (default: false)',
+      },
+      htmlDir: {
+        description: 'Directory of HTML coverage output to be served in UI mode and HTML reporter.',
+        argument: '<path>',
+      },
     },
   },
   mode: {
@@ -807,7 +814,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. If browser mode is enabled, the UI will be opened automatically. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:

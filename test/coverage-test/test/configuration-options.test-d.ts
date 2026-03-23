@@ -72,25 +72,6 @@ test('provider options, generic', () => {
   })
 })
 
-test('provider specific options, custom', () => {
-  assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'custom-provider-module.ts',
-    enabled: true,
-  })
-
-  // @ts-expect-error --  customProviderModule is required
-  assertType<Coverage>({ provider: 'custom' })
-
-  assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'some-module',
-
-    // @ts-expect-error --  typings of BaseCoverageOptions still apply
-    enabled: 'not boolean',
-  })
-})
-
 test('provider module', () => {
   assertType<CoverageProviderModule>({
     getProvider() {
@@ -100,6 +81,7 @@ test('provider module', () => {
         generateCoverage() {},
         resolveOptions(): ResolvedCoverageOptions {
           return {
+            provider: 'v8',
             clean: true,
             cleanOnRerun: true,
             enabled: true,

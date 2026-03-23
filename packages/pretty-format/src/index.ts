@@ -380,29 +380,44 @@ function printer(
   refs: Refs,
   hasCalledToJSON?: boolean,
 ): string {
+  let result: string
+
   const plugin = findPlugin(config.plugins, val)
   if (plugin !== null) {
-    return printPlugin(plugin, val, config, indentation, depth, refs)
+    result = printPlugin(plugin, val, config, indentation, depth, refs)
+  }
+  else {
+    const basicResult = printBasicValue(
+      val,
+      config.printFunctionName,
+      config.escapeRegex,
+      config.escapeString,
+    )
+    if (basicResult !== null) {
+      result = basicResult
+    }
+    else {
+      result = printComplexValue(
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        hasCalledToJSON,
+      )
+    }
   }
 
-  const basicResult = printBasicValue(
-    val,
-    config.printFunctionName,
-    config.escapeRegex,
-    config.escapeString,
-  )
-  if (basicResult !== null) {
-    return basicResult
+  // Check string length budget:
+  // accumulate output length and if exceeded,
+  // force no further recursion by patching maxDepth.
+  // Inspired by Node's util.inspect bail out approach.
+  config.outputLength += result.length
+  if (config.outputLength > config.maxOutputLength) {
+    config.maxDepth = 0
   }
 
-  return printComplexValue(
-    val,
-    config,
-    indentation,
-    depth,
-    refs,
-    hasCalledToJSON,
-  )
+  return result
 }
 
 const DEFAULT_THEME: Theme = {
@@ -425,6 +440,9 @@ export const DEFAULT_OPTIONS: Options = {
   highlight: false,
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
+  // Practical default hard-limit to avoid too long string being generated
+  // (Node's limit is buffer.constants.MAX_STRING_LENGTH ~ 512MB)
+  maxOutputLength: 1_000_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
   plugins: [],
@@ -509,6 +527,8 @@ function getConfig(options?: OptionsReceived): Config {
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
+    maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
+    outputLength: 0,
   }
 }
 

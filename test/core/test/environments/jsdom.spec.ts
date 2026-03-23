@@ -124,7 +124,7 @@ describe('FormData', () => {
   })
 
   // https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData#exceptions
-  test('cannot pass down form data from a FORM element with a non-sumbit sumbitter', async () => {
+  test('cannot pass down form data from a FORM element with a non-submit submitter', async () => {
     const form = document.createElement('form')
     document.body.append(form)
     const submitter = document.createElement('button')
@@ -136,7 +136,7 @@ describe('FormData', () => {
     )
   })
 
-  test('cannot pass down form data from a FORM element with a sumbitter from a wrong form', async () => {
+  test('cannot pass down form data from a FORM element with a submitter from a wrong form', async () => {
     const form1 = document.createElement('form')
     const form2 = document.createElement('form')
     document.body.append(form1, form2)

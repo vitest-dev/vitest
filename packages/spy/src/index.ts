@@ -245,7 +245,7 @@ export function fn<T extends Procedure | Constructable = Procedure>(
   originalImplementation?: T,
 ): Mock<T> {
   // if the function is already a mock, just return the same function,
-  // simillarly to how vi.spyOn() works
+  // similarly to how vi.spyOn() works
   if (originalImplementation != null && isMockFunction(originalImplementation)) {
     return originalImplementation as Mock<T>
   }
@@ -485,11 +485,11 @@ function createMock(
 
           // jest calls this before the implementation, but we have to resolve this _after_
           // because we cannot do it before the `Reflect.construct` called the custom implementation.
-          // fortunetly, the constructor is always an empty functon because `prototypeMethods`
+          // fortunately, the constructor is always an empty function because `prototypeMethods`
           // are only used by the automocker, so this doesn't matter
           for (const prop of prototypeMembers) {
             const prototypeMock = returnValue[prop]
-            // the method was overidden because of inheritence, ignore it
+            // the method was overridden because of inheritance, ignore it
             // eslint-disable-next-line ts/no-use-before-define
             if (prototypeMock !== mock.prototype[prop]) {
               continue
