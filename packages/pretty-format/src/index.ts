@@ -289,7 +289,7 @@ function printComplexValue(
   // Inspired by node's util.inspect bail out heuristics.
   config.budget.used += result.length
   if (config.budget.used > config.budget.max) {
-    config.maxDepth = -1
+    config.maxDepth = 0
   }
 
   return result
@@ -323,7 +323,7 @@ const ErrorPlugin: NewPlugin = {
       )}}`
     config.budget.used += result.length
     if (config.budget.used > config.budget.max) {
-      config.maxDepth = -1
+      config.maxDepth = 0
     }
     return result
   },
