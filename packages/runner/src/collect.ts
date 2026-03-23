@@ -36,6 +36,8 @@ export async function collectTests(
       'collect_spec',
       { 'code.file.path': filepath },
       async () => {
+        runner._currentSpecification = typeof spec === 'string' ? { filepath: spec } : spec
+
         const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
         const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
         const testIds = typeof spec === 'string' ? undefined : spec.testIds
