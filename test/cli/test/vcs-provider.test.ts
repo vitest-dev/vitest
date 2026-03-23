@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { runInlineTests, useFS } from '#test-utils'
 import { resolve } from 'pathe'
-import { expect, onTestFinished, test } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 test('custom vcsProvider that returns specific files runs only matching tests', async () => {
@@ -159,6 +159,22 @@ test('vcsProvider "git" resolves to GitVCSProvider', async () => {
   })
   expect(v.config.experimental.vcsProvider).toBe('git')
   expect(v.vcs.constructor.name).toBe('GitVCSProvider')
+})
+
+test('vcsProvider object is used directly', async () => {
+  const customProvider = {
+    findChangedFiles: vi.fn(async () => {
+      return []
+    }),
+  }
+  const v = await vitest({
+    experimental: {
+      vcsProvider: customProvider,
+    },
+  })
+  const files = await v.vcs.findChangedFiles({ root: v.config.root })
+  expect(files).toEqual([])
+  expect(customProvider.findChangedFiles).toHaveBeenCalledOnce()
 })
 
 test('vcsProvider string path is resolved to absolute path', async () => {
