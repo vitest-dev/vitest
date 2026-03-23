@@ -52,7 +52,7 @@ export function populateGlobal(
 
   const originals = new Map<string | symbol, any>()
 
-  const overridenKeys = new Set([...KEYS, ...options.additionalKeys || []])
+  const overriddenKeys = new Set([...KEYS, ...options.additionalKeys || []])
 
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
@@ -62,7 +62,7 @@ export function populateGlobal(
         && !isClassLikeName(key)
         && win[key].bind(win)
 
-    if (overridenKeys.has(key) && key in global) {
+    if (overriddenKeys.has(key) && key in global) {
       originals.set(key, global[key])
     }
 
