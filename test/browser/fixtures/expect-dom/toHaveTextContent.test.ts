@@ -69,7 +69,7 @@ describe('.toHaveTextContent', () => {
     expect(container.querySelector('#parent')).toHaveTextContent('Step 1 of 4')
   })
 
-  test('can handle multiple levels with content spread across decendants', () => {
+  test('can handle multiple levels with content spread across descendants', () => {
     const {container} = render(`
         <span id="parent">
             <span>Step</span>

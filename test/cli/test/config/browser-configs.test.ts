@@ -974,7 +974,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 })
 
 test('browser root', async () => {
-  process.env.BROWSER_DEFINE_TEST_PROEJCT = 'false'
+  process.env.BROWSER_DEFINE_TEST_PROJECT = 'false'
   const { testTree, stderr } = await runVitest({
     root: './fixtures/config/browser-define',
     browser: {
@@ -992,7 +992,7 @@ test('browser root', async () => {
 })
 
 test('browser project', async () => {
-  process.env.BROWSER_DEFINE_TEST_PROEJCT = 'true'
+  process.env.BROWSER_DEFINE_TEST_PROJECT = 'true'
   const { testTree, stderr } = await runVitest({
     root: './fixtures/config/browser-define',
     browser: {

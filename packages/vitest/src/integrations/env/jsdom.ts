@@ -133,7 +133,7 @@ export default <Environment>{
       'AbortController',
       'AbortSignal',
       'URLSearchParams',
-      // URL and Request is overriden with a compat one
+      // URL and Request is overridden with a compat one
       // 'URL',
       // 'Request',
     ] as const

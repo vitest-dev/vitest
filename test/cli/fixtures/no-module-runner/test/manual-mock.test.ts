@@ -77,7 +77,7 @@ test('exports are mocked', () => {
 })
 
 test('importMock works', async () => {
-  // wasnt't mocked by vi.mock, but importMock did
+  // wasn't mocked by vi.mock, but importMock did
   const mockedUnmocked = await vi.importMock<typeof import('../src/no-mock.ts')>('../src/no-mock.ts')
   expect(vi.isMockFunction(mockedUnmocked.notMocked)).toBe(true)
   expect(mockedUnmocked.notMocked()).toBeUndefined()

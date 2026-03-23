@@ -49,7 +49,7 @@ it.each([
   expect(stdout).toContain('custom.spec.ts:14:1 > custom')
 
   const suiteMeta = { done: true }
-  const testMeta = { custom: 'some-custom-hanlder' }
+  const testMeta = { custom: 'some-custom-handler' }
 
   expect(finishedTestCaseMetas).toHaveLength(3)
   expect(finishedTestModuleMetas).toHaveLength(1)

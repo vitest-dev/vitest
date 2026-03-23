@@ -742,8 +742,7 @@ Vitest supports all common sinon-chai assertions:
 | `spy.callCount(n)` | `callCount(n)` | Spy was called n times |
 | `spy.calledWith(...)` | `calledWith(...)` | Spy was called with specific args |
 | `spy.calledOnceWith(...)` | `calledOnceWith(...)` | Spy was called once with specific args |
-| `spy.returned` | `returned` | Spy returned successfully |
-| `spy.returnedWith(value)` | `returnedWith(value)` | Spy returned specific value |
+| `spy.returned(value)` | `returned` | Spy returned specific value |
 
 See the [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions) documentation for the complete list.
 

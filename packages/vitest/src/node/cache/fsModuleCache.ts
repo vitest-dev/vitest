@@ -212,7 +212,7 @@ export class FileSystemModuleCache {
           consumer: config.consumer,
           resolve: config.resolve,
           // plugins can have different options, so this is not the best key,
-          // but we canot access the options because there is no standard API for it
+          // but we cannot access the options because there is no standard API for it
           plugins: config.plugins
             .filter(p => p.api?.vitest?.experimental?.ignoreFsModuleCache !== true)
             .map(p => p.name),
