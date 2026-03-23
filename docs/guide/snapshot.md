@@ -120,7 +120,7 @@ This captures screenshots and compares them against reference images to detect u
 
 ## ARIA Snapshots
 
-ARIA snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Inspired by [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to visual regression testing — asserting structure and meaning rather than pixels.
+ARIA snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Inspired by [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to DOM structure testing — asserting semantical structure and meaning rather than implementation language meant for browsers.
 
 For example, given this HTML:
 
