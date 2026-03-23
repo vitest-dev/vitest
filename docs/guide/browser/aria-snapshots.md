@@ -162,7 +162,7 @@ Each accessible element in the tree is represented as a YAML node:
 - role "name" [attribute=value]
 ```
 
-- `role`: The ARIA or implicit HTML role of the element, such as `heading`, `list`, `listitem`, or `button`
+- `role`: The ARIA role of the element, such as `heading`, `list`, `listitem`, or `button`
 - `"name"`: The [accessible name](https://w3c.github.io/accname/), when present. Quoted strings match exact values, and `/patterns/` match regular expressions
 - `[attribute=value]`: Accessibility states and properties such as `checked`, `disabled`, `expanded`, `level`, `pressed`, or `selected`
 
