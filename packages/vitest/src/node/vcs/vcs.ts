@@ -12,7 +12,7 @@ export interface VCSProvider {
 }
 
 export async function loadVCSProvider(runner: ModuleRunner, vcsProvider: string | VCSProvider | undefined): Promise<VCSProvider> {
-  if (typeof vcsProvider === 'object') {
+  if (typeof vcsProvider === 'object' && vcsProvider != null) {
     return vcsProvider
   }
   if (!vcsProvider || vcsProvider === 'git') {

@@ -172,8 +172,7 @@ test('vcsProvider object is used directly', async () => {
       vcsProvider: customProvider,
     },
   })
-  expect(v.vcs).toBeDefined()
-  expect(typeof v.vcs.findChangedFiles).toBe('function')
+  expect(v.vcs.findChangedFiles).toBe(customProvider.findChangedFiles)
   expect(v.config.experimental.vcsProvider).toBe(v.vcs)
 })
 
