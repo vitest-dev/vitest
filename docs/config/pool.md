@@ -32,7 +32,7 @@ Running code in a sandbox has some advantages (faster tests), but also comes wit
 
 ```ts
 try {
-  fs.writeFileSync('/doesn't exist')
+  fs.writeFileSync('/does-not-exist')
 }
 catch (err) {
   console.log(err instanceof Error) // false
