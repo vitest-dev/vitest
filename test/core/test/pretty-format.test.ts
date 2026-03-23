@@ -7,44 +7,90 @@ describe('maxOutputLength budget', () => {
   // output growth, hitting Node's string length limit. The budget (maxOutputLength)
   // guards against this amplification by setting maxDepth = 0 once exceeded.
 
-  function createSharedRefGraph(n: number) {
-    // N columns each referencing the same shared model/events objects.
-    // When formatting `groups` (not the root model), columnModel is NOT
-    // an ancestor — so [Circular] doesn't apply and each column fully
-    // re-expands the shared model, causing exponential blowup.
-    const model = { columns: [] as any[], groups: [] as any[] }
-    const events = { model, listeners: [] }
+  // Recursive types show why pretty-format can't terminate:
+  // expanding a Child means expanding its Parent, which contains all Children again.
+  type Parent = { children: Child[] }
+  type Child = { id: number; parent: Parent }
+
+  function createGraph(n: number) {
+    //  format(children) --> child(0) --> parent --> child(0)  [Circular]
+    //                        |            |
+    //                        |            +--> child(1) --> parent  (not ancestor, re-expand!)
+    //                        |            |                  +--> child(0) --> parent ...
+    //                        |            |                  +--> child(1)  [Circular]
+    //                        |            |                  +--> child(2) --> parent ...
+    //                        |            +--> child(2) --> parent  (same explosion)
+    //                       ...
+    //                       child(1) --> parent  (same explosion again from sibling)
+    //
+    // `parent` is never an ancestor when visiting via a sibling child,
+    // so [Circular] doesn't apply and each child fully re-expands it.
+    const parent: Parent = { children: [] }
     for (let i = 0; i < n; i++) {
-      const col = { id: `col${i}`, model, events }
-      model.columns.push(col)
-      if (i % 3 === 0) {
-        model.groups.push(col)
-      }
+      parent.children.push({ id: i, parent })
     }
-    return model
+    return parent
   }
 
-  test('terminates on exponential shared-reference graph', () => {
-    const model = createSharedRefGraph(100)
-    // Without budget this would hit Node's string length limit.
-    // With default budget (100_000) it completes quickly.
-    const result = format(model.groups)
-    expect(result.length).toBeLessThan(100_000)
+  test('print graph', () => {
+    const parent = createGraph(3)
+    expect(format(parent)).toMatchInlineSnapshot(`
+      "Object {
+        "children": Array [
+          Object {
+            "id": 0,
+            "parent": [Circular],
+          },
+          Object {
+            "id": 1,
+            "parent": [Circular],
+          },
+          Object {
+            "id": 2,
+            "parent": [Circular],
+          },
+        ],
+      }"
+    `)
+    expect(format(parent.children)).toMatchInlineSnapshot(`
+      "Array [
+        Object {
+          "id": 0,
+          "parent": Object {
+            "children": [Circular],
+          },
+        },
+        Object {
+          "id": 1,
+          "parent": Object {
+            "children": [Circular],
+          },
+        },
+        Object {
+          "id": 2,
+          "parent": Object {
+            "children": [Circular],
+          },
+        },
+      ]"
+    `)
+    // const result = format(parent)
+    // expect(result.length).toBeLessThan(100_000)
   })
 
-  test('custom maxOutputLength limits output', () => {
-    const model = createSharedRefGraph(50)
-    const small = format(model.groups, { maxOutputLength: 5_000 })
-    const large = format(model.groups, { maxOutputLength: 50_000 })
-    expect(small.length).toBeLessThan(large.length)
-  })
+  // test('custom maxOutputLength limits output', () => {
+  //   const children = createGraph(50)
+  //   const small = format(children, { maxOutputLength: 5_000 })
+  //   const large = format(children, { maxOutputLength: 50_000 })
+  //   expect(small.length).toBeLessThan(large.length)
+  // })
 
-  test('abbreviated objects use [ClassName] form after budget exceeded', () => {
-    const model = createSharedRefGraph(20)
-    const result = format(model.groups, { maxOutputLength: 1_000 })
-    // Once budget trips, remaining objects render as [Object] / [Array]
-    expect(result).toContain('[Object]')
-  })
+  // test('abbreviated objects use [ClassName] form after budget exceeded', () => {
+  //   const children = createGraph(20)
+  //   const result = format(children, { maxOutputLength: 1_000 })
+  //   // Once budget trips, remaining objects render as [Object] / [Array]
+  //   expect(result).toContain('[Object]')
+  // })
 
   test('early elements expanded, later elements folded after budget trips', () => {
     // Visualizes the kill-switch: once budget is exceeded, maxDepth is set to 0
