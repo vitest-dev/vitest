@@ -72,7 +72,8 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
-  budget: { used: number; max: number }
+  maxOutputLength: number
+  outputLength: number
 }
 
 export type Printer = (

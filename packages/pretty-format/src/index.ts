@@ -412,8 +412,8 @@ function printer(
   // accumulate output length and if exceeded,
   // force no further recursion by patching maxDepth.
   // Inspired by Node's util.inspect bail out approach.
-  config.budget.used += result.length
-  if (config.budget.used > config.budget.max) {
+  config.outputLength += result.length
+  if (config.outputLength > config.maxOutputLength) {
     config.maxDepth = 0
   }
 
@@ -527,7 +527,8 @@ function getConfig(options?: OptionsReceived): Config {
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
-    budget: { used: 0, max: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength },
+    maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
+    outputLength: 0,
   }
 }
 
