@@ -153,7 +153,7 @@ describe('maxOutputLength budget', () => {
     `)
 
     // depending on object/array shape, output can exceed the limit 100_000,
-    // but the size should be proportional to the amount of objects and the size of array.
+    // but the output size is proportional to the amount of objects and the size of array.
     expect(format(createObjectGraph(1000).cats).length).toMatchInlineSnapshot(`99009`)
     expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`389799`)
   })
