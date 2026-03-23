@@ -474,14 +474,11 @@ async function setIframeViewport(
 
   if (ui) {
     await ui.setIframeViewport(width, height)
-
-    return
   }
+  else {
+    document.body.style.setProperty('--viewport-width', `${width}px`)
+    document.body.style.setProperty('--viewport-height', `${height}px`)
 
-  document.body.style.setProperty('--viewport-width', `${width}px`)
-  document.body.style.setProperty('--viewport-height', `${height}px`)
-
-  if (getBrowserState().provider === 'webdriverio') {
     await client.rpc.triggerCommand(
       getBrowserState().sessionId,
       '__vitest_viewport',
