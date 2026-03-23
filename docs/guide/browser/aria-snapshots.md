@@ -28,7 +28,7 @@ await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
 `)
 ```
 
-This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss.
+This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss. Even if the underlying HTML structure changes, the assertion would not fail as long as content matches semantically.
 
 ## Snapshot Workflow
 
@@ -162,7 +162,7 @@ Each accessible element in the tree is represented as a YAML node:
 - role "name" [attribute=value]
 ```
 
-- `role`: The ARIA or implicit HTML role of the element, such as `heading`, `list`, `listitem`, or `button`
+- `role`: The ARIA role of the element, such as `heading`, `list`, `listitem`, or `button`
 - `"name"`: The [accessible name](https://w3c.github.io/accname/), when present. Quoted strings match exact values, and `/patterns/` match regular expressions
 - `[attribute=value]`: Accessibility states and properties such as `checked`, `disabled`, `expanded`, `level`, `pressed`, or `selected`
 
