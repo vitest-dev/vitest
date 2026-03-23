@@ -14,8 +14,14 @@ describe('maxOutputLength budget', () => {
     //       |-> dog1
     //       |-> dog2
     //       |-> ...
-    interface Owner { dogs: Pet[]; cats: Pet[] }
-    interface Pet { name: string; owner: Owner }
+    interface Owner {
+      dogs: Pet[]
+      cats: Pet[]
+    }
+    interface Pet {
+      name: string
+      owner: Owner
+    }
     const owner: Owner = { dogs: [], cats: [] }
     for (let i = 0; i < n; i++) {
       owner.dogs.push({ name: `dog${i}`, owner })
@@ -132,10 +138,24 @@ describe('maxOutputLength budget', () => {
   })
 
   test('budget prevents blowup on large graphs', () => {
-    // TODO: use number that actually breaks on main
-    const owner = createObjectGraph(100)
-    const result = format(owner.cats)
-    expect(result.length).toBeLessThan(100_000)
+    // quickly hit the kill switch due to quadratic growth
+    expect([1, 5, 10, 15, 20, 30, 100].map(n => format(createObjectGraph(n).cats).length))
+      .toMatchInlineSnapshot(`
+      [
+        216,
+        2744,
+        9729,
+        21044,
+        27554,
+        27169,
+        27309,
+      ]
+    `)
+
+    // depending on object/array shape, output can exceed the limit 100_000,
+    // but the size should be proportional to the amount of objects and the size of array.
+    expect(format(createObjectGraph(1000).cats).length).toMatchInlineSnapshot(`99009`)
+    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`389799`)
   })
 
   test('early elements expanded, later elements folded after budget trips', () => {
