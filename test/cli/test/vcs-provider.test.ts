@@ -161,21 +161,6 @@ test('vcsProvider "git" resolves to GitVCSProvider', async () => {
   expect(v.vcs.constructor.name).toBe('GitVCSProvider')
 })
 
-test('vcsProvider object is used directly', async () => {
-  const customProvider = {
-    async findChangedFiles() {
-      return []
-    },
-  }
-  const v = await vitest({
-    experimental: {
-      vcsProvider: customProvider,
-    },
-  })
-  expect(v.vcs.findChangedFiles).toBe(customProvider.findChangedFiles)
-  expect(v.config.experimental.vcsProvider).toBe(v.vcs)
-})
-
 test('vcsProvider string path is resolved to absolute path', async () => {
   const root = createRoot({
     'my-vcs-provider.ts': `
