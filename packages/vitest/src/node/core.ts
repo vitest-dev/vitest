@@ -15,6 +15,7 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
+import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -51,6 +52,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
+import { loadVCSProvider } from './vcs/vcs'
 import { VitestWatcher } from './watcher'
 
 const WATCHER_DEBOUNCE = 100
@@ -101,6 +103,13 @@ export class Vitest {
    * Vitest behaviour.
    */
   public readonly watcher: VitestWatcher
+  /**
+   * The version control system provider used to detect changed files.
+   * This is used with the `--changed` flag to determine which test files to run.
+   * By default, Vitest uses Git. You can provide a custom implementation via
+   * `experimental.vcsProvider` in your config.
+   */
+  public vcs!: VCSProvider
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
@@ -263,6 +272,7 @@ export class Vitest {
         configurable: true,
       })
     }
+    this.vcs = await loadVCSProvider(this.runner, resolved.experimental.vcsProvider)
 
     if (this.config.watch) {
       // hijack server restart
