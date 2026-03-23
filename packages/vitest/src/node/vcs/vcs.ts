@@ -14,7 +14,7 @@ export interface VCSProvider {
 
 export async function loadVCSProvider(runner: ModuleRunner, vcsProvider: string | VCSProvider | undefined): Promise<VCSProvider> {
   if (typeof vcsProvider === 'object' && vcsProvider != null) {
-    return vcsProvider
+    return wrapVCSProvider(vcsProvider)
   }
   if (!vcsProvider || vcsProvider === 'git') {
     return new GitVCSProvider()
@@ -23,9 +23,13 @@ export async function loadVCSProvider(runner: ModuleRunner, vcsProvider: string 
   if (!module.default || typeof module.default !== 'object' || typeof module.default.findChangedFiles !== 'function') {
     throw new Error(`The vcsProvider module '${vcsProvider}' doesn't have a default export with \`findChangedFiles\` method.`)
   }
+  return wrapVCSProvider(module.default)
+}
+
+function wrapVCSProvider(provider: VCSProvider): VCSProvider {
   return {
     async findChangedFiles(options) {
-      const changedFiles = await module.default.findChangedFiles(options)
+      const changedFiles = await provider.findChangedFiles(options)
       return changedFiles.map(file => resolve(options.root, file))
     },
   }
