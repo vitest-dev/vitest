@@ -55,7 +55,7 @@ test('invalid packages', async () => {
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
   })
 
-  // requires Vite 8 for relaxed import analysis validataion
+  // requires Vite 8 for relaxed import analysis validation
   // https://github.com/vitejs/vite/pull/21601
   if (rolldownVersion) {
     expect(stderr).toMatchInlineSnapshot(`""`)

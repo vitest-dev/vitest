@@ -241,7 +241,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   expect(stderr).toContain('Failure screenshot')
   expect(stderr).toContain('__screenshots__/failing')
 
-  expect(stderr).toContain('Access denied to "/inaccesible/path".')
+  expect(stderr).toContain('Access denied to "/inaccessible/path".')
 
   // depending on the browser it references either `.toBe()` or `expect()`
   expect(stderr).toMatch(/failing.test.ts:11:(12|17)/)
