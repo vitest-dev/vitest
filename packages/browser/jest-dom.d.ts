@@ -748,7 +748,7 @@ export interface TestingLibraryMatchers<E, R> {
    * //     - /url: /about
    *
    * @see https://vitest.dev/guide/browser/aria-snapshots
-   * @see https://vitest.dev/api/expect#tomatcharisnapshot
+   * @see https://vitest.dev/api/expect#tomatchariasnapshot
    */
   toMatchAriaSnapshot: () => void
   /**
