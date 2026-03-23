@@ -267,8 +267,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
     }),
   )
-  // aria snapshot domain is registered on browser mode
-  // packages/browser/src/client/tester/aria.ts
+  /**
+   * ARIA snapshot domain is registered in browser mode.
+   * See {@link file://./../../../../browser/src/client/tester/aria.ts}
+   */
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchAriaSnapshot',
