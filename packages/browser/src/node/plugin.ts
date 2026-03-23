@@ -334,7 +334,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       },
       transform(code, id) {
         if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
-          // loupe bundle has a nastry require('util') call that leaves a warning in the console
+          // loupe bundle has a nasty require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }

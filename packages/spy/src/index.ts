@@ -245,7 +245,7 @@ export function fn<T extends Procedure | Constructable = Procedure>(
   originalImplementation?: T,
 ): Mock<T> {
   // if the function is already a mock, just return the same function,
-  // simillarly to how vi.spyOn() works
+  // similarly to how vi.spyOn() works
   if (originalImplementation != null && isMockFunction(originalImplementation)) {
     return originalImplementation as Mock<T>
   }

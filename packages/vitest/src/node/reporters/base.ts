@@ -713,7 +713,7 @@ export abstract class BaseReporter implements Reporter {
     //     shared/components/Form/__tests__/Form.spec.ts        5ms     988ms ████████████████████
     //      ↳ tests/support/components/index.ts                 0ms     935ms ███████████████████░
     //      ↳ tests/support/components/renderComponent.ts      61ms     935ms ███████████████████░
-    //     ...ditor/features/link/__test__/LinkForm.spec.ts     7ms     972ms ███████████████████░
+    //     ...editor/features/link/__test__/LinkForm.spec.ts     7ms     972ms ███████████████████░
     //      ↳ tests/support/components/renderComponent.ts      56ms     936ms ███████████████████░
 
     const groupedImports = Object.entries(

@@ -336,11 +336,11 @@ This allows you to assert whether an element contains another element as a desce
 ```ts
 const ancestor = getByTestId('ancestor')
 const descendant = getByTestId('descendant')
-const nonExistantElement = getByTestId('does-not-exist')
+const nonExistentElement = getByTestId('does-not-exist')
 
 await expect.element(ancestor).toContainElement(descendant)
 await expect.element(descendant).not.toContainElement(ancestor)
-await expect.element(ancestor).not.toContainElement(nonExistantElement)
+await expect.element(ancestor).not.toContainElement(nonExistentElement)
 ```
 
 ## toContainHTML

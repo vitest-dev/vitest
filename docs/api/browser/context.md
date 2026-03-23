@@ -241,7 +241,7 @@ Utility functions useful for custom render libraries.
 ```ts
 export const utils: {
   /**
-   * This is simillar to calling `page.elementLocator`, but it returns only
+   * This is similar to calling `page.elementLocator`, but it returns only
    * locator selectors.
    */
   getElementLocatorSelectors(element: Element): LocatorSelectors

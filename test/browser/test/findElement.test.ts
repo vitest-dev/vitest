@@ -32,7 +32,7 @@ test('locator.findElement fails if it cannot find the element', async () => {
     return locator.findElement({ timeout: 100 })
   }).rejects.toThrow('Cannot find element with locator: getByRole(\'button\')')
   // Normally it would be 5:
-  // Immidiate, 0 (next tick), 20, 50, 100
+  // Immediate, 0 (next tick), 20, 50, 100
   // But on CI it can be less because resources are limited
   expect(elementsSpy.mock.calls.length).toBeGreaterThanOrEqual(3)
 })

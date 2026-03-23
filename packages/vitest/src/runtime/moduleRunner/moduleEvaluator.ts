@@ -86,7 +86,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private convertIdToImportUrl(id: string) {
     // TODO: vitest returns paths for external modules, but Vite returns file://
     // REMOVE WHEN VITE 6 SUPPORT IS OVER
-    // unfortunetly, there is a bug in Vite where ID is resolved incorrectly, so we can't return files until the fix is merged
+    // unfortunately, there is a bug in Vite where ID is resolved incorrectly, so we can't return files until the fix is merged
     // https://github.com/vitejs/vite/pull/20449
     if (!isWindows || isBuiltin(id) || /^(?:node:|data:|http:|https:|file:)/.test(id)) {
       return id

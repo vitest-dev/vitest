@@ -41,9 +41,9 @@ describe.runIf(
     expect(input).toHaveValue('a')
 
     await cdp().send('Input.insertText', {
-      text: 'some text',
+      text: 'wesome text',
     })
-    expect(input).toHaveValue('asome text')
+    expect(input).toHaveValue('awesome text')
   })
 
   it('click events are fired correctly', async () => {
