@@ -340,7 +340,7 @@ const nonExistingElement = getByTestId('does-not-exist')
 
 await expect.element(ancestor).toContainElement(descendant)
 await expect.element(descendant).not.toContainElement(ancestor)
-await expect.element(ancestor).not.toContainElement(nonExistentElement)
+await expect.element(ancestor).not.toContainElement(nonExistingElement)
 ```
 
 ## toContainHTML
