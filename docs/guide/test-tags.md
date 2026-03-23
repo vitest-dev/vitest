@@ -303,14 +303,14 @@ vitest --tags-filter="unit || e2e" --tags-filter="!slow"
 
 ### Checking Tags Filter at Runtime
 
-You can use `TestRunner.matchesTagsFilter` (since Vitest 4.1.1) to check whether the current tags filter matches a set of tags. This is useful for conditionally running expensive setup logic only when relevant tests are included:
+You can use `TestRunner.matchesTags` (since Vitest 4.1.1) to check whether the current tags filter matches a set of tags. This is useful for conditionally running expensive setup logic only when relevant tests are included:
 
 ```ts
 import { beforeAll, TestRunner } from 'vitest'
 
 beforeAll(async () => {
   // Seed database when "vitest --tags-filter db" is used
-  if (TestRunner.matchesTagsFilter(['db'])) {
+  if (TestRunner.matchesTags(['db'])) {
     await seedDatabase()
   }
 })
