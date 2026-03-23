@@ -1,6 +1,8 @@
 catalogMode: prefer
+ignoreWorkspaceRootCheck: true
 shellEmulator: true
 trustPolicy: no-downgrade
+strictPeerDependencies: false
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
