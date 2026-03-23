@@ -3,6 +3,60 @@
 exports[`html reporter > resolves to "failing" status for test file "json-fail" > tests are failing 1`] = `
 {
   "config": {},
+  "environmentModules": {
+    "": {
+      "environments": {
+        "__vitest__": {
+          "idTable": [
+            "<rootDir>/packages/ui/dist/reporter.js",
+            "/@fs<rootDir>/packages/ui/dist/reporter.js",
+          ],
+          "modules": [
+            [
+              0,
+              0,
+              1,
+              [],
+            ],
+          ],
+        },
+        "client": {
+          "idTable": [],
+          "modules": [],
+        },
+        "ssr": {
+          "idTable": [
+            "<rootDir>/packages/vitest/dist/index.js",
+            "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+            "/json-fail.test.ts",
+            "/@fs<rootDir>/packages/vitest/dist/index.js",
+          ],
+          "modules": [
+            [
+              1,
+              1,
+              2,
+              [
+                0,
+              ],
+            ],
+            [
+              0,
+              0,
+              3,
+              [],
+            ],
+          ],
+        },
+      },
+      "external": [
+        [
+          "<rootDir>/packages/ui/dist/reporter.js",
+          "<rootDir>/packages/ui/dist/reporter.js",
+        ],
+      ],
+    },
+  },
   "files": [
     {
       "collectDuration": 0,
@@ -93,19 +147,6 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "viteEnvironment": "ssr",
     },
   ],
-  "moduleGraph": {
-    "": {
-      "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": {
-        "externalized": [],
-        "graph": {
-          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": [],
-        },
-        "inlined": [
-          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
-        ],
-      },
-    },
-  },
   "paths": [
     "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
   ],
@@ -131,6 +172,60 @@ test('should fail', { tags: ['fail'] }, () => {
 exports[`html reporter > resolves to "passing" status for test file "all-passing-or-skipped" > tests are passing 1`] = `
 {
   "config": {},
+  "environmentModules": {
+    "": {
+      "environments": {
+        "__vitest__": {
+          "idTable": [
+            "<rootDir>/packages/ui/dist/reporter.js",
+            "/@fs<rootDir>/packages/ui/dist/reporter.js",
+          ],
+          "modules": [
+            [
+              0,
+              0,
+              1,
+              [],
+            ],
+          ],
+        },
+        "client": {
+          "idTable": [],
+          "modules": [],
+        },
+        "ssr": {
+          "idTable": [
+            "<rootDir>/packages/vitest/dist/index.js",
+            "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+            "/all-passing-or-skipped.test.ts",
+            "/@fs<rootDir>/packages/vitest/dist/index.js",
+          ],
+          "modules": [
+            [
+              1,
+              1,
+              2,
+              [
+                0,
+              ],
+            ],
+            [
+              0,
+              0,
+              3,
+              [],
+            ],
+          ],
+        },
+      },
+      "external": [
+        [
+          "<rootDir>/packages/ui/dist/reporter.js",
+          "<rootDir>/packages/ui/dist/reporter.js",
+        ],
+      ],
+    },
+  },
   "files": [
     {
       "collectDuration": 0,
@@ -202,19 +297,6 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "viteEnvironment": "ssr",
     },
   ],
-  "moduleGraph": {
-    "": {
-      "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": {
-        "externalized": [],
-        "graph": {
-          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": [],
-        },
-        "inlined": [
-          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
-        ],
-      },
-    },
-  },
   "paths": [
     "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
   ],
