@@ -13,7 +13,7 @@ test('custom vcsProvider that returns specific files runs only matching tests', 
           experimental: {
             vcsProvider: {
               async findChangedFiles({ root }) {
-                return [path.resolve(root, 'src/changed.ts')]
+                return [path.resolve(root, 'src', 'changed.ts')]
               },
             },
           },
@@ -90,8 +90,8 @@ test('custom vcsProvider that returns all files runs all tests', async () => {
             vcsProvider: {
               async findChangedFiles({ root }) {
                 return [
-                  path.resolve(root, 'src/a.ts'),
-                  path.resolve(root, 'src/b.ts'),
+                  path.resolve(root, 'src', 'a.ts'),
+                  path.resolve(root, 'src', 'b.ts'),
                 ]
               },
             },
