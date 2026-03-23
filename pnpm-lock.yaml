@@ -1464,6 +1464,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker
+      '@vitest/pretty-format':
+        specifier: workspace:*
+        version: link:../../packages/pretty-format
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
