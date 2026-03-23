@@ -129,11 +129,15 @@ export class ProjectBrowser implements IProjectBrowser {
 }
 
 function wrapConfig(config: SerializedConfig): SerializedConfig {
-  return {
-    ...config,
-    // workaround RegExp serialization
-    testNamePattern: config.testNamePattern
-      ? (config.testNamePattern.toString() as any as RegExp)
-      : undefined,
+  config = { ...config }
+
+  // workaround RegExp serialization
+  config.testNamePattern &&= config.testNamePattern.toString() as any as RegExp
+
+  // workaround RegExp serialization
+  if (typeof config.retry === 'object') {
+    config.retry.condition &&= config.retry.condition.toString() as any as RegExp
   }
+
+  return config
 }
