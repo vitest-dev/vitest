@@ -212,11 +212,9 @@ function printComplexValue(
     return printer(val.toJSON(), config, indentation, depth, refs, true)
   }
 
-  let result: string
-
   const toStringed = toString.call(val)
   if (toStringed === '[object Arguments]') {
-    result = hitMaxDepth
+    return hitMaxDepth
       ? '[Arguments]'
       : `${min ? '' : 'Arguments '}[${printListItems(
         val,
@@ -227,8 +225,8 @@ function printComplexValue(
         printer,
       )}]`
   }
-  else if (isToStringedArrayType(toStringed)) {
-    result = hitMaxDepth
+  if (isToStringedArrayType(toStringed)) {
+    return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
         min
@@ -238,8 +236,8 @@ function printComplexValue(
               : `${val.constructor.name} `
       }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
-  else if (toStringed === '[object Map]') {
-    result = hitMaxDepth
+  if (toStringed === '[object Map]') {
+    return hitMaxDepth
       ? '[Map]'
       : `Map {${printIteratorEntries(
         val.entries(),
@@ -251,8 +249,8 @@ function printComplexValue(
         ' => ',
       )}}`
   }
-  else if (toStringed === '[object Set]') {
-    result = hitMaxDepth
+  if (toStringed === '[object Set]') {
+    return hitMaxDepth
       ? '[Set]'
       : `Set {${printIteratorValues(
         val.values(),
@@ -263,36 +261,25 @@ function printComplexValue(
         printer,
       )}}`
   }
+
   // Avoid failure to serialize global window object in jsdom test environment.
   // For example, not even relevant if window is prop of React element.
-  else {
-    result = hitMaxDepth || isWindow(val)
-      ? `[${getConstructorName(val)}]`
-      : `${
-        min
-          ? ''
-          : !config.printBasicPrototype && getConstructorName(val) === 'Object'
-              ? ''
-              : `${getConstructorName(val)} `
-      }{${printObjectProperties(
-        val,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
-  }
-
-  // Post-hoc budget check
-  // Accumulate output length and if exceeded, force no recursion by patching maxDepth.
-  // Inspired by node's util.inspect bail out heuristics.
-  config.budget.used += result.length
-  if (config.budget.used > config.budget.max) {
-    config.maxDepth = 0
-  }
-
-  return result
+  return hitMaxDepth || isWindow(val)
+    ? `[${getConstructorName(val)}]`
+    : `${
+      min
+        ? ''
+        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
+            ? ''
+            : `${getConstructorName(val)} `
+    }{${printObjectProperties(
+      val,
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 const ErrorPlugin: NewPlugin = {
@@ -393,29 +380,44 @@ function printer(
   refs: Refs,
   hasCalledToJSON?: boolean,
 ): string {
+  let result: string
+
   const plugin = findPlugin(config.plugins, val)
   if (plugin !== null) {
-    return printPlugin(plugin, val, config, indentation, depth, refs)
+    result = printPlugin(plugin, val, config, indentation, depth, refs)
+  }
+  else {
+    const basicResult = printBasicValue(
+      val,
+      config.printFunctionName,
+      config.escapeRegex,
+      config.escapeString,
+    )
+    if (basicResult !== null) {
+      result = basicResult
+    }
+    else {
+      result = printComplexValue(
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        hasCalledToJSON,
+      )
+    }
   }
 
-  const basicResult = printBasicValue(
-    val,
-    config.printFunctionName,
-    config.escapeRegex,
-    config.escapeString,
-  )
-  if (basicResult !== null) {
-    return basicResult
+  // Check string length budget:
+  // accumulate output length and if exceeded,
+  // force no further recursion by patching maxDepth.
+  // Inspired by Node's util.inspect bail out approach.
+  config.budget.used += result.length
+  if (config.budget.used > config.budget.max) {
+    config.maxDepth = 0
   }
 
-  return printComplexValue(
-    val,
-    config,
-    indentation,
-    depth,
-    refs,
-    hasCalledToJSON,
-  )
+  return result
 }
 
 const DEFAULT_THEME: Theme = {

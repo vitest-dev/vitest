@@ -153,8 +153,8 @@ describe('maxOutputLength', () => {
 
     // depending on object/array shape, output can exceed the limit 1mb
     // but the output size is proportional to the amount of objects and the size of array.
-    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`999009`)
-    expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1497738`)
+    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`936779`)
+    expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1236779`)
   })
 
   test('early elements expanded, later elements folded after budget trips', () => {
@@ -175,9 +175,7 @@ describe('maxOutputLength', () => {
         Object {
           "i": 3,
         },
-        Object {
-          "i": 4,
-        },
+        [Object],
         [Object],
         [Object],
         [Object],
