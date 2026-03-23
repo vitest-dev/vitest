@@ -1559,23 +1559,19 @@ test('spy nth called with', () => {
 
 ## returned <Version>4.1.0</Version> {#returned}
 
-- **Type:** `Assertion` (property, not a method)
+- **Type:** `(value: any) => void`
 
-Chai-style assertion that checks if a spy returned successfully at least once. This is equivalent to `toHaveReturned()`.
-
-::: tip
-This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.returned`
-:::
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy returned', () => {
-  const spy = vi.fn(() => 'result')
+  const spy = vi.fn(() => 'value')
 
   spy()
 
-  expect(spy).to.have.returned
+  expect(spy).to.have.returned('value')
 })
 ```
 
