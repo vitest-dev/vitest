@@ -309,6 +309,7 @@ You can use `TestRunner.matchesTagsFilter` (since Vitest 4.1.1) to check whether
 import { beforeAll, TestRunner } from 'vitest'
 
 beforeAll(async () => {
+  // Seed database when "vitest --tags-filter db" is used
   if (TestRunner.matchesTagsFilter(['db'])) {
     await seedDatabase()
   }
