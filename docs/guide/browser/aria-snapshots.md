@@ -28,7 +28,7 @@ await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
 `)
 ```
 
-This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss.
+This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss. Even if the underlying HTML structure changes, the assertion would not fail as long as content matches semantically.
 
 ## Snapshot Workflow
 
