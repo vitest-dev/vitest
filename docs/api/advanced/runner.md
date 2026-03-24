@@ -198,7 +198,7 @@ interface Suite extends TaskBase {
 }
 ```
 
-Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to travers the tasks from the bottom up.
+Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to traverse the tasks from the bottom up.
 
 ```ts
 interface Test<ExtraContext = object> extends TaskBase {

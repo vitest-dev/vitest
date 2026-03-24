@@ -18,6 +18,7 @@ export interface CollectFilteredTests extends FilteredTests {
   ignored: number
   todo: number
   expectedFail: number
+  slow: number
 }
 
 export interface TaskTreeNode {
@@ -40,6 +41,7 @@ export interface UITaskTreeNode extends TaskTreeNode {
   indent: number
   state?: TaskState
   duration?: number
+  slow?: boolean
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
@@ -73,6 +75,7 @@ export interface Filter {
   failed: boolean
   success: boolean
   skipped: boolean
+  slow: boolean
   onlyTests: boolean
 }
 
@@ -109,6 +112,7 @@ export interface CollectorInfo {
   testsSkipped: number
   testsTodo: number
   testsExpectedFail: number
+  testsSlow: number
   totalTests: number
   failedSnapshot: boolean
   failedSnapshotEnabled: boolean

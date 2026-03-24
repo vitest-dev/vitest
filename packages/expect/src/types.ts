@@ -188,8 +188,6 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   /**
    * Matches if the received number is within a certain precision of the expected number.
    *
-   * @param precision - Optional decimal precision for comparison. Default is 2.
-   *
    * @example
    * expect(10.45).toEqual(expect.closeTo(10.5, 1));
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
@@ -838,13 +836,13 @@ export interface ChaiMockAssertion {
   nthCalledWith: <E extends any[]>(n: number, ...args: E) => void
 
   /**
-   * Checks that a spy returned successfully at least once.
-   * Chai-style equivalent of `toHaveReturned`.
+   * Checks that a spy returned a specific value at least once.
+   * Chai-style equivalent of `toHaveReturnedWith`.
    *
    * @example
-   * expect(spy).to.have.returned
+   * expect(spy).to.have.returned('value')
    */
-  readonly returned: Assertion
+  returned: <E>(value: E) => void
 
   /**
    * Checks that a spy returned a specific value at least once.

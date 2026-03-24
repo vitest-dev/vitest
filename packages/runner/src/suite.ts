@@ -32,6 +32,7 @@ import {
   collectTask,
   createTestContext,
   runWithSuite,
+  withCancel,
   withTimeout,
 } from './context'
 import { configureProps, TestFixtures, withFixtures } from './fixture'
@@ -412,7 +413,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
+          withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), task.context.signal),
           timeout,
           false,
           stackTraceError,
@@ -866,7 +867,7 @@ export function createTaskCollector(
         optionsOrFn !== null
         && typeof optionsOrFn === 'object'
         && !Array.isArray(optionsOrFn)
-        && ('scope' in optionsOrFn || 'auto' in optionsOrFn)
+        && TestFixtures.isFixtureOptions(optionsOrFn)
       ) {
         // (name, options) with no value - treat as empty object fixture
         fixtureOptions = optionsOrFn as object

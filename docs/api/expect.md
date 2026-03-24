@@ -6,7 +6,7 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides [Chai-style assertions](#chai-style-spy-assertions) (e.g., `expect(spy).to.have.been.called()`) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
@@ -1079,7 +1079,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWit
+## toHaveBeenCalledExactlyOnceWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1559,23 +1559,19 @@ test('spy nth called with', () => {
 
 ## returned <Version>4.1.0</Version> {#returned}
 
-- **Type:** `Assertion` (property, not a method)
+- **Type:** `(value: any) => void`
 
-Chai-style assertion that checks if a spy returned successfully at least once. This is equivalent to `toHaveReturned()`.
-
-::: tip
-This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.returned`
-:::
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy returned', () => {
-  const spy = vi.fn(() => 'result')
+  const spy = vi.fn(() => 'value')
 
   spy()
 
-  expect(spy).to.have.returned
+  expect(spy).to.have.returned('value')
 })
 ```
 
@@ -2113,7 +2109,7 @@ This method adds custom serializers that are called when creating a snapshot. Th
 If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/setupfiles). This will affect every snapshot.
 
 :::tip
-If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
+If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
 
 ## expect.extend

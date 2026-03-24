@@ -1,9 +1,11 @@
 import type { FixtureFn, Suite, VitestRunner } from './types'
 import type { File, FixtureOptions, TestContext } from './types/tasks'
-import { createDefer, filterOutComments, isObject } from '@vitest/utils/helpers'
-import { FixtureDependencyError } from './errors'
+import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
+import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
+
+const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
 
 export interface TestFixtureItem extends FixtureOptions {
   name: string
@@ -18,7 +20,7 @@ export type UserFixtures = Record<string, unknown>
 export type FixtureRegistrations = Map<string, TestFixtureItem>
 
 export class TestFixtures {
-  private _suiteContexts: WeakMap<Suite | symbol, /* context object */ Record<string, unknown>>
+  private _suiteContexts: WeakMap<Suite | { type: 'worker' }, /* context object */ Record<string, unknown>>
   private _overrides = new WeakMap<Suite, FixtureRegistrations>()
   private _registrations: FixtureRegistrations
 
@@ -34,7 +36,7 @@ export class TestFixtures {
 
   private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']
   private static _fixtureScopes: string[] = ['test', 'file', 'worker']
-  private static _workerContextSymbol = Symbol('workerContext')
+  private static _workerContextSuite = { type: 'worker' } as const
 
   static clearDefinitions(): void {
     TestFixtures._definitions.length = 0
@@ -46,6 +48,10 @@ export class TestFixtures {
 
   static getFileContexts(file: File): Record<string, any>[] {
     return TestFixtures._definitions.map(f => f.getFileContext(file))
+  }
+
+  static isFixtureOptions(obj: unknown): boolean {
+    return isObject(obj) && Object.keys(obj as any).some(key => TestFixtures._fixtureOptionKeys.includes(key))
   }
 
   constructor(registrations?: FixtureRegistrations) {
@@ -103,10 +109,10 @@ export class TestFixtures {
   }
 
   getWorkerContext(): Record<string, any> {
-    if (!this._suiteContexts.has(TestFixtures._workerContextSymbol)) {
-      this._suiteContexts.set(TestFixtures._workerContextSymbol, Object.create(null))
+    if (!this._suiteContexts.has(TestFixtures._workerContextSuite)) {
+      this._suiteContexts.set(TestFixtures._workerContextSuite, Object.create(null))
     }
-    return this._suiteContexts.get(TestFixtures._workerContextSymbol)!
+    return this._suiteContexts.get(TestFixtures._workerContextSuite)!
   }
 
   private parseUserFixtures(
@@ -125,8 +131,7 @@ export class TestFixtures {
       if (
         Array.isArray(fn)
         && fn.length >= 2
-        && isObject(fn[1])
-        && Object.keys(fn[1]).some(key => TestFixtures._fixtureOptionKeys.includes(key))
+        && TestFixtures.isFixtureOptions(fn[1])
       ) {
         _options = fn[1] as FixtureOptions
         options = {
@@ -185,6 +190,10 @@ export class TestFixtures {
         scope: options.scope ?? 'test',
         deps,
         parent,
+      }
+
+      if (isFixtureFunction(value)) {
+        Object.assign(value, { [FIXTURE_STACK_TRACE_KEY]: new Error('STACK_TRACE_ERROR') })
       }
 
       registrations.set(name, item)
@@ -269,12 +278,14 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   cleanupFnArray.length = fromIndex
 }
 
+type SuiteHook = 'beforeAll' | 'afterAll' | 'aroundAll'
+
 export interface WithFixturesOptions {
   /**
    * Whether this is a suite-level hook (beforeAll/afterAll/aroundAll).
    * Suite hooks can only access file/worker scoped fixtures and static values.
    */
-  suiteHook?: 'beforeAll' | 'afterAll' | 'aroundAll'
+  suiteHook?: SuiteHook
   /**
    * The test context to use. If not provided, the hookContext passed to the
    * returned function will be used.
@@ -289,13 +300,18 @@ export interface WithFixturesOptions {
    * Current fixtures from the context.
    */
   fixtures?: TestFixtures
+  /**
+   * The suite to use for fixture lookups.
+   * Used by beforeEach/afterEach/aroundEach hooks to pick up fixture overrides from the test's describe block.
+   */
+  suite?: Suite
 }
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const suite = collector.suite || collector.file
+  const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
@@ -420,6 +436,7 @@ function resolveTestFixtureValue(
 
   return resolveFixtureFunction(
     fixture.value,
+    fixture.name,
     context,
     cleanupFnArray,
   )
@@ -456,6 +473,7 @@ async function resolveScopeFixtureValue(
 
   const promise = resolveFixtureFunction(
     fixture.value,
+    fixture.name,
     fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
   ).then((value) => {
@@ -472,11 +490,16 @@ async function resolveFixtureFunction(
     context: unknown,
     useFn: (arg: unknown) => Promise<void>,
   ) => Promise<void>,
+  fixtureName: string,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
+  const stackTraceError
+    = FIXTURE_STACK_TRACE_KEY in fixtureFn && fixtureFn[FIXTURE_STACK_TRACE_KEY] instanceof Error
+      ? fixtureFn[FIXTURE_STACK_TRACE_KEY]
+      : undefined
   let isUseFnArgResolved = false
 
   const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
@@ -493,6 +516,17 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
+  }).then(() => {
+    // fixture returned without calling use()
+    if (!isUseFnArgResolved) {
+      const error = new Error(
+        `Fixture "${fixtureName}" returned without calling "use". Make sure to call "use" in every code path of the fixture function.`,
+      )
+      if (stackTraceError?.stack) {
+        error.stack = error.message + stackTraceError.stack.replace(stackTraceError.message, '')
+      }
+      useFnArgPromise.reject(error)
+    }
   }).catch((e: unknown) => {
     // treat fixture setup error as test failure
     if (!isUseFnArgResolved) {
@@ -548,19 +582,24 @@ function resolveDeps(
   return pendingFixtures
 }
 
-function validateSuiteHook(fn: Function, hook: string, error: Error | undefined) {
-  const usedProps = getUsedProps(fn)
+function validateSuiteHook(fn: Function, hook: SuiteHook, suiteError: Error | undefined) {
+  const usedProps = getUsedProps(fn, { sourceError: suiteError, suiteHook: hook })
   if (usedProps.size) {
-    console.warn(`The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. Did you forget to call it as "test.${hook}()" instead of "${hook}()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks`)
-    if (error) {
-      const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
-      const stack = processor(error.stack || '')
-      console.warn(stack)
+    const error = new FixtureAccessError(
+      `The ${hook} hook uses fixtures "${[...usedProps].join('", "')}", but has no access to context. `
+      + `Did you forget to call it as "test.${hook}()" instead of "${hook}()"?\n`
+      + `If you used internal "suite" task as the first argument previously, access it in the second argument instead. `
+      + `See https://vitest.dev/guide/test-context#suite-level-hooks`,
+    )
+    if (suiteError) {
+      error.stack = suiteError.stack?.replace(suiteError.message, error.message)
     }
+    throw error
   }
 }
 
 const kPropsSymbol = Symbol('$vitest:fixture-props')
+const kPropNamesSymbol = Symbol('$vitest:fixture-prop-names')
 
 interface FixturePropsOptions {
   index?: number
@@ -574,7 +613,21 @@ export function configureProps(fn: Function, options: FixturePropsOptions): void
   })
 }
 
-function getUsedProps(fn: Function): Set<string> {
+function memoProps(fn: Function, props: Set<string>): Set<string> {
+  (fn as any)[kPropNamesSymbol] = props
+  return props
+}
+
+interface PropsParserOptions {
+  sourceError?: Error | undefined
+  suiteHook?: SuiteHook
+}
+
+function getUsedProps(fn: Function, { sourceError, suiteHook }: PropsParserOptions = {}): Set<string> {
+  if (kPropNamesSymbol in fn) {
+    return fn[kPropNamesSymbol] as Set<string>
+  }
+
   const {
     index: fixturesIndex = 0,
     original: implementation = fn,
@@ -591,24 +644,31 @@ function getUsedProps(fn: Function): Set<string> {
   }
   const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   const args = splitByComma(match[1])
   if (!args.length) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   const fixturesArgument = args[fixturesIndex]
 
   if (!fixturesArgument) {
-    return new Set()
+    return memoProps(fn, new Set())
   }
 
   if (!(fixturesArgument[0] === '{' && fixturesArgument.endsWith('}'))) {
-    throw new Error(
-      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${fixturesArgument}".`,
+    const ordinalArgument = ordinal(fixturesIndex + 1)
+    const error = new FixtureParseError(
+      `The ${ordinalArgument} argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). `
+      + `Instead, received "${fixturesArgument}".`
+      + `${(suiteHook ? ` If you used internal "suite" task as the ${ordinalArgument} argument previously, access it in the ${ordinal(fixturesIndex + 2)} argument instead.` : '')}`,
     )
+    if (sourceError) {
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+    }
+    throw error
   }
 
   const _first = fixturesArgument.slice(1, -1).replace(/\s/g, '')
@@ -618,12 +678,16 @@ function getUsedProps(fn: Function): Set<string> {
 
   const last = props.at(-1)
   if (last && last.startsWith('...')) {
-    throw new Error(
+    const error = new FixtureParseError(
       `Rest parameters are not supported in fixtures, received "${last}".`,
     )
+    if (sourceError) {
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+    }
+    throw error
   }
 
-  return new Set(props)
+  return memoProps(fn, new Set(props))
 }
 
 function splitByComma(s: string) {

@@ -199,7 +199,7 @@ describe(
       },
       ({ task }) => {
         // task.meta === { nested: { object: false } }
-        // notice array got lost because "nested" object was overriden
+        // notice array got lost because "nested" object was overridden
       }
     )
   }
@@ -223,7 +223,7 @@ Whether this test run concurrently with other concurrent tests in the suite.
 - **Default:** `true`
 - **Alias:** [`test.sequential`](#test-sequential)
 
-Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precendence.
+Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
 
 ### skip
 

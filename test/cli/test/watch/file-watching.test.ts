@@ -118,7 +118,7 @@ test("dynamic test case", () => {
 })
 
 test('renaming an existing test file', { retry: 3 }, async () => {
-  const { vitest, fs } = await testUtils.runInlineTests({
+  const { vitest, ctx, fs } = await testUtils.runInlineTests({
     'before.test.js': /* js */`
       import { expect, test } from "vitest";
 
@@ -132,10 +132,17 @@ test('renaming an existing test file', { retry: 3 }, async () => {
   await vitest.waitForStdout('Running existing test')
   await vitest.waitForStdout('press h to show help')
 
+  const fileAdded = new Promise<void>((resolve) => {
+    ctx!.vite.watcher.on('add', () => {
+      resolve()
+    })
+  })
+
   fs.renameFile('before.test.js', 'after.test.js')
 
   await vitest.waitForStdout('Test removed')
   await vitest.waitForStdout('Waiting for file changes...')
+  await fileAdded
 
   vitest.write('p')
   await vitest.waitForStdout('Input filename pattern')

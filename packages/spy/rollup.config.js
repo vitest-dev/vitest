@@ -10,6 +10,7 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  '@vitest/spy/optional-types.js',
 ]
 
 const dtsUtils = createDtsUtils()

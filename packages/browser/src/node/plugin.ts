@@ -49,6 +49,20 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // strip _vitest_original query added by importActual so that
+        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook).
+        server.middlewares.use((req, _res, next) => {
+          if (
+            req.url?.includes('_vitest_original')
+            && parentServer.project.config.browser.provider?.name === 'playwright'
+          ) {
+            req.url = req.url
+              .replace(/[?&]_vitest_original(?=[&#]|$)/, '')
+              .replace(/[?&]ext\b[^&#]*/, '')
+              .replace(/\?$/, '')
+          }
+          next()
+        })
         server.middlewares.use(createOrchestratorMiddleware(parentServer))
         server.middlewares.use(createTesterMiddleware(parentServer))
 
@@ -320,7 +334,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       },
       transform(code, id) {
         if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
-          // loupe bundle has a nastry require('util') call that leaves a warning in the console
+          // loupe bundle has a nasty require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }
@@ -341,7 +355,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        if (viteConfig.esbuild !== false) {
+        // Only set esbuild options when not using rolldown-vite (Vite 8+),
+        // which uses oxc for transformation instead of esbuild
+        if (!rolldownVersion && viteConfig.esbuild !== false) {
           viteConfig.esbuild ||= {}
           viteConfig.esbuild.legalComments = 'inline'
         }

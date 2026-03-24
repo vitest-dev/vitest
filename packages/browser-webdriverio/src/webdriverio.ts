@@ -221,9 +221,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const host = inspector.host || '127.0.0.1'
 
       args.push(`--remote-debugging-port=${port}`)
-      args.push(`--remote-debugging-address=${host}`)
 
-      this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+        this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chrome only allows remote debugging on localhost.`)
+      }
+      this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
 
       capabilities[key] ??= {}
       capabilities[key]!.args = args
@@ -267,7 +269,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async getCDPSession(_sessionId: string): Promise<CDPSession> {
     return {
-      send: (method: string, params: any) => {
+      send: (method, params) => {
         if (!this.browser) {
           throw new Error(`The environment was torn down.`)
         }
@@ -306,6 +308,13 @@ declare module 'vitest/browser' {
   export interface LocatorScreenshotOptions extends SelectorOptions {}
 }
 
+interface WebdriverCDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+  on: (event: string, listener: (...args: unknown[]) => void) => void
+  once: (event: string, listener: (...args: unknown[]) => void) => void
+  off: (event: string, listener: (...args: unknown[]) => void) => void
+}
+
 declare module 'vitest/node' {
   export interface BrowserCommandContext {
     browser: WebdriverIO.Browser
@@ -323,4 +332,6 @@ declare module 'vitest/node' {
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
+
+  export interface CDPSession extends WebdriverCDPSession {}
 }

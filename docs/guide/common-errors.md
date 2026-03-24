@@ -10,7 +10,7 @@ If you receive an error that module cannot be found, it might mean several diffe
 
 1. You misspelled the path. Make sure the path is correct.
 
-2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://www.npmjs.com/package/vite-tsconfig-paths) yourself, if you rely on this behavior.
+2. It's possible that you rely on `baseUrl` in your `tsconfig.json`. Vite doesn't take into account `tsconfig.json` by default, so you might need to install [`vite-tsconfig-paths`](https://npmx.dev/package/vite-tsconfig-paths) yourself, if you rely on this behavior.
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -121,3 +121,47 @@ export default defineConfig({
 vitest --pool=forks
 ```
 :::
+
+## Unhandled Promise Rejection
+
+This error happens when a Promise rejects but no `.catch()` handler or `await` is attached to it before the microtask queue flushes. This behavior comes from JavaScript itself and is not specific to Vitest. Learn more in the [Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection).
+
+A common cause is calling an async function without `await`ing it:
+
+```ts
+async function fetchUser(id) {
+  const res = await fetch(`/api/users/${id}`)
+  if (!res.ok) {
+    throw new Error(`User ${id} not found`) // [!code highlight]
+  }
+  return res.json()
+}
+
+test('fetches user', async () => {
+  fetchUser(123) // [!code error]
+})
+```
+
+Because `fetchUser()` is not `await`ed, its rejection has no handler and Vitest reports:
+
+```
+Unhandled Rejection: Error: User 123 not found
+```
+
+### Fix
+
+`await` the promise so Vitest can catch the error:
+
+```ts
+test('fetches user', async () => {
+  await fetchUser(123) // [!code ++]
+})
+```
+
+If you expect the call to throw, use [`expect().rejects`](/api/expect#rejects):
+
+```ts
+test('rejects for missing user', async () => {
+  await expect(fetchUser(123)).rejects.toThrow('User 123 not found')
+})
+```

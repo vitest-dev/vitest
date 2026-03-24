@@ -259,6 +259,7 @@ export type TaskUpdateEvent
     | 'test-prepare'
     | 'test-finished'
     | 'test-retried'
+    | 'test-cancel'
     | 'suite-prepare'
     | 'suite-finished'
     | 'before-hook-start'
@@ -1261,7 +1262,7 @@ export interface TestAttachment {
   /** File system path to the attachment */
   path?: string
   /** Inline attachment content as a string or raw binary data */
-  body?: string | Uint8Array
+  body?: string | Uint8Array | undefined
 }
 
 export interface Location {

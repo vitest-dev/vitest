@@ -5,7 +5,16 @@ outline: deep
 
 # Migration Guide
 
+[Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
+
 ## Migrating to Vitest 4.0 {#vitest-4}
+
+::: warning Prerequisites
+Vitest 4.0 requires **Vite >= 6.0.0** and **Node.js >= 20.0.0**. Before proceeding
+with any other migration steps, ensure your environment meets these requirements.
+Running Vitest 4.0 on older versions of Vite or Node.js is not supported and may
+result in unexpected errors.
+:::
 
 ### V8 Code Coverage Major Changes
 
@@ -733,8 +742,7 @@ Vitest supports all common sinon-chai assertions:
 | `spy.callCount(n)` | `callCount(n)` | Spy was called n times |
 | `spy.calledWith(...)` | `calledWith(...)` | Spy was called with specific args |
 | `spy.calledOnceWith(...)` | `calledOnceWith(...)` | Spy was called once with specific args |
-| `spy.returned` | `returned` | Spy returned successfully |
-| `spy.returnedWith(value)` | `returnedWith(value)` | Spy returned specific value |
+| `spy.returned(value)` | `returned` | Spy returned specific value |
 
 See the [Chai-Style Spy Assertions](/api/expect#chai-style-spy-assertions) documentation for the complete list.
 

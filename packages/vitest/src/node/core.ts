@@ -15,10 +15,12 @@ import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMod
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
+import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
 import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
+import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
+import { serializeValue } from '@vitest/utils/serialize'
 import { join, normalize, relative } from 'pathe'
 import { isRunnableDevEnvironment } from 'vite'
 import { version } from '../../package.json' with { type: 'json' }
@@ -50,6 +52,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
+import { loadVCSProvider } from './vcs/vcs'
 import { VitestWatcher } from './watcher'
 
 const WATCHER_DEBOUNCE = 100
@@ -100,6 +103,13 @@ export class Vitest {
    * Vitest behaviour.
    */
   public readonly watcher: VitestWatcher
+  /**
+   * The version control system provider used to detect changed files.
+   * This is used with the `--changed` flag to determine which test files to run.
+   * By default, Vitest uses Git. You can provide a custom implementation via
+   * `experimental.vcsProvider` in your config.
+   */
+  public vcs!: VCSProvider
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
@@ -262,6 +272,7 @@ export class Vitest {
         configurable: true,
       })
     }
+    this.vcs = await loadVCSProvider(this.runner, resolved.experimental.vcsProvider)
 
     if (this.config.watch) {
       // hijack server restart
@@ -606,15 +617,17 @@ export class Vitest {
         specifications.push(specification)
       }
 
-      await this._testRun.start(specifications).catch(noop)
+      await this._testRun.start(specifications)
       await this.coverageProvider?.onTestRunStart?.()
 
       for (const file of files) {
         await this._reportFileTask(file)
       }
 
-      this._checkUnhandledErrors(errors)
-      await this._testRun.end(specifications, errors).catch(noop)
+      // append errors thrown during reporter event replay during merge reports
+      const unhandledErrors = [...errors, ...this.state.getUnhandledErrors()]
+      this._checkUnhandledErrors(unhandledErrors)
+      await this._testRun.end(specifications, unhandledErrors)
       await this.initCoverageProvider()
       await this.coverageProvider?.mergeReports?.(coverages)
 
@@ -635,8 +648,12 @@ export class Vitest {
   /** @internal */
   public async _reportFileTask(file: File): Promise<void> {
     const project = this.getProjectByName(file.projectName || '')
-    await this._testRun.enqueued(project, file).catch(noop)
-    await this._testRun.collected(project, [file]).catch(noop)
+    await this._testRun.enqueued(project, file).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
+    await this._testRun.collected(project, [file]).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
 
     const logs: UserConsoleLog[] = []
 
@@ -649,10 +666,14 @@ export class Vitest {
     logs.sort((log1, log2) => log1.time - log2.time)
 
     for (const log of logs) {
-      await this._testRun.log(log).catch(noop)
+      await this._testRun.log(log).catch((error) => {
+        this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+      })
     }
 
-    await this._testRun.updated(packs, events).catch(noop)
+    await this._testRun.updated(packs, events).catch((error) => {
+      this.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+    })
   }
 
   async collect(filters?: string[], options?: { staticParse?: boolean; staticParseConcurrency?: number }): Promise<TestRunResult> {
@@ -784,10 +805,18 @@ export class Vitest {
   }
 
   /**
+   * @deprecated use `standalone()` instead
+   */
+  init(): Promise<void> {
+    this.logger.deprecate('`vitest.init()` is deprecated. Use `vitest.standalone()` instead.')
+    return this.standalone()
+  }
+
+  /**
    * Initialize reporters and the coverage provider. This method doesn't run any tests.
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
-  async init(): Promise<void> {
+  async standalone(): Promise<void> {
     await this._traces.$('vitest.init', async () => {
       try {
         await this.initCoverageProvider()
@@ -799,6 +828,8 @@ export class Vitest {
 
       // populate test files cache so watch mode can trigger a file rerun
       await this.globTestSpecifications()
+
+      await Promise.all(this.projects.map(project => project._standalone()))
 
       if (this.config.watch) {
         await this.report('onWatcherStart')

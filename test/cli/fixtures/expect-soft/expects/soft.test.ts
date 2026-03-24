@@ -75,6 +75,29 @@ test('promise with expect.extend', async () => {
   await expect.soft(2 + 2).toBeAsync(3);
 });
 
+test('promise rejection', async () => {
+  await expect
+    .soft(
+      Promise.resolve().then(() => {
+        throw new Error('boom 1st')
+      }),
+    )
+    .resolves.toBe('1st')
+
+  await expect
+    .soft(
+      Promise.resolve().then(() => {
+        throw new Error('boom 2nd')
+      }),
+    )
+    .resolves.toBe('2nd')
+})
+
+test('promise resolved instead of rejecting', async () => {
+  await expect.soft(Promise.resolve('value 1')).rejects.toBe('1st')
+  await expect.soft(Promise.resolve('value 2')).rejects.toBe('2nd')
+})
+
 test('passed', () => {
   expect.soft(1).toEqual(1)
   expect(10).toEqual(10)

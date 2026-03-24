@@ -118,6 +118,7 @@ test('basic', () => {});
       ],
     },
   })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
@@ -126,4 +127,46 @@ test('basic', () => {});
     }
   `)
   expect(result.fs.statFile('html/index.html').isFile()).toBe(true)
+})
+
+it('html and coverage already next each other', async () => {
+  const result = await runInlineTests({
+    'basic.ts': `
+export const add = (a: number, b: number) => a + b;
+`,
+    'basic.test.ts': `
+import { test, expect } from "vitest";
+import { add } from "./basic";
+test('add', () => {
+  expect(add(1, 2)).toBe(3);
+});
+`,
+  }, {
+    reporters: [
+      'default',
+      ['html', { outputFile: './custom-dir/index.html' }],
+    ],
+    coverage: {
+      enabled: true,
+      reporter: ['html'],
+      reportsDirectory: './custom-dir/coverage',
+    },
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "add": "passed",
+      },
+    }
+  `)
+  expect({
+    html: result.fs.statFile('custom-dir/index.html').isFile(),
+    coverage: result.fs.statFile('custom-dir/coverage/index.html').isFile(),
+  }).toMatchInlineSnapshot(`
+    {
+      "coverage": true,
+      "html": true,
+    }
+  `)
 })

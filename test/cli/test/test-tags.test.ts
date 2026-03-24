@@ -1361,6 +1361,371 @@ test('test meta overrides tag meta', async () => {
   `)
 })
 
+test('matchesTags returns true when no filter is configured', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, describe, expect, test } from 'vitest'
+
+      let matchResult
+
+      beforeAll(() => {
+        matchResult = TestRunner.matchesTags(['unit'])
+      })
+
+      test('test 1', { tags: ['unit'] }, () => {
+        expect(matchResult).toBe(true)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [{ name: 'unit' }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "test 1": "passed",
+      },
+    }
+  `)
+})
+
+test('matchesTags returns true when tags match the filter', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchUnit, matchE2e
+
+      beforeAll(() => {
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchE2e = TestRunner.matchesTags(['e2e'])
+      })
+
+      test('unit matches', { tags: ['unit'] }, () => {
+        expect(matchUnit).toBe(true)
+        expect(matchE2e).toBe(false)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [{ name: 'unit' }, { name: 'e2e' }],
+      },
+    },
+  }, {
+    tagsFilter: ['unit'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "unit matches": "passed",
+      },
+    }
+  `)
+})
+
+test('matchesTags supports NOT expressions', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchUnit, matchSlow
+
+      beforeAll(() => {
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchSlow = TestRunner.matchesTags(['slow'])
+      })
+
+      test('unit passes NOT slow', { tags: ['unit'] }, () => {
+        expect(matchUnit).toBe(true)
+        expect(matchSlow).toBe(false)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [{ name: 'unit' }, { name: 'slow' }],
+      },
+    },
+  }, {
+    tagsFilter: ['!slow'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "unit passes NOT slow": "passed",
+      },
+    }
+  `)
+})
+
+test('matchesTags supports AND/OR expressions', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchUnitFast, matchUnitSlow, matchE2eFast, matchEmpty
+
+      beforeAll(() => {
+        matchUnitFast = TestRunner.matchesTags(['unit', 'fast'])
+        matchUnitSlow = TestRunner.matchesTags(['unit', 'slow'])
+        matchE2eFast = TestRunner.matchesTags(['e2e', 'fast'])
+        matchEmpty = TestRunner.matchesTags([])
+      })
+
+      test('matches complex expression', { tags: ['unit', 'fast'] }, () => {
+        expect(matchUnitFast).toBe(true)
+        expect(matchUnitSlow).toBe(false)
+        expect(matchE2eFast).toBe(true)
+        expect(matchEmpty).toBe(false)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+          { name: 'fast' },
+          { name: 'slow' },
+        ],
+      },
+    },
+  }, {
+    tagsFilter: ['(unit || e2e) && fast'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "matches complex expression": "passed",
+      },
+    }
+  `)
+})
+
+test('matchesTags supports wildcard patterns', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchBrowserChrome, matchNode
+
+      beforeAll(() => {
+        matchBrowserChrome = TestRunner.matchesTags(['browser-chrome'])
+        matchNode = TestRunner.matchesTags(['node'])
+      })
+
+      test('wildcard matches', { tags: ['browser-chrome'] }, () => {
+        expect(matchBrowserChrome).toBe(true)
+        expect(matchNode).toBe(false)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [
+          { name: 'browser-chrome' },
+          { name: 'browser-firefox' },
+          { name: 'node' },
+        ],
+      },
+    },
+  }, {
+    tagsFilter: ['browser-*'],
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "wildcard matches": "passed",
+      },
+    }
+  `)
+})
+
+test('matchesTags with empty tags array and no filter returns true', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchEmpty
+
+      beforeAll(() => {
+        matchEmpty = TestRunner.matchesTags([])
+      })
+
+      test('empty tags no filter', () => {
+        expect(matchEmpty).toBe(true)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [{ name: 'unit' }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "empty tags no filter": "passed",
+      },
+    }
+  `)
+})
+
+test('per-specification testTagsFilter overrides global tagsFilter', async () => {
+  const { fs, ctx, errorTree } = await runInlineTests({
+    'basic.test.js': `
+      test('unit-test', { tags: ['unit'] }, () => {})
+      test('e2e-test', { tags: ['e2e'] }, () => {})
+      test('integration-test', { tags: ['integration'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+          { name: 'integration' },
+        ],
+      },
+    },
+  }, { standalone: true, watch: true, tagsFilter: ['unit'] })
+  const vitest = ctx!
+
+  const specification = vitest.getRootProject().createSpecification(
+    fs.resolveFile('./basic.test.js'),
+    { testTagsFilter: ['e2e'] },
+  )
+
+  await vitest.runTestSpecifications([specification])
+
+  expect(errorTree()).toEqual({
+    'basic.test.js': {
+      'unit-test': 'skipped',
+      'e2e-test': 'passed',
+      'integration-test': 'skipped',
+    },
+  })
+})
+
+test('per-specification testTagsFilter with complex expression', async () => {
+  const { fs, ctx, errorTree } = await runInlineTests({
+    'basic.test.js': `
+      test('test 1', { tags: ['unit', 'fast'] }, () => {})
+      test('test 2', { tags: ['unit', 'slow'] }, () => {})
+      test('test 3', { tags: ['e2e', 'fast'] }, () => {})
+      test('test 4', { tags: ['e2e', 'slow'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+          { name: 'fast' },
+          { name: 'slow' },
+        ],
+      },
+    },
+  }, { standalone: true, watch: true })
+  const vitest = ctx!
+
+  const specification = vitest.getRootProject().createSpecification(
+    fs.resolveFile('./basic.test.js'),
+    { testTagsFilter: ['unit && fast'] },
+  )
+
+  await vitest.runTestSpecifications([specification])
+
+  expect(errorTree()).toEqual({
+    'basic.test.js': {
+      'test 1': 'passed',
+      'test 2': 'skipped',
+      'test 3': 'skipped',
+      'test 4': 'skipped',
+    },
+  })
+})
+
+test('matchesTags uses per-specification filter instead of global filter', async () => {
+  const { fs, ctx, errorTree } = await runInlineTests({
+    'basic.test.js': `
+      import { TestRunner, beforeAll, expect, test } from 'vitest'
+
+      let matchUnit, matchE2e
+
+      beforeAll(() => {
+        matchUnit = TestRunner.matchesTags(['unit'])
+        matchE2e = TestRunner.matchesTags(['e2e'])
+      })
+
+      test('check filter', { tags: ['e2e'] }, () => {
+        expect(matchUnit).toBe(false)
+        expect(matchE2e).toBe(true)
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+        ],
+      },
+    },
+  }, { standalone: true, watch: true, tagsFilter: ['unit'] })
+  const vitest = ctx!
+
+  const specification = vitest.getRootProject().createSpecification(
+    fs.resolveFile('./basic.test.js'),
+    { testTagsFilter: ['e2e'] },
+  )
+
+  await vitest.runTestSpecifications([specification])
+
+  expect(errorTree()).toEqual({
+    'basic.test.js': {
+      'check filter': 'passed',
+    },
+  })
+})
+
+test('per-specification testTagsFilter with no global filter', async () => {
+  const { fs, ctx, errorTree } = await runInlineTests({
+    'basic.test.js': `
+      test('unit-test', { tags: ['unit'] }, () => {})
+      test('e2e-test', { tags: ['e2e'] }, () => {})
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [
+          { name: 'unit' },
+          { name: 'e2e' },
+        ],
+      },
+    },
+  }, { standalone: true, watch: true })
+  const vitest = ctx!
+
+  const specification = vitest.getRootProject().createSpecification(
+    fs.resolveFile('./basic.test.js'),
+    { testTagsFilter: ['unit'] },
+  )
+
+  await vitest.runTestSpecifications([specification])
+
+  expect(errorTree()).toEqual({
+    'basic.test.js': {
+      'unit-test': 'passed',
+      'e2e-test': 'skipped',
+    },
+  })
+})
+
 test('multiple tags with meta are merged with priority order', async () => {
   const { stderr, ctx } = await runInlineTests({
     'basic.test.js': `
