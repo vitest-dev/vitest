@@ -197,7 +197,8 @@ export async function resolveProjects(
     names.add(name)
   }
 
-  return resolveBrowserProjects(vitest, names, resolvedProjects)
+  const browserProjects = await resolveBrowserProjects(vitest, names, resolvedProjects)
+  return resolveMergeReportProjects(vitest, names, browserProjects)
 }
 
 export async function resolveBrowserProjects(
@@ -269,6 +270,61 @@ export async function resolveBrowserProjects(
   return resolvedProjects.filter(project => !removeProjects.has(project))
 }
 
+// TODO: review
+export function resolveMergeReportProjects(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+): TestProject[] {
+  const labels = vitest.config.mergeReportsLabels
+  if (!labels?.length) {
+    return resolvedProjects
+  }
+
+  const removeProjects = new Set<TestProject>()
+
+  resolvedProjects.forEach((project) => {
+    const originalName = project.name
+    const filteredLabels = vitest.matchesProjectFilter(originalName)
+      ? labels
+      : labels.filter((label) => {
+          const nextName = originalName
+            ? `${originalName} [${label}]`
+            : label
+          return vitest.matchesProjectFilter(nextName)
+        })
+
+    if (!filteredLabels.length) {
+      removeProjects.add(project)
+      return
+    }
+
+    filteredLabels.forEach((label) => {
+      const name = originalName
+        ? `${originalName} [${label}]`
+        : label
+
+      if (names.has(name)) {
+        throw new Error(
+          `Project name "${name}" is not unique. All projects should have unique names. Make sure your configuration is correct.`,
+        )
+      }
+
+      names.add(name)
+      resolvedProjects.push(
+        TestProject._cloneProject(
+          project,
+          cloneMergeReportProjectConfig(project, label, name),
+        ),
+      )
+    })
+
+    removeProjects.add(project)
+  })
+
+  return resolvedProjects.filter(project => !removeProjects.has(project))
+}
+
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
   const {
     locators,
@@ -311,6 +367,17 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     includeSource: (overrideConfig.includeSource && overrideConfig.includeSource.length > 0) ? [] : clonedConfig.includeSource,
     // TODO: should resolve, not merge/override
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
+}
+
+function cloneMergeReportProjectConfig(
+  project: TestProject,
+  label: string,
+  name: string,
+): ResolvedConfig {
+  const clonedConfig = deepClone(project.config)
+  clonedConfig.mergeReportsLabel = label
+  clonedConfig.name = name
+  return clonedConfig
 }
 
 async function resolveTestProjectConfigs(

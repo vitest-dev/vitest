@@ -110,6 +110,67 @@ it('can define inline workspace config programmatically', async () => {
   expect(stdout).toContain('3 passed')
 })
 
+// TODO: more cases
+// - single browser instance
+// - multiple browser instances
+// - multiple browser instances with multiple projects
+it('duplicates the default project for mergeReportsLabels', async () => {
+  const { ctx, stderr, exitCode } = await runInlineTests({
+    'basic.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('works', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  }, {
+    name: 'base',
+    mergeReportsLabels: ['linux', 'macos'],
+  })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
+    'base [linux]',
+    'base [macos]',
+  ])
+})
+
+it('duplicates configured projects for mergeReportsLabels', async () => {
+  const { ctx, stderr, exitCode } = await runInlineTests({
+    'basic.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('works', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  }, {
+    mergeReportsLabels: ['linux', 'macos'],
+    projects: [
+      {
+        test: {
+          name: 'server',
+        },
+      },
+      {
+        test: {
+          name: 'client',
+        },
+      },
+    ],
+  })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
+    'client [linux]',
+    'client [macos]',
+    'server [linux]',
+    'server [macos]',
+  ])
+})
+
 it('correctly inherits the root config', async () => {
   const { stderr, stdout } = await runVitest({
     root: 'fixtures/workspace/config-extends',

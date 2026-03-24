@@ -728,7 +728,7 @@ export class TestProject {
   }
 
   /** @internal */
-  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
+  static _cloneProject(parent: TestProject, config: ResolvedConfig): TestProject {
     const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
     clone.runner = parent.runner
     clone._vite = parent._vite
@@ -739,6 +739,13 @@ export class TestProject {
     clone._parent = parent
     clone._serializedDefines = parent._serializedDefines
     clone._provideObject(config.provide)
+    return clone
+  }
+
+  /** @internal */
+  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
+    const clone = TestProject._cloneProject(parent, config)
+    clone._parent = parent
     return clone
   }
 }
