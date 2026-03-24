@@ -372,7 +372,7 @@ vi.mock('node:fs', async (importOriginal) => {
 const fs = require('node:fs') // throws an error
 ```
 
-This limitation exists because factories can be asynchronous. This should not be a problem because Vitest doesn't mock builtin modules inside `node_modules`, which is simillar to how Vitest works by default.
+This limitation exists because factories can be asynchronous. This should not be a problem because Vitest doesn't mock builtin modules inside `node_modules`, which is similar to how Vitest works by default.
 
 ### TypeScript
 

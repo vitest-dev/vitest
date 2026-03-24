@@ -23,7 +23,7 @@ test('.toBeEmptyDOMElement', () => {
   const withElementAndComment = queryByTestId('with-element-and-comment')
   const withWhitespace = queryByTestId('with-whitespace')
   const withText = queryByTestId('with-whitespace')
-  const nonExistantElement = queryByTestId('not-exists')
+  const nonExistentElement = queryByTestId('not-exists')
   const fakeElement = {thisIsNot: 'an html element'}
 
   expect(empty).toBeEmptyDOMElement()
@@ -58,6 +58,6 @@ test('.toBeEmptyDOMElement', () => {
   expect(() => expect(fakeElement).toBeEmptyDOMElement()).toThrow()
 
   expect(() => {
-    expect(nonExistantElement).toBeEmptyDOMElement()
+    expect(nonExistentElement).toBeEmptyDOMElement()
   }).toThrow()
 })

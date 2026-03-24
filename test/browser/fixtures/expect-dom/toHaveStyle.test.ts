@@ -237,7 +237,7 @@ describe('.toHaveStyle', () => {
       `)
       expect(queryByTestId('color-example')).toHaveStyle({
         // in jest-dom '12' is converted to 12px
-        // but in the browser setting the style to 12 wil have no effect,
+        // but in the browser setting the style to 12 will have no effect,
         // so Vitest prioritizes the browser behavior
         // fontSize: 12,
         fontSize: '12px',

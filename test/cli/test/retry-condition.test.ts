@@ -18,12 +18,12 @@ function modeToConfig(mode: string): RunVitestConfig {
   return {}
 }
 
-it.for(['node', 'playwright'])('test.retry.condition is corrrectly serialized %s', async (mode) => {
+it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s', async (mode) => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.js': /* js */`
       import { expect, test } from 'vitest'
 
-      test('task.retry.condition is corrrectly deserialized', ({ task }) => {
+      test('task.retry.condition is correctly deserialized', ({ task }) => {
         expect(task.retry.condition).toBeInstanceOf(RegExp)
         expect(task.retry.condition).toStrictEqual(/retry_this/)
       })
@@ -98,7 +98,7 @@ it.for(['node', 'playwright'])('test.retry.condition is corrrectly serialized %s
           "retry_that",
         ],
         "retry": "passed",
-        "task.retry.condition is corrrectly deserialized": "passed",
+        "task.retry.condition is correctly deserialized": "passed",
       },
     }
   `)
