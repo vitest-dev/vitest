@@ -410,7 +410,10 @@ function printer(
 
   // Per-depth output budget (inspired by Node's util.inspect).
   // Each depth level tracks output independently, so nested results
-  // don't inflate a single counter. See node/lib/internal/util/inspect.js#L1486.
+  // don't inflate a single counter (which would undercount by ~Nx for
+  // N levels of nesting). Nodes at the same depth produce disjoint spans
+  // in the output string, so each bucket accurately reflects output at
+  // that level. Total output is bounded by maxDepth × maxOutputLength.
   config.outputLengthPerDepth[depth] ??= 0
   config.outputLengthPerDepth[depth] += result.length
   if (config.outputLengthPerDepth[depth] > config.maxOutputLength) {
