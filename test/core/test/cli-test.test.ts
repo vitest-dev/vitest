@@ -339,6 +339,18 @@ test('merge-reports', () => {
   expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest-reports' })
   expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
   expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
+
+  const defaultResult = parseCLI('vitest merge-reports')
+  expect(defaultResult.options.mergeReports).toBe('.vitest-reports')
+  expect(defaultResult.options.watch).toBe(false)
+  expect(defaultResult.options.run).toBe(true)
+  expect(defaultResult.filter).toEqual([])
+
+  const withPath = parseCLI('vitest merge-reports ./blobs')
+  expect(withPath.options.mergeReports).toBe('./blobs')
+  expect(withPath.options.watch).toBe(false)
+  expect(withPath.options.run).toBe(true)
+  expect(withPath.filter).toEqual([])
 })
 
 test('configure expect', () => {
@@ -508,6 +520,42 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'exclude': ['docs', 'demo'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest merge-reports')).toEqual({
+    filter: [],
+    options: {
+      'mergeReports': '.vitest-reports',
+      'watch': false,
+      'run': true,
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest merge-reports ./blobs')).toEqual({
+    filter: [],
+    options: {
+      'mergeReports': './blobs',
+      'watch': false,
+      'run': true,
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest merge-reports ./blobs --reporter=junit')).toEqual({
+    filter: [],
+    options: {
+      'mergeReports': './blobs',
+      'watch': false,
+      'run': true,
+      'reporter': [
+        'junit',
+      ],
       '--': [],
       'color': true,
     },

@@ -193,6 +193,10 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   )
 
   cli
+    .command('merge-reports [path]', undefined, options)
+    .action(mergeReports)
+
+  cli
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
@@ -249,6 +253,12 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
     options.passWithNoTests ??= true
     args = []
   }
+  if (arrayArgs[2] === 'merge-reports') {
+    options.mergeReports = args[0] || '.vitest-reports'
+    options.watch = false
+    options.run = true
+    args = []
+  }
   return {
     filter: args as string[],
     options,
@@ -276,6 +286,13 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
   await start('benchmark', cliFilters, options)
+}
+
+async function mergeReports(path: string | undefined, options: CliOptions): Promise<void> {
+  options.mergeReports = path || '.vitest-reports'
+  options.watch = false
+  options.run = true
+  await start('test', [], options)
 }
 
 function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
