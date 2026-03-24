@@ -13,7 +13,7 @@ import crypto from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -29,13 +29,17 @@ import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
 function resolvePath(path: string, root: string) {
-  // local-pkg resolves resolveModule("./file.js", { paths: ["/some/root"] })
-  // into "/some/file.js" but we want "/some/root/file.js".
-  if (path[0] === '/' || path[0] === '.') {
-    return resolve(root, path)
-  }
+  // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
+  // /some/file
+  // /some/file.js
+  // /some/root/file
+  // /some/root/file.js
+  // etc.
+  // but we don't want to resolve files from parent directories,
+  // so we ensure passing "/" suffix such as "/some/root/"
+  // https://github.com/unjs/mlly/blob/401d42983f6f3a9112658d67b0a92ba4fb1d7efa/src/resolve.ts#L104-L110
   return normalize(
-    /* @__PURE__ */ resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
 }
