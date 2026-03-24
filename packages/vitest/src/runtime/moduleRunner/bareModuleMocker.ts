@@ -172,16 +172,12 @@ export class BareModuleMocker implements TestModuleMocker {
       }
     }
 
-    // resolve in parallel if all pending mocks are of the same type,
-    // otherwise resolve sequentially to preserve mock/unmock ordering
-    const pendingIds = BareModuleMocker.pendingIds
-    if (new Set(pendingIds.map(m => m.action)).size === 1) {
-      await Promise.all(pendingIds.map(resolveMock))
-    }
-    else {
-      for (const mock of pendingIds) {
-        await resolveMock(mock)
-      }
+    // group consecutive mocks of the same action type together,
+    // resolve in parallel inside each group, but run groups sequentially
+    // to preserve mock/unmock ordering
+    const groups = groupByConsecutiveAction(BareModuleMocker.pendingIds)
+    for (const group of groups) {
+      await Promise.all(group.map(resolveMock))
     }
 
     BareModuleMocker.pendingIds = []
@@ -376,6 +372,20 @@ export function normalizeModuleId(file: string): string {
 const windowsSlashRE = /\\/g
 function slash(p: string): string {
   return p.replace(windowsSlashRE, '/')
+}
+
+function groupByConsecutiveAction(pendingIds: PendingSuiteMock[]): PendingSuiteMock[][] {
+  const groups: PendingSuiteMock[][] = []
+  for (const mock of pendingIds) {
+    const last = groups[groups.length - 1]
+    if (last && last[0].action === mock.action) {
+      last.push(mock)
+    }
+    else {
+      groups.push([mock])
+    }
+  }
+  return groups
 }
 
 const multipleSlashRe = /^\/+/
