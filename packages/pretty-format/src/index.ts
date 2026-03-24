@@ -408,12 +408,12 @@ function printer(
     }
   }
 
-  // Check string length budget:
-  // accumulate output length and if exceeded,
-  // force no further recursion by patching maxDepth.
-  // Inspired by Node's util.inspect bail out approach.
-  config.outputLength += result.length
-  if (config.outputLength > config.maxOutputLength) {
+  // Per-depth output budget (inspired by Node's util.inspect).
+  // Each depth level tracks output independently, so nested results
+  // don't inflate a single counter. See node/lib/internal/util/inspect.js#L1486.
+  config.outputLengthPerDepth[depth] ??= 0
+  config.outputLengthPerDepth[depth] += result.length
+  if (config.outputLengthPerDepth[depth] > config.maxOutputLength) {
     config.maxDepth = 0
   }
 
@@ -528,7 +528,7 @@ function getConfig(options?: OptionsReceived): Config {
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
     maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
-    outputLength: 0,
+    outputLengthPerDepth: [],
   }
 }
 

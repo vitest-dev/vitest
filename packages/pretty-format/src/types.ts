@@ -73,7 +73,8 @@ export interface Config {
   spacingInner: string
   spacingOuter: string
   maxOutputLength: number
-  outputLength: number
+  // track total printed string length per depth as we print
+  outputLengthPerDepth: number[]
 }
 
 export type Printer = (
