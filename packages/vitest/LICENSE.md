@@ -673,7 +673,7 @@ Repository: git+https://github.com/tinylibs/tinyhighlight.git
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
 >
-> # Additionally Tinyhighlight modifies code with the following licenses:
+> # Additionaly Tinyhighlight modifies code with the following licenses:
 >
 > MIT
 >
