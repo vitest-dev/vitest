@@ -75,6 +75,7 @@ const external = [
   'node:console',
   'node:events',
   'inspector',
+  'vitest/optional-runtime-types.js',
   'vitest/optional-types.js',
   'vitest/browser',
   'vite/module-runner',

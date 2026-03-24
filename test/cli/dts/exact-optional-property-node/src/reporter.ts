@@ -1,5 +1,5 @@
 import type { File } from '@vitest/runner'
-import { DefaultReporter } from 'vitest/reporters'
+import { DefaultReporter } from 'vitest/node'
 
 export class MyReporter extends DefaultReporter {
   override reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {

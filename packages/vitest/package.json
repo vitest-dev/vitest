@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.1.0-beta.6",
+  "version": "4.1.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -47,6 +47,9 @@
     "./package.json": "./package.json",
     "./optional-types.js": {
       "types": "./optional-types.d.ts"
+    },
+    "./optional-runtime-types.js": {
+      "types": "./optional-runtime-types.d.ts"
     },
     "./src/*": "./src/*",
     "./globals": {
@@ -139,7 +142,7 @@
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*",
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0-0"
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
@@ -192,7 +195,7 @@
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0-0",
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {

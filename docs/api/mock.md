@@ -473,7 +473,7 @@ fn.mock.calls === [
 ```
 
 :::warning Objects are Stored by Reference
-Note that Vitest always stores objects by reference in all properies of the `mock` state. This means that if the properties were changed by your code, then some assertions like [`.toHaveBeenCalledWith`](/api/expect#tohavebeencalledwith) will not pass:
+Note that Vitest always stores objects by reference in all properties of the `mock` state. This means that if the properties were changed by your code, then some assertions like [`.toHaveBeenCalledWith`](/api/expect#tohavebeencalledwith) will not pass:
 
 ```ts
 const argument = {

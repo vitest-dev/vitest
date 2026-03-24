@@ -494,7 +494,7 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
@@ -949,6 +949,10 @@ export function resolveConfig(
   resolved.experimental.importDurations.thresholds ??= {} as any
   resolved.experimental.importDurations.thresholds.warn ??= 100
   resolved.experimental.importDurations.thresholds.danger ??= 500
+
+  if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
+    resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
+  }
 
   return resolved
 }

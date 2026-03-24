@@ -1,7 +1,7 @@
 {
   "name": "@vitest/spy",
   "type": "module",
-  "version": "4.1.0-beta.6",
+  "version": "4.1.1",
   "description": "Lightweight Jest compatible spy implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -27,13 +27,17 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./optional-types.js": {
+      "types": "./optional-types.d.ts"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "optional-types.d.ts"
   ],
   "scripts": {
     "build": "premove dist && rollup -c",

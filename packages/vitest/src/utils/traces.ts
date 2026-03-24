@@ -218,7 +218,7 @@ export class Traces {
       throw error
     }
     finally {
-      // end sync callbcak
+      // end sync callback
       if (!(result instanceof Promise)) {
         span.end()
       }
