@@ -157,6 +157,20 @@ describe('maxOutputLength', () => {
     expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1236779`)
   })
 
+  test('budget should not truncate output shorter than maxOutputLength', () => {
+    const data = Array.from({ length: 50 }, (_, i) => ({ a: { b: { c: i } } }))
+    const full = format(data, { maxOutputLength: Infinity })
+    const limited = format(data, { maxOutputLength: full.length })
+    // this invariant should hold for any input
+    // expect(limited.length).toBe(full.length)
+    expect({ limited: limited.length, full: full.length }).toMatchInlineSnapshot(`
+      {
+        "full": 4349,
+        "limited": 2399,
+      }
+    `)
+  })
+
   test('early elements expanded, later elements folded after budget trips', () => {
     // First few objects are fully expanded, but once budget is exceeded,
     // maxDepth = 0 means no more expansion.
