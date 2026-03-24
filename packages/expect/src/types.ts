@@ -91,6 +91,7 @@ export interface SyncExpectationResult {
   message: () => string
   actual?: any
   expected?: any
+  meta?: object
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>
