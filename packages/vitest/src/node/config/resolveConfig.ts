@@ -29,6 +29,11 @@ import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
 function resolvePath(path: string, root: string) {
+  // local-pkg resolves resolveModule("./file.js", { paths: ["/some/root"] })
+  // into "/some/file.js" but we want "/some/root/file.js".
+  if (path[0] === '/' || path[0] === '.') {
+    return resolve(root, path)
+  }
   return normalize(
     /* @__PURE__ */ resolveModule(path, { paths: [root] })
     ?? resolve(root, path),
