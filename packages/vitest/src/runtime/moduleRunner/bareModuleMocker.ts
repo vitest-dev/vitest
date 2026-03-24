@@ -374,11 +374,11 @@ function slash(p: string): string {
   return p.replace(windowsSlashRE, '/')
 }
 
-function groupByConsecutiveAction(pendingIds: PendingSuiteMock[]): PendingSuiteMock[][] {
+function groupByConsecutiveAction(mocks: PendingSuiteMock[]): PendingSuiteMock[][] {
   const groups: PendingSuiteMock[][] = []
-  for (const mock of pendingIds) {
-    const last = groups[groups.length - 1]
-    if (last && last[0].action === mock.action) {
+  for (const mock of mocks) {
+    const last = groups.at(-1)
+    if (last?.[0].action === mock.action) {
       last.push(mock)
     }
     else {
