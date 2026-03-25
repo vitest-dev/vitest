@@ -2,6 +2,7 @@ import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
@@ -11,7 +12,6 @@ import { deepClone } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { TestProject } from '../project'
 
 export interface BlobOptions {
   outputFile?: string
@@ -272,7 +272,8 @@ function resolveMergeReportProjects(
       names.add(name)
       const config = deepClone(project.config)
       config.name = name
-      clonedProjects.push(TestProject._cloneProject(project, config))
+      // TODO: importing `import "../project"` breaks some tests
+      clonedProjects.push((project.constructor as typeof TestProject)._cloneProject(project, config))
     }
   }
 
