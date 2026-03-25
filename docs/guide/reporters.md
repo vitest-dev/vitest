@@ -670,11 +670,16 @@ By default, stores all results in `.vitest-reports` folder, but can be overridde
 npx vitest --reporter=blob --outputFile=reports/blob-1.json
 ```
 
-We recommend using this reporter if you are running Vitest on different machines with the [`--shard`](/guide/cli#shard) flag.
-All blob reports can be merged into any report by using `--merge-reports` command at the end of your CI pipeline:
+We recommend using this reporter if you are running Vitest on different machines with the [`--shard`](/guide/cli#shard) flag or across multiple environments (e.g., linux/macos/windows). All blob reports can be merged into any report by using `--merge-reports` command at the end of your CI pipeline:
 
 ```bash
 npx vitest --merge-reports=reports --reporter=json --reporter=default
+```
+
+When running the same tests across multiple environments, set the `label` option (or `VITEST_BLOB_LABEL` environment variable) to distinguish each environment's blob. Vitest reads labels at merge time and creates separate project entries automatically (e.g., `myproject [linux]`, `myproject [macos]`). See [Merging Reports from Multiple Environments](/guide/improving-performance#merging-reports-from-multiple-environments) for a full CI example.
+
+```bash
+VITEST_BLOB_LABEL=linux vitest run --reporter=blob
 ```
 
 Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).

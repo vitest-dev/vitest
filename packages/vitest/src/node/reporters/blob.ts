@@ -15,7 +15,10 @@ import { TestProject } from '../project'
 
 export interface BlobOptions {
   outputFile?: string
-  // TOOD: support via environemnt variable?
+  /**
+   * Label for this environment's blob report (e.g., "linux", "node-22").
+   * Can also be set via `VITEST_BLOB_LABEL` environment variable.
+   */
   label?: string
 }
 
@@ -50,7 +53,7 @@ export class BlobReporter implements Reporter {
     const errors = [...unhandledErrors]
     const coverage = this.coverage
 
-    const label = this.options.label
+    const label = this.options.label ?? process.env.VITEST_BLOB_LABEL
 
     let outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
