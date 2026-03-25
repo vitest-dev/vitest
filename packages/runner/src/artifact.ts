@@ -178,4 +178,8 @@ export function manageArtifactAttachment(attachment: TestAttachment): void {
   if (attachment.body instanceof Uint8Array) {
     attachment.body = encodeUint8Array(attachment.body)
   }
+  else if (typeof attachment.body === 'string' && attachment.bodyEncoding === 'raw') {
+    // TODO: what?
+    attachment.body = encodeUint8Array(new TextEncoder().encode(attachment.body))
+  }
 }

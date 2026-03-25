@@ -24,8 +24,14 @@ test('annotated image test', async ({ annotate }) => {
 test('annotated with body', async ({ annotate }) => {
   await annotate('body annotation', {
     contentType: 'text/markdown',
-    // requires pre-encoded base64 for raw string
-    // https://github.com/vitest-dev/vitest/issues/9633
     body: btoa('Hello **markdown**'),
+  })
+})
+
+test('annotated with raw body', async ({ annotate }) => {
+  await annotate('raw body annotation', {
+    contentType: 'text/markdown',
+    body: 'Hello **markdown**',
+    bodyEncoding: 'raw',
   })
 })
