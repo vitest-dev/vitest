@@ -494,18 +494,12 @@ test('merge report with labels', async () => {
   }
   await runVitest({
     ...baseConfig,
-    reporters: ['blob'],
-    mergeReportsLabel: 'linux',
-    // TODO
-    // reporters: [['blob', { label: 'linux' }]],
+    reporters: [['blob', { label: 'linux' }]],
   })
 
   await runVitest({
     ...baseConfig,
-    reporters: ['blob'],
-    mergeReportsLabel: 'macos',
-    // TODO
-    // reporters: [['blob', { label: 'macos' }]],
+    reporters: [['blob', { label: 'macos' }]],
   })
 
   const result = await runVitest({
@@ -575,18 +569,12 @@ test('merge report with labels and projects', async () => {
   }
   await runVitest({
     ...baseConfig,
-    reporters: ['blob'],
-    mergeReportsLabel: 'linux',
-    // TODO
-    // reporters: [['blob', { label: 'linux' }]],
+    reporters: [['blob', { label: 'linux' }]],
   })
 
   await runVitest({
     ...baseConfig,
-    reporters: ['blob'],
-    mergeReportsLabel: 'macos',
-    // TODO
-    // reporters: [['blob', { label: 'macos' }]],
+    reporters: [['blob', { label: 'macos' }]],
   })
 
   const result = await runVitest({

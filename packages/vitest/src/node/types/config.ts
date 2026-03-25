@@ -1091,14 +1091,6 @@ export interface UserConfig extends InlineConfig {
    */
   mergeReports?: string
 
-  // TODO: remove
-  /**
-   * Label for this test run's environment (e.g., "linux", "node-22").
-   * Suffixes the project name so that blobs from different environments
-   * are treated as distinct projects during merge.
-   */
-  mergeReportsLabel?: string
-
   /**
    * Delete all Vitest caches, including `experimental.fsModuleCache`.
    * @experimental

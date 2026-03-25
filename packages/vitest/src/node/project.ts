@@ -547,7 +547,6 @@ export class TestProject {
       {
         ...options,
         coverage: this.vitest.config.coverage,
-        mergeReportsLabel: this.vitest.config.mergeReportsLabel,
       },
       server.config,
     )
