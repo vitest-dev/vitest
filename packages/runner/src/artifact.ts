@@ -174,9 +174,14 @@ export function manageArtifactAttachment(attachment: TestAttachment): void {
   if (attachment.body && attachment.path) {
     throw new TypeError(`Test attachment requires only one of "body" or "path" to be set. Both are specified.`)
   }
+  if (attachment.path && attachment.bodyEncoding) {
+    throw new TypeError(`Test attachment with "path" should not have "bodyEncoding" specified.`)
+  }
   // convert to a string so it's easier to serialise
   if (attachment.body instanceof Uint8Array) {
     attachment.body = encodeUint8Array(attachment.body)
   }
-  attachment.bodyEncoding ??= 'base64'
+  if (attachment.body != null) {
+    attachment.bodyEncoding ??= 'base64'
+  }
 }
