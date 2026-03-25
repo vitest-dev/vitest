@@ -408,12 +408,15 @@ function printer(
     }
   }
 
-  // Check string length budget:
-  // accumulate output length and if exceeded,
-  // force no further recursion by patching maxDepth.
-  // Inspired by Node's util.inspect bail out approach.
-  config.outputLength += result.length
-  if (config.outputLength > config.maxOutputLength) {
+  // Per-depth output budget (inspired by Node's util.inspect).
+  // Each depth level tracks output independently, so nested results
+  // don't inflate a single counter (which would undercount by ~Nx for
+  // N levels of nesting). Nodes at the same depth produce disjoint spans
+  // in the output string, so each bucket accurately reflects output at
+  // that level. Total output is bounded by maxDepth × maxOutputLength.
+  config._outputLengthPerDepth[depth] ??= 0
+  config._outputLengthPerDepth[depth] += result.length
+  if (config._outputLengthPerDepth[depth] > config.maxOutputLength) {
     config.maxDepth = 0
   }
 
@@ -528,7 +531,7 @@ function getConfig(options?: OptionsReceived): Config {
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
     maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
-    outputLength: 0,
+    _outputLengthPerDepth: [],
   }
 }
 
