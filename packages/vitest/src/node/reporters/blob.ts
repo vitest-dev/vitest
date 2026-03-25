@@ -7,9 +7,9 @@ import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { calculateSuiteHash, generateFileHash } from '@vitest/runner/utils'
+import { deepClone } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
-import { deepClone } from '@vitest/utils/helpers'
 import { getOutputFile } from '../../utils/config-helpers'
 import { TestProject } from '../project'
 
@@ -179,8 +179,6 @@ export async function readBlobs(
   const labels = discoverMergeReportLabels(blobs)
   if (labels) {
     ctx.projects = resolveMergeReportProjects(
-      ctx,
-      new Set(ctx.projects.map(project => project.name)),
       ctx.projects,
       labels,
     )
@@ -265,14 +263,13 @@ function suffixProjectName(originalName: string | undefined, label: string): str
 }
 
 function resolveMergeReportProjects(
-  vitest: Vitest,
-  names: Set<string>,
-  resolvedProjects: TestProject[],
+  projects: TestProject[],
   labels: string[],
 ): TestProject[] {
+  const names = new Set(projects.map(p => p.name))
   const clonedProjects: TestProject[] = []
 
-  for (const project of resolvedProjects) {
+  for (const project of projects) {
     for (const label of labels) {
       const name = suffixProjectName(project.name || undefined, label)
 
@@ -292,7 +289,7 @@ function resolveMergeReportProjects(
   return clonedProjects
 }
 
-function discoverMergeReportLabels(blobs: { file: string, metadata?: MergeReportMetadata }[]): string[] | undefined {
+function discoverMergeReportLabels(blobs: { file: string; metadata?: MergeReportMetadata }[]): string[] | undefined {
   const labeled = blobs.filter(b => b.metadata?.label)
 
   if (!labeled.length) {
