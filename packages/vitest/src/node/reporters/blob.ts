@@ -56,19 +56,8 @@ export class BlobReporter implements Reporter {
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
       const shard = this.ctx.config.shard
-      // TODO: join("-")
-      if (shard && label) {
-        outputFile = `.vitest-reports/blob-${label}-${shard.index}-${shard.count}.json`
-      }
-      else if (shard) {
-        outputFile = `.vitest-reports/blob-${shard.index}-${shard.count}.json`
-      }
-      else if (label) {
-        outputFile = `.vitest-reports/blob-${label}.json`
-      }
-      else {
-        outputFile = '.vitest-reports/blob.json'
-      }
+      const suffix = [label, shard && `${shard.index}-${shard.count}`].filter(Boolean).join('-')
+      outputFile = suffix ? `.vitest-reports/blob-${suffix}.json` : '.vitest-reports/blob.json'
     }
 
     const environmentModules: MergeReportEnvironmentModules = {}
