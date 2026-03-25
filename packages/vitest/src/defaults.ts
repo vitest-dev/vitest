@@ -3,6 +3,7 @@ import type {
   CoverageOptions,
   UserConfig,
 } from './node/types/config'
+import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
 import { isAgent, isCI } from './utils/env'
 
@@ -24,7 +25,7 @@ export const benchmarkConfigDefaults: Required<
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: Required<Omit<CoverageOptions, 'include' | 'skipFull' | 'thresholds' | 'watermarks' | 'ignoreClassMethods' | 'htmlDir' | 'changed' | 'customProviderModule'>> = {
+export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDefaultValues>> = {
   provider: 'v8',
   enabled: false,
   clean: true,
@@ -44,6 +45,14 @@ export const coverageConfigDefaults: Required<Omit<CoverageOptions, 'include' | 
     20,
     os.availableParallelism?.() ?? os.cpus().length,
   ),
+  ignoreClassMethods: [],
+  skipFull: false,
+  watermarks: {
+    statements: [50, 80],
+    functions: [50, 80],
+    branches: [50, 80],
+    lines: [50, 80],
+  },
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
