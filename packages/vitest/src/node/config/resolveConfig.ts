@@ -227,6 +227,7 @@ export function resolveConfig(
     : (options.name?.label || '')
 
   if (resolved.mergeReportsLabel) {
+    // TODO: can we move project mutation only at blob report stage?
     resolved.name = resolved.name
       ? `${resolved.name} [${resolved.mergeReportsLabel}]`
       : resolved.mergeReportsLabel

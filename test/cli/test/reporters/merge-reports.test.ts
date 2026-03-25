@@ -2,7 +2,7 @@ import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runVitest } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
@@ -246,7 +246,68 @@ test('merge reports', async () => {
   `)
 })
 
-// TODO
+
+// TODO: more cases
+// - single browser instance
+// - multiple browser instances
+// - multiple browser instances with multiple projects
+test('duplicates the default project for mergeReportsLabels', async () => {
+  const { ctx, stderr, exitCode } = await runInlineTests({
+    'basic.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('works', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  }, {
+    name: 'base',
+    mergeReportsLabels: ['linux', 'macos'],
+  })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
+    'base [linux]',
+    'base [macos]',
+  ])
+})
+
+test('duplicates configured projects for mergeReportsLabels', async () => {
+  const { ctx, stderr, exitCode } = await runInlineTests({
+    'basic.test.js': `
+      import { expect, test } from 'vitest'
+
+      test('works', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  }, {
+    mergeReportsLabels: ['linux', 'macos'],
+    projects: [
+      {
+        test: {
+          name: 'server',
+        },
+      },
+      {
+        test: {
+          name: 'client',
+        },
+      },
+    ],
+  })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toBe('')
+  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
+    'client [linux]',
+    'client [macos]',
+    'server [linux]',
+    'server [macos]',
+  ])
+})
+
 test('auto-discovers merge report labels from default blob filenames', async () => {
   // const { root } = await runInlineTests({
   //   'basic.test.ts': `

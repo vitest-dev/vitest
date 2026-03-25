@@ -1091,7 +1091,7 @@ export interface UserConfig extends InlineConfig {
    */
   mergeReports?: string
 
-  // TODO: rename
+  // TODO: remove
   /**
    * Label for this test run's environment (e.g., "linux", "node-22").
    * Suffixes the project name so that blobs from different environments
