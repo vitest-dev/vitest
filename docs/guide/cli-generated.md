@@ -949,3 +949,10 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 - **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
+
+### experimental.vcsProvider
+
+- **CLI:** `--experimental.vcsProvider <path>`
+- **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
+
+Custom provider for detecting changed files. (default: `git`)

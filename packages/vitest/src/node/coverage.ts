@@ -331,11 +331,17 @@ export class BaseCoverageProvider {
 
   async onTestRunStart(): Promise<void> {
     if (this.options.changed) {
-      const { VitestGit } = await import('./git')
-      const vitestGit = new VitestGit(this.ctx.config.root)
-      const changedFiles = await vitestGit.findChangedFiles({ changedSince: this.options.changed })
+      try {
+        const changedFiles = await this.ctx.vcs.findChangedFiles({
+          root: this.ctx.config.root,
+          changedSince: this.options.changed,
+        })
 
-      this.changedFiles = changedFiles ?? undefined
+        this.changedFiles = changedFiles
+      }
+      catch {
+        this.changedFiles = undefined
+      }
     }
     else if (this.ctx.config.changed) {
       this.changedFiles = this.ctx.config.related

@@ -38,7 +38,7 @@ export const bench: BenchmarkAPI = createBenchmark(function (
   benchFns.set(task, fn)
   benchOptsMap.set(task, { ...options, name: formatName(name) })
   // vitest runner sets mode to `todo` if handler is not passed down
-  // but we store handler separetly
+  // but we store handler separately
   if (!this.todo && task.mode === 'todo') {
     task.mode = 'run'
   }
