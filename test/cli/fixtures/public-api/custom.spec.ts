@@ -12,7 +12,7 @@ afterAll(({}, suite) => {
 })
 
 test('custom', ({ task }) => {
-  task.meta.custom = 'some-custom-hanlder'
+  task.meta.custom = 'some-custom-handler'
 })
 
 test.each([1, 2])('custom %s', () => {

@@ -33,7 +33,7 @@ export default defineConfig({
         }
       },
     },
-    // Use babel plugin since Oxc (Vite 8) doens't support ecma decorators out of the box
+    // Use babel plugin since Oxc (Vite 8) doesn't support ecma decorators out of the box
     // https://github.com/oxc-project/oxc/issues/9170#issuecomment-4072166491
     !!rolldownVersion
     && (import('@rolldown/plugin-babel').then(({ default: babel }) =>

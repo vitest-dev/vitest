@@ -17,8 +17,8 @@ const provider = new WebTracerProvider({
 provider.register({
   // you can customize contextManager but browser support has limitation
   // cf. https://github.com/open-telemetry/opentelemetry-js/discussions/2060
-  // contextManager: new StackContextManager(), // this is the default (avialable in sdk-trace-web)
-  // contextManager: new ZoneContextManager(), // doesn't seem to help (avialable in @opentelemetry/context-zone)
+  // contextManager: new StackContextManager(), // this is the default (available in sdk-trace-web)
+  // contextManager: new ZoneContextManager(), // doesn't seem to help (available in @opentelemetry/context-zone)
 })
 
 export default provider

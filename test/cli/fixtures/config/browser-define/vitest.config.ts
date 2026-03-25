@@ -18,7 +18,7 @@ let config = defineConfig({
   },
 })
 
-if (process.env.BROWSER_DEFINE_TEST_PROEJCT === "true") {
+if (process.env.BROWSER_DEFINE_TEST_PROJECT === "true") {
   config = defineConfig({
     test: {
       projects: [config],

@@ -91,6 +91,7 @@ export interface SyncExpectationResult {
   message: () => string
   actual?: any
   expected?: any
+  meta?: object
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>
@@ -836,13 +837,13 @@ export interface ChaiMockAssertion {
   nthCalledWith: <E extends any[]>(n: number, ...args: E) => void
 
   /**
-   * Checks that a spy returned successfully at least once.
-   * Chai-style equivalent of `toHaveReturned`.
+   * Checks that a spy returned a specific value at least once.
+   * Chai-style equivalent of `toHaveReturnedWith`.
    *
    * @example
-   * expect(spy).to.have.returned
+   * expect(spy).to.have.returned('value')
    */
-  readonly returned: Assertion
+  returned: <E>(value: E) => void
 
   /**
    * Checks that a spy returned a specific value at least once.
