@@ -740,13 +740,6 @@ export class TestProject {
     clone._provideObject(config.provide)
     return clone
   }
-
-  /** @internal */
-  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = TestProject._cloneProject(parent, config)
-    clone._parent = parent
-    return clone
-  }
 }
 
 function deduped<T extends (...args: any[]) => Promise<void>>(cb: T): T {
