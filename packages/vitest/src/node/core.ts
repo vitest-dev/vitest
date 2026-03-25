@@ -43,8 +43,8 @@ import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from 
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
-import { getDefaultTestProject, resolveBrowserProjects, resolveMergeReportProjects, resolveProjects } from './projects/resolveProjects'
-import { BlobReporter, discoverMergeReportLabels, readBlobs } from './reporters/blob'
+import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
+import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
@@ -605,22 +605,7 @@ export class Vitest {
         throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
       }
 
-      // TODO: move projects duplication inside `readBlobs(ctx: Vitest, ...)`
-      // TODO: auto-discover labels from blob content not filename.
-      const reportsDirectory = directory || this.config.mergeReports
-      if (!this.config.mergeReportsLabels?.length) {
-        const labels = await discoverMergeReportLabels(reportsDirectory)
-        if (labels?.length) {
-          this.projects = resolveMergeReportProjects(
-            this,
-            new Set(this.projects.map(project => project.name)),
-            this.projects,
-            labels,
-          )
-        }
-      }
-
-      const { files, errors, coverages, executionTimes } = await readBlobs(this.version, reportsDirectory, this.projects)
+      const { files, errors, coverages, executionTimes } = await readBlobs(this, directory || this.config.mergeReports)
       this.state.blobs = { files, errors, coverages, executionTimes }
 
       await this.report('onInit', this)
