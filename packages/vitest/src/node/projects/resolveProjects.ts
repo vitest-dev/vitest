@@ -276,31 +276,12 @@ export function resolveMergeReportProjects(
   resolvedProjects: TestProject[],
   labels: string[],
 ): TestProject[] {
-  if (!labels?.length) {
-    return resolvedProjects
-  }
+  const clonedProjects: TestProject[] = []
 
-  const removeProjects = new Set<TestProject>()
-
-  resolvedProjects.forEach((project) => {
-    const originalName = project.name
-    const filteredLabels = vitest.matchesProjectFilter(originalName)
-      ? labels
-      : labels.filter((label) => {
-          const nextName = originalName
-            ? `${originalName} [${label}]`
-            : label
-          return vitest.matchesProjectFilter(nextName)
-        })
-
-    if (!filteredLabels.length) {
-      removeProjects.add(project)
-      return
-    }
-
-    filteredLabels.forEach((label) => {
-      const name = originalName
-        ? `${originalName} [${label}]`
+  for (const project of resolvedProjects) {
+    for (const label of labels) {
+      const name = project.name
+        ? `${project.name} [${label}]`
         : label
 
       if (names.has(name)) {
@@ -310,18 +291,13 @@ export function resolveMergeReportProjects(
       }
 
       names.add(name)
-      resolvedProjects.push(
-        TestProject._cloneProject(
-          project,
-          cloneMergeReportProjectConfig(project, label, name),
-        ),
-      )
-    })
+      const config = deepClone(project.config)
+      config.name = name
+      clonedProjects.push(TestProject._cloneProject(project, config))
+    }
+  }
 
-    removeProjects.add(project)
-  })
-
-  return resolvedProjects.filter(project => !removeProjects.has(project))
+  return clonedProjects
 }
 
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
@@ -366,17 +342,6 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     includeSource: (overrideConfig.includeSource && overrideConfig.includeSource.length > 0) ? [] : clonedConfig.includeSource,
     // TODO: should resolve, not merge/override
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
-}
-
-function cloneMergeReportProjectConfig(
-  project: TestProject,
-  label: string,
-  name: string,
-): ResolvedConfig {
-  const clonedConfig = deepClone(project.config)
-  clonedConfig.mergeReportsLabel = label
-  clonedConfig.name = name
-  return clonedConfig
 }
 
 async function resolveTestProjectConfigs(
