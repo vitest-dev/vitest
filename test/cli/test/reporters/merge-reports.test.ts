@@ -484,9 +484,6 @@ function createTest(name: string, file: File): Test {
 }
 
 // TODO: more tests
-// - single browser instance
-// - multiple browser instances
-// - multiple browser instances with multiple projects
 // - shards
 // - coverage
 test('merge report with labels', async () => {
@@ -506,7 +503,6 @@ test('merge report with labels', async () => {
   const result = await runVitest({
     ...baseConfig,
     mergeReports: reportsDir,
-    reporters: [['default', { isTTY: false }]],
   })
   expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
@@ -581,7 +577,6 @@ test('merge report with labels and projects', async () => {
   const result = await runVitest({
     ...baseConfig,
     mergeReports: reportsDir,
-    reporters: [['default', { isTTY: false }]],
   })
   expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
@@ -613,6 +608,282 @@ test('merge report with labels and projects', async () => {
         },
       },
       "second [macos]": {
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('merge report with labels and single browser', async () => {
+  const baseConfig: RunVitestConfig = {
+    root: './fixtures/reporters/merge-reports',
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }],
+      headless: true,
+    },
+  }
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+
+  const result = await runVitest({
+    ...baseConfig,
+    mergeReports: reportsDir,
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "chromium [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chromium [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('merge report with labels and multiple browsers', async () => {
+  const baseConfig: RunVitestConfig = {
+    root: './fixtures/reporters/merge-reports',
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        { name: 'chrome1', browser: 'chromium' },
+        { name: 'chrome2', browser: 'chromium' },
+      ],
+      headless: true,
+    },
+  }
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+
+  const result = await runVitest({
+    ...baseConfig,
+    mergeReports: reportsDir,
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "chrome1 [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome1 [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome2 [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome2 [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('merge report with labels and multiple browser projects', async () => {
+  const baseConfig: RunVitestConfig = {
+    root: './fixtures/reporters/merge-reports',
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'first',
+          include: ['**/first.test.ts'],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [
+              { name: 'chrome1', browser: 'chromium' },
+              { name: 'chrome2', browser: 'chromium' },
+            ],
+            headless: true,
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'second',
+          include: ['**/second.test.ts'],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [
+              { browser: 'chromium' },
+            ],
+            headless: true,
+          },
+        },
+      },
+    ],
+  }
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+
+  await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+
+  const result = await runVitest({
+    ...baseConfig,
+    mergeReports: reportsDir,
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "chrome1 [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome1 [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome2 [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "chrome2 [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "second (chromium) [linux]": {
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "second (chromium) [macos]": {
         "second.test.ts": {
           "group": {
             "test 2-2": "passed",
