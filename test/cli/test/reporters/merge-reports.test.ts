@@ -6,6 +6,7 @@ import { resolve } from 'node:path'
 import { runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
+import { globSync } from 'tinyglobby'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import { writeBlob } from 'vitest/src/node/reporters/blob.js'
@@ -575,6 +576,12 @@ test('merge report with labels and projects', async () => {
     ...baseConfig,
     mergeReports: reportsDir,
   })
+  expect(globSync('*', { cwd: reportsDir }).sort()).toMatchInlineSnapshot(`
+    [
+      "blob-linux.json",
+      "blob-macos.json",
+    ]
+  `)
   expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "first [linux]": {
