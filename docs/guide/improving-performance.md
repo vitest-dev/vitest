@@ -144,9 +144,10 @@ on:
       - main
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
@@ -163,12 +164,14 @@ jobs:
 
       - name: Run tests
         run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          VITEST_BLOB_LABEL: ${{ matrix.os }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ matrix.shardIndex }}
+          name: blob-report-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest-reports/*
           include-hidden-files: true
           retention-days: 1
@@ -177,7 +180,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-attachments-${{ matrix.shardIndex }}
+          name: blob-attachments-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest-attachments/**
           include-hidden-files: true
           retention-days: 1
@@ -219,98 +222,6 @@ jobs:
 
 If your tests create file-based attachments (for example via `context.annotate` or custom artifacts), upload and restore [`attachmentsDir`](/config/attachmentsdir) in the merge job as shown above.
 
-:::
-
-## Merging Reports from Multiple Environments
-
-If you run the same test suite across multiple platforms or environments in CI (e.g., linux/macos/windows, or node 20/22), you can use the blob reporter's [`label`](/guide/reporters#labels) option to merge results into a unified report.
-
-Unlike [sharding](#sharding) where test files are split with no overlap, cross-environment runs execute the same tests in each environment. The label tells Vitest which environment produced each blob, so results appear as separate projects in the merged output.
-
-```sh
-# On each environment
-VITEST_BLOB_LABEL=linux vitest run --reporter=blob
-VITEST_BLOB_LABEL=macos vitest run --reporter=blob
-```
-
-Then merge:
-
-```sh
-vitest run --merge-reports
-```
-
-::: details GitHub Actions example
-
-```yaml
-name: Tests
-on:
-  push:
-    branches:
-      - main
-jobs:
-  tests:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-
-      - name: Install dependencies
-        run: pnpm i
-
-      - name: Run tests
-        run: pnpm run test --reporter=blob
-        env:
-          VITEST_BLOB_LABEL: ${{ matrix.os }}
-
-      - name: Upload blob report to GitHub Actions Artifacts
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: blob-report-${{ matrix.os }}
-          path: .vitest-reports/*
-          include-hidden-files: true
-          retention-days: 1
-
-  merge-reports:
-    if: ${{ !cancelled() }}
-    needs: [tests]
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-
-      - name: Install dependencies
-        run: pnpm i
-
-      - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: .vitest-reports
-          pattern: blob-report-*
-          merge-multiple: true
-
-      - name: Merge reports
-        run: npx vitest --merge-reports
-```
-
-:::
-
-:::tip
-Labels can be combined with sharding. For example, you can shard tests within each platform. The blob filename will include both the label and shard index (e.g., `blob-linux-1-3.json`).
 :::
 
 :::tip

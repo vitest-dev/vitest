@@ -676,7 +676,7 @@ We recommend using this reporter if you are running Vitest on different machines
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
 
-When running the same tests across multiple environments, set the `label` option (or `VITEST_BLOB_LABEL` environment variable) to distinguish each environment's blob. Vitest reads labels at merge time and creates separate project entries automatically (e.g., `myproject [linux]`, `myproject [macos]`). See [Merging Reports from Multiple Environments](/guide/improving-performance#merging-reports-from-multiple-environments) for a full CI example.
+When running the same tests across multiple environments, set the `label` option (or `VITEST_BLOB_LABEL` environment variable) to distinguish each environment's blob. Vitest reads labels at merge time and creates separate project entries automatically (e.g., `myproject [linux]`, `myproject [macos]`).
 
 ```bash
 VITEST_BLOB_LABEL=linux vitest run --reporter=blob
