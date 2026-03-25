@@ -275,8 +275,8 @@ export function resolveMergeReportProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
+  labels: string[] = vitest.config.mergeReportsLabels,
 ): TestProject[] {
-  const labels = vitest.config.mergeReportsLabels
   if (!labels?.length) {
     return resolvedProjects
   }

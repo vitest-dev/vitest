@@ -222,6 +222,26 @@ export async function readBlobs(
   }
 }
 
+export async function discoverMergeReportLabels(blobsDirectory: string): Promise<string[] | undefined> {
+  // using process.cwd() because --merge-reports can only be used in CLI
+  const resolvedDir = resolve(process.cwd(), blobsDirectory)
+  const blobsFiles = await readdir(resolvedDir)
+  const labels = new Set<string>()
+
+  for (const filename of blobsFiles) {
+    const label = getBlobFilenameLabel(filename)
+    if (label) {
+      labels.add(label)
+    }
+  }
+
+  if (!labels.size) {
+    return undefined
+  }
+
+  return [...labels]
+}
+
 export interface MergedBlobs {
   files: File[]
   errors: unknown[]
@@ -237,6 +257,24 @@ type MergeReport = [
   executionTime: number,
   environmentModules: MergeReportEnvironmentModules,
 ]
+
+function getBlobFilenameLabel(filename: string): string | undefined {
+  const match = filename.match(/^blob-(.+?)(?:-(\d+)-(\d+))?\.json$/)
+  if (!match) {
+    return undefined
+  }
+
+  const [, label, shardIndex, shardCount] = match
+  if (shardIndex && shardCount) {
+    return label
+  }
+
+  if (label.match(/^\d+-\d+$/)) {
+    return undefined
+  }
+
+  return label
+}
 
 interface MergeReportEnvironmentModules {
   [projectName: string]: {

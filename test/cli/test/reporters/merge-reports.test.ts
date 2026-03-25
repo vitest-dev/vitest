@@ -2,7 +2,7 @@ import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runVitest } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
@@ -244,6 +244,49 @@ test('merge reports', async () => {
       ],
     }
   `)
+})
+
+// TODO
+test('auto-discovers merge report labels from default blob filenames', async () => {
+  // const { root } = await runInlineTests({
+  //   'basic.test.ts': `
+  //     import { expect, test } from 'vitest'
+
+  //     test('works', () => {
+  //       expect(1).toBe(1)
+  //     })
+  //   `,
+  // }, {
+  //   name: 'base',
+  // })
+
+  // await runVitest({
+  //   root,
+  //   name: 'base',
+  //   reporters: ['blob'],
+  //   mergeReportsLabel: 'linux',
+  // })
+
+  // await runVitest({
+  //   root,
+  //   name: 'base',
+  //   reporters: ['blob'],
+  //   mergeReportsLabel: 'macos',
+  // })
+
+  // const result = await runVitest({
+  //   root,
+  //   name: 'base',
+  //   mergeReports: resolve(root, '.vitest-reports'),
+  //   reporters: [['default', { isTTY: false }]],
+  // })
+
+  // expect(exitCode).toBe(0)
+  // expect(stderr).toBe('')
+  // expect(ctx?.projects.map(project => project.name).sort()).toEqual([
+  //   'base [linux]',
+  //   'base [macos]',
+  // ])
 })
 
 test('total and merged execution times are shown', async () => {
