@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`custom file snapshot matcher 1`] = `
+Object {
+  "length": 5,
+  "reversed": "olleh",
+}
+`;
