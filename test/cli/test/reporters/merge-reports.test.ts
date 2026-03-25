@@ -2,7 +2,7 @@ import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runInlineTests, runVitest } from '#test-utils'
+import { runVitest } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
@@ -246,110 +246,6 @@ test('merge reports', async () => {
   `)
 })
 
-
-// TODO: more cases
-// - single browser instance
-// - multiple browser instances
-// - multiple browser instances with multiple projects
-test('duplicates the default project for mergeReportsLabels', async () => {
-  const { ctx, stderr, exitCode } = await runInlineTests({
-    'basic.test.js': `
-      import { expect, test } from 'vitest'
-
-      test('works', () => {
-        expect(1).toBe(1)
-      })
-    `,
-  }, {
-    name: 'base',
-    mergeReportsLabels: ['linux', 'macos'],
-  })
-
-  expect(exitCode).toBe(0)
-  expect(stderr).toBe('')
-  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
-    'base [linux]',
-    'base [macos]',
-  ])
-})
-
-test('duplicates configured projects for mergeReportsLabels', async () => {
-  const { ctx, stderr, exitCode } = await runInlineTests({
-    'basic.test.js': `
-      import { expect, test } from 'vitest'
-
-      test('works', () => {
-        expect(1).toBe(1)
-      })
-    `,
-  }, {
-    mergeReportsLabels: ['linux', 'macos'],
-    projects: [
-      {
-        test: {
-          name: 'server',
-        },
-      },
-      {
-        test: {
-          name: 'client',
-        },
-      },
-    ],
-  })
-
-  expect(exitCode).toBe(0)
-  expect(stderr).toBe('')
-  expect(ctx?.projects.map(project => project.name).sort()).toEqual([
-    'client [linux]',
-    'client [macos]',
-    'server [linux]',
-    'server [macos]',
-  ])
-})
-
-test('auto-discovers merge report labels from default blob filenames', async () => {
-  // const { root } = await runInlineTests({
-  //   'basic.test.ts': `
-  //     import { expect, test } from 'vitest'
-
-  //     test('works', () => {
-  //       expect(1).toBe(1)
-  //     })
-  //   `,
-  // }, {
-  //   name: 'base',
-  // })
-
-  // await runVitest({
-  //   root,
-  //   name: 'base',
-  //   reporters: ['blob'],
-  //   mergeReportsLabel: 'linux',
-  // })
-
-  // await runVitest({
-  //   root,
-  //   name: 'base',
-  //   reporters: ['blob'],
-  //   mergeReportsLabel: 'macos',
-  // })
-
-  // const result = await runVitest({
-  //   root,
-  //   name: 'base',
-  //   mergeReports: resolve(root, '.vitest-reports'),
-  //   reporters: [['default', { isTTY: false }]],
-  // })
-
-  // expect(exitCode).toBe(0)
-  // expect(stderr).toBe('')
-  // expect(ctx?.projects.map(project => project.name).sort()).toEqual([
-  //   'base [linux]',
-  //   'base [macos]',
-  // ])
-})
-
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
@@ -585,3 +481,69 @@ function createTest(name: string, file: File): Test {
     context: {} as any,
   }
 }
+
+// TODO: more tests
+// - single browser instance
+// - multiple browser instances
+// - multiple browser instances with multiple projects
+test('merge report with labels', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    reporters: ['blob'],
+    mergeReportsLabel: 'linux',
+    // TODO
+    // reporters: [['blob', { label: 'linux' }]],
+  })
+
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    reporters: ['blob'],
+    mergeReportsLabel: 'macos',
+    // TODO
+    // reporters: [['blob', { label: 'macos' }]],
+  })
+
+  const result = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    reporters: [['default', { isTTY: false }]],
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "linux": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "macos": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+    }
+  `)
+})
