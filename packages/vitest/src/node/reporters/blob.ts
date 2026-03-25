@@ -14,6 +14,7 @@ import { resolveMergeReportProjects } from '../projects/resolveProjects'
 
 export interface BlobOptions {
   outputFile?: string
+  // TOOD: support via environemnt variable?
   label?: string
 }
 
@@ -175,7 +176,7 @@ export async function readBlobs(
 
   // Auto-discover labels and duplicate projects if needed
   const labels = discoverMergeReportLabels(blobs)
-  if (labels?.length) {
+  if (labels) {
     ctx.projects = resolveMergeReportProjects(
       ctx,
       new Set(ctx.projects.map(project => project.name)),
@@ -262,20 +263,22 @@ function suffixProjectName(originalName: string | undefined, label: string): str
   return originalName ? `${originalName} [${label}]` : label
 }
 
-// TODO: do we support some blob has label but some doesn't?
-function discoverMergeReportLabels(blobs: { metadata?: MergeReportMetadata }[]): string[] | undefined {
-  const labels = new Set<string>()
+function discoverMergeReportLabels(blobs: { file: string, metadata?: MergeReportMetadata }[]): string[] | undefined {
+  const labeled = blobs.filter(b => b.metadata?.label)
 
-  for (const blob of blobs) {
-    if (blob.metadata?.label) {
-      labels.add(blob.metadata.label)
-    }
-  }
-
-  if (!labels.size) {
+  if (!labeled.length) {
     return undefined
   }
 
+  const unlabeled = blobs.filter(b => !b.metadata?.label)
+  if (unlabeled.length) {
+    throw new Error(
+      `vitest.mergeReports() requires all blob files to have a label when any blob has one. `
+      + `Missing label in: ${unlabeled.map(b => `"${b.file}"`).join(', ')}`,
+    )
+  }
+
+  const labels = new Set(labeled.map(b => b.metadata!.label!))
   return [...labels]
 }
 
