@@ -13,6 +13,8 @@ import { getOutputFile } from '../../utils/config-helpers'
 
 export interface BlobOptions {
   outputFile?: string
+  // TODO:
+  // label?: string
 }
 
 export class BlobReporter implements Reporter {
