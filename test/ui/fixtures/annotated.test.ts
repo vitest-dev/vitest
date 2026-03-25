@@ -21,17 +21,17 @@ test('annotated image test', async ({ annotate }) => {
   })
 })
 
-test('annotated with body', async ({ annotate }) => {
-  await annotate('body annotation', {
+test('annotated with body base64', async ({ annotate }) => {
+  await annotate('body base64 annotation', {
     contentType: 'text/markdown',
-    body: btoa('Hello **markdown**'),
+    body: btoa('Hello base64 **markdown**'),
   })
 })
 
-test('annotated with raw body', async ({ annotate }) => {
-  await annotate('raw body annotation', {
+test('annotated with body utf-8', async ({ annotate }) => {
+  await annotate('body utf-8 annotation', {
     contentType: 'text/markdown',
-    body: 'Hello **markdown**',
-    bodyEncoding: 'raw',
+    body: 'Hello utf-8 **markdown**',
+    bodyEncoding: 'utf-8',
   })
 })
