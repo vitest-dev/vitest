@@ -283,6 +283,7 @@ function discoverMergeReportLabels(blobs: { file: string; label?: string }[]): s
     return undefined
   }
 
+  // TODO: support mix of labeled and unlabeled blobs?
   const unlabeled = blobs.filter(b => !b.label)
   if (unlabeled.length) {
     throw new Error(
