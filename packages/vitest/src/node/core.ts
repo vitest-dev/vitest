@@ -558,8 +558,7 @@ export class Vitest {
     if (!project) {
       return []
     }
-    const browserProjects = await resolveBrowserProjects(this, new Set([project.name]), [project])
-    return resolveMergeReportProjects(this, new Set(browserProjects.map(project => project.name)), browserProjects)
+    return resolveBrowserProjects(this, new Set([project.name]), [project])
   }
 
   /**
