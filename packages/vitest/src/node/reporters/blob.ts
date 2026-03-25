@@ -174,8 +174,7 @@ export async function readBlobs(
     )
   }
 
-  // TODO: review
-  // Rewrite file projectName/IDs and environmentModules keys for labeled blobs
+  // Rewrite blob data so they get attached to duplicated projects based on labels
   for (const blob of blobs) {
     const label = blob.label
     if (!label) {
