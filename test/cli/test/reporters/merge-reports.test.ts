@@ -487,6 +487,7 @@ function createTest(name: string, file: File): Test {
 // - single browser instance
 // - multiple browser instances
 // - multiple browser instances with multiple projects
+// - shards
 // - coverage
 test('merge report with labels', async () => {
   const baseConfig: RunVitestConfig = {
