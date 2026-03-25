@@ -1,3 +1,4 @@
+import type { RunVitestConfig } from '#test-utils'
 import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
@@ -486,9 +487,13 @@ function createTest(name: string, file: File): Test {
 // - single browser instance
 // - multiple browser instances
 // - multiple browser instances with multiple projects
+// - coverage
 test('merge report with labels', async () => {
-  await runVitest({
+  const baseConfig: RunVitestConfig = {
     root: './fixtures/reporters/merge-reports',
+  }
+  await runVitest({
+    ...baseConfig,
     reporters: ['blob'],
     mergeReportsLabel: 'linux',
     // TODO
@@ -496,7 +501,7 @@ test('merge report with labels', async () => {
   })
 
   await runVitest({
-    root: './fixtures/reporters/merge-reports',
+    ...baseConfig,
     reporters: ['blob'],
     mergeReportsLabel: 'macos',
     // TODO
@@ -504,7 +509,7 @@ test('merge report with labels', async () => {
   })
 
   const result = await runVitest({
-    root: './fixtures/reporters/merge-reports',
+    ...baseConfig,
     mergeReports: reportsDir,
     reporters: [['default', { isTTY: false }]],
   })
@@ -534,6 +539,91 @@ test('merge report with labels', async () => {
             "expected 1 to be 2 // Object.is equality",
           ],
         },
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+    }
+  `)
+})
+
+test('merge report with labels and projects', async () => {
+  const baseConfig: RunVitestConfig = {
+    root: './fixtures/reporters/merge-reports',
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'first',
+          include: ['**/first.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'second',
+          include: ['**/second.test.ts'],
+        },
+      },
+    ],
+  }
+  await runVitest({
+    ...baseConfig,
+    reporters: ['blob'],
+    mergeReportsLabel: 'linux',
+    // TODO
+    // reporters: [['blob', { label: 'linux' }]],
+  })
+
+  await runVitest({
+    ...baseConfig,
+    reporters: ['blob'],
+    mergeReportsLabel: 'macos',
+    // TODO
+    // reporters: [['blob', { label: 'macos' }]],
+  })
+
+  const result = await runVitest({
+    ...baseConfig,
+    mergeReports: reportsDir,
+    reporters: [['default', { isTTY: false }]],
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "first [linux]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "first [macos]": {
+        "first.test.ts": {
+          "test 1-1": "passed",
+          "test 1-2": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "second [linux]": {
+        "second.test.ts": {
+          "group": {
+            "test 2-2": "passed",
+            "test 2-3": "passed",
+          },
+          "test 2-1": [
+            "expected 1 to be 2 // Object.is equality",
+          ],
+        },
+      },
+      "second [macos]": {
         "second.test.ts": {
           "group": {
             "test 2-2": "passed",
