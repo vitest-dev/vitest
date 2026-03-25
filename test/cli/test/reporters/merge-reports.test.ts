@@ -483,9 +483,6 @@ function createTest(name: string, file: File): Test {
   }
 }
 
-// TODO: more tests
-// - shards
-// - coverage
 test('merge report with labels', async () => {
   const baseConfig: RunVitestConfig = {
     root: './fixtures/reporters/merge-reports',
