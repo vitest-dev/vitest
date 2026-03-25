@@ -31,7 +31,7 @@ test("conditions", () => {
       conditionDevelopment: true,
       conditionModule: viteMajor <= 5 && inline,
       conditionNode: true,
-      conditionProductioin: false,
+      conditionProduction: false,
     },
   });
 });
