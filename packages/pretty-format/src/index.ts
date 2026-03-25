@@ -414,9 +414,9 @@ function printer(
   // N levels of nesting). Nodes at the same depth produce disjoint spans
   // in the output string, so each bucket accurately reflects output at
   // that level. Total output is bounded by maxDepth × maxOutputLength.
-  config.outputLengthPerDepth[depth] ??= 0
-  config.outputLengthPerDepth[depth] += result.length
-  if (config.outputLengthPerDepth[depth] > config.maxOutputLength) {
+  config._outputLengthPerDepth[depth] ??= 0
+  config._outputLengthPerDepth[depth] += result.length
+  if (config._outputLengthPerDepth[depth] > config.maxOutputLength) {
     config.maxDepth = 0
   }
 
@@ -531,7 +531,7 @@ function getConfig(options?: OptionsReceived): Config {
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
     maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
-    outputLengthPerDepth: [],
+    _outputLengthPerDepth: [],
   }
 }
 
