@@ -40,7 +40,7 @@ Number of calls: 3
 "
 `;
 
-exports[`mocked function which fails on toReturnWith > oject type 1`] = `
+exports[`mocked function which fails on toReturnWith > object type 1`] = `
 "expected "vi.fn()" to return with: { a: '4' } at least once
 
 Received:

@@ -21,7 +21,7 @@ export { CDPSession };
 
 export interface ScreenshotOptions extends SelectorOptions {
   /**
-   * The HTML element to screeshot.
+   * The HTML element to screenshot.
    */
   element?: Element | Locator
   /**
@@ -905,7 +905,7 @@ export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 
 export const utils: {
   /**
-   * This is simillar to calling `page.elementLocator`, but it returns only
+   * This is similar to calling `page.elementLocator`, but it returns only
    * locator selectors.
    */
   getElementLocatorSelectors(element: Element): LocatorSelectors

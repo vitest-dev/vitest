@@ -31,7 +31,7 @@ function catchWindowErrors(errorEvent, prop, cb) {
       cb(e)
     }
     else {
-      // `ErrorEvent` doesn't necessary have `ErrotEvent.error` defined
+      // `ErrorEvent` doesn't necessary have `ErrorEvent.error` defined
       // but some has `ErrorEvent.message` defined, e.g. ResizeObserver error.
       // https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent/error
       // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
