@@ -269,37 +269,6 @@ export async function resolveBrowserProjects(
   return resolvedProjects.filter(project => !removeProjects.has(project))
 }
 
-// TODO: review
-export function resolveMergeReportProjects(
-  vitest: Vitest,
-  names: Set<string>,
-  resolvedProjects: TestProject[],
-  labels: string[],
-): TestProject[] {
-  const clonedProjects: TestProject[] = []
-
-  for (const project of resolvedProjects) {
-    for (const label of labels) {
-      const name = project.name
-        ? `${project.name} [${label}]`
-        : label
-
-      if (names.has(name)) {
-        throw new Error(
-          `Project name "${name}" is not unique. All projects should have unique names. Make sure your configuration is correct.`,
-        )
-      }
-
-      names.add(name)
-      const config = deepClone(project.config)
-      config.name = name
-      clonedProjects.push(TestProject._cloneProject(project, config))
-    }
-  }
-
-  return clonedProjects
-}
-
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
   const {
     locators,

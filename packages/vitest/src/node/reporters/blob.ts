@@ -9,8 +9,9 @@ import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { calculateSuiteHash, generateFileHash } from '@vitest/runner/utils'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
+import { deepClone } from '@vitest/utils/helpers'
 import { getOutputFile } from '../../utils/config-helpers'
-import { resolveMergeReportProjects } from '../projects/resolveProjects'
+import { TestProject } from '../project'
 
 export interface BlobOptions {
   outputFile?: string
@@ -261,6 +262,34 @@ export async function readBlobs(
 
 function suffixProjectName(originalName: string | undefined, label: string): string {
   return originalName ? `${originalName} [${label}]` : label
+}
+
+function resolveMergeReportProjects(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+  labels: string[],
+): TestProject[] {
+  const clonedProjects: TestProject[] = []
+
+  for (const project of resolvedProjects) {
+    for (const label of labels) {
+      const name = suffixProjectName(project.name || undefined, label)
+
+      if (names.has(name)) {
+        throw new Error(
+          `Project name "${name}" is not unique. All projects should have unique names. Make sure your configuration is correct.`,
+        )
+      }
+
+      names.add(name)
+      const config = deepClone(project.config)
+      config.name = name
+      clonedProjects.push(TestProject._cloneProject(project, config))
+    }
+  }
+
+  return clonedProjects
 }
 
 function discoverMergeReportLabels(blobs: { file: string, metadata?: MergeReportMetadata }[]): string[] | undefined {
