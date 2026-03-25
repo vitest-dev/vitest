@@ -23,7 +23,8 @@ test('simple', async ({ annotate }) => {
   await annotate('with base64 body', { body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' })
   await annotate('with Uint8Array body', { body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) })
   await annotate('with contentType', { body: '', contentType: 'text/plain' })
-  await annotate('with raw body', { body: 'Hello world', bodyEncoding: 'raw', contentType: 'text/plain' })
+  await annotate('bodyEncoding utf-8', { body: 'Hello world', bodyEncoding: 'utf-8', contentType: 'text/plain' })
+  await annotate('bodyEncoding base64', { body: btoa('Hello world'), bodyEncoding: 'base64', contentType: 'text/plain' })
 })
 
 describe('suite', () => {
@@ -113,7 +114,8 @@ describe('API', () => {
         "[annotate] simple with base64 body notice path=undefined contentType=undefined body=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "[annotate] simple with Uint8Array body notice path=undefined contentType=undefined body=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
         "[annotate] simple with contentType notice path=undefined contentType=text/plain body=",
-        "[annotate] simple with raw body notice path=undefined contentType=text/plain body=Hello world",
+        "[annotate] simple bodyEncoding utf-8 notice path=undefined contentType=text/plain body=Hello world",
+        "[annotate] simple bodyEncoding base64 notice path=undefined contentType=text/plain body=SGVsbG8gd29ybGQ=",
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 notice path=undefined contentType=undefined body=undefined",
@@ -135,19 +137,20 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 19,
+              "line": 20,
             },
             "message": "5",
             "type": "notice",
           },
           {
             "attachment": {
+              "bodyEncoding": "base64",
               "path": "https://absolute-path.com",
             },
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 20,
+              "line": 21,
             },
             "message": "6",
             "type": "notice",
@@ -174,6 +177,7 @@ describe('API', () => {
           },
           {
             "attachment": {
+              "bodyEncoding": "base64",
               "contentType": "text/javascript",
               "path": "<root>/.vitest-attachments/3-<hash>.js",
             },
@@ -187,6 +191,7 @@ describe('API', () => {
           },
           {
             "attachment": {
+              "bodyEncoding": "base64",
               "contentType": "text/javascript",
               "path": "<root>/.vitest-attachments/4-<hash>.js",
             },
@@ -210,6 +215,7 @@ describe('API', () => {
           {
             "attachment": {
               "body": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+              "bodyEncoding": "base64",
             },
             "location": {
               "column": 9,
@@ -222,6 +228,7 @@ describe('API', () => {
           {
             "attachment": {
               "body": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+              "bodyEncoding": "base64",
             },
             "location": {
               "column": 9,
@@ -234,6 +241,7 @@ describe('API', () => {
           {
             "attachment": {
               "body": "",
+              "bodyEncoding": "base64",
               "contentType": "text/plain",
             },
             "location": {
@@ -247,7 +255,7 @@ describe('API', () => {
           {
             "attachment": {
               "body": "Hello world",
-              "bodyEncoding": "raw",
+              "bodyEncoding": "utf-8",
               "contentType": "text/plain",
             },
             "location": {
@@ -255,7 +263,21 @@ describe('API', () => {
               "file": "<root>/basic.test.ts",
               "line": 14,
             },
-            "message": "with raw body",
+            "message": "bodyEncoding utf-8",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "SGVsbG8gd29ybGQ=",
+              "bodyEncoding": "base64",
+              "contentType": "text/plain",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 15,
+            },
+            "message": "bodyEncoding base64",
             "type": "notice",
           },
         ],
@@ -306,7 +328,8 @@ describe('reporters', () => {
               # notice: with base64 body
               # notice: with Uint8Array body
               # notice: with contentType
-              # notice: with raw body
+              # notice: bodyEncoding utf-8
+              # notice: bodyEncoding base64
           ok 2 - suite # time=<time> {
               1..1
               ok 1 - second # time=<time>
@@ -340,7 +363,8 @@ describe('reporters', () => {
           # notice: with base64 body
           # notice: with Uint8Array body
           # notice: with contentType
-          # notice: with raw body
+          # notice: bodyEncoding utf-8
+          # notice: bodyEncoding base64
       ok 2 - basic.test.ts > suite > second # time=<time>
           # notice: 5
           # notice: 6
@@ -385,7 +409,9 @@ describe('reporters', () => {
                       </property>
                       <property name="notice" value="with contentType">
                       </property>
-                      <property name="notice" value="with raw body">
+                      <property name="notice" value="bodyEncoding utf-8">
+                      </property>
+                      <property name="notice" value="bodyEncoding base64">
                       </property>
                   </properties>
               </testcase>
@@ -437,11 +463,13 @@ describe('reporters', () => {
 
       ::notice file=<root>/basic.test.ts,line=13,column=9::with contentType
 
-      ::notice file=<root>/basic.test.ts,line=14,column=9::with raw body
+      ::notice file=<root>/basic.test.ts,line=14,column=9::bodyEncoding utf-8
 
-      ::notice file=<root>/basic.test.ts,line=19,column=11::5
+      ::notice file=<root>/basic.test.ts,line=15,column=9::bodyEncoding base64
 
-      ::notice file=<root>/basic.test.ts,line=20,column=11::6
+      ::notice file=<root>/basic.test.ts,line=20,column=11::5
+
+      ::notice file=<root>/basic.test.ts,line=21,column=11::6
       "
     `)
   })
@@ -483,13 +511,15 @@ describe('reporters', () => {
          ❯ basic.test.ts:13:9 notice
            ↳ with contentType
          ❯ basic.test.ts:14:9 notice
-           ↳ with raw body
+           ↳ bodyEncoding utf-8
+         ❯ basic.test.ts:15:9 notice
+           ↳ bodyEncoding base64
 
        ✓ basic.test.ts > suite > second <time>
 
-         ❯ basic.test.ts:19:11 notice
-           ↳ 5
          ❯ basic.test.ts:20:11 notice
+           ↳ 5
+         ❯ basic.test.ts:21:11 notice
            ↳ 6
 
       "
