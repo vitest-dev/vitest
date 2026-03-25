@@ -144,7 +144,6 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "bodyEncoding": "base64",
               "path": "https://absolute-path.com",
             },
             "location": {
@@ -177,7 +176,6 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "bodyEncoding": "base64",
               "contentType": "text/javascript",
               "path": "<root>/.vitest-attachments/3-<hash>.js",
             },
@@ -191,7 +189,6 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "bodyEncoding": "base64",
               "contentType": "text/javascript",
               "path": "<root>/.vitest-attachments/4-<hash>.js",
             },
