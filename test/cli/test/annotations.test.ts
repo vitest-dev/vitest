@@ -113,7 +113,7 @@ describe('API', () => {
         "[annotate] simple with base64 body notice path=undefined contentType=undefined body=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "[annotate] simple with Uint8Array body notice path=undefined contentType=undefined body=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
         "[annotate] simple with contentType notice path=undefined contentType=text/plain body=",
-        "[annotate] simple with raw body notice path=undefined contentType=text/plain body=SGVsbG8gd29ybGQ=",
+        "[annotate] simple with raw body notice path=undefined contentType=text/plain body=Hello world",
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 notice path=undefined contentType=undefined body=undefined",
@@ -246,7 +246,7 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "body": "SGVsbG8gd29ybGQ=",
+              "body": "Hello world",
               "bodyEncoding": "raw",
               "contentType": "text/plain",
             },
