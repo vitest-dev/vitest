@@ -832,12 +832,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Label for this test run\'s environment (e.g., "linux", "node-22"). Suffixes the project name so blobs from different environments are distinct during merge',
     argument: '<label>',
   },
-  mergeReportsLabels: {
-    description:
-      'Expected labels when merging reports from multiple environments. Repeat the flag for multiple labels',
-    argument: '<label>',
-    array: true,
-  },
   listTags: {
     description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
     argument: '[type]',

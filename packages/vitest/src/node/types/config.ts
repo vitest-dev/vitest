@@ -1100,13 +1100,6 @@ export interface UserConfig extends InlineConfig {
   mergeReportsLabel?: string
 
   /**
-   * Labels expected when merging reports from multiple environments.
-   * These will later be used to synthesize distinct project identities
-   * during merge.
-   */
-  mergeReportsLabels?: string[]
-
-  /**
    * Delete all Vitest caches, including `experimental.fsModuleCache`.
    * @experimental
    */

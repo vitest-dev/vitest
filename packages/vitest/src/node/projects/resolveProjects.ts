@@ -197,8 +197,7 @@ export async function resolveProjects(
     names.add(name)
   }
 
-  const browserProjects = await resolveBrowserProjects(vitest, names, resolvedProjects)
-  return resolveMergeReportProjects(vitest, names, browserProjects)
+  return resolveBrowserProjects(vitest, names, resolvedProjects)
 }
 
 export async function resolveBrowserProjects(
@@ -275,7 +274,7 @@ export function resolveMergeReportProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
-  labels: string[] = vitest.config.mergeReportsLabels,
+  labels: string[],
 ): TestProject[] {
   if (!labels?.length) {
     return resolvedProjects

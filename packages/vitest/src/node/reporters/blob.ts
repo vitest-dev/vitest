@@ -2,7 +2,6 @@ import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../core'
-import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
@@ -171,16 +170,14 @@ export async function readBlobs(
   }
 
   // Auto-discover labels and duplicate projects if needed
-  if (!ctx.config.mergeReportsLabels?.length) {
-    const labels = discoverMergeReportLabels(blobs)
-    if (labels?.length) {
-      ctx.projects = resolveMergeReportProjects(
-        ctx,
-        new Set(ctx.projects.map(project => project.name)),
-        ctx.projects,
-        labels,
-      )
-    }
+  const labels = discoverMergeReportLabels(blobs)
+  if (labels?.length) {
+    ctx.projects = resolveMergeReportProjects(
+      ctx,
+      new Set(ctx.projects.map(project => project.name)),
+      ctx.projects,
+      labels,
+    )
   }
 
   // Restore module graph
