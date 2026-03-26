@@ -1,9 +1,12 @@
 import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
+import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
+  addDomain,
   addSerializer,
+  getDomain,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
@@ -167,6 +170,142 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }),
   )
+
+  function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
+    if (typeof domain !== 'string' || !domain) {
+      throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
+    }
+    const adapter = getDomain(domain)
+    if (!adapter) {
+      throw new Error(`Snapshot domain "${domain}" is not registered.`)
+    }
+    return adapter
+  }
+
+  function assertDomainSnapshot(self: object, name: string, adapter: DomainSnapshotAdapter<any, any>, opts: {
+    inline: boolean
+    inlineSnapshot?: string
+    message?: string
+  }) {
+    utils.flag(self, '_name', name)
+    const isNot = utils.flag(self, 'negate')
+    if (isNot) {
+      throw new Error(`${name} cannot be used with "not"`)
+    }
+    const test = getTest(name, self)
+
+    let { inlineSnapshot } = opts
+    if (inlineSnapshot) {
+      inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+    }
+
+    const pollFn = utils.flag(self, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
+    if (pollFn) {
+      return getSnapshotClient().pollAssertDomain({
+        poll: pollFn,
+        adapter,
+        message: opts.message,
+        isInline: opts.inline,
+        errorMessage: utils.flag(self, 'message'),
+        timeout: utils.flag(self, '_poll.timeout') as number | undefined,
+        interval: utils.flag(self, '_poll.interval') as number | undefined,
+        assertionName: name,
+        ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
+        ...getTestNames(test),
+      })
+    }
+
+    return getSnapshotClient().assertDomain({
+      received: utils.flag(self, 'object'),
+      adapter,
+      message: opts.message,
+      isInline: opts.inline,
+      errorMessage: utils.flag(self, 'message'),
+      assertionName: name,
+      ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
+      ...getTestNames(test),
+    })
+  }
+
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchDomainSnapshot',
+    wrapAssertion(utils, 'toMatchDomainSnapshot', function (
+      this,
+      domain: string,
+      message?: string,
+    ) {
+      return assertDomainSnapshot(
+        this,
+        'toMatchDomainSnapshot',
+        resolveDomainAdapter(domain, 'toMatchDomainSnapshot'),
+        { inline: false, message },
+      )
+    }),
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchDomainInlineSnapshot',
+    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
+      inlineSnapshot: string,
+      domain: string,
+      message?: string,
+    ) {
+      // try/finally prevents WebKit proper tail call from eliminating this frame
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      try {
+        return assertDomainSnapshot(
+          this,
+          'toMatchDomainInlineSnapshot',
+          resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
+          { inline: true, inlineSnapshot, message },
+        )
+      }
+      finally {
+        // for webkit
+      }
+    }),
+  )
+  /**
+   * ARIA snapshot domain is registered in browser mode.
+   * See {@link file://./../../../../browser/src/client/tester/aria.ts}
+   */
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchAriaSnapshot',
+    wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
+      return assertDomainSnapshot(
+        this,
+        'toMatchAriaSnapshot',
+        resolveDomainAdapter('aria', 'toMatchAriaSnapshot'),
+        { inline: false },
+      )
+    }),
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchAriaInlineSnapshot',
+    wrapAssertion(utils, 'toMatchAriaInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
+      this,
+      inlineSnapshot?: string,
+    ) {
+      // try/finally prevents WebKit proper tail call from eliminating this frame
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      try {
+        return assertDomainSnapshot(
+          this,
+          'toMatchAriaInlineSnapshot',
+          resolveDomainAdapter('aria', 'toMatchAriaInlineSnapshot'),
+          { inline: true, inlineSnapshot },
+        )
+      }
+      finally {
+        // for webkit
+      }
+    }),
+  )
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
@@ -226,4 +365,5 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
+  utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
 }

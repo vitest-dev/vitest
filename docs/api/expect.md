@@ -964,6 +964,77 @@ The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
+## toMatchAriaSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatcharisnapshot}
+
+- **Type:** `() => void`
+
+Captures the accessibility tree of a DOM element and compares it against a stored snapshot. Inspired by [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots).
+
+The snapshot uses a YAML-like format describing the accessible roles, names, and states of the element tree.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('navigation accessibility', () => {
+  document.body.innerHTML = `
+    <nav aria-label="Actions">
+      <button>Save</button>
+      <button>Cancel</button>
+    </nav>
+  `
+  expect(document.querySelector('nav')).toMatchAriaSnapshot()
+})
+```
+
+On first run, Vitest generates a snapshot entry like:
+
+```
+- navigation "Actions":
+  - button: Save
+  - button: Cancel
+```
+
+See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchariainlinesnapshot}
+
+- **Type:** `(snapshot?: string) => void`
+
+Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file.
+
+See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('user profile', () => {
+  expect(document.body).toMatchAriaInlineSnapshot(`
+    - heading "Dashboard" [level=1]
+    - button /User \\d+/: Profile
+  `)
+})
+```
+
+## toMatchDomainSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchdomainsnapshot}
+
+- **Type:** `(domain: string, hint?: string) => void`
+
+Matches a value against a stored snapshot using a registered [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain). The `domain` argument is the adapter's `name`.
+
+```ts
+expect(value).toMatchDomainSnapshot('my-domain')
+```
+
+## toMatchDomainInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchdomaininlinesnapshot}
+
+- **Type:** `(snapshot: string, domain: string, hint?: string) => void`
+
+Same as [`toMatchDomainSnapshot`](#tomatchdomainsnapshot), but stores the snapshot inline in the test file.
+
+```ts
+expect(value).toMatchDomainInlineSnapshot(`...`, `my-domain`)
+```
+
 ## toHaveBeenCalled
 
 - **Type:** `() => Awaitable<void>`
@@ -2111,6 +2182,19 @@ If you are adding custom serializers, you should call this method inside [`setup
 :::tip
 If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
+
+## expect.addSnapshotDomain <Version type="experimental">4.1.1</Version> <Experimental /> {#expect-addsnapshotdomain}
+
+- **Type:** `(adapter: DomainSnapshotAdapter) => void`
+
+Registers a [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain) for use with `toMatchDomainSnapshot` and `toMatchDomainInlineSnapshot`. Call this in [`setupFiles`](/config/setupfiles).
+
+```ts
+import { expect } from 'vitest'
+import { kvAdapter } from './kv-adapter'
+
+expect.addSnapshotDomain(kvAdapter)
+```
 
 ## expect.extend
 

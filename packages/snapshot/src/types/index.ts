@@ -2,6 +2,7 @@ import type {
   OptionsReceived as PrettyFormatOptions,
   Plugin as PrettyFormatPlugin,
 } from '@vitest/pretty-format'
+import type { DomainMatchResult } from '../domain'
 import type { RawSnapshotInfo } from '../port/rawSnapshot'
 import type {
   SnapshotEnvironment,
@@ -32,6 +33,18 @@ export interface SnapshotMatchOptions {
   isInline: boolean
   error?: Error
   rawSnapshot?: RawSnapshotInfo
+}
+
+export interface SnapshotDomainMatchOptions {
+  testId: string
+  testName: string
+  received: string
+  key?: string
+  match: (existingSnapshot: string) => DomainMatchResult
+  isInline?: boolean
+  inlineSnapshot?: string
+  error?: Error
+  assertionName?: string
 }
 
 export interface SnapshotResult {

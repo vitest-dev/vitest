@@ -9,6 +9,7 @@ import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-form
 import type { ParsedStack } from '@vitest/utils'
 import type {
   SnapshotData,
+  SnapshotDomainMatchOptions,
   SnapshotEnvironment,
   SnapshotMatchOptions,
   SnapshotResult,
@@ -119,6 +120,10 @@ export default class SnapshotState {
     return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
+  get snapshotUpdateState(): SnapshotUpdateState {
+    return this._updateSnapshot
+  }
+
   get environment(): SnapshotEnvironment {
     return this._environment
   }
@@ -168,6 +173,19 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
+    // support poll + domain inline snapshot
+    const pollPromiseIndex = stacks.findIndex(i =>
+      i.method.match(/__VITEST_POLL_PROMISE__/),
+    )
+    if (pollPromiseIndex !== -1) {
+      const stack = stacks[pollPromiseIndex + 1]
+      if (stack.method === 'then') {
+        // skip one more stack (expect.poll `then` wrapper) on browser mode firefox
+        return stacks[pollPromiseIndex + 2]
+      }
+      return stack
+    }
+
     // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
     // to specify a custom stack offset
     for (let i = 0; i < stacks.length; i++) {
@@ -206,6 +224,146 @@ export default class SnapshotState {
     }
     else {
       this._snapshotData[key] = receivedSerialized
+    }
+  }
+
+  private _resolveKey(testId: string, testName: string, key?: string): { key: string; count: number } {
+    this._counters.increment(testName)
+    const count = this._counters.get(testName)
+    if (!key) {
+      key = testNameToKey(testName, count)
+    }
+    this._testIdToKeys.get(testId).push(key)
+    return { key, count }
+  }
+
+  private _resolveInlineStack(options: {
+    testId: string
+    snapshot: string
+    assertionName: string
+    error: Error
+  }): ParsedStack {
+    const { testId, snapshot, assertionName, error } = options
+    const stacks = parseErrorStacktrace(
+      error,
+      { ignoreStackEntries: [] },
+    )
+    const _stack = this._inferInlineSnapshotStack(stacks)
+    if (!_stack) {
+      throw new Error(
+        `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
+      )
+    }
+    const stack = this.environment.processStackTrace?.(_stack) || _stack
+    // removing 1 column, because source map points to the wrong
+    // location for js files, but `column-1` points to the same in both js/ts
+    // https://github.com/vitejs/vite/issues/8657
+    stack.column--
+
+    // reject multiple inline snapshots at the same location if snapshot is different
+    const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack))
+    if (snapshotsWithSameStack.length > 0) {
+      // ensure only one snapshot will be written at the same location
+      this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack))
+
+      const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== snapshot)
+      if (differentSnapshot) {
+        throw Object.assign(
+          new Error(
+            `${assertionName} with different snapshots cannot be called at the same location`,
+          ),
+          {
+            actual: snapshot,
+            expected: differentSnapshot.snapshot,
+          },
+        )
+      }
+    }
+    this._inlineSnapshotStacks.push({ ...stack, testId, snapshot })
+    return stack
+  }
+
+  private _reconcile(opts: {
+    testId: string
+    key: string
+    count: number
+    pass: boolean
+    hasSnapshot: boolean
+    snapshotIsPersisted: boolean
+    addValue: string
+    actualDisplay: string
+    expectedDisplay?: string
+    stack?: ParsedStack
+    rawSnapshot?: RawSnapshotInfo
+  }): SnapshotReturnOptions {
+    // These are the conditions on when to write snapshots:
+    //  * There's no snapshot file in a non-CI environment.
+    //  * There is a snapshot file and we decided to update the snapshot.
+    //  * There is a snapshot file, but it doesn't have this snapshot.
+    // These are the conditions on when not to write snapshots:
+    //  * The update flag is set to 'none'.
+    //  * There's no snapshot file or a file without this snapshot on a CI environment.
+    if (
+      (opts.hasSnapshot && this._updateSnapshot === 'all')
+      || ((!opts.hasSnapshot || !opts.snapshotIsPersisted)
+        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+    ) {
+      if (this._updateSnapshot === 'all') {
+        if (!opts.pass) {
+          if (opts.hasSnapshot) {
+            this.updated.increment(opts.testId)
+          }
+          else {
+            this.added.increment(opts.testId)
+          }
+          this._addSnapshot(opts.key, opts.addValue, {
+            stack: opts.stack,
+            testId: opts.testId,
+            rawSnapshot: opts.rawSnapshot,
+          })
+        }
+        else {
+          this.matched.increment(opts.testId)
+        }
+      }
+      else {
+        this._addSnapshot(opts.key, opts.addValue, {
+          stack: opts.stack,
+          testId: opts.testId,
+          rawSnapshot: opts.rawSnapshot,
+        })
+        this.added.increment(opts.testId)
+      }
+
+      return {
+        actual: '',
+        count: opts.count,
+        expected: '',
+        key: opts.key,
+        pass: true,
+      }
+    }
+    else {
+      if (!opts.pass) {
+        this.unmatched.increment(opts.testId)
+        return {
+          actual: opts.actualDisplay,
+          count: opts.count,
+          expected: opts.expectedDisplay,
+          key: opts.key,
+          pass: false,
+        }
+      }
+      else {
+        this.matched.increment(opts.testId)
+        return {
+          actual: '',
+          count: opts.count,
+          expected: '',
+          key: opts.key,
+          pass: true,
+        }
+      }
     }
   }
 
@@ -277,14 +435,9 @@ export default class SnapshotState {
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
-    // this also increments counter for inline snapshots. maybe we shouldn't?
-    this._counters.increment(testName)
-    const count = this._counters.get(testName)
-
-    if (!key) {
-      key = testNameToKey(testName, count)
-    }
-    this._testIdToKeys.get(testId).push(key)
+    const resolved = this._resolveKey(testId, testName, key)
+    key = resolved.key
+    const count = resolved.count
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be
@@ -327,131 +480,112 @@ export default class SnapshotState {
         || (rawSnapshot && rawSnapshot.content != null)
 
     if (pass && !isInline && !rawSnapshot) {
-      // Executing a snapshot file as JavaScript and writing the strings back
-      // when other snapshots have changed loses the proper escaping for some
-      // characters. Since we check every snapshot in every test, use the newly
-      // generated formatted string.
-      // Note that this is only relevant when a snapshot is added and the dirty
-      // flag is set.
+      // When the file is re-saved (because other snapshots changed), the JS
+      // round-trip can lose proper escaping. Refresh in-memory data with the
+      // freshly serialized string so the file is written correctly.
+      // _reconcile does not write _snapshotData on pass, so this is the only
+      // place it gets refreshed. Domain snapshots skip this because the stored
+      // value may contain match patterns that differ from the received output.
       this._snapshotData[key] = receivedSerialized
     }
 
-    // find call site of toMatchInlineSnapshot
-    let stack: ParsedStack | undefined
-    if (isInline) {
-      const stacks = parseErrorStacktrace(
-        error || new Error('snapshot'),
-        { ignoreStackEntries: [] },
-      )
-      const _stack = this._inferInlineSnapshotStack(stacks)
-      if (!_stack) {
-        throw new Error(
-          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
-            stacks,
-          )}`,
-        )
-      }
-      stack = this.environment.processStackTrace?.(_stack) || _stack
-      // removing 1 column, because source map points to the wrong
-      // location for js files, but `column-1` points to the same in both js/ts
-      // https://github.com/vitejs/vite/issues/8657
-      stack.column--
-
-      // reject multiple inline snapshots at the same location if snapshot is different
-      const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack!))
-      if (snapshotsWithSameStack.length > 0) {
-        // ensure only one snapshot will be written at the same location
-        this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
-
-        const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== receivedSerialized)
-        if (differentSnapshot) {
-          throw Object.assign(
-            new Error(
-              'toMatchInlineSnapshot with different snapshots cannot be called at the same location',
-            ),
-            {
-              actual: receivedSerialized,
-              expected: differentSnapshot.snapshot,
-            },
-          )
-        }
-      }
-      this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: receivedSerialized })
-    }
-
-    // These are the conditions on when to write snapshots:
-    //  * There's no snapshot file in a non-CI environment.
-    //  * There is a snapshot file and we decided to update the snapshot.
-    //  * There is a snapshot file, but it doesn't have this snapshot.
-    // These are the conditions on when not to write snapshots:
-    //  * The update flag is set to 'none'.
-    //  * There's no snapshot file or a file without this snapshot on a CI environment.
-    if (
-      (hasSnapshot && this._updateSnapshot === 'all')
-      || ((!hasSnapshot || !snapshotIsPersisted)
-        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
-    ) {
-      if (this._updateSnapshot === 'all') {
-        if (!pass) {
-          if (hasSnapshot) {
-            this.updated.increment(testId)
-          }
-          else {
-            this.added.increment(testId)
-          }
-
-          this._addSnapshot(key, receivedSerialized, {
-            stack,
-            testId,
-            rawSnapshot,
-          })
-        }
-        else {
-          this.matched.increment(testId)
-        }
-      }
-      else {
-        this._addSnapshot(key, receivedSerialized, {
-          stack,
+    const stack = isInline
+      ? this._resolveInlineStack({
           testId,
-          rawSnapshot,
+          snapshot: receivedSerialized,
+          assertionName: 'toMatchInlineSnapshot',
+          error: error || new Error('snapshot'),
         })
-        this.added.increment(testId)
-      }
+      : undefined
 
-      return {
-        actual: '',
-        count,
-        expected: '',
-        key,
-        pass: true,
-      }
+    return this._reconcile({
+      testId,
+      key,
+      count,
+      pass,
+      hasSnapshot,
+      snapshotIsPersisted: !!snapshotIsPersisted,
+      addValue: receivedSerialized,
+      actualDisplay: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
+      expectedDisplay: expectedTrimmed !== undefined
+        ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
+        : undefined,
+      stack,
+      rawSnapshot,
+    })
+  }
+
+  probeExpectedSnapshot(options: { testName: string; testId: string; isInline?: boolean; inlineSnapshot?: string }): {
+    data?: string
+    markAsChecked: () => void
+  } {
+    // Peek at the counter WITHOUT incrementing — compute the same key
+    // that the subsequent match/matchDomain call will use.
+    const count = this._counters.get(options.testName) + 1
+    const key = testNameToKey(options.testName, count)
+    let data: string | undefined
+    if (options?.isInline) {
+      data = options.inlineSnapshot
     }
     else {
-      if (!pass) {
-        this.unmatched.increment(testId)
-        return {
-          actual: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
-          count,
-          expected:
-            expectedTrimmed !== undefined
-              ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
-              : undefined,
-          key,
-          pass: false,
-        }
-      }
-      else {
-        this.matched.increment(testId)
-        return {
-          actual: '',
-          count,
-          expected: '',
-          key,
-          pass: true,
-        }
-      }
+      data = this._snapshotData[key]
     }
+
+    return {
+      data,
+      markAsChecked: () => {
+        this._counters.increment(options.testName)
+        this._testIdToKeys.get(options.testId).push(key)
+        this._uncheckedKeys.delete(key)
+      },
+    }
+  }
+
+  matchDomain({
+    testId,
+    testName,
+    received,
+    key,
+    match,
+    isInline,
+    inlineSnapshot,
+    error,
+    assertionName,
+  }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
+    const resolved = this._resolveKey(testId, testName, key)
+    key = resolved.key
+
+    if (!isInline) {
+      this._uncheckedKeys.delete(key)
+    }
+
+    const expected = isInline ? inlineSnapshot : this._snapshotData[key]
+    const hasSnapshot = !!expected
+    const matchResult = hasSnapshot ? match(expected) : undefined
+    const stack = isInline
+      ? this._resolveInlineStack({
+          testId,
+          snapshot: received,
+          assertionName: assertionName!,
+          error: error || new Error('snapshot'),
+        })
+      : undefined
+    const actualResolved = matchResult?.resolved ?? received
+    const expectedResolved = matchResult?.expected ?? expected
+    return this._reconcile({
+      testId,
+      key,
+      count: resolved.count,
+      pass: matchResult?.pass ?? false,
+      hasSnapshot,
+      snapshotIsPersisted: isInline ? true : this._fileExists,
+      addValue: actualResolved,
+      actualDisplay: removeExtraLineBreaks(actualResolved),
+      expectedDisplay: expectedResolved !== undefined
+        ? removeExtraLineBreaks(expectedResolved)
+        : undefined,
+      stack,
+    })
   }
 
   async pack(): Promise<SnapshotResult> {

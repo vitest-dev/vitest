@@ -87,7 +87,7 @@
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.7.1",
+    "ivya": "https://pkg.pr.new/vitest-dev/ivya/ivya@68f8735",
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "vitest": "workspace:*"

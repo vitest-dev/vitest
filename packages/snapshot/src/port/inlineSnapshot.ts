@@ -45,7 +45,7 @@ export async function saveInlineSnapshots(
 }
 
 const startObjectRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
+  = /(?:toMatchInlineSnapshot|toMatchDomainInlineSnapshot|toMatchAriaInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
 
 function replaceObjectSnap(
   code: string,
@@ -122,6 +122,8 @@ function prepareSnapString(snap: string, source: string, index: number) {
 }
 
 const toMatchInlineName = 'toMatchInlineSnapshot'
+const toMatchDomainInlineName = 'toMatchDomainInlineSnapshot'
+const toMatchAriaInlineName = 'toMatchAriaInlineSnapshot'
 const toThrowErrorMatchingInlineName = 'toThrowErrorMatchingInlineSnapshot'
 
 // on webkit, the line number is at the end of the method, not at the start
@@ -131,6 +133,20 @@ function getCodeStartingAtIndex(code: string, index: number) {
     return {
       code: code.slice(indexInline),
       index: indexInline,
+    }
+  }
+  const indexDomainInline = index - toMatchDomainInlineName.length
+  if (code.slice(indexDomainInline, index) === toMatchDomainInlineName) {
+    return {
+      code: code.slice(indexDomainInline),
+      index: indexDomainInline,
+    }
+  }
+  const indexAriaInline = index - toMatchAriaInlineName.length
+  if (code.slice(indexAriaInline, index) === toMatchAriaInlineName) {
+    return {
+      code: code.slice(indexAriaInline),
+      index: indexAriaInline,
     }
   }
   const indexThrowInline = index - toThrowErrorMatchingInlineName.length
@@ -147,7 +163,7 @@ function getCodeStartingAtIndex(code: string, index: number) {
 }
 
 const startRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
+  = /(?:toMatchInlineSnapshot|toMatchDomainInlineSnapshot|toMatchAriaInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
 export function replaceInlineSnap(
   code: string,
   s: MagicString,
@@ -158,7 +174,7 @@ export function replaceInlineSnap(
 
   const startMatch = startRegex.exec(codeStartingAtIndex)
 
-  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
+  const firstKeywordMatch = /toMatchInlineSnapshot|toMatchDomainInlineSnapshot|toMatchAriaInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
     codeStartingAtIndex,
   )
 
