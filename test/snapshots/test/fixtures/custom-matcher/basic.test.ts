@@ -40,6 +40,7 @@ test('custom file snapshot matcher', () => {
   expect(`hahaha`).toMatchCustomSnapshot()
 })
 
+// -- TEST INLINE START --
 test('custom inline snapshot matcher', () => {
   expect(`hehehe`).toMatchCustomInlineSnapshot(`
     Object {
@@ -48,3 +49,4 @@ test('custom inline snapshot matcher', () => {
     }
   `)
 })
+// -- TEST INLINE END --
