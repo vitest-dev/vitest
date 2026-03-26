@@ -285,6 +285,7 @@ jobs:
           merge-multiple: true
 
       - name: Merge reports
+        continue-on-error: true
         run: pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
 
       - uses: actions/upload-artifact@v7
