@@ -1,4 +1,4 @@
-import type { Assertion, ChaiPlugin } from '@vitest/expect'
+import type { Assertion, ChaiPlugin, MatcherState } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
@@ -226,4 +226,111 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
+}
+
+// TODO: use impl for above builtin snapshot API too.
+function toMatchSnapshotImpl(
+  assertion: Chai.AssertionStatic & Chai.Assertion,
+  utils: Chai.ChaiUtils,
+  assertionName: string,
+  received: unknown,
+  propertiesOrHint?: object,
+  hint?: string,
+): void {
+  utils.flag(assertion, '_name', assertionName)
+  const isNot = utils.flag(assertion, 'negate')
+  if (isNot) {
+    throw new Error(`${assertionName} cannot be used with "not"`)
+  }
+  const test = utils.flag(assertion, 'vitest-test') as Test | undefined
+  if (!test) {
+    throw new Error(`'${assertionName}' cannot be used without test context`)
+  }
+  if (typeof propertiesOrHint === 'string' && typeof hint === 'undefined') {
+    hint = propertiesOrHint
+    propertiesOrHint = undefined
+  }
+  // TODO: implement non-throwing variant for jest matcher convention (likely SnapshotClient.match)
+  getSnapshotClient().assert({
+    received,
+    message: hint,
+    isInline: false,
+    properties: propertiesOrHint,
+    errorMessage: utils.flag(assertion, 'message'),
+    ...getTestNames(test),
+  })
+}
+
+function toMatchInlineSnapshotImpl(
+  assertion: Chai.AssertionStatic & Chai.Assertion,
+  utils: Chai.ChaiUtils,
+  assertionName: string,
+  received: unknown,
+  propertiesOrHint?: object,
+  inlineSnapshot?: string,
+  hint?: string,
+) {
+  utils.flag(assertion, '_name', assertionName)
+  const isNot = utils.flag(assertion, 'negate')
+  if (isNot) {
+    throw new Error(`${assertionName} cannot be used with "not"`)
+  }
+  const test = utils.flag(assertion, 'vitest-test') as Test | undefined
+  if (!test) {
+    throw new Error(`'${assertionName}' cannot be used without test context`)
+  }
+  if (typeof propertiesOrHint === 'string') {
+    hint = inlineSnapshot
+    inlineSnapshot = propertiesOrHint
+    propertiesOrHint = undefined
+  }
+  if (inlineSnapshot) {
+    inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+  }
+  // TODO: non-throwing
+  // TODO: pass `assertionName` to help stack probing
+  getSnapshotClient().assert({
+    received,
+    message: hint,
+    isInline: true,
+    properties: propertiesOrHint,
+    inlineSnapshot,
+    error: utils.flag(assertion, 'error'), // set by `.resolves/rejects` wrapper
+    errorMessage: utils.flag(assertion, 'message'),
+    ...getTestNames(test),
+  })
+}
+
+export function toMatchSnapshot(
+  this: MatcherState,
+  received: unknown,
+  propertiesOrHint?: object,
+  hint?: string,
+): void {
+  return toMatchSnapshotImpl(
+    this.__vitest_context.chaiAssertion,
+    this.__vitest_context.chaiUtils,
+    this.__vitest_context.assertionName,
+    received,
+    propertiesOrHint,
+    hint,
+  )
+}
+
+export function toMatchInlineSnapshot(
+  this: MatcherState,
+  received: unknown,
+  propertiesOrHint?: object,
+  inlineSnapshot?: string,
+  hint?: string,
+): void {
+  return toMatchInlineSnapshotImpl(
+    this.__vitest_context.chaiAssertion,
+    this.__vitest_context.chaiUtils,
+    this.__vitest_context.assertionName,
+    received,
+    propertiesOrHint,
+    inlineSnapshot,
+    hint,
+  )
 }

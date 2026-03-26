@@ -84,6 +84,12 @@ export interface MatcherState {
   soft?: boolean
   poll?: boolean
   task?: Readonly<Test>
+  /** @internal */
+  __vitest_context: {
+    chaiAssertion: Chai.AssertionStatic & Chai.Assertion
+    chaiUtils: Chai.ChaiUtils
+    assertionName: string
+  }
 }
 
 export interface SyncExpectationResult {
