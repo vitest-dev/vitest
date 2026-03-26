@@ -159,7 +159,7 @@ export default class SnapshotState {
     this.unmatched.delete(testId)
   }
 
-  protected _inferInlineSnapshotStack(stacks: ParsedStack[], method?: string): ParsedStack | null {
+  protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i =>
       i.method.match(/__VITEST_(RESOLVES|REJECTS)__/),
@@ -177,15 +177,13 @@ export default class SnapshotState {
       }
     }
 
-    // find custom matcher name in stack and resolve to call site
-    // the call site is 4 frames above the custom matcher:
-    //   method frame → expectWrapper → Proxy → methodWrapper → call site
-    if (method) {
-      for (let i = 0; i < stacks.length; i++) {
-        if (stacks[i].method.includes(method)) {
-          return stacks[i + 4] ?? null
-        }
-      }
+    // custom matcher registered via expect.extend() — the wrapper function
+    // in jest-extend.ts is named __VITEST_EXTEND_ASSERTION__
+    const customMatcherIndex = stacks.findIndex(i =>
+      i.method.includes('__VITEST_EXTEND_ASSERTION__'),
+    )
+    if (customMatcherIndex !== -1) {
+      return stacks[customMatcherIndex + 3] ?? null
     }
 
     // inline snapshot function is called __INLINE_SNAPSHOT__
@@ -356,7 +354,7 @@ export default class SnapshotState {
         error || new Error('snapshot'),
         { ignoreStackEntries: [] },
       )
-      const _stack = this._inferInlineSnapshotStack(stacks, method)
+      const _stack = this._inferInlineSnapshotStack(stacks)
       if (!_stack) {
         throw new Error(
           `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(

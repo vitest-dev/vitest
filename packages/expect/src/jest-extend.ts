@@ -89,7 +89,7 @@ function JestExtendPlugin(
   return (_, utils) => {
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
-        function expectWrapper(
+        function __VITEST_EXTEND_ASSERTION__(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
@@ -133,7 +133,7 @@ function JestExtendPlugin(
           }
         }
 
-        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, __VITEST_EXTEND_ASSERTION__)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,
