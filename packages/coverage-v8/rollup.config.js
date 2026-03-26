@@ -10,9 +10,10 @@ const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
 
 const entries = {
-  index: 'src/index.ts',
-  browser: 'src/browser.ts',
-  provider: 'src/provider.ts',
+  'index': 'src/index.ts',
+  'browser': 'src/browser.ts',
+  'provider': 'src/provider.ts',
+  'intercept-new-run-context': 'src/intercept-new-run-context.ts',
 }
 
 const external = [

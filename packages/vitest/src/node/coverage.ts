@@ -663,11 +663,11 @@ export class BaseCoverageProvider {
   // TODO: should this be abstracted in `project`/`vitest` instead?
   // if we decide to keep `viteModuleRunner: false`, we will need to abstract transformation in both main thread and tests
   // custom --import=module.registerHooks need to be transformed as well somehow
-  async transformFile(url: string, project: TestProject, viteEnvironment: string): Promise<TransformResult | null | undefined> {
+  async transformFile(url: string, project: TestProject, viteEnvironment: string, isTransformedByVite = true): Promise<TransformResult | null | undefined> {
     const config = project.config
 
     // vite is disabled, should transform manually if possible
-    if (config.experimental.viteModuleRunner === false) {
+    if (config.experimental.viteModuleRunner === false || !isTransformedByVite) {
       const pathname = url.split('?')[0]
       const filename = pathname.startsWith('file://') ? fileURLToPath(pathname) : pathname
       const extension = path.extname(filename)
