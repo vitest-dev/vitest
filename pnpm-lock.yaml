@@ -133,8 +133,8 @@ catalogs:
       specifier: ^0.3.2
       version: 0.3.2
     tinyrainbow:
-      specifier: ^3.0.3
-      version: 3.0.3
+      specifier: ^3.1.0
+      version: 3.1.0
     tinyspy:
       specifier: ^4.0.4
       version: 4.0.4
@@ -537,7 +537,7 @@ importers:
         version: 3.0.2
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
       ws:
         specifier: 'catalog:'
         version: 8.19.0
@@ -586,7 +586,7 @@ importers:
         version: link:../mocker
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       playwright:
         specifier: ^1.58.2
@@ -658,7 +658,7 @@ importers:
         version: 2.1.1
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
@@ -719,7 +719,7 @@ importers:
         version: 4.0.0-rc.1
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
@@ -762,7 +762,7 @@ importers:
         version: 6.2.2
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       '@vitest/runner':
         specifier: workspace:*
@@ -809,7 +809,7 @@ importers:
     dependencies:
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       '@types/react-is':
         specifier: ^19.2.0
@@ -876,7 +876,7 @@ importers:
         version: 0.2.15
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -988,7 +988,7 @@ importers:
         version: 2.0.0
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
     devDependencies:
       '@jridgewell/trace-mapping':
         specifier: 'catalog:'
@@ -1073,7 +1073,7 @@ importers:
         version: 0.2.15
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
       vite:
         specifier: 7.1.5
         version: 7.1.5(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -1529,7 +1529,7 @@ importers:
         version: 0.3.0
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
       tinyspy:
         specifier: ^4.0.4
         version: 4.0.4
@@ -1634,7 +1634,7 @@ importers:
         version: 1.0.2
       tinyrainbow:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.1.0
       vite:
         specifier: 7.1.5
         version: 7.1.5(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -9873,8 +9873,8 @@ packages:
       picocolors:
         optional: true
 
-  tinyrainbow@3.0.3:
-    resolution: {integrity: sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q==}
+  tinyrainbow@3.1.0:
+    resolution: {integrity: sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==}
     engines: {node: '>=14.0.0'}
 
   tinyspy@4.0.4:
@@ -19286,7 +19286,7 @@ snapshots:
     optionalDependencies:
       picocolors: 1.1.1
 
-  tinyrainbow@3.0.3: {}
+  tinyrainbow@3.1.0: {}
 
   tinyspy@4.0.4: {}
 

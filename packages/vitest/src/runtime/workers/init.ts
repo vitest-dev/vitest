@@ -3,6 +3,7 @@ import type { WorkerRequest, WorkerResponse } from '../../node/pools/types'
 import type { WorkerSetupContext } from '../../types/worker'
 import type { VitestWorker } from './types'
 import { serializeError } from '@vitest/utils/error'
+import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
@@ -48,6 +49,10 @@ export function init(worker: Options): void {
         process.env.VITEST_POOL_ID = String(message.poolId)
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
+
+        if (message.context.config.isAgent) {
+          disableDefaultColors()
+        }
 
         traces ??= await new Traces({
           enabled: message.traces.enabled,
