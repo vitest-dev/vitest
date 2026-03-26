@@ -295,8 +295,9 @@ function toMatchInlineSnapshotImpl(
     isInline: true,
     properties: propertiesOrHint,
     inlineSnapshot,
-    error: utils.flag(assertion, 'error'), // set by `.resolves/rejects` wrapper
     errorMessage: utils.flag(assertion, 'message'),
+    // set by async assertion (e.g. resolves/rejects) for stack probing
+    error: utils.flag(assertion, 'error'),
     ...getTestNames(test),
   })
 }
