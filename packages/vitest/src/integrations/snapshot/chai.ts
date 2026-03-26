@@ -1,8 +1,8 @@
 import type { Assertion, ChaiPlugin, MatcherState } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
+import type { MatchResult } from '@vitest/snapshot'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
-import type { MatchResult } from '@vitest/snapshot'
 import {
   addSerializer,
   SnapshotClient,
