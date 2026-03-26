@@ -14,6 +14,7 @@ export interface InlineSnapshot {
   file: string
   line: number
   column: number
+  // TODO: can we rely on `method` extracted from stack?
   assertionName?: string
 }
 
