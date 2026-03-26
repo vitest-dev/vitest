@@ -284,15 +284,19 @@ jobs:
           merge-multiple: true
 
       - name: Merge test/core reports
-        run: pnpm -C test/core vitest --run --merge-reports --reporter=html
+        if: ${{ !cancelled() }}
+        run: pnpm -C test/core test --run --merge-reports --reporter=html
 
       - name: Merge test/cli reports
-        run: pnpm -C test/cli vitest --run --merge-reports --reporter=html
+        if: ${{ !cancelled() }}
+        run: pnpm -C test/cli test --run --merge-reports --reporter=html
 
       - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
         with:
-          name: vitest-merge-html
+          name: vitest-merge-reports
           path: |
+            README.md
             test/core/html/
             test/cli/html/
           retention-days: 7
