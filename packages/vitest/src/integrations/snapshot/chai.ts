@@ -1,6 +1,5 @@
-import type { Assertion, ChaiPlugin, MatcherState } from '@vitest/expect'
+import type { Assertion, ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
-import type { MatchResult } from '@vitest/snapshot'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
@@ -237,7 +236,7 @@ function toMatchSnapshotImpl(
   received: unknown,
   propertiesOrHint?: object,
   hint?: string,
-): MatchResult {
+): SyncExpectationResult {
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -269,7 +268,7 @@ function toMatchInlineSnapshotImpl(
   propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
-): MatchResult {
+): SyncExpectationResult {
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -307,7 +306,7 @@ export function toMatchSnapshot(
   received: unknown,
   propertiesOrHint?: object,
   hint?: string,
-): MatchResult {
+): SyncExpectationResult {
   return toMatchSnapshotImpl(
     this.__vitest_context.chaiAssertion,
     this.__vitest_context.chaiUtils,
@@ -324,7 +323,7 @@ export function toMatchInlineSnapshot(
   propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
-): MatchResult {
+): SyncExpectationResult {
   return toMatchInlineSnapshotImpl(
     this.__vitest_context.chaiAssertion,
     this.__vitest_context.chaiUtils,
