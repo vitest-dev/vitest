@@ -75,7 +75,7 @@ class JestExtendError extends Error {
     message: string,
     public actual?: any,
     public expected?: any,
-    public context?: { assertionName: string; meta?: object },
+    public __vitest_error_context__?: { assertionName: string; meta?: object },
   ) {
     super(message)
   }

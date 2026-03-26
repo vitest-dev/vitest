@@ -51,6 +51,13 @@ interface AssertOptions {
   assertionName?: string
 }
 
+export interface MatchResult {
+  pass: boolean
+  message: () => string
+  actual?: string
+  expected?: string
+}
+
 export interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
@@ -100,7 +107,7 @@ export class SnapshotClient {
     return state
   }
 
-  assert(options: AssertOptions): void {
+  match(options: AssertOptions): MatchResult {
     const {
       filepath,
       name,
@@ -163,12 +170,23 @@ export class SnapshotClient {
       assertionName,
     })
 
-    if (!pass) {
+    return {
+      pass,
+      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      actual: rawSnapshot ? actual : actual?.trim(),
+      expected: rawSnapshot ? expected : expected?.trim(),
+    }
+  }
+
+  assert(options: AssertOptions): void {
+    const result = this.match(options)
+    if (!result.pass) {
+      const snapshotState = this.getSnapshotState(options.filepath)
       throw createMismatchError(
-        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        result.message(),
         snapshotState.expand,
-        rawSnapshot ? actual : actual?.trim(),
-        rawSnapshot ? expected : expected?.trim(),
+        result.actual,
+        result.expected,
       )
     }
   }

@@ -19,20 +19,17 @@ function formatCustom(received: string) {
   }
 }
 
-// TODO: make snapshot helper non-throwing and return { pass, ... }
 expect.extend({
   toMatchCustomSnapshot(received: string) {
     const receivedCustom = formatCustom(received)
-    toMatchSnapshot.call(this, receivedCustom)
-    return { pass: true, message: () => '' }
+    return toMatchSnapshot.call(this, receivedCustom)
   },
   toMatchCustomInlineSnapshot(
     received: string,
     inlineSnapshot?: string,
   ) {
     const receivedCustom = formatCustom(received)
-    toMatchInlineSnapshot.call(this, receivedCustom, inlineSnapshot)
-    return { pass: true, message: () => '' }
+    return toMatchInlineSnapshot.call(this, receivedCustom, inlineSnapshot)
   },
 })
 

@@ -76,14 +76,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ Object.toMatchCustomSnapshot basic.test.ts:26:21
-         24|   toMatchCustomSnapshot(received: string) {
-         25|     const receivedCustom = formatCustom(received)
-         26|     toMatchSnapshot.call(this, receivedCustom)
-           |                     ^
-         27|     return { pass: true, message: () => '' }
-         28|   },
-     ❯ basic.test.ts:40:25
+     ❯ basic.test.ts:37:25
+         35|
+         36| test('custom file snapshot matcher', () => {
+         37|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+           |                         ^
+         38| })
+         39|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -100,14 +99,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ Object.toMatchCustomInlineSnapshot basic.test.ts:34:27
-         32|   ) {
-         33|     const receivedCustom = formatCustom(received)
-         34|     toMatchInlineSnapshot.call(this, receivedCustom, inlineSnapshot)
-           |                           ^
-         35|     return { pass: true, message: () => '' }
-         36|   },
-     ❯ basic.test.ts:45:25
+     ❯ basic.test.ts:42:25
+         40| // -- TEST INLINE START --
+         41| test('custom inline snapshot matcher', () => {
+         42|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+           |                         ^
+         43|     Object {
+         44|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 

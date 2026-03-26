@@ -2,6 +2,7 @@ import type { Assertion, ChaiPlugin, MatcherState } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
+import type { MatchResult } from '@vitest/snapshot'
 import {
   addSerializer,
   SnapshotClient,
@@ -236,7 +237,7 @@ function toMatchSnapshotImpl(
   received: unknown,
   propertiesOrHint?: object,
   hint?: string,
-): void {
+): MatchResult {
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -250,8 +251,7 @@ function toMatchSnapshotImpl(
     hint = propertiesOrHint
     propertiesOrHint = undefined
   }
-  // TODO: implement non-throwing variant for jest matcher convention (likely SnapshotClient.match)
-  getSnapshotClient().assert({
+  return getSnapshotClient().match({
     received,
     message: hint,
     isInline: false,
@@ -269,7 +269,7 @@ function toMatchInlineSnapshotImpl(
   propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
-) {
+): MatchResult {
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -287,8 +287,7 @@ function toMatchInlineSnapshotImpl(
   if (inlineSnapshot) {
     inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
   }
-  // TODO: non-throwing
-  getSnapshotClient().assert({
+  return getSnapshotClient().match({
     received,
     message: hint,
     isInline: true,
@@ -308,7 +307,7 @@ export function toMatchSnapshot(
   received: unknown,
   propertiesOrHint?: object,
   hint?: string,
-): void {
+): MatchResult {
   return toMatchSnapshotImpl(
     this.__vitest_context.chaiAssertion,
     this.__vitest_context.chaiUtils,
@@ -325,7 +324,7 @@ export function toMatchInlineSnapshot(
   propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
-): void {
+): MatchResult {
   return toMatchInlineSnapshotImpl(
     this.__vitest_context.chaiAssertion,
     this.__vitest_context.chaiUtils,
