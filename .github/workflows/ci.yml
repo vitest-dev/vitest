@@ -288,4 +288,4 @@ jobs:
         with:
           name: vitest-core-html
           path: test/core/html/
-          retention-days: 30
+          retention-days: 7
