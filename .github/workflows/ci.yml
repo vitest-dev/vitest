@@ -135,8 +135,8 @@ jobs:
           name: vitest-blob-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
-            test/core/.vitest-reports/
-            test/cli/.vitest-reports/
+            test/core/.vitest-reports/*
+            test/cli/.vitest-reports/*
           retention-days: 1
 
   test-cached:
