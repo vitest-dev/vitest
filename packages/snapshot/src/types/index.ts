@@ -32,6 +32,7 @@ export interface SnapshotMatchOptions {
   isInline: boolean
   error?: Error
   rawSnapshot?: RawSnapshotInfo
+  method?: string
 }
 
 export interface SnapshotResult {

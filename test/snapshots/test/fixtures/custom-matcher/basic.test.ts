@@ -40,6 +40,11 @@ test('custom file snapshot matcher', () => {
   expect(`hahaha`).toMatchCustomSnapshot()
 })
 
-test.skip('custom inline snapshot matcher', () => {
-  expect(`hehehe`).toMatchCustomInlineSnapshot()
+test('custom inline snapshot matcher', () => {
+  expect(`hehehe`).toMatchCustomInlineSnapshot(`
+    Object {
+      "length": 6,
+      "reversed": "eheheh",
+    }
+  `)
 })

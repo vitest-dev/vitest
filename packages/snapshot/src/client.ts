@@ -48,6 +48,7 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+  method?: string
 }
 
 export interface SnapshotClientOptions {
@@ -111,6 +112,7 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
+      method,
     } = options
     let { received } = options
 
@@ -158,6 +160,7 @@ export class SnapshotClient {
       error,
       inlineSnapshot,
       rawSnapshot,
+      method,
     })
 
     if (!pass) {

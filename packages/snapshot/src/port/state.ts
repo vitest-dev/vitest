@@ -159,7 +159,7 @@ export default class SnapshotState {
     this.unmatched.delete(testId)
   }
 
-  protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
+  protected _inferInlineSnapshotStack(stacks: ParsedStack[], method?: string): ParsedStack | null {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i =>
       i.method.match(/__VITEST_(RESOLVES|REJECTS)__/),
@@ -177,6 +177,17 @@ export default class SnapshotState {
       }
     }
 
+    // find custom matcher name in stack and resolve to call site
+    // the call site is 4 frames above the custom matcher:
+    //   method frame → expectWrapper → Proxy → methodWrapper → call site
+    if (method) {
+      for (let i = 0; i < stacks.length; i++) {
+        if (stacks[i].method.includes(method)) {
+          return stacks[i + 4] ?? null
+        }
+      }
+    }
+
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i =>
@@ -188,7 +199,7 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; method?: string },
   ): void {
     this._dirty = true
     if (options.stack) {
@@ -196,6 +207,7 @@ export default class SnapshotState {
         snapshot: receivedSerialized,
         testId: options.testId,
         ...options.stack,
+        method: options.method,
       })
     }
     else if (options.rawSnapshot) {
@@ -276,6 +288,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    method,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     // this also increments counter for inline snapshots. maybe we shouldn't?
     this._counters.increment(testName)
@@ -343,7 +356,7 @@ export default class SnapshotState {
         error || new Error('snapshot'),
         { ignoreStackEntries: [] },
       )
-      const _stack = this._inferInlineSnapshotStack(stacks)
+      const _stack = this._inferInlineSnapshotStack(stacks, method)
       if (!_stack) {
         throw new Error(
           `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
@@ -404,6 +417,7 @@ export default class SnapshotState {
             stack,
             testId,
             rawSnapshot,
+            method,
           })
         }
         else {
@@ -415,6 +429,7 @@ export default class SnapshotState {
           stack,
           testId,
           rawSnapshot,
+          method,
         })
         this.added.increment(testId)
       }
