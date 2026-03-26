@@ -130,6 +130,7 @@ export class SnapshotClient {
     const snapshotState = this.getSnapshotState(filepath)
 
     if (typeof properties === 'object') {
+      // TODO: this should be also non-throwing?
       if (typeof received !== 'object' || !received) {
         throw new Error(
           'Received value must be an object when the matcher has properties',
