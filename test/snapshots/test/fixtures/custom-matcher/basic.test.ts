@@ -19,6 +19,12 @@ function formatCustom(received: string) {
   }
 }
 
+// TODO:
+// can we support inlien snapshot with arbitrary options and argument position?
+// ideally users should be able to define custom matcher such as:
+//   expect(thing).toMatchCustomInlineSnapthot(myCustomOption1, myCustomOption2, `...snaphsot goes here...`)
+// does jest supports this pattern?
+
 expect.extend({
   toMatchCustomSnapshot(received: string) {
     const receivedCustom = formatCustom(received)
