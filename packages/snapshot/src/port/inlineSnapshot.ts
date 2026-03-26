@@ -6,6 +6,7 @@ import {
   offsetToLineNumber,
   positionToOffset,
 } from '@vitest/utils/offset'
+import { memo } from './utils'
 
 export interface InlineSnapshot {
   snapshot: string
@@ -52,11 +53,13 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function buildStartObjectRegex(assertionName: string): RegExp {
-  return new RegExp(
-    `${escapeRegExp(assertionName)}\\s*\\(\\s*(?:\\/\\*[\\s\\S]*\\*\\/\\s*|\\/\\/.*(?:[\\n\\r\\u2028\\u2029]\\s*|[\\t\\v\\f \\xA0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000\\uFEFF]))*\\{`,
+const buildStartObjectRegex = memo((assertionName: string) => {
+  const replaced = defaultStartObjectRegex.source.replace(
+    'toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot',
+    escapeRegExp(assertionName),
   )
-}
+  return new RegExp(replaced)
+})
 
 function replaceObjectSnap(
   code: string,
@@ -156,11 +159,13 @@ function getCodeStartingAtIndex(code: string, index: number, methodNames: string
 const defaultStartRegex
   = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
 
-function buildStartRegex(assertionName: string): RegExp {
-  const escaped = escapeRegExp(assertionName)
-  const wsAndComments = '\\s*\\(\\s*(?:\\/\\*[\\s\\S]*\\*\\/\\s*|\\/\\/.*(?:[\\n\\r\\u2028\\u2029]\\s*|[\\t\\v\\f \\xA0\\u1680\\u2000-\\u200A\\u202F\\u205F\\u3000\\uFEFF]))*[\\w$]*'
-  return new RegExp(`${escaped + wsAndComments}(['"\`)])`)
-}
+const buildStartRegex = memo((assertionName: string) => {
+  const replaced = defaultStartRegex.source.replace(
+    'toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot',
+    escapeRegExp(assertionName),
+  )
+  return new RegExp(replaced)
+})
 
 export function replaceInlineSnap(
   code: string,
