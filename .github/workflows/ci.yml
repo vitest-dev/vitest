@@ -292,6 +292,6 @@ jobs:
           name: vitest-merge-reports
           path: |
             README.md
-            test/core/html/
-            test/cli/html/
+            test/core/html/*
+            test/cli/html/*
           retention-days: 7
