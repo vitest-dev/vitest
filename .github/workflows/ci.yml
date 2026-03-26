@@ -283,13 +283,8 @@ jobs:
           pattern: vitest-blob-*
           merge-multiple: true
 
-      - name: Merge test/core reports
-        if: ${{ !cancelled() }}
-        run: pnpm -C test/core test --run --merge-reports --reporter=html
-
-      - name: Merge test/cli reports
-        if: ${{ !cancelled() }}
-        run: pnpm -C test/cli test --run --merge-reports --reporter=html
+      - name: Merge reports
+        run: pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
