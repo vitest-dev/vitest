@@ -197,15 +197,15 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; method?: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; assertionName?: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
+        ...options.stack,
         snapshot: receivedSerialized,
         testId: options.testId,
-        ...options.stack,
-        method: options.method,
+        assertionName: options.assertionName,
       })
     }
     else if (options.rawSnapshot) {
@@ -286,7 +286,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
-    method,
+    assertionName,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     // this also increments counter for inline snapshots. maybe we shouldn't?
     this._counters.increment(testName)
@@ -415,7 +415,7 @@ export default class SnapshotState {
             stack,
             testId,
             rawSnapshot,
-            method,
+            assertionName,
           })
         }
         else {
@@ -427,7 +427,7 @@ export default class SnapshotState {
           stack,
           testId,
           rawSnapshot,
-          method,
+          assertionName,
         })
         this.added.increment(testId)
       }

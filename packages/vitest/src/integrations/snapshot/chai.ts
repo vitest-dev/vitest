@@ -296,7 +296,7 @@ function toMatchInlineSnapshotImpl(
     inlineSnapshot,
     errorMessage: utils.flag(assertion, 'message'),
     // pass `assertionName` to help stack probing
-    method: assertionName,
+    assertionName,
     // set by async assertion (e.g. resolves/rejects) for stack probing
     error: utils.flag(assertion, 'error'),
     ...getTestNames(test),

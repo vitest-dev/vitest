@@ -3,14 +3,12 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
+const INLINE_BLOCK_RE = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
+
 function extractInlineBlocks(content: string): string {
-  const blocks: string[] = []
-  const regex = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
-  let match
-  while ((match = regex.exec(content)) !== null) {
-    blocks.push(match[1].trim())
-  }
-  return blocks.join('\n\n')
+  return [...content.matchAll(INLINE_BLOCK_RE)]
+    .map(m => m[1].trim())
+    .join('\n\n')
 }
 
 test('custom snapshot matcher', async () => {
@@ -20,7 +18,7 @@ test('custom snapshot matcher', async () => {
 
   // remove snapshots
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s => s.replace(/toMatchCustomInlineSnapshot\(`[^`]*`\)/gs, 'toMatchCustomInlineSnapshot()'))
+  editFile(testFile, s => s.replace(/toMatchCustomInlineSnapshot\(`[^`]*`\)/g, 'toMatchCustomInlineSnapshot()'))
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
