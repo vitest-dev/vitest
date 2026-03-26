@@ -8,7 +8,7 @@ import type {
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
@@ -970,7 +970,7 @@ export function isBrowserEnabled(config: ResolvedConfig): boolean {
   return Boolean(config.browser?.enabled)
 }
 
-export function resolveCoverageReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
   // E.g. { reporter: "html" }
   if (!Array.isArray(configReporters)) {
     return [[configReporters, {}]]
