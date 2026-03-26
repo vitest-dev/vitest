@@ -3,7 +3,7 @@ import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runVitest } from '#test-utils'
+import { runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
 import { globSync } from 'tinyglobby'
@@ -536,6 +536,107 @@ test('merge report with labels', async () => {
           "test 2-1": [
             "expected 1 to be 2 // Object.is equality",
           ],
+        },
+      },
+    }
+  `)
+})
+
+test('merge reports of different results with labels', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'first.test.ts': `
+test("always good", () => {})
+
+test("works on linux", () => {
+  expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+})
+
+test("works on macos", () => {
+  expect(process.env.TEST_LABEL_ENV === 'macos').toBe(true)
+})
+`,
+    'second.test.ts': `
+test("linux only", () => {})
+`,
+    'third.test.ts': `
+test("macos only", () => {})
+`,
+  })
+  process.env.TEST_LABEL_ENV = 'linux'
+  const result1 = await runVitest({
+    root,
+    globals: true,
+    reporters: [['blob', { label: 'linux' }]],
+  }, ['first', 'second'])
+  expect(result1.stderr).toMatchInlineSnapshot(`""`);
+  expect(result1.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "": {
+        "first.test.ts": {
+          "always good": "passed",
+          "works on linux": "passed",
+          "works on macos": [
+            "expected false to be true // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "linux only": "passed",
+        },
+      },
+    }
+  `)
+  process.env.TEST_LABEL_ENV = 'macos'
+  const result2 = await runVitest({
+    root,
+    globals: true,
+    reporters: [['blob', { label: 'macos' }]],
+  }, ['first', 'third'])
+  expect(result2.stderr).toMatchInlineSnapshot(`""`);
+  expect(result2.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "": {
+        "first.test.ts": {
+          "always good": "passed",
+          "works on linux": [
+            "expected false to be true // Object.is equality",
+          ],
+          "works on macos": "passed",
+        },
+        "third.test.ts": {
+          "macos only": "passed",
+        },
+      },
+    }
+  `)
+  const result = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest-reports'),
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "linux": {
+        "first.test.ts": {
+          "always good": "passed",
+          "works on linux": "passed",
+          "works on macos": [
+            "expected false to be true // Object.is equality",
+          ],
+        },
+        "second.test.ts": {
+          "linux only": "passed",
+        },
+      },
+      "macos": {
+        "first.test.ts": {
+          "always good": "passed",
+          "works on linux": [
+            "expected false to be true // Object.is equality",
+          ],
+          "works on macos": "passed",
+        },
+        "third.test.ts": {
+          "macos only": "passed",
         },
       },
     }
