@@ -569,7 +569,7 @@ test("macos only", () => {})
     globals: true,
     reporters: [['blob', { label: 'linux' }]],
   }, ['first', 'second'])
-  expect(result1.stderr).toMatchInlineSnapshot(`""`);
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "": {
@@ -592,7 +592,7 @@ test("macos only", () => {})
     globals: true,
     reporters: [['blob', { label: 'macos' }]],
   }, ['first', 'third'])
-  expect(result2.stderr).toMatchInlineSnapshot(`""`);
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect(result2.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "": {
