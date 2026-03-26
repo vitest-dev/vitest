@@ -2,7 +2,7 @@
 
 exports[`custom file snapshot matcher 1`] = `
 Object {
-  "length": 5,
-  "reversed": "olleh",
+  "length": 6,
+  "reversed": "ahahah",
 }
 `;

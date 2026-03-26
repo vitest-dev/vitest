@@ -266,7 +266,7 @@ function toMatchInlineSnapshotImpl(
   utils: Chai.ChaiUtils,
   assertionName: string,
   received: unknown,
-  propertiesOrHint?: object,
+  propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
 ) {
@@ -321,7 +321,7 @@ export function toMatchSnapshot(
 export function toMatchInlineSnapshot(
   this: MatcherState,
   received: unknown,
-  propertiesOrHint?: object,
+  propertiesOrHint?: object | string,
   inlineSnapshot?: string,
   hint?: string,
 ): void {
