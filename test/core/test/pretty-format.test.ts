@@ -145,16 +145,30 @@ describe('maxOutputLength', () => {
           9729,
           36659,
           80789,
-          273009,
-          374009,
-          299009,
+          1056011,
+          1074009,
+          1088009,
         ]
       `)
 
     // depending on object/array shape, output can exceed the limit 1mb
     // but the output size is proportional to the amount of objects and the size of array.
-    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`936779`)
-    expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1236779`)
+    expect(format(createObjectGraph(10000).cats).length).toMatchInlineSnapshot(`1377439`)
+    expect(format(createObjectGraph(20000).cats).length).toMatchInlineSnapshot(`1497738`)
+  })
+
+  test('budget should not truncate output shorter than maxOutputLength', () => {
+    const data = Array.from({ length: 50 }, (_, i) => ({ a: { b: { c: i } } }))
+    const full = format(data, { maxOutputLength: Infinity })
+    const limited = format(data, { maxOutputLength: full.length })
+    // this invariant should hold for any input
+    expect(limited.length).toBe(full.length)
+    expect({ limited: limited.length, full: full.length }).toMatchInlineSnapshot(`
+      {
+        "full": 4349,
+        "limited": 4349,
+      }
+    `)
   })
 
   test('early elements expanded, later elements folded after budget trips', () => {
@@ -175,7 +189,9 @@ describe('maxOutputLength', () => {
         Object {
           "i": 3,
         },
-        [Object],
+        Object {
+          "i": 4,
+        },
         [Object],
         [Object],
         [Object],
