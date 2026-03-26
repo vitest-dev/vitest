@@ -125,9 +125,14 @@ export default defineConfig({
       },
     },
     includeTaskLocation: true,
-    reporters: process.env.GITHUB_ACTIONS
-      ? ['default', ['github-actions', { displayAnnotations: false }]]
-      : [['default', { summary: true }], 'hanging-process'],
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS
+        ? [['default'], ['github-actions', { displayAnnotations: false }] as any]
+        : [['default', { summary: true }], ['hanging-process']]),
+      ...(process.env.VITEST_BLOB_LABEL_DOGFOOD
+        ? [['blob', { label: process.env.VITEST_BLOB_LABEL_DOGFOOD }]]
+        : []),
+    ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
