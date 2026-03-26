@@ -174,8 +174,8 @@ export function replaceInlineSnap(
   newSnap: string,
   assertionName?: string,
 ): boolean {
-  const names = assertionName ? [assertionName] : defaultMethodNames
-  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex, names)
+  const methodNames = assertionName ? [assertionName] : defaultMethodNames
+  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex, methodNames)
 
   const startRegex = assertionName ? buildStartRegex(assertionName) : defaultStartRegex
   const startMatch = startRegex.exec(codeStartingAtIndex)
