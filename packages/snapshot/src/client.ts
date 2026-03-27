@@ -147,10 +147,6 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    // TODO:
-    // early return/throwing pass should consume "uncheckedKeys"
-    // to avoid false-flagging obsolete snapshots.
-    // (this is a pre-existing issue)
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
         expectedSnapshot.markAsChecked()
