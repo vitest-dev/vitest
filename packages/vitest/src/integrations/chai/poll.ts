@@ -87,10 +87,14 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const { setTimeout, clearTimeout } = getSafeTimers()
 
             let executionPhase: 'fn' | 'assertion' = 'fn'
-            let hasTimedOut = false
+            const ac = new AbortController()
+
+            const timeoutPromise = new Promise((resolve) => {
+              ac.signal.addEventListener('abort', resolve)
+            })
 
             const timerId = setTimeout(() => {
-              hasTimedOut = true
+              ac.abort()
             }, timeout)
 
             chai.util.flag(assertion, '_name', key)
@@ -99,16 +103,20 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             try {
               while (true) {
-                const isLastAttempt = hasTimedOut
-
-                if (isLastAttempt) {
-                  chai.util.flag(assertion, '_isLastPollAttempt', true)
-                }
-
                 try {
                   executionPhase = 'fn'
-                  const obj = await fn()
-                  chai.util.flag(assertion, 'object', obj)
+                  const fnPromise = Promise.resolve(fn())
+                  // @todo: what should happen here?
+                  fnPromise.catch(() => {})
+
+                  const result = await Promise.race([fnPromise, timeoutPromise])
+
+                  if (ac.signal.aborted) {
+                    chai.util.flag(assertion, '_isLastPollAttempt', true)
+                  }
+                  else {
+                    chai.util.flag(assertion, 'object', result)
+                  }
 
                   executionPhase = 'assertion'
                   const output = await assertionFunction.call(assertion, ...args)
@@ -117,12 +125,12 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 }
                 catch (err) {
-                  if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
+                  if (ac.signal.aborted || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
                     await onSettled?.({ assertion, status: 'fail' })
                     throwWithCause(err, STACK_TRACE_ERROR)
                   }
 
-                  await delay(interval, setTimeout)
+                  await Promise.race([delay(interval, setTimeout), timeoutPromise])
                 }
               }
             }
