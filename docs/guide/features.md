@@ -106,7 +106,7 @@ Notice that if you are using third-party libraries that add matchers, setting [`
 
 ## Mocking
 
-[Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
+Vitets provides `jest`-compatible APIs on `vi` object.
 
 ```ts
 import { expect, vi } from 'vitest'
