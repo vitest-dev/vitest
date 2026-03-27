@@ -196,7 +196,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     }
   `)
 
-  // run with update — file/inline snapshots update, properties errors persist
+  // run with update — properties errors persist
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
