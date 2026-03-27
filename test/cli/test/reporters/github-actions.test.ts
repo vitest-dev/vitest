@@ -207,5 +207,32 @@ describe(GithubActionsReporter, () => {
         "
       `)
     })
+    it('includes config name in header when set', async ({ onTestFinished }) => {
+      const outputPath = resolve(tmpdir(), randomUUID())
+
+      onTestFinished(async () => {
+        await rm(outputPath).catch(() => {
+          console.error(`Could not remove ${outputPath}`)
+        })
+      })
+
+      await runVitest({
+        name: 'my-app',
+        reporters: new GithubActionsReporter({
+          jobSummary: {
+            outputPath,
+            fileLinks: {
+              commitHash: 'aaa',
+              repository: 'owner/repo',
+            },
+          },
+        }),
+        root: './fixtures/reporters/github-actions',
+      })
+
+      const summary = await readFile(outputPath, 'utf8')
+
+      expect(summary).toContain('## Vitest Test Report (my-app)')
+    })
   })
 })
