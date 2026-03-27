@@ -142,14 +142,19 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
     wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, propertiesOrHint?: object | string, hint?: string) {
-      const expected = utils.flag(this, 'object')
+      const assertionName = 'toThrowErrorMatchingSnapshot'
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error(`${assertionName} cannot be used with "not"`)
+      }
+      const received = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
         assertion: this,
         utils,
         assertionName: 'toThrowErrorMatchingSnapshot',
         assert: true,
-        received: getError(expected, promise),
+        received: getError(received, promise),
         ...normalizeArguments(propertiesOrHint, hint),
       })
     }),
@@ -162,14 +167,19 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       inlineSnapshotOrHint?: string,
       hint?: string,
     ) {
-      const expected = utils.flag(this, 'object')
+      const assertionName = 'toThrowErrorMatchingInlineSnapshot'
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error(`${assertionName} cannot be used with "not"`)
+      }
+      const received = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
         assertion: this,
         utils,
-        assertionName: 'toThrowErrorMatchingInlineSnapshot',
+        assertionName,
         assert: true,
-        received: getError(expected, promise),
+        received: getError(received, promise),
         isInline: true,
         ...normalizeInlineArguments(undefined, inlineSnapshotOrHint, hint),
       })
