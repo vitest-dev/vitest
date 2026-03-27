@@ -349,6 +349,36 @@ test('filter for the global browser project includes all browser instances', asy
   ])
 })
 
+test('negated filter for the global browser project excludes all browser instances', async () => {
+  const { projects } = await vitest({ project: '!myproject' }, {
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+              { browser: 'webkit' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'skip',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'skip',
+  ])
+})
+
 test('can enable browser-cli options for multi-project workspace', async () => {
   const { projects } = await vitest(
     {

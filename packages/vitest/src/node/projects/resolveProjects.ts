@@ -10,11 +10,12 @@ import type {
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { deepClone } from '@vitest/utils/helpers'
+import { deepClone, toArray } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 
@@ -217,11 +218,15 @@ export async function resolveBrowserProjects(
       return
     }
     const originalName = project.config.name
+    const projectWasExplicitlyExcluded = matchesNegatedProjectFilter(vitest, originalName)
     // if original name is in the --project=name filter, keep all instances
     const filteredInstances = vitest.matchesProjectFilter(originalName)
       ? instances
       : instances.filter((instance) => {
           const newName = instance.name! // name is set in "workspace" plugin
+          if (projectWasExplicitlyExcluded) {
+            return matchesPositiveProjectFilter(vitest, newName)
+          }
           return vitest.matchesProjectFilter(newName)
         })
 
@@ -267,6 +272,26 @@ export async function resolveBrowserProjects(
   })
 
   return resolvedProjects.filter(project => !removeProjects.has(project))
+}
+
+function matchesPositiveProjectFilter(vitest: Vitest, name: string): boolean {
+  const projects = toArray(vitest.config.project)
+  return projects.some((project) => {
+    if (project.startsWith('!')) {
+      return false
+    }
+    return wildcardPatternToRegExp(project).test(name)
+  })
+}
+
+function matchesNegatedProjectFilter(vitest: Vitest, name: string): boolean {
+  const projects = toArray(vitest.config.project)
+  return projects.some((project) => {
+    if (!project.startsWith('!')) {
+      return false
+    }
+    return wildcardPatternToRegExp(project.slice(1)).test(name)
+  })
 }
 
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
