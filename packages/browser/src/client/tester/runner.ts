@@ -240,7 +240,13 @@ export function createBrowserRunner(
         }
         catch {}
       }
-      return rpc().onCollected(this.method, files)
+      const result = await rpc().onCollected(this.method, files)
+
+      if (this.method === 'collect') {
+        await mocker.invalidate()
+      }
+
+      return result
     }
 
     onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<TestAnnotation> => {

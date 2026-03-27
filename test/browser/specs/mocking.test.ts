@@ -1,5 +1,5 @@
 import { expect, onTestFailed, onTestFinished, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runVitest, runVitestCli } from '../../test-utils'
 import { instances } from '../settings'
 
 // TODO: investigate `isolate: false` tests.
@@ -34,6 +34,27 @@ test.each([true/* , false */])('mocking works correctly - isolated %s', async (i
     expect(result.stdout).toReportPassedTest('import-actual-dep.test.ts', browser)
   })
 
+  expect(result.exitCode).toBe(0)
+})
+
+test('manual mocks registered through different ids do not leak during list', async () => {
+  const result = await runVitestCli(
+    'list',
+    '--root',
+    'fixtures/mocking',
+    '--no-cache',
+    'src/manual-mock-dual-id-probe.test.ts',
+    'src/manual-mock-dual-id-target.test.ts',
+  )
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+  expect(result.stdout).toContain('src/manual-mock-dual-id-probe.test.ts > manual mocks registered for the same module under multiple ids stay local to this file')
+  expect(result.stdout).toContain('src/manual-mock-dual-id-target.test.ts > manual mocks from a previous file do not leak into later files')
   expect(result.exitCode).toBe(0)
 })
 
