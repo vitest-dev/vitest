@@ -236,6 +236,31 @@ export function deepMergeSnapshot(target: any, source: any): any {
   return target
 }
 
+export function getSnapshotSubset(target: any, source: any): any {
+  if (Array.isArray(target) && Array.isArray(source)) {
+    const subset: any[] = []
+    Object.keys(source).forEach((key) => {
+      if (key in target) {
+        const index = Number(key)
+        subset[index] = getSnapshotSubset(target[index], source[index])
+      }
+    })
+    return subset
+  }
+
+  if (isObject(target) && isObject(source) && !source.$$typeof) {
+    const subset = Object.create(Object.getPrototypeOf(target))
+    Object.keys(source).forEach((key) => {
+      if (key in target) {
+        subset[key] = getSnapshotSubset(target[key], source[key])
+      }
+    })
+    return subset
+  }
+
+  return target
+}
+
 export class DefaultMap<K, V> extends Map<K, V> {
   constructor(
     private defaultFn: (key: K) => V,

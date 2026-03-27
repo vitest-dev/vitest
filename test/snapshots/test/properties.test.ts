@@ -96,7 +96,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
       {
     -   "age": Any<Number>,
     +   "age": "thirty",
-    +   "name": "alice",
       }
 
      ❯ basic.test.ts:4:44
@@ -117,7 +116,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
 
       {
     -   "score": toSatisfy<[Function lessThan100]>,
-    +   "name": "bob",
     +   "score": 999,
       }
 
@@ -162,7 +160,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
       {
     -   "age": Any<Number>,
     +   "age": "twenty-five",
-    +   "name": "carol",
       }
 
      ❯ basic.test.ts:21:49
@@ -211,7 +208,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
       {
     -   "age": Any<Number>,
     +   "age": "thirty",
-    +   "name": "alice",
       }
 
      ❯ basic.test.ts:4:44
@@ -232,7 +228,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
 
       {
     -   "score": toSatisfy<[Function lessThan100]>,
-    +   "name": "bob",
     +   "score": 999,
       }
 
@@ -255,7 +250,6 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
       {
     -   "age": Any<Number>,
     +   "age": "twenty-five",
-    +   "name": "carol",
       }
 
      ❯ basic.test.ts:21:49

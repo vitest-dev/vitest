@@ -1,7 +1,7 @@
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
-import { deepMergeSnapshot } from './port/utils'
+import { deepMergeSnapshot, getSnapshotSubset } from './port/utils'
 
 function createMismatchError(
   message: string,
@@ -158,7 +158,7 @@ export class SnapshotClient {
         return {
           pass: false,
           message: () => errorMessage || 'Snapshot properties mismatched',
-          actual: received,
+          actual: getSnapshotSubset(received, properties),
           expected: properties,
         }
       }
