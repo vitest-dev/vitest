@@ -80,6 +80,15 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
+  // Vite 8+ uses TextDecoder/TextEncoder at the module level in module-runner.js,
+  // so they need to be available in the VM context even if the environment doesn't provide them
+  // see: https://github.com/vitejs/vite/pull/21985
+  if (!('TextDecoder' in context)) {
+    context.TextDecoder = TextDecoder
+  }
+  if (!('TextEncoder' in context)) {
+    context.TextEncoder = TextEncoder
+  }
 
   const stubs = getDefaultRequestStubs(context)
 
