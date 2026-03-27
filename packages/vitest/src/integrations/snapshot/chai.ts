@@ -7,6 +7,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
+import { getWorkerState } from '../../runtime/utils'
 
 let _client: SnapshotClient
 
@@ -56,7 +57,9 @@ function assertMatchResult(result: SyncExpectationResult): void {
     throw Object.assign(new Error(result.message()), {
       actual: result.actual,
       expected: result.expected,
-      // TODO: diffOptions
+      diffOptions: {
+        expand: getWorkerState().config.snapshotOptions.expand,
+      },
     })
   }
 }
