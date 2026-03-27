@@ -68,6 +68,11 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     }
   `)
 
+  // verify idempotency — re-run without update passes cleanly
+  const result2 = await runVitest({ root, update: 'none' })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toEqual(result.errorTree())
+
   // edit tests to break properties check
   editFile(testFile, s =>
     s
