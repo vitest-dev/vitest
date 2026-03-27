@@ -79,16 +79,6 @@ test('custom snapshot matcher', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts [ basic.test.ts ]
-    Error: Obsolete snapshots found when no snapshot update is expected.
-    · properties 1 1
-    · properties 2 1
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
-
-
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > file
@@ -104,17 +94,15 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:46:25
-         44|
-         45| test('file', () => {
-         46|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:40:25
+         38|
+         39| test('file', () => {
+         40|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         47| })
-         48|
+         41| })
+         42|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
      FAIL  basic.test.ts > properties 1
     Error: [custom error] Snapshot properties mismatched
@@ -128,17 +116,15 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:50:25
-         48|
-         49| test('properties 1', () => {
-         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:44:25
+         42|
+         43| test('properties 1', () => {
+         44|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         51| })
-         52|
+         45| })
+         46|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
 
      FAIL  basic.test.ts > properties 2
     Error: [custom error] Snapshot properties mismatched
@@ -152,17 +138,15 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:54:25
-         52|
-         53| test('properties 2', () => {
-         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:48:25
+         46|
+         47| test('properties 2', () => {
+         48|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         55| })
-         56|
+         49| })
+         50|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
 
      FAIL  basic.test.ts > inline
     Error: [custom error] Snapshot \`inline 1\` mismatched
@@ -177,29 +161,21 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:59:25
-         57| // -- TEST INLINE START --
-         58| test('inline', () => {
-         59|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:53:25
+         51| // -- TEST INLINE START --
+         52| test('inline', () => {
+         53|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         60|     Object {
-         61|       "length": 6,
+         54|     Object {
+         55|       "length": 6,
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomInlineSnapshot', meta: undefined } }
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "__module_errors__": Array [
-          "Obsolete snapshots found when no snapshot update is expected.
-    · properties 1 1
-    · properties 2 1
-    ",
-        ],
         "file": Array [
           "[custom error] Snapshot \`file 1\` mismatched",
         ],
@@ -234,16 +210,14 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:50:25
-         48|
-         49| test('properties 1', () => {
-         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:44:25
+         42|
+         43| test('properties 1', () => {
+         44|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         51| })
-         52|
+         45| })
+         46|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > properties 2
@@ -258,16 +232,14 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:54:25
-         52|
-         53| test('properties 2', () => {
-         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:48:25
+         46|
+         47| test('properties 2', () => {
+         48|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         55| })
-         56|
+         49| })
+         50|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
-    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
@@ -279,6 +251,20 @@ test('custom snapshot matcher', async () => {
     Object {
       "length": 11,
       "reversed": "tide-ahahah",
+    }
+    \`;
+
+    exports[\`properties 1 1\`] = \`
+    Object {
+      "length": 6,
+      "reversed": "opopop",
+    }
+    \`;
+
+    exports[\`properties 2 1\`] = \`
+    Object {
+      "length": toSatisfy<[Function lessThan10]>,
+      "reversed": "epepep",
     }
     \`;
     "
