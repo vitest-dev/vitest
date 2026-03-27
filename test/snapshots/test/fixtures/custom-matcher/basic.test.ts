@@ -3,7 +3,7 @@ import { toMatchInlineSnapshot, toMatchSnapshot } from "vitest/runtime"
 
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
-  toMatchCustomSnapshot: () => R
+  toMatchCustomSnapshot: (properties?: object) => R
   toMatchCustomInlineSnapshot: (snapshot?: string) => R
 }
 
@@ -26,9 +26,9 @@ function formatCustom(input: string) {
 // does jest supports this pattern?
 
 expect.extend({
-  toMatchCustomSnapshot(actual: string) {
+  toMatchCustomSnapshot(actual: string, properties?: object) {
     const actualCustom = formatCustom(actual)
-    const result = toMatchSnapshot.call(this, actualCustom)
+    const result = toMatchSnapshot.call(this, actualCustom, properties)
     // result can be further enhanced
     return { ...result, message: () => `[custom error] ${result.message()}` }
   },
@@ -46,10 +46,9 @@ test('file', () => {
   expect(`hahaha`).toMatchCustomSnapshot()
 })
 
-// TODO
-// test('with properties', () => {
-//   expect(`hahaha`).toMatchCustomSnapshot()
-// })
+test('properties', () => {
+  expect(`popopo`).toMatchCustomSnapshot({ length: expect.any(Number) })
+})
 
 // -- TEST INLINE START --
 test('inline', () => {
