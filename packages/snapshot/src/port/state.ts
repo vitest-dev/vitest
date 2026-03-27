@@ -267,7 +267,9 @@ export default class SnapshotState {
     }
   }
 
-  probeExpectedSnapshot(options: { testName: string; testId: string; isInline?: boolean; inlineSnapshot?: string }): {
+  probeExpectedSnapshot(
+    options: Pick<SnapshotMatchOptions, 'testName' | 'testId' | 'isInline' | 'inlineSnapshot'>,
+  ): {
     data?: string
     markAsChecked: () => void
   } {
