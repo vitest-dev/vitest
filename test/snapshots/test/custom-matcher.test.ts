@@ -76,14 +76,16 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:37:25
-         35|
-         36| test('custom file snapshot matcher', () => {
-         37|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:43:25
+         41|
+         42| test('custom file snapshot matcher', () => {
+         43|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         38| })
-         39|
+         44| })
+         45|
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > custom inline snapshot matcher
@@ -99,14 +101,16 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:42:25
-         40| // -- TEST INLINE START --
-         41| test('custom inline snapshot matcher', () => {
-         42|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:48:25
+         46| // -- TEST INLINE START --
+         47| test('custom inline snapshot matcher', () => {
+         48|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         43|     Object {
-         44|       "length": 6,
+         49|     Object {
+         50|       "length": 6,
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomInlineSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
