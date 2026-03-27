@@ -236,6 +236,101 @@ export function deepMergeSnapshot(target: any, source: any): any {
   return target
 }
 
+function getObjectKeys(object: object): Array<string | symbol> {
+  return [
+    ...Object.keys(object),
+    ...Object.getOwnPropertySymbols(object).filter(
+      symbol => Object.getOwnPropertyDescriptor(object, symbol)?.enumerable,
+    ),
+  ]
+}
+
+function hasPropertyInObject(object: object, key: string | symbol): boolean {
+  const shouldTerminate
+    = !object || typeof object !== 'object' || object === Object.prototype
+
+  if (shouldTerminate) {
+    return false
+  }
+
+  return (
+    Object.hasOwn(object, key)
+    || hasPropertyInObject(Object.getPrototypeOf(object), key)
+  )
+}
+
+function isSubsetLikeObject(value: unknown): value is object {
+  return isObject(value)
+    && !(value instanceof Date)
+    && !(value instanceof Set)
+    && !(value instanceof Map)
+    && !(value instanceof Error)
+    && !(value as any).$$typeof
+}
+
+function isTrackableObject(value: unknown): value is object {
+  return value !== null && (typeof value === 'object' || typeof value === 'function')
+}
+
+export function getSnapshotPropertiesSubset(
+  received: unknown,
+  properties: unknown,
+): unknown {
+  const seenReferences = new WeakMap<object, unknown>()
+
+  const project = (target: unknown, source: unknown): unknown => {
+    if (Array.isArray(target) && Array.isArray(source)) {
+      const projected: unknown[] = []
+      seenReferences.set(target, projected)
+
+      source.forEach((sourceValue, index) => {
+        if (!Object.hasOwn(target, index)) {
+          return
+        }
+
+        const targetValue = target[index]
+        projected[index] = isTrackableObject(targetValue) && seenReferences.has(targetValue)
+          ? seenReferences.get(targetValue)
+          : project(targetValue, sourceValue)
+      })
+
+      return projected
+    }
+
+    if (isSubsetLikeObject(target) && isSubsetLikeObject(source)) {
+      const projected = {}
+      seenReferences.set(target, projected)
+
+      if (
+        typeof target.constructor === 'function'
+        && typeof target.constructor.name === 'string'
+      ) {
+        Object.defineProperty(projected, 'constructor', {
+          enumerable: false,
+          value: target.constructor,
+        })
+      }
+
+      for (const key of getObjectKeys(source)) {
+        if (!hasPropertyInObject(target, key)) {
+          continue
+        }
+
+        const targetValue = (target as any)[key]
+        projected[key] = isTrackableObject(targetValue) && seenReferences.has(targetValue)
+          ? seenReferences.get(targetValue)
+          : project(targetValue, (source as any)[key])
+      }
+
+      return projected
+    }
+
+    return target
+  }
+
+  return project(received, properties)
+}
+
 export class DefaultMap<K, V> extends Map<K, V> {
   constructor(
     private defaultFn: (key: K) => V,

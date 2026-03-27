@@ -3,7 +3,7 @@ import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray }
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
 import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
+import { deepMergeSnapshot, getSnapshotPropertiesSubset } from '../../../packages/snapshot/src/port/utils'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
 describe('assertTypes', () => {
@@ -102,6 +102,66 @@ describe('deepMerge', () => {
       foo: 88,
       array: [{}, 'test'],
     })
+  })
+
+  test('getSnapshotPropertiesSubset removes unrelated keys recursively', () => {
+    const received = {
+      user: {
+        name: 'alice',
+        age: 30,
+        address: {
+          city: 'Paris',
+          zip: 75000,
+        },
+      },
+      extra: true,
+      list: [
+        { id: 1, label: 'first' },
+        { id: 2, label: 'second' },
+      ],
+    }
+
+    expect(getSnapshotPropertiesSubset(received, {
+      user: {
+        age: expect.any(Number),
+        address: {
+          zip: expect.any(Number),
+        },
+      },
+      list: [
+        { id: 1 },
+      ],
+    })).toEqual({
+      user: {
+        age: 30,
+        address: {
+          zip: 75000,
+        },
+      },
+      list: [
+        { id: 1 },
+      ],
+    })
+  })
+
+  test('getSnapshotPropertiesSubset preserves circular references', () => {
+    const received: { nested: { self?: unknown; value: number }; extra: string } = {
+      nested: {
+        value: 1,
+      },
+      extra: 'ignored',
+    }
+    received.nested.self = received.nested
+
+    const subset = getSnapshotPropertiesSubset(received, {
+      nested: {
+        self: {
+          value: expect.any(Number),
+        },
+      },
+    }) as { nested: { self: unknown } }
+
+    expect(subset.nested.self).toBe(subset.nested)
   })
 })
 
