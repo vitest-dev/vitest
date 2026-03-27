@@ -28,6 +28,12 @@ const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 
+export const providerInternals = {
+  parseCoverageAst(code: string): ReturnType<typeof parseAstAsync> {
+    return parseAstAsync(code)
+  },
+}
+
 export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8' as const
   version: string = version
@@ -200,10 +206,12 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     let ast
 
     try {
-      ast = await parseAstAsync(result.code)
+      ast = await providerInternals.parseCoverageAst(result.code)
     }
     catch (error) {
-      this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
+      if (debug.enabled) {
+        debug('Failed to parse %s. Excluding it from coverage. %O', filename, error)
+      }
       return {}
     }
 
