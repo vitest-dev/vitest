@@ -50,6 +50,14 @@ interface AssertOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
+/** Same shape as SyncExpectationResult from @vitest/expect */
+export interface MatchResult {
+  pass: boolean
+  message: () => string
+  actual?: unknown
+  expected?: unknown
+}
+
 export interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
@@ -99,7 +107,7 @@ export class SnapshotClient {
     return state
   }
 
-  assert(options: AssertOptions): void {
+  match(options: AssertOptions): MatchResult {
     const {
       filepath,
       name,
@@ -119,36 +127,36 @@ export class SnapshotClient {
     }
 
     const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
+
+    // Probe first so we can mark as checked even on early return
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+      testName,
+      testId,
+      isInline,
+      inlineSnapshot,
+    })
 
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
+        expectedSnapshot.markAsChecked()
         throw new Error(
           'Received value must be an object when the matcher has properties',
         )
       }
 
-      try {
-        const pass = this.options.isEqual?.(received, properties) ?? false
-        // const pass = equals(received, properties, [iterableEquality, subsetEquality])
-        if (!pass) {
-          throw createMismatchError(
-            'Snapshot properties mismatched',
-            snapshotState.expand,
-            received,
-            properties,
-          )
-        }
-        else {
-          received = deepMergeSnapshot(received, properties)
+      const propertiesPass = this.options.isEqual?.(received, properties) ?? false
+      if (!propertiesPass) {
+        expectedSnapshot.markAsChecked()
+        return {
+          pass: false,
+          message: () => errorMessage || 'Snapshot properties mismatched',
+          actual: received,
+          expected: properties,
         }
       }
-      catch (err: any) {
-        err.message = errorMessage || 'Snapshot mismatched'
-        throw err
-      }
+      received = deepMergeSnapshot(received, properties)
     }
-
-    const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     const { actual, expected, key, pass } = snapshotState.match({
       testId,
@@ -160,12 +168,23 @@ export class SnapshotClient {
       rawSnapshot,
     })
 
-    if (!pass) {
+    return {
+      pass,
+      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      actual: rawSnapshot ? actual : actual?.trim(),
+      expected: rawSnapshot ? expected : expected?.trim(),
+    }
+  }
+
+  assert(options: AssertOptions): void {
+    const result = this.match(options)
+    if (!result.pass) {
+      const snapshotState = this.getSnapshotState(options.filepath)
       throw createMismatchError(
-        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        result.message(),
         snapshotState.expand,
-        rawSnapshot ? actual : actual?.trim(),
-        rawSnapshot ? expected : expected?.trim(),
+        result.actual,
+        result.expected,
       )
     }
   }

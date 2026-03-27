@@ -267,6 +267,30 @@ export default class SnapshotState {
     }
   }
 
+  probeExpectedSnapshot(options: { testName: string; testId: string; isInline?: boolean; inlineSnapshot?: string }): {
+    data?: string
+    markAsChecked: () => void
+  } {
+    const count = this._counters.get(options.testName) + 1
+    const key = testNameToKey(options.testName, count)
+    let data: string | undefined
+    if (options?.isInline) {
+      data = options.inlineSnapshot
+    }
+    else {
+      data = this._snapshotData[key]
+    }
+
+    return {
+      data,
+      markAsChecked: () => {
+        this._counters.increment(options.testName)
+        this._testIdToKeys.get(options.testId).push(key)
+        this._uncheckedKeys.delete(key)
+      },
+    }
+  }
+
   match({
     testId,
     testName,
