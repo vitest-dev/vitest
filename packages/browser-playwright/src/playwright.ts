@@ -263,7 +263,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const idPredicates = new Map<string, (url: URL) => boolean>()
     const sessionIds = new Map<string, string[]>()
 
-    function createPredicate(sessionId: string, url: string) {
+    function createPredicate(url: string) {
       const moduleUrl = new URL(url, 'http://localhost')
       const predicate = (url: URL) => {
         if (url.searchParams.has('_vitest_original')) {
@@ -293,11 +293,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         return true
       }
-      const ids = sessionIds.get(sessionId) || []
-      ids.push(moduleUrl.href)
-      sessionIds.set(sessionId, ids)
-      idPredicates.set(predicateKey(sessionId, moduleUrl.href), predicate)
-      return predicate
+      return {
+        url: moduleUrl.href,
+        predicate,
+      }
     }
 
     function predicateKey(sessionId: string, url: string) {
@@ -307,7 +306,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        await page.context().route(createPredicate(sessionId, module.url), async (route) => {
+        const { url, predicate } = createPredicate(module.url)
+        const key = predicateKey(sessionId, url)
+        const existingPredicate = idPredicates.get(key)
+        if (existingPredicate) {
+          await page.context().unroute(existingPredicate)
+        }
+
+        const ids = sessionIds.get(sessionId) || []
+        if (!ids.includes(url)) {
+          ids.push(url)
+          sessionIds.set(sessionId, ids)
+        }
+        idPredicates.set(key, predicate)
+
+        await page.context().route(predicate, async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
             const body = createManualModuleSource(module.url, exports)
