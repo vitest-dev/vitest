@@ -273,16 +273,8 @@ export default class SnapshotState {
   } {
     const count = this._counters.get(options.testName) + 1
     const key = testNameToKey(options.testName, count)
-    let data: string | undefined
-    if (options?.isInline) {
-      data = options.inlineSnapshot
-    }
-    else {
-      data = this._snapshotData[key]
-    }
-
     return {
-      data,
+      data: options?.isInline ? options.inlineSnapshot : this._snapshotData[key],
       markAsChecked: () => {
         this._counters.increment(options.testName)
         this._testIdToKeys.get(options.testId).push(key)
