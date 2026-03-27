@@ -237,8 +237,6 @@ expect.extend({
 })
 ```
 
-The assertion name (the key you pass to `expect.extend`) is automatically used for snapshot keys and inline snapshot rewriting — no extra configuration needed.
-
 ::: warning
 For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
 :::
