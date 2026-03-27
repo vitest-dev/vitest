@@ -12,6 +12,10 @@ test("file asymmetric", () => {
   });
 });
 
+test("file snapshot-only", () => {
+  expect({ name: "dave", age: 42 }).toMatchSnapshot({ age: expect.any(Number) });
+});
+
 // -- TEST INLINE START --
 test("inline", () => {
   expect({ name: "carol", age: 25 }).toMatchInlineSnapshot({ age: expect.any(Number) }, `
