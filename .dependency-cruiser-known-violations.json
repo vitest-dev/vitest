@@ -1,0 +1,74 @@
+[
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/chunks/cli-api.CdrCPbCl.js",
+    "to": "bufferutil",
+    "rule": {
+      "severity": "error",
+      "name": "no-unresolved-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/chunks/cli-api.CdrCPbCl.js",
+    "to": "utf-8-validate",
+    "rule": {
+      "severity": "error",
+      "name": "no-unresolved-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/chunks/index.nZ2xqFgD.js",
+    "to": "async_hooks",
+    "rule": {
+      "severity": "warn",
+      "name": "no-deprecated-core-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/worker.js",
+    "to": "async_hooks",
+    "rule": {
+      "severity": "warn",
+      "name": "no-deprecated-core-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/workers/forks.js",
+    "to": "async_hooks",
+    "rule": {
+      "severity": "warn",
+      "name": "no-deprecated-core-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/workers/runVmTests.js",
+    "to": "async_hooks",
+    "rule": {
+      "severity": "warn",
+      "name": "no-deprecated-core-in-dist"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/vitest/dist/workers/threads.js",
+    "to": "async_hooks",
+    "rule": {
+      "severity": "warn",
+      "name": "no-deprecated-core-in-dist"
+    }
+  },
+  {
+    "type": "module",
+    "from": "packages/mocker/dist/auto-register.d.ts",
+    "to": "packages/mocker/dist/auto-register.d.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-orphans-in-dist"
+    }
+  }
+]
