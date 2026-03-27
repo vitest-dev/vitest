@@ -44,7 +44,7 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    __vitest_context: {
+    __vitest_context__: {
       chaiAssertion: assertion,
       chaiUtils: util,
       assertionName,

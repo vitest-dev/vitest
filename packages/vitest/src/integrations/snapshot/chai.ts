@@ -308,9 +308,9 @@ export function toMatchSnapshot(
   hint?: string,
 ): SyncExpectationResult {
   return toMatchSnapshotImpl(
-    this.__vitest_context.chaiAssertion,
-    this.__vitest_context.chaiUtils,
-    this.__vitest_context.assertionName,
+    this.__vitest_context__.chaiAssertion,
+    this.__vitest_context__.chaiUtils,
+    this.__vitest_context__.assertionName,
     received,
     propertiesOrHint,
     hint,
@@ -325,9 +325,9 @@ export function toMatchInlineSnapshot(
   hint?: string,
 ): SyncExpectationResult {
   return toMatchInlineSnapshotImpl(
-    this.__vitest_context.chaiAssertion,
-    this.__vitest_context.chaiUtils,
-    this.__vitest_context.assertionName,
+    this.__vitest_context__.chaiAssertion,
+    this.__vitest_context__.chaiUtils,
+    this.__vitest_context__.assertionName,
     received,
     propertiesOrHint,
     inlineSnapshot,

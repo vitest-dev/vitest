@@ -85,7 +85,7 @@ export interface MatcherState {
   poll?: boolean
   task?: Readonly<Test>
   /** @internal */
-  __vitest_context: {
+  __vitest_context__: {
     chaiAssertion: Chai.AssertionStatic & Chai.Assertion
     chaiUtils: Chai.ChaiUtils
     assertionName: string
