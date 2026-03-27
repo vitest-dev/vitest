@@ -781,7 +781,18 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
-  resolved.sequence.groupOrder ??= 0
+  if (resolved.sequence.groupOrder != null) {
+    const order = Number(resolved.sequence.groupOrder)
+    if (!Number.isFinite(order)) {
+      throw new TypeError(
+        `Invalid "sequence.groupOrder" value: expected a finite number, received ${JSON.stringify(resolved.sequence.groupOrder)}`,
+      )
+    }
+    resolved.sequence.groupOrder = order
+  }
+  else {
+    resolved.sequence.groupOrder = 0
+  }
   resolved.sequence.hooks ??= 'stack'
   // Set seed if either files or tests are shuffled
   if (resolved.sequence.sequencer === RandomSequencer || resolved.sequence.shuffle) {
