@@ -52,18 +52,6 @@ function getTestNames(test: Test) {
   }
 }
 
-function assertMatchResult(result: SyncExpectationResult): void {
-  if (!result.pass) {
-    throw Object.assign(new Error(result.message()), {
-      actual: result.actual,
-      expected: result.expected,
-      diffOptions: {
-        expand: getWorkerState().config.snapshotOptions.expand,
-      },
-    })
-  }
-}
-
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   function getTest(assertionName: string, obj: object) {
     const test = utils.flag(obj, 'vitest-test')
@@ -79,13 +67,18 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       key,
       wrapAssertion(utils, key, function (
         this,
-        properties?: object,
-        message?: string,
+        propertiesOrHint?: object | string,
+        hint?: string,
       ) {
-        const received = utils.flag(this, 'object')
-        assertMatchResult(
-          toMatchSnapshotImpl(this, utils, key, received, properties, message),
-        )
+        toMatchSnapshotImpl({
+          assertion: this,
+          utils,
+          assertionName: key,
+          assert: true,
+          received: utils.flag(this, 'object'),
+          propertiesOrHint,
+          hint,
+        })
       }),
     )
   }
@@ -131,25 +124,37 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     'toMatchInlineSnapshot',
     wrapAssertion(utils, 'toMatchInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
       this,
-      properties?: object,
+      propertiesOrHint?: object | string,
       inlineSnapshot?: string,
-      message?: string,
+      hint?: string,
     ) {
-      const received = utils.flag(this, 'object')
-      assertMatchResult(
-        toMatchInlineSnapshotImpl(this, utils, 'toMatchInlineSnapshot', received, properties, inlineSnapshot, message),
-      )
+      toMatchInlineSnapshotImpl({
+        assertion: this,
+        utils,
+        assertionName: 'toMatchInlineSnapshot',
+        assert: true,
+        received: utils.flag(this, 'object'),
+        propertiesOrHint,
+        inlineSnapshot,
+        hint,
+      })
     }),
   )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
-    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, properties?: object, message?: string) {
+    wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, propertiesOrHint?: object | string, hint?: string) {
       const expected = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
-      assertMatchResult(
-        toMatchSnapshotImpl(this, utils, 'toThrowErrorMatchingSnapshot', getError(expected, promise), properties, message),
-      )
+      toMatchSnapshotImpl({
+        assertion: this,
+        utils,
+        assertionName: 'toThrowErrorMatchingSnapshot',
+        assert: true,
+        received: getError(expected, promise),
+        propertiesOrHint,
+        hint,
+      })
     }),
   )
   utils.addMethod(
@@ -162,24 +167,43 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     ) {
       const expected = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
-      assertMatchResult(
-        toMatchInlineSnapshotImpl(this, utils, 'toThrowErrorMatchingInlineSnapshot', getError(expected, promise), undefined, inlineSnapshot, message),
-      )
+      toMatchInlineSnapshotImpl({
+        assertion: this,
+        utils,
+        assertionName: 'toThrowErrorMatchingInlineSnapshot',
+        assert: true,
+        received: getError(expected, promise),
+        inlineSnapshot,
+        hint: message,
+      })
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
 }
 
-// TODO: option object as argument
-// TODO: flag to switch throwing vs non-throwing
-function toMatchSnapshotImpl(
-  assertion: Chai.AssertionStatic & Chai.Assertion,
-  utils: Chai.ChaiUtils,
-  assertionName: string,
-  received: unknown,
-  propertiesOrHint?: object,
-  hint?: string,
-): SyncExpectationResult {
+interface ToMatchSnapshotImplOptions {
+  assertion: Chai.AssertionStatic & Chai.Assertion
+  utils: Chai.ChaiUtils
+  assertionName: string
+  received: unknown
+  assert?: boolean
+  propertiesOrHint?: object | string
+  inlineSnapshot?: string
+  hint?: string
+}
+
+function toMatchSnapshotImpl(options: ToMatchSnapshotImplOptions): SyncExpectationResult {
+  const { assertion, utils, assertionName, received } = options
+  let { hint } = options
+  let properties: object | undefined
+
+  if (typeof options.propertiesOrHint === 'string') {
+    hint = options.propertiesOrHint
+  }
+  else {
+    properties = options.propertiesOrHint
+  }
+
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -189,29 +213,33 @@ function toMatchSnapshotImpl(
   if (!test) {
     throw new Error(`'${assertionName}' cannot be used without test context`)
   }
-  if (typeof propertiesOrHint === 'string' && typeof hint === 'undefined') {
-    hint = propertiesOrHint
-    propertiesOrHint = undefined
-  }
-  return getSnapshotClient().match({
+  const result = getSnapshotClient().match({
     received,
     message: hint,
     isInline: false,
-    properties: propertiesOrHint,
+    properties,
     errorMessage: utils.flag(assertion, 'message'),
     ...getTestNames(test),
   })
+  if (options.assert) {
+    assertMatchResult(result)
+  }
+  return result
 }
 
-function toMatchInlineSnapshotImpl(
-  assertion: Chai.AssertionStatic & Chai.Assertion,
-  utils: Chai.ChaiUtils,
-  assertionName: string,
-  received: unknown,
-  propertiesOrHint?: object | string,
-  inlineSnapshot?: string,
-  hint?: string,
-): SyncExpectationResult {
+function toMatchInlineSnapshotImpl(options: ToMatchSnapshotImplOptions): SyncExpectationResult {
+  const { assertion, utils, assertionName, received } = options
+  let { hint, inlineSnapshot } = options
+  let properties: object | undefined
+
+  if (typeof options.propertiesOrHint === 'string') {
+    hint = inlineSnapshot
+    inlineSnapshot = options.propertiesOrHint
+  }
+  else {
+    properties = options.propertiesOrHint
+  }
+
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
@@ -220,28 +248,37 @@ function toMatchInlineSnapshotImpl(
   const test = utils.flag(assertion, 'vitest-test') as Test | undefined
   if (!test) {
     throw new Error(`'${assertionName}' cannot be used without test context`)
-  }
-  if (typeof propertiesOrHint === 'string') {
-    hint = inlineSnapshot
-    inlineSnapshot = propertiesOrHint
-    propertiesOrHint = undefined
   }
   if (inlineSnapshot) {
     inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
   }
-  return getSnapshotClient().match({
+  const result = getSnapshotClient().match({
     received,
     message: hint,
     isInline: true,
-    properties: propertiesOrHint,
+    properties,
     inlineSnapshot,
     errorMessage: utils.flag(assertion, 'message'),
-    // pass `assertionName` to help stack probing
     assertionName,
-    // set by async assertion (e.g. resolves/rejects) for stack probing
     error: utils.flag(assertion, 'error'),
     ...getTestNames(test),
   })
+  if (options.assert) {
+    assertMatchResult(result)
+  }
+  return result
+}
+
+function assertMatchResult(result: SyncExpectationResult): void {
+  if (!result.pass) {
+    throw Object.assign(new Error(result.message()), {
+      actual: result.actual,
+      expected: result.expected,
+      diffOptions: {
+        expand: getWorkerState().config.snapshotOptions.expand,
+      },
+    })
+  }
 }
 
 /**
@@ -268,17 +305,17 @@ function toMatchInlineSnapshotImpl(
 export function toMatchSnapshot(
   this: MatcherState,
   received: unknown,
-  propertiesOrHint?: object,
+  propertiesOrHint?: object | string,
   hint?: string,
 ): SyncExpectationResult {
-  return toMatchSnapshotImpl(
-    this.__vitest_context__.chaiAssertion,
-    this.__vitest_context__.chaiUtils,
-    this.__vitest_context__.assertionName,
+  return toMatchSnapshotImpl({
+    assertion: this.__vitest_context__.chaiAssertion,
+    utils: this.__vitest_context__.chaiUtils,
+    assertionName: this.__vitest_context__.assertionName,
     received,
     propertiesOrHint,
     hint,
-  )
+  })
 }
 
 /**
@@ -309,13 +346,13 @@ export function toMatchInlineSnapshot(
   inlineSnapshot?: string,
   hint?: string,
 ): SyncExpectationResult {
-  return toMatchInlineSnapshotImpl(
-    this.__vitest_context__.chaiAssertion,
-    this.__vitest_context__.chaiUtils,
-    this.__vitest_context__.assertionName,
+  return toMatchInlineSnapshotImpl({
+    assertion: this.__vitest_context__.chaiAssertion,
+    utils: this.__vitest_context__.chaiUtils,
+    assertionName: this.__vitest_context__.assertionName,
     received,
     propertiesOrHint,
     inlineSnapshot,
     hint,
-  )
+  })
 }
