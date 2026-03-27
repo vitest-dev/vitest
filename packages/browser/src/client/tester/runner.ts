@@ -156,7 +156,8 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      const lastErrorContext = task.result?.errors?.at(-1)?.context
+      // check custom matcher metadata in JestExtendError
+      const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
       if (
         this.config.browser.screenshotFailures
         && document.body.clientHeight > 0

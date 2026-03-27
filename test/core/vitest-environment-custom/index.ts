@@ -19,6 +19,8 @@ export default <Environment>{
       AbortController,
       EventTarget,
       Event,
+      TextDecoder,
+      TextEncoder,
     })
     return {
       getVmContext() {

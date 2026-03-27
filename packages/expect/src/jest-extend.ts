@@ -70,12 +70,18 @@ function getMatcherState(
   }
 }
 
+interface VitestErrorContext {
+  assertionName: string
+  meta?: object
+}
+
 class JestExtendError extends Error {
   constructor(
     message: string,
     public actual?: any,
     public expected?: any,
-    public context?: { assertionName: string; meta?: object },
+    /** @internal */
+    public __vitest_error_context__?: VitestErrorContext,
   ) {
     super(message)
   }

@@ -2,6 +2,11 @@
 
 import { expect, test } from 'vitest'
 
+test('TextDecoder and TextEncoder are available', () => {
+  expect(typeof TextDecoder).toBe('function')
+  expect(typeof TextEncoder).toBe('function')
+})
+
 test('custom env is defined', () => {
   expect(expect.getState().environment).toBe('custom')
   expect((globalThis as any).testEnvironment).toBe('custom')
