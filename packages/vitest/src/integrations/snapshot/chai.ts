@@ -195,10 +195,15 @@ function normalizeInlineArguments(
   inlineSnapshotOrHint?: string,
   hint?: string,
 ): { properties?: object; inlineSnapshot?: string; hint?: string } {
+  let inlineSnapshot: string | undefined
   if (typeof propertiesOrInlineSnapshot === 'string') {
-    return { inlineSnapshot: propertiesOrInlineSnapshot, hint: inlineSnapshotOrHint }
+    inlineSnapshot = stripSnapshotIndentation(propertiesOrInlineSnapshot)
+    return { inlineSnapshot, hint: inlineSnapshotOrHint }
   }
-  return { properties: propertiesOrInlineSnapshot, inlineSnapshot: inlineSnapshotOrHint, hint }
+  if (inlineSnapshotOrHint) {
+    inlineSnapshot = stripSnapshotIndentation(inlineSnapshotOrHint)
+  }
+  return { properties: propertiesOrInlineSnapshot, inlineSnapshot, hint }
 }
 
 function toMatchSnapshotImpl(options: {
@@ -212,8 +217,7 @@ function toMatchSnapshotImpl(options: {
   isInline?: boolean
   inlineSnapshot?: string
 }): SyncExpectationResult {
-  const { assertion, utils, assertionName, received, isInline } = options
-  let { inlineSnapshot } = options
+  const { assertion, utils, assertionName, received, isInline, inlineSnapshot } = options
 
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
@@ -223,9 +227,6 @@ function toMatchSnapshotImpl(options: {
   const test = utils.flag(assertion, 'vitest-test') as Test | undefined
   if (!test) {
     throw new Error(`'${assertionName}' cannot be used without test context`)
-  }
-  if (inlineSnapshot) {
-    inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
   }
   const result = getSnapshotClient().match({
     received,
