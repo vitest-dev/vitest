@@ -78,3 +78,23 @@ test('mocking out of root', async () => {
     expect(vitest.stdout).toReportPassedTest('basic.test.js', browser)
   })
 })
+
+test('manual mocks do not leak across browser files when alias and relative ids target the same module', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking',
+  }, ['src/manual-repro/aaa-probe.spec.ts', 'src/manual-repro/zzz-target.spec.ts'])
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('src/manual-repro/aaa-probe.spec.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/manual-repro/zzz-target.spec.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+}, 60_000)

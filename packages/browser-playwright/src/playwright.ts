@@ -293,10 +293,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         return true
       }
+      const key = predicateKey(sessionId, moduleUrl.href)
       const ids = sessionIds.get(sessionId) || []
-      ids.push(moduleUrl.href)
-      sessionIds.set(sessionId, ids)
-      idPredicates.set(predicateKey(sessionId, moduleUrl.href), predicate)
+      if (!ids.includes(moduleUrl.href)) {
+        ids.push(moduleUrl.href)
+        sessionIds.set(sessionId, ids)
+      }
+      idPredicates.set(key, predicate)
       return predicate
     }
 
@@ -307,6 +310,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
+        const key = predicateKey(sessionId, new URL(module.url, 'http://localhost').href)
+        const existingPredicate = idPredicates.get(key)
+        if (existingPredicate) {
+          await page.context().unroute(existingPredicate)
+        }
         await page.context().route(createPredicate(sessionId, module.url), async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
