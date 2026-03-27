@@ -145,7 +145,14 @@ export class SnapshotClient {
         )
       }
 
-      const propertiesPass = this.options.isEqual?.(received, properties) ?? false
+      let propertiesPass: boolean
+      try {
+        propertiesPass = this.options.isEqual?.(received, properties) ?? false
+      }
+      catch (err) {
+        expectedSnapshot.markAsChecked()
+        throw err
+      }
       if (!propertiesPass) {
         expectedSnapshot.markAsChecked()
         return {
