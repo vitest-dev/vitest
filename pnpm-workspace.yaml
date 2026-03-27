@@ -34,7 +34,7 @@ overrides:
   acorn: 8.11.3
   mlly: ^1.8.0
   rollup: $rollup
-  vite: $vite
+  vite: npm:vite@8
   vitest: workspace:*
 patchedDependencies:
   '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
