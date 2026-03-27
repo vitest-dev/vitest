@@ -12,10 +12,10 @@ declare module 'vitest' {
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
-function formatCustom(received: string) {
+function formatCustom(input: string) {
   return {
-    reversed: received.split('').reverse().join(''),
-    length: received.length,
+    reversed: input.split('').reverse().join(''),
+    length: input.length,
   }
 }
 
@@ -26,25 +26,33 @@ function formatCustom(received: string) {
 // does jest supports this pattern?
 
 expect.extend({
-  toMatchCustomSnapshot(received: string) {
-    const receivedCustom = formatCustom(received)
-    return toMatchSnapshot.call(this, receivedCustom)
+  toMatchCustomSnapshot(actual: string) {
+    const actualCustom = formatCustom(actual)
+    const result = toMatchSnapshot.call(this, actualCustom)
+    // result can be further enhanced
+    return { ...result, message: () => `[custom error] ${result.message()}` }
   },
   toMatchCustomInlineSnapshot(
-    received: string,
+    actual: string,
     inlineSnapshot?: string,
   ) {
-    const receivedCustom = formatCustom(received)
-    return toMatchInlineSnapshot.call(this, receivedCustom, inlineSnapshot)
+    const actualCustom = formatCustom(actual)
+    const result = toMatchInlineSnapshot.call(this, actualCustom, inlineSnapshot)
+    return { ...result, message: () => `[custom error] ${result.message()}` }
   },
 })
 
-test('custom file snapshot matcher', () => {
+test('file', () => {
   expect(`hahaha`).toMatchCustomSnapshot()
 })
 
+// TODO
+// test('with properties', () => {
+//   expect(`hahaha`).toMatchCustomSnapshot()
+// })
+
 // -- TEST INLINE START --
-test('custom inline snapshot matcher', () => {
+test('inline', () => {
   expect(`hehehe`).toMatchCustomInlineSnapshot(`
     Object {
       "length": 6,

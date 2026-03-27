@@ -26,7 +26,7 @@ test('custom snapshot matcher', async () => {
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`custom file snapshot matcher 1\`] = \`
+    exports[\`file 1\`] = \`
     Object {
       "length": 6,
       "reversed": "ahahah",
@@ -35,7 +35,7 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-    "test('custom inline snapshot matcher', () => {
+    "test('inline', () => {
       expect(\`hehehe\`).toMatchCustomInlineSnapshot(\`
         Object {
           "length": 6,
@@ -47,8 +47,8 @@ test('custom snapshot matcher', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "custom file snapshot matcher": "passed",
-        "custom inline snapshot matcher": "passed",
+        "file": "passed",
+        "inline": "passed",
       },
     }
   `)
@@ -63,8 +63,8 @@ test('custom snapshot matcher', async () => {
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  basic.test.ts > custom file snapshot matcher
-    Error: Snapshot \`custom file snapshot matcher 1\` mismatched
+     FAIL  basic.test.ts > file
+    Error: [custom error] Snapshot \`file 1\` mismatched
 
     - Expected
     + Received
@@ -76,20 +76,20 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:43:25
-         41|
-         42| test('custom file snapshot matcher', () => {
-         43|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:46:25
+         44|
+         45| test('file', () => {
+         46|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         44| })
-         45|
+         47| })
+         48|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
-     FAIL  basic.test.ts > custom inline snapshot matcher
-    Error: Snapshot \`custom inline snapshot matcher 1\` mismatched
+     FAIL  basic.test.ts > inline
+    Error: [custom error] Snapshot \`inline 1\` mismatched
 
     - Expected
     + Received
@@ -101,13 +101,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:48:25
-         46| // -- TEST INLINE START --
-         47| test('custom inline snapshot matcher', () => {
-         48|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:56:25
+         54| // -- TEST INLINE START --
+         55| test('inline', () => {
+         56|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         49|     Object {
-         50|       "length": 6,
+         57|     Object {
+         58|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
     Serialized Error: { context: { assertionName: 'toMatchCustomInlineSnapshot', meta: undefined } }
@@ -118,11 +118,11 @@ test('custom snapshot matcher', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "custom file snapshot matcher": Array [
-          "Snapshot \`custom file snapshot matcher 1\` mismatched",
+        "file": Array [
+          "[custom error] Snapshot \`file 1\` mismatched",
         ],
-        "custom inline snapshot matcher": Array [
-          "Snapshot \`custom inline snapshot matcher 1\` mismatched",
+        "inline": Array [
+          "[custom error] Snapshot \`inline 1\` mismatched",
         ],
       },
     }
@@ -134,7 +134,7 @@ test('custom snapshot matcher', async () => {
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-    exports[\`custom file snapshot matcher 1\`] = \`
+    exports[\`file 1\`] = \`
     Object {
       "length": 11,
       "reversed": "tide-ahahah",
@@ -143,7 +143,7 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-    "test('custom inline snapshot matcher', () => {
+    "test('inline', () => {
       expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
         Object {
           "length": 11,
@@ -155,8 +155,8 @@ test('custom snapshot matcher', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "custom file snapshot matcher": "passed",
-        "custom inline snapshot matcher": "passed",
+        "file": "passed",
+        "inline": "passed",
       },
     }
   `)
