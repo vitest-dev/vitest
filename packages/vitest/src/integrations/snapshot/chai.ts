@@ -217,7 +217,7 @@ function toMatchSnapshotImpl(options: {
   isInline?: boolean
   inlineSnapshot?: string
 }): SyncExpectationResult {
-  const { assertion, utils, assertionName, received, isInline, inlineSnapshot } = options
+  const { assertion, utils, assertionName } = options
 
   utils.flag(assertion, '_name', assertionName)
   const isNot = utils.flag(assertion, 'negate')
@@ -229,11 +229,11 @@ function toMatchSnapshotImpl(options: {
     throw new Error(`'${assertionName}' cannot be used without test context`)
   }
   const result = getSnapshotClient().match({
-    received,
-    message: options.hint,
-    isInline,
+    received: options.received,
     properties: options.properties,
-    inlineSnapshot,
+    message: options.hint,
+    isInline: options.isInline,
+    inlineSnapshot: options.inlineSnapshot,
     errorMessage: utils.flag(assertion, 'message'),
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
