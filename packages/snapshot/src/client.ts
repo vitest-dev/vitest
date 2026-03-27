@@ -50,7 +50,7 @@ interface AssertOptions {
   rawSnapshot?: RawSnapshotInfo
 }
 
-/** Same shape as SyncExpectationResult from @vitest/expect */
+/** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
 export interface MatchResult {
   pass: boolean
   message: () => string
