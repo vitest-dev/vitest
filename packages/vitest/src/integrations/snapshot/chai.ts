@@ -301,7 +301,27 @@ function toMatchInlineSnapshotImpl(
   })
 }
 
-// TODO: docs
+/**
+ * Composable for building custom snapshot matchers via `expect.extend`.
+ * Call with `this` bound to the matcher state. Returns `{ pass, message }`
+ * compatible with the custom matcher return contract.
+ *
+ * The assertion name is automatically inferred from the `expect.extend` key,
+ * so file snapshots use the custom matcher name as the snapshot key prefix.
+ *
+ * @example
+ * ```ts
+ * import { toMatchSnapshot } from 'vitest/runtime'
+ *
+ * expect.extend({
+ *   toMatchTrimmedSnapshot(received: string, length: number) {
+ *     return toMatchSnapshot.call(this, received.slice(0, length))
+ *   },
+ * })
+ * ```
+ *
+ * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+ */
 export function toMatchSnapshot(
   this: MatcherState,
   received: unknown,
@@ -318,6 +338,27 @@ export function toMatchSnapshot(
   )
 }
 
+/**
+ * Composable for building custom inline snapshot matchers via `expect.extend`.
+ * Call with `this` bound to the matcher state. Returns `{ pass, message }`
+ * compatible with the custom matcher return contract.
+ *
+ * The assertion name is automatically inferred from the `expect.extend` key,
+ * so inline snapshots are rewritten using the custom matcher name.
+ *
+ * @example
+ * ```ts
+ * import { toMatchInlineSnapshot } from 'vitest/runtime'
+ *
+ * expect.extend({
+ *   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+ *     return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+ *   },
+ * })
+ * ```
+ *
+ * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+ */
 export function toMatchInlineSnapshot(
   this: MatcherState,
   received: unknown,

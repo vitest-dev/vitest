@@ -200,6 +200,66 @@ Pretty foo: Object {
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
 
+## Custom Snapshot Matchers
+
+You can build custom snapshot matchers using the composable functions exported from `vitest/runtime`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+
+```ts
+import { expect, test } from 'vitest'
+import { toMatchInlineSnapshot, toMatchSnapshot } from 'vitest/runtime'
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length))
+  },
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+})
+
+test('file snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedSnapshot(10)
+})
+
+test('inline snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
+})
+```
+
+The composables return `{ pass, message }` so you can further customize the error:
+
+```ts
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    const result = toMatchSnapshot.call(this, received.slice(0, length))
+    return { ...result, message: () => `Trimmed snapshot failed: ${result.message()}` }
+  },
+})
+```
+
+The assertion name (the key you pass to `expect.extend`) is automatically used for snapshot keys and inline snapshot rewriting — no extra configuration needed.
+
+::: warning
+For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
+:::
+
+For TypeScript, extend the `Assertion` interface:
+
+```ts
+import 'vitest'
+
+declare module 'vitest' {
+  interface Assertion<T = any> {
+    toMatchTrimmedSnapshot: (length: number) => T
+    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
+  }
+}
+```
+
+::: tip
+See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
+:::
+
 ## Difference from Jest
 
 Vitest provides an almost compatible Snapshot feature with [Jest's](https://jestjs.io/docs/snapshot-testing) with a few exceptions:
