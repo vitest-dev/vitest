@@ -46,8 +46,12 @@ test('file', () => {
   expect(`hahaha`).toMatchCustomSnapshot()
 })
 
-test('properties', () => {
-  expect(`popopo`).toMatchCustomSnapshot({ length: expect.any(Number) })
+test('properties 1', () => {
+  expect(`popopo`).toMatchCustomSnapshot({ length: 6 })
+})
+
+test('properties 2', () => {
+  expect(`pepepe`).toMatchCustomSnapshot({ length: expect.toSatisfy(function lessThan10(n) { return n < 10 }) })
 })
 
 // -- TEST INLINE START --
