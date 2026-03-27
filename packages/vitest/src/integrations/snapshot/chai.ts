@@ -234,7 +234,9 @@ function toMatchSnapshotImpl(options: {
     properties: options.properties,
     inlineSnapshot,
     errorMessage: utils.flag(assertion, 'message'),
+    // pass `assertionName` for inline snapshot stack probing
     assertionName,
+    // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
     error: utils.flag(assertion, 'error'),
     ...getTestNames(test),
   })
