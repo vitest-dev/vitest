@@ -14,7 +14,9 @@ export interface InlineSnapshot {
   file: string
   line: number
   column: number
-  // TODO: can we rely on `method` extracted from stack?
+  // it maybe possible to accurately extract this from `ParsedStack.method`,
+  // but for now, we ask higher level assertion to pass it explicitly
+  // since this is useful for certain error messages before we extract stack.
   assertionName?: string
 }
 
