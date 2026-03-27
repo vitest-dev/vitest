@@ -51,12 +51,12 @@ interface AssertOptions {
   assertionName?: string
 }
 
-/** same shape as expect.extend custom matcher result */
+/** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
 export interface MatchResult {
   pass: boolean
   message: () => string
-  actual?: string
-  expected?: string
+  actual?: unknown
+  expected?: unknown
 }
 
 export interface SnapshotClientOptions {
@@ -130,33 +130,27 @@ export class SnapshotClient {
 
     const snapshotState = this.getSnapshotState(filepath)
 
+    // TODO:
+    // early return/throwing pass should consume "uncheckedKeys"
+    // to avoid false-flagging obsolete snapshots.
+    // (this is a pre-existing issue)
     if (typeof properties === 'object') {
-      // TODO: this should be also non-throwing?
       if (typeof received !== 'object' || !received) {
         throw new Error(
           'Received value must be an object when the matcher has properties',
         )
       }
 
-      try {
-        const pass = this.options.isEqual?.(received, properties) ?? false
-        // const pass = equals(received, properties, [iterableEquality, subsetEquality])
-        if (!pass) {
-          throw createMismatchError(
-            'Snapshot properties mismatched',
-            snapshotState.expand,
-            received,
-            properties,
-          )
-        }
-        else {
-          received = deepMergeSnapshot(received, properties)
+      const propertiesPass = this.options.isEqual?.(received, properties) ?? false
+      if (!propertiesPass) {
+        return {
+          pass: false,
+          message: () => errorMessage || 'Snapshot properties mismatched',
+          actual: received,
+          expected: properties,
         }
       }
-      catch (err: any) {
-        err.message = errorMessage || 'Snapshot mismatched'
-        throw err
-      }
+      received = deepMergeSnapshot(received, properties)
     }
 
     const testName = [name, ...(message ? [message] : [])].join(' > ')

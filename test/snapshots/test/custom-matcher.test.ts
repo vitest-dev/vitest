@@ -117,7 +117,7 @@ test('custom snapshot matcher', async () => {
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
 
      FAIL  basic.test.ts > properties 1
-    Error: Snapshot mismatched
+    Error: [custom error] Snapshot properties mismatched
 
     - Expected
     + Received
@@ -128,19 +128,20 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ Object.toMatchCustomSnapshot basic.test.ts:31:36
-         29|   toMatchCustomSnapshot(actual: string, properties?: object) {
-         30|     const actualCustom = formatCustom(actual)
-         31|     const result = toMatchSnapshot.call(this, actualCustom, properties)
-           |                                    ^
-         32|     // result can be further enhanced
-         33|     return { ...result, message: () => \`[custom error] \${result.messag…
      ❯ basic.test.ts:50:25
+         48|
+         49| test('properties 1', () => {
+         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+           |                         ^
+         51| })
+         52|
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
 
      FAIL  basic.test.ts > properties 2
-    Error: Snapshot mismatched
+    Error: [custom error] Snapshot properties mismatched
 
     - Expected
     + Received
@@ -151,15 +152,16 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ Object.toMatchCustomSnapshot basic.test.ts:31:36
-         29|   toMatchCustomSnapshot(actual: string, properties?: object) {
-         30|     const actualCustom = formatCustom(actual)
-         31|     const result = toMatchSnapshot.call(this, actualCustom, properties)
-           |                                    ^
-         32|     // result can be further enhanced
-         33|     return { ...result, message: () => \`[custom error] \${result.messag…
      ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 2', () => {
+         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+           |                         ^
+         55| })
+         56|
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
 
      FAIL  basic.test.ts > inline
@@ -205,10 +207,10 @@ test('custom snapshot matcher', async () => {
           "[custom error] Snapshot \`inline 1\` mismatched",
         ],
         "properties 1": Array [
-          "Snapshot mismatched",
+          "[custom error] Snapshot properties mismatched",
         ],
         "properties 2": Array [
-          "Snapshot mismatched",
+          "[custom error] Snapshot properties mismatched",
         ],
       },
     }
@@ -221,7 +223,7 @@ test('custom snapshot matcher', async () => {
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > properties 1
-    Error: Snapshot mismatched
+    Error: [custom error] Snapshot properties mismatched
 
     - Expected
     + Received
@@ -232,19 +234,20 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ Object.toMatchCustomSnapshot basic.test.ts:31:36
-         29|   toMatchCustomSnapshot(actual: string, properties?: object) {
-         30|     const actualCustom = formatCustom(actual)
-         31|     const result = toMatchSnapshot.call(this, actualCustom, properties)
-           |                                    ^
-         32|     // result can be further enhanced
-         33|     return { ...result, message: () => \`[custom error] \${result.messag…
      ❯ basic.test.ts:50:25
+         48|
+         49| test('properties 1', () => {
+         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+           |                         ^
+         51| })
+         52|
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > properties 2
-    Error: Snapshot mismatched
+    Error: [custom error] Snapshot properties mismatched
 
     - Expected
     + Received
@@ -255,15 +258,16 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ Object.toMatchCustomSnapshot basic.test.ts:31:36
-         29|   toMatchCustomSnapshot(actual: string, properties?: object) {
-         30|     const actualCustom = formatCustom(actual)
-         31|     const result = toMatchSnapshot.call(this, actualCustom, properties)
-           |                                    ^
-         32|     // result can be further enhanced
-         33|     return { ...result, message: () => \`[custom error] \${result.messag…
      ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 2', () => {
+         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+           |                         ^
+         55| })
+         56|
 
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+    Serialized Error: { context: { assertionName: 'toMatchCustomSnapshot', meta: undefined } }
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
@@ -295,10 +299,10 @@ test('custom snapshot matcher', async () => {
         "file": "passed",
         "inline": "passed",
         "properties 1": Array [
-          "Snapshot mismatched",
+          "[custom error] Snapshot properties mismatched",
         ],
         "properties 2": Array [
-          "Snapshot mismatched",
+          "[custom error] Snapshot properties mismatched",
         ],
       },
     }
