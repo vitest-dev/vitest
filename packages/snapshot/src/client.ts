@@ -51,6 +51,7 @@ interface AssertOptions {
   assertionName?: string
 }
 
+/** same shape as expect.extend custom matcher result */
 export interface MatchResult {
   pass: boolean
   message: () => string

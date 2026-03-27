@@ -301,6 +301,7 @@ function toMatchInlineSnapshotImpl(
   })
 }
 
+// TODO: docs
 export function toMatchSnapshot(
   this: MatcherState,
   received: unknown,
