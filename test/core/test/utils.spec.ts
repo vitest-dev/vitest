@@ -1,3 +1,5 @@
+import type { File, Suite, Test } from '@vitest/runner/types'
+import { getFullName, getNames, getTestName } from '@vitest/runner/utils'
 import { objDisplay } from '@vitest/utils/display'
 import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
 import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
@@ -391,5 +393,67 @@ describe('parseSingleFFOrSafariStack', () => {
     }
 
     parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
+  })
+})
+
+describe('getNames', () => {
+  test('stops when a suite chain becomes cyclic', () => {
+    const file = {
+      id: '1',
+      name: 'example.test.ts',
+      type: 'suite',
+      mode: 'run',
+      meta: {},
+      tasks: [],
+      fullName: 'example.test.ts',
+      filepath: '/example.test.ts',
+      projectName: undefined,
+    } as unknown as File
+    file.file = file
+
+    const parentSuite = {
+      id: '2',
+      name: 'parent',
+      type: 'suite',
+      mode: 'run',
+      meta: {},
+      tasks: [],
+      fullName: 'parent',
+      file,
+    } as unknown as Suite
+
+    const childSuite = {
+      id: '3',
+      name: 'child',
+      type: 'suite',
+      mode: 'run',
+      meta: {},
+      tasks: [],
+      fullName: 'child',
+      file,
+      suite: parentSuite,
+    } as unknown as Suite
+
+    const task = {
+      id: '4',
+      name: 'my test',
+      type: 'test',
+      mode: 'run',
+      meta: {},
+      context: {} as Test['context'],
+      annotations: [],
+      artifacts: [],
+      timeout: 1_000,
+      fullName: 'my test',
+      fullTestName: 'my test',
+      file,
+      suite: childSuite,
+    } as unknown as Test
+
+    parentSuite.suite = childSuite
+
+    expect(getNames(task)).toEqual(['example.test.ts', 'parent', 'child', 'my test'])
+    expect(getFullName(task)).toBe('example.test.ts > parent > child > my test')
+    expect(getTestName(task)).toBe('parent > child > my test')
   })
 })

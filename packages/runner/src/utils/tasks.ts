@@ -58,8 +58,13 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
 export function getNames(task: Task): string[] {
   const names = [task.name]
   let current: Task | undefined = task
+  const seen = new Set<Task>()
 
   while (current?.suite) {
+    if (seen.has(current.suite)) {
+      break
+    }
+    seen.add(current.suite)
     current = current.suite
     if (current?.name) {
       names.unshift(current.name)
