@@ -222,7 +222,9 @@ export async function resolveBrowserProjects(
       ? instances
       : instances.filter((instance) => {
           const newName = instance.name! // name is set in "workspace" plugin
-          return vitest.matchesProjectFilter(newName)
+          return vitest.matchesProjectFilters(
+            originalName ? [newName, originalName] : [newName],
+          )
         })
 
     // every project was filtered out
@@ -467,9 +469,7 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
     return project
   }
   // check for the project name and browser names
-  const hasProjects = getPotentialProjectNames(project).some(p =>
-    vitest.matchesProjectFilter(p),
-  )
+  const hasProjects = vitest.matchesProjectFilters(getPotentialProjectNames(project))
   if (hasProjects) {
     return project
   }

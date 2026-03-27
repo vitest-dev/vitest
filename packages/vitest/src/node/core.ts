@@ -1582,6 +1582,14 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
+    return this.matchesProjectFilters([name])
+  }
+
+  /**
+   * Check if the project group with the given names should be included.
+   * This is used for browser projects where the root project name also acts as an alias for nested instances.
+   */
+  matchesProjectFilters(names: string[]): boolean {
     const projects = this._config?.project || this._cliOptions?.project
     // no filters applied, any project can be included
     if (!projects || !projects.length) {
@@ -1589,7 +1597,9 @@ export class Vitest {
     }
     return toArray(projects).some((project) => {
       const regexp = wildcardPatternToRegExp(project)
-      return regexp.test(name)
+      return project[0] === '!'
+        ? names.every(name => regexp.test(name))
+        : names.some(name => regexp.test(name))
     })
   }
 }

@@ -85,9 +85,7 @@ export function WorkspaceVitestPlugin(
         // if projects don't match, we ignore the test project altogether
         // if some of them match, they will later be filtered again by `resolveWorkspace`
         if (filters.length) {
-          const hasProject = workspaceNames.some((name) => {
-            return project.vitest.matchesProjectFilter(name)
-          })
+          const hasProject = project.vitest.matchesProjectFilters(workspaceNames)
           if (!hasProject) {
             throw new VitestFilteredOutProjectError()
           }

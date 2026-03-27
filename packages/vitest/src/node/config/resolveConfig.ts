@@ -1012,8 +1012,9 @@ function hasBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
   }
   return browser.instances.some((instance) => {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    const names = config.name ? [name, config.name] : [name]
     // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
+    if (!vitest.matchesProjectFilters(names)) {
       return false
     }
     return isChromiumName(browser.provider!.name, instance.browser)
@@ -1033,8 +1034,9 @@ function hasOnlyBrowserChromium(vitest: Vitest, config: ResolvedConfig) {
   }
   return browser.instances.every((instance) => {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    const names = config.name ? [name, config.name] : [name]
     // browser config is filtered out
-    if (!vitest.matchesProjectFilter(name)) {
+    if (!vitest.matchesProjectFilters(names)) {
       return true // ignore this project
     }
     return isChromiumName(browser.provider!.name, instance.browser)
