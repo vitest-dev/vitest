@@ -59,14 +59,6 @@ export interface MatchResult {
   expected?: unknown
 }
 
-/** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
-export interface MatchResult {
-  pass: boolean
-  message: () => string
-  actual?: unknown
-  expected?: unknown
-}
-
 export interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
