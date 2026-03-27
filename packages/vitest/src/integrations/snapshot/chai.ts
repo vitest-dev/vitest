@@ -261,16 +261,13 @@ function assertMatchResult(result: SyncExpectationResult): void {
  * Call with `this` bound to the matcher state. Returns `{ pass, message }`
  * compatible with the custom matcher return contract.
  *
- * The assertion name is automatically inferred from the `expect.extend` key,
- * so file snapshots use the custom matcher name as the snapshot key prefix.
- *
  * @example
  * ```ts
  * import { toMatchSnapshot } from 'vitest/runtime'
  *
  * expect.extend({
- *   toMatchTrimmedSnapshot(received: string, length: number) {
- *     return toMatchSnapshot.call(this, received.slice(0, length))
+ *   toMatchTrimmedSnapshot(received: string) {
+ *     return toMatchSnapshot.call(this, received.slice(0, 10))
  *   },
  * })
  * ```
@@ -296,9 +293,6 @@ export function toMatchSnapshot(
  * Composable for building custom inline snapshot matchers via `expect.extend`.
  * Call with `this` bound to the matcher state. Returns `{ pass, message }`
  * compatible with the custom matcher return contract.
- *
- * The assertion name is automatically inferred from the `expect.extend` key,
- * so inline snapshots are rewritten using the custom matcher name.
  *
  * @example
  * ```ts
