@@ -203,7 +203,11 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       ast = await parseAstAsync(result.code)
     }
     catch (error) {
-      this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
+      debug(
+        'Failed to parse %s. Excluding it from coverage. %s',
+        filename,
+        error instanceof Error ? error.message : String(error),
+      )
       return {}
     }
 
