@@ -652,7 +652,7 @@ Otherwise your snapshots will have a lot of escaped `"` characters.
 
 ### Custom Snapshot Matchers
 
-Jest imports snapshot composables from `jest-snapshot` and requires passing the matcher name explicitly. Vitest imports from `vitest/runtime` and infers the matcher name automatically from the `expect.extend` key:
+Jest imports snapshot composables from `jest-snapshot`. In Vitest, import from `vitest/runtime` instead:
 
 ```ts
 const { toMatchSnapshot } = require('jest-snapshot') // [!code --]
