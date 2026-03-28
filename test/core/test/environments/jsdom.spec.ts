@@ -182,6 +182,21 @@ describe('FormData', () => {
 
     expect(retrievedBlob).toBeInstanceOf(File)
   })
+
+  test('file name is preserved through a Request', async () => {
+    const fileName = 'my-doc.pdf'
+    const file = new File([new Uint8Array(1_024)], fileName)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const req = new Request('http://localhost:3000/', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const result = await req.formData()
+    expect((result.get('file') as File).name).toEqual(fileName)
+  })
 })
 
 test('DOM APIs accept AbortController', () => {
