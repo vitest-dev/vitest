@@ -155,10 +155,21 @@ export class SnapshotClient {
       }
       if (!propertiesPass) {
         expectedSnapshot.markAsChecked()
+        // Filter actual to only include keys present in properties,
+        // so the diff focuses on mismatched values rather than showing
+        // unrelated keys as additions.
+        const filteredActual: Record<string, unknown> = {}
+        if (typeof received === 'object' && received !== null) {
+          for (const key of Object.keys(properties as object)) {
+            if (key in (received as Record<string, unknown>)) {
+              filteredActual[key] = (received as Record<string, unknown>)[key]
+            }
+          }
+        }
         return {
           pass: false,
           message: () => errorMessage || 'Snapshot properties mismatched',
-          actual: received,
+          actual: filteredActual,
           expected: properties,
         }
       }
