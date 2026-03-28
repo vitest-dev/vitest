@@ -1,5 +1,6 @@
 import type { Test } from '@vitest/runner'
 import type {
+  Assertion,
   ChaiPlugin,
   ExpectStatic,
   MatchersObject,
@@ -20,10 +21,10 @@ import { getState } from './state'
 import { wrapAssertion } from './utils'
 
 function getMatcherState(
-  assertion: Chai.AssertionStatic & Chai.Assertion,
+  assertion: Assertion,
   expect: ExpectStatic,
 ) {
-  const obj = assertion._obj
+  const obj = util.flag(assertion, 'object')
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
   const customMessage = util.flag(assertion, 'message') as string | undefined
@@ -93,7 +94,7 @@ function JestExtendPlugin(
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
         function __VITEST_EXTEND_ASSERTION__(
-          this: Chai.AssertionStatic & Chai.Assertion,
+          this: Assertion,
           ...args: any[]
         ) {
           const { state, isNot, obj, customMessage } = getMatcherState(this, expect)

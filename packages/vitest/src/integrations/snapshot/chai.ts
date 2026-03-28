@@ -52,7 +52,7 @@ function getTestNames(test: Test) {
   }
 }
 
-function getAssertionName(assertion: Chai.Assertion): string {
+function getAssertionName(assertion: Assertion): string {
   const name = chai.util.flag(assertion, '_name') as string | undefined
   if (!name) {
     throw new Error('Assertion name is not set. This is a bug in Vitest. Please, open a new issue with reproduction.')
@@ -60,7 +60,7 @@ function getAssertionName(assertion: Chai.Assertion): string {
   return name
 }
 
-function getTest(obj: Chai.Assertion) {
+function getTest(obj: Assertion) {
   const test = chai.util.flag(obj, 'vitest-test')
   if (!test) {
     throw new Error(`'${getAssertionName(obj)}' cannot be used without test context`)
@@ -68,7 +68,7 @@ function getTest(obj: Chai.Assertion) {
   return test as Test
 }
 
-function validateAssertion(assertion: Chai.Assertion): void {
+function validateAssertion(assertion: Assertion): void {
   if (chai.util.flag(assertion, 'negate')) {
     throw new Error(`${getAssertionName(assertion)} cannot be used with "not"`)
   }
@@ -97,7 +97,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    function (this: Chai.AssertionStatic & Assertion, filepath: string, hint?: string) {
+    function (this: Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
       validateAssertion(this)
@@ -203,7 +203,7 @@ function normalizeInlineArguments(
 }
 
 function toMatchSnapshotImpl(options: {
-  assertion: Chai.AssertionStatic & Chai.Assertion
+  assertion: Assertion
   received: unknown
   assert?: boolean
   properties?: object
@@ -235,7 +235,7 @@ function toMatchSnapshotImpl(options: {
 }
 
 async function toMatchFileSnapshotImpl(options: {
-  assertion: Chai.AssertionStatic & Chai.Assertion
+  assertion: Assertion
   received: unknown
   filepath: string
   hint?: string

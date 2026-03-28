@@ -88,7 +88,7 @@ export interface MatcherState {
   // TODO: not sure Vitest `Assertion` vs Chai one
   /** @internal */
   __vitest_context__: {
-    assertion: Chai.AssertionStatic & Chai.Assertion
+    assertion: Assertion
   }
 }
 
