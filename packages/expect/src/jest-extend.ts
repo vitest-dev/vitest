@@ -44,9 +44,6 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    __vitest_context__: {
-      assertion,
-    },
     task,
     currentTestName,
     customTesters: getCustomEqualityTesters(),
@@ -58,6 +55,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
+    __vitest_assertion__: assertion,
   }
 
   return {

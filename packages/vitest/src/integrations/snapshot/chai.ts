@@ -302,7 +302,7 @@ export function toMatchSnapshot(
   hint?: string,
 ): SyncExpectationResult {
   return toMatchSnapshotImpl({
-    assertion: this.__vitest_context__.assertion,
+    assertion: this.__vitest_assertion__,
     received,
     ...normalizeArguments(propertiesOrHint, hint),
   })
@@ -334,7 +334,7 @@ export function toMatchInlineSnapshot(
   hint?: string,
 ): SyncExpectationResult {
   return toMatchSnapshotImpl({
-    assertion: this.__vitest_context__.assertion,
+    assertion: this.__vitest_assertion__,
     received,
     isInline: true,
     ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
@@ -366,7 +366,7 @@ export function toMatchFileSnapshot(
   hint?: string,
 ): Promise<SyncExpectationResult> {
   return toMatchFileSnapshotImpl({
-    assertion: this.__vitest_context__.assertion,
+    assertion: this.__vitest_assertion__,
     received,
     filepath,
     hint,
