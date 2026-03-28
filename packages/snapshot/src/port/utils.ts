@@ -237,24 +237,56 @@ export function deepMergeSnapshot(target: any, source: any): any {
 }
 
 export function getSnapshotSubset(target: any, source: any): any {
+  const seenReferences = new WeakMap<object, any>()
+
+  return getSnapshotSubsetWithContext(target, source, seenReferences)
+}
+
+function getSnapshotSubsetWithContext(
+  target: any,
+  source: any,
+  seenReferences: WeakMap<object, any>,
+): any {
   if (Array.isArray(target) && Array.isArray(source)) {
+    if (seenReferences.has(target)) {
+      return seenReferences.get(target)
+    }
+
     const subset: any[] = []
+    seenReferences.set(target, subset)
+
     Object.keys(source).forEach((key) => {
       if (key in target) {
         const index = Number(key)
-        subset[index] = getSnapshotSubset(target[index], source[index])
+        subset[index] = getSnapshotSubsetWithContext(
+          target[index],
+          source[index],
+          seenReferences,
+        )
       }
     })
+
     return subset
   }
 
   if (isObject(target) && isObject(source) && !source.$$typeof) {
+    if (seenReferences.has(target)) {
+      return seenReferences.get(target)
+    }
+
     const subset = Object.create(Object.getPrototypeOf(target))
+    seenReferences.set(target, subset)
+
     Object.keys(source).forEach((key) => {
       if (key in target) {
-        subset[key] = getSnapshotSubset(target[key], source[key])
+        subset[key] = getSnapshotSubsetWithContext(
+          target[key],
+          source[key],
+          seenReferences,
+        )
       }
     })
+
     return subset
   }
 
