@@ -87,7 +87,7 @@ export interface MatcherState {
   /** @internal */
   __vitest_context__: {
     chaiAssertion: Chai.AssertionStatic & Chai.Assertion
-    chaiUtils: Chai.ChaiUtils
+    chaiUtils: Chai.ChaiUtils // TODO: just access from import chai.util?
     assertionName: string
   }
 }

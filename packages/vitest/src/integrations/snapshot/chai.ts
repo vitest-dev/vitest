@@ -86,10 +86,15 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
     function (this: Chai.AssertionStatic & Assertion, filepath: string, hint?: string) {
+      const assertionName = 'toMatchFileSnapshot'
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error(`${assertionName} cannot be used with "not"`)
+      }
       const promise = toMatchFileSnapshotImpl({
         assertion: this,
         utils,
-        assertionName: 'toMatchFileSnapshot',
+        assertionName,
         received: utils.flag(this, 'object'),
         filepath,
         hint,
@@ -216,7 +221,7 @@ function toMatchSnapshotImpl(options: {
 }): SyncExpectationResult {
   const { assertion, utils, assertionName } = options
 
-  utils.flag(assertion, '_name', assertionName)
+  utils.flag(assertion, '_name', assertionName) // TODO: move to caller and jest-extend?
   const isNot = utils.flag(assertion, 'negate')
   if (isNot) {
     throw new Error(`${assertionName} cannot be used with "not"`)
