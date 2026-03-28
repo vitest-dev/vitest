@@ -21,10 +21,10 @@ import { getState } from './state'
 import { wrapAssertion } from './utils'
 
 function getMatcherState(
-  assertion: Assertion,
+  assertion: Chai.AssertionStatic & Chai.Assertion,
   expect: ExpectStatic,
 ) {
-  const obj = util.flag(assertion, 'object')
+  const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
   const customMessage = util.flag(assertion, 'message') as string | undefined
@@ -55,7 +55,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
-    __vitest_assertion__: assertion,
+    __vitest_assertion__: assertion as any as Assertion,
   }
 
   return {
@@ -92,7 +92,7 @@ function JestExtendPlugin(
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
         function __VITEST_EXTEND_ASSERTION__(
-          this: Assertion,
+          this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
           const { state, isNot, obj, customMessage } = getMatcherState(this, expect)

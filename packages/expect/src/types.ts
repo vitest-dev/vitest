@@ -85,10 +85,11 @@ export interface MatcherState {
   poll?: boolean
   task?: Readonly<Test>
   /**
-   * @internal
-   * this allows expect.extend to implement builtin chai assertion equivalent feature.
+   * this allows `expect.extend`-based custom matcher
+   * to implement builtin vitest/chai assertion equivalent feature.
    * this used for custom snapshot matcher API.
    */
+  /** @internal */
   __vitest_assertion__: Assertion
 }
 

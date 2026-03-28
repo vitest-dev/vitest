@@ -64,7 +64,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   (['throw', 'throws', 'Throw'] as const).forEach((m) => {
     utils.overwriteMethod(chai.Assertion.prototype, m, (_super: any) => {
       return function (
-        this: Chai.Assertion,
+        this: Chai.Assertion & Chai.AssertionStatic,
         ...args: any[]
       ) {
         const promise = utils.flag(this, 'promise')
