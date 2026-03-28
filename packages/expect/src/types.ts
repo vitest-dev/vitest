@@ -84,6 +84,8 @@ export interface MatcherState {
   soft?: boolean
   poll?: boolean
   task?: Readonly<Test>
+  // TODO: rename to __vitest_assertion__
+  // TODO: not sure Vitest `Assertion` vs Chai one
   /** @internal */
   __vitest_context__: {
     assertion: Chai.AssertionStatic & Chai.Assertion

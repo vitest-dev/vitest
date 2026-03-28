@@ -52,12 +52,26 @@ function getTestNames(test: Test) {
   }
 }
 
-function getTest(obj: Chai.Assertion, assertionName: string) {
+function getAssertionName(assertion: Chai.Assertion): string {
+  const name = chai.util.flag(assertion, '_name') as string | undefined
+  if (!name) {
+    throw new Error('Assertion name is not set. This is a bug in Vitest. Please, open a new issue with reproduction.')
+  }
+  return name
+}
+
+function getTest(obj: Chai.Assertion) {
   const test = chai.util.flag(obj, 'vitest-test')
   if (!test) {
-    throw new Error(`'${assertionName}' cannot be used without test context`)
+    throw new Error(`'${getAssertionName(obj)}' cannot be used without test context`)
   }
   return test as Test
+}
+
+function validateAssertion(assertion: Chai.Assertion): void {
+  if (chai.util.flag(assertion, 'negate')) {
+    throw new Error(`${getAssertionName(assertion)} cannot be used with "not"`)
+  }
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
@@ -86,6 +100,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Chai.AssertionStatic & Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
+      validateAssertion(this)
       const promise = toMatchFileSnapshotImpl({
         assertion: this,
         received: utils.flag(this, 'object'),
@@ -94,7 +109,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         assert: true,
       })
       return recordAsyncExpect(
-        getTest(this, 'toMatchFileSnapshot'),
+        getTest(this),
         promise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
@@ -125,11 +140,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
     wrapAssertion(utils, 'toThrowErrorMatchingSnapshot', function (this, propertiesOrHint?: object | string, hint?: string) {
-      const assertionName = 'toThrowErrorMatchingSnapshot'
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error(`${assertionName} cannot be used with "not"`)
-      }
+      validateAssertion(this)
       const received = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
@@ -148,11 +159,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       inlineSnapshotOrHint?: string,
       hint?: string,
     ) {
-      const assertionName = 'toThrowErrorMatchingInlineSnapshot'
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error(`${assertionName} cannot be used with "not"`)
-      }
+      validateAssertion(this)
       const received = utils.flag(this, 'object')
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
@@ -205,13 +212,9 @@ function toMatchSnapshotImpl(options: {
   inlineSnapshot?: string
 }): SyncExpectationResult {
   const { assertion } = options
-  const assertionName = chai.util.flag(assertion, '_name') as string
-  const isNot = chai.util.flag(assertion, 'negate')
-  if (isNot) {
-    throw new Error(`${assertionName} cannot be used with "not"`)
-  }
-
-  const test = getTest(assertion, assertionName)
+  validateAssertion(assertion)
+  const assertionName = getAssertionName(assertion)
+  const test = getTest(assertion)
   const result = getSnapshotClient().match({
     received: options.received,
     properties: options.properties,
@@ -239,14 +242,8 @@ async function toMatchFileSnapshotImpl(options: {
   assert?: boolean
 }): Promise<SyncExpectationResult> {
   const { assertion } = options
-  const assertionName = chai.util.flag(assertion, '_name') as string
-
-  const isNot = chai.util.flag(assertion, 'negate')
-  if (isNot) {
-    throw new Error(`${assertionName} cannot be used with "not"`)
-  }
-
-  const test = getTest(assertion, assertionName)
+  validateAssertion(assertion)
+  const test = getTest(assertion)
   const testNames = getTestNames(test)
   const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
   const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
