@@ -43,7 +43,7 @@
     "build:client": "vite build",
     "build:node": "rollup -c",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "typecheck:client": "vue-tsc --noEmit",
+    "typecheck:client": "vue-tsc -p tsconfig.build.json --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
     "dev:ui": "pnpm run --stream '/^(dev|dev:client)$/'",
