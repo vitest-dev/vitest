@@ -1,6 +1,6 @@
 import type { Assertion, ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
-import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
+import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
@@ -52,8 +52,8 @@ function getTestNames(test: Test) {
   }
 }
 
-function getTest(obj: Chai.Assertion, utils: Chai.ChaiUtils, assertionName: string) {
-  const test = utils.flag(obj, 'vitest-test')
+function getTest(obj: Chai.Assertion, assertionName: string) {
+  const test = chai.util.flag(obj, 'vitest-test')
   if (!test) {
     throw new Error(`'${assertionName}' cannot be used without test context`)
   }
@@ -72,7 +72,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       ) {
         toMatchSnapshotImpl({
           assertion: this,
-          utils,
           assertionName: key,
           assert: true,
           received: utils.flag(this, 'object'),
@@ -93,7 +92,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
       const promise = toMatchFileSnapshotImpl({
         assertion: this,
-        utils,
         assertionName,
         received: utils.flag(this, 'object'),
         filepath,
@@ -101,7 +99,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         assert: true,
       })
       return recordAsyncExpect(
-        getTest(this, utils, 'toMatchFileSnapshot'),
+        getTest(this, 'toMatchFileSnapshot'),
         promise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
@@ -121,7 +119,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     ) {
       toMatchSnapshotImpl({
         assertion: this,
-        utils,
         assertionName: 'toMatchInlineSnapshot',
         assert: true,
         received: utils.flag(this, 'object'),
@@ -143,7 +140,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
         assertion: this,
-        utils,
         assertionName: 'toThrowErrorMatchingSnapshot',
         assert: true,
         received: getError(received, promise),
@@ -168,7 +164,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const promise = utils.flag(this, 'promise') as string | undefined
       toMatchSnapshotImpl({
         assertion: this,
-        utils,
         assertionName,
         assert: true,
         received: getError(received, promise),
@@ -210,7 +205,6 @@ function normalizeInlineArguments(
 
 function toMatchSnapshotImpl(options: {
   assertion: Chai.AssertionStatic & Chai.Assertion
-  utils: Chai.ChaiUtils
   assertionName: string
   received: unknown
   assert?: boolean
@@ -219,26 +213,26 @@ function toMatchSnapshotImpl(options: {
   isInline?: boolean
   inlineSnapshot?: string
 }): SyncExpectationResult {
-  const { assertion, utils, assertionName } = options
+  const { assertion, assertionName } = options
 
-  utils.flag(assertion, '_name', assertionName) // TODO: move to caller and jest-extend?
-  const isNot = utils.flag(assertion, 'negate')
+  chai.util.flag(assertion, '_name', assertionName) // TODO: move to caller and jest-extend?
+  const isNot = chai.util.flag(assertion, 'negate')
   if (isNot) {
     throw new Error(`${assertionName} cannot be used with "not"`)
   }
 
-  const test = getTest(assertion, utils, assertionName)
+  const test = getTest(assertion, assertionName)
   const result = getSnapshotClient().match({
     received: options.received,
     properties: options.properties,
     message: options.hint,
     isInline: options.isInline,
     inlineSnapshot: options.inlineSnapshot,
-    errorMessage: utils.flag(assertion, 'message'),
+    errorMessage: chai.util.flag(assertion, 'message'),
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
     // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
-    error: utils.flag(assertion, 'error'),
+    error: chai.util.flag(assertion, 'error'),
     ...getTestNames(test),
   })
   if (options.assert) {
@@ -249,22 +243,21 @@ function toMatchSnapshotImpl(options: {
 
 async function toMatchFileSnapshotImpl(options: {
   assertion: Chai.AssertionStatic & Chai.Assertion
-  utils: Chai.ChaiUtils
   assertionName: string
   received: unknown
   filepath: string
   hint?: string
   assert?: boolean
 }): Promise<SyncExpectationResult> {
-  const { assertion, utils, assertionName } = options
+  const { assertion, assertionName } = options
 
-  utils.flag(assertion, '_name', assertionName)
-  const isNot = utils.flag(assertion, 'negate')
+  chai.util.flag(assertion, '_name', assertionName)
+  const isNot = chai.util.flag(assertion, 'negate')
   if (isNot) {
     throw new Error(`${assertionName} cannot be used with "not"`)
   }
 
-  const test = getTest(assertion, utils, assertionName)
+  const test = getTest(assertion, assertionName)
   const testNames = getTestNames(test)
   const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
   const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
@@ -273,7 +266,7 @@ async function toMatchFileSnapshotImpl(options: {
   const result = getSnapshotClient().match({
     received: options.received,
     message: options.hint,
-    errorMessage: utils.flag(assertion, 'message'),
+    errorMessage: chai.util.flag(assertion, 'message'),
     rawSnapshot: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
@@ -324,7 +317,7 @@ export function toMatchSnapshot(
 ): SyncExpectationResult {
   return toMatchSnapshotImpl({
     assertion: this.__vitest_context__.chaiAssertion,
-    utils: this.__vitest_context__.chaiUtils,
+
     assertionName: this.__vitest_context__.assertionName,
     received,
     ...normalizeArguments(propertiesOrHint, hint),
@@ -358,7 +351,7 @@ export function toMatchInlineSnapshot(
 ): SyncExpectationResult {
   return toMatchSnapshotImpl({
     assertion: this.__vitest_context__.chaiAssertion,
-    utils: this.__vitest_context__.chaiUtils,
+
     assertionName: this.__vitest_context__.assertionName,
     received,
     isInline: true,
@@ -392,7 +385,7 @@ export function toMatchFileSnapshot(
 ): Promise<SyncExpectationResult> {
   return toMatchFileSnapshotImpl({
     assertion: this.__vitest_context__.chaiAssertion,
-    utils: this.__vitest_context__.chaiUtils,
+
     assertionName: this.__vitest_context__.assertionName,
     received,
     filepath,

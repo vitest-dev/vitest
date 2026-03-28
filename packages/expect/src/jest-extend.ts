@@ -46,7 +46,6 @@ function getMatcherState(
     ...getState(expect),
     __vitest_context__: {
       chaiAssertion: assertion,
-      chaiUtils: util,
       assertionName,
     },
     task,
