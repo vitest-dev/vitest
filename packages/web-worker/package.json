@@ -34,8 +34,7 @@
   ],
   "scripts": {
     "build": "premove dist && rollup -c",
-    "dev": "rollup -c --watch --watch.include 'src/**'",
-    "typecheck": "tsc -p tsconfig.build.json --noEmit"
+    "dev": "rollup -c --watch --watch.include 'src/**'"
   },
   "peerDependencies": {
     "vitest": "workspace:*"
