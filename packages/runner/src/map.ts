@@ -1,11 +1,12 @@
 import type { Awaitable } from '@vitest/utils'
 import type { TestFixtures } from './fixture'
-import type { Suite, SuiteHooks, Test, TestContext } from './types/tasks'
+import type { BenchManager, Suite, SuiteHooks, Test, TestContext } from './types/tasks'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
 const testFixtureMap = new WeakMap()
 const hooksMap = new WeakMap()
+const benchManagers = new WeakMap<Test, BenchManager[]>()
 
 export function setFn(key: Test, fn: () => Awaitable<void>): void {
   fnMap.set(key, fn)
@@ -13,6 +14,17 @@ export function setFn(key: Test, fn: () => Awaitable<void>): void {
 
 export function getFn<Task = Test>(key: Task): () => Awaitable<void> {
   return fnMap.get(key as any)
+}
+
+export function addBenchManager(key: Test, manager: BenchManager): void {
+  if (!benchManagers.has(key)) {
+    benchManagers.set(key, [])
+  }
+  benchManagers.get(key)!.push(manager)
+}
+
+export function getBenchManagers(key: Test): BenchManager[] {
+  return benchManagers.get(key) || []
 }
 
 export function setTestFixture(

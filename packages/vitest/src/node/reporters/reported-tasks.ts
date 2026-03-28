@@ -11,6 +11,7 @@ import type {
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { DevEnvironment } from 'vite'
+import type { TestBenchmark } from '../../runtime/types/benchmark'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 
@@ -203,6 +204,14 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public artifacts(): ReadonlyArray<TestArtifact> {
     return [...this.task.artifacts]
+  }
+
+  /**
+   * @exorimental
+   * // TODO: description
+   */
+  public benchmarks(): ReadonlyArray<TestBenchmark> {
+    return [...this.task.benchmarks]
   }
 
   /**

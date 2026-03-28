@@ -173,6 +173,7 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        FORCE_COLOR: undefined,
         AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,

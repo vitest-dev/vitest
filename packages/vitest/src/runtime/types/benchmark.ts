@@ -8,6 +8,15 @@ import type {
   TaskResult as TinybenchResult,
 } from 'tinybench'
 
+export interface TestBenchmark {
+  name: string
+  tasks: TestBenchmarkTask[]
+}
+
+export interface TestBenchmarkTask {
+  name: string
+}
+
 export interface Benchmark extends Test {
   meta: {
     benchmark: true

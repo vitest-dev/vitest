@@ -1,16 +1,20 @@
 import type { Awaitable } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type {
+  BenchManager,
   RuntimeContext,
   SuiteCollector,
   Test,
   TestAnnotation,
+  TestBenchmark,
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { Bench } from 'tinybench'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { PendingError } from './errors'
+import { addBenchManager } from './map'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 
@@ -166,6 +170,56 @@ export function createTestContext(
 
   context.signal = abortController.signal
   context.task = test
+  let benchIdx = 0
+  context.bench = (options) => {
+    // TODO: warning if running in parallel with other tests (not in the bench group)
+    // check maxWorkers > 1 in this group
+    if (test.concurrent) {
+      // TODO: warning
+    }
+
+    const currentIndex = ++benchIdx
+    const bench = new Bench({
+      signal: abortController.signal,
+      name: `${test.fullTestName} ${currentIndex}`,
+      ...options,
+      now,
+    })
+    let completed = false
+    let completePromise: Promise<void> | undefined
+    const manager: BenchManager = {
+      instance: bench,
+      get completed() {
+        return completed
+      },
+      add(name, fn, fnOpts) {
+        bench.add(name, fn, fnOpts)
+        return bench.getTask(name)!
+      },
+      async run() {
+        if (completed) {
+          return
+        }
+        if (!completePromise) {
+          completePromise = (async () => {
+            const tasks = await bench.run()
+            const benchmark: TestBenchmark = {
+              name: bench.name || test.fullTestName,
+              tasks: tasks.map((t) => {
+                return {
+                  name: t.name,
+                }
+              }),
+            }
+            await runner.onTestBenchmark?.(test, benchmark)
+          })().finally(() => completed = true)
+        }
+        await completePromise
+      },
+    }
+    addBenchManager(test, manager)
+    return manager
+  }
 
   context.skip = (condition?: boolean | string, note?: string): never => {
     if (condition === false) {

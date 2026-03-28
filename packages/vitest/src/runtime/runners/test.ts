@@ -14,6 +14,7 @@ import type {
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
+import type { TestBenchmark } from '../types/benchmark'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import {
   createTaskCollector,
@@ -259,6 +260,11 @@ export class TestRunner implements VitestTestRunner {
     }
 
     return importDurations
+  }
+
+  async onTestBenchmark(test: Test, benchmark: TestBenchmark): Promise<void> {
+    // TODO: move to overrides
+    await this.workerState.rpc.onTestBenchmark(test.id, benchmark)
   }
 
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {

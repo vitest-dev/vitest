@@ -1,0 +1,10 @@
+- prefer `expect.poll(() => expr).to*` instead of `vi.waitFor`
+- if using external variables in `vi.mock`, define them with `vi.hoisted`. if there are multiple values, use a single `vi.hoisted` to return an object instead of defining multiple veriables wrapped in `vi.hoisted`
+- browser mode:
+  - prefer locators over raw `document.querySelector`
+  - prefer locator events to naitve methods `locator.click` instead of `locator.element().click`
+  - avoid using `locator.element()`, `locator.query()` or `locator.findElement` - you should instead provide the locator to `expect.element(locator).toAssert`, where `toAssert` is one of the available assertions
+  - to make sure elements is in the DOM, use `expect.element(locator).toBeVisible()`
+  - always await `expect.element().toAssert()` expressions
+  - always await locator actions like `click`, `fill` and others
+  - prefer using locator actions over `userEvent`, unless not possible (like using `userEvent.type` or `userEvent.keyboard`)

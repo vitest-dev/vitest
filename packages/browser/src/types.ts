@@ -8,6 +8,7 @@ import type {
   RunnerTestFile,
   SerializedTestSpecification,
   SnapshotResult,
+  TestBenchmark,
   TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
@@ -20,6 +21,7 @@ export interface WebSocketBrowserHandlers {
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
   onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
