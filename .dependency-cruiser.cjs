@@ -54,7 +54,6 @@ module.exports = {
       from: { path: distPaths },
       to: {
         couldNotResolve: true,
-        pathNot: ['^bufferutil$'], // optional peer dependencies of ws
       },
     },
     {
