@@ -1,5 +1,4 @@
-import type { Plugin } from 'vite'
-import type { Vitest } from 'vitest/node'
+import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, resolve } from 'pathe'
@@ -8,7 +7,7 @@ import c from 'tinyrainbow'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
-export default (ctx: Vitest): Plugin => {
+export default (ctx: Vitest): Vite.Plugin => {
   if (ctx.version !== version) {
     ctx.logger.warn(
       c.yellow(
@@ -19,7 +18,7 @@ export default (ctx: Vitest): Plugin => {
     )
   }
 
-  return <Plugin>{
+  return <Vite.Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     configureServer: {

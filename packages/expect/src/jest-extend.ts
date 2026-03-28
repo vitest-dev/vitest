@@ -43,7 +43,6 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    task,
     currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
@@ -55,6 +54,7 @@ function getMatcherState(
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
   }
+  Object.assign(matcherState, { task })
 
   return {
     state: matcherState,
