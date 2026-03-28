@@ -42,7 +42,7 @@
     "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build",
     "build:node": "rollup -c",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "typecheck:client": "vue-tsc --noEmit",
     "dev:client": "vite",
     "dev": "rollup -c --watch --watch.include 'node/**'",
