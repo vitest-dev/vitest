@@ -1,10 +1,11 @@
 import { expect, test } from 'vitest'
-import { toMatchInlineSnapshot, toMatchSnapshot } from "vitest/runtime"
+import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from "vitest/runtime"
 
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
   toMatchCustomSnapshot: (properties?: object) => R
   toMatchCustomInlineSnapshot: (snapshot?: string) => R
+  toMatchCustomFileSnapshot: (filepath: string) => Promise<R>
 }
 
 declare module 'vitest' {
@@ -34,6 +35,11 @@ expect.extend({
     const result = toMatchInlineSnapshot.call(this, actualCustom, inlineSnapshot)
     return { ...result, message: () => `[custom error] ${result.message()}` }
   },
+  async toMatchCustomFileSnapshot(actual: string, filepath: string) {
+    const actualCustom = formatCustom(actual)
+    const result = await toMatchFileSnapshot.call(this, actualCustom, filepath)
+    return { ...result, message: () => `[custom error] ${result.message()}` }
+  },
 })
 
 test('file', () => {
@@ -46,6 +52,10 @@ test('properties 1', () => {
 
 test('properties 2', () => {
   expect(`pepepe`).toMatchCustomSnapshot({ length: expect.toSatisfy(function lessThan10(n) { return n < 10 }) })
+})
+
+test('raw', async () => {
+  await expect(`hihihi`).toMatchCustomFileSnapshot('./__snapshots__/raw.txt')
 })
 
 // -- TEST INLINE START --

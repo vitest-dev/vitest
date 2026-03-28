@@ -82,37 +82,24 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     )
   }
 
-  // TODO: expose custom matcher equivalent?
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    function (this: Assertion, file: string, message?: string) {
-      utils.flag(this, '_name', 'toMatchFileSnapshot')
-      const isNot = utils.flag(this, 'negate')
-      if (isNot) {
-        throw new Error('toMatchFileSnapshot cannot be used with "not"')
-      }
-      const error = new Error('resolves')
-      const expected = utils.flag(this, 'object')
-      const test = getTest('toMatchFileSnapshot', this)
-      const errorMessage = utils.flag(this, 'message')
-
-      const promise = getSnapshotClient().assertRaw({
-        received: expected,
-        message,
-        isInline: false,
-        rawSnapshot: {
-          file,
-        },
-        errorMessage,
-        ...getTestNames(test),
+    function (this: Chai.AssertionStatic & Assertion, filepath: string, hint?: string) {
+      const promise = toMatchFileSnapshotImpl({
+        assertion: this,
+        utils,
+        assertionName: 'toMatchFileSnapshot',
+        received: utils.flag(this, 'object'),
+        filepath,
+        hint,
+        assert: true,
       })
-
       return recordAsyncExpect(
-        test,
+        getTest('toMatchFileSnapshot', this),
         promise,
         createAssertionMessage(utils, this, true),
-        error,
+        new Error('resolves'),
         utils.flag(this, 'soft'),
       )
     },
@@ -257,6 +244,51 @@ function toMatchSnapshotImpl(options: {
   return result
 }
 
+// TODO: refactor
+// - getTest
+// - getTestNames
+async function toMatchFileSnapshotImpl(options: {
+  assertion: Chai.AssertionStatic & Chai.Assertion
+  utils: Chai.ChaiUtils
+  assertionName: string
+  received: unknown
+  filepath: string
+  hint?: string
+  assert?: boolean
+}): Promise<SyncExpectationResult> {
+  const { assertion, utils, assertionName } = options
+
+  utils.flag(assertion, '_name', assertionName)
+  const isNot = utils.flag(assertion, 'negate')
+  if (isNot) {
+    throw new Error(`${assertionName} cannot be used with "not"`)
+  }
+  const test = utils.flag(assertion, 'vitest-test') as Test | undefined
+  if (!test) {
+    throw new Error(`'${assertionName}' cannot be used without test context`)
+  }
+
+  const testNames = getTestNames(test)
+  const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
+  const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
+  const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
+
+  const result = getSnapshotClient().match({
+    received: options.received,
+    message: options.hint,
+    errorMessage: utils.flag(assertion, 'message'),
+    rawSnapshot: {
+      file: rawSnapshotFile,
+      content: rawSnapshotContent ?? undefined,
+    },
+    ...testNames,
+  })
+  if (options.assert) {
+    assertMatchResult(result)
+  }
+  return result
+}
+
 function assertMatchResult(result: SyncExpectationResult): void {
   if (!result.pass) {
     throw Object.assign(new Error(result.message()), {
@@ -334,5 +366,22 @@ export function toMatchInlineSnapshot(
     received,
     isInline: true,
     ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
+  })
+}
+
+// TODO: docs
+export function toMatchFileSnapshot(
+  this: MatcherState,
+  received: unknown,
+  filepath: string,
+  hint?: string,
+): Promise<SyncExpectationResult> {
+  return toMatchFileSnapshotImpl({
+    assertion: this.__vitest_context__.chaiAssertion,
+    utils: this.__vitest_context__.chaiUtils,
+    assertionName: this.__vitest_context__.assertionName,
+    received,
+    filepath,
+    hint,
   })
 }
