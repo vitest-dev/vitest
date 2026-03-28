@@ -100,6 +100,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
+      // validate early synchronously just not to break some existing tests
       validateAssertion(this)
       const resultPromise = toMatchFileSnapshotImpl({
         assertion: this,
