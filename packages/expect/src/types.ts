@@ -86,8 +86,7 @@ export interface MatcherState {
   task?: Readonly<Test>
   /** @internal */
   __vitest_context__: {
-    chaiAssertion: Chai.AssertionStatic & Chai.Assertion
-    assertionName: string
+    assertion: Chai.AssertionStatic & Chai.Assertion
   }
 }
 

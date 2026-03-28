@@ -92,7 +92,7 @@ function handleTestError(test: Test, err: unknown) {
   test.result.errors.push(processError(err))
 }
 
-/** wrap assertion function to support `expect.soft` and provide `_name` */
+/** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */
 export function wrapAssertion(
   utils: Chai.ChaiUtils,
   name: string,

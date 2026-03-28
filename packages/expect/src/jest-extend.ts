@@ -22,7 +22,6 @@ import { wrapAssertion } from './utils'
 function getMatcherState(
   assertion: Chai.AssertionStatic & Chai.Assertion,
   expect: ExpectStatic,
-  assertionName: string,
 ) {
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
@@ -45,8 +44,7 @@ function getMatcherState(
   const matcherState: MatcherState = {
     ...getState(expect),
     __vitest_context__: {
-      chaiAssertion: assertion,
-      assertionName,
+      assertion,
     },
     task,
     currentTestName,
@@ -98,7 +96,7 @@ function JestExtendPlugin(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
-          const { state, isNot, obj, customMessage } = getMatcherState(this, expect, expectAssertionName)
+          const { state, isNot, obj, customMessage } = getMatcherState(this, expect)
 
           const result = expectAssertion.call(state, obj, ...args)
 
