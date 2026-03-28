@@ -106,7 +106,7 @@ Notice that if you are using third-party libraries that add matchers, setting [`
 
 ## Mocking
 
-Vitets provides `jest`-compatible APIs on `vi` object.
+Vitest provides `jest`-compatible APIs on `vi` object.
 
 ```ts
 import { expect, vi } from 'vitest'
