@@ -52,15 +52,15 @@ function getTestNames(test: Test) {
   }
 }
 
-export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
-  function getTest(assertionName: string, obj: object) {
-    const test = utils.flag(obj, 'vitest-test')
-    if (!test) {
-      throw new Error(`'${assertionName}' cannot be used without test context`)
-    }
-    return test as Test
+function getTest(obj: Chai.Assertion, utils: Chai.ChaiUtils, assertionName: string) {
+  const test = utils.flag(obj, 'vitest-test')
+  if (!test) {
+    throw new Error(`'${assertionName}' cannot be used without test context`)
   }
+  return test as Test
+}
 
+export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
     utils.addMethod(
       chai.Assertion.prototype,
@@ -96,7 +96,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         assert: true,
       })
       return recordAsyncExpect(
-        getTest('toMatchFileSnapshot', this),
+        getTest(this, utils, 'toMatchFileSnapshot'),
         promise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
@@ -221,10 +221,8 @@ function toMatchSnapshotImpl(options: {
   if (isNot) {
     throw new Error(`${assertionName} cannot be used with "not"`)
   }
-  const test = utils.flag(assertion, 'vitest-test') as Test | undefined
-  if (!test) {
-    throw new Error(`'${assertionName}' cannot be used without test context`)
-  }
+
+  const test = getTest(assertion, utils, assertionName)
   const result = getSnapshotClient().match({
     received: options.received,
     properties: options.properties,
@@ -244,9 +242,6 @@ function toMatchSnapshotImpl(options: {
   return result
 }
 
-// TODO: refactor
-// - getTest
-// - getTestNames
 async function toMatchFileSnapshotImpl(options: {
   assertion: Chai.AssertionStatic & Chai.Assertion
   utils: Chai.ChaiUtils
@@ -263,11 +258,8 @@ async function toMatchFileSnapshotImpl(options: {
   if (isNot) {
     throw new Error(`${assertionName} cannot be used with "not"`)
   }
-  const test = utils.flag(assertion, 'vitest-test') as Test | undefined
-  if (!test) {
-    throw new Error(`'${assertionName}' cannot be used without test context`)
-  }
 
+  const test = getTest(assertion, utils, assertionName)
   const testNames = getTestNames(test)
   const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
   const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
