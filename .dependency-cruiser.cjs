@@ -54,6 +54,7 @@ module.exports = {
       from: { path: distPaths },
       to: {
         couldNotResolve: true,
+        pathNot: ['^bufferutil$', '^utf-8-validate$'], // optional peer dependencies of ws
       },
     },
     {

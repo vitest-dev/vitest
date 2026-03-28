@@ -1,23 +1,5 @@
 [
   {
-    "type": "dependency",
-    "from": "packages/vitest/dist/chunks/cli-api.CdrCPbCl.js",
-    "to": "bufferutil",
-    "rule": {
-      "severity": "error",
-      "name": "no-unresolved-in-dist"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/vitest/dist/chunks/cli-api.CdrCPbCl.js",
-    "to": "utf-8-validate",
-    "rule": {
-      "severity": "error",
-      "name": "no-unresolved-in-dist"
-    }
-  },
-  {
     "type": "module",
     "from": "packages/mocker/dist/auto-register.d.ts",
     "to": "packages/mocker/dist/auto-register.d.ts",
