@@ -74,6 +74,21 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
+    include: [new RegExp(
+      "/node_modules/ws/lib/validation.js$"
+        .replaceAll('/', '[\\\\/]')
+        .replaceAll('.', '[.]')
+    )],
+    exclude: [],
+    transform: {
+      target: 'node20',
+      define: {
+        'process.env.WS_NO_UTF_8_VALIDATE': 'true',
+      },
+    },
+    sourcemap: true,
+  }),
+  oxc({
     transform: {
       target: 'node20',
       define: {
