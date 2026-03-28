@@ -18,51 +18,6 @@
     }
   },
   {
-    "type": "dependency",
-    "from": "packages/vitest/dist/chunks/index.nZ2xqFgD.js",
-    "to": "async_hooks",
-    "rule": {
-      "severity": "warn",
-      "name": "no-deprecated-core-in-dist"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/vitest/dist/worker.js",
-    "to": "async_hooks",
-    "rule": {
-      "severity": "warn",
-      "name": "no-deprecated-core-in-dist"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/vitest/dist/workers/forks.js",
-    "to": "async_hooks",
-    "rule": {
-      "severity": "warn",
-      "name": "no-deprecated-core-in-dist"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/vitest/dist/workers/runVmTests.js",
-    "to": "async_hooks",
-    "rule": {
-      "severity": "warn",
-      "name": "no-deprecated-core-in-dist"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/vitest/dist/workers/threads.js",
-    "to": "async_hooks",
-    "rule": {
-      "severity": "warn",
-      "name": "no-deprecated-core-in-dist"
-    }
-  },
-  {
     "type": "module",
     "from": "packages/mocker/dist/auto-register.d.ts",
     "to": "packages/mocker/dist/auto-register.d.ts",
