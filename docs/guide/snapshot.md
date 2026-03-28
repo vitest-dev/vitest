@@ -206,7 +206,7 @@ You can build custom snapshot matchers using the composable functions exported f
 
 ```ts
 import { expect, test } from 'vitest'
-import { toMatchInlineSnapshot, toMatchSnapshot } from 'vitest/runtime'
+import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest/runtime'
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
@@ -214,6 +214,9 @@ expect.extend({
   },
   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
     return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+  async toMatchTrimmedFileSnapshot(received: string, file: string) {
+    return toMatchFileSnapshot.call(this, received.slice(0, 10), file)
   },
 })
 
@@ -223,6 +226,10 @@ test('file snapshot', () => {
 
 test('inline snapshot', () => {
   expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
+})
+
+test('raw file snapshot', async () => {
+  await expect('extra long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
 })
 ```
 
@@ -241,6 +248,10 @@ expect.extend({
 For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
 :::
 
+::: tip
+File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
+:::
+
 For TypeScript, extend the `Assertion` interface:
 
 ```ts
@@ -250,6 +261,7 @@ declare module 'vitest' {
   interface Assertion<T = any> {
     toMatchTrimmedSnapshot: (length: number) => T
     toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
+    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
   }
 }
 ```
