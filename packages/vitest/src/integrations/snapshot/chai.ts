@@ -1,4 +1,4 @@
-import type { Assertion, ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
+import type { ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
@@ -52,7 +52,7 @@ function getTestNames(test: Test) {
   }
 }
 
-function getAssertionName(assertion: Assertion): string {
+function getAssertionName(assertion: Chai.Assertion): string {
   const name = chai.util.flag(assertion, '_name') as string | undefined
   if (!name) {
     throw new Error('Assertion name is not set. This is a bug in Vitest. Please, open a new issue with reproduction.')
@@ -60,7 +60,7 @@ function getAssertionName(assertion: Assertion): string {
   return name
 }
 
-function getTest(obj: Assertion) {
+function getTest(obj: Chai.Assertion) {
   const test = chai.util.flag(obj, 'vitest-test')
   if (!test) {
     throw new Error(`'${getAssertionName(obj)}' cannot be used without test context`)
@@ -68,7 +68,7 @@ function getTest(obj: Assertion) {
   return test as Test
 }
 
-function validateAssertion(assertion: Assertion): void {
+function validateAssertion(assertion: Chai.Assertion): void {
   if (chai.util.flag(assertion, 'negate')) {
     throw new Error(`${getAssertionName(assertion)} cannot be used with "not"`)
   }
@@ -97,7 +97,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    function (this: Assertion, filepath: string, hint?: string) {
+    function (this: Chai.Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
       // validate early synchronously just not to break some existing tests
@@ -204,7 +204,7 @@ function normalizeInlineArguments(
 }
 
 function toMatchSnapshotImpl(options: {
-  assertion: Assertion
+  assertion: Chai.Assertion
   received: unknown
   properties?: object
   hint?: string
@@ -231,7 +231,7 @@ function toMatchSnapshotImpl(options: {
 }
 
 async function toMatchFileSnapshotImpl(options: {
-  assertion: Assertion
+  assertion: Chai.Assertion
   received: unknown
   filepath: string
   hint?: string

@@ -1,6 +1,5 @@
 import type { Test } from '@vitest/runner'
 import type {
-  Assertion,
   ChaiPlugin,
   ExpectStatic,
   MatchersObject,
@@ -55,7 +54,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
-    __vitest_assertion__: assertion as any as Assertion,
+    __vitest_assertion__: assertion as any,
   }
 
   return {

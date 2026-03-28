@@ -5,7 +5,7 @@ import { noop } from '@vitest/utils/helpers'
 
 export function createAssertionMessage(
   util: Chai.ChaiUtils,
-  assertion: Assertion,
+  assertion: Chai.Assertion,
   hasArgs: boolean,
 ) {
   const soft = util.flag(assertion, 'soft') ? '.soft' : ''
