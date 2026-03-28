@@ -147,3 +147,34 @@ test('should handle failure on last attempt', async () => {
     }),
   }))
 })
+
+test('slow async fn is interrupted when timeout expires', async () => {
+  const start = Date.now()
+  await expect(async () => {
+    await expect.poll(
+      async () => { await new Promise(r => setTimeout(r, 10_000)) },
+      { timeout: 100 },
+    ).toBe(1)
+  }).rejects.toThrow('Matcher did not succeed in time.')
+  expect(Date.now() - start).toBeLessThan(1000)
+})
+
+test('slow async fn timeout surfaces last assertion error when available', async () => {
+  let calls = 0
+  await expect(async () => {
+    await expect.poll(
+      async () => {
+        calls++
+        // First call is fast so an assertion error is recorded; subsequent calls are slow
+        if (calls > 1) {
+          await new Promise(r => setTimeout(r, 10_000))
+        }
+        return 42
+      },
+      { timeout: 150, interval: 10 },
+    ).toBe(1)
+  }).rejects.toThrow(expect.objectContaining({
+    message: 'expected 42 to be 1 // Object.is equality',
+    cause: expect.objectContaining({ message: 'Matcher did not succeed in time.' }),
+  }))
+})
