@@ -756,6 +756,13 @@ Allow JavaScript files to be typechecked. By default takes the value from tsconf
 
 Ignore type errors from source files
 
+### typecheck.build
+
+- **CLI:** `--typecheck.build`
+- **Config:** [typecheck.build](/config/typecheck#typecheck-build)
+
+Use TypeScript build mode
+
 ### typecheck.tsconfig
 
 - **CLI:** `--typecheck.tsconfig <path>`
