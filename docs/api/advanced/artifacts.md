@@ -82,12 +82,20 @@ export interface TestAttachment {
   path?: string
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array
+  /**
+   * How the string `body` is encoded.
+   * - `'base64'` (default): body is already base64-encoded
+   * - `'utf-8'`: body is a utf8 string
+   */
+  bodyEncoding?: 'base64' | 'utf-8'
 }
 ```
 
 The `TestAttachment` interface represents a file or data attachment associated with a test artifact.
 
 Attachments can be either file-based (via `path`) or inline content (via `body`). The `contentType` helps consumers understand how to interpret the attachment data.
+
+If you pass a string `body`, Vitest assumes it is already base64-encoded unless you set `bodyEncoding: 'utf-8'`. When you pass `body` as a `Uint8Array`, Vitest automatically encodes it as base64. The `bodyEncoding` option only applies to inline `body` attachments, not `path` attachments.
 
 ### `TestArtifactLocation`
 

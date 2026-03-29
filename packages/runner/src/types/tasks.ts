@@ -1263,6 +1263,16 @@ export interface TestAttachment {
   path?: string
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array | undefined
+  // TODO: change default to utf-8 on next major
+  /**
+   * How the string `body` is encoded.
+   * - `'base64'` (default): body is already base64-encoded
+   * - `'utf-8'`: body is a utf8 string
+   *
+   * `body: Uint8Array` is always auto-encoded to string with `bodyEncoding: 'base64'`
+   * regardless of this option.
+   */
+  bodyEncoding?: 'base64' | 'utf-8'
 }
 
 export interface Location {
