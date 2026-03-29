@@ -1017,6 +1017,12 @@ importers:
       '@vitest/browser-webdriverio':
         specifier: workspace:*
         version: link:../browser-webdriverio
+      '@vitest/coverage-istanbul':
+        specifier: workspace:*
+        version: link:../coverage-istanbul
+      '@vitest/coverage-v8':
+        specifier: workspace:*
+        version: link:../coverage-v8
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
