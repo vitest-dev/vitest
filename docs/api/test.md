@@ -293,15 +293,15 @@ import { test as baseTest, describe, expect } from 'vitest'
 
 const test = baseTest
   .extend('dependency', 'default')
-  .extend('dependant', ({ dependency }) => dependency)
+  .extend('dependent', ({ dependency }) => dependency)
 
 describe('use scoped values', () => {
   test.override({ dependency: 'new' })
 
-  test('uses scoped value', ({ dependant }) => {
-    // `dependant` uses the new overridden value that is scoped
+  test('uses scoped value', ({ dependent }) => {
+    // `dependent` uses the new overridden value that is scoped
     // to all tests in this suite
-    expect(dependant).toEqual({ dependency: 'new' })
+    expect(dependent).toEqual({ dependency: 'new' })
   })
 })
 ```
