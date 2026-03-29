@@ -860,6 +860,52 @@ test('throws non-Error values', () => {
 ```
 :::
 
+:::warning Unhandled Rejections with Fake Timers
+When using fake timers, an async function that rejects _during_ a `vi.advanceTimersByTimeAsync` call will trigger an [unhandled rejection](https://nodejs.org/api/process.html#event-unhandledrejection) — even if you later assert it with `.rejects.toThrow()`. This happens because the error is thrown before the `expect` chain has a chance to catch it.
+
+```ts
+async function foo() {
+  await new Promise(resolve => setTimeout(resolve, 100))
+  throw new Error('boom')
+}
+
+test('rejects', async () => {
+  const result = foo()
+
+  await vi.advanceTimersByTimeAsync(100)
+
+  // The assertion passes, but the error was already "unhandled" during advanceTimersByTimeAsync
+  await expect(result).rejects.toThrow()
+})
+```
+
+To avoid this, prefer [`vi.setTimerTickMode('nextTimerAsync')`](/api/vi#vi-settimertickmode) so that timers tick automatically as promises settle, without needing a manual advance:
+
+```ts
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setTimerTickMode('nextTimerAsync')
+})
+
+test('rejects', async () => {
+  // No advanceTimersByTimeAsync needed — the error is caught by rejects.toThrow()
+  await expect(foo()).rejects.toThrow('boom')
+})
+```
+
+Alternatively, set up the `.rejects.toThrow()` assertion _before_ advancing timers so the rejection is handled immediately:
+
+```ts
+test('rejects', async () => {
+  const result = foo()
+  const assertion = expect(result).rejects.toThrow('boom')
+
+  await vi.advanceTimersByTimeAsync(100)
+  await assertion
+})
+```
+:::
+
 ## toMatchSnapshot
 
 - **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
