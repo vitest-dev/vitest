@@ -38,14 +38,6 @@
     "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch"
   },
-  "peerDependencies": {
-    "@vitest/runner": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@vitest/runner": {
-      "optional": true
-    }
-  },
   "dependencies": {
     "@standard-schema/spec": "^1.1.0",
     "@types/chai": "catalog:",
