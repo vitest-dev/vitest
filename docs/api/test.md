@@ -284,6 +284,29 @@ test('server uses correct port', ({ config, server }) => {
 })
 ```
 
+## mergeTests <Version>4.1.0</Version>
+
+`mergeTests` utility allows you to merge multiple `TestAPI` instances into a single one. This is equivalent to calling `.extend()` repeatedly with the fixtures from each test.
+
+```ts
+import { mergeTests, test } from 'vitest'
+
+// Combined test has fixtures from test, otherTest, and uiTest
+const myTest = mergeTests(test, otherTest, uiTest)
+```
+
+`mergeTests` is variadic and accepts any number of test instances. If multiple tests define the same fixture name, the one from the later test overrides the earlier one.
+
+::: tip
+Circular fixture dependencies are not detected during the merge process itself. Instead, they are caught at runtime when the fixtures are actually resolved for a test.
+:::
+
+::: warning
+If multiple test instances define a fixture with the same name but different scopes (e.g., one `test` and one `file`), `mergeTests` will throw a `FixtureDependencyError`. You cannot override a fixture's scope during a merge.
+:::
+
+See [Merging Test Contexts](/guide/test-context#merging-test-contexts) for more details.
+
 ## test.override <Version>4.1.0</Version> {#test-override}
 
 Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.

@@ -60,10 +60,35 @@ export class TestFixtures {
     TestFixtures._definitions.push(this)
   }
 
-  extend(runner: VitestRunner, userFixtures: UserFixtures): TestFixtures {
-    const { suite } = getCurrentSuite()
+  extend(runner: VitestRunner, userFixtures: UserFixtures | TestFixtures): TestFixtures {
+    const { suite, file } = getCurrentSuite()
     const isTopLevel = !suite || suite.file === suite
-    const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel)
+    const targetSuite = suite || file
+
+    // allow merging another TestFixtures instance
+    if (userFixtures instanceof TestFixtures) {
+      const registrations = new Map(this.get(targetSuite))
+
+      for (const [name, item] of userFixtures.get(targetSuite)) {
+        registrations.set(name, { ...item })
+      }
+
+      TestFixtures.validateFixtures(registrations, { allowUnknown: true })
+
+      return new TestFixtures(registrations)
+    }
+
+    const parentRegistrations = new Map(this.get(targetSuite))
+
+    const registrations = this.parseUserFixtures(
+      runner,
+      userFixtures,
+      isTopLevel,
+      parentRegistrations,
+    )
+
+    TestFixtures.validateFixtures(registrations, { allowUnknown: true })
+
     return new TestFixtures(registrations)
   }
 
@@ -91,6 +116,7 @@ export class TestFixtures {
     // For chained calls, this.get(suite) returns this suite's overrides; for first call, returns parent's
     const suiteRegistrations = new Map(this.get(suite))
     const registrations = this.parseUserFixtures(runner, userFixtures, isTopLevel, suiteRegistrations)
+    TestFixtures.validateFixtures(registrations, { allowUnknown: true })
     // If defined in top-level, just override all registrations
     // We don't support overriding suite-level fixtures anyway (it will throw an error)
     if (isTopLevel) {
@@ -203,26 +229,57 @@ export class TestFixtures {
       }
     })
 
-    // validate fixture dependency scopes
+    if (errors.length === 1) {
+      throw errors[0]
+    }
+    else if (errors.length > 1) {
+      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+    }
+    return registrations
+  }
+
+  static validateFixtures(
+    registrations: FixtureRegistrations,
+    options: { allowUnknown?: boolean } = {},
+  ): void {
+    const errors: Error[] = []
+
     for (const fixture of registrations.values()) {
       for (const depName of fixture.deps) {
         if (TestFixtures._builtinFixtures.includes(depName)) {
           continue
         }
-
         const dep = registrations.get(depName)
+
         if (!dep) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on unknown fixture "${depName}".`))
-          continue
-        }
-        if (depName === fixture.name && !fixture.parent) {
-          errors.push(new FixtureDependencyError(`The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`))
+          if (!options.allowUnknown) {
+            errors.push(
+              new FixtureDependencyError(
+                `The "${fixture.name}" fixture depends on unknown fixture "${depName}".`,
+              ),
+            )
+          }
           continue
         }
 
-        if (TestFixtures._fixtureScopes.indexOf(fixture.scope) > TestFixtures._fixtureScopes.indexOf(dep.scope)) {
-          errors.push(new FixtureDependencyError(`The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`))
+        if (depName === fixture.name && !fixture.parent) {
+          errors.push(
+            new FixtureDependencyError(
+              `The "${fixture.name}" fixture depends on itself, but does not have a base implementation.`,
+            ),
+          )
           continue
+        }
+
+        if (
+          TestFixtures._fixtureScopes.indexOf(fixture.scope)
+          > TestFixtures._fixtureScopes.indexOf(dep.scope)
+        ) {
+          errors.push(
+            new FixtureDependencyError(
+              `The ${fixture.scope} "${fixture.name}" fixture cannot depend on a ${dep.scope} fixture "${dep.name}".`,
+            ),
+          )
         }
       }
     }
@@ -231,9 +288,8 @@ export class TestFixtures {
       throw errors[0]
     }
     else if (errors.length > 1) {
-      throw new AggregateError(errors, 'Cannot resolve user fixtures. See errors for more information.')
+      throw new AggregateError(errors, 'Cannot resolve user fixtures.')
     }
-    return registrations
   }
 }
 
