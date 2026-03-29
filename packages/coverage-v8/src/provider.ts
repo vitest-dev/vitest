@@ -20,6 +20,9 @@ import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
+
+  /** Whether script ran outside Vite, e.g. in sub-processes or worker threads */
+  isExtendedContext?: boolean
 }
 
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
@@ -331,8 +334,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   private async getSources(
     url: string,
-    onTransform: (filepath: string) => Promise<Vite.TransformResult | undefined | null>,
+    onTransform: (filepath: string, isExtendedContext?: ScriptCoverageWithOffset['isExtendedContext']) => Promise<Vite.TransformResult | undefined | null>,
     functions: Profiler.FunctionCoverage[] = [],
+    isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false,
   ): Promise<{
     code: string
     map?: Vite.Rollup.SourceMap
@@ -342,7 +346,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       ? url.slice(8)
       : removeStartsWith(url, FILE_PROTOCOL)
     // TODO: do we still need to "catch" here? why would it fail?
-    const transformResult = await onTransform(filepath).catch(() => null)
+    const transformResult = await onTransform(filepath, isExtendedContext).catch(() => null)
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
@@ -385,8 +389,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       throw new Error(`Cannot access browser module graph because it was torn down.`)
     }
 
-    const onTransform = async (filepath: string) => {
-      const result = await this.transformFile(filepath, project, environment)
+    const onTransform = async (filepath: string, isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false) => {
+      const result = await this.transformFile(filepath, project, environment, !isExtendedContext)
       if (result && environment === '__browser__' && project.browser) {
         return { ...result, code: `${result.code}// <inline-source-map>` }
       }
@@ -423,7 +427,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
 
       await Promise.all(
-        chunk.map(async ({ url, functions, startOffset }) => {
+        chunk.map(async ({ url, functions, startOffset, isExtendedContext }) => {
           let timeout: ReturnType<typeof setTimeout> | undefined
           let start: number | undefined
 
@@ -436,6 +440,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
             url,
             onTransform,
             functions,
+            isExtendedContext,
           )
 
           coverageMap.merge(await this.remapCoverage(

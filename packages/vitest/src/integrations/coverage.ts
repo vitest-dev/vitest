@@ -10,7 +10,10 @@ export async function startCoverageInsideWorker(
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.startCoverage?.(runtimeOptions)
+    return coverageModule.startCoverage?.({
+      ...runtimeOptions,
+      trackProcessAndWorker: options?.trackProcessAndWorker ?? false,
+    })
   }
 
   return null
