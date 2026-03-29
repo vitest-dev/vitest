@@ -80,3 +80,10 @@ Path to custom tsconfig, relative to the project root.
 - **Default**: `10_000`
 
 Minimum time in milliseconds it takes to spawn the typechecker.
+
+## typecheck.ignoreExperimentalWarning
+
+- **Type**: `boolean`
+- **Default**: `false`
+
+Suppress the `Testing types with tsc and vue-tsc is an experimental feature` warning. Useful in monorepos where multiple Vitest instances each print the warning.

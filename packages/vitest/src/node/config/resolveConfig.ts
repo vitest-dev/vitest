@@ -796,7 +796,7 @@ export function resolveConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled) {
+  if (resolved.typecheck.enabled && !resolved.typecheck.ignoreExperimentalWarning) {
     logger.console.warn(
       c.yellow(
         'Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.',

@@ -700,6 +700,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Minimum time in milliseconds it takes to spawn the typechecker',
         argument: '<time>',
       },
+      ignoreExperimentalWarning: {
+        description: 'Suppress the "Testing types is an experimental feature" warning',
+      },
       include: null,
       exclude: null,
     },
