@@ -14,7 +14,7 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror-theme-vars/base.css'
 import './styles/main.css'
 import 'floating-vue/dist/style.css'
-import 'uno.css'
+import 'virtual:uno.css'
 
 export const directives: Record<string, Directive> = {
   tooltip: vTooltip,

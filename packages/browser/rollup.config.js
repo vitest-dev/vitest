@@ -1,29 +1,16 @@
-import { createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import oxc from 'unplugin-oxc/rollup'
-import { createDtsUtils } from '../../scripts/build-utils.js'
-
-const require = createRequire(import.meta.url)
-const pkg = require('./package.json')
+import { createDtsUtils, externalDependencies, nodejsBuiltinModules } from '../../scripts/build-utils.js'
 
 const external = [
-  ...Object.keys(pkg.dependencies),
-  ...Object.keys(pkg.peerDependencies || {}),
-  /^@?vitest(\/|$)/,
-  '@vitest/browser/utils',
-  '@vitest/browser/context',
-  '@vitest/browser/client',
-  'vitest/browser',
-  'worker_threads',
-  'node:worker_threads',
-  'vite',
-  'vitest/internal/browser',
+  ...nodejsBuiltinModules,
+  ...externalDependencies(import.meta.url, { selfImportList: ['@vitest/browser/context'] }),
 ]
 
-const dtsUtils = createDtsUtils()
+const dtsUtils = createDtsUtils({ inputBase: 'src' })
 const dtsUtilsClient = createDtsUtils({
   // need extra depth to avoid output conflict
   isolatedDeclDir: '.types-client/tester',
