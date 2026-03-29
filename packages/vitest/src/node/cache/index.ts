@@ -5,13 +5,16 @@ import { resolve } from 'pathe'
 import { hash } from '../hash'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
+import { StaleManifest } from './stale'
 
 export class VitestCache {
   results: ResultsCache
   stats: FilesStatsCache = new FilesStatsCache()
+  stale: StaleManifest
 
   constructor(logger: Logger) {
     this.results = new ResultsCache(logger)
+    this.stale = new StaleManifest(logger)
   }
 
   getFileTestResults(key: string): SuiteResultCache | undefined {
