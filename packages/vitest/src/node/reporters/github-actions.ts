@@ -177,7 +177,7 @@ export class GithubActionsReporter implements Reporter {
     }
 
     if (this.options.jobSummary.enabled === true && this.options.jobSummary.outputPath) {
-      const summary = renderSummary(collectSummaryData(testModules), this.options.jobSummary.fileLinks)
+      const summary = renderSummary(collectSummaryData(testModules), this.options.jobSummary.fileLinks, this.ctx.config.name)
 
       try {
         writeFileSync(
@@ -438,12 +438,13 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
   return output
 }
 
-const SUMMARY_HEADER = '## Vitest Test Report\n'
+const SUMMARY_HEADER = '## Vitest Test Report'
 
-function renderSummary(summaryData: SummaryData, fileLinks?: JobSummaryOptions['fileLinks']): string {
+function renderSummary(summaryData: SummaryData, fileLinks?: JobSummaryOptions['fileLinks'], configName?: string): string {
   const fileLinkCreator = createGitHubFileLinkCreator(fileLinks)
 
-  let summary = `${SUMMARY_HEADER}${renderStats(summaryData)}`
+  const header = configName ? `${SUMMARY_HEADER} (${configName})\n` : `${SUMMARY_HEADER}\n`
+  let summary = `${header}${renderStats(summaryData)}`
 
   if (summaryData.flakyTests.length > 0) {
     summary += '\n### Flaky Tests\n\nThese tests passed only after one or more retries, indicating potential instability.\n'
