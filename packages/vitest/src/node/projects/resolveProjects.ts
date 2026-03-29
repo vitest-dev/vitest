@@ -217,6 +217,11 @@ export async function resolveBrowserProjects(
       return
     }
     const originalName = project.config.name
+    // if original name is explicitly excluded by a negated pattern, exclude all instances
+    if (vitest.isProjectExcludedByNegatedPattern(originalName)) {
+      removeProjects.add(project)
+      return
+    }
     // if original name is in the --project=name filter, keep all instances
     const filteredInstances = vitest.matchesProjectFilter(originalName)
       ? instances
