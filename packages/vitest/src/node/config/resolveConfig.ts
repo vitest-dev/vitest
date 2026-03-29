@@ -428,6 +428,11 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  for (const reporter of resolved.coverage.reporter) {
+    if (isAgent && reporter[0] === 'text') {
+      reporter[1] = { skipFull: true, ...reporter[1] }
+    }
+  }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
   }
