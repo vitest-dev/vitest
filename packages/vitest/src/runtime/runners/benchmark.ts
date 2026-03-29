@@ -7,11 +7,11 @@ import type {
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedConfig } from '../config'
-// import type { VitestExecutor } from '../execute'
 import type {
   Benchmark,
   BenchmarkResult,
-  BenchTask,
+  BenchmarkStatistics,
+  TinybenchTask,
 } from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer } from '@vitest/utils/helpers'
@@ -19,24 +19,47 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
 
+function createEmptyStatistics(): BenchmarkStatistics {
+  return {
+    aad: 0,
+    critical: 0,
+    df: 0,
+    mad: 0,
+    max: 0,
+    mean: 0,
+    min: 0,
+    moe: 0,
+    p50: 0,
+    p75: 0,
+    p99: 0,
+    p995: 0,
+    p999: 0,
+    rme: 0,
+    samples: undefined,
+    samplesCount: 0,
+    sd: 0,
+    sem: 0,
+    variance: 0,
+  }
+}
+
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
     name,
     rank: 0,
-    rme: 0,
-    samples: [] as number[],
-  } as BenchmarkResult
+    samplesCount: 0,
+    latency: createEmptyStatistics(),
+    throughput: createEmptyStatistics(),
+    period: 0,
+    totalTime: 0,
+  }
 }
 
-const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
-
 async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
-  const { Task, Bench } = await runner.importTinybench()
-
   const start = performance.now()
 
   const benchmarkGroup: Benchmark[] = []
-  const benchmarkSuiteGroup = []
+  const benchmarkSuiteGroup: Suite[] = []
   for (const task of suite.tasks) {
     if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
@@ -50,12 +73,15 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     }
   }
 
-  // run sub suites sequentially
-  for (const subSuite of benchmarkSuiteGroup) {
-    await runBenchmarkSuite(subSuite, runner)
+  if (benchmarkSuiteGroup.length) {
+    for (const subSuite of benchmarkSuiteGroup) {
+      await runBenchmarkSuite(subSuite, runner)
+    }
   }
 
   if (benchmarkGroup.length) {
+    const { Bench } = await runner.importTinybench()
+
     const defer = createDefer()
     suite.result = {
       state: 'run',
@@ -65,37 +91,51 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
-      task: InstanceType<typeof Task>,
+      task: TinybenchTask,
       benchmark: Benchmark,
     ) => {
+      let hasErrored = false
+
       task.addEventListener(
-        'complete',
+        'error',
         (e) => {
-          const task = e.task
-          const taskRes = task.result!
-          const result = benchmark.result!.benchmark!
-          benchmark.result!.state = 'pass'
-          Object.assign(result, taskRes)
-          // compute extra stats and free raw samples as early as possible
-          const samples = result.samples
-          result.sampleCount = samples.length
-          result.median = samples.length % 2
-            ? samples[Math.floor(samples.length / 2)]
-            : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
-          if (!runner.config.benchmark?.includeSamples) {
-            result.samples.length = 0
-          }
-          updateTask('test-finished', benchmark)
+          hasErrored = true
+          defer.reject(e.error ?? e)
         },
         {
           once: true,
         },
       )
       task.addEventListener(
-        'error',
+        'complete',
         (e) => {
-          const task = e.task
-          defer.reject(benchmark ? task.result!.error : e)
+          const task = e.task!
+          const taskResult = task.result
+
+          if (hasErrored || taskResult.state !== 'completed') {
+            benchmark.result!.state = 'fail'
+            updateTask('test-finished', benchmark)
+            return
+          }
+
+          const result = benchmark.result!.benchmark!
+          result.latency = {
+            ...taskResult.latency,
+            samples: taskResult.latency.samples
+              ? [...taskResult.latency.samples]
+              : undefined,
+          }
+          result.throughput = {
+            ...taskResult.throughput,
+            samples: taskResult.throughput.samples
+              ? [...taskResult.throughput.samples]
+              : undefined,
+          }
+          result.period = taskResult.period
+          result.totalTime = taskResult.totalTime
+          result.samplesCount = taskResult.latency.samplesCount
+          benchmark.result!.state = 'pass'
+          updateTask('test-finished', benchmark)
         },
         {
           once: true,
@@ -103,38 +143,24 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       )
     }
 
-    benchmarkGroup.forEach((benchmark) => {
-      const options = getBenchOptions(benchmark)
-      const benchmarkInstance = new Bench(options)
-
-      const benchmarkFn = getBenchFn(benchmark)
-
+    const { setTimeout } = getSafeTimers()
+    for (const benchmark of benchmarkGroup) {
+      const benchOptions = getBenchOptions(benchmark, runner.config)
+      const bench = new Bench(benchOptions)
+      bench.add(benchmark.name, getBenchFn(benchmark))
       benchmark.result = {
         state: 'run',
         startTime: start,
         benchmark: createBenchmarkResult(benchmark.name),
       }
-
-      const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
-      benchmarkTasks.set(benchmark, task)
-      addBenchTaskListener(task, benchmark)
-    })
-
-    const { setTimeout } = getSafeTimers()
-    const tasks: [BenchTask, Benchmark][] = []
-
-    for (const benchmark of benchmarkGroup) {
-      const task = benchmarkTasks.get(benchmark)!
+      addBenchTaskListener(bench.getTask(benchmark.name)!, benchmark)
       updateTask('test-prepare', benchmark)
-      await task.warmup()
-      tasks.push([
-        await new Promise<BenchTask>(resolve =>
-          setTimeout(async () => {
-            resolve(await task.run())
-          }),
-        ),
-        benchmark,
-      ])
+      await new Promise<void>(resolve =>
+        setTimeout(async () => {
+          await bench.run()
+          resolve()
+        }),
+      )
     }
 
     suite.result!.duration = performance.now() - start

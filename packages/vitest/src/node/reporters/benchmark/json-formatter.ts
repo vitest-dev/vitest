@@ -32,7 +32,7 @@ export function createBenchmarkJsonReport(files: File[]): Report {
           const benchmark = t.meta.benchmark && t.result?.benchmark
 
           if (benchmark) {
-            benchmarks.push({ id: t.id, ...benchmark, samples: [] })
+            benchmarks.push({ id: t.id, ...benchmark })
           }
         }
 

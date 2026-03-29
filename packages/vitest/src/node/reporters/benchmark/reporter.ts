@@ -39,8 +39,8 @@ export class BenchmarkReporter extends DefaultReporter {
       const task = this.ctx.state.idMap.get(pack[0])
 
       if (task?.type === 'suite' && task.result?.state !== 'run') {
-        task.tasks.filter(task => task.result?.benchmark)
-          .sort((benchA, benchB) => benchA.result!.benchmark!.mean - benchB.result!.benchmark!.mean)
+        task.tasks.filter(task => task.result?.benchmark?.latency)
+          .sort((benchA, benchB) => benchA.result!.benchmark!.latency.mean - benchB.result!.benchmark!.latency.mean)
           .forEach((bench, idx) => {
             bench.result!.benchmark!.rank = Number(idx) + 1
           })
