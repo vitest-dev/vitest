@@ -563,6 +563,10 @@ expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
 To test if something was thrown, use [`toThrow`](#tothrow) assertion.
 :::
 
+:::warning
+Some built-in objects (e.g. `Response`, `Request`) expose their data through getters instead of enumerable keys. Since `toEqual` relies on `Object.keys()`, these properties are not compared, which may cause false-negatives. Vitest emits a `console.warn` when this is detected. Consider comparing the relevant properties directly in that case.
+:::
+
 ## toStrictEqual
 
 - **Type:** `(received: any) => Awaitable<void>`
