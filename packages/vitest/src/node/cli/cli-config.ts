@@ -151,6 +151,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)',
     subcommands: null,
   },
+  junitIncludeConsoleOutput: {
+    description: 'Include console output for each test in the JUnit reporter',
+  },
   coverage: {
     description: 'Enable coverage report',
     argument: '', // empty string means boolean
