@@ -116,6 +116,8 @@ jobs:
 
       - name: Test
         run: pnpm run test:ci
+        env:
+          VITEST_BLOB_LABEL_DOGFOOD: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
         run: pnpm run test:examples
@@ -126,6 +128,17 @@ jobs:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-blob-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: |
+            README.md
+            test/core/.vitest-reports
+            test/cli/.vitest-reports
+          retention-days: 1
+          include-hidden-files: true
 
   test-cached:
     needs: changed
@@ -248,3 +261,39 @@ jobs:
           name: playwright-report-rolldown
           path: rolldown/test/ui/test-results/
           retention-days: 30
+
+  merge-reports:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    name: Merge Reports
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+
+      - name: Install
+        run: pnpm i
+
+      - name: Build
+        run: pnpm run build
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: vitest-blob-*
+          merge-multiple: true
+
+      - name: Merge reports
+        continue-on-error: true
+        run: pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-merge-reports
+          path: |
+            README.md
+            test/core/html
+            test/cli/html
+          retention-days: 7
