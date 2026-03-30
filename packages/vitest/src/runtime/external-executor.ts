@@ -141,7 +141,7 @@ export class ExternalModulesExecutor {
     const fileUrl = identifier.startsWith('file://')
       ? identifier
       : (pathToFileURL(file) + postfix)
-    const pathUrl = fileURLToPath(fileUrl) // trims off `?=...`
+    const pathUrl = fileURLToPath(fileUrl) // this trims off `?...`
 
     let type: 'module' | 'commonjs' | 'vite' | 'wasm'
     if (this.vite.canResolve(fileUrl)) {
