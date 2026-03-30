@@ -54,7 +54,7 @@ You can configure output with [`outputFile`](/config/outputfile) config option. 
 :::
 
 ::: tip
-To view the HTML report from CI, upload the output directory as a zip artifact (e.g. in GitHub Actions):
+To view the HTML report from CI, for example in GitHub Actions, upload the output directory as an artifact:
 
 ```yaml
 - uses: actions/upload-artifact@v4
@@ -63,7 +63,7 @@ To view the HTML report from CI, upload the output directory as a zip artifact (
     path: html/
 ```
 
-You can download and extract it, then run `vite preview` locally as above — or open the zip directly in [Zipview](https://zipview.hiro18181.workers.dev/) without any local setup.
+Download and extract it, then run `vite preview` locally as above — or open the zip directly in [Zipview](https://zipview.hiro18181.workers.dev/) without any local setup.
 :::
 
 ## Module Graph
