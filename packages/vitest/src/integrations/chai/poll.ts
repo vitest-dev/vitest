@@ -3,6 +3,7 @@ import type { Test } from '@vitest/runner'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
+import { vi } from '../vi'
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -123,6 +124,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   }
 
                   await delay(interval, setTimeout)
+                  if (vi.isFakeTimers()) {
+                    vi.advanceTimersByTime(interval)
+                  }
                 }
               }
             }
