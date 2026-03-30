@@ -248,3 +248,30 @@ jobs:
           name: playwright-report-rolldown
           path: rolldown/test/ui/test-results/
           retention-days: 30
+
+  demo-html-report:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node_version: [24]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - run: pnpm i
+
+      - run: pnpm run build
+
+      - run: pnpm -C examples/basic test --reporter=html
+
+      - uses: actions/upload-artifact@v4
+        id: upload-report
+        with:
+          name: vitest-report
+          path: examples/basic/html/
+
+      - run: echo "[View HTML report on Zipview](https://zipview.hiro18181.workers.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
