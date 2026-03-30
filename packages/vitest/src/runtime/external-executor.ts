@@ -5,7 +5,7 @@ import type { VMModule } from './vm/types'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { cleanUrl, isBareImport } from '@vitest/utils/helpers'
+import { isBareImport, splitFileAndPostfix } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
@@ -125,9 +125,8 @@ export class ExternalModulesExecutor {
       return { type: 'data', url: identifier, path: identifier }
     }
 
-    const cleanId = cleanUrl(identifier)
-    const query = identifier.slice(cleanId.length)
-    const extension = extname(cleanId)
+    const { file, postfix } = splitFileAndPostfix(identifier)
+    const extension = extname(file)
     if (extension === '.node' || isBuiltin(identifier)) {
       return { type: 'builtin', url: identifier, path: identifier }
     }
@@ -139,8 +138,9 @@ export class ExternalModulesExecutor {
       return { type: 'network', url: identifier, path: identifier }
     }
 
-    const isFileUrl = identifier.startsWith('file://')
-    const fileUrl = isFileUrl ? identifier : `${pathToFileURL(cleanId)}${query}`
+    const fileUrl = identifier.startsWith('file://')
+      ? identifier
+      : (pathToFileURL(file) + postfix)
     const pathUrl = fileURLToPath(fileUrl) // trims off `?=...`
 
     let type: 'module' | 'commonjs' | 'vite' | 'wasm'
