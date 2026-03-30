@@ -64,10 +64,10 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
     path: html/
 
 - name: Report summary
-  run: echo "[View HTML report on Zipview](https://vitest.dev/zipview/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+  run: echo "[View HTML report on Zipview](https://zipview.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
 ```
 
-This adds a [Zipview](https://vitest.dev/zipview/) link to the job summary. Click it to open the zip directly on browser — or download and extract it, then run `vite preview` locally as above.
+This adds a [Zipview](https://zipview.vitest.dev/) link to the job summary. Click it to open the zip directly on browser — or download and extract it, then run `vite preview` locally as above.
 :::
 
 ## Module Graph
