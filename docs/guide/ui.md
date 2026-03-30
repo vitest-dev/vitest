@@ -53,6 +53,19 @@ npx vite preview --outDir ./html
 You can configure output with [`outputFile`](/config/outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
 :::
 
+::: tip Viewing reports from CI
+To view an HTML report generated in CI (e.g. GitHub Actions), upload the output directory as a zip artifact:
+
+```yaml
+- uses: actions/upload-artifact@v4
+  with:
+    name: vitest-report
+    path: html/
+```
+
+Then download the artifact zip from the workflow run page and drag-and-drop it into [Zipview](https://zipview.hiro18181.workers.dev/) — a browser-only zip viewer that requires no install or local server.
+:::
+
 ## Module Graph
 
 Module Graph's tab displays the module graph of the selected test file.
