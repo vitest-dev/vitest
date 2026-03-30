@@ -1,29 +1,10 @@
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
+// TODO: all pools
 test('optimize deps optimizes them into node_modules/.vite', async () => {
   const { errorTree, stderr } = await runVitest({
     root: './fixtures/optimize-deps',
-    deps: {
-      optimizer: {
-        client: {
-          enabled: true,
-        },
-        ssr: {
-          enabled: true,
-        },
-      },
-    },
-    $viteConfig: {
-      optimizeDeps: {
-        include: ['@test/test-dep-url'],
-      },
-      ssr: {
-        optimizeDeps: {
-          include: ['@test/test-dep-url'],
-        },
-      },
-    },
   })
 
   expect(stderr).toBe('')
