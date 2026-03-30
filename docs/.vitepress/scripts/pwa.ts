@@ -64,7 +64,7 @@ export const pwa: PwaOptions = {
     },
   },
   workbox: {
-    navigateFallbackDenylist: [/^\/new$/],
+    navigateFallbackDenylist: [/^\/new$/, /^\/zipview/],
     maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // <== 3MB
     globPatterns: ['**/*.{css,js,html,png,svg,ico,txt,woff2,json}'],
     // Rollup 4 change the layout: don't calculate revision (hash)
