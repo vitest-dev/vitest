@@ -4,7 +4,7 @@ import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
   createTaskName,
-  generateHash,
+  generateFileHash,
   interpretTaskModes,
   someTasksAreOnly,
 } from '@vitest/runner/utils'
@@ -55,11 +55,10 @@ export async function collectTests(
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.name
-  const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: generateHash(`${testFilepath}${typecheckSubprojectName}`),
+    id: generateFileHash(testFilepath, projectName, { typecheck: true }),
     name: testFilepath,
     fullName: testFilepath,
     mode: 'run',

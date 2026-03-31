@@ -57,15 +57,10 @@ export class TestSpecification {
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
   ) {
     const projectName = project.config.name
-    const hashName = pool !== 'typescript'
-      ? projectName
-      : projectName
-      // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
-        ? `${projectName}:__typecheck__`
-        : '__typecheck__'
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
-      hashName,
+      projectName,
+      { typecheck: pool === 'typescript' },
     )
     this.project = project
     this.moduleId = moduleId

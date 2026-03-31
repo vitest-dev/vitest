@@ -143,8 +143,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     tags: config.tags || [],
     tagsFilter: config.tagsFilter,
     strictTags: config.strictTags ?? true,
-    // TODO
-    idSeed: config.blobLabel,
+    blobLabel: config.blobLabel,
     slowTestThreshold:
       config.slowTestThreshold
       ?? globalConfig.slowTestThreshold
