@@ -255,19 +255,6 @@ export class SnapshotClient {
     }
   }
 
-  assertDomain(options: AssertDomainOptions): void {
-    const result = this.matchDomain(options)
-    if (!result.pass) {
-      const snapshotState = this.getSnapshotState(options.filepath)
-      throw createMismatchError(
-        result.message(),
-        snapshotState.expand,
-        result.actual,
-        result.expected,
-      )
-    }
-  }
-
   async pollMatchDomain(options: AssertDomainPollOptions): Promise<MatchResult> {
     const {
       poll,
@@ -345,19 +332,6 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
-    }
-  }
-
-  async pollAssertDomain(options: AssertDomainPollOptions): Promise<void> {
-    const result = await this.pollMatchDomain(options)
-    if (!result.pass) {
-      const snapshotState = this.getSnapshotState(options.filepath)
-      throw createMismatchError(
-        result.message(),
-        snapshotState.expand,
-        result.actual,
-        result.expected,
-      )
     }
   }
 
