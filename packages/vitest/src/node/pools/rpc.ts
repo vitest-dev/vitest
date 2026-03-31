@@ -7,7 +7,6 @@ import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
 import { handleRollupError } from '../environments/fetchModule'
 import { normalizeResolvedIdToUrl } from '../environments/normalizeUrl'
-import { applyBlobLabel } from './applyBlobLabel'
 
 interface MethodsOptions {
   cacheFs?: boolean
@@ -104,10 +103,6 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       return { code: result?.code }
     },
     async onQueued(file) {
-      const label = project.config.blobLabel
-      if (label) {
-        applyBlobLabel([file], label, project.name)
-      }
       if (methodsOptions.collect) {
         vitest.state.collectFiles(project, [file])
       }
@@ -116,10 +111,6 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       }
     },
     async onCollected(files) {
-      const label = project.config.blobLabel
-      if (label) {
-        applyBlobLabel(files, label, project.name)
-      }
       if (methodsOptions.collect) {
         vitest.state.collectFiles(project, files)
       }
