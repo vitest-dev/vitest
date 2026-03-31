@@ -1,4 +1,5 @@
 export { SnapshotClient } from './client'
+export type { MatchResult } from './client'
 export { addDomain, getDomain } from './domain'
 
 export type {

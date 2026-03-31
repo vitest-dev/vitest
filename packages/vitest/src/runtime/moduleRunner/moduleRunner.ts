@@ -102,7 +102,7 @@ export class VitestModuleRunner
    * Vite checks that the module has exports emulating the Node.js behaviour,
    * but Vitest is more relaxed.
    *
-   * We should keep the Vite behavour when there is a `strict` flag.
+   * We should keep the Vite behavior when there is a `strict` flag.
    * @internal
    */
   processImport(exports: Record<string, any>): Record<string, any> {

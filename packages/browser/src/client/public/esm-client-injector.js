@@ -50,6 +50,9 @@
   if (config.testNamePattern)
     config.testNamePattern = parseRegexp(config.testNamePattern);
 
+  if (config.retry?.condition)
+    config.retry.condition = parseRegexp(config.retry.condition);
+
   function parseRegexp(input) {
     // Parse input
     const m = input.match(/(\/?)(.+)\1([a-z]*)/i);

@@ -14,7 +14,7 @@ export function third() {
 }
 
 export function fourth() {
-  return "fourh"
+  return "fourth"
 }
 /* istanbul ignore stop */
 

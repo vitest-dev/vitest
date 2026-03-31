@@ -55,10 +55,10 @@ export interface FileSpecification {
   // file can be marked via a jsdoc comment to have tags,
   // these are _not_ tags to filter tests by
   fileTags?: string[]
-  testLocations: number[] | undefined
-  testNamePattern: RegExp | undefined
-  testTagsFilter: string[] | undefined
-  testIds: string[] | undefined
+  testLocations?: number[] | undefined
+  testNamePattern?: RegExp | undefined
+  testTagsFilter?: string[] | undefined
+  testIds?: string[] | undefined
 }
 
 export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'> {
@@ -231,8 +231,10 @@ export interface VitestRunner {
   // eslint-disable-next-line ts/method-signature-style
   trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
 
-  /** @private */
+  /** @internal */
+  _currentSpecification?: FileSpecification | undefined
+  /** @internal */
   _currentTaskStartTime?: number
-  /** @private */
+  /** @internal */
   _currentTaskTimeout?: number
 }

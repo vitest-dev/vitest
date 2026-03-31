@@ -91,6 +91,16 @@ test('provider module', () => {
             reportOnFailure: true,
             allowExternal: true,
             processingConcurrency: 1,
+            excludeAfterRemap: false,
+            ignoreClassMethods: [],
+            skipFull: true,
+            watermarks: {
+              statements: [80, 95],
+              functions: [80, 95],
+              branches: [80, 95],
+              lines: [80, 95],
+            },
+
           }
         },
         clean(_?: boolean) {},

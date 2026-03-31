@@ -3,6 +3,7 @@ import type { Test } from '@vitest/runner'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
+import { vi } from '../vi'
 
 // these matchers own their poll lifecycle (probe/commit split)
 // poll.ts skips fn() and retry — the matcher calls poll() internally
@@ -149,6 +150,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   }
 
                   await delay(interval, setTimeout)
+                  if (vi.isFakeTimers()) {
+                    vi.advanceTimersByTime(interval)
+                  }
                 }
               }
             }

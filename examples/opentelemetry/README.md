@@ -9,7 +9,7 @@
 # and serve Web UI at http://localhost:16686
 docker compose up -d
 
-# Run tests (exports with OTLP HTTP by deafult)
+# Run tests (exports with OTLP HTTP by default)
 pnpm test --experimental.openTelemetry.enabled
 
 # Use console exporter for quick debugging
