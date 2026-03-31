@@ -642,7 +642,7 @@ test("macos only", () => {})
 test('merge reports with projects and labels', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
-    'first.test.ts': `
+    'basic.test.ts': `
 import { test, expect } from "vitest";
 
 test("always good", () => {})
@@ -654,12 +654,7 @@ test("works on node", () => {
 test("works on browser", () => {
   expect(typeof window).not.toBe('undefined')
 })
-`,
-    'second.test.ts': `
-import { test, expect } from "vitest";
-
-test("also good", () => {})
-`,
+`
   })
   const baseConfig: RunVitestConfig = {
     root,
@@ -668,12 +663,18 @@ test("also good", () => {})
         extends: true,
         test: {
           name: 'node',
+          sequence: {
+            groupOrder: 0,
+          },
         },
       },
       {
         extends: true,
         test: {
           name: 'browser',
+          sequence: {
+            groupOrder: 1,
+          },
           browser: {
             enabled: true,
             headless: true,
@@ -698,27 +699,21 @@ test("also good", () => {})
   expect(result1.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "browser (chromium)": {
-        "first.test.ts": {
+        "basic.test.ts": {
           "always good": "passed",
           "works on browser": "passed",
           "works on node": [
             "expected 'object' to be 'undefined' // Object.is equality",
           ],
         },
-        "second.test.ts": {
-          "also good": "passed",
-        },
       },
       "node": {
-        "first.test.ts": {
+        "basic.test.ts": {
           "always good": "passed",
           "works on browser": [
             "expected 'undefined' not to be 'undefined' // Object.is equality",
           ],
           "works on node": "passed",
-        },
-        "second.test.ts": {
-          "also good": "passed",
         },
       },
     }
@@ -732,27 +727,21 @@ test("also good", () => {})
   expect(result2.errorTree({ project: true })).toMatchInlineSnapshot(`
     {
       "browser (chromium)": {
-        "first.test.ts": {
+        "basic.test.ts": {
           "always good": "passed",
           "works on browser": "passed",
           "works on node": [
             "expected 'object' to be 'undefined' // Object.is equality",
           ],
         },
-        "second.test.ts": {
-          "also good": "passed",
-        },
       },
       "node": {
-        "first.test.ts": {
+        "basic.test.ts": {
           "always good": "passed",
           "works on browser": [
             "expected 'undefined' not to be 'undefined' // Object.is equality",
           ],
           "works on node": "passed",
-        },
-        "second.test.ts": {
-          "also good": "passed",
         },
       },
     }
@@ -762,29 +751,25 @@ test("also good", () => {})
     mergeReports: resolve(root, '.vitest-reports'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
-    "✓ |node| first.test.ts > always good <time>
-     ✓ |node| first.test.ts > works on node <time>
-     × |node| first.test.ts > works on browser <time>
+    "✓ |node|  linux  basic.test.ts > always good <time>
+     ✓ |node|  linux  basic.test.ts > works on node <time>
+     × |node|  linux  basic.test.ts > works on browser <time>
        → expected 'undefined' not to be 'undefined' // Object.is equality
-     ✓ |node| second.test.ts > also good <time>
-     ✓ |browser (chromium)| first.test.ts > always good <time>
-     × |browser (chromium)| first.test.ts > works on node <time>
+     ✓ |browser (chromium)|  linux  basic.test.ts > always good <time>
+     × |browser (chromium)|  linux  basic.test.ts > works on node <time>
        → expected 'object' to be 'undefined' // Object.is equality
-     ✓ |browser (chromium)| first.test.ts > works on browser <time>
-     ✓ |browser (chromium)| second.test.ts > also good <time>
-     ✓ |node| first.test.ts > always good <time>
-     ✓ |node| first.test.ts > works on node <time>
-     × |node| first.test.ts > works on browser <time>
+     ✓ |browser (chromium)|  linux  basic.test.ts > works on browser <time>
+     ✓ |node|  macos  basic.test.ts > always good <time>
+     ✓ |node|  macos  basic.test.ts > works on node <time>
+     × |node|  macos  basic.test.ts > works on browser <time>
        → expected 'undefined' not to be 'undefined' // Object.is equality
-     ✓ |node| second.test.ts > also good <time>
-     ✓ |browser (chromium)| second.test.ts > also good <time>
-     ✓ |browser (chromium)| first.test.ts > always good <time>
-     × |browser (chromium)| first.test.ts > works on node <time>
+     ✓ |browser (chromium)|  macos  basic.test.ts > always good <time>
+     × |browser (chromium)|  macos  basic.test.ts > works on node <time>
        → expected 'object' to be 'undefined' // Object.is equality
-     ✓ |browser (chromium)| first.test.ts > works on browser <time>
+     ✓ |browser (chromium)|  macos  basic.test.ts > works on browser <time>
 
-     Test Files  4 failed | 4 passed (8)
-          Tests  4 failed | 12 passed (16)
+     Test Files  4 failed (4)
+          Tests  4 failed | 8 passed (12)
        Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
        Per blob  <time> <time>"
   `)
@@ -792,10 +777,10 @@ test("also good", () => {})
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  |node| first.test.ts > works on browser
-     FAIL  |node| first.test.ts > works on browser
+     FAIL  |node|  linux  basic.test.ts > works on browser
+     FAIL  |node|  macos  basic.test.ts > works on browser
     AssertionError: expected 'undefined' not to be 'undefined' // Object.is equality
-     ❯ first.test.ts:11:29
+     ❯ basic.test.ts:11:29
           9|
          10| test("works on browser", () => {
          11|   expect(typeof window).not.toBe('undefined')
@@ -805,14 +790,13 @@ test("also good", () => {})
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
-     FAIL  |browser (chromium)| first.test.ts > works on node
-     FAIL  |browser (chromium)| first.test.ts > works on node
+     FAIL  |browser (chromium)|  linux  basic.test.ts > works on node
     AssertionError: expected 'object' to be 'undefined' // Object.is equality
 
     Expected: "undefined"
     Received: "object"
 
-     ❯ first.test.ts:7:24
+     ❯ basic.test.ts:7:24
           5|
           6| test("works on node", () => {
           7|   expect(typeof window).toBe('undefined')
@@ -822,32 +806,56 @@ test("also good", () => {})
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
 
+     FAIL  |browser (chromium)|  macos  basic.test.ts > works on node
+    AssertionError: expected 'object' to be 'undefined' // Object.is equality
+
+    Expected: "undefined"
+    Received: "object"
+
+     ❯ basic.test.ts:7:24
+          5|
+          6| test("works on node", () => {
+          7|   expect(typeof window).toBe('undefined')
+           |                        ^
+          8| })
+          9|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
     "
   `)
   expect(result.errorTree({ project: true, fileLabel: true })).toMatchInlineSnapshot(`
     {
       "browser (chromium)": {
-        "first.test.ts (undefined)": {
+        "basic.test.ts (linux)": {
           "always good": "passed",
           "works on browser": "passed",
           "works on node": [
             "expected 'object' to be 'undefined' // Object.is equality",
           ],
         },
-        "second.test.ts (undefined)": {
-          "also good": "passed",
+        "basic.test.ts (macos)": {
+          "always good": "passed",
+          "works on browser": "passed",
+          "works on node": [
+            "expected 'object' to be 'undefined' // Object.is equality",
+          ],
         },
       },
       "node": {
-        "first.test.ts (undefined)": {
+        "basic.test.ts (linux)": {
           "always good": "passed",
           "works on browser": [
             "expected 'undefined' not to be 'undefined' // Object.is equality",
           ],
           "works on node": "passed",
         },
-        "second.test.ts (undefined)": {
-          "also good": "passed",
+        "basic.test.ts (macos)": {
+          "always good": "passed",
+          "works on browser": [
+            "expected 'undefined' not to be 'undefined' // Object.is equality",
+          ],
+          "works on node": "passed",
         },
       },
     }
