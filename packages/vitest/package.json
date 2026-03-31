@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -139,6 +139,8 @@
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
+    "@vitest/coverage-istanbul": "workspace:*",
+    "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*",
@@ -161,6 +163,12 @@
       "optional": true
     },
     "@vitest/browser-webdriverio": {
+      "optional": true
+    },
+    "@vitest/coverage-istanbul": {
+      "optional": true
+    },
+    "@vitest/coverage-v8": {
       "optional": true
     },
     "@vitest/ui": {

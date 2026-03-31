@@ -1,6 +1,7 @@
 import type { TestProject } from '../project'
 import type { ApiConfig, SerializedConfig } from '../types/config'
 import { configDefaults } from '../../defaults'
+import { isAgent } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -146,5 +147,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       config.slowTestThreshold
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
+    isAgent,
   }
 }
