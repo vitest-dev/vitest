@@ -183,10 +183,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     return adapter
   }
 
+  // TOOD: refactor after https://github.com/vitest-dev/vitest/pull/9973
   function assertDomainSnapshot(self: object, name: string, adapter: DomainSnapshotAdapter<any, any>, opts: {
     inline: boolean
     inlineSnapshot?: string
-    message?: string
+    hint?: string
   }) {
     utils.flag(self, '_name', name)
     const isNot = utils.flag(self, 'negate')
@@ -205,7 +206,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const result = getSnapshotClient().pollMatchDomain({
         poll: pollFn,
         adapter,
-        message: opts.message,
+        message: opts.hint,
         isInline: opts.inline,
         errorMessage: utils.flag(self, 'message'),
         timeout: utils.flag(self, '_poll.timeout') as number | undefined,
@@ -220,7 +221,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     const result = getSnapshotClient().matchDomain({
       received: utils.flag(self, 'object'),
       adapter,
-      message: opts.message,
+      message: opts.hint,
       isInline: opts.inline,
       errorMessage: utils.flag(self, 'message'),
       assertionName: name,
@@ -238,13 +239,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     wrapAssertion(utils, 'toMatchDomainSnapshot', function (
       this,
       domain: string,
-      message?: string,
+      hint?: string,
     ) {
       return assertDomainSnapshot(
         this,
         'toMatchDomainSnapshot',
         resolveDomainAdapter(domain, 'toMatchDomainSnapshot'),
-        { inline: false, message },
+        { inline: false, hint },
       )
     }),
   )
@@ -255,7 +256,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       this,
       inlineSnapshot: string,
       domain: string,
-      message?: string,
+      hint?: string,
     ) {
       // try/finally prevents WebKit proper tail call from eliminating this frame
       // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
@@ -264,7 +265,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           this,
           'toMatchDomainInlineSnapshot',
           resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
-          { inline: true, inlineSnapshot, message },
+          { inline: true, inlineSnapshot, hint },
         )
       }
       finally {
