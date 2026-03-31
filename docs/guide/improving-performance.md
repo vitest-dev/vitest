@@ -163,7 +163,7 @@ jobs:
         run: pnpm i
 
       - name: Run tests
-        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --blobLabel=${{ matrix.os }}
+        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --label=${{ matrix.os }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}

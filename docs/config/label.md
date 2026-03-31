@@ -1,11 +1,11 @@
 ---
-title: blobLabel | Config
+title: label | Config
 ---
 
-# blobLabel <CRoot />
+# label <CRoot />
 
 - **Type:** `string`
-- **CLI:** `--blobLabel=<label>`
+- **CLI:** `--label=<label>`
 
 Label for the current test run. When set, the label is displayed alongside test results in the reporter output, and stored in the blob when using [`--reporter=blob`](/guide/reporters#blob-reporter).
 
@@ -16,8 +16,8 @@ During [`--merge-reports`](/guide/cli#merge-reports), results from the same test
 Run with a label on each platform:
 
 ```bash
-vitest run --reporter=blob --blobLabel=linux
-vitest run --reporter=blob --blobLabel=macos
+vitest run --reporter=blob --label=linux
+vitest run --reporter=blob --label=macos
 ```
 
 Or set it via config, typically driven by an environment variable in CI:
@@ -27,7 +27,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    blobLabel: `${process.platform}-${process.versions.node}`,
+    label: `${process.platform}-${process.versions.node}`,
     reporters: ['blob'],
   },
 })
