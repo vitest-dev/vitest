@@ -3,13 +3,12 @@ import type { Rollup } from 'vite'
 import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
+  createFileTask,
   createTaskName,
-  generateFileHash,
   interpretTaskModes,
   someTasksAreOnly,
 } from '@vitest/runner/utils'
 import { ancestor as walkAst } from 'acorn-walk'
-import { relative } from 'pathe'
 import { parseAstAsync } from 'vite'
 
 interface ParsedFile extends File {
@@ -53,22 +52,19 @@ export async function collectTests(
     return null
   }
   const ast = await parseAstAsync(request.code)
-  const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.name
-  // TODO: use createFileTask directly?
   const file: ParsedFile = {
-    filepath,
-    type: 'suite',
-    id: generateFileHash(testFilepath, projectName, { typecheck: true }),
-    name: testFilepath,
-    fullName: testFilepath,
-    mode: 'run',
-    tasks: [],
+    ...createFileTask(
+      filepath,
+      ctx.config.root,
+      projectName,
+      undefined,
+      undefined,
+      { typecheck: true },
+    ),
     start: ast.start,
     end: ast.end,
-    projectName,
-    meta: { typecheck: true },
-    file: null!,
+    mode: 'run',
   }
   file.file = file
   const definitions: LocalCallDefinition[] = []
