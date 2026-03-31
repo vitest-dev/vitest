@@ -47,6 +47,7 @@ export class StateManager {
   collectFiles(files: File[] = []): void {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
+      // TODO
       const otherProject = existing.filter(
         i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck || i.meta.blobLabel !== file.meta.blobLabel,
       )
