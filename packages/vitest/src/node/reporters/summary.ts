@@ -38,9 +38,7 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   projectColor: TestModule['project']['color']
   hook?: Omit<SlowTask, 'hook'>
   tests: Map<TestCase['id'], SlowTask>
-  // TODO: keep it in one meta?
-  typecheck: boolean
-  label?: string
+  meta: TestModule['task']['meta']
 }
 
 /**
@@ -290,8 +288,8 @@ export class SummaryReporter implements Reporter {
     const summary = ['']
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
-      const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
-      const label = testFile.label ? `${c.bgCyan(c.bold(` ${testFile.label} `))} ` : ''
+      const typecheck = testFile.meta.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const label = testFile.meta.label ? `${c.bgCyan(c.bold(` ${testFile.meta.label} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
@@ -402,7 +400,6 @@ function initializeStats(module: TestModule): RunningModule {
     projectName: module.project.name,
     projectColor: module.project.color,
     tests: new Map(),
-    typecheck: !!module.task.meta.typecheck,
-    label: module.task.meta.label,
+    meta: module.task.meta,
   }
 }
