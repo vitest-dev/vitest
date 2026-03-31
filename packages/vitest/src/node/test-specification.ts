@@ -60,7 +60,7 @@ export class TestSpecification {
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      { typecheck: pool === 'typescript' },
+      { typecheck: pool === 'typescript', blobLabel: project.config.blobLabel },
     )
     this.project = project
     this.moduleId = moduleId
