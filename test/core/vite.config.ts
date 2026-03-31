@@ -195,6 +195,7 @@ export default defineConfig({
       project('forks', 'green'),
       project('vmThreads', 'blue'),
     ],
+    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
   },
 })
 

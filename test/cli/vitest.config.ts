@@ -25,6 +25,7 @@ export default defineConfig({
         return false
       }
     },
+    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
   },
   server: {
     watch: {
