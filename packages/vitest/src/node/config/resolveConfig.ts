@@ -28,6 +28,8 @@ import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
+const loggedExperimentalWarnings = new Set<string>()
+
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
   // /some/file
@@ -796,7 +798,8 @@ export function resolveConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled) {
+  if (resolved.typecheck.enabled && !loggedExperimentalWarnings.has('typecheck')) {
+    loggedExperimentalWarnings.add('typecheck')
     logger.console.warn(
       c.yellow(
         'Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.',
