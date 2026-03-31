@@ -202,7 +202,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
 
     const pollFn = utils.flag(self, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
     if (pollFn) {
-      return getSnapshotClient().pollAssertDomain({
+      const result = getSnapshotClient().pollMatchDomain({
         poll: pollFn,
         adapter,
         message: opts.message,
@@ -214,6 +214,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
         ...getTestNames(test),
       })
+      return result.then(assertMatchResult)
     }
 
     const result = getSnapshotClient().matchDomain({
