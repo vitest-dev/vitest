@@ -53,6 +53,19 @@ export default defineConfig({
 })
 ```
 
+### Example using `.vitest` directory for reporter outputs
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: ['junit'],
+    outputFile: {
+      junit: './.vitest/junit/report.xml'
+    }
+  }
+})
+
+
 ## Reported Tasks
 
 Reported [events](/api/advanced/reporters) receive tasks for [tests](/api/advanced/test-case), [suites](/api/advanced/test-suite) and [modules](/api/advanced/test-module):
