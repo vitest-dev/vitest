@@ -1149,6 +1149,7 @@ export interface ResolvedConfig
     | 'vmMemoryLimit'
     | 'fileParallelism'
     | 'tagsFilter'
+    | 'blobLabel'
   > {
   mode: VitestRunMode
 

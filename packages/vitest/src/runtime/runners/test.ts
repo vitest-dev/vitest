@@ -77,6 +77,10 @@ export class TestRunner implements VitestTestRunner {
 
   onCollectStart(file: File): void {
     this.workerState.current = file
+    // TODO: review
+    if (this.config.idSeed) {
+      file.meta.blobLabel = this.config.idSeed
+    }
   }
 
   onCleanupWorkerContext(listener: () => unknown): void {

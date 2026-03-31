@@ -199,10 +199,11 @@ export function createFileTask(
   projectName: string | undefined,
   pool?: string,
   viteEnvironment?: string,
+  idSeed?: string,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
-    id: generateFileHash(path, projectName),
+    id: generateFileHash(path, projectName, idSeed),
     name: path,
     fullName: path,
     type: 'suite',
@@ -228,8 +229,9 @@ export function createFileTask(
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
+  idSeed?: string,
 ): string {
-  return /* @__PURE__ */ generateHash(`${file}${projectName || ''}`)
+  return /* @__PURE__ */ generateHash(`${file}${projectName || ''}${idSeed ? `\0${idSeed}` : ''}`)
 }
 
 export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
