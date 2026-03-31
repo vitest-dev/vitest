@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
-import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
+import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
@@ -778,7 +778,7 @@ function resolveGlobThresholds(
 
 function assertConfigurationModule(config: unknown): asserts config is {
   test: {
-    coverage: { thresholds: NonNullable<BaseCoverageOptions['thresholds']> }
+    coverage: { thresholds: NonNullable<CoverageOptions['thresholds']> }
   }
 } {
   try {

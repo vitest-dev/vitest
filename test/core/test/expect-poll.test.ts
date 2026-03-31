@@ -66,6 +66,21 @@ test('fake timers don\'t break it', async () => {
   expect(diff >= 100).toBe(true)
 })
 
+test('fake timers are advanced on each poll interval', async ({ onTestFinished }) => {
+  vi.useFakeTimers()
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+
+  let didAdvance = false
+
+  setTimeout(() => {
+    didAdvance = true
+  }, 50)
+
+  await expect.poll(() => didAdvance, { interval: 100 }).toBe(true)
+})
+
 test('custom matcher works correctly', async () => {
   const fn = vi.fn()
   let idx = 0

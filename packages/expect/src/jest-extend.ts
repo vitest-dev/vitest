@@ -43,7 +43,6 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    task,
     currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
@@ -55,6 +54,7 @@ function getMatcherState(
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
   }
+  Object.assign(matcherState, { task })
 
   return {
     state: matcherState,
@@ -64,12 +64,18 @@ function getMatcherState(
   }
 }
 
+interface VitestErrorContext {
+  assertionName: string
+  meta?: object
+}
+
 class JestExtendError extends Error {
   constructor(
     message: string,
     public actual?: any,
     public expected?: any,
-    public context?: { assertionName: string; meta?: object },
+    /** @internal */
+    public __vitest_error_context__?: VitestErrorContext,
   ) {
     super(message)
   }

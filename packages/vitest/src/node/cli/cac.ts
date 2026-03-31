@@ -5,8 +5,9 @@ import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
-import c from 'tinyrainbow'
+import c, { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { isAgent } from '../../utils/env'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
@@ -74,6 +75,10 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
 }
 
 export function createCLI(options: CliParseOptions = {}): CAC {
+  if (isAgent) {
+    disableDefaultColors()
+  }
+
   const cli = cac('vitest')
 
   cli.version(version)
