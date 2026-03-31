@@ -125,9 +125,15 @@ export default defineConfig({
       },
     },
     includeTaskLocation: true,
-    reporters: process.env.GITHUB_ACTIONS
-      ? ['default', ['github-actions', { displayAnnotations: false }]]
-      : [['default', { summary: true }], 'hanging-process'],
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS
+        ? [['default'], ['github-actions', { displayAnnotations: false }] as any]
+        : [['default', { summary: true }], ['hanging-process']]),
+      ...(process.env.VITEST_CI_BLOB_LABEL
+        ? [['blob']]
+        : []),
+    ],
+    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
@@ -195,7 +201,6 @@ export default defineConfig({
       project('forks', 'green'),
       project('vmThreads', 'blue'),
     ],
-    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
   },
 })
 

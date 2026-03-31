@@ -286,17 +286,19 @@ jobs:
 
       - name: Merge reports
         continue-on-error: true
+        run: pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
+
+      - name: Merge reports html
         run: |
-          pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
-          mkdir -p html-merged
-          cp -rf test/core/html html-merged/core
-          cp -rf test/cli/html html-merged/cli
+          mkdir -p html-all
+          cp -rf test/core/html html-all/core
+          cp -rf test/cli/html html-all/cli
 
       - uses: actions/upload-artifact@v7
         id: upload-report
         with:
           name: vitest-merge-reports
-          path: html-merged
+          path: html-all
           retention-days: 7
 
       - name: Viewer link in summary
