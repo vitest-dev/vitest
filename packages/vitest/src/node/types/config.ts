@@ -961,6 +961,16 @@ export interface InlineConfig {
    * @default true
    */
   strictTags?: boolean
+
+  // TODO:
+  // move to blob reporter level option? but this influences the entire test run.
+  // or just label: string?
+  /**
+   * Label to disambiguate the same test file when run under different conditions
+   * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
+   * `File.meta.blobLabel` so that state treats each label as a distinct entry.
+   */
+  blobLabel?: string
 }
 
 export interface TypecheckConfig {
@@ -1107,16 +1117,6 @@ export interface UserConfig extends InlineConfig {
    * Log all available tags instead of running tests.
    */
   listTags?: boolean | 'json'
-
-  // TODO:
-  // move to blob reporter level option? but this influences the entire test run.
-  // or just label: string?
-  /**
-   * Label to disambiguate the same test file when run under different conditions
-   * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
-   * `File.meta.blobLabel` so that state treats each label as a distinct entry.
-   */
-  blobLabel?: string
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
