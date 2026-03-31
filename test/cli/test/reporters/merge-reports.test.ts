@@ -560,7 +560,7 @@ test("macos only", () => {})
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
-     FAIL  first.test.ts > works on macos
+     FAIL   linux  first.test.ts > works on macos
     AssertionError: expected false to be true // Object.is equality
 
     - Expected
@@ -579,7 +579,7 @@ test("macos only", () => {})
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
-     FAIL  first.test.ts > works on linux
+     FAIL   macos  first.test.ts > works on linux
     AssertionError: expected false to be true // Object.is equality
 
     - Expected

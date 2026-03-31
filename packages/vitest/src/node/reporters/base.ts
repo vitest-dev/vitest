@@ -933,6 +933,7 @@ export abstract class BaseReporter implements Reporter {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find(p => p.name === projectName)
+        const blobLabel = (task as File)?.meta?.blobLabel || task.file?.meta?.blobLabel
 
         let name = this.getFullName(task, separator)
 
@@ -941,7 +942,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${blobLabel ? `${c.bgCyan(c.bold(` ${blobLabel} `))} ` : ''}${name}`,
         )
       }
 
