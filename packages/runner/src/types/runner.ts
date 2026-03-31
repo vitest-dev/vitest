@@ -45,7 +45,7 @@ export interface VitestRunnerConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
-  blobLabel?: string
+  blobLabel: string | undefined
 }
 
 /**
