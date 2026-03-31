@@ -1107,6 +1107,15 @@ export interface UserConfig extends InlineConfig {
    * Log all available tags instead of running tests.
    */
   listTags?: boolean | 'json'
+
+  // TODO:
+  // move to blob reporter level option? but this influences the entire test run.
+  /**
+   * Label to disambiguate the same test file when run under different conditions
+   * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
+   * `File.meta.blobLabel` so that state treats each label as a distinct entry.
+   */
+  blobLabel?: string
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1211,6 +1220,7 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
+  blobLabel?: string
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
