@@ -555,6 +555,15 @@ test("macos only", () => {})
     root,
     mergeReports: resolve(root, '.vitest-reports'),
   })
+  // TODO: what...
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "No test files found, exiting with code 1
+
+    include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+    exclude:  **/node_modules/**, **/.git/**
+
+    "
+  `)
   expect(result.errorTree({ fileLabel: true })).toMatchInlineSnapshot(`
     {
       "first.test.ts (linux)": {
