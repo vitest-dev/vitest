@@ -337,6 +337,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/reporters',
               },
               {
+                text: 'blobLabel',
+                link: '/config/blob-label',
+              },
+              {
                 text: 'outputFile',
                 link: '/config/outputfile',
               },
