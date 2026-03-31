@@ -11,7 +11,6 @@ import {
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
 import { getWorkerState } from '../../runtime/utils'
-import { utils } from 'vitest/browser'
 
 let _client: SnapshotClient
 
