@@ -210,7 +210,7 @@ export class SnapshotClient {
     }
   }
 
-  assertDomain(options: AssertDomainOptions): void {
+  matchDomain(options: AssertDomainOptions): MatchResult {
     const {
       received,
       filepath,
@@ -247,12 +247,23 @@ export class SnapshotClient {
       },
     })
 
-    if (!pass) {
+    return {
+      pass,
+      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      actual: actual?.trim(),
+      expected: expected?.trim(),
+    }
+  }
+
+  assertDomain(options: AssertDomainOptions): void {
+    const result = this.matchDomain(options)
+    if (!result.pass) {
+      const snapshotState = this.getSnapshotState(options.filepath)
       throw createMismatchError(
-        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        result.message(),
         snapshotState.expand,
-        actual?.trim(),
-        expected?.trim(),
+        result.actual,
+        result.expected,
       )
     }
   }
