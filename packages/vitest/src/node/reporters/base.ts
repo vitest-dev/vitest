@@ -335,6 +335,7 @@ export abstract class BaseReporter implements Reporter {
       title += ` ${c.bgBlue(c.bold(' TS '))}`
     }
 
+    // TODO: tweak styles
     if (entity.meta().blobLabel) {
       title += ` ${c.bgCyan(c.bold(` ${entity.meta().blobLabel} `))}`
     }
