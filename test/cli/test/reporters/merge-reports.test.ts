@@ -551,24 +551,30 @@ test("macos only", () => {})
       },
     }
   `)
-  // TODO: support meta split for `errorTree` helper
   const result = await runVitest({
     root,
     mergeReports: resolve(root, '.vitest-reports'),
   })
-  expect(result.errorTree()).toMatchInlineSnapshot(`
+  expect(result.errorTree({ fileLabel: true })).toMatchInlineSnapshot(`
     {
-      "first.test.ts": {
+      "first.test.ts (linux)": {
+        "always good": "passed",
+        "works on linux": "passed",
+        "works on macos": [
+          "expected false to be true // Object.is equality",
+        ],
+      },
+      "first.test.ts (macos)": {
         "always good": "passed",
         "works on linux": [
           "expected false to be true // Object.is equality",
         ],
         "works on macos": "passed",
       },
-      "second.test.ts": {
+      "second.test.ts (linux)": {
         "linux only": "passed",
       },
-      "third.test.ts": {
+      "third.test.ts (macos)": {
         "macos only": "passed",
       },
     }
