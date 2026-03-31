@@ -571,7 +571,7 @@ export class StableTestFileOrderSorter {
   }
 }
 
-interface BuildErrorTreeOptions {
+export interface BuildErrorTreeOptions {
   stackTrace?: boolean
   fileLabel?: boolean
 }
