@@ -1,5 +1,5 @@
 import type { ParsedStack } from '@vitest/utils'
-import type { File, Suite, TaskBase, TaskMeta } from '../types/tasks'
+import type { File, Suite, TaskBase } from '../types/tasks'
 import { processError } from '@vitest/utils/error'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
@@ -199,7 +199,7 @@ export function createFileTask(
   projectName: string | undefined,
   pool?: string,
   viteEnvironment?: string,
-  meta?: { typecheck?: boolean, blobLabel?: string },
+  meta?: { typecheck?: boolean; blobLabel?: string },
 ): File {
   const path = relative(root, filepath)
   const file: File = {
@@ -210,7 +210,7 @@ export function createFileTask(
     mode: 'queued',
     filepath,
     tasks: [],
-    meta: Object.assign(Object.create(null), meta) as TaskMeta,
+    meta: Object.assign(Object.create(null), meta),
     projectName,
     file: undefined!,
     pool,
@@ -229,11 +229,15 @@ export function createFileTask(
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
-  meta?: { typecheck?: boolean, blobLabel?: string },
+  meta?: { typecheck?: boolean; blobLabel?: string },
 ): string {
-  return /* @__PURE__ */ generateHash(
-    `${file}${projectName || ''}${meta?.typecheck ? ':__typecheck__' : ''}${meta?.blobLabel ? `\0${meta.blobLabel}` : ''}`,
-  )
+  const seed = [
+    file,
+    projectName || '',
+    meta?.typecheck ? '__typecheck__' : '',
+    meta?.blobLabel || '',
+  ].join('\0')
+  return generateHash(seed)
 }
 
 export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {
