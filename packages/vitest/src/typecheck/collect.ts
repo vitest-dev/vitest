@@ -55,6 +55,7 @@ export async function collectTests(
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.name
+  // TODO: use createFileTask directly?
   const file: ParsedFile = {
     filepath,
     type: 'suite',
