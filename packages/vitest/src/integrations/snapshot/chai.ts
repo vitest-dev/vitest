@@ -183,22 +183,21 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     return adapter
   }
 
-  // TOOD: refactor after https://github.com/vitest-dev/vitest/pull/9973
+  // TOOD: refactor further after https://github.com/vitest-dev/vitest/pull/9973
   function assertDomainSnapshot(opts: {
     assertion: object
-    name: string
     adapter: DomainSnapshotAdapter<any, any>
     isInline?: boolean
     inlineSnapshot?: string
     hint?: string
   }) {
-    const { assertion, name, adapter } = opts
-    utils.flag(assertion, '_name', name)
+    const { assertion } = opts
+    const assertionName = utils.flag(assertion, '_name')
     const isNot = utils.flag(assertion, 'negate')
     if (isNot) {
-      throw new Error(`${name} cannot be used with "not"`)
+      throw new Error(`${assertionName} cannot be used with "not"`)
     }
-    const test = getTest(name, assertion)
+    const test = getTest(assertionName, assertion)
 
     let { inlineSnapshot } = opts
     if (inlineSnapshot) {
@@ -209,13 +208,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     if (pollFn) {
       const result = getSnapshotClient().pollMatchDomain({
         poll: pollFn,
-        adapter,
+        adapter: opts.adapter,
         message: opts.hint,
         isInline: opts.isInline,
         errorMessage: utils.flag(assertion, 'message'),
         timeout: utils.flag(assertion, '_poll.timeout') as number | undefined,
         interval: utils.flag(assertion, '_poll.interval') as number | undefined,
-        assertionName: name,
+        assertionName,
         inlineSnapshot,
         error: utils.flag(assertion, 'error'),
         ...getTestNames(test),
@@ -225,11 +224,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
 
     const result = getSnapshotClient().matchDomain({
       received: utils.flag(assertion, 'object'),
-      adapter,
+      adapter: opts.adapter,
       message: opts.hint,
       isInline: opts.isInline,
       errorMessage: utils.flag(assertion, 'message'),
-      assertionName: name,
+      assertionName,
       inlineSnapshot,
       error: utils.flag(assertion, 'error'),
       ...getTestNames(test),
@@ -249,7 +248,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     ) {
       return assertDomainSnapshot({
         assertion: this,
-        name: 'toMatchDomainSnapshot',
         adapter: resolveDomainAdapter(domain, 'toMatchDomainSnapshot'),
         hint,
       })
@@ -269,7 +267,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       try {
         return assertDomainSnapshot({
           assertion: this,
-          name: 'toMatchDomainInlineSnapshot',
           adapter: resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
           isInline: true,
           inlineSnapshot,
@@ -291,7 +288,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
       return assertDomainSnapshot({
         assertion: this,
-        name: 'toMatchAriaSnapshot',
         adapter: resolveDomainAdapter('aria', 'toMatchAriaSnapshot'),
       })
     }),
@@ -308,7 +304,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       try {
         return assertDomainSnapshot({
           assertion: this,
-          name: 'toMatchAriaInlineSnapshot',
           adapter: resolveDomainAdapter('aria', 'toMatchAriaInlineSnapshot'),
           isInline: true,
           inlineSnapshot,
