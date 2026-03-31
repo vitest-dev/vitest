@@ -153,6 +153,30 @@ it('throws an error if typechecker process exists', async () => {
   }
 })
 
+it('logs experimental typecheck warning once per run with multiple projects', async () => {
+  const { stderr } = await runVitest({
+    root: resolve(import.meta.dirname, '..'),
+    projects: [
+      {
+        test: {
+          name: 'project-1',
+          dir: resolve(import.meta.dirname, '../test-d'),
+          typecheck: { enabled: true },
+        },
+      },
+      {
+        test: {
+          name: 'project-2',
+          dir: resolve(import.meta.dirname, '../test-d'),
+          typecheck: { enabled: true },
+        },
+      },
+    ],
+  })
+  const count = (stderr.match(/Testing types with tsc and vue-tsc is an experimental feature/g) ?? []).length
+  expect(count).toBe(1)
+})
+
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
 }
