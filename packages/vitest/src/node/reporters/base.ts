@@ -335,7 +335,6 @@ export abstract class BaseReporter implements Reporter {
       title += ` ${c.bgBlue(c.bold(' TS '))}`
     }
 
-    // TODO: show only during --merge-reports?
     const label = entity.task.file.meta.label
     if (label) {
       title += ` ${c.bgCyan(c.bold(` ${label} `))}`
