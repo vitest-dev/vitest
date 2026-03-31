@@ -200,6 +200,11 @@ export interface BrowserConfigOptions {
      * @default 'data-testid'
      */
     testIdAttribute?: string
+    /**
+     * Should locators match the text exactly by default
+     * @default false
+     */
+    exact?: boolean
   }
 
   /**
@@ -394,6 +399,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+    exact: boolean
   }
   trace: {
     mode: BrowserTraceViewMode
