@@ -40,7 +40,7 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   tests: Map<TestCase['id'], SlowTask>
   // TODO: keep it in one meta?
   typecheck: boolean
-  blobLabel?: string
+  label?: string
 }
 
 /**
@@ -291,12 +291,12 @@ export class SummaryReporter implements Reporter {
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
-      const blobLabel = testFile.blobLabel ? `${c.bgCyan(c.bold(` ${testFile.blobLabel} `))} ` : ''
+      const label = testFile.label ? `${c.bgCyan(c.bold(` ${testFile.label} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
-        + blobLabel
+        + label
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
@@ -403,6 +403,6 @@ function initializeStats(module: TestModule): RunningModule {
     projectColor: module.project.color,
     tests: new Map(),
     typecheck: !!module.task.meta.typecheck,
-    blobLabel: module.task.meta.blobLabel,
+    label: module.task.meta.label,
   }
 }

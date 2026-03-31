@@ -199,7 +199,7 @@ export function createFileTask(
   projectName: string | undefined,
   pool?: string,
   viteEnvironment?: string,
-  meta?: { typecheck?: boolean; blobLabel?: string },
+  meta?: { typecheck?: boolean; label?: string },
 ): File {
   const path = relative(root, filepath)
   const file: File = {
@@ -229,13 +229,13 @@ export function createFileTask(
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
-  meta?: { typecheck?: boolean; blobLabel?: string },
+  meta?: { typecheck?: boolean; label?: string },
 ): string {
   const seed = [
     file,
     projectName || '',
     meta?.typecheck ? '__typecheck__' : '',
-    meta?.blobLabel || '',
+    meta?.label || '',
   ].join('\0')
   return generateHash(seed)
 }

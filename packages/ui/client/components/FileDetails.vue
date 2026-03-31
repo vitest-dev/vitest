@@ -60,7 +60,7 @@ const isTypecheck = computed(() => {
   return !!current.value?.meta?.typecheck
 })
 
-const blobLabel = computed(() => current.value?.meta?.blobLabel)
+const label = computed(() => current.value?.meta?.label)
 
 function open() {
   const filePath = current.value?.filepath
@@ -208,7 +208,7 @@ const tags = computed(() => {
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-        <span v-if="blobLabel" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ blobLabel }}</span>
+        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
         <span
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light"

@@ -10,7 +10,7 @@ export default defineConfig({
         ? [['blob', {}] as any]
         : []),
     ],
-    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
+    label: process.env.VITEST_CI_BLOB_LABEL,
     testTimeout: 60_000,
     isolate: false,
     fileParallelism: false,

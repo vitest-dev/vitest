@@ -968,9 +968,9 @@ export interface InlineConfig {
   /**
    * Label to disambiguate the same test file when run under different conditions
    * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
-   * `File.meta.blobLabel` so that state treats each label as a distinct entry.
+   * `File.meta.label` so that state treats each label as a distinct entry.
    */
-  blobLabel?: string
+  label?: string
 }
 
 export interface TypecheckConfig {
@@ -1150,7 +1150,7 @@ export interface ResolvedConfig
     | 'vmMemoryLimit'
     | 'fileParallelism'
     | 'tagsFilter'
-    | 'blobLabel'
+    | 'label'
   > {
   mode: VitestRunMode
 
@@ -1222,7 +1222,7 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
-  blobLabel?: string
+  label?: string
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {

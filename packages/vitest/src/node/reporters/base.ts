@@ -336,9 +336,9 @@ export abstract class BaseReporter implements Reporter {
     }
 
     // TODO: show only during --merge-reports?
-    const blobLabel = entity.task.file.meta.blobLabel
-    if (blobLabel) {
-      title += ` ${c.bgCyan(c.bold(` ${blobLabel} `))}`
+    const label = entity.task.file.meta.label
+    if (label) {
+      title += ` ${c.bgCyan(c.bold(` ${label} `))}`
     }
 
     return title
@@ -942,9 +942,9 @@ export abstract class BaseReporter implements Reporter {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
         }
 
-        const blobLabel = task.file?.meta?.blobLabel
+        const label = task.file?.meta?.label
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${blobLabel ? `${c.bgCyan(c.bold(` ${blobLabel} `))} ` : ''}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${label ? `${c.bgCyan(c.bold(` ${label} `))} ` : ''}${name}`,
         )
       }
 

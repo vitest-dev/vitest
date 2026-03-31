@@ -47,7 +47,7 @@ export async function collectTests(
 
         const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
-        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment, { blobLabel: config.blobLabel })
+        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment, { label: config.label })
         file.tags = fileTags
         file.shuffle = config.sequence.shuffle
 

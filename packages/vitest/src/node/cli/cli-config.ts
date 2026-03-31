@@ -830,8 +830,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
     argument: '[type]',
   },
-  blobLabel: {
-    description: 'Label to disambiguate the same test file when merging blob reports from different environments (e.g. `--blob-label=linux`).',
+  label: {
+    description: 'Label to disambiguate the same test file when merging blob reports from different environments (e.g. `--label=linux`).',
     argument: '<label>',
   },
   clearCache: {

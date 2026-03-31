@@ -111,7 +111,7 @@ declare module '@vitest/runner' {
     typecheck?: boolean
     benchmark?: boolean
     // TODO: rename it `label`? also accomodate `label: "__typecheck__"`?
-    blobLabel?: string
+    label?: string
   }
 
   interface File {

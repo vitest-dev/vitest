@@ -133,7 +133,7 @@ export default defineConfig({
         ? [['blob']]
         : []),
     ],
-    blobLabel: process.env.VITEST_CI_BLOB_LABEL,
+    label: process.env.VITEST_CI_BLOB_LABEL,
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

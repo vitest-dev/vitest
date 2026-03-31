@@ -508,7 +508,7 @@ test("macos only", () => {})
   const result1 = await runVitest({
     root,
     globals: true,
-    blobLabel: 'linux',
+    label: 'linux',
     reporters: 'blob',
   }, ['first', 'second'])
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
@@ -530,7 +530,7 @@ test("macos only", () => {})
   const result2 = await runVitest({
     root,
     globals: true,
-    blobLabel: 'macos',
+    label: 'macos',
     reporters: 'blob',
   }, ['first', 'third'])
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
@@ -692,7 +692,7 @@ test("works on browser", () => {
   }
   const result1 = await runVitest({
     ...baseConfig,
-    blobLabel: 'linux',
+    label: 'linux',
     reporters: 'blob',
   })
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
@@ -720,7 +720,7 @@ test("works on browser", () => {
   `)
   const result2 = await runVitest({
     ...baseConfig,
-    blobLabel: 'macos',
+    label: 'macos',
     reporters: 'blob',
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)

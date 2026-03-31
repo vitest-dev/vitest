@@ -145,7 +145,7 @@ export interface SerializedConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
-  blobLabel: string | undefined
+  label: string | undefined
   slowTestThreshold: number | undefined
   isAgent: boolean
 }

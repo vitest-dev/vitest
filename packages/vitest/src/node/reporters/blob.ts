@@ -50,7 +50,7 @@ export class BlobReporter implements Reporter {
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
       const shard = this.ctx.config.shard
-      const label = this.ctx.config.blobLabel
+      const label = this.ctx.config.label
       const suffix = [label, shard && `${shard.index}-${shard.count}`].filter(Boolean).join('-')
       outputFile = suffix ? `.vitest-reports/blob-${suffix}.json` : '.vitest-reports/blob.json'
     }
