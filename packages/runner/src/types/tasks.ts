@@ -1265,6 +1265,7 @@ export interface TestAttachment {
   body?: string | Uint8Array | undefined
   // TODO: change default to utf-8 on next major
   /**
+   * @experimental
    * How the string `body` is encoded.
    * - `'base64'` (default): body is already base64-encoded
    * - `'utf-8'`: body is a utf8 string

@@ -83,6 +83,7 @@ export interface TestAttachment {
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array
   /**
+   * @experimental
    * How the string `body` is encoded.
    * - `'base64'` (default): body is already base64-encoded
    * - `'utf-8'`: body is a utf8 string
