@@ -556,6 +556,23 @@ test("macos only", () => {})
     root,
     mergeReports: resolve(root, '.vitest-reports'),
   })
+  expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
+    "✓  linux  first.test.ts > always good <time>
+     ✓  linux  first.test.ts > works on linux <time>
+     ×  linux  first.test.ts > works on macos <time>
+       → expected false to be true // Object.is equality
+     ✓  linux  second.test.ts > linux only <time>
+     ✓  macos  first.test.ts > always good <time>
+     ×  macos  first.test.ts > works on linux <time>
+       → expected false to be true // Object.is equality
+     ✓  macos  first.test.ts > works on macos <time>
+     ✓  macos  third.test.ts > macos only <time>
+
+     Test Files  2 failed | 2 passed (4)
+          Tests  2 failed | 6 passed (8)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Per blob  <time> <time>"
+  `)
   expect(result.stderr).toMatchInlineSnapshot(`
     "
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
