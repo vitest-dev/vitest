@@ -1,4 +1,4 @@
-import type { Assertion, ChaiPlugin } from '@vitest/expect'
+import type { Assertion, ChaiPlugin, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
@@ -10,6 +10,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
+import { getWorkerState } from '../../runtime/utils'
 
 let _client: SnapshotClient
 
@@ -215,7 +216,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       })
     }
 
-    return getSnapshotClient().assertDomain({
+    const result = getSnapshotClient().matchDomain({
       received: utils.flag(self, 'object'),
       adapter,
       message: opts.message,
@@ -225,6 +226,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       ...(opts.inline ? { inlineSnapshot, error: utils.flag(self, 'error') } : {}),
       ...getTestNames(test),
     })
+    if (!result.pass) {
+      assertMatchResult(result)
+    }
   }
 
   utils.addMethod(
@@ -366,4 +370,16 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
   utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
+}
+
+function assertMatchResult(result: SyncExpectationResult): void {
+  if (!result.pass) {
+    throw Object.assign(new Error(result.message()), {
+      actual: result.actual,
+      expected: result.expected,
+      diffOptions: {
+        expand: getWorkerState().config.snapshotOptions.expand,
+      },
+    })
+  }
 }
