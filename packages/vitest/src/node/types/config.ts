@@ -962,13 +962,8 @@ export interface InlineConfig {
    */
   strictTags?: boolean
 
-  // TODO:
-  // move to blob reporter level option? but this influences the entire test run.
-  // or just label: string?
   /**
-   * Label to disambiguate the same test file when run under different conditions
-   * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
-   * `File.meta.label` so that state treats each label as a distinct entry.
+   * Label to disambiguate the same test file when merging blob reports from different environments
    */
   label?: string
 }
