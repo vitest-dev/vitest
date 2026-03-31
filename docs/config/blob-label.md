@@ -13,15 +13,14 @@ During [`--merge-reports`](/guide/cli#merge-reports), results from the same test
 
 ## Example
 
-::: code-group
+Run with a label on each platform:
 
-```bash [CLI]
-# on linux
+```bash
 vitest run --reporter=blob --blobLabel=linux
-
-# on macos
 vitest run --reporter=blob --blobLabel=macos
 ```
+
+Or set it via config, typically driven by an environment variable in CI:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -33,8 +32,6 @@ export default defineConfig({
   },
 })
 ```
-
-:::
 
 When merging, each label is displayed as a separate entry in the reporter output:
 
