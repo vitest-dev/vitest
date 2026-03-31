@@ -1110,6 +1110,7 @@ export interface UserConfig extends InlineConfig {
 
   // TODO:
   // move to blob reporter level option? but this influences the entire test run.
+  // or just label: string?
   /**
    * Label to disambiguate the same test file when run under different conditions
    * (e.g. different OSes in a merge-reports workflow). Encoded into `File.id` and
