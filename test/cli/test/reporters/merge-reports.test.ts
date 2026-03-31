@@ -486,6 +486,7 @@ function createTest(name: string, file: File): Test {
 // - with projects
 // - with browser mode
 // - with browser mode multiple instances
+// - reporter output
 test('merge reports of different results with labels', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {

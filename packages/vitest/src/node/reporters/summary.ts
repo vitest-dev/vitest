@@ -38,7 +38,9 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   projectColor: TestModule['project']['color']
   hook?: Omit<SlowTask, 'hook'>
   tests: Map<TestCase['id'], SlowTask>
+  // TODO: keep it in one meta?
   typecheck: boolean
+  blobLabel?: string
 }
 
 /**
@@ -289,10 +291,12 @@ export class SummaryReporter implements Reporter {
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const blobLabel = testFile.blobLabel ? `${c.bgCyan(c.bold(` ${testFile.blobLabel} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
+        + blobLabel
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
@@ -399,5 +403,6 @@ function initializeStats(module: TestModule): RunningModule {
     projectColor: module.project.color,
     tests: new Map(),
     typecheck: !!module.task.meta.typecheck,
+    blobLabel: module.task.meta.blobLabel,
   }
 }
