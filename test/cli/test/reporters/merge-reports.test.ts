@@ -654,7 +654,7 @@ test("works on node", () => {
 test("works on browser", () => {
   expect(typeof window).not.toBe('undefined')
 })
-`
+`,
   })
   const baseConfig: RunVitestConfig = {
     root,
