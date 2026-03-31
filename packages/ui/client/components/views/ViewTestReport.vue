@@ -25,6 +25,7 @@ const failed = computed(() => {
 const kWellKnownMeta = new Set([
   'benchmark',
   'typecheck',
+  'blobLabel',
 ])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {

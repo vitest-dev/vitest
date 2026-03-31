@@ -63,6 +63,7 @@ export interface FileTreeNode extends ParentTreeNode {
   type: 'file'
   filepath: string
   typecheck: boolean | undefined
+  blobLabel?: string
   projectName?: string
   projectNameColor: string
   collectDuration?: number
