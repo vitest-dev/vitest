@@ -555,12 +555,47 @@ test("macos only", () => {})
     root,
     mergeReports: resolve(root, '.vitest-reports'),
   })
-  // TODO: what...
   expect(result.stderr).toMatchInlineSnapshot(`
-    "No test files found, exiting with code 1
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
 
-    include: **/*.{test,spec}.?(c|m)[jt]s?(x)
-    exclude:  **/node_modules/**, **/.git/**
+     FAIL  first.test.ts > works on macos
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:9:50
+          7|
+          8| test("works on macos", () => {
+          9|   expect(process.env.TEST_LABEL_ENV === 'macos').toBe(true)
+           |                                                  ^
+         10| })
+         11|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL  first.test.ts > works on linux
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:5:50
+          3|
+          4| test("works on linux", () => {
+          5|   expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+           |                                                  ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)

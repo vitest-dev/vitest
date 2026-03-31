@@ -1,3 +1,4 @@
+import type { TaskMeta } from '@vitest/runner/types'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
@@ -55,12 +56,13 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
+    meta?: TaskMeta,
   ) {
     const projectName = project.config.name
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      { typecheck: pool === 'typescript', blobLabel: project.config.blobLabel },
+      meta ?? { typecheck: pool === 'typescript', blobLabel: project.config.blobLabel },
     )
     this.project = project
     this.moduleId = moduleId
