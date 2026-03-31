@@ -1,7 +1,7 @@
 import type { Assertion, ChaiPlugin, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
-import { createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
+import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addDomain,
@@ -11,6 +11,7 @@ import {
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
 import { getWorkerState } from '../../runtime/utils'
+import { utils } from 'vitest/browser'
 
 let _client: SnapshotClient
 
@@ -172,72 +173,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
 
-  function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
-    if (typeof domain !== 'string' || !domain) {
-      throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
-    }
-    const adapter = getDomain(domain)
-    if (!adapter) {
-      throw new Error(`Snapshot domain "${domain}" is not registered.`)
-    }
-    return adapter
-  }
-
-  // TOOD: refactor further after https://github.com/vitest-dev/vitest/pull/9973
-  function assertDomainSnapshot(opts: {
-    assertion: object
-    adapter: DomainSnapshotAdapter<any, any>
-    isInline?: boolean
-    inlineSnapshot?: string
-    hint?: string
-  }) {
-    const { assertion } = opts
-    const assertionName = utils.flag(assertion, '_name')
-    const isNot = utils.flag(assertion, 'negate')
-    if (isNot) {
-      throw new Error(`${assertionName} cannot be used with "not"`)
-    }
-    const test = getTest(assertionName, assertion)
-
-    let { inlineSnapshot } = opts
-    if (inlineSnapshot) {
-      inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
-    }
-
-    const pollFn = utils.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
-    if (pollFn) {
-      const result = getSnapshotClient().pollMatchDomain({
-        poll: pollFn,
-        adapter: opts.adapter,
-        message: opts.hint,
-        isInline: opts.isInline,
-        errorMessage: utils.flag(assertion, 'message'),
-        timeout: utils.flag(assertion, '_poll.timeout') as number | undefined,
-        interval: utils.flag(assertion, '_poll.interval') as number | undefined,
-        assertionName,
-        inlineSnapshot,
-        error: utils.flag(assertion, 'error'),
-        ...getTestNames(test),
-      })
-      return result.then(assertMatchResult)
-    }
-
-    const result = getSnapshotClient().matchDomain({
-      received: utils.flag(assertion, 'object'),
-      adapter: opts.adapter,
-      message: opts.hint,
-      isInline: opts.isInline,
-      errorMessage: utils.flag(assertion, 'message'),
-      assertionName,
-      inlineSnapshot,
-      error: utils.flag(assertion, 'error'),
-      ...getTestNames(test),
-    })
-    if (!result.pass) {
-      assertMatchResult(result)
-    }
-  }
-
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchDomainSnapshot',
@@ -386,5 +321,75 @@ function assertMatchResult(result: SyncExpectationResult): void {
         expand: getWorkerState().config.snapshotOptions.expand,
       },
     })
+  }
+}
+
+function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
+  if (typeof domain !== 'string' || !domain) {
+    throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
+  }
+  const adapter = getDomain(domain)
+  if (!adapter) {
+    throw new Error(`Snapshot domain "${domain}" is not registered.`)
+  }
+  return adapter
+}
+
+// TODO: support custom matcher like https://github.com/vitest-dev/vitest/pull/9973
+function assertDomainSnapshot(opts: {
+  assertion: object
+  adapter: DomainSnapshotAdapter<any, any>
+  isInline?: boolean
+  inlineSnapshot?: string
+  hint?: string
+}) {
+  const { assertion } = opts
+  const assertionName = chai.util.flag(assertion, '_name')
+  const isNot = chai.util.flag(assertion, 'negate')
+  if (isNot) {
+    throw new Error(`${assertionName} cannot be used with "not"`)
+  }
+
+  const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
+  if (!test) {
+    throw new Error(`'${assertionName}' cannot be used without test context`)
+  }
+
+  let { inlineSnapshot } = opts
+  if (inlineSnapshot) {
+    inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+  }
+
+  const pollFn = chai.util.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
+  if (pollFn) {
+    const result = getSnapshotClient().pollMatchDomain({
+      poll: pollFn,
+      adapter: opts.adapter,
+      message: opts.hint,
+      isInline: opts.isInline,
+      errorMessage: chai.util.flag(assertion, 'message'),
+      timeout: chai.util.flag(assertion, '_poll.timeout') as number | undefined,
+      interval: chai.util.flag(assertion, '_poll.interval') as number | undefined,
+      assertionName,
+      inlineSnapshot,
+      error: chai.util.flag(assertion, 'error'),
+      ...getTestNames(test),
+    })
+    return result.then(assertMatchResult)
+  }
+
+  const result = getSnapshotClient().matchDomain({
+    received: chai.util.flag(assertion, 'object'),
+    adapter: opts.adapter,
+    message: opts.hint,
+    isInline: opts.isInline,
+    errorMessage: chai.util.flag(assertion, 'message'),
+    assertionName,
+    inlineSnapshot,
+    error: chai.util.flag(assertion, 'error'),
+    ...getTestNames(test),
+  })
+  if (!result.pass) {
+    assertMatchResult(result)
   }
 }
