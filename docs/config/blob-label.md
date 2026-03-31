@@ -42,4 +42,4 @@ vitest --merge-reports
  ✓  macos  src/basic.test.ts (2 tests)
 ```
 
-See [Blob Reporter](/guide/reporters#blob-reporter) and the [CI setup guide](/guide/improving-performance#cross-platform-sharding) for a full example.
+See [Blob Reporter](/guide/reporters#blob-reporter) and the [CI setup guide](/guide/improving-performance#sharding) for a full example.
