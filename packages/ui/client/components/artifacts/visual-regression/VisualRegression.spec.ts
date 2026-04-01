@@ -30,7 +30,7 @@ describe('VisualRegression', () => {
   it('renders content with no attachments', async () => {
     const messageContent = faker.lorem.words(5)
 
-    render(VisualRegression, {
+    const result = render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -49,10 +49,17 @@ describe('VisualRegression', () => {
     await expect.element(article.getByRole('paragraph'))
       .toHaveTextContent(messageContent)
     await expect.element(article.getByRole('tablist')).toHaveTextContent('')
+
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - article:
+        - heading "Visual Regression" [level=1]
+        - paragraph: /.*/
+        - tablist
+    `)
   })
 
   it('renders diff tab', async () => {
-    render(VisualRegression, {
+    const result = render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -67,6 +74,17 @@ describe('VisualRegression', () => {
       .toHaveTextContent('Diff')
     await expect.element(page.getByRole('tabpanel').getByRole('img'))
       .toBeInTheDocument()
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - article:
+        - heading "Visual Regression" [level=1]
+        - paragraph: /.*/
+        - tablist:
+          - tab "Diff" [selected]
+        - tabpanel "Diff":
+          - link:
+            - /url: /.*/
+            - img
+    `)
   })
 
   it('renders reference tab', async () => {
@@ -106,7 +124,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders reference, actual, and slider tabs', async () => {
-    render(VisualRegression, {
+    const result = render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -121,6 +139,19 @@ describe('VisualRegression', () => {
     const tabs = tablist.getByRole('tab')
 
     await expect.element(tablist).toBeInTheDocument()
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - article:
+        - heading "Visual Regression" [level=1]
+        - paragraph: /.*/
+        - tablist:
+          - tab "Reference" [selected]
+          - tab "Actual"
+          - tab "Slider"
+        - tabpanel "Reference":
+          - link:
+            - /url: /.*/
+            - img
+    `)
 
     expect(tabs.all()).toHaveLength(3)
     await expect.element(tabs.nth(0)).toHaveTextContent('Reference')
@@ -129,15 +160,23 @@ describe('VisualRegression', () => {
 
     await userEvent.click(tabs.nth(2))
 
-    await expect.element(
-      page.getByLabelText(
-        'Image comparison slider showing reference and actual screenshots',
-      ),
-    ).toBeInTheDocument()
+    await expect.element(tablist.getByRole('tab', { selected: true })).toHaveTextContent('Slider')
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - article:
+        - heading "Visual Regression" [level=1]
+        - paragraph: /.*/
+        - tablist:
+          - tab "Reference"
+          - tab "Actual"
+          - tab "Slider" [selected]
+        - tabpanel "Slider":
+          - slider "Adjust slider to compare reference and actual images": "50"
+          - status: Showing 50% reference, 50% actual
+    `)
   })
 
   it('renders diff, reference, actual, and slider tabs', async () => {
-    render(VisualRegression, {
+    const result = render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -158,5 +197,19 @@ describe('VisualRegression', () => {
     await expect.element(tabs.nth(1)).toHaveTextContent('Reference')
     await expect.element(tabs.nth(2)).toHaveTextContent('Actual')
     await expect.element(tabs.nth(3)).toHaveTextContent('Slider')
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - article:
+        - heading "Visual Regression" [level=1]
+        - paragraph: /.*/
+        - tablist:
+          - tab "Diff" [selected]
+          - tab "Reference"
+          - tab "Actual"
+          - tab "Slider"
+        - tabpanel "Diff":
+          - link:
+            - /url: /.*/
+            - img
+    `)
   })
 })
