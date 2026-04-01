@@ -698,11 +698,7 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     expect(value()).toBe('Another Value')
   })
 
-  test.skipIf(
-    server.provider === 'preview'
-    // failing since playwright 1.59.0 https://github.com/microsoft/playwright/issues/39983
-    || (server.provider === 'playwright' && server.browser === 'webkit'),
-  )('fill input in shadow root', async () => {
+  test.skipIf(server.provider === 'preview')('fill input in shadow root', async () => {
     const input = getInput()
     const shadowRoot = createShadowRoot()
     shadowRoot.appendChild(input)
@@ -714,6 +710,11 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     }
 
     await userEvent.fill(input, 'Hello')
+    if (input.tagName === 'DIV' && server.provider === 'playwright' && server.browser === 'webkit') {
+      // broken since playwright 1.59.0 https://github.com/microsoft/playwright/issues/39983
+      expect(value()).toBe('')
+      return
+    }
     expect(value()).toBe('Hello')
   })
 })
