@@ -2397,17 +2397,17 @@ describe('builder pattern API with automatic type inference', () => {
           return 'test'
         })
         .extend('workerValue', { scope: 'worker' }, async () => {
-          log('>> workerValue setup')
+          log('workerValue setup')
           return 'worker'
         })
     }, {
       'basic.test.ts': ({ extendedTest, log }) => {
         extendedTest.beforeAll(({ workerValue }) => {
-          log('>> beforeAll:', { workerValue })
+          log('beforeAll:', { workerValue })
         })
 
         extendedTest('test', ({ workerValue, testValue }) => {
-          log('>> test:', { workerValue, testValue })
+          log('test:', { workerValue, testValue })
         })
       },
     })
@@ -2430,17 +2430,17 @@ describe('builder pattern API with automatic type inference', () => {
           return 'test'
         })
         .extend('workerValue', { scope: 'worker' }, async () => {
-          log('>> workerValue setup')
+          log('workerValue setup')
           return 'worker'
         })
     }, {
       'basic.test.ts': ({ extendedTest, log }) => {
         extendedTest.beforeAll(({ workerValue }) => {
-          log('>> beforeAll:', { workerValue })
+          log('beforeAll:', { workerValue })
         })
 
         extendedTest('test', ({ workerValue, testValue }) => {
-          log('>> test:', { workerValue, testValue })
+          log('test:', { workerValue, testValue })
         })
       },
     })
