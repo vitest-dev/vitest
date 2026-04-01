@@ -621,6 +621,7 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
                   headless: p.config.browser.headless,
                   browser: p.config.browser.enabled,
                   ui: p.config.browser.ui,
+                  locators: p.config.browser.locators,
                 })
                 console.log(JSON.stringify({
                   browser: {
@@ -662,6 +663,51 @@ function getCliConfig(options: TestUserConfig, cli: string[], fs: TestFsStructur
 }
 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
+  test('nested CLI options correctly override inline workspace options', async () => {
+    const vitest = await getCliConfig({
+      projects: [
+        {
+          test: {
+            name: 'unit',
+          },
+        },
+        {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright(),
+              instances: [
+                {
+                  browser: 'chromium',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    }, ['--browser.locators.exact'])
+
+    const config = JSON.parse(vitest.stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toMatchObject({
+      name: 'unit',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toMatchObject({
+      name: 'browser (chromium)',
+      locators: {
+        exact: true,
+      },
+    })
+  })
+
   test('UI is not enabled by default in headless config', async () => {
     const vitest = await getCliConfig({
       projects: [
@@ -691,7 +737,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const config = JSON.parse(vitest.stdout)
 
     expect(config.workspace).toHaveLength(2)
-    expect(config.workspace[0]).toEqual({
+    expect(config.workspace[0]).toMatchObject({
       name: 'unit',
       headless: false,
       browser: false,
@@ -699,19 +745,19 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       parent: null,
     })
 
-    expect(config.workspace[1]).toEqual({
+    expect(config.workspace[1]).toMatchObject({
       name: 'browser (chromium)',
       // headless was set in the config
       headless: true,
       browser: true,
       // UI is false because headless is enabled
       ui: false,
-      parent: {
+      parent: expect.objectContaining({
         name: 'browser',
         headless: true,
         browser: true,
         ui: false,
-      },
+      }),
     })
   })
 
@@ -744,7 +790,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const config = JSON.parse(vitest.stdout)
 
     expect(config.workspace).toHaveLength(2)
-    expect(config.workspace[0]).toEqual({
+    expect(config.workspace[0]).toMatchObject({
       name: 'unit',
       headless: false,
       browser: false,
@@ -752,7 +798,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       parent: null,
     })
 
-    expect(config.workspace[1]).toEqual({
+    expect(config.workspace[1]).toMatchObject({
       name: 'browser (chromium)',
       // headless was overridden by CLI options
       headless: false,
@@ -760,12 +806,12 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       // UI should be true because we always set CI to false,
       // if headless was `true`, ui would be `false`
       ui: true,
-      parent: {
+      parent: expect.objectContaining({
         name: 'browser',
         headless: false,
         browser: true,
         ui: true,
-      },
+      }),
     })
   })
 
@@ -804,7 +850,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const config = JSON.parse(vitest.stdout)
 
     expect(config.workspace).toHaveLength(2)
-    expect(config.workspace[0]).toEqual({
+    expect(config.workspace[0]).toMatchObject({
       name: 'unit',
       headless: false,
       browser: false,
@@ -812,17 +858,17 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       parent: null,
     })
 
-    expect(config.workspace[1]).toEqual({
+    expect(config.workspace[1]).toMatchObject({
       name: 'browser (chromium)',
       headless: false,
       browser: true,
       ui: true,
-      parent: {
+      parent: expect.objectContaining({
         name: 'browser',
         headless: false,
         browser: true,
         ui: true,
-      },
+      }),
     })
   })
 
@@ -859,7 +905,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const config = JSON.parse(stdout)
 
     expect(config.workspace).toHaveLength(2)
-    expect(config.workspace[0]).toEqual({
+    expect(config.workspace[0]).toMatchObject({
       name: 'node',
       headless: true,
       browser: false,
@@ -867,17 +913,17 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       parent: null,
     })
 
-    expect(config.workspace[1]).toEqual({
+    expect(config.workspace[1]).toMatchObject({
       name: 'browser (chromium)',
       headless: true,
       browser: true,
       ui: false,
-      parent: {
+      parent: expect.objectContaining({
         name: 'browser',
         headless: true,
         browser: true,
         ui: false,
-      },
+      }),
     })
   })
 
@@ -914,7 +960,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     const config = JSON.parse(stdout)
 
     expect(config.workspace).toHaveLength(2)
-    expect(config.workspace[0]).toEqual({
+    expect(config.workspace[0]).toMatchObject({
       name: 'node',
       headless: false,
       browser: false,
@@ -922,17 +968,17 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       parent: null,
     })
 
-    expect(config.workspace[1]).toEqual({
+    expect(config.workspace[1]).toMatchObject({
       name: 'browser (chromium)',
       headless: false,
       browser: true,
       ui: true,
-      parent: {
+      parent: expect.objectContaining({
         name: 'browser',
         headless: false,
         browser: true,
         ui: true,
-      },
+      }),
     })
   })
 
@@ -956,18 +1002,18 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
         ui: true,
       },
       workspace: [
-        {
+        expect.objectContaining({
           name: 'chromium',
           headless: false,
           browser: true,
           ui: true,
-          parent: {
+          parent: expect.objectContaining({
             name: '',
             headless: false,
             browser: true,
             ui: true,
-          },
-        },
+          }),
+        }),
       ],
     })
   })

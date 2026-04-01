@@ -43,7 +43,6 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    task,
     currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
@@ -56,6 +55,7 @@ function getMatcherState(
     poll: util.flag(assertion, 'poll') as boolean | undefined,
     __vitest_assertion__: assertion as any,
   }
+  Object.assign(matcherState, { task })
 
   return {
     state: matcherState,
