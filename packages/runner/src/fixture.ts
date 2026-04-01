@@ -337,7 +337,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const usedProps = getUsedProps(fn)
 
     for (const fixture of registrations.values()) {
-      if (usedProps.has(fixture.name) || isAutoFixture(fixture, options)) {
+      if (isAutoFixture(fixture, options) || usedProps.has(fixture.name)) {
         usedFixtures.push(fixture)
       }
     }
