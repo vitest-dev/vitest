@@ -13,6 +13,9 @@ export function getAttachmentUrl(attachment: TestAttachment): string {
     return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
   }
   // attachment.body is always a string outside of the test frame
+  if (attachment.bodyEncoding === 'utf-8') {
+    return `data:${contentType},${encodeURIComponent(attachment.body as string)}`
+  }
   return `data:${contentType};base64,${attachment.body}`
 }
 
