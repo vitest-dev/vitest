@@ -224,15 +224,15 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_: 
 }
 
 export function getIframeScale(): number {
-  const testerUi = window.parent.document.querySelector(`iframe[data-vitest]`)?.parentElement
-  if (!testerUi) {
-    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  const iframe = window.frameElement
+
+  if (!iframe) {
+    throw new Error(`Cannot find iframe element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
-  const scaleAttribute = testerUi.getAttribute('data-scale')
-  const scale = Number(scaleAttribute)
-  if (Number.isNaN(scale)) {
-    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
-  }
+
+  // we can safely use `a` as both vertical and horizontal scale are the same
+  const scale = new DOMMatrix(getComputedStyle(iframe).transform).a
+
   return scale
 }
 

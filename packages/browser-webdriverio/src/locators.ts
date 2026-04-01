@@ -247,12 +247,11 @@ function processClickOptions(options?: UserEventClickOptions) {
     return options
   }
   if (options.x != null || options.y != null) {
-    const cache = {}
     if (options.x != null) {
-      options.x = scaleCoordinate(options.x, cache)
+      options.x = scaleCoordinate(options.x)
     }
     if (options.y != null) {
-      options.y = scaleCoordinate(options.y, cache)
+      options.y = scaleCoordinate(options.y)
     }
   }
   return options
@@ -263,12 +262,11 @@ function processHoverOptions(options?: UserEventHoverOptions) {
   if (!options || !server.config.browser.ui) {
     return options
   }
-  const cache = {}
   if (options.xOffset != null) {
-    options.xOffset = scaleCoordinate(options.xOffset, cache)
+    options.xOffset = scaleCoordinate(options.xOffset)
   }
   if (options.yOffset != null) {
-    options.yOffset = scaleCoordinate(options.yOffset, cache)
+    options.yOffset = scaleCoordinate(options.yOffset)
   }
   return options
 }
@@ -278,26 +276,31 @@ function processDragAndDropOptions(options?: UserEventDragAndDropOptions) {
   if (!options || !server.config.browser.ui) {
     return options
   }
-  const cache = {}
   if (options.sourceX != null) {
-    options.sourceX = scaleCoordinate(options.sourceX, cache)
+    options.sourceX = scaleCoordinate(options.sourceX)
   }
   if (options.sourceY != null) {
-    options.sourceY = scaleCoordinate(options.sourceY, cache)
+    options.sourceY = scaleCoordinate(options.sourceY)
   }
   if (options.targetX != null) {
-    options.targetX = scaleCoordinate(options.targetX, cache)
+    options.targetX = scaleCoordinate(options.targetX)
   }
   if (options.targetY != null) {
-    options.targetY = scaleCoordinate(options.targetY, cache)
+    options.targetY = scaleCoordinate(options.targetY)
   }
   return options
 }
 
-function scaleCoordinate(coordinate: number, cache: any) {
-  return Math.round(coordinate * getCachedScale(cache))
+let scale = getIframeScale()
+
+const iframeContainer = window.frameElement?.parentElement
+
+if (iframeContainer) {
+  new ResizeObserver(() => {
+    scale = getIframeScale()
+  }).observe(iframeContainer)
 }
 
-function getCachedScale(cache: { scale: number | undefined }) {
-  return cache.scale ??= getIframeScale()
+function scaleCoordinate(coordinate: number) {
+  return Math.round(coordinate * scale)
 }

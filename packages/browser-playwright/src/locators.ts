@@ -155,8 +155,17 @@ function processClickOptions(options?: UserEventClickOptions) {
   return options
 }
 
+let scale = getIframeScale()
+
+const iframeContainer = window.frameElement?.parentElement
+
+if (iframeContainer) {
+  new ResizeObserver(() => {
+    scale = getIframeScale()
+  }).observe(iframeContainer)
+}
+
 function processPlaywrightPosition(position: { x: number; y: number }) {
-  const scale = getIframeScale()
   if (position.x != null) {
     position.x *= scale
   }
