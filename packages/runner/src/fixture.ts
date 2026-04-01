@@ -337,9 +337,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const usedProps = getUsedProps(fn)
 
     for (const fixture of registrations.values()) {
-      // suite hook shouldn't automatically trigger unused test-scoped fixtures
-      const auto = fixture.auto && !(options?.suiteHook && fixture.scope === 'test')
-      if (usedProps.has(fixture.name) || auto) {
+      if (usedProps.has(fixture.name) || isAutoFixture(fixture, options)) {
         usedFixtures.push(fixture)
       }
     }
@@ -421,6 +419,17 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
 
     return fn(context)
   }
+}
+
+function isAutoFixture(fixture: TestFixtureItem, options?: WithFixturesOptions): boolean {
+  if (!fixture.auto) {
+    return false
+  }
+  // suite hook doesn't automatically trigger unused test-scoped fixtures.
+  if (options?.suiteHook && fixture.scope === 'test') {
+    return false
+  }
+  return true
 }
 
 function isFixtureFunction(value: unknown): value is FixtureFn<any, any, any> {
