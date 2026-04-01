@@ -11,6 +11,7 @@ export default mergeConfig(
     },
     test: {
       browser: {
+        enabled: true,
         provider: playwright(),
         instances: [{ browser: 'chromium' }],
       },

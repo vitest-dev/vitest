@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { defineComponent, h } from 'vue'
@@ -14,10 +13,10 @@ function createSmallTabs(children: number) {
           SmallTabs,
           null,
           {
-            default: () => Array.from({ length: children }, () => h(
+            default: () => Array.from({ length: children }, (_, i) => h(
               SmallTabsPane,
-              { title: faker.lorem.word() },
-              () => faker.lorem.words(2),
+              { title: `title-${i}` },
+              () => `content-${i}`,
             )),
           },
         ),
@@ -26,7 +25,7 @@ function createSmallTabs(children: number) {
 
 describe('SmallTabs', () => {
   it('has accessible elements', async () => {
-    render(createSmallTabs(2))
+    const result = render(createSmallTabs(2))
 
     // a tablist with two elements inside
     const tablist = page.getByRole('tablist')
@@ -35,6 +34,12 @@ describe('SmallTabs', () => {
     const secondTab = tabs.last()
 
     await expect.element(tablist).toBeInTheDocument()
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - tablist:
+        - tab "title-0" [selected]
+        - tab "title-1"
+      - tabpanel "title-0": content-0
+    `)
     expect(tabs.all()).toHaveLength(2)
 
     await expect.element(firstTab).toHaveAttribute('aria-selected', 'true')
@@ -73,7 +78,7 @@ describe('SmallTabs', () => {
   it('opens one panel at a time', async () => {
     const tabsLimit = 5
 
-    render(createSmallTabs(tabsLimit))
+    const result = render(createSmallTabs(tabsLimit))
 
     const tabs = page.getByRole('tablist').getByRole('tab')
     const panels = page.getByRole('tabpanel', { includeHidden: true })
@@ -90,5 +95,15 @@ describe('SmallTabs', () => {
         page.getByRole('tabpanel'),
       ).toBe(activePanel.element())
     }
+
+    expect(result.container).toMatchAriaInlineSnapshot(`
+      - tablist:
+        - tab "title-0"
+        - tab "title-1"
+        - tab "title-2"
+        - tab "title-3"
+        - tab "title-4" [selected]
+      - tabpanel "title-4": content-4
+    `)
   })
 })
