@@ -2414,11 +2414,11 @@ describe('builder pattern API with automatic type inference', () => {
 
     expect(stderr).toMatchInlineSnapshot(`""`)
     expect(fixtures).toMatchInlineSnapshot(`
-     ">> fixture | >> workerValue setup | undefined
-     >> fixture | >> beforeAll: { workerValue: 'worker' } | undefined
-     >> fixture | testValue setup | test
-     >> fixture | >> test: { workerValue: 'worker', testValue: 'test' } | test"
-   `)
+      ">> fixture | workerValue setup | undefined
+      >> fixture | beforeAll: { workerValue: 'worker' } | undefined
+      >> fixture | testValue setup | test
+      >> fixture | test: { workerValue: 'worker', testValue: 'test' } | test"
+    `)
     expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test <time>"`)
   })
 
@@ -2447,11 +2447,11 @@ describe('builder pattern API with automatic type inference', () => {
 
     expect(stderr).toMatchInlineSnapshot(`""`)
     expect(fixtures).toMatchInlineSnapshot(`
-     ">> fixture | >> workerValue setup | undefined
-     >> fixture | >> beforeAll: { workerValue: 'worker' } | undefined
-     >> fixture | testValue setup | test
-     >> fixture | >> test: { workerValue: 'worker', testValue: 'test' } | test"
-   `)
+      ">> fixture | workerValue setup | undefined
+      >> fixture | beforeAll: { workerValue: 'worker' } | undefined
+      >> fixture | testValue setup | test
+      >> fixture | test: { workerValue: 'worker', testValue: 'test' } | test"
+    `)
     expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test <time>"`)
   })
 
