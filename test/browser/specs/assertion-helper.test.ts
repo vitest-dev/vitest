@@ -35,15 +35,11 @@ test('vi.defineHelper hides internal stack traces', async () => {
       `)
     }
     else if (name === 'webkit') {
-      // async stack trace is incomplete on webkit
-      // waiting for https://github.com/WebKit/WebKit/pull/57832 to land on playwright
-      // bun has already landed https://github.com/oven-sh/bun/pull/22517
       expect.soft(tree).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
             "async": [
               "expected 'async' to deeply equal 'x'
-            at basic.test.ts:9:20
             at basic.test.ts:26:21",
             ],
             "soft": [
@@ -52,7 +48,6 @@ test('vi.defineHelper hides internal stack traces', async () => {
             ],
             "soft async": [
               "expected 'soft async' to deeply equal 'x'
-            at basic.test.ts:18:25
             at basic.test.ts:34:25",
             ],
             "sync": [
