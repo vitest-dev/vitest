@@ -808,7 +808,8 @@ export interface InternalTestContext extends Record<
 
 export interface FixtureOptions {
   /**
-   * Whether to automatically set up current fixture, even though it's not being used in tests.
+   * Whether to automatically set up current fixture, even though it's not being used.
+   * Test-scoped auto fixtures are not initialized in suite-level hooks (`beforeAll`/`afterAll`/`aroundAll`).
    * @default false
    */
   auto?: boolean
