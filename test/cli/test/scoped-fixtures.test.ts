@@ -1279,8 +1279,8 @@ test('file fixture cannot access test fixture at runtime', async () => {
     },
   }, { globals: true })
   expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts [ basic.test.ts ]
     FixtureDependencyError: The file "fileFixture" fixture cannot depend on a test fixture "testFixture".
@@ -2337,6 +2337,91 @@ describe('builder pattern API with automatic type inference', () => {
 
       "
     `)
+  })
+
+  test('non-auto test fixture does works with beforeAll worker fixture', async () => {
+    const { stderr, stdout } = await runInlineTests({
+      'basic.test.ts': `
+        import { describe, test } from 'vitest'
+
+        const it = test
+          .extend('testValue', async () => {
+            console.log('>> testValue setup')
+            return 'test'
+          })
+          .extend('workerValue', { scope: 'worker' }, async () => {
+            console.log('>> workerValue setup')
+            return "worker"
+          })
+
+        describe('suite', () => {
+          it.beforeAll(({ workerValue }) => {
+            console.log('>> beforeAll:', { workerValue })
+          })
+
+          it('test', ({ workerValue, testValue }) => {
+            console.log('>> test:', { workerValue, testValue })
+          })
+        })
+      `,
+    })
+
+    expect(stderr).toMatchInlineSnapshot(`""`)
+    expect(stdout.split('\n').filter(line => line.includes('>>')).join('\n')).toMatchInlineSnapshot(`
+      ">> workerValue setup
+      >> beforeAll: { workerValue: 'worker' }
+      >> testValue setup
+      >> test: { workerValue: 'worker', testValue: 'test' }"
+    `)
+  })
+
+  // TODO: fix
+  test.only('auto test fixture works with beforeAll worker fixture', async () => {
+    const { stderr, stdout } = await runInlineTests({
+      'basic.test.ts': `
+        import { describe, test } from 'vitest'
+
+        const it = test
+          .extend('testValue', { auto: true }, async () => {
+            console.log('>> testValue setup')
+            return 'test'
+          })
+          .extend('workerValue', { scope: 'worker' }, async () => {
+            console.log('>> workerValue setup')
+            return "worker"
+          })
+
+        describe('suite', () => {
+          it.beforeAll(({ workerValue }) => {
+            console.log('>> beforeAll:', { workerValue })
+          })
+
+          it('test', ({ workerValue, testValue }) => {
+            console.log('>> test:', { workerValue, testValue })
+          })
+        })
+      `,
+    })
+
+    expect(stderr).toMatchInlineSnapshot(`
+      "
+      ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+       FAIL  basic.test.ts > suite
+      FixtureDependencyError: Test-scoped fixtures cannot be used inside beforeAll hook. The following fixtures are test-scoped: "testValue". Use { scope: 'file' } or { scope: 'worker' } fixtures instead, or move the logic to beforeEach hook.
+       ❯ basic.test.ts:15:14
+           13|
+           14|         describe('suite', () => {
+           15|           it.beforeAll(({ workerValue }) => {
+             |              ^
+           16|             console.log('>> beforeAll:', { workerValue })
+           17|           })
+
+      ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+      "
+    `)
+    expect(stdout.split('\n').filter(line => line.includes('>>')).join('\n')).toMatchInlineSnapshot(`""`)
   })
 
   test('cleanup error is reported', async () => {
