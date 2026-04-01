@@ -964,6 +964,7 @@ export interface InlineConfig {
 
   /**
    * Label to disambiguate the same test file when merging blob reports from different environments
+   * @experimental
    */
   label?: string
 }

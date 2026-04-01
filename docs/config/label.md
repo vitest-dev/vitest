@@ -2,7 +2,7 @@
 title: label | Config
 ---
 
-# label <CRoot />
+# label <CRoot /> <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
 
 - **Type:** `string`
 - **CLI:** `--label=<label>`
