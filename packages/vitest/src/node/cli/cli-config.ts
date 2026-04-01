@@ -418,7 +418,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
-      locators: null,
+      locators: {
+        description: 'Options for how locators should be handled by default',
+        argument: '<options>',
+        subcommands: {
+          testIdAttribute: null,
+          exact: {
+            description: 'Should locators match the text exactly by default (default: `false`)',
+          },
+        },
+        transform(val) {
+          if (typeof val !== 'object' || val == null) {
+            return {}
+          }
+          return val
+        },
+      },
       testerHtmlPath: null,
       instances: null,
       expect: null,

@@ -105,6 +105,7 @@ export interface SerializedConfig {
     }
     locators: {
       testIdAttribute: string
+      exact: boolean
     }
     screenshotFailures: boolean
     providerOptions: {

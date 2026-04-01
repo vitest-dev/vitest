@@ -17,6 +17,12 @@ test('hello world', async ({ annotate }) => {
 
   const file = createTestSpecificFile()
   await annotate('creates a file', { body: file })
+
+  await annotate('creates a file with text', {
+    contentType: 'text/markdown',
+    body: 'Hello **markdown**',
+    bodyEncoding: 'utf-8',
+  })
 })
 ```
 

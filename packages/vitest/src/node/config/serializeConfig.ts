@@ -113,6 +113,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         screenshotFailures: browser.screenshotFailures,
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
+          exact: browser.locators.exact,
         },
         providerOptions: provider?.name === 'playwright'
           ? {
