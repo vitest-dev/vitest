@@ -650,7 +650,7 @@ export default defineConfig({
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
 
-### Custom Snapshot Matchers
+### Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
 
 Jest imports snapshot composables from `jest-snapshot`. In Vitest, import from `vitest/runtime` instead:
 

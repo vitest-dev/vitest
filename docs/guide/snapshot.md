@@ -200,7 +200,7 @@ Pretty foo: Object {
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
 
-## Custom Snapshot Matchers
+## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
 You can build custom snapshot matchers using the composable functions exported from `vitest/runtime`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 

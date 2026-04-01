@@ -283,6 +283,7 @@ function assertMatchResult(result: SyncExpectationResult): void {
  * })
  * ```
  *
+ * @experimental
  * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
  */
 export function toMatchSnapshot(
@@ -314,6 +315,7 @@ export function toMatchSnapshot(
  * })
  * ```
  *
+ * @experimental
  * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
  */
 export function toMatchInlineSnapshot(
@@ -347,6 +349,7 @@ export function toMatchInlineSnapshot(
  * })
  * ```
  *
+ * @experimental
  * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
  */
 export function toMatchFileSnapshot(
