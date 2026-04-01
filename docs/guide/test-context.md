@@ -893,6 +893,8 @@ This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
 ::: tip
 Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes). Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
 
+This applies to `auto` fixtures as well: `auto: true` does not make a test-scoped fixture available in `beforeAll`, `afterAll`, or `aroundAll`. Only `file`-scoped and `worker`-scoped auto fixtures can be initialized for suite-level hooks.
+
 ```ts
 const test = baseTest
   .extend('testFixture', () => 'test-scoped')

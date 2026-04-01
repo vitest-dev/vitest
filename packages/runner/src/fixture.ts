@@ -337,7 +337,9 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const usedProps = getUsedProps(fn)
 
     for (const fixture of registrations.values()) {
-      if (fixture.auto || usedProps.has(fixture.name)) {
+      // suite hook shouldn't automatically trigger unused test-scoped fixtures
+      const auto = fixture.auto && !(options?.suiteHook && fixture.scope === 'test')
+      if (usedProps.has(fixture.name) || auto) {
         usedFixtures.push(fixture)
       }
     }
