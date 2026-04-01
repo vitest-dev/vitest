@@ -27,6 +27,9 @@ catalogs:
     '@jridgewell/trace-mapping':
       specifier: 0.3.31
       version: 0.3.31
+    '@playwright/test':
+      specifier: ^1.59.0
+      version: 1.59.0
     '@rolldown/plugin-babel':
       specifier: ^0.2.1
       version: 0.2.1
@@ -106,8 +109,8 @@ catalogs:
       specifier: ^2.0.3
       version: 2.0.3
     playwright:
-      specifier: ^1.58.2
-      version: 1.58.2
+      specifier: ^1.59.0
+      version: 1.59.0
     sinon:
       specifier: ^21.0.3
       version: 21.0.3
@@ -198,7 +201,7 @@ importers:
         specifier: ^28.3.0
         version: 28.3.0
       '@playwright/test':
-        specifier: ^1.59.0
+        specifier: 'catalog:'
         version: 1.59.0
       '@rollup/plugin-commonjs':
         specifier: ^29.0.2
@@ -407,8 +410,8 @@ importers:
         specifier: latest
         version: 29.0.1(@noble/hashes@1.8.0)
       playwright:
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: ^1.59.0
+        version: 1.59.0
       vite:
         specifier: 7.1.5
         version: 7.1.5(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.31.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -589,8 +592,8 @@ importers:
         version: 3.1.0
     devDependencies:
       playwright:
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: 'catalog:'
+        version: 1.59.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -1234,8 +1237,8 @@ importers:
         specifier: link:./cjs-lib
         version: link:cjs-lib
       playwright:
-        specifier: ^1.58.2
-        version: 1.58.2
+        specifier: 'catalog:'
+        version: 1.59.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -1319,7 +1322,7 @@ importers:
         version: 2.1.1
       playwright:
         specifier: 'catalog:'
-        version: 1.58.2
+        version: 1.59.0
       test-dep-invalid:
         specifier: link:./deps/dep-invalid
         version: link:deps/dep-invalid
@@ -8874,18 +8877,8 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.58.2:
-    resolution: {integrity: sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.59.0:
     resolution: {integrity: sha512-PW/X/IoZ6BMUUy8rpwHEZ8Kc0IiLIkgKYGNFaMs5KmQhcfLILNx9yCQD0rnWeWfz1PNeqcFP1BsihQhDOBCwZw==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.58.2:
-    resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -18133,15 +18126,7 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.58.2: {}
-
   playwright-core@1.59.0: {}
-
-  playwright@1.58.2:
-    dependencies:
-      playwright-core: 1.58.2
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.59.0:
     dependencies:

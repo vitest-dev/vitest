@@ -43,7 +43,8 @@ test('vi.defineHelper hides internal stack traces', async () => {
           "basic.test.ts": {
             "async": [
               "expected 'async' to deeply equal 'x'
-            at basic.test.ts:9:20",
+            at basic.test.ts:9:20
+            at basic.test.ts:26:21",
             ],
             "soft": [
               "expected 'soft' to deeply equal 'x'
@@ -51,7 +52,8 @@ test('vi.defineHelper hides internal stack traces', async () => {
             ],
             "soft async": [
               "expected 'soft async' to deeply equal 'x'
-            at basic.test.ts:18:25",
+            at basic.test.ts:18:25
+            at basic.test.ts:34:25",
             ],
             "sync": [
               "expected 'sync' to deeply equal 'x'
