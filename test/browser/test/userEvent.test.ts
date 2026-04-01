@@ -710,6 +710,11 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     }
 
     await userEvent.fill(input, 'Hello')
+    if (input.tagName === 'DIV' && server.provider === 'playwright' && server.browser === 'webkit') {
+      // broken since playwright 1.59.0 https://github.com/microsoft/playwright/issues/39983
+      expect(value()).toBe('')
+      return
+    }
     expect(value()).toBe('Hello')
   })
 })
