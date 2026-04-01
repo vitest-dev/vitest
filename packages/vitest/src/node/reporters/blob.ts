@@ -54,7 +54,7 @@ export class BlobReporter implements Reporter {
       const filename = [
         'blob',
         this.ctx.config.label,
-        shard && `${shard.index}-${shard.count}`
+        shard && `${shard.index}-${shard.count}`,
       ].filter(Boolean).join('-')
       outputFile = `.vitest-reports/${sanitizeFilePath(filename)}.json`
     }
