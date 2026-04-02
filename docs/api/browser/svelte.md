@@ -30,9 +30,7 @@ If you have used `@testing-library/svelte` in your tests before, you can keep us
 `vitest-browser-svelte` returns APIs that interact well with built-in [locators](/api/browser/locators), [user events](/api/browser/interactivity) and [assertions](/api/browser/assertions): for example, Vitest will automatically retry the element until the assertion is successful, even if it was rerendered between the assertions.
 :::
 
-The package exposes two entry points: `vitest-browser-svelte` and `vitest-browser-svelte/pure`.
-
-By default, `vitest-browser-svelte` calls [`cleanup`](#cleanup) before the next test starts so the previous render remains visible in the Browser UI until the test finishes. The `pure` entry point disables this automatic cleanup.
+The package exposes two entry points: `vitest-browser-svelte` and `vitest-browser-svelte/pure`. By default, `vitest-browser-svelte` calls [`cleanup`](#cleanup) before the next test starts so the previous render remains visible in the Browser UI until the test finishes. The `pure` entry point disables this automatic cleanup.
 
 ## render
 
