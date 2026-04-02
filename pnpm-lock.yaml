@@ -147,9 +147,9 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.0.0':
-    hash: 8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2
-    path: patches/@sinonjs__fake-timers@15.0.0.patch
+  '@sinonjs/fake-timers@15.3.0':
+    hash: 9a4575978f602f31682a4a4912a0faff4fed22b805b280168d0ef08a82ab0db8
+    path: patches/@sinonjs__fake-timers@15.3.0.patch
   acorn@8.11.3:
     hash: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
     path: patches/acorn@8.11.3.patch
@@ -1064,8 +1064,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@sinonjs/fake-timers':
-        specifier: 15.0.0
-        version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
+        specifier: 15.3.0
+        version: 15.3.0(patch_hash=9a4575978f602f31682a4a4912a0faff4fed22b805b280168d0ef08a82ab0db8)
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1087,9 +1087,6 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
-      '@types/sinonjs__fake-timers':
-        specifier: ^15.0.1
-        version: 15.0.1
       acorn:
         specifier: 8.11.3
         version: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
@@ -4486,8 +4483,8 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@15.0.0':
-    resolution: {integrity: sha512-dlUB2oL+hDIYkIq/OWFBDhQAuU6kDey3eeMiYpVb7UXHhkMq/r1HloKXAbJwJZpYWkFWsydLjMqDpueMUEOjXQ==}
+  '@sinonjs/fake-timers@15.3.0':
+    resolution: {integrity: sha512-m2xozxSfCIxjDdvbhIWazlP2i2aha/iUmbl94alpsIbd3iLTfeXgfBVbwyWogB6l++istyGZqamgA/EcqYf+Bg==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -4838,9 +4835,6 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
-
-  '@types/sinonjs__fake-timers@15.0.1':
-    resolution: {integrity: sha512-Ko2tjWJq8oozHzHV+reuvS5KYIRAokHnGbDwGh/J64LntgpbuylF74ipEL24HCyRjf9FOlBiBHWBR1RlVKsI1w==}
 
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
@@ -12581,7 +12575,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)':
+  '@sinonjs/fake-timers@15.3.0(patch_hash=9a4575978f602f31682a4a4912a0faff4fed22b805b280168d0ef08a82ab0db8)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -12915,8 +12909,6 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.2': {}
-
-  '@types/sinonjs__fake-timers@15.0.1': {}
 
   '@types/sinonjs__fake-timers@8.1.5': {}
 
