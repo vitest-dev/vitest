@@ -25,15 +25,14 @@ test('toMatchAriaInlineSnapshot simple', () => {
   `)
 })
 
-// NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
+test('poll aria once', async () => {
   await expect.poll(async () => {
     document.body.innerHTML = `<p>poll once</p>`
     return document.body
   }).toMatchAriaInlineSnapshot(`- paragraph: poll once`)
 })
 
-test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
+test('expect.element aria once', async () => {
   document.body.innerHTML = `
     <h1>Hello</h1>
     <p>World</p>
@@ -45,7 +44,7 @@ test.skipIf(server.browser === 'webkit')('expect.element aria once', async () =>
   `)
 })
 
-test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
+test('expect.element aria retry', async () => {
   document.body.innerHTML = `
     <h1>Hello</h1>
   `

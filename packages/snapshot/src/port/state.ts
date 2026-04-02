@@ -173,7 +173,14 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
-    // support poll + domain inline snapshot
+    // support poll + inline snapshot
+    const pollChainIndex = stacks.findIndex(i =>
+      i.method.match(/__VITEST_POLL_CHAIN__/),
+    )
+    if (pollChainIndex !== -1) {
+      return stacks[pollChainIndex + 1]
+    }
+
     const pollPromiseIndex = stacks.findIndex(i =>
       i.method.match(/__VITEST_POLL_PROMISE__/),
     )

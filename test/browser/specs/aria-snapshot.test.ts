@@ -7,6 +7,21 @@ import { instances, runBrowserTests } from './utils'
 
 const dir = join(import.meta.dirname, '../fixtures/aria-snapshot')
 
+function extractInlineSnaphsots(code: string) {
+  const matches = Array.from(
+    code.matchAll(/\.toMatchAriaInlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
+  )
+  const snapshots = matches.map((match) => {
+    const end = match.index! + match[0].length
+    const start = code.lastIndexOf('expect', match.index)
+    if (start === -1) {
+      throw new Error('Failed to extract inline snapshot: no expect found for match ' + match[0])
+    }
+    return code.slice(start, end)
+  })
+  return `\n${snapshots.join("\n\n")}\n`
+}
+
 test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
   const testFile = join(dir, 'basic.test.ts')
   const snapshotFile = join(dir, '__snapshots__/basic.test.ts.snap')
@@ -23,245 +38,97 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     update: 'new',
   })
   if (browser === 'webkit') {
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "skipped",
-          "expect.element aria retry": "skipped",
-          "poll aria once": "skipped",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="Actions">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Original</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+      "
+      expect(document.body).toMatchAriaInlineSnapshot(\`
           - paragraph: Original
           - button "1234": Pattern
         \`)
-      })
 
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
+      expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
           return document.body
-        }).toMatchAriaInlineSnapshot()
-      })
+        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot()
-      })
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot()
-      })
+      expect.element(page.getByTestId('body'), { interval: 20 })
+          .toMatchAriaInlineSnapshot(\`
+            - heading "Hello" [level=1]
+            - paragraph: World
+          \`)
       "
     `)
   }
   else if (browser === 'firefox') {
     // firefox and chrome are almost identical except
     // that the generated snapshot raw string has a different indent.
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "passed",
-          "expect.element aria retry": "passed",
-          "poll aria once": "passed",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="Actions">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Original</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+      "
+      expect(document.body).toMatchAriaInlineSnapshot(\`
           - paragraph: Original
           - button "1234": Pattern
         \`)
-      })
 
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
+      expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
           return document.body
         }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
           - heading "Hello" [level=1]
           - paragraph: World
         \`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
+      expect.element(page.getByTestId('body'), { interval: 20 })
           .toMatchAriaInlineSnapshot(\`
             - heading "Hello" [level=1]
             - paragraph: World
           \`)
-      })
       "
     `)
   }
   else {
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "passed",
-          "expect.element aria retry": "passed",
-          "poll aria once": "passed",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="Actions">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Original</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+      "
+      expect(document.body).toMatchAriaInlineSnapshot(\`
           - paragraph: Original
           - button "1234": Pattern
         \`)
-      })
 
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
+      expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
           return document.body
         }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
           - heading "Hello" [level=1]
           - paragraph: World
         \`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
+      expect.element(page.getByTestId('body'), { interval: 20 })
           .toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-      })
+            - heading "Hello" [level=1]
+            - paragraph: World
+          \`)
       "
     `)
   }
-
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "expect.element aria once": "passed",
+        "expect.element aria retry": "passed",
+        "poll aria once": "passed",
+        "toMatchAriaInlineSnapshot simple": "passed",
+        "toMatchAriaSnapshot simple": "passed",
+      },
+    }
+  `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
@@ -307,7 +174,7 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
   })
   if (browser === 'webkit') {
     if (rolldownVersion) {
-      expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+      expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
             "expect.element aria once": "skipped",
@@ -326,18 +193,33 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
       `)
     }
     else {
-      expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+      expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
-            "expect.element aria once": "skipped",
-            "expect.element aria retry": "skipped",
-            "poll aria once": "skipped",
+            "expect.element aria once": "passed",
+            "expect.element aria retry": "passed",
+            "poll aria once": "passed",
             "toMatchAriaInlineSnapshot simple": [
               "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+        - Expected
+        + Received
+
+        - - paragraph: Original
+        + - paragraph: Changed
+          - button /\\d+/: Pattern
             at basic.test.ts:22:50",
             ],
             "toMatchAriaSnapshot simple": [
               "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+        - Expected
+        + Received
+
+          - main:
+            - heading "Dashboard" [level=1]
+        -   - navigation /A\\w+/:
+        +   - navigation "EDITED":
+              - button "Save"
+              - button "Cancel"
             at basic.test.ts:14:44",
             ],
           },
@@ -387,242 +269,95 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     update: 'all',
   })
   if (browser === 'webkit') {
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "skipped",
-          "expect.element aria retry": "skipped",
-          "poll aria once": "skipped",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="EDITED">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Changed</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Changed
-          - button /\\\\d+/: Pattern
-        \`)
-      })
-
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot()
-      })
-
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot()
-      })
-
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot()
-      })
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
       "
-    `)
-  }
-  else if (browser === 'firefox') {
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "passed",
-          "expect.element aria retry": "passed",
-          "poll aria once": "passed",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="EDITED">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Changed</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
+      expect(document.body).toMatchAriaInlineSnapshot(\`
           - paragraph: Changed
           - button /\\\\d+/: Pattern
         \`)
-      })
 
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
+      expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
           return document.body
         }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
           - heading "Hello" [level=1]
           - paragraph: World
         \`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
+      expect.element(page.getByTestId('body'), { interval: 20 })
           .toMatchAriaInlineSnapshot(\`
             - heading "Hello" [level=1]
             - paragraph: World
           \`)
-      })
+      "
+    `)
+  }
+  else if (browser === 'firefox') {
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+      "
+      expect(document.body).toMatchAriaInlineSnapshot(\`
+          - paragraph: Changed
+          - button /\\\\d+/: Pattern
+        \`)
+
+      expect.poll(async () => {
+          document.body.innerHTML = \`<p>poll once</p>\`
+          return document.body
+        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
+
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
+
+      expect.element(page.getByTestId('body'), { interval: 20 })
+          .toMatchAriaInlineSnapshot(\`
+            - heading "Hello" [level=1]
+            - paragraph: World
+          \`)
       "
     `)
   }
   else {
-    expect(result.stderr).toMatchInlineSnapshot(`""`)
-    expect(result.errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "expect.element aria once": "passed",
-          "expect.element aria retry": "passed",
-          "poll aria once": "passed",
-          "toMatchAriaInlineSnapshot simple": "passed",
-          "toMatchAriaSnapshot simple": "passed",
-        },
-      }
-    `)
-    expect(readFileSync(testFile, 'utf-8')).toMatchInlineSnapshot(`
-      "import { expect, test, } from 'vitest'
-      import { server, page } from 'vitest/browser'
-
-      test('toMatchAriaSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <main>
-            <h1>Dashboard</h1>
-            <nav aria-label="EDITED">
-              <button>Save</button>
-              <button>Cancel</button>
-            </nav>
-          </main>
-        \`
-        expect(document.body).toMatchAriaSnapshot()
-      })
-
-      test('toMatchAriaInlineSnapshot simple', () => {
-        document.body.innerHTML = \`
-          <p>Changed</p>
-          <button aria-label="1234">Pattern</button>
-        \`
-        expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+      "
+      expect(document.body).toMatchAriaInlineSnapshot(\`
           - paragraph: Changed
           - button /\\\\d+/: Pattern
         \`)
-      })
 
-      // NOTE: webkit async stack traces is poor. next playwright/webkit release is expected to fix this.
-      test.skipIf(server.browser === 'webkit')('poll aria once', async () => {
-        await expect.poll(async () => {
+      expect.poll(async () => {
           document.body.innerHTML = \`<p>poll once</p>\`
           return document.body
         }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria once', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-          <p>World</p>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        await expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
           - heading "Hello" [level=1]
           - paragraph: World
         \`)
-      })
 
-      test.skipIf(server.browser === 'webkit')('expect.element aria retry', async () => {
-        document.body.innerHTML = \`
-          <h1>Hello</h1>
-        \`
-        document.body.setAttribute('data-testid', 'body')
-        setTimeout(() => {
-          document.body.innerHTML = \`
-            <h1>Hello</h1>
-            <p>World</p>
-          \`
-        }, 10)
-        await expect.element(page.getByTestId('body'), { interval: 20 })
+      expect.element(page.getByTestId('body'), { interval: 20 })
           .toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-      })
+            - heading "Hello" [level=1]
+            - paragraph: World
+          \`)
       "
     `)
   }
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "expect.element aria once": "passed",
+        "expect.element aria retry": "passed",
+        "poll aria once": "passed",
+        "toMatchAriaInlineSnapshot simple": "passed",
+        "toMatchAriaSnapshot simple": "passed",
+      },
+    }
+  `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
