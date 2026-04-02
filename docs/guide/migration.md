@@ -652,11 +652,11 @@ Otherwise your snapshots will have a lot of escaped `"` characters.
 
 ### Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
 
-Jest imports snapshot composables from `jest-snapshot`. In Vitest, import from `vitest/runtime` instead:
+Jest imports snapshot composables from `jest-snapshot`. In Vitest, import from `vitest` instead:
 
 ```ts
 const { toMatchSnapshot } = require('jest-snapshot') // [!code --]
-import { toMatchSnapshot } from 'vitest/runtime' // [!code ++]
+import { toMatchSnapshot } from 'vitest' // [!code ++]
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
@@ -669,7 +669,7 @@ For inline snapshots, the same applies:
 
 ```ts
 const { toMatchInlineSnapshot } = require('jest-snapshot') // [!code --]
-import { toMatchInlineSnapshot } from 'vitest/runtime' // [!code ++]
+import { toMatchInlineSnapshot } from 'vitest' // [!code ++]
 
 expect.extend({
   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
