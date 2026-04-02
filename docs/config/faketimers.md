@@ -5,7 +5,7 @@ outline: deep
 
 # fakeTimers
 
-- **Type:** `FakeTimerInstallOpts`
+- **Type:** `FakeTimerConfig`
 
 Options that Vitest will pass down to [`@sinon/fake-timers`](https://npmx.dev/package/@sinonjs/fake-timers) when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers).
 
@@ -26,6 +26,24 @@ An array with names of global methods and APIs to fake.
 To only mock `setTimeout()` and `nextTick()`, specify this property as `['setTimeout', 'nextTick']`.
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+
+::: tip
+`toFake` and `toNotFake` are mutually exclusive — only set one or the other.
+:::
+
+## fakeTimers.toNotFake
+
+- **Type:** `('setTimeout' | 'clearTimeout' | 'setImmediate' | 'clearImmediate' | 'setInterval' | 'clearInterval' | 'Date' | 'nextTick' | 'hrtime' | 'requestAnimationFrame' | 'cancelAnimationFrame' | 'requestIdleCallback' | 'cancelIdleCallback' | 'performance' | 'queueMicrotask')[]`
+
+An array with names of global methods and APIs to keep native. All other available timers will be mocked.
+
+To only mock `setInterval()`, specify this property as `['setInterval']`.
+
+Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. If `toNotFake` does not include `nextTick`, Vitest will throw an error when running with `--pool=forks`.
+
+::: tip
+`toNotFake` and `toFake` are mutually exclusive — only set one or the other.
+:::
 
 ## fakeTimers.loopLimit
 
