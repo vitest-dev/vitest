@@ -8,8 +8,8 @@
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
 import type { ParsedStack } from '@vitest/utils'
 import type {
+  ProcessDomainSnapshotOptions,
   SnapshotData,
-  SnapshotDomainMatchOptions,
   SnapshotEnvironment,
   SnapshotMatchOptions,
   SnapshotResult,
@@ -552,8 +552,7 @@ export default class SnapshotState {
     })
   }
 
-  // TODO: rename to processDomainSnapshot?
-  matchDomain({
+  processDomainSnapshot({
     testId,
     received,
     expectedSnapshot,
@@ -561,7 +560,7 @@ export default class SnapshotState {
     isInline,
     error,
     assertionName,
-  }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
+  }: ProcessDomainSnapshotOptions): SnapshotReturnOptions {
     const stack = isInline
       ? this._resolveInlineStack({
           testId,

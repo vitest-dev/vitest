@@ -244,7 +244,7 @@ export class SnapshotClient {
     const matchResult = expectedSnapshot.data
       ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
-    const { actual, expected, key, pass } = snapshotState.matchDomain({
+    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
       testId,
       received: rendered,
       expectedSnapshot,
@@ -323,9 +323,9 @@ export class SnapshotClient {
     }
 
     const matchResult = expectedSnapshot.data
-      ? adapter.match(stableResult.captured,  adapter.parseExpected(expectedSnapshot.data))
+      ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
-    const { actual, expected, key, pass } = snapshotState.matchDomain({
+    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
       testId,
       received: stableResult.rendered,
       expectedSnapshot,

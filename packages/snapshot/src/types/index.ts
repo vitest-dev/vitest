@@ -37,7 +37,7 @@ export interface SnapshotMatchOptions {
   assertionName?: string
 }
 
-export interface SnapshotDomainMatchOptions {
+export interface ProcessDomainSnapshotOptions {
   testId: string
   received: string
   expectedSnapshot: ExpectedSnapshot
