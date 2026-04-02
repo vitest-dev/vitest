@@ -272,6 +272,11 @@ function toMatchDomainSnapshotImpl(opts: {
 
   const pollFn = chai.util.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
   if (pollFn) {
+    // take over polling logic from `expect.poll`
+    // TODO: this isn't enough though because `expect.poll`
+    // still calls first `pollFn` on their side, which breaks
+    // for example obsolete snapshots if the first `pollFn` times out.
+    chai.util.flag(assertion, '_poll.assert_once', true)
     return getSnapshotClient().pollMatchDomain({
       poll: pollFn,
       adapter: opts.adapter,
