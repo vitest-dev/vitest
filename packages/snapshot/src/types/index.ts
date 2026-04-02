@@ -41,8 +41,8 @@ export interface SnapshotDomainMatchOptions {
   testId: string
   received: string
   expectedSnapshot: ExpectedSnapshot
+  matchResult?: DomainMatchResult
   isInline?: boolean
-  match: (existingSnapshot: string) => DomainMatchResult
   // assertionName and error are crucial
   // for finding assertion callsite by probing stacktrace
   assertionName?: string

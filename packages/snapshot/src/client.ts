@@ -240,18 +240,18 @@ export class SnapshotClient {
       isInline,
       inlineSnapshot,
     })
-
+    expectedSnapshot.markAsChecked()
+    const matchResult = expectedSnapshot.data
+      ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
+      : undefined
     const { actual, expected, key, pass } = snapshotState.matchDomain({
       testId,
       received: rendered,
       expectedSnapshot,
+      matchResult,
       isInline,
       error,
       assertionName: options.assertionName,
-      match: (existingSnapshot) => {
-        const parsed = adapter.parseExpected(existingSnapshot)
-        return adapter.match(captured, parsed)
-      },
     })
 
     return {
@@ -291,6 +291,7 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
+    // TODO: why snapshotState.snapshotUpdateState !== 'all'?
     const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
@@ -307,8 +308,9 @@ export class SnapshotClient {
         : undefined,
     })
 
+    expectedSnapshot.markAsChecked()
+
     if (!stableResult?.rendered) {
-      expectedSnapshot.markAsChecked()
       // upper `expect.poll` manipulates error via `throwWithCause`,
       // so here we can directly throw `lastPollError` if exists.
       if (stableResult?.lastPollError) {
@@ -320,17 +322,17 @@ export class SnapshotClient {
       }
     }
 
+    const matchResult = expectedSnapshot.data
+      ? adapter.match(stableResult.captured,  adapter.parseExpected(expectedSnapshot.data))
+      : undefined
     const { actual, expected, key, pass } = snapshotState.matchDomain({
       testId,
       received: stableResult.rendered,
-      isInline,
       expectedSnapshot,
+      matchResult,
+      isInline,
       error,
       assertionName: options.assertionName,
-      match: (existingSnapshot) => {
-        const parsed = adapter.parseExpected(existingSnapshot)
-        return adapter.match(stableResult.captured, parsed)
-      },
     })
 
     return {

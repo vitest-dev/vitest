@@ -557,17 +557,11 @@ export default class SnapshotState {
     testId,
     received,
     expectedSnapshot,
-    // TODO: just receivve DomainMatchResult?
-    match,
+    matchResult,
     isInline,
     error,
     assertionName,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
-    expectedSnapshot.markAsChecked()
-
-    const expected = expectedSnapshot.data
-    const hasSnapshot = !!expected
-    const matchResult = hasSnapshot ? match(expected) : undefined
     const stack = isInline
       ? this._resolveInlineStack({
           testId,
@@ -577,13 +571,13 @@ export default class SnapshotState {
         })
       : undefined
     const actualResolved = matchResult?.resolved ?? received
-    const expectedResolved = matchResult?.expected ?? expected
+    const expectedResolved = matchResult?.expected ?? expectedSnapshot.data
     return this._reconcile({
       testId,
       key: expectedSnapshot.key,
       count: expectedSnapshot.count,
       pass: matchResult?.pass ?? false,
-      hasSnapshot,
+      hasSnapshot: !!expectedSnapshot.data,
       snapshotIsPersisted: isInline ? true : this._fileExists,
       addValue: actualResolved,
       actualDisplay: removeExtraLineBreaks(actualResolved),
