@@ -39,11 +39,14 @@ export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNo
 
   match(captured, expected): DomainMatchResult {
     const r = matchAriaTree(captured, expected)
+    if (r.pass) {
+      return { pass: true }
+    }
     return {
-      pass: r.pass,
-      message: r.pass ? undefined : 'Accessibility tree does not match expected template',
-      resolved: r.pass ? undefined : wrapNewlines(r.resolved),
-      expected: r.pass ? undefined : wrapNewlines(renderAriaTemplate(expected)),
+      pass: false,
+      message: 'Accessibility tree does not match expected template',
+      resolved: wrapNewlines(r.resolved),
+      expected: wrapNewlines(renderAriaTemplate(expected)),
     }
   },
 }
