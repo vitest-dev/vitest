@@ -40,7 +40,10 @@ export const instances: BrowserInstanceOption[] = process.env.BROWSER
   ? [
       {
         browser: process.env.BROWSER as any,
-        headless: wsEndpoint ? true : process.env.BROWSER === 'safari' ? false : undefined,
+        headless:
+          wsEndpoint
+            ? true
+            : process.env.BROWSER === 'safari' ? false : undefined,
       },
     ]
   : provider.name === 'playwright'

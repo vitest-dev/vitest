@@ -891,7 +891,7 @@ This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
 :::
 
 ::: tip
-Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes). Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
+Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes), including `auto` fixtures. Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
 
 ```ts
 const test = baseTest
