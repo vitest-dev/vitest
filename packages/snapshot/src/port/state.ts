@@ -552,16 +552,17 @@ export default class SnapshotState {
     })
   }
 
+  // TODO: rename to processDomainSnapshot?
   matchDomain({
     testId,
     received,
     expectedSnapshot,
+    // TODO: just receivve DomainMatchResult?
     match,
     isInline,
     error,
     assertionName,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
-    const key = expectedSnapshot.key
     expectedSnapshot.markAsChecked()
 
     const expected = expectedSnapshot.data
@@ -572,14 +573,14 @@ export default class SnapshotState {
           testId,
           snapshot: received,
           assertionName: assertionName!,
-          error: error || new Error('snapshot'),
+          error: error || new Error('STACK_TRACE_ERROR'),
         })
       : undefined
     const actualResolved = matchResult?.resolved ?? received
     const expectedResolved = matchResult?.expected ?? expected
     return this._reconcile({
       testId,
-      key,
+      key: expectedSnapshot.key,
       count: expectedSnapshot.count,
       pass: matchResult?.pass ?? false,
       hasSnapshot,
