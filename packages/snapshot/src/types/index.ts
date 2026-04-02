@@ -40,7 +40,6 @@ export interface SnapshotDomainMatchOptions {
   testId: string
   testName: string
   received: string
-  key?: string
   match: (existingSnapshot: string) => DomainMatchResult
   isInline?: boolean
   inlineSnapshot?: string

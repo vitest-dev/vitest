@@ -550,15 +550,14 @@ export default class SnapshotState {
     testId,
     testName,
     received,
-    key,
     match,
     isInline,
     inlineSnapshot,
     error,
     assertionName,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
-    const resolved = this._resolveKey(testId, testName, key)
-    key = resolved.key
+    const resolved = this._resolveKey(testId, testName)
+    const key = resolved.key
 
     if (!isInline) {
       this._uncheckedKeys.delete(key)
