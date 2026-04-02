@@ -195,6 +195,15 @@ export default class SnapshotState {
       }
     }
 
+    // custom matcher registered via expect.extend() — the wrapper function
+    // in jest-extend.ts is named __VITEST_EXTEND_ASSERTION__
+    const customMatcherIndex = stacks.findIndex(i =>
+      i.method.includes('__VITEST_EXTEND_ASSERTION__'),
+    )
+    if (customMatcherIndex !== -1) {
+      return stacks[customMatcherIndex + 3] ?? null
+    }
+
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i =>
@@ -206,14 +215,15 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; assertionName?: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
+        ...options.stack,
         snapshot: receivedSerialized,
         testId: options.testId,
-        ...options.stack,
+        assertionName: options.assertionName,
       })
     }
     else if (options.rawSnapshot) {
@@ -295,6 +305,7 @@ export default class SnapshotState {
     expectedDisplay?: string
     stack?: ParsedStack
     rawSnapshot?: RawSnapshotInfo
+    assertionName?: string
   }): SnapshotReturnOptions {
     // These are the conditions on when to write snapshots:
     //  * There's no snapshot file in a non-CI environment.
@@ -320,6 +331,7 @@ export default class SnapshotState {
             stack: opts.stack,
             testId: opts.testId,
             rawSnapshot: opts.rawSnapshot,
+            assertionName: opts.assertionName,
           })
         }
         else {
@@ -331,6 +343,7 @@ export default class SnapshotState {
           stack: opts.stack,
           testId: opts.testId,
           rawSnapshot: opts.rawSnapshot,
+          assertionName: opts.assertionName,
         })
         this.added.increment(opts.testId)
       }
@@ -452,6 +465,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    assertionName,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     const resolved = this._resolveKey(testId, testName, key)
     key = resolved.key
@@ -511,7 +525,7 @@ export default class SnapshotState {
       ? this._resolveInlineStack({
           testId,
           snapshot: receivedSerialized,
-          assertionName: 'toMatchInlineSnapshot',
+          assertionName: assertionName || 'toMatchInlineSnapshot',
           error: error || new Error('snapshot'),
         })
       : undefined
@@ -530,6 +544,7 @@ export default class SnapshotState {
         : undefined,
       stack,
       rawSnapshot,
+      assertionName,
     })
   }
 
@@ -577,6 +592,7 @@ export default class SnapshotState {
         ? removeExtraLineBreaks(expectedResolved)
         : undefined,
       stack,
+      assertionName,
     })
   }
 

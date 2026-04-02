@@ -33,6 +33,7 @@ export interface SnapshotMatchOptions {
   isInline: boolean
   error?: Error
   rawSnapshot?: RawSnapshotInfo
+  assertionName?: string
 }
 
 export interface SnapshotDomainMatchOptions {

@@ -133,6 +133,7 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
+      assertionName,
     } = options
     let { received } = options
 
@@ -187,6 +188,7 @@ export class SnapshotClient {
       error,
       inlineSnapshot,
       rawSnapshot,
+      assertionName,
     })
 
     return {
