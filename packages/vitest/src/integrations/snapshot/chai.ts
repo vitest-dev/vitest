@@ -1,4 +1,4 @@
-import type { ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
+import type { ChaiPlugin, ExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
@@ -268,7 +268,6 @@ function resolveDomainAdapter(domain: string, methodName: string): DomainSnapsho
   return adapter
 }
 
-// TODO: support custom matcher like https://github.com/vitest-dev/vitest/pull/9973
 function assertDomainSnapshot(opts: {
   assertion: Chai.Assertion
   adapter: DomainSnapshotAdapter<any, any>
@@ -276,6 +275,28 @@ function assertDomainSnapshot(opts: {
   inlineSnapshot?: string
   hint?: string
 }) {
+  const result = toMatchDomainSnapshotImpl({
+    assertion: opts.assertion,
+    adapter: opts.adapter,
+    received: chai.util.flag(opts.assertion, 'object'),
+    isInline: opts.isInline,
+    inlineSnapshot: opts.inlineSnapshot,
+    hint: opts.hint,
+  })
+  if (result instanceof Promise) {
+    return result.then(assertMatchResult)
+  }
+  assertMatchResult(result)
+}
+
+function toMatchDomainSnapshotImpl(opts: {
+  assertion: Chai.Assertion
+  adapter: DomainSnapshotAdapter<any, any>
+  received: unknown
+  isInline?: boolean
+  inlineSnapshot?: string
+  hint?: string
+}): ExpectationResult {
   const { assertion } = opts
   validateAssertion(assertion)
   const assertionName = getAssertionName(assertion)
@@ -288,7 +309,7 @@ function assertDomainSnapshot(opts: {
 
   const pollFn = chai.util.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
   if (pollFn) {
-    const result = getSnapshotClient().pollMatchDomain({
+    return getSnapshotClient().pollMatchDomain({
       poll: pollFn,
       adapter: opts.adapter,
       message: opts.hint,
@@ -301,11 +322,10 @@ function assertDomainSnapshot(opts: {
       error: chai.util.flag(assertion, 'error'),
       ...getTestNames(test),
     })
-    return result.then(assertMatchResult)
   }
 
-  const result = getSnapshotClient().matchDomain({
-    received: chai.util.flag(assertion, 'object'),
+  return getSnapshotClient().matchDomain({
+    received: opts.received,
     adapter: opts.adapter,
     message: opts.hint,
     isInline: opts.isInline,
@@ -315,9 +335,41 @@ function assertDomainSnapshot(opts: {
     error: chai.util.flag(assertion, 'error'),
     ...getTestNames(test),
   })
-  if (!result.pass) {
-    assertMatchResult(result)
-  }
+}
+
+/**
+ * TODO
+ * @experimental
+ */
+export function toMatchDomainSnapshot(
+  this: MatcherState,
+  domain: DomainSnapshotAdapter<any, any>,
+  received: unknown,
+): ExpectationResult {
+  return toMatchDomainSnapshotImpl({
+    assertion: this.__vitest_assertion__,
+    adapter: domain,
+    received,
+  })
+}
+
+/**
+ * TODO
+ * @experimental
+ */
+export function toMatchDomainInlineSnapshot(
+  this: MatcherState,
+  domain: DomainSnapshotAdapter<any, any>,
+  received: unknown,
+  inlineSnapshot?: string,
+): ExpectationResult {
+  return toMatchDomainSnapshotImpl({
+    assertion: this.__vitest_assertion__,
+    adapter: domain,
+    received,
+    isInline: true,
+    inlineSnapshot,
+  })
 }
 
 // toMatchSnapshot(propertiesOrHint?, hint?)
