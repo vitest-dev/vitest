@@ -260,8 +260,11 @@ export default class SnapshotState {
     )
     const _stack = this._inferInlineSnapshotStack(stacks)
     if (!_stack) {
+      const message = stacks.map(s =>
+        `  ${s.file}:${s.line}:${s.column}${s.method ? ` (${s.method})` : ''}`,
+      ).join('\n')
       throw new Error(
-        `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(stacks)}`,
+        `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${message}`,
       )
     }
     const stack = this.environment.processStackTrace?.(_stack) || _stack
