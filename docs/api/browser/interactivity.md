@@ -39,6 +39,31 @@ await originalUserEvent.keyboard('{/Shift}') // DID NOT release shift because th
 This behaviour is more useful because we do not emulate the keyboard, we actually press the Shift, so keeping the original behaviour would cause unexpected issues when typing in the field.
 :::
 
+<!-- TODO: tweak docs. test per providers -->
+
+::: warning
+Vitest resets unreleased keyboard state automatically before each task attempt, so pressed keys or modifiers do not leak into later tests.
+
+Pointer position and hover state are not reset automatically, however, so they can carry over between tests in the same file.
+
+This applies both to `userEvent.*` calls and locator shortcuts like `locator.click()` or `locator.hover()`, because they use the same underlying interaction state.
+
+If your tests depend on a neutral pointer state, reset it in `beforeEach`:
+
+```ts
+import { beforeEach } from 'vitest'
+import { userEvent } from 'vitest/browser'
+
+beforeEach(async () => {
+  await userEvent.hover(document.body, {
+    position: { x: -1, y: -1 },
+  })
+})
+```
+
+You can also call `locator.unhover()` or `userEvent.unhover(...)` explicitly when a test changes hover state.
+:::
+
 ## userEvent.click
 
 ```ts
