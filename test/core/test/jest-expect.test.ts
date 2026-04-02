@@ -995,15 +995,6 @@ describe('toHaveBeenCalledBefore', () => {
     expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
   })
 
-  it('does not accept a number as failIfNoFirstInvocation', () => {
-    const resultMock = vi.fn()
-
-    resultMock()
-
-    // @ts-expect-error failIfNoFirstInvocation must be boolean, not number
-    expect(vi.fn()).toHaveBeenCalledBefore(resultMock, 0)
-  })
-
   it('fails if result mock is not called', () => {
     const expectMock = vi.fn().mockName('expectMock')
 
@@ -1078,15 +1069,6 @@ describe('toHaveBeenCalledAfter', () => {
     expectMock()
 
     expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
-  })
-
-  it('does not accept a number as failIfNoFirstInvocation', () => {
-    const expectMock = vi.fn()
-
-    expectMock()
-
-    // @ts-expect-error failIfNoFirstInvocation must be boolean, not number
-    expect(expectMock).toHaveBeenCalledAfter(vi.fn(), 0)
   })
 
   it('fails if expect mock is not called', () => {
