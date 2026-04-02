@@ -177,6 +177,15 @@ export default class SnapshotState {
       }
     }
 
+    // custom matcher registered via expect.extend() — the wrapper function
+    // in jest-extend.ts is named __VITEST_EXTEND_ASSERTION__
+    const customMatcherIndex = stacks.findIndex(i =>
+      i.method.includes('__VITEST_EXTEND_ASSERTION__'),
+    )
+    if (customMatcherIndex !== -1) {
+      return stacks[customMatcherIndex + 3] ?? null
+    }
+
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i =>
@@ -188,14 +197,15 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; assertionName?: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
+        ...options.stack,
         snapshot: receivedSerialized,
         testId: options.testId,
-        ...options.stack,
+        assertionName: options.assertionName,
       })
     }
     else if (options.rawSnapshot) {
@@ -294,6 +304,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    assertionName,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     // this also increments counter for inline snapshots. maybe we shouldn't?
     this._counters.increment(testName)
@@ -422,6 +433,7 @@ export default class SnapshotState {
             stack,
             testId,
             rawSnapshot,
+            assertionName,
           })
         }
         else {
@@ -433,6 +445,7 @@ export default class SnapshotState {
           stack,
           testId,
           rawSnapshot,
+          assertionName,
         })
         this.added.increment(testId)
       }
