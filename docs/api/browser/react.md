@@ -28,7 +28,9 @@ If you have used `@testing-library/react` in your tests before, you can keep usi
 `vitest-browser-react` returns APIs that interact well with built-in [locators](/api/browser/locators), [user events](/api/browser/interactivity) and [assertions](/api/browser/assertions): for example, Vitest will automatically retry the element until the assertion is successful, even if it was rerendered between the assertions.
 :::
 
-The package exposes two entry points: `vitest-browser-react` and `vitest-browser-react/pure`. They expose almost identical API (`pure` also exposes `configure`), but the `pure` entry point doesn't add a handler to remove the component before the next test has started.
+The package exposes two entry points: `vitest-browser-react` and `vitest-browser-react/pure`.
+
+By default, `vitest-browser-react` calls [`cleanup`](#cleanup) before the next test starts so the previous render remains visible in the Browser UI until the test finishes. The `pure` entry point disables this automatic cleanup and also exposes `configure`.
 
 ## render
 
