@@ -42,7 +42,7 @@ This behaviour is more useful because we do not emulate the keyboard, we actuall
 ::: warning
 With `playwright` and `webdriverio` providers, interactions are performed by the underlying browser driver. That means some interaction state, like pressed keys or pointer position and the resulting hover state, can persist between tests in the same file.
 
-Vitest resets unreleased keyboard state automatically before starting each test case, but pointer position and the resulting hover state are not reset automatically.
+Vitest resets unreleased keyboard state automatically before starting each test case, but pointer position and the resulting hover state are not reset automatically since resetting pointer position can be expensive.
 
 This applies both to `userEvent.*` calls and locator shortcuts like `locator.click()` or `locator.hover()`, because they use the same underlying interaction state.
 
