@@ -2,11 +2,10 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
-
-const SPLITTER = '// --- TEST CASES ---'
+import { extractInlineSnaphsots } from './utils'
 
 function readTestCases(file: string) {
-  return readFileSync(file, 'utf-8').split(SPLITTER)[1]
+  return extractInlineSnaphsots(readFileSync(file, 'utf-8'))
 }
 
 test('domain inline snapshot', async () => {
@@ -15,7 +14,7 @@ test('domain inline snapshot', async () => {
 
   // purge inline snapshots to empty strings, restore test values
   editFile(testFile, s => s
-    .replace(/toMatchDomainInlineSnapshot\(`[^`]*`/g, 'toMatchDomainInlineSnapshot(``'))
+    .replace(/toMatchKvInlineSnapshot\(`[^`]*`/g, 'toMatchKvInlineSnapshot('))
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
@@ -30,20 +29,16 @@ test('domain inline snapshot', async () => {
   `)
   expect(readTestCases(testFile)).toMatchInlineSnapshot(`
     "
-    test('all literal', () => {
-      expect({ name: 'alice', age: '30' }).toMatchDomainInlineSnapshot(\`
+    expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(\`
         name=alice
         age=30
-      \`, 'kv')
-    })
+      \`)
 
-    test('with regex', () => {
-      expect({ name: 'bob', score: '999', status: 'active' }).toMatchDomainInlineSnapshot(\`
+    expect({ name: 'bob', score: '999', status: 'active' }).toMatchKvInlineSnapshot(\`
         name=bob
         score=999
         status=active
-      \`, 'kv')
-    })
+      \`)
     "
   `)
 
@@ -87,13 +82,13 @@ test('domain inline snapshot', async () => {
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:15:60
-         13|
-         14| test('with regex', () => {
-         15|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDoma…
+     ❯ basic.test.ts:12:60
+         10|
+         11| test('with regex', () => {
+         12|   expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchKvIn…
            |                                                            ^
-         16|     name=bob
-         17|     score=/\\\\d+/
+         13|     name=bob
+         14|     score=/\\\\d+/
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -127,20 +122,16 @@ test('domain inline snapshot', async () => {
   //    score regex preserved, status updated to 'inactive'
   expect(readTestCases(testFile)).toMatchInlineSnapshot(`
     "
-    test('all literal', () => {
-      expect({ name: 'alice', age: '30' }).toMatchDomainInlineSnapshot(\`
+    expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(\`
         name=alice
         age=30
-      \`, 'kv')
-    })
+      \`)
 
-    test('with regex', () => {
-      expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchDomainInlineSnapshot(\`
+    expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchKvInlineSnapshot(\`
         name=bob
         score=/\\\\d+/
         status=inactive
-      \`, 'kv')
-    })
+      \`)
     "
   `)
 })
