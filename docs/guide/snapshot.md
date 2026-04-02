@@ -202,7 +202,7 @@ We are using Jest's `pretty-format` for serializing snapshots. You can read more
 
 ## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
-You can build custom snapshot matchers using the composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting), including in browser mode.
+You can build custom snapshot matchers using the composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 
 ```ts
 import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
