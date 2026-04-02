@@ -270,23 +270,16 @@ function resolveDomainAdapter(domain: string, methodName: string): DomainSnapsho
 
 // TODO: support custom matcher like https://github.com/vitest-dev/vitest/pull/9973
 function assertDomainSnapshot(opts: {
-  assertion: object
+  assertion: Chai.Assertion
   adapter: DomainSnapshotAdapter<any, any>
   isInline?: boolean
   inlineSnapshot?: string
   hint?: string
 }) {
   const { assertion } = opts
-  const assertionName = chai.util.flag(assertion, '_name')
-  const isNot = chai.util.flag(assertion, 'negate')
-  if (isNot) {
-    throw new Error(`${assertionName} cannot be used with "not"`)
-  }
-
-  const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
-  if (!test) {
-    throw new Error(`'${assertionName}' cannot be used without test context`)
-  }
+  validateAssertion(assertion)
+  const assertionName = getAssertionName(assertion)
+  const test = getTest(assertion)
 
   let { inlineSnapshot } = opts
   if (inlineSnapshot) {
