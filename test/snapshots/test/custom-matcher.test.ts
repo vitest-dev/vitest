@@ -1,7 +1,9 @@
 import fs, { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
+import { extractInlineSnaphsots } from './utils'
 
 const INLINE_BLOCK_RE = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
 
@@ -335,4 +337,71 @@ test('custom snapshot matcher', async () => {
       },
     }
   `)
+})
+
+test('browser', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { test, expect, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string) {
+    return toMatchSnapshot.call(this, received.slice(0, 10))
+  },
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+  async toMatchTrimmedFileSnapshot(received: string, filepath: string) {
+    return toMatchFileSnapshot.call(this, received.slice(0, 10), filepath)
+  },
+})
+
+test('file snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedSnapshot()
+})
+
+test('inline snapshot', () => {
+  expect('super long string oh my gerd').toMatchTrimmedInlineSnapshot()
+})
+
+test('raw file snapshot', async () => {
+  await expect('crazy long string oh my gerd').toMatchTrimmedFileSnapshot('./raw.txt')
+})
+`,
+  }, {
+    update: 'all',
+    browser: {
+      enabled: true,
+      headless: true,
+      screenshotFailures: false,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+    },
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "file snapshot": "passed",
+        "inline snapshot": "passed",
+        "raw file snapshot": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`file snapshot 1\`] = \`"extra long"\`;
+    "
+  `)
+  expect(extractInlineSnaphsots(result.fs.readFile('basic.test.ts'))).toMatchInlineSnapshot(`
+    "
+    expect('super long string oh my gerd').toMatchTrimmedInlineSnapshot(\`"super long"\`)
+    "
+  `)
+  expect(result.fs.readFile('raw.txt')).toMatchInlineSnapshot(`"crazy long"`)
 })
