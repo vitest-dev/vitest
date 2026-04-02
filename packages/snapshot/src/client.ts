@@ -234,12 +234,18 @@ export class SnapshotClient {
     const snapshotState = this.getSnapshotState(filepath)
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
-    const { actual, expected, key, pass } = snapshotState.matchDomain({
-      testId,
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
       testName,
-      received: rendered,
+      testId,
       isInline,
       inlineSnapshot,
+    })
+
+    const { actual, expected, key, pass } = snapshotState.matchDomain({
+      testId,
+      received: rendered,
+      expectedSnapshot,
+      isInline,
       error,
       assertionName: options.assertionName,
       match: (existingSnapshot) => {
@@ -316,10 +322,9 @@ export class SnapshotClient {
 
     const { actual, expected, key, pass } = snapshotState.matchDomain({
       testId,
-      testName,
       received: stableResult.rendered,
       isInline,
-      inlineSnapshot,
+      expectedSnapshot,
       error,
       assertionName: options.assertionName,
       match: (existingSnapshot) => {

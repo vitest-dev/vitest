@@ -50,6 +50,13 @@ interface SaveStatus {
 
 type ParsedStackPosition = Pick<ParsedStack, 'file' | 'line' | 'column'>
 
+export interface ExpectedSnapshot {
+  key: string
+  count: number
+  data?: string
+  markAsChecked: () => void
+}
+
 function isSameStackPosition(x: ParsedStackPosition, y: ParsedStackPosition) {
   return x.file === y.file && x.column === y.column && x.line === y.line
 }
@@ -438,13 +445,12 @@ export default class SnapshotState {
 
   probeExpectedSnapshot(
     options: Pick<SnapshotMatchOptions, 'testName' | 'testId' | 'isInline' | 'inlineSnapshot'>,
-  ): {
-    data?: string
-    markAsChecked: () => void
-  } {
+  ): ExpectedSnapshot {
     const count = this._counters.get(options.testName) + 1
     const key = testNameToKey(options.testName, count)
     return {
+      key,
+      count,
       data: options?.isInline ? options.inlineSnapshot : this._snapshotData[key],
       markAsChecked: () => {
         this._counters.increment(options.testName)
@@ -548,22 +554,17 @@ export default class SnapshotState {
 
   matchDomain({
     testId,
-    testName,
     received,
+    expectedSnapshot,
     match,
     isInline,
-    inlineSnapshot,
     error,
     assertionName,
   }: SnapshotDomainMatchOptions): SnapshotReturnOptions {
-    const resolved = this._resolveKey(testId, testName)
-    const key = resolved.key
+    const key = expectedSnapshot.key
+    expectedSnapshot.markAsChecked()
 
-    if (!isInline) {
-      this._uncheckedKeys.delete(key)
-    }
-
-    const expected = isInline ? inlineSnapshot : this._snapshotData[key]
+    const expected = expectedSnapshot.data
     const hasSnapshot = !!expected
     const matchResult = hasSnapshot ? match(expected) : undefined
     const stack = isInline
@@ -579,7 +580,7 @@ export default class SnapshotState {
     return this._reconcile({
       testId,
       key,
-      count: resolved.count,
+      count: expectedSnapshot.count,
       pass: matchResult?.pass ?? false,
       hasSnapshot,
       snapshotIsPersisted: isInline ? true : this._fileExists,

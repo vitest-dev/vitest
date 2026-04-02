@@ -4,6 +4,7 @@ import type {
 } from '@vitest/pretty-format'
 import type { DomainMatchResult } from '../domain'
 import type { RawSnapshotInfo } from '../port/rawSnapshot'
+import type { ExpectedSnapshot } from '../port/state'
 import type {
   SnapshotEnvironment,
   SnapshotEnvironmentOptions,
@@ -38,13 +39,14 @@ export interface SnapshotMatchOptions {
 
 export interface SnapshotDomainMatchOptions {
   testId: string
-  testName: string
   received: string
-  match: (existingSnapshot: string) => DomainMatchResult
+  expectedSnapshot: ExpectedSnapshot
   isInline?: boolean
-  inlineSnapshot?: string
-  error?: Error
+  match: (existingSnapshot: string) => DomainMatchResult
+  // assertionName and error are crucial
+  // for finding assertion callsite by probing stacktrace
   assertionName?: string
+  error?: Error
 }
 
 export interface SnapshotResult {
