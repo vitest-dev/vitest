@@ -202,10 +202,12 @@ We are using Jest's `pretty-format` for serializing snapshots. You can read more
 
 ## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
-You can build custom snapshot matchers using the composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+You can build custom snapshot matchers using the composable functions exposed on `SnapshotMatchers` from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 
 ```ts
-import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
+import { expect, test, SnapshotMatchers } from 'vitest'
+
+const { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } = SnapshotMatchers
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
@@ -235,6 +237,10 @@ test('raw file snapshot', async () => {
 The composables return `{ pass, message }` so you can further customize the error:
 
 ```ts
+import { SnapshotMatchers } from 'vitest'
+
+const { toMatchSnapshot } = SnapshotMatchers
+
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
     const result = toMatchSnapshot.call(this, received.slice(0, length))

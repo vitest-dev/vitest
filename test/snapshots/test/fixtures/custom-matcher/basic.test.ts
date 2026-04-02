@@ -1,4 +1,10 @@
-import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
+import { expect, test, SnapshotMatchers } from 'vitest'
+
+const {
+  toMatchFileSnapshot,
+  toMatchInlineSnapshot,
+  toMatchSnapshot,
+} = SnapshotMatchers
 
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
@@ -56,7 +62,6 @@ test('raw', async () => {
   await expect(`hihihi`).toMatchCustomFileSnapshot('./__snapshots__/raw.txt')
 })
 
-// -- TEST INLINE START --
 test('inline', () => {
   expect(`hehehe`).toMatchCustomInlineSnapshot(`
     Object {
@@ -65,4 +70,3 @@ test('inline', () => {
     }
   `)
 })
-// -- TEST INLINE END --

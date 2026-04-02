@@ -19,6 +19,7 @@ it('exports snapshot', async ({ skip, task }) => {
       ".": {
         "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
+        "SnapshotMatchers": "object",
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",
@@ -42,9 +43,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "should": "function",
         "suite": "function",
         "test": "function",
-        "toMatchFileSnapshot": "function",
-        "toMatchInlineSnapshot": "function",
-        "toMatchSnapshot": "function",
         "vi": "object",
         "vitest": "object",
       },

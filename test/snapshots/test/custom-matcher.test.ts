@@ -5,14 +5,6 @@ import { expect, test } from 'vitest'
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
 import { extractInlineSnaphsots } from './utils'
 
-const INLINE_BLOCK_RE = /\/\/ -- TEST INLINE START --\n([\s\S]*?)\/\/ -- TEST INLINE END --/g
-
-function extractInlineBlocks(content: string): string {
-  return [...content.matchAll(INLINE_BLOCK_RE)]
-    .map(m => m[1].trim())
-    .join('\n\n')
-}
-
 test('custom snapshot matcher', async () => {
   const root = join(import.meta.dirname, 'fixtures/custom-matcher')
   const testFile = join(root, 'basic.test.ts')
@@ -57,15 +49,15 @@ test('custom snapshot matcher', async () => {
       "reversed": "ihihih",
     }"
   `)
-  expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-    "test('inline', () => {
-      expect(\`hehehe\`).toMatchCustomInlineSnapshot(\`
+  expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+    "
+    expect(\`hehehe\`).toMatchCustomInlineSnapshot(\`
         Object {
           "length": 6,
           "reversed": "eheheh",
         }
       \`)
-    })"
+    "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
@@ -105,13 +97,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:44:25
-         42|
-         43| test('file', () => {
-         44|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:50:25
+         48|
+         49| test('file', () => {
+         50|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         45| })
-         46|
+         51| })
+         52|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
 
@@ -127,13 +119,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:48:25
-         46|
-         47| test('properties 1', () => {
-         48|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 1', () => {
+         54|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         49| })
-         50|
+         55| })
+         56|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
 
@@ -149,13 +141,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:52:25
-         50|
-         51| test('properties 2', () => {
-         52|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:58:25
+         56|
+         57| test('properties 2', () => {
+         58|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         53| })
-         54|
+         59| })
+         60|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
 
@@ -172,13 +164,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ihihih",
       }
 
-     ❯ basic.test.ts:56:3
-         54|
-         55| test('raw', async () => {
-         56|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
+     ❯ basic.test.ts:62:3
+         60|
+         61| test('raw', async () => {
+         62|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
            |   ^
-         57| })
-         58|
+         63| })
+         64|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
 
@@ -195,13 +187,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:61:25
-         59| // -- TEST INLINE START --
-         60| test('inline', () => {
-         61|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:66:25
+         64|
+         65| test('inline', () => {
+         66|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         62|     Object {
-         63|       "length": 6,
+         67|     Object {
+         68|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
 
@@ -247,13 +239,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:48:25
-         46|
-         47| test('properties 1', () => {
-         48|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 1', () => {
+         54|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         49| })
-         50|
+         55| })
+         56|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -269,13 +261,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:52:25
-         50|
-         51| test('properties 2', () => {
-         52|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:58:25
+         56|
+         57| test('properties 2', () => {
+         58|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         53| })
-         54|
+         59| })
+         60|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
@@ -312,15 +304,15 @@ test('custom snapshot matcher', async () => {
       "reversed": "tide-ihihih",
     }"
   `)
-  expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-    "test('inline', () => {
-      expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+  expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+    "
+    expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
         Object {
           "length": 11,
           "reversed": "tide-eheheh",
         }
       \`)
-    })"
+    "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
@@ -342,7 +334,13 @@ test('custom snapshot matcher', async () => {
 test('browser', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
-import { test, expect, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
+import { test, expect, SnapshotMatchers } from 'vitest'
+
+const {
+  toMatchFileSnapshot,
+  toMatchInlineSnapshot,
+  toMatchSnapshot,
+} = SnapshotMatchers
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string) {
