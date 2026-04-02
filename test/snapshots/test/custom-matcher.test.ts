@@ -103,13 +103,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:46:25
-         44|
-         45| test('file', () => {
-         46|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:44:25
+         42|
+         43| test('file', () => {
+         44|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         47| })
-         48|
+         45| })
+         46|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
 
@@ -125,13 +125,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:50:25
-         48|
-         49| test('properties 1', () => {
-         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:48:25
+         46|
+         47| test('properties 1', () => {
+         48|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         51| })
-         52|
+         49| })
+         50|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
 
@@ -147,13 +147,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:54:25
-         52|
-         53| test('properties 2', () => {
-         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:52:25
+         50|
+         51| test('properties 2', () => {
+         52|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         55| })
-         56|
+         53| })
+         54|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
 
@@ -170,13 +170,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ihihih",
       }
 
-     ❯ basic.test.ts:58:3
-         56|
-         57| test('raw', async () => {
-         58|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
+     ❯ basic.test.ts:56:3
+         54|
+         55| test('raw', async () => {
+         56|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
            |   ^
-         59| })
-         60|
+         57| })
+         58|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
 
@@ -193,13 +193,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:63:25
-         61| // -- TEST INLINE START --
-         62| test('inline', () => {
-         63|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:61:25
+         59| // -- TEST INLINE START --
+         60| test('inline', () => {
+         61|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         64|     Object {
-         65|       "length": 6,
+         62|     Object {
+         63|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
 
@@ -245,13 +245,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:50:25
-         48|
-         49| test('properties 1', () => {
-         50|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:48:25
+         46|
+         47| test('properties 1', () => {
+         48|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         51| })
-         52|
+         49| })
+         50|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -267,13 +267,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:54:25
-         52|
-         53| test('properties 2', () => {
-         54|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:52:25
+         50|
+         51| test('properties 2', () => {
+         52|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         55| })
-         56|
+         53| })
+         54|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
