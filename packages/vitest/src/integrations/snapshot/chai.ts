@@ -1,7 +1,6 @@
-import type { ChaiPlugin, SyncExpectationResult } from '@vitest/expect'
+import type { ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
-import type { MatcherState } from '@vitest/expect'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
