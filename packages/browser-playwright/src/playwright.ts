@@ -261,7 +261,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private createMocker(): BrowserModuleMocker {
     const idPredicates = new Map<string, (url: URL) => boolean>()
-    const sessionIds = new Map<string, string[]>()
+    const sessionIds = new Map<string, Set<string>>()
+
+    function predicateKey(sessionId: string, url: string) {
+      return `${sessionId}:${url}`
+    }
+
+    function normalizeUrl(url: string) {
+      return new URL(url, 'http://localhost').href
+    }
 
     function createPredicate(sessionId: string, url: string) {
       const moduleUrl = new URL(url, 'http://localhost')
@@ -293,20 +301,36 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         return true
       }
-      const ids = sessionIds.get(sessionId) || []
-      ids.push(moduleUrl.href)
+      const ids = sessionIds.get(sessionId) || new Set<string>()
+      ids.add(moduleUrl.href)
       sessionIds.set(sessionId, ids)
       idPredicates.set(predicateKey(sessionId, moduleUrl.href), predicate)
       return predicate
     }
 
-    function predicateKey(sessionId: string, url: string) {
-      return `${sessionId}:${url}`
+    async function unregisterPredicate(page: Page, sessionId: string, url: string): Promise<void> {
+      const normalizedUrl = normalizeUrl(url)
+      const key = predicateKey(sessionId, normalizedUrl)
+      const predicate = idPredicates.get(key)
+      if (!predicate) {
+        return
+      }
+
+      await page.context().unroute(predicate).finally(() => {
+        idPredicates.delete(key)
+
+        const ids = sessionIds.get(sessionId)
+        ids?.delete(normalizedUrl)
+        if (!ids?.size) {
+          sessionIds.delete(sessionId)
+        }
+      })
     }
 
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
+        await unregisterPredicate(page, sessionId, module.url)
         await page.context().route(createPredicate(sessionId, module.url), async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
@@ -373,24 +397,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const key = predicateKey(sessionId, id)
-        const predicate = idPredicates.get(key)
-        if (predicate) {
-          await page.context().unroute(predicate).finally(() => idPredicates.delete(key))
-        }
+        await unregisterPredicate(page, sessionId, id)
       },
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const ids = sessionIds.get(sessionId) || []
-        const promises = ids.map((id) => {
-          const key = predicateKey(sessionId, id)
-          const predicate = idPredicates.get(key)
-          if (predicate) {
-            return page.context().unroute(predicate).finally(() => idPredicates.delete(key))
-          }
-          return null
-        })
-        await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
+        const ids = sessionIds.get(sessionId)
+        const promises = [...(ids || [])].map(id => unregisterPredicate(page, sessionId, id))
+        await Promise.all(promises)
       },
     }
   }
