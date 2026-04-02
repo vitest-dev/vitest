@@ -102,9 +102,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         //   /home/hiroshi/code/others/vitest/test/browser/fixtures/aria-snapshot/basic.test.ts:29:31
         return function __VITEST_POLL_CHAIN__(this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          // TODO: remove __VITEST_POLL_PROMISE__
-          // since __VITEST_POLL_CHAIN__ + STACK_TRACE_ERROR seems more reliable
-          const promise = async function __VITEST_POLL_PROMISE__() {
+          const promise = async () => {
             chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
 
