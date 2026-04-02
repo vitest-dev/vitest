@@ -723,6 +723,7 @@ export interface TestingLibraryMatchers<E, R> {
   ): Promise<R>
 
   /**
+   * @experimental
    * @description
    * Captures the accessibility tree of an element and compares it against a stored
    * snapshot file. The snapshot uses a YAML-like format describing roles, names, and
@@ -752,6 +753,7 @@ export interface TestingLibraryMatchers<E, R> {
    */
   toMatchAriaSnapshot: () => void
   /**
+   * @experimental
    * @description
    * Captures the accessibility tree of an element and compares it against an inline
    * snapshot stored directly in the test file. The snapshot uses a YAML-like format
