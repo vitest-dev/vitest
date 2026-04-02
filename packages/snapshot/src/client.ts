@@ -291,7 +291,6 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    // TODO: why snapshotState.snapshotUpdateState !== 'all'?
     const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
@@ -322,6 +321,7 @@ export class SnapshotClient {
       }
     }
 
+    // TODO: should `all` mode ignore parse error?
     const matchResult = expectedSnapshot.data
       ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
