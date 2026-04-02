@@ -15,11 +15,11 @@ function extractInlineSnaphsots(code: string) {
     const end = match.index! + match[0].length
     const start = code.lastIndexOf('expect', match.index)
     if (start === -1) {
-      throw new Error('Failed to extract inline snapshot: no expect found for match ' + match[0])
+      throw new Error(`Failed to extract inline snapshot: no expect found for match ${match[0]}`)
     }
     return code.slice(start, end)
   })
-  return `\n${snapshots.join("\n\n")}\n`
+  return `\n${snapshots.join('\n\n')}\n`
 }
 
 test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
@@ -37,86 +37,6 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     project: [browser],
     update: 'new',
   })
-  if (browser === 'webkit') {
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Original
-          - button "1234": Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
-  else if (browser === 'firefox') {
-    // firefox and chrome are almost identical except
-    // that the generated snapshot raw string has a different indent.
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Original
-          - button "1234": Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
-  else {
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Original
-          - button "1234": Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -139,6 +59,30 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
         - button "Save"
         - button "Cancel"
     \`;
+    "
+  `)
+  expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+    "
+    expect(document.body).toMatchAriaInlineSnapshot(\`
+        - paragraph: Original
+        - button "1234": Pattern
+      \`)
+
+    expect.poll(async () => {
+        document.body.innerHTML = \`<p>poll once</p>\`
+        return document.body
+      }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
+
+    expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+        - heading "Hello" [level=1]
+        - paragraph: World
+      \`)
+
+    expect.element(page.getByTestId('body'), { interval: 20 })
+        .toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
     "
   `)
 
@@ -268,84 +212,6 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
     project: [browser],
     update: 'all',
   })
-  if (browser === 'webkit') {
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Changed
-          - button /\\\\d+/: Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
-  else if (browser === 'firefox') {
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Changed
-          - button /\\\\d+/: Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
-  else {
-    expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
-      "
-      expect(document.body).toMatchAriaInlineSnapshot(\`
-          - paragraph: Changed
-          - button /\\\\d+/: Pattern
-        \`)
-
-      expect.poll(async () => {
-          document.body.innerHTML = \`<p>poll once</p>\`
-          return document.body
-        }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
-
-      expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
-          - heading "Hello" [level=1]
-          - paragraph: World
-        \`)
-
-      expect.element(page.getByTestId('body'), { interval: 20 })
-          .toMatchAriaInlineSnapshot(\`
-            - heading "Hello" [level=1]
-            - paragraph: World
-          \`)
-      "
-    `)
-  }
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
@@ -368,6 +234,30 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
         - button "Save"
         - button "Cancel"
     \`;
+    "
+  `)
+  expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
+    "
+    expect(document.body).toMatchAriaInlineSnapshot(\`
+        - paragraph: Changed
+        - button /\\\\d+/: Pattern
+      \`)
+
+    expect.poll(async () => {
+        document.body.innerHTML = \`<p>poll once</p>\`
+        return document.body
+      }).toMatchAriaInlineSnapshot(\`- paragraph: poll once\`)
+
+    expect.element(page.getByTestId('body')).toMatchAriaInlineSnapshot(\`
+        - heading "Hello" [level=1]
+        - paragraph: World
+      \`)
+
+    expect.element(page.getByTestId('body'), { interval: 20 })
+        .toMatchAriaInlineSnapshot(\`
+          - heading "Hello" [level=1]
+          - paragraph: World
+        \`)
     "
   `)
 })
