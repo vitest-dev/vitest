@@ -1010,7 +1010,7 @@ The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
-## toMatchAriaSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatcharisnapshot}
+## toMatchAriaSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatcharisnapshot}
 
 - **Type:** `() => void`
 
@@ -1042,7 +1042,7 @@ On first run, Vitest generates a snapshot entry like:
 
 See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
 
-## toMatchAriaInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchariainlinesnapshot}
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchariainlinesnapshot}
 
 - **Type:** `(snapshot?: string) => void`
 
@@ -1061,7 +1061,7 @@ test('user profile', () => {
 })
 ```
 
-## toMatchDomainSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchdomainsnapshot}
+## toMatchDomainSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchdomainsnapshot}
 
 - **Type:** `(domain: string, hint?: string) => void`
 
@@ -1071,7 +1071,7 @@ Matches a value against a stored snapshot using a registered [domain snapshot ad
 expect(value).toMatchDomainSnapshot('my-domain')
 ```
 
-## toMatchDomainInlineSnapshot <Version type="experimental">4.1.1</Version> <Experimental /> {#tomatchdomaininlinesnapshot}
+## toMatchDomainInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchdomaininlinesnapshot}
 
 - **Type:** `(snapshot: string, domain: string, hint?: string) => void`
 
@@ -2229,7 +2229,7 @@ If you are adding custom serializers, you should call this method inside [`setup
 If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
 
-## expect.addSnapshotDomain <Version type="experimental">4.1.1</Version> <Experimental /> {#expect-addsnapshotdomain}
+## expect.addSnapshotDomain <Version type="experimental">4.1.3</Version> <Experimental /> {#expect-addsnapshotdomain}
 
 - **Type:** `(adapter: DomainSnapshotAdapter) => void`
 
