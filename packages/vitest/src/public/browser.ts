@@ -3,6 +3,7 @@ export {
   stopCoverageInsideWorker,
   takeCoverageInsideWorker,
 } from '../integrations/coverage'
+export { toMatchDomainInlineSnapshot, toMatchDomainSnapshot, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from '../integrations/snapshot/chai'
 export {
   loadDiffConfig,
   loadSnapshotSerializers,

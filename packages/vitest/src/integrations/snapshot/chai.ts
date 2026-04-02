@@ -181,43 +181,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       }
     }),
   )
-  /**
-   * ARIA snapshot domain is registered in browser mode.
-   * See {@link file://./../../../../browser/src/client/tester/aria.ts}
-   */
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchAriaSnapshot',
-    wrapAssertion(utils, 'toMatchAriaSnapshot', function (this) {
-      return assertDomainSnapshot({
-        assertion: this,
-        adapter: resolveDomainAdapter('aria', 'toMatchAriaSnapshot'),
-      })
-    }),
-  )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchAriaInlineSnapshot',
-    wrapAssertion(utils, 'toMatchAriaInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      inlineSnapshot?: string,
-    ) {
-      // try/finally prevents WebKit proper tail call from eliminating this frame
-      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
-      try {
-        return assertDomainSnapshot({
-          assertion: this,
-          adapter: resolveDomainAdapter('aria', 'toMatchAriaInlineSnapshot'),
-          isInline: true,
-          inlineSnapshot,
-        })
-      }
-      finally {
-        // for webkit
-      }
-    }),
-  )
-
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
