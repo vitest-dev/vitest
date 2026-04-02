@@ -258,18 +258,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
 }
 
-function assertMatchResult(result: SyncExpectationResult): void {
-  if (!result.pass) {
-    throw Object.assign(new Error(result.message()), {
-      actual: result.actual,
-      expected: result.expected,
-      diffOptions: {
-        expand: getWorkerState().config.snapshotOptions.expand,
-      },
-    })
-  }
-}
-
 function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
   if (typeof domain !== 'string' || !domain) {
     throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
