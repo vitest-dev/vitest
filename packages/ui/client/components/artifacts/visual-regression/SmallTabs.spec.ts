@@ -34,7 +34,7 @@ describe('SmallTabs', () => {
     const secondTab = tabs.last()
 
     await expect.element(tablist).toBeInTheDocument()
-    expect(result.container).toMatchAriaInlineSnapshot(`
+    await expect.element(result.locator).toMatchAriaInlineSnapshot(`
       - tablist:
         - tab "title-0" [selected]
         - tab "title-1"

@@ -12,7 +12,9 @@ export default mergeConfig(
     test: {
       browser: {
         enabled: true,
-        provider: playwright(),
+        provider: playwright({
+          actionTimeout: 5000,
+        }),
         instances: [{ browser: 'chromium' }],
       },
     },

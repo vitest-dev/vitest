@@ -64,7 +64,7 @@ describe('VisualRegression', () => {
         regression: {
           type: 'internal:toMatchScreenshot',
           kind: 'visual-regression',
-          message: faker.lorem.words(5),
+          message: 'Happy testing!',
           attachments: [diff],
         } satisfies VisualRegressionArtifact,
       },
@@ -74,10 +74,10 @@ describe('VisualRegression', () => {
       .toHaveTextContent('Diff')
     await expect.element(page.getByRole('tabpanel').getByRole('img'))
       .toBeInTheDocument()
-    expect(result.container).toMatchAriaInlineSnapshot(`
+    await expect.element(result.locator).toMatchAriaInlineSnapshot(`
       - article:
         - heading "Visual Regression" [level=1]
-        - paragraph: /.*/
+        - paragraph: Happy testing!
         - tablist:
           - tab "Diff" [selected]
         - tabpanel "Diff":
