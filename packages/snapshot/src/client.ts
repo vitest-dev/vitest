@@ -49,7 +49,6 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
-  // this is used for inline snapshot location validation error message
   assertionName?: string
 }
 

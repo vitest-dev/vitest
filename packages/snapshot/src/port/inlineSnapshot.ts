@@ -169,6 +169,7 @@ const buildStartRegex = memo((assertionName: string) => {
   )
   return new RegExp(replaced)
 })
+
 export function replaceInlineSnap(
   code: string,
   s: MagicString,
