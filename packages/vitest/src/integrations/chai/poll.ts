@@ -72,8 +72,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
 
-        // we use expect.extend(..., { __vitest_poll_takeover__: true })
-        // to let domain snapshot matchers take over polling logic.
+        // We use expect.extend(..., { __vitest_poll_takeover__: true })
+        // to let specific custom matchers take over polling logic.
         // this is not public API yet.
         const pollTakeover = Object.getOwnPropertyDescriptor(
           assertionFunction,
@@ -120,7 +120,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
-            // for now, domain snapshot owns polling logic. to be consolidated later.
+            // Some snapshot-style custom matchers own polling logic for now.
+            // This should be consolidated with the main poll loop later.
             if (pollTakeover) {
               try {
                 const output = await assertionFunction.call(assertion, ...args)
