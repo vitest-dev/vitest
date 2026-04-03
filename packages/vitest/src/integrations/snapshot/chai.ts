@@ -267,6 +267,15 @@ function assertMatchResult(result: SyncExpectationResult): void {
   }
 }
 
+/**
+ * Composable snapshot matcher helpers for building custom snapshot matchers
+ * with `expect.extend`.
+ *
+ * Each method must be called with `this` bound to Vitest's matcher state.
+ *
+ * @experimental
+ * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+ */
 export const Snapshots = {
   /**
    * Composable for building custom snapshot matchers via `expect.extend`.
