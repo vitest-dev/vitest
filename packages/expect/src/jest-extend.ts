@@ -147,11 +147,11 @@ function JestExtendPlugin(
           expectAssertionName,
           softWrapper,
         )
+
+        // TODO: explain
         const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
-        if (options?.__vitest_poll_takeover__) {
-          Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
-            value: true,
-          })
+        if ((expectAssertion as any).__vitest_poll_takeover__) {
+          addedMethod.__vitest_poll_takeover__ = true
         }
 
         class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {

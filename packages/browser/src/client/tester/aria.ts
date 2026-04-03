@@ -66,3 +66,9 @@ export const ariaMatchers: MatchersObject = {
     return toMatchDomainInlineSnapshot.call(this, ariaSnapshotAdapter, actual, inlineSnapshot)
   },
 }
+
+for (const matcher of Object.values(ariaMatchers)) {
+  Object.assign(matcher, {
+    __vitest_poll_takeover__: true,
+  })
+}

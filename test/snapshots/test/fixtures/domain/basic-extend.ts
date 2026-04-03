@@ -24,6 +24,14 @@ const matchers: MatchersObject = {
   },
 }
 
-expect.extend(matchers, {
-  __vitest_poll_takeover__: true,
-})
+for (const matcher of Object.values(matchers)) {
+  Object.assign(matcher, {
+    __vitest_poll_takeover__: true,
+  });
+}
+
+// expect.extend(matchers, {
+//   __vitest_poll_takeover__: true,
+// })
+
+expect.extend(matchers)

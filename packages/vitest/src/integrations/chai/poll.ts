@@ -72,8 +72,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
 
-        // We use expect.extend(..., { __vitest_poll_takeover__: true })
-        // to let specific custom matchers take over polling logic.
+        // We use `matcher.__vitest_poll_takeover__`
+        // to let domain snapshot matchers take over polling logic.
         // this is not public API yet.
         const pollTakeover = Object.getOwnPropertyDescriptor(
           assertionFunction,

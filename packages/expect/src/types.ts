@@ -135,6 +135,7 @@ export interface ExpectStatic
   not: AsymmetricMatchersContaining
 }
 
+// TODO: remove
 export interface ExpectExtendOptions {
   /**
    * @experimental

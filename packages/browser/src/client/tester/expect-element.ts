@@ -84,5 +84,5 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 }
 
 expect.extend(matchers)
-expect.extend(ariaMatchers, { __vitest_poll_takeover__: true })
+expect.extend(ariaMatchers)
 expect.element = element
