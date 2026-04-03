@@ -5,15 +5,6 @@ import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
-// these matchers own their poll lifecycle (probe/commit split)
-// poll.ts skips fn() and retry — the matcher calls poll() internally
-const snapshotPollMatchers = [
-  'toMatchDomainSnapshot',
-  'toMatchDomainInlineSnapshot',
-  'toMatchAriaSnapshot',
-  'toMatchAriaInlineSnapshot',
-]
-
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
@@ -81,6 +72,14 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
 
+        // we use expect.extend(..., { __vitest_poll_takeover__: true })
+        // to let domain snapshot matchers take over polling logic.
+        // this is not public API yet.
+        const pollTakeover = Object.getOwnPropertyDescriptor(
+          assertionFunction,
+          '__vitest_poll_takeover__',
+        )?.value
+
         if (typeof assertionFunction !== 'function') {
           return assertionFunction instanceof chai.Assertion ? proxy : assertionFunction
         }
@@ -122,7 +121,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
             // for now, domain snapshot owns polling logic. to be consolidated later.
-            if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
+            if (pollTakeover) {
               try {
                 const output = await assertionFunction.call(assertion, ...args)
                 await onSettled?.({ assertion, status: 'pass' })

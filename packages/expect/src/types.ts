@@ -124,12 +124,22 @@ export interface ExpectStatic
   Matchers,
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
-  extend: (expects: MatchersObject) => void
+  extend: (
+    expects: MatchersObject,
+    options?: ExpectExtendOptions,
+  ) => void
   anything: () => any
   any: (constructor: unknown) => any
   getState: () => MatcherState
   setState: (state: Partial<MatcherState>) => void
   not: AsymmetricMatchersContaining
+}
+
+export interface ExpectExtendOptions {
+  /**
+   * @experimental
+   */
+  __vitest_poll_takeover__?: boolean
 }
 
 interface CustomMatcher {

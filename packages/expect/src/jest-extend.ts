@@ -1,6 +1,7 @@
 import type { Test } from '@vitest/runner'
 import type {
   ChaiPlugin,
+  ExpectExtendOptions,
   ExpectStatic,
   MatchersObject,
   MatcherState,
@@ -86,6 +87,7 @@ function JestExtendPlugin(
   c: Chai.ChaiStatic,
   expect: ExpectStatic,
   matchers: MatchersObject,
+  options?: ExpectExtendOptions,
 ): ChaiPlugin {
   return (_, utils) => {
     Object.entries(matchers).forEach(
@@ -145,6 +147,12 @@ function JestExtendPlugin(
           expectAssertionName,
           softWrapper,
         )
+        const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
+        if (options?.__vitest_poll_takeover__) {
+          Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
+            value: true,
+          })
+        }
 
         class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
           constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {
@@ -213,8 +221,8 @@ export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.expect,
     'extend',
-    (expect: ExpectStatic, expects: MatchersObject) => {
-      use(JestExtendPlugin(chai, expect, expects))
+    (expect: ExpectStatic, expects: MatchersObject, options?: ExpectExtendOptions) => {
+      use(JestExtendPlugin(chai, expect, expects, options))
     },
   )
 }
