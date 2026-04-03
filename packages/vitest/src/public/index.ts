@@ -30,7 +30,7 @@ export type {
 } from '../api/types'
 export { assert, chai, createExpect, expect, should } from '../integrations/chai'
 export { inject } from '../integrations/inject'
-export { snapshots } from '../integrations/snapshot/chai'
+export { Snapshots } from '../integrations/snapshot/chai'
 
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'

@@ -1,10 +1,10 @@
-import { expect, test, snapshots } from 'vitest'
+import { expect, test, Snapshots } from 'vitest'
 
 const {
   toMatchFileSnapshot,
   toMatchInlineSnapshot,
   toMatchSnapshot,
-} = snapshots
+} = Snapshots
 
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
