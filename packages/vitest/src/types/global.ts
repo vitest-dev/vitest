@@ -1,7 +1,7 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { Test } from '@vitest/runner'
-import type { DomainSnapshotAdapter, SnapshotState } from '@vitest/snapshot'
+import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
