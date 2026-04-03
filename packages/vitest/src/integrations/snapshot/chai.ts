@@ -225,7 +225,11 @@ function toMatchDomainSnapshotImpl(opts: {
 }
 
 /**
- * TODO
+ * Composable for building custom domain-based snapshot matchers via `expect.extend`.
+ *
+ * Call this from a matcher and pass the domain adapter that defines capture,
+ * rendering, parsing, and semantic matching behavior.
+ *
  * @experimental
  */
 export function toMatchDomainSnapshot(
@@ -241,7 +245,11 @@ export function toMatchDomainSnapshot(
 }
 
 /**
- * TODO
+ * Composable for building custom domain-based inline snapshot matchers via `expect.extend`.
+ *
+ * Call this from a matcher and pass the domain adapter that defines capture,
+ * rendering, parsing, and semantic matching behavior.
+ *
  * @experimental
  */
 export function toMatchDomainInlineSnapshot(
