@@ -267,7 +267,7 @@ function assertMatchResult(result: SyncExpectationResult): void {
   }
 }
 
-export const SnapshotMatchers = {
+export const snapshots = {
   /**
    * Composable for building custom snapshot matchers via `expect.extend`.
    * Call with `this` bound to the matcher state. Returns `{ pass, message }`
@@ -275,11 +275,11 @@ export const SnapshotMatchers = {
    *
    * @example
    * ```ts
-   * import { SnapshotMatchers } from 'vitest/runtime'
+   * import { snapshots } from 'vitest/runtime'
    *
    * expect.extend({
    *   toMatchTrimmedSnapshot(received: string) {
-   *     return SnapshotMatchers.toMatchSnapshot.call(this, received.slice(0, 10))
+   *     return snapshots.toMatchSnapshot.call(this, received.slice(0, 10))
    *   },
    * })
    * ```
@@ -307,11 +307,11 @@ export const SnapshotMatchers = {
    *
    * @example
    * ```ts
-   * import { SnapshotMatchers } from 'vitest/runtime'
+   * import { snapshots } from 'vitest/runtime'
    *
    * expect.extend({
    *   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
-   *     return SnapshotMatchers.toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+   *     return snapshots.toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
    *   },
    * })
    * ```
@@ -341,11 +341,11 @@ export const SnapshotMatchers = {
    *
    * @example
    * ```ts
-   * import { SnapshotMatchers } from 'vitest/runtime'
+   * import { snapshots } from 'vitest/runtime'
    *
    * expect.extend({
    *   async toMatchTrimmedFileSnapshot(received: string, file: string) {
-   *     return SnapshotMatchers.toMatchFileSnapshot.call(this, received.slice(0, 10), file)
+   *     return snapshots.toMatchFileSnapshot.call(this, received.slice(0, 10), file)
    *   },
    * })
    * ```

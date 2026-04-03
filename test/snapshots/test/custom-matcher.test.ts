@@ -334,13 +334,13 @@ test('custom snapshot matcher', async () => {
 test('browser', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
-import { test, expect, SnapshotMatchers } from 'vitest'
+import { test, expect, snapshots } from 'vitest'
 
 const {
   toMatchFileSnapshot,
   toMatchInlineSnapshot,
   toMatchSnapshot,
-} = SnapshotMatchers
+} = snapshots
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string) {

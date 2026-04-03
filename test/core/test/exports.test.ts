@@ -19,7 +19,6 @@ it('exports snapshot', async ({ skip, task }) => {
       ".": {
         "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
-        "SnapshotMatchers": "object",
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",
@@ -41,6 +40,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "onTestFinished": "function",
         "recordArtifact": "function",
         "should": "function",
+        "snapshots": "object",
         "suite": "function",
         "test": "function",
         "vi": "object",

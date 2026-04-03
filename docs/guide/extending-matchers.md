@@ -108,7 +108,7 @@ expect.extend({ customMatcher })
 ```
 
 ::: tip
-To build custom **snapshot matchers** (wrappers around `toMatchSnapshot()` / `toMatchInlineSnapshot()` / `toMatchFileSnapshot()`), use `SnapshotMatchers` from `vitest`. See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers).
+To build custom **snapshot matchers** (wrappers around `toMatchSnapshot()` / `toMatchInlineSnapshot()` / `toMatchFileSnapshot()`), use `snapshots` from `vitest`. See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers).
 :::
 
 Matcher function has access to `this` context with the following properties:
