@@ -60,7 +60,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
-    // injected so that snapshot pollAssertDomain can take over poll implementation.
+    // injected so that domain snapshot can take over poll implementation.
     chai.util.flag(assertion, '_poll.fn', fn)
     chai.util.flag(assertion, '_poll.timeout', timeout)
     chai.util.flag(assertion, '_poll.interval', interval)
@@ -72,7 +72,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
 
-        // We use `matcher.__vitest_poll_takeover__`
+        // We use `matcher.__vitest_poll_takeover__` flag
         // to let domain snapshot matchers take over polling logic.
         // this is not public API yet.
         const pollTakeover = Object.getOwnPropertyDescriptor(
