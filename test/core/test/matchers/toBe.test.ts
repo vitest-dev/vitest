@@ -1,27 +1,5 @@
-import { stripVTControlCharacters } from 'node:util'
-import { processError } from '@vitest/utils/error'
 import { describe, expect, it } from 'vitest'
-
-/**
- * Captures the error thrown by the provided function and returns a snapshot-friendly
- * object with the error message, diff, actual and expected values.
- * Part of #9074 — standardize matcher failure messages.
- */
-function getError(f: () => unknown) {
-  try {
-    f()
-  }
-  catch (error) {
-    const e = processError(error, { expand: true })
-    return {
-      message: stripVTControlCharacters(e.message),
-      diff: e.diff ? stripVTControlCharacters(e.diff) : undefined,
-      expected: e.expected,
-      actual: e.actual,
-    }
-  }
-  return expect.unreachable()
-}
+import { getError } from './utils'
 
 describe('toBe', () => {
   it('passes when values are strictly equal', () => {
@@ -97,7 +75,7 @@ describe('toBe', () => {
     `)
   })
 
-  it('fails with suggestion to use toEqual when arrays are deeply equal', () => {
+  it('fails with suggestion to use toStrictEqual when arrays are deeply equal', () => {
     expect(getError(() => expect([1, 2, 3]).toBe([1, 2, 3]))).toMatchInlineSnapshot(`
       {
         "actual": "Array [
