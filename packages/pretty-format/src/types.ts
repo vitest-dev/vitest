@@ -42,7 +42,7 @@ export interface PrettyFormatOptions {
    * Call `toJSON` on objects before formatting them.
    * Ignored after the formatter has already called `toJSON` once for a value.
    * @default true
-  */
+   */
   callToJSON?: boolean
   /**
    * Whether to escape special characters in regular expressions.
