@@ -4,9 +4,7 @@ import type { DomainSnapshotAdapter } from '@vitest/snapshot'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
-  addDomain,
   addSerializer,
-  getDomain,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
@@ -140,47 +138,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       return assertMatchResult(result)
     }),
   )
-
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchDomainSnapshot',
-    wrapAssertion(utils, 'toMatchDomainSnapshot', function (
-      this,
-      domain: string,
-      hint?: string,
-    ) {
-      return assertDomainSnapshot({
-        assertion: this,
-        adapter: resolveDomainAdapter(domain, 'toMatchDomainSnapshot'),
-        hint,
-      })
-    }),
-  )
-  utils.addMethod(
-    chai.Assertion.prototype,
-    'toMatchDomainInlineSnapshot',
-    wrapAssertion(utils, 'toMatchDomainInlineSnapshot', function __INLINE_SNAPSHOT_OFFSET_3__(
-      this,
-      inlineSnapshot: string,
-      domain: string,
-      hint?: string,
-    ) {
-      // try/finally prevents WebKit proper tail call from eliminating this frame
-      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
-      try {
-        return assertDomainSnapshot({
-          assertion: this,
-          adapter: resolveDomainAdapter(domain, 'toMatchDomainInlineSnapshot'),
-          isInline: true,
-          inlineSnapshot,
-          hint,
-        })
-      }
-      finally {
-        // for webkit
-      }
-    }),
-  )
   utils.addMethod(
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
@@ -217,39 +174,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
-  utils.addMethod(chai.expect, 'addSnapshotDomain', addDomain)
-}
-
-function resolveDomainAdapter(domain: string, methodName: string): DomainSnapshotAdapter<any, any> {
-  if (typeof domain !== 'string' || !domain) {
-    throw new Error(`${methodName} expects a non-empty domain name as the first argument`)
-  }
-  const adapter = getDomain(domain)
-  if (!adapter) {
-    throw new Error(`Snapshot domain "${domain}" is not registered.`)
-  }
-  return adapter
-}
-
-function assertDomainSnapshot(opts: {
-  assertion: Chai.Assertion
-  adapter: DomainSnapshotAdapter<any, any>
-  isInline?: boolean
-  inlineSnapshot?: string
-  hint?: string
-}) {
-  const result = toMatchDomainSnapshotImpl({
-    assertion: opts.assertion,
-    adapter: opts.adapter,
-    received: chai.util.flag(opts.assertion, 'object'),
-    isInline: opts.isInline,
-    inlineSnapshot: opts.inlineSnapshot,
-    hint: opts.hint,
-  })
-  if (result instanceof Promise) {
-    return result.then(assertMatchResult)
-  }
-  assertMatchResult(result)
 }
 
 function toMatchDomainSnapshotImpl(opts: {
@@ -272,11 +196,6 @@ function toMatchDomainSnapshotImpl(opts: {
 
   const pollFn = chai.util.flag(assertion, '_poll.fn') as (() => Promise<unknown> | unknown) | undefined
   if (pollFn) {
-    // take over polling logic from `expect.poll`
-    // TODO: this isn't enough though because `expect.poll`
-    // still calls first `pollFn` on their side, which breaks
-    // for example obsolete snapshots if the first `pollFn` times out.
-    chai.util.flag(assertion, '_poll.assert_once', true)
     return getSnapshotClient().pollMatchDomain({
       poll: pollFn,
       adapter: opts.adapter,
