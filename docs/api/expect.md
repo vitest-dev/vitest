@@ -1061,26 +1061,6 @@ test('user profile', () => {
 })
 ```
 
-## toMatchDomainSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchdomainsnapshot}
-
-- **Type:** `(domain: string, hint?: string) => void`
-
-Matches a value against a stored snapshot using a registered [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain). The `domain` argument is the adapter's `name`.
-
-```ts
-expect(value).toMatchDomainSnapshot('my-domain')
-```
-
-## toMatchDomainInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchdomaininlinesnapshot}
-
-- **Type:** `(snapshot: string, domain: string, hint?: string) => void`
-
-Same as [`toMatchDomainSnapshot`](#tomatchdomainsnapshot), but stores the snapshot inline in the test file.
-
-```ts
-expect(value).toMatchDomainInlineSnapshot(`...`, `my-domain`)
-```
-
 ## toHaveBeenCalled
 
 - **Type:** `() => Awaitable<void>`

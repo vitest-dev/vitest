@@ -232,9 +232,11 @@ Pretty foo: Object {
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
 
-## Custom Snapshot Domain <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
+## Custom Snapshot Matchers with Domain Adapters <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
 
-Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further — it owns the entire comparison pipeline: how to capture a value, render it, parse a stored snapshot, and match them semantically.
+<!-- TODO: move after custom snapshot matchers section -->
+
+Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further: it owns the entire comparison pipeline for a custom matcher, including how to capture a value, render it, parse a stored snapshot, and match them semantically.
 
 ### The adapter interface
 
@@ -283,21 +285,33 @@ This asymmetry is what makes `--update` work correctly: `match` returns a `resol
 
 :::
 
-### Registration
+### Build a matcher from the adapter
 
-Register an adapter in your test setup file:
+Register a custom matcher with `expect.extend(...)` and call the snapshot composables from `vitest`:
 
 ```ts [setup.ts]
-import { expect } from 'vitest'
+import { expect, toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest'
 
-expect.addSnapshotDomain(myAdapter)
+expect.extend({
+  toMatchMyDomainSnapshot(received: unknown) {
+    return toMatchDomainSnapshot.call(this, myAdapter, received)
+  },
+  toMatchMyDomainInlineSnapshot(received: unknown, inlineSnapshot?: string) {
+    return toMatchDomainInlineSnapshot.call(
+      this,
+      myAdapter,
+      received,
+      inlineSnapshot,
+    )
+  },
+})
 ```
 
-Then use it in tests via [`toMatchDomainSnapshot`](/api/expect#tomatchdomainsnapshot) or [`toMatchDomainInlineSnapshot`](/api/expect#tomatchdomaininlinesnapshot):
+Then use your matcher in tests:
 
 ```ts
-expect(value).toMatchDomainSnapshot('my-domain')
-expect(value).toMatchDomainInlineSnapshot(`key=value`, 'my-domain')
+expect(value).toMatchMyDomainSnapshot()
+expect(value).toMatchMyDomainInlineSnapshot(`key=value`)
 ```
 
 ### Example: key-value adapter
@@ -376,10 +390,17 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
 ```
 
 ```ts [setup.ts]
-import { expect } from 'vitest'
+import { expect, toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest'
 import { kvAdapter } from './kv-adapter'
 
-expect.addSnapshotDomain(kvAdapter)
+expect.extend({
+  toMatchKvSnapshot(received: unknown) {
+    return toMatchDomainSnapshot.call(this, kvAdapter, received)
+  },
+  toMatchKvInlineSnapshot(received: unknown, inlineSnapshot?: string) {
+    return toMatchDomainInlineSnapshot.call(this, kvAdapter, received, inlineSnapshot)
+  },
+})
 ```
 
 ```ts [example.test.ts]
@@ -387,25 +408,24 @@ import { expect, test } from 'vitest'
 
 test('user data', () => {
   const user = { name: 'Alice', score: '42' }
-  expect(user).toMatchDomainSnapshot('kv')
+  expect(user).toMatchKvSnapshot()
 })
 
 test('user data inline', () => {
   const user = { name: 'Alice', age: 100, score: '42' }
-  expect(user).toMatchDomainInlineSnapshot(`
+  expect(user).toMatchKvInlineSnapshot(`
     name=Alice
     score=/\\d+/
-  `, 'kv')
+  `)
 })
 ```
 
 ## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
-You can build custom snapshot matchers using the composable functions exported from `vitest/runtime`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+You can build custom snapshot matchers using composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 
 ```ts
-import { expect, test } from 'vitest'
-import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest/runtime'
+import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
@@ -450,6 +470,8 @@ For inline snapshot matchers, the snapshot argument must be the last parameter (
 ::: tip
 File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
 :::
+
+The same pattern works with [`DomainSnapshotAdapter`](#custom-snapshot-domain) when you need semantic matching instead of plain string snapshots.
 
 For TypeScript, extend the `Assertion` interface:
 
