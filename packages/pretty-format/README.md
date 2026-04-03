@@ -28,23 +28,25 @@ console.log(format(value, {
 }))
 ```
 
-## Package Defaults
+## Options
 
-The package-level defaults are:
-
-- `callToJSON: true`
-- `compareKeys: undefined`
-- `escapeRegex: false`
-- `escapeString: true`
-- `highlight: false`
-- `indent: 2`
-- `maxDepth: Infinity`
-- `maxOutputLength: 1_000_000`
-- `min: false`
-- `plugins: []`
-- `printBasicPrototype: true`
-- `printFunctionName: true`
-- `printShadowRoot: true`
+<!-- prettier-ignore -->
+| key                   | type             | default       | notes |
+| :-------------------- | :--------------- | :------------ | :---- |
+| `callToJSON`          | `boolean`        | `true`        | Call `toJSON` if present |
+| `compareKeys`         | `function\|null` | `undefined`   | Compare function for sorting object keys. Use `null` to skip sorting |
+| `escapeRegex`         | `boolean`        | `false`       | Escape special characters in regular expressions |
+| `escapeString`        | `boolean`        | `true`        | Escape special characters in strings |
+| `highlight`           | `boolean`        | `false`       | Highlight syntax with terminal colors |
+| `indent`              | `number`         | `2`           | Spaces per indentation level |
+| `maxDepth`            | `number`         | `Infinity`    | Maximum depth to print |
+| `maxOutputLength`     | `number`         | `1_000_000`   | Approximate per-depth output budget |
+| `maxWidth`            | `number`         | `Infinity`    | Maximum number of items to print in collections |
+| `min`                 | `boolean`        | `false`       | Minimize added whitespace |
+| `plugins`             | `array`          | `[]`          | Plugins to serialize application-specific data types |
+| `printBasicPrototype` | `boolean`        | `true`        | Print `Object` and `Array` prefixes for plain objects and arrays |
+| `printFunctionName`   | `boolean`        | `true`        | Include or omit the function name |
+| `printShadowRoot`     | `boolean`        | `true`        | Include shadow-root contents when formatting DOM nodes |
 
 Important:
 
