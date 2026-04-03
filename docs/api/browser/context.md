@@ -294,8 +294,6 @@ utils.configurePrettyDOM({
 - **`highlight`** - Enable syntax highlighting (default: `true`)
 - And other options from [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format)
 
-The browser `prettyDOM` formatter uses Vitest's general stringify layer backed by `@vitest/pretty-format`, not the snapshot serializer. When `filterNode` is configured, Vitest swaps the default DOM plugin for a filtered variant.
-
 #### Filtering with CSS Selectors <Version>4.1.0</Version> {#filtering-with-css-selectors}
 
 The `filterNode` option allows you to hide irrelevant markup (like scripts, styles, or hidden elements) from test failure messages, making it easier to identify the actual cause of failures.
