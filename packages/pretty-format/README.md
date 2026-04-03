@@ -164,6 +164,7 @@ Matcher and error messages commonly go through Vitest's general [`stringify`](ht
 Browser `prettyDOM` builds on the general `stringify` path and enables browser-oriented defaults such as:
 
 - `highlight: true`
-- `maxLength: 7000`
 
 It can also replace the default DOM plugin with a filtered variant when `filterNode` is configured.
+
+Output may also be truncated by wrapper-level utilities such as `stringify(..., { maxLength })` or browser `prettyDOM`, but `maxLength` is not a `@vitest/pretty-format` option.
