@@ -96,11 +96,6 @@ declare module '@vitest/expect' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
-
-    /** @experimental */
-    toMatchDomainSnapshot: (domain: string, hint?: string) => void
-    /** @experimental */
-    toMatchDomainInlineSnapshot: (snapshot: string, domain: string, hint?: string) => void
   }
 }
 
