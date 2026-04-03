@@ -11,12 +11,14 @@ import { isAgent } from '../../utils/env'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
-// Use an isolated color instance for Vitest's own CLI output when running
-// inside an agent environment (Claude Code, Cursor, etc.). This avoids
-// mutating the shared tinyrainbow singleton via disableDefaultColors(), which
-// would also disable colors in user code under test that imports tinyrainbow.
+// Use an isolated color instance for Vitest's own CLI output.
+// In agent environments (Claude Code, Cursor, etc.) we explicitly disable
+// colors for Vitest's reporter output (force: false) WITHOUT mutating the
+// shared tinyrainbow singleton via disableDefaultColors(). This prevents
+// user code under test that imports tinyrainbow from losing its colors too.
+// In non-agent environments we let tinyrainbow auto-detect support (force: undefined).
 // See: https://github.com/vitest-dev/vitest/issues/10046
-const c = createColors({ force: !isAgent })
+const c = isAgent ? createColors({ force: false }) : createColors()
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
