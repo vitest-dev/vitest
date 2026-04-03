@@ -1,12 +1,11 @@
-import type { Task } from '@vitest/runner'
-import type { BenchmarkResult } from '../../../runtime/types/benchmark'
+import type { Task, TestBenchmarkTask } from '@vitest/runner'
 import type { FormattedBenchmarkResult } from './json-formatter'
 import { stripVTControlCharacters } from 'node:util'
 import { getTests } from '@vitest/runner/utils'
 import { notNullish } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { F_RIGHT } from '../renderers/figures'
-import { getStateSymbol, truncateString } from '../renderers/utils'
+import { benchmarkPass, getStateSymbol, truncateString } from '../renderers/utils'
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -18,10 +17,10 @@ function formatNumber(number: number) {
 
 const tableHead = [
   'name',
-  'hz',
+  'mean',
   'min',
   'max',
-  'mean',
+  'p50/median',
   'p75',
   'p99',
   'p995',
@@ -30,23 +29,23 @@ const tableHead = [
   'samples',
 ]
 
-function renderBenchmarkItems(result: BenchmarkResult) {
+function renderBenchmarkItems(result: TestBenchmarkTask) {
   return [
     result.name,
-    formatNumber(result.hz || 0),
-    formatNumber(result.min || 0),
-    formatNumber(result.max || 0),
-    formatNumber(result.mean || 0),
-    formatNumber(result.p75 || 0),
-    formatNumber(result.p99 || 0),
-    formatNumber(result.p995 || 0),
-    formatNumber(result.p999 || 0),
-    `±${(result.rme || 0).toFixed(2)}%`,
-    (result.sampleCount || 0).toString(),
+    formatNumber(result.latency.mean || 0),
+    formatNumber(result.latency.min || 0),
+    formatNumber(result.latency.max || 0),
+    formatNumber(result.latency.p50 || 0),
+    formatNumber(result.latency.p75 || 0),
+    formatNumber(result.latency.p99 || 0),
+    formatNumber(result.latency.p995 || 0),
+    formatNumber(result.latency.p999 || 0),
+    `±${(result.latency.rme || 0).toFixed(2)}%`,
+    (result.latency.samplesCount || 0).toString(),
   ]
 }
 
-function computeColumnWidths(results: BenchmarkResult[]): number[] {
+function computeColumnWidths(results: TestBenchmarkTask[]): number[] {
   const rows = [tableHead, ...results.map(v => renderBenchmarkItems(v))]
 
   return Array.from(tableHead, (_, i) =>
@@ -63,44 +62,43 @@ function renderTableHead(widths: number[]) {
   return ' '.repeat(3) + padRow(tableHead, widths).map(c.bold).join('  ')
 }
 
-function renderBenchmark(result: BenchmarkResult, widths: number[]) {
+function renderBenchmark(result: TestBenchmarkTask, widths: number[]) {
   const padded = padRow(renderBenchmarkItems(result), widths)
   return [
     padded[0], // name
-    c.blue(padded[1]), // hz
+    c.blue(padded[1]), // mean
     c.cyan(padded[2]), // min
     c.cyan(padded[3]), // max
-    c.cyan(padded[4]), // mean
+    c.cyan(padded[4]), // p50/median
     c.cyan(padded[5]), // p75
     c.cyan(padded[6]), // p99
     c.cyan(padded[7]), // p995
     c.cyan(padded[8]), // p999
     c.dim(padded[9]), // rem
-    c.dim(padded[10]), // sample
+    c.dim(padded[10]), // samples
   ].join('  ')
 }
 
 export function renderTable(
   options: {
-    tasks: Task[]
+    tasks: TestBenchmarkTask[]
     level: number
     shallow?: boolean
     showHeap: boolean
     columns: number
     slowTestThreshold: number
-    compare?: Record<Task['id'], FormattedBenchmarkResult>
+    // TODO
+    // compare?: Record<Task['id'], FormattedBenchmarkResult>
   },
 ): string {
   const output: string[] = []
 
-  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
+  const benchMap: Record<string, { current: TestBenchmarkTask; baseline?: TestBenchmarkTask }> = {}
 
   for (const task of options.tasks) {
-    if (task.meta.benchmark && task.result?.benchmark) {
-      benchMap[task.id] = {
-        current: task.result.benchmark,
-        baseline: options.compare?.[task.id],
-      }
+    benchMap[task.name] = {
+      current: task,
+      // baseline: options.compare?.[task.id],
     }
   }
 
@@ -116,16 +114,17 @@ export function renderTable(
   const padding = '  '.repeat(options.level ? 1 : 0)
 
   for (const task of options.tasks) {
-    const duration = task.result?.duration
-    const bench = benchMap[task.id]
+    const duration = task.period
+    const bench = benchMap[task.name]
 
     let prefix = ''
 
-    if (idx === 0 && task.meta?.benchmark) {
+    if (idx === 0) {
       prefix += `${renderTableHead(columnWidths)}\n${padding}`
     }
 
-    prefix += ` ${getStateSymbol(task)} `
+    // TODO: can be failed(?)
+    prefix += ` ${benchmarkPass} `
 
     let suffix = ''
 
@@ -151,15 +150,14 @@ export function renderTable(
       let body = renderBenchmark(bench.current, columnWidths)
 
       if (options.compare && bench.baseline) {
-        if (bench.current.hz) {
-          const diff = bench.current.hz / bench.baseline.hz
+        if (bench.current.throughput.mean) {
+          const diff = bench.current.throughput.mean / bench.baseline.throughput.mean
           const diffFixed = diff.toFixed(2)
 
-          if (diffFixed === '1.0.0') {
+          if (diffFixed === '1.00') {
             body += c.gray(`  [${diffFixed}x]`)
           }
-
-          if (diff > 1) {
+          else if (diff > 1) {
             body += c.blue(`  [${diffFixed}x] ⇑`)
           }
           else {

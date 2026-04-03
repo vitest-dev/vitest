@@ -7,6 +7,7 @@ import type {
   Test,
   TestAnnotation,
   TestBenchmark,
+  TestBenchmarkTask,
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
@@ -202,14 +203,38 @@ export function createTestContext(
         }
         if (!completePromise) {
           completePromise = (async () => {
-            const tasks = await bench.run()
+            const benchTasks = await bench.run()
+            const tasks = benchTasks.map<TestBenchmarkTask>((t) => {
+              const result = t.result
+              if (result.state === 'errored') {
+                throw result.error
+              }
+              if (result.state !== 'completed') {
+                // TODO: different handling for different results
+                // TODO: have a test for each state
+                throw new Error(`task did not complete: received ${result.state}`)
+              }
+              return {
+                name: t.name,
+                latency: {
+                  ...result.latency,
+                  samples: undefined,
+                },
+                throughput: {
+                  ...result.throughput,
+                  samples: undefined,
+                },
+                period: result.period,
+                totalTime: result.totalTime,
+                rank: 0,
+              }
+            }).sort((a, b) => a.latency.mean - b.latency.mean)
+            tasks.forEach((task, idx) => {
+              task.rank = idx + 1
+            })
             const benchmark: TestBenchmark = {
               name: bench.name || test.fullTestName,
-              tasks: tasks.map((t) => {
-                return {
-                  name: t.name,
-                }
-              }),
+              tasks,
             }
             await runner.onTestBenchmark?.(test, benchmark)
           })().finally(() => completed = true)

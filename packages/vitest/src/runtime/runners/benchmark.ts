@@ -154,7 +154,9 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 export class NodeBenchmarkRunner implements VitestRunner {
   private moduleRunner!: ModuleRunner
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) {
+    throw new Error(`don't use benchmark runner`)
+  }
 
   async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')

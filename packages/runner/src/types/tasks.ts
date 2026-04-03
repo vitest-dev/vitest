@@ -1,5 +1,5 @@
 import type { Awaitable, TestError } from '@vitest/utils'
-import type { Bench, BenchOptions, Task as BenchTask, Fn, FnOptions } from 'tinybench'
+import type { Bench, BenchOptions, Task as BenchTask, Fn, FnOptions, Statistics } from 'tinybench'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction, kChainableContext } from '../utils/chain'
@@ -355,8 +355,15 @@ export interface TestBenchmark {
   tasks: TestBenchmarkTask[]
 }
 
+export type TestBenchmarkStatistics = Omit<Statistics, 'samples'>
+
 export interface TestBenchmarkTask {
   name: string
+  latency: TestBenchmarkStatistics
+  throughput: TestBenchmarkStatistics
+  period: number
+  totalTime: number
+  rank: number
 }
 
 export type Task = Test | Suite | File

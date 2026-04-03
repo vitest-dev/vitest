@@ -1,9 +1,6 @@
 import type { Test } from '@vitest/runner'
 import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
-import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
-import { noop } from '@vitest/utils/helpers'
-import { getWorkerState } from './utils'
 
 const benchFns = new WeakMap<Test, BenchFunction>()
 const benchOptsMap = new WeakMap()
@@ -16,28 +13,8 @@ export function getBenchFn(key: Test): BenchFunction {
   return benchFns.get(key)!
 }
 
-export const bench: BenchmarkAPI = createBenchmark(function (
-  name,
-  fn: BenchFunction = noop,
-  options: BenchOptions = {},
-) {
-  if (getWorkerState().config.mode !== 'benchmark') {
-    throw new Error('`bench()` is only available in benchmark mode.')
-  }
-
-  const task = getCurrentSuite().task(formatName(name), {
-    ...this,
-    meta: {
-      benchmark: true,
-    },
-  })
-  benchFns.set(task, fn)
-  benchOptsMap.set(task, options)
-  // vitest runner sets mode to `todo` if handler is not passed down
-  // but we store handler separately
-  if (!this.todo && task.mode === 'todo') {
-    task.mode = 'run'
-  }
+export const bench: BenchmarkAPI = createBenchmark(() => {
+  throw new Error(`use 'bench' from test's context`)
 })
 
 function createBenchmark(
@@ -59,12 +36,4 @@ function createBenchmark(
     (condition ? benchmark : benchmark.skip) as BenchmarkAPI
 
   return benchmark as BenchmarkAPI
-}
-
-function formatName(name: string | Function) {
-  return typeof name === 'string'
-    ? name
-    : typeof name === 'function'
-      ? name.name || '<anonymous>'
-      : String(name)
 }
