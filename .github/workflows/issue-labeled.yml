@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write # for actions-cool/issues-helper to update issues
+      pull-requests: write # for actions-cool/issues-helper to update issues
     steps:
       - name: needs reproduction
         if: github.event.label.name == 'needs reproduction'
