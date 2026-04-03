@@ -24,7 +24,17 @@ const value = {
 }
 
 console.log(format(value))
-// TODO: show example
+/*
+-- output --
+Object {
+  "items": Array [
+    1,
+    2,
+    3,
+  ],
+  "user": "Ada",
+}
+*/
 ```
 
 ## Options
