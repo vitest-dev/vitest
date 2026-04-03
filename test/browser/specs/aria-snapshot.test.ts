@@ -121,15 +121,30 @@ test.for(instances.map(i => i.browser))('aria snapshot %s', async (browser) => {
       expect(result.errorTree({ stackTrace: true, diff: true })).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
-            "expect.element aria once": "skipped",
-            "expect.element aria retry": "skipped",
-            "poll aria once": "skipped",
+            "expect.element aria once": "passed",
+            "expect.element aria retry": "passed",
+            "poll aria once": "passed",
             "toMatchAriaInlineSnapshot simple": [
               "Snapshot \`toMatchAriaInlineSnapshot simple 1\` mismatched
+        - Expected
+        + Received
+
+        - - paragraph: Original
+        + - paragraph: Changed
+          - button /\\d+/: Pattern
             at basic.test.ts:22:50",
             ],
             "toMatchAriaSnapshot simple": [
               "Snapshot \`toMatchAriaSnapshot simple 1\` mismatched
+        - Expected
+        + Received
+
+          - main:
+            - heading "Dashboard" [level=1]
+        -   - navigation /A\\w+/:
+        +   - navigation "EDITED":
+              - button "Save"
+              - button "Cancel"
             at basic.test.ts:14:24",
             ],
           },
