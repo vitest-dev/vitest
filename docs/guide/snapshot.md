@@ -232,9 +232,76 @@ Pretty foo: Object {
 
 We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
 
-## Custom Snapshot Matchers with Domain Adapters <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
+## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
-<!-- TODO: move after custom snapshot matchers section -->
+You can build custom snapshot matchers using composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+
+```ts
+import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length))
+  },
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+  async toMatchTrimmedFileSnapshot(received: string, file: string) {
+    return toMatchFileSnapshot.call(this, received.slice(0, 10), file)
+  },
+})
+
+test('file snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedSnapshot(10)
+})
+
+test('inline snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
+})
+
+test('raw file snapshot', async () => {
+  await expect('extra long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
+})
+```
+
+The composables return `{ pass, message }` so you can further customize the error:
+
+```ts
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    const result = toMatchSnapshot.call(this, received.slice(0, length))
+    return { ...result, message: () => `Trimmed snapshot failed: ${result.message()}` }
+  },
+})
+```
+
+::: warning
+For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
+:::
+
+::: tip
+File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
+:::
+
+For TypeScript, extend the `Assertion` interface:
+
+```ts
+import 'vitest'
+
+declare module 'vitest' {
+  interface Assertion<T = any> {
+    toMatchTrimmedSnapshot: (length: number) => T
+    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
+    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
+  }
+}
+```
+
+::: tip
+See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
+:::
+
+## Custom Snapshot Domain <Badge type="warning">experimental</Badge> {#custom-snapshot-domain}
 
 Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further: it owns the entire comparison pipeline for a custom matcher, including how to capture a value, render it, parse a stored snapshot, and match them semantically.
 
@@ -419,77 +486,6 @@ test('user data inline', () => {
   `)
 })
 ```
-
-## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
-
-You can build custom snapshot matchers using composable functions exported from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
-
-```ts
-import { expect, test, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest'
-
-expect.extend({
-  toMatchTrimmedSnapshot(received: string, length: number) {
-    return toMatchSnapshot.call(this, received.slice(0, length))
-  },
-  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
-    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
-  },
-  async toMatchTrimmedFileSnapshot(received: string, file: string) {
-    return toMatchFileSnapshot.call(this, received.slice(0, 10), file)
-  },
-})
-
-test('file snapshot', () => {
-  expect('extra long string oh my gerd').toMatchTrimmedSnapshot(10)
-})
-
-test('inline snapshot', () => {
-  expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
-})
-
-test('raw file snapshot', async () => {
-  await expect('extra long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
-})
-```
-
-The composables return `{ pass, message }` so you can further customize the error:
-
-```ts
-expect.extend({
-  toMatchTrimmedSnapshot(received: string, length: number) {
-    const result = toMatchSnapshot.call(this, received.slice(0, length))
-    return { ...result, message: () => `Trimmed snapshot failed: ${result.message()}` }
-  },
-})
-```
-
-::: warning
-For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
-:::
-
-::: tip
-File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
-:::
-
-The same pattern works with [`DomainSnapshotAdapter`](#custom-snapshot-domain) when you need semantic matching instead of plain string snapshots.
-
-For TypeScript, extend the `Assertion` interface:
-
-```ts
-import 'vitest'
-
-declare module 'vitest' {
-  interface Assertion<T = any> {
-    toMatchTrimmedSnapshot: (length: number) => T
-    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
-    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
-  }
-}
-```
-
-::: tip
-See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
-:::
 
 ## Difference from Jest
 
