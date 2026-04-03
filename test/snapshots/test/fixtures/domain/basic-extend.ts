@@ -1,6 +1,7 @@
 import { toMatchDomainSnapshot, toMatchDomainInlineSnapshot } from "vitest/runtime"
 import { kvAdapter } from "./basic"
 import { expect } from "vitest"
+import { MatchersObject } from "@vitest/expect"
 
 interface CustomMatchers<R = unknown> {
   toMatchKvSnapshot: () => R
@@ -11,7 +12,7 @@ declare module 'vitest' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
 }
 
-expect.extend({
+const matchers: MatchersObject = {
   toMatchKvSnapshot(actual: unknown) {
     return toMatchDomainSnapshot.call(this, kvAdapter, actual)
   },
@@ -21,4 +22,8 @@ expect.extend({
   ) {
     return toMatchDomainInlineSnapshot.call(this, kvAdapter, actual, inlineSnapshot)
   },
+}
+
+expect.extend(matchers, {
+  __vitest_poll_takeover__: true,
 })

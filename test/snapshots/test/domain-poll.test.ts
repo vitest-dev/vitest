@@ -113,16 +113,16 @@ test('domain snapshot with poll', async () => {
     + name=a
       age=23
 
-     ❯ basic.test.ts:11:24
-          9|     trial++
-         10|     return { name: 'a', age: '23' }
-         11|   }, { interval: 10 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:9:24
+          7|     trial++
+          8|     return { name: 'a', age: '23' }
+          9|   }, { interval: 10 }).toMatchKvSnapshot()
            |                        ^
-         12|   expect(trial).toBe(2)
-         13| })
+         10|   expect(trial).toBe(2)
+         11| })
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:8:3
+     ❯ basic.test.ts:6:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -265,9 +265,7 @@ phase=complete
 `,
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import { kvAdapter } from '../test/fixtures/domain/basic'
-
-expect.addSnapshotDomain(kvAdapter)
+import '../test/fixtures/domain/basic-extend'
 
 test('stable wrong then right', async () => {
   let trial = 0
@@ -275,7 +273,7 @@ test('stable wrong then right', async () => {
     trial++
     if (trial <= 4) return { phase: 'pending' }
     return { phase: 'complete' }
-  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  }, { interval: 10 }).toMatchKvSnapshot()
   expect(trial).toBe(6)
 })
 `,
@@ -303,9 +301,7 @@ phase=complete
 `,
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import { kvAdapter } from '../test/fixtures/domain/basic'
-
-expect.addSnapshotDomain(kvAdapter)
+import '../test/fixtures/domain/basic-extend'
 
 test('stable wrong then right', async () => {
   let trial = 0
@@ -313,7 +309,7 @@ test('stable wrong then right', async () => {
     trial++
     if (trial <= 4) return { phase: 'pending' }
     return { phase: 'complete' }
-  }, { interval: 10 }).toMatchDomainSnapshot('kv')
+  }, { interval: 10 }).toMatchKvSnapshot()
   expect(trial).toBe(2)
 })
 `,
@@ -342,16 +338,14 @@ test('errors', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import { kvAdapter } from '../test/fixtures/domain/basic'
-
-expect.addSnapshotDomain(kvAdapter)
+import '../test/fixtures/domain/basic-extend'
 
 test('unstable', async () => {
   let trial = 0
   await expect.poll(() => {
     trial++
     return { name: 'x', counter: String(trial) }
-  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+  }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
 })
 
 test('hanging', async () => {
@@ -359,7 +353,7 @@ test('hanging', async () => {
   await expect.poll(() => {
     trial++
     return new Promise(() => {})
-  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+  }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
 })
 
 test('throwing', async () => {
@@ -367,7 +361,7 @@ test('throwing', async () => {
   await expect.poll(() => {
     trial++
     throw new Error("ALWAYS_THROWS")
-  }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+  }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
 })
 `,
   }, {
@@ -379,46 +373,46 @@ test('throwing', async () => {
 
      FAIL  basic.test.ts > unstable
     Error: poll() did not produce a stable snapshot within the timeout
-     ❯ basic.test.ts:12:38
-         10|     trial++
-         11|     return { name: 'x', counter: String(trial) }
-         12|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:10:38
+          8|     trial++
+          9|     return { name: 'x', counter: String(trial) }
+         10|   }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
            |                                      ^
-         13| })
-         14|
+         11| })
+         12|
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:9:3
+     ❯ basic.test.ts:7:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
 
      FAIL  basic.test.ts > hanging
     Error: poll() did not produce a stable snapshot within the timeout
-     ❯ basic.test.ts:20:38
-         18|     trial++
-         19|     return new Promise(() => {})
-         20|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:18:38
+         16|     trial++
+         17|     return new Promise(() => {})
+         18|   }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
            |                                      ^
-         21| })
-         22|
+         19| })
+         20|
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:17:3
+     ❯ basic.test.ts:15:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
 
      FAIL  basic.test.ts > throwing
     Error: ALWAYS_THROWS
-     ❯ basic.test.ts:28:38
-         26|     trial++
-         27|     throw new Error("ALWAYS_THROWS")
-         28|   }, { timeout: 100, interval: 10 }).toMatchDomainSnapshot('kv')
+     ❯ basic.test.ts:26:38
+         24|     trial++
+         25|     throw new Error("ALWAYS_THROWS")
+         26|   }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
            |                                      ^
-         29| })
-         30|
+         27| })
+         28|
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:25:3
+     ❯ basic.test.ts:23:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
