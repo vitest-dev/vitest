@@ -148,9 +148,9 @@ Default diff plugins:
 - `AsymmetricMatcher`
 - `Error`
 
-### General Message Formatting
+### Vitest `stringify`
 
-Matcher and error messages commonly go through Vitest's general [`stringify`](https://github.com/vitest-dev/vitest/blob/59b0e6411be2b4aa5f2b339d02691aa83d5e403f/packages/utils/src/display.ts#L49) utility, which use:
+Matcher and error messages commonly go through Vitest's internal [`stringify`](https://github.com/vitest-dev/vitest/blob/59b0e6411be2b4aa5f2b339d02691aa83d5e403f/packages/utils/src/display.ts#L49) utility, which uses:
 
 - `ReactTestComponent`
 - `ReactElement`
@@ -159,12 +159,16 @@ Matcher and error messages commonly go through Vitest's general [`stringify`](ht
 - `Immutable`
 - `AsymmetricMatcher`
 
+`stringify` also adds wrapper-level behavior on top of `@vitest/pretty-format`:
+
+- `maxLength`: if the formatted output grows too large, `stringify` retries with a smaller `maxDepth` to keep the result bounded
+- `filterNode`: swaps the default DOM plugin for a filtered variant so selected nodes are omitted from the output
+- fallback on formatter errors: if formatting throws, `stringify` retries with `callToJSON: false`
+
 ### Browser `prettyDOM`
 
-Browser `prettyDOM` builds on the general `stringify` path and enables browser-oriented defaults such as:
+Browser `prettyDOM` builds on Vitest's `stringify` path and enables browser-oriented defaults such as:
 
 - `highlight: true`
 
 It can also replace the default DOM plugin with a filtered variant when `filterNode` is configured.
-
-Output may also be truncated by wrapper-level utilities such as `stringify(..., { maxLength })` or browser `prettyDOM`, but `maxLength` is not a `@vitest/pretty-format` option.
