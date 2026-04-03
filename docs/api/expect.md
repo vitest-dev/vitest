@@ -2229,19 +2229,6 @@ If you are adding custom serializers, you should call this method inside [`setup
 If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
 
-## expect.addSnapshotDomain <Version type="experimental">4.1.3</Version> <Experimental /> {#expect-addsnapshotdomain}
-
-- **Type:** `(adapter: DomainSnapshotAdapter) => void`
-
-Registers a [domain snapshot adapter](/guide/snapshot#custom-snapshot-domain) for use with `toMatchDomainSnapshot` and `toMatchDomainInlineSnapshot`. Call this in [`setupFiles`](/config/setupfiles).
-
-```ts
-import { expect } from 'vitest'
-import { kvAdapter } from './kv-adapter'
-
-expect.addSnapshotDomain(kvAdapter)
-```
-
 ## expect.extend
 
 - **Type:** `(matchers: MatchersObject) => void`

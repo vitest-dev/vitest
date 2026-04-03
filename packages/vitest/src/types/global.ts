@@ -47,10 +47,6 @@ declare module '@vitest/expect' {
     assertions: (expected: number) => void
     hasAssertions: () => void
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
-    /** @experimental */
-    addSnapshotDomain: <Captured = unknown, Expected = unknown>(
-      adapter: DomainSnapshotAdapter<Captured, Expected>,
-    ) => void
   }
 
   interface Assertion<T> {
