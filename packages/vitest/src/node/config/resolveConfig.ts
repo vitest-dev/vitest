@@ -306,17 +306,23 @@ export function resolveConfig(
     }
   }
 
-  // apply browser CLI options only if the config already has the browser config and not disabled manually
+  // apply browser CLI options only if the config already has the browser config,
+  // OR if this is the root config and we explicitly passed CLI options.
   if (
     vitest._cliOptions.browser
-    && resolved.browser
+    && (resolved.browser || vitest.vite?.config === viteConfig)
     // if enabled is set to `false`, but CLI overrides it, then always override it
-    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
+    && (resolved.browser?.enabled !== false || vitest._cliOptions.browser.enabled)
   ) {
     resolved.browser = mergeConfig(
       resolved.browser,
       vitest._cliOptions.browser,
     ) as ResolvedBrowserOptions
+    if (resolved.browser.instances) {
+      resolved.browser.instances.forEach((instance) => {
+        instance.name ??= resolved.name ? `${resolved.name} (${instance.browser})` : instance.browser
+      })
+    }
   }
 
   resolved.browser ??= {} as any

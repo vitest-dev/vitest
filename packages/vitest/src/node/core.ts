@@ -312,7 +312,7 @@ export class Vitest {
 
     if (this._cliOptions.browser?.enabled) {
       const browserProjects = this.projects.filter(p => p.config.browser.enabled)
-      if (!browserProjects.length && !this.config.browser?.instances?.length) {
+      if (!browserProjects.length) {
         throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
       }
     }
