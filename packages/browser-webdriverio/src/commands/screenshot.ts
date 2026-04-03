@@ -68,7 +68,7 @@ export async function takeScreenshot(
       stylesheet.textContent = /* css */`
         iframe {
           position: absolute !important;
-          inset: 0  !important;
+          inset: 0 !important;
           z-index: ${Number.MAX_SAFE_INTEGER} !important;
           transform: none !important;
         }
