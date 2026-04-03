@@ -52,15 +52,7 @@ If your tests depend on a neutral hover state, reset it explicitly, for example 
 import { beforeEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
-// TODO: test and verify
 beforeEach(async () => {
-  // for playwright
-  await userEvent.hover(document.body, {
-    position: { x: 0, y: 0 },
-  })
-
-  // TODO
-  // for webdriverio
   await userEvent.unhover(document.body)
 })
 ```
