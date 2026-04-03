@@ -5,12 +5,32 @@ outline: deep
 
 # snapshotFormat <CRoot />
 
-- **Type:** `PrettyFormatOptions`
+- **Type:** `Omit<PrettyFormatOptions, 'plugins' | 'compareKeys'> & { compareKeys?: null | undefined }`
 
-Format options for snapshot testing. These options are passed down to our fork of [`pretty-format`](https://npmx.dev/package/pretty-format). In addition to the `pretty-format` options we support `printShadowRoot: boolean`.
+Format options for snapshot testing. These options configure the snapshot-specific formatting layer built on top of [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format).
+
+Vitest snapshots already apply these defaults before your `snapshotFormat` overrides:
+
+- `printBasicPrototype: false`
+- `escapeString: false`
+- `escapeRegex: true`
+- `printFunctionName: false`
+
+The following options are commonly useful in `snapshotFormat`:
+
+- Output shape: `indent`, `min`, `maxDepth`, `maxWidth`
+- Escaping and display: `escapeRegex`, `escapeString`, `highlight`
+- Object formatting: `callToJSON`, `printBasicPrototype`, `printFunctionName`
+- Vitest-specific behavior: `printShadowRoot`, `maxOutputLength`
+
+`printShadowRoot` controls whether shadow-root contents are included in DOM snapshots.
+
+`maxOutputLength` is an approximate per-depth output budget, not a hard cap on the final rendered string.
 
 ::: tip
-Beware that `plugins` field on this object will be ignored.
+Beware that `plugins` on this object will be ignored, and `compareKeys` cannot be a function.
 
-If you need to extend snapshot serializer via pretty-format plugins, please, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API or [snapshotSerializers](/config/snapshotserializers) option.
+If you need to extend snapshot serialization via pretty-format plugins, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) or [`snapshotSerializers`](/config/snapshotserializers) instead.
 :::
+
+For the base package API, package defaults, and feature-specific plugin stacks used across Vitest, see [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format).

@@ -198,7 +198,9 @@ Pretty foo: Object {
 }
 ```
 
-We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
+Snapshot rendering in Vitest is powered by [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format).
+
+Use [`snapshotFormat`](/config/snapshotformat) to control snapshot formatting defaults in Vitest. If you need custom serializers, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) or [`snapshotSerializers`](/config/snapshotserializers) instead of `snapshotFormat.plugins`.
 
 ## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
@@ -285,7 +287,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
+Both Jest and Vitest snapshots are powered by `pretty-format`, but Vitest applies its own snapshot defaults on top of [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). In particular, Vitest sets `printBasicPrototype` to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it is `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'

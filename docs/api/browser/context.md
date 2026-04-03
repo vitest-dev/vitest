@@ -292,7 +292,9 @@ utils.configurePrettyDOM({
 - **`maxLength`** - Maximum length of the output string (default: `7000`)
 - **`filterNode`** - A CSS selector string or function to filter out nodes from the output. When a string is provided, elements matching the selector will be excluded. When a function is provided, it should return `false` to exclude a node.
 - **`highlight`** - Enable syntax highlighting (default: `true`)
-- And other options from [`pretty-format`](https://npmx.dev/package/@vitest/pretty-format)
+- And other options from [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format)
+
+The browser `prettyDOM` formatter uses Vitest's general stringify layer backed by `@vitest/pretty-format`, not the snapshot serializer. When `filterNode` is configured, Vitest swaps the default DOM plugin for a filtered variant.
 
 #### Filtering with CSS Selectors <Version>4.1.0</Version> {#filtering-with-css-selectors}
 
