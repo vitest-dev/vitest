@@ -23,30 +23,28 @@ const value = {
   items: [1, 2, 3],
 }
 
-console.log(format(value, {
-  printBasicPrototype: false,
-}))
+console.log(format(value))
+// TODO: show example
 ```
 
 ## Options
 
-<!-- prettier-ignore -->
-| key                   | type             | default       | notes |
-| :-------------------- | :--------------- | :------------ | :---- |
-| `callToJSON`          | `boolean`        | `true`        | Call `toJSON` if present |
-| `compareKeys`         | `function\|null` | `undefined`   | Compare function for sorting object keys. Use `null` to skip sorting |
-| `escapeRegex`         | `boolean`        | `false`       | Escape special characters in regular expressions |
-| `escapeString`        | `boolean`        | `true`        | Escape special characters in strings |
-| `highlight`           | `boolean`        | `false`       | Highlight syntax with terminal colors |
-| `indent`              | `number`         | `2`           | Spaces per indentation level |
-| `maxDepth`            | `number`         | `Infinity`    | Maximum depth to print |
-| `maxOutputLength`     | `number`         | `1_000_000`   | Approximate per-depth output budget |
-| `maxWidth`            | `number`         | `Infinity`    | Maximum number of items to print in collections |
-| `min`                 | `boolean`        | `false`       | Minimize added whitespace |
-| `plugins`             | `array`          | `[]`          | Plugins to serialize application-specific data types |
-| `printBasicPrototype` | `boolean`        | `true`        | Print `Object` and `Array` prefixes for plain objects and arrays |
-| `printFunctionName`   | `boolean`        | `true`        | Include or omit the function name |
-| `printShadowRoot`     | `boolean`        | `true`        | Include shadow-root contents when formatting DOM nodes |
+| key                   | type             | default     | notes                                                                |
+| :-------------------- | :--------------- | :---------- | :------------------------------------------------------------------- |
+| `callToJSON`          | `boolean`        | `true`      | Call `toJSON` if present                                             |
+| `compareKeys`         | `function\|null` | `undefined` | Compare function for sorting object keys. Use `null` to skip sorting |
+| `escapeRegex`         | `boolean`        | `false`     | Escape special characters in regular expressions                     |
+| `escapeString`        | `boolean`        | `true`      | Escape special characters in strings                                 |
+| `highlight`           | `boolean`        | `false`     | Highlight syntax with terminal colors                                |
+| `indent`              | `number`         | `2`         | Spaces per indentation level                                         |
+| `maxDepth`            | `number`         | `Infinity`  | Maximum depth to print                                               |
+| `maxOutputLength`     | `number`         | `1_000_000` | Approximate per-depth output budget                                  |
+| `maxWidth`            | `number`         | `Infinity`  | Maximum number of items to print in collections                      |
+| `min`                 | `boolean`        | `false`     | Minimize added whitespace                                            |
+| `plugins`             | `array`          | `[]`        | Plugins to serialize application-specific data types                 |
+| `printBasicPrototype` | `boolean`        | `true`      | Print `Object` and `Array` prefixes for plain objects and arrays     |
+| `printFunctionName`   | `boolean`        | `true`      | Include or omit the function name                                    |
+| `printShadowRoot`     | `boolean`        | `true`      | Include shadow-root contents when formatting DOM nodes               |
 
 Important:
 
@@ -70,9 +68,11 @@ You can use them directly with `format(..., { plugins })`:
 ```ts
 import { format, plugins } from '@vitest/pretty-format'
 
-console.log(format(document.body, {
-  plugins: [plugins.DOMElement, plugins.DOMCollection],
-}))
+console.log(
+  format(document.body, {
+    plugins: [plugins.DOMElement, plugins.DOMCollection],
+  }),
+)
 ```
 
 ## Vitest Extensions
@@ -102,8 +102,6 @@ format(value, {
 ```
 
 ## How Vitest Uses It
-
-Vitest does not use one global formatter preset everywhere.
 
 ### Snapshots
 
@@ -142,7 +140,7 @@ Default diff plugins:
 
 ### General Message Formatting
 
-Matcher and error messages commonly go through Vitest's general stringify utilities, which use:
+Matcher and error messages commonly go through Vitest's general [`stringify`](https://github.com/vitest-dev/vitest/blob/59b0e6411be2b4aa5f2b339d02691aa83d5e403f/packages/utils/src/display.ts#L49) utility, which use:
 
 - `ReactTestComponent`
 - `ReactElement`
@@ -153,22 +151,9 @@ Matcher and error messages commonly go through Vitest's general stringify utilit
 
 ### Browser `prettyDOM`
 
-Browser `prettyDOM` builds on the general stringify path and enables browser-oriented defaults such as:
+Browser `prettyDOM` builds on the general `stringify` path and enables browser-oriented defaults such as:
 
 - `highlight: true`
 - `maxLength: 7000`
 
 It can also replace the default DOM plugin with a filtered variant when `filterNode` is configured.
-
-## Notes for `snapshotFormat`
-
-The package API accepts `plugins`, but Vitest intentionally ignores `test.snapshotFormat.plugins`.
-
-If you need custom snapshot serialization in Vitest:
-
-- use `expect.addSnapshotSerializer`
-- or use `snapshotSerializers`
-
-## Compatibility
-
-This package is forked from Jest's `pretty-format`, but Vitest documents its behavior independently because Vitest-specific defaults and extensions differ by feature.
