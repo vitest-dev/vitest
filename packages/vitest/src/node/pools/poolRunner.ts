@@ -267,8 +267,13 @@ export class PoolRunner {
     try {
       this._state = RunnerState.STOPPING
 
-      // Remove exit listener early to avoid "unexpected exit" errors during shutdown
+      // Remove exit and error listeners early to prevent spurious errors during shutdown.
+      // The exit listener would fire "Worker exited unexpectedly" if the process exits
+      // during graceful shutdown. The error listener would propagate IPC/EPIPE errors
+      // (common on Windows) to already-resolved task resolvers.
+      // Keep the message listener active -- we still need it to receive the 'stopped' response.
       this.worker.off('exit', this.emitUnexpectedExit)
+      this.worker.off('error', this.emitWorkerError)
 
       const stopSpan = this.startTracesSpan('vitest.worker.stop')
       await this.withTimeout(
