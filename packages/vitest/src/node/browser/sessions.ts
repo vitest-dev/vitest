@@ -16,7 +16,7 @@ export class BrowserSessions {
   }
 
   createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }): Promise<void> {
-    // this promise only waits for the WS connection with the orhcestrator to be established
+    // this promise only waits for the WS connection with the orchestrator to be established
     const defer = createDefer<void>()
 
     const timeout = setTimeout(() => {

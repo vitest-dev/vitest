@@ -45,6 +45,14 @@ export interface PrettyFormatOptions {
   indent?: number
   maxDepth?: number
   maxWidth?: number
+  /**
+   * Approximate per-depth-level budget for output length.
+   * When the accumulated output at any single depth level exceeds this value,
+   * further nesting is collapsed. This is a heuristic safety valve, not a hard
+   * limit — total output can reach up to roughly `maxDepth × maxOutputLength`.
+   * @default 1_000_000
+   */
+  maxOutputLength?: number
   min?: boolean
   printBasicPrototype?: boolean
   printFunctionName?: boolean
@@ -71,6 +79,12 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
+  maxOutputLength: number
+  /**
+   * Per-depth budget accumulator for {@link maxOutputLength}.
+   * @internal
+   */
+  _outputLengthPerDepth: number[]
 }
 
 export type Printer = (

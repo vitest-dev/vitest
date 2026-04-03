@@ -16,33 +16,33 @@ describe('.toContainHTML', () => {
     const grandparent = queryByTestId('grandparent')
     const parent = queryByTestId('parent')
     const child = queryByTestId('child')
-    const nonExistantElement = queryByTestId('not-exists')
+    const nonExistentElement = queryByTestId('not-exists')
     const fakeElement = {thisIsNot: 'an html element'}
     const stringChildElement = '<span data-testid="child"></span>'
     const stringChildElementSelfClosing = '<span data-testid="child" />'
     const incorrectStringHtml = '<span data-testid="child"></div>'
-    const nonExistantString = '<span> Does not exists </span>'
+    const nonExistentString = '<span> Does not exists </span>'
     const svgElement = queryByTestId('svg-element')
 
     expect(grandparent).toContainHTML(stringChildElement)
     expect(parent).toContainHTML(stringChildElement)
     expect(child).toContainHTML(stringChildElement)
     expect(child).toContainHTML(stringChildElementSelfClosing)
-    expect(grandparent).not.toContainHTML(nonExistantString)
-    expect(parent).not.toContainHTML(nonExistantString)
-    expect(child).not.toContainHTML(nonExistantString)
-    expect(child).not.toContainHTML(nonExistantString)
+    expect(grandparent).not.toContainHTML(nonExistentString)
+    expect(parent).not.toContainHTML(nonExistentString)
+    expect(child).not.toContainHTML(nonExistentString)
+    expect(child).not.toContainHTML(nonExistentString)
     expect(grandparent).toContainHTML(incorrectStringHtml)
     expect(parent).toContainHTML(incorrectStringHtml)
     expect(child).toContainHTML(incorrectStringHtml)
 
     // negative test cases wrapped in throwError assertions for coverage.
     expect(() =>
-      expect(nonExistantElement).not.toContainHTML(stringChildElement),
+      expect(nonExistentElement).not.toContainHTML(stringChildElement),
     ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
-      expect(nonExistantElement).not.toContainHTML(nonExistantElement),
+      expect(nonExistentElement).not.toContainHTML(nonExistentElement),
     ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
@@ -66,23 +66,23 @@ describe('.toContainHTML', () => {
     expect(() =>
       expect(child).not.toContainHTML(stringChildElementSelfClosing),
     ).toThrow()
-    expect(() => expect(child).toContainHTML(nonExistantString)).toThrow()
-    expect(() => expect(parent).toContainHTML(nonExistantString)).toThrow()
+    expect(() => expect(child).toContainHTML(nonExistentString)).toThrow()
+    expect(() => expect(parent).toContainHTML(nonExistentString)).toThrow()
     expect(() =>
-      expect(grandparent).toContainHTML(nonExistantString),
+      expect(grandparent).toContainHTML(nonExistentString),
     ).toThrow()
       // @ts-expect-error testing invalid input
-    expect(() => expect(child).toContainHTML(nonExistantElement)).toThrow()
+    expect(() => expect(child).toContainHTML(nonExistentElement)).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
-      expect(parent).toContainHTML(nonExistantElement),
+      expect(parent).toContainHTML(nonExistentElement),
     ).toThrow()
     expect(() =>
       // @ts-expect-error testing invalid input
-      expect(grandparent).toContainHTML(nonExistantElement),
+      expect(grandparent).toContainHTML(nonExistentElement),
     ).toThrow()
     expect(() =>
-      expect(nonExistantElement).not.toContainHTML(incorrectStringHtml),
+      expect(nonExistentElement).not.toContainHTML(incorrectStringHtml),
     ).toThrow()
     expect(() =>
       expect(grandparent).not.toContainHTML(incorrectStringHtml),
@@ -98,11 +98,11 @@ describe('.toContainHTML', () => {
   test('throws with an expected text', async () => {
     const {queryByTestId} = render('<span data-testid="child"></span>')
     const htmlElement = queryByTestId('child')
-    const nonExistantString = '<div> non-existent element </div>'
+    const nonExistentString = '<div> non-existent element </div>'
 
     let errorMessage
     try {
-      expect(htmlElement).toContainHTML(nonExistantString)
+      expect(htmlElement).toContainHTML(nonExistentString)
     } catch (error) {
       errorMessage = error.message
     }

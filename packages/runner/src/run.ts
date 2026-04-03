@@ -482,7 +482,7 @@ function sendTasksUpdate(runner: VitestRunner): void {
     const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)
     if (p) {
       pendingTasksUpdates.push(p)
-      // remove successful promise to not grow array indefnitely,
+      // remove successful promise to not grow array indefinitely,
       // but keep rejections so finishSendTasksUpdate can handle them
       p.then(
         () => pendingTasksUpdates.splice(pendingTasksUpdates.indexOf(p), 1),

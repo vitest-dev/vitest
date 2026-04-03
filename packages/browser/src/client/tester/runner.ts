@@ -156,14 +156,17 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
+      // check custom matcher metadata in JestExtendError
+      const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
       if (
         this.config.browser.screenshotFailures
         && document.body.clientHeight > 0
         && task.result?.state === 'fail'
         && task.type === 'test'
-        && task.artifacts.every(
-          artifact => artifact.type !== 'internal:toMatchScreenshot',
-        )
+        && !(
+          lastErrorContext
+          && Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot'
+          && Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot')
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,

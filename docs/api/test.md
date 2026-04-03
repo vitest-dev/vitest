@@ -223,7 +223,7 @@ Whether this test run concurrently with other concurrent tests in the suite.
 - **Default:** `true`
 - **Alias:** [`test.sequential`](#test-sequential)
 
-Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precendence.
+Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
 
 ### skip
 
