@@ -1,5 +1,5 @@
-import { expect, test } from "vitest"
-import { instances, runBrowserTests } from "./utils"
+import { expect, test } from 'vitest'
+import { instances, runBrowserTests } from './utils'
 
 test('user-event-hover', async () => {
   const result = await runBrowserTests({
