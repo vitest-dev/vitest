@@ -75,6 +75,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         // We use `matcher.__vitest_poll_takeover__` flag
         // to let domain snapshot matchers take over polling logic.
         // this is not public API yet.
+        // Need to use `getOwnPropertyDescriptor` since otherwise chai proxy breaks.
         const pollTakeover = Object.getOwnPropertyDescriptor(
           assertionFunction,
           '__vitest_poll_takeover__',

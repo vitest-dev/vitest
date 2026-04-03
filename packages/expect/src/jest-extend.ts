@@ -146,10 +146,11 @@ function JestExtendPlugin(
           softWrapper,
         )
 
-        const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
+        // `expect.poll()` inspects the installed Chai assertion method,
+        // so copy the internal marker from the original matcher function.
+        // this is only for domain snapshot matchers for now.
         if ((expectAssertion as any).__vitest_poll_takeover__) {
-          // `expect.poll()` inspects the installed Chai assertion method,
-          // so copy the internal marker from the original matcher function.
+          const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
           Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
             value: true,
           })
