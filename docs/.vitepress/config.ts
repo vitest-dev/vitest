@@ -755,6 +755,11 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/trace-view',
                 docFooterText: 'Trace View | Browser Mode',
               },
+              {
+                text: 'ARIA Snapshots',
+                link: '/guide/browser/aria-snapshots',
+                docFooterText: 'ARIA Snapshots | Browser Mode',
+              },
             ],
           },
           {
