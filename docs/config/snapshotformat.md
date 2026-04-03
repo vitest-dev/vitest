@@ -27,10 +27,10 @@ The following options are commonly useful in `snapshotFormat`:
 
 `maxOutputLength` is an approximate per-depth output budget, not a hard cap on the final rendered string.
 
+By default, snapshot keys are sorted using the formatter's default behavior. Set `compareKeys` to `null` to disable key sorting. Custom compare functions are not supported in `snapshotFormat`.
+
 ::: tip
-Beware that `plugins` on this object will be ignored, and `compareKeys` cannot be a function.
+Beware that `plugins` on this object will be ignored.
 
 If you need to extend snapshot serialization via pretty-format plugins, use [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) or [`snapshotSerializers`](/config/snapshotserializers) instead.
 :::
-
-For the base package API, package defaults, and feature-specific plugin stacks used across Vitest, see [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format).
