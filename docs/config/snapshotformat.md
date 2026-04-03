@@ -9,6 +9,8 @@ outline: deep
 
 Format options for snapshot testing. These options configure the snapshot-specific formatting layer built on top of [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format).
 
+For the full option surface of `PrettyFormatOptions`, see [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). This page focuses on the Vitest snapshot-specific defaults and constraints.
+
 Vitest snapshots already apply these defaults before your `snapshotFormat` overrides:
 
 - `printBasicPrototype: false`
@@ -16,12 +18,7 @@ Vitest snapshots already apply these defaults before your `snapshotFormat` overr
 - `escapeRegex: true`
 - `printFunctionName: false`
 
-The following options are commonly useful in `snapshotFormat`:
-
-- Output shape: `indent`, `min`, `maxDepth`, `maxWidth`
-- Escaping and display: `escapeRegex`, `escapeString`, `highlight`
-- Object formatting: `callToJSON`, `printBasicPrototype`, `printFunctionName`
-- Vitest-specific behavior: `printShadowRoot`, `maxOutputLength`
+Vitest also supports formatter options such as `printShadowRoot` and `maxOutputLength` in `snapshotFormat`.
 
 `printShadowRoot` controls whether shadow-root contents are included in DOM snapshots.
 
