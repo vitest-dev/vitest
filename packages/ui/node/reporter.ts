@@ -4,10 +4,10 @@ import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
+import c from '@vitest/utils/colors'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
-import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
 interface PotentialConfig {

@@ -16,13 +16,13 @@ import type {
   Refs,
   Theme,
 } from './types'
-import styles from 'tinyrainbow'
 import {
   printIteratorEntries,
   printIteratorValues,
   printListItems,
   printObjectProperties,
 } from './collections'
+import styles from './colors'
 import AsymmetricMatcher from './plugins/AsymmetricMatcher'
 import DOMCollection from './plugins/DOMCollection'
 import DOMElement from './plugins/DOMElement'

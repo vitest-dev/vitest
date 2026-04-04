@@ -1,13 +1,10 @@
+import type { Colors } from '@vitest/utils/colors'
 import type { TokenColors } from 'tinyhighlight'
-import type { Colors } from 'tinyrainbow'
+import c from '@vitest/utils/colors'
 import { extname } from 'pathe'
 import { highlight } from 'tinyhighlight'
-import defaultColors, { getDefaultColors } from 'tinyrainbow'
-import { isAgent } from './env'
 
-export type { Colors, Formatter } from 'tinyrainbow'
-
-const c: Colors = isAgent ? getDefaultColors() : defaultColors
+export type { Colors, Formatter } from '@vitest/utils/colors'
 export default c
 
 const HIGHLIGHT_SUPPORTED_EXTS = new Set(

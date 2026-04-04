@@ -21,6 +21,7 @@ const entries = {
   'offset': 'src/offset.ts',
   'timers': 'src/timers.ts',
   'display': 'src/display.ts',
+  'colors': 'src/colors.ts',
   'resolver': 'src/resolver.ts',
   'serialize': 'src/serialize.ts',
 }
