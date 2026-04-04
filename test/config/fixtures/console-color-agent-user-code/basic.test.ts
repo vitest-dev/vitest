@@ -1,3 +1,4 @@
+// @ts-expect-error fixture resolves tinyrainbow via alias in vitest.config.ts
 import c from 'tinyrainbow'
 import { expect, test } from 'vitest'
 
