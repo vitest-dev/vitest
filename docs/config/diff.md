@@ -10,6 +10,8 @@ outline: deep
 
 `DiffOptions` object or a path to a module which exports `DiffOptions`. Useful if you want to customize diff display.
 
+Vitest diff rendering uses [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format) under the hood and a part of `DiffOptions` is forwarded to the pretty-format configuration, while the rest affects diff rendering itself.
+
 For example, as a config object:
 
 ```ts

@@ -1632,6 +1632,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
     devDependencies:
+      '@vitest/browser-playwright':
+        specifier: workspace:*
+        version: link:../../packages/browser-playwright
       jest-image-snapshot:
         specifier: ^6.5.1
         version: 6.5.1
