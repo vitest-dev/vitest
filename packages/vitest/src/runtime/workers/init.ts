@@ -50,7 +50,7 @@ export function init(worker: Options): void {
         process.env.VITEST_WORKER_ID = String(message.workerId)
         reportMemory = message.options.reportMemory
 
-        if (message.context.config.isAgent) {
+        if (message.context.config.isAgent && !process.stdout?.isTTY) {
           disableDefaultColors()
         }
 
