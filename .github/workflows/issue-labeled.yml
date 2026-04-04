@@ -11,7 +11,6 @@ permissions:
   issues: write
   pull-requests: write
 
-
 jobs:
   reply-labeled:
     runs-on: ubuntu-latest
