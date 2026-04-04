@@ -1,6 +1,6 @@
 # @vitest/pretty-format
 
-Vitest's fork of `pretty-format`, published as an ESM-only package.
+Vitest's fork of Jest's [`pretty-format`](https://npmx.dev/package/pretty-format), published as an ESM-only package.
 
 This package powers several formatting paths in Vitest:
 
