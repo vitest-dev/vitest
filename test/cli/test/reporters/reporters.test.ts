@@ -1,5 +1,7 @@
+import type { RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import type { TestModule } from 'vitest/node'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { createFileTask } from '@vitest/runner/utils'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { JsonReporter, JUnitReporter, TapFlatReporter, TapReporter } from 'vitest/node'
@@ -221,6 +223,70 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
 
   // Cleanup
   rmSync(outputFile)
+})
+
+test('JUnit reporter emits [[ATTACHMENT]] for failure screenshots', async () => {
+  const reporter = new JUnitReporter({ hostname: 'hostname' })
+  const context = getContext()
+
+  const file: RunnerTestFile = createFileTask('/vitest/test/shot.test.ts', '/vitest/test', '')
+  file.mode = 'run'
+  file.result = { state: 'fail', duration: 10 }
+
+  const suite: RunnerTestSuite = {
+    id: `${file.id}_0`,
+    type: 'suite',
+    name: 'screenshots',
+    fullName: `${file.fullName} > screenshots`,
+    fullTestName: `${file.fullTestName} > screenshots`,
+    mode: 'run',
+    meta: {},
+    file,
+    result: { state: 'fail', duration: 10 },
+    tasks: [],
+  }
+
+  const failedTest: RunnerTestCase = {
+    id: `${suite.id}_0`,
+    type: 'test',
+    name: 'failing test',
+    fullName: `${suite.fullName} > failing test`,
+    fullTestName: `${suite.fullTestName} > failing test`,
+    mode: 'run',
+    fails: undefined,
+    meta: {},
+    file,
+    suite,
+    annotations: [],
+    artifacts: [
+      {
+        type: 'internal:failureScreenshot',
+        attachments: [
+          {
+            name: 'screenshot',
+            path: '/screenshots/shot.png',
+            originalPath: '/screenshots/shot.png',
+          } as any,
+        ],
+      },
+    ],
+    // result has state=fail but no errors array, so capturePrintError is not called
+    result: {
+      state: 'fail',
+      errors: [],
+      duration: 5,
+    },
+    timeout: 0,
+    context: null as any,
+  }
+
+  suite.tasks = [failedTest]
+  file.tasks = [suite]
+
+  await reporter.onInit(context.vitest)
+  await reporter.onTestRunEnd([{ task: file } as TestModule])
+
+  expect(context.output).toContain('[[ATTACHMENT|/screenshots/shot.png]]')
 })
 
 test('json reporter', async () => {
