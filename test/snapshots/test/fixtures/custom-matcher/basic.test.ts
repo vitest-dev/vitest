@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from "vitest/runtime"
 
+
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
   toMatchCustomSnapshot: (properties?: object) => R
@@ -10,7 +11,6 @@ interface CustomMatchers<R = unknown> {
 
 declare module 'vitest' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
 function formatCustom(input: string) {

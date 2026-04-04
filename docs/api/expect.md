@@ -1010,6 +1010,57 @@ The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
+## toMatchAriaSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatcharisnapshot}
+
+- **Type:** `() => void`
+
+Captures the accessibility tree of a DOM element and compares it against a stored snapshot. Inspired by [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots).
+
+The snapshot uses a YAML-like format describing the accessible roles, names, and states of the element tree.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('navigation accessibility', () => {
+  document.body.innerHTML = `
+    <nav aria-label="Actions">
+      <button>Save</button>
+      <button>Cancel</button>
+    </nav>
+  `
+  expect(document.querySelector('nav')).toMatchAriaSnapshot()
+})
+```
+
+On first run, Vitest generates a snapshot entry like:
+
+```
+- navigation "Actions":
+  - button: Save
+  - button: Cancel
+```
+
+See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchariainlinesnapshot}
+
+- **Type:** `(snapshot?: string) => void`
+
+Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file.
+
+See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('user profile', () => {
+  expect(document.body).toMatchAriaInlineSnapshot(`
+    - heading "Dashboard" [level=1]
+    - button /User \\d+/: Profile
+  `)
+})
+```
+
 ## toHaveBeenCalled
 
 - **Type:** `() => Awaitable<void>`

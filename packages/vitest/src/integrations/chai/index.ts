@@ -58,7 +58,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
 
   expect.assert = chai.assert
   // @ts-expect-error untyped
-  expect.extend = matchers => chai.expect.extend(expect, matchers)
+  expect.extend = (...args) => chai.expect.extend(expect, ...args)
   expect.addEqualityTesters = customTesters =>
     addCustomEqualityTesters(customTesters)
 

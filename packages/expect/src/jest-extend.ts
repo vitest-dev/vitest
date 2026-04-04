@@ -146,6 +146,16 @@ function JestExtendPlugin(
           softWrapper,
         )
 
+        // `expect.poll()` inspects the installed Chai assertion method,
+        // so copy the internal marker from the original matcher function.
+        // this is only for domain snapshot matchers for now.
+        if ((expectAssertion as any).__vitest_poll_takeover__) {
+          const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
+          Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
+            value: true,
+          })
+        }
+
         class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
           constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {
             super(sample, inverse)
