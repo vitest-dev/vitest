@@ -2,7 +2,13 @@ import type { TokenColors } from 'tinyhighlight'
 import type { Colors } from 'tinyrainbow'
 import { extname } from 'pathe'
 import { highlight } from 'tinyhighlight'
-import c from 'tinyrainbow'
+import defaultColors, { getDefaultColors } from 'tinyrainbow'
+import { isAgent } from './env'
+
+export type { Colors, Formatter } from 'tinyrainbow'
+
+const c: Colors = isAgent ? getDefaultColors() : defaultColors
+export default c
 
 const HIGHLIGHT_SUPPORTED_EXTS = new Set(
   ['js', 'ts'].flatMap(lang => [

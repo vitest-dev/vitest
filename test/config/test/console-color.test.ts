@@ -44,6 +44,23 @@ test('agent', async () => {
   expect.soft(stdout).not.toContain('\x1B[46m RUN')
 })
 
+test('agent keeps tinyrainbow colors enabled in user code', async () => {
+  const { stdout } = await runVitestCli({
+    preserveAnsi: true,
+    nodeOptions: {
+      env: {
+        AI_AGENT: 'copilot',
+        FORCE_COLOR: '1',
+        NO_COLOR: undefined,
+      },
+    },
+  }, '--root', 'fixtures/console-color-agent-user-code', '--reporter', 'default')
+
+  expect.soft(stdout).toContain('✓ basic.test.ts')
+  expect.soft(stdout).toContain(' RUN')
+  expect.soft(stdout).not.toContain('\x1B[46m RUN')
+})
+
 test.skipIf(process.platform === 'win32')('without color, forks pool in non-TTY parent', async () => {
   const { stdout } = await runVitest({
     root: 'fixtures/console-color',
