@@ -304,6 +304,12 @@ export class Vitest {
     }
     catch { }
 
+    this.cache.stale.setConfig(resolved.root, resolved.cache)
+    try {
+      await this.cache.stale.readFromCache()
+    }
+    catch { }
+
     const projects = await this.resolveProjects(this._cliOptions)
     this.projects = projects
 
@@ -779,7 +785,7 @@ export class Vitest {
           await this.reportCoverage(coverage, true)
         })
 
-        if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+        if (!this.config.watch || !(this.config.changed || this.config.related?.length || this.config.stale)) {
           throw new FilesNotFoundError(this.mode)
         }
       }
@@ -951,6 +957,7 @@ export class Vitest {
           this.cache.results.updateResults(files)
           try {
             await this.cache.results.writeToCache()
+            await this.cache.stale.writeToCache()
           }
           catch {}
 
@@ -974,6 +981,7 @@ export class Vitest {
 
           // all subsequent runs will treat this as a fresh run
           this.config.changed = false
+          this.config.stale = false
           this.config.related = undefined
         })
 
@@ -1102,6 +1110,7 @@ export class Vitest {
 
         // all subsequent runs will treat this as a fresh run
         this.config.changed = false
+        this.config.stale = false
         this.config.related = undefined
       })
 

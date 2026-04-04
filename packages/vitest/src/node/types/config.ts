@@ -1053,6 +1053,14 @@ export interface UserConfig extends InlineConfig {
   changed?: boolean | string
 
   /**
+   * Run only tests that are stale. A test is stale when it or any of its dependencies have changed since the last run with --stale.
+   * Uses filesystem mtime-based manifest stored in the cache directory.
+   * Mutually exclusive with --changed option.
+   * @default false
+   */
+  stale?: boolean
+
+  /**
    * Test suite shard to execute in a format of <index>/<count>.
    * Will divide tests into a `count` numbers, and run only the `indexed` part.
    * Cannot be used with enabled watch.

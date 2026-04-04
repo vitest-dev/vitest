@@ -165,7 +165,7 @@ export class Logger {
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
-    if (config.watch && (config.changed || config.related?.length)) {
+    if (config.watch && (config.changed || config.related?.length || config.stale)) {
       this.log(`No affected ${config.mode} files found\n`)
     }
     else if (config.watch) {

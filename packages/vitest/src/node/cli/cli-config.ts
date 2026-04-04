@@ -495,6 +495,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Run tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
   },
+  stale: {
+    description:
+      'Run only tests that are stale. A test is stale when it or any of its dependencies have changed since the last run with --stale (default: `false`)',
+  },
   sequence: {
     description: 'Options for how tests should be sorted',
     argument: '<options>',
