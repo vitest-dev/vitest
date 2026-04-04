@@ -10,8 +10,8 @@ import { stripVTControlCharacters } from 'node:util'
 import { inspect } from '@vitest/utils/display'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { normalize, relative } from 'pathe'
-import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
+import c from '../utils/colors'
 import {
   defaultStackIgnorePatterns,
   lineSplitRE,

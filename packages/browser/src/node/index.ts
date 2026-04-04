@@ -1,7 +1,7 @@
 import type { BrowserCommand, BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
-import c from 'tinyrainbow'
+import c from '@vitest/utils/colors'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
 import { distRoot } from './constants'

@@ -48,6 +48,7 @@
     "@istanbuljs/schema": "^0.1.3",
     "@jridgewell/gen-mapping": "^0.3.13",
     "@jridgewell/trace-mapping": "catalog:",
+    "@vitest/utils": "workspace:*",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
     "istanbul-reports": "catalog:",

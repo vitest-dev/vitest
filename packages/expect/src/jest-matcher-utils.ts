@@ -1,9 +1,9 @@
-import type { Formatter } from 'tinyrainbow'
+import type { Formatter } from '@vitest/utils/colors'
 import type { MatcherHintOptions, Tester } from './types'
+import c from '@vitest/utils/colors'
 import { diff, printDiffOrStringify } from '@vitest/utils/diff'
 import { stringify } from '@vitest/utils/display'
 import { getType } from '@vitest/utils/helpers'
-import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
 export { diff } from '@vitest/utils/diff'

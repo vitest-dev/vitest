@@ -6,6 +6,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import c from '@vitest/utils/colors'
 import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -14,7 +15,6 @@ import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
-import c from 'tinyrainbow'
 import { BaseCoverageProvider, parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 

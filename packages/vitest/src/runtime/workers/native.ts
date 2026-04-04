@@ -9,8 +9,8 @@ import { cleanUrl } from '@vitest/utils/helpers'
 import { parse } from 'acorn'
 import MagicString from 'magic-string'
 import { resolve } from 'pathe'
-import c from 'tinyrainbow'
 import { distDir } from '../../paths'
+import c from '../../utils/colors'
 import { toBuiltin } from '../../utils/modules'
 
 const NOW_LENGTH = Date.now().toString().length

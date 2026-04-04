@@ -7,7 +7,7 @@
  */
 
 import type { MockInstance } from '@vitest/spy'
-import type { Formatter } from 'tinyrainbow'
+import type { Formatter } from '@vitest/utils/colors'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
