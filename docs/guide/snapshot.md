@@ -202,11 +202,12 @@ Pretty foo: Object {
 
 ## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
-You can build custom snapshot matchers using the composable functions exported from `vitest/runtime`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+You can build custom snapshot matchers using the composable functions exposed on `Snapshots` from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 
 ```ts
-import { expect, test } from 'vitest'
-import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from 'vitest/runtime'
+import { expect, test, Snapshots } from 'vitest'
+
+const { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } = Snapshots
 
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
@@ -236,6 +237,10 @@ test('raw file snapshot', async () => {
 The composables return `{ pass, message }` so you can further customize the error:
 
 ```ts
+import { Snapshots } from 'vitest'
+
+const { toMatchSnapshot } = Snapshots
+
 expect.extend({
   toMatchTrimmedSnapshot(received: string, length: number) {
     const result = toMatchSnapshot.call(this, received.slice(0, length))
