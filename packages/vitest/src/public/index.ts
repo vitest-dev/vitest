@@ -47,14 +47,14 @@ export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRun
 export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
 export { TestRunner } from '../runtime/runners/test'
 export type {
-  BenchFactory,
+  Bench as BenchFactory,
   BenchFunction,
   Benchmark,
   BenchmarkAPI,
   BenchmarkResult,
   BenchOptions,
-  BenchTask,
-  BenchTaskResult,
+  TinybenchTask as BenchTask,
+  TinybenchTaskResult as BenchTaskResult,
 } from '../runtime/types/benchmark'
 export { assertType } from '../typecheck/assertType'
 

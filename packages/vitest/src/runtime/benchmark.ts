@@ -1,4 +1,5 @@
 import type { Test } from '@vitest/runner'
+import type { SerializedConfig } from './config'
 import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
@@ -6,10 +7,13 @@ import { noop } from '@vitest/utils/helpers'
 import { getWorkerState } from './utils'
 
 const benchFns = new WeakMap<Test, BenchFunction>()
-const benchOptsMap = new WeakMap()
+const benchOptsMap = new WeakMap<Test, BenchOptions>()
 
-export function getBenchOptions(key: Test): BenchOptions {
-  return benchOptsMap.get(key)
+export function getBenchOptions(key: Test, config: SerializedConfig): BenchOptions {
+  return {
+    ...benchOptsMap.get(key)!,
+    retainSamples: !!config.benchmark?.includeSamples,
+  }
 }
 
 export function getBenchFn(key: Test): BenchFunction {
@@ -17,7 +21,7 @@ export function getBenchFn(key: Test): BenchFunction {
 }
 
 export const bench: BenchmarkAPI = createBenchmark(function (
-  name,
+  name: string | Function,
   fn: BenchFunction = noop,
   options: BenchOptions = {},
 ) {
@@ -32,7 +36,7 @@ export const bench: BenchmarkAPI = createBenchmark(function (
     },
   })
   benchFns.set(task, fn)
-  benchOptsMap.set(task, options)
+  benchOptsMap.set(task, { ...options, name: formatName(name) })
   // vitest runner sets mode to `todo` if handler is not passed down
   // but we store handler separately
   if (!this.todo && task.mode === 'todo') {
