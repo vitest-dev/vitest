@@ -17,7 +17,7 @@ import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
-import { getTasks, hasFailed, limitConcurrency } from '@vitest/runner/utils'
+import { getTasks, hasFailed, interpretTaskModes, limitConcurrency, someTasksAreOnly } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
@@ -749,7 +749,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const specifications = await this._traces.$(
+      let specifications = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -766,6 +766,13 @@ export class Vitest {
           return specifications
         },
       )
+
+      if (this.config.experimental.preParse) {
+        await this.experimental_parseSpecifications(specifications)
+        specifications = specifications.filter(({ testModule }) => {
+          return !testModule || testModule.task.mode !== 'skip'
+        })
+      }
 
       // if run with --changed, don't exit if no tests are found
       if (!specifications.length) {
@@ -1032,10 +1039,35 @@ export class Vitest {
       ? os.availableParallelism()
       : os.cpus().length)
     const limit = limitConcurrency(concurrency)
-    const promises = specifications.map(specification =>
-      limit(() => this.experimental_parseSpecification(specification)),
-    )
-    return Promise.all(promises)
+
+    // Phase 1: parse all files in parallel (without mode interpretation)
+    const results = await Promise.all(specifications.map(specification =>
+      limit(async () => {
+        const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
+          return createFailedFileTask(specification.project, specification.moduleId, error)
+        })
+        return { file, specification }
+      }),
+    ))
+
+    // Phase 2: cross-file .only resolution
+    const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
+    for (const { file, specification } of results) {
+      const config = specification.project.serializedConfig
+      interpretTaskModes(
+        file,
+        config.testNamePattern,
+        undefined,
+        undefined,
+        undefined,
+        globalHasOnly,
+        false,
+        config.allowOnly,
+      )
+      this.state.collectFiles(specification.project, [file])
+    }
+
+    return results.map(({ file }) => this.state.getReportedEntity(file) as TestModule)
   }
 
   public async experimental_parseSpecification(specification: TestSpecification): Promise<TestModule> {
@@ -1045,6 +1077,18 @@ export class Vitest {
     const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
+    const config = specification.project.serializedConfig
+    const hasOnly = someTasksAreOnly(file)
+    interpretTaskModes(
+      file,
+      config.testNamePattern,
+      undefined,
+      undefined,
+      undefined,
+      hasOnly,
+      false,
+      config.allowOnly,
+    )
     // register in state, so it can be retrieved by "getReportedEntity"
     this.state.collectFiles(specification.project, [file])
     return this.state.getReportedEntity(file) as TestModule

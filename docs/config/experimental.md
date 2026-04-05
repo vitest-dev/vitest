@@ -479,3 +479,10 @@ export default {
 If module runner is disabled, Vitest uses a native [Node.js module loader](https://nodejs.org/api/module.html#customization-hooks) to transform files to support `import.meta.vitest`, `vi.mock` and `vi.hoisted`.
 
 If you don't use these features, you can disable this to improve performance.
+
+## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-preparse}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them.
