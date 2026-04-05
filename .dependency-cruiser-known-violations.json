@@ -1,0 +1,11 @@
+[
+  {
+    "type": "module",
+    "from": "packages/mocker/dist/auto-register.d.ts",
+    "to": "packages/mocker/dist/auto-register.d.ts",
+    "rule": {
+      "severity": "warn",
+      "name": "no-orphans-in-dist"
+    }
+  }
+]
