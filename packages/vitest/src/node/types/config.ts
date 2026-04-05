@@ -1008,6 +1008,13 @@ export interface TypecheckConfig {
    * @default 10_000
    */
   spawnTimeout?: number
+  /**
+   * Suppress the "Testing types with tsc and vue-tsc is an experimental feature" warning.
+   * Useful in monorepos where the warning is printed once per project.
+   *
+   * @default false
+   */
+  ignoreExperimentalWarning?: boolean
 }
 
 export interface UserConfig extends InlineConfig {
