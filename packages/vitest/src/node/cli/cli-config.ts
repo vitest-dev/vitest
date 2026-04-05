@@ -920,6 +920,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Custom provider for detecting changed files. (default: `git`)',
         subcommands: null,
       },
+      preParse: {
+        description: 'Parse test specifications to <TODO> (default: `false`)',
+      },
     },
   },
   // disable CLI options

@@ -947,6 +947,11 @@ export interface InlineConfig {
      * implementation of the `VCSProvider` interface to use a different version control system.
      */
     vcsProvider?: VCSProvider | string
+
+    /**
+     * TODO
+     */
+    preParse?: boolean
   }
 
   /**

@@ -749,7 +749,7 @@ export class Vitest {
 
       this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
       startSpan.setAttribute('vitest.start.filters', this.filenamePattern || [])
-      const specifications = await this._traces.$(
+      let specifications = await this._traces.$(
         'vitest.config.resolve_include_glob',
         async () => {
           const specifications = await this.specifications.getRelevantTestSpecifications(filters)
@@ -766,6 +766,14 @@ export class Vitest {
           return specifications
         },
       )
+
+      if (this.config.experimental.preParse) {
+        await this.experimental_parseSpecifications(specifications)
+        specifications = specifications.filter(({ testModule }) => {
+          return !testModule || testModule.task.mode !== 'skip'
+        })
+      }
+      console.log(specifications.map(f => f.testModule?.task))
 
       // if run with --changed, don't exit if no tests are found
       if (!specifications.length) {
