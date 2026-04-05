@@ -45,13 +45,13 @@ patchedDependencies:
 catalog:
   '@babel/core': ^7.29.0
   '@babel/plugin-proposal-decorators': ^7.29.0
-  '@iconify-json/carbon': ^1.2.19
-  '@iconify-json/logos': ^1.2.10
+  '@iconify-json/carbon': ^1.2.20
+  '@iconify-json/logos': ^1.2.11
   '@iconify/vue': ^5.0.0
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
-  '@playwright/test': ^1.59.0
-  '@rolldown/plugin-babel': ^0.2.1
+  '@playwright/test': ^1.59.1
+  '@rolldown/plugin-babel': ^0.2.2
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.8
   '@types/istanbul-lib-coverage': ^2.0.6
@@ -60,8 +60,8 @@ catalog:
   '@types/istanbul-reports': ^3.0.4
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
-  '@unocss/reset': ^66.6.6
-  '@vitejs/plugin-vue': ^6.0.4
+  '@unocss/reset': ^66.6.7
+  '@vitejs/plugin-vue': ^6.0.5
   '@vueuse/core': ^14.2.1
   acorn-walk: ^8.3.5
   birpc: ^4.0.0
@@ -74,25 +74,25 @@ catalog:
   istanbul-reports: ^3.2.0
   magic-string: ^0.30.21
   magicast: ^0.5.2
-  msw: ^2.12.10
+  msw: ^2.12.14
   obug: ^2.1.1
   pathe: ^2.0.3
-  playwright: ^1.59.0
+  playwright: ^1.59.1
   sinon: ^21.0.3
   sinon-chai: ^4.0.1
   sirv: ^3.0.2
-  std-env: ^4.0.0-rc.1
+  std-env: ^4.0.0
   strip-literal: ^3.1.0
-  tinyexec: ^1.0.2
+  tinyexec: ^1.0.4
   tinyglobby: ^0.2.15
   tinyhighlight: ^0.3.2
   tinyrainbow: ^3.1.0
   tinyspy: ^4.0.4
   typescript: ^5.9.3
-  unocss: ^66.6.6
+  unocss: ^66.6.7
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.29
-  ws: ^8.19.0
+  vue: ^3.5.32
+  ws: ^8.20.0
   yauzl: ^3.2.0
 onlyBuiltDependencies:
   - '@sveltejs/kit'
