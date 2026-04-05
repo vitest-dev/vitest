@@ -480,7 +480,7 @@ If module runner is disabled, Vitest uses a native [Node.js module loader](https
 
 If you don't use these features, you can disable this to improve performance.
 
-## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-nodeloader}
+## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-preparse}
 
 - **Type:** `boolean`
 - **Default:** `false`
