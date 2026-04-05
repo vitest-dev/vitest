@@ -394,7 +394,6 @@ describe('Temporal equality', () => {
   })
 })
 
-// TODO: test expect.poll(..., { message })
 describe('expect with custom message', () => {
   describe('built-in matchers', () => {
     test('sync matcher throws custom message on failure', () => {
