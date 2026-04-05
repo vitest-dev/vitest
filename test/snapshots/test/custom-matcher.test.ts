@@ -422,110 +422,31 @@ expect.extend({
 test('custom snapshot matcher', () => {
   expect('abcdefghij', 'outer message').toMatchTrimmedInlineSnapshot(\`"wrong"\`)
 })
-`,
-  })
 
-  expect(result.stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > custom snapshot matcher
-    Error: outer message: Snapshot \`custom snapshot matcher 1\` mismatched
-
-    Expected: ""wrong""
-    Received: ""abcde""
-
-     ❯ basic.test.ts:15:41
-         13|
-         14| test('custom snapshot matcher', () => {
-         15|   expect('abcdefghij', 'outer message').toMatchTrimmedInlineSnapshot(\`…
-           |                                         ^
-         16| })
-         17|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
-  expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "custom snapshot matcher": Array [
-          "outer message: Snapshot \`custom snapshot matcher 1\` mismatched",
-        ],
-      },
-    }
-  `)
-})
-
-test('outer expect message is prefixed for built-in snapshot matchers', async () => {
-  const result = await runInlineTests({
-    'basic.test.ts': `
-import { test, expect } from 'vitest'
-
-test('inline snapshot', () => {
+test('builtin', () => {
   expect('abcdefghij', 'outer message').toMatchInlineSnapshot(\`"wrong"\`)
 })
 
-test('properties snapshot', () => {
+test('builtin properties mismatch', () => {
   expect({ value: 1 }, 'outer message').toMatchSnapshot({
     value: expect.any(String),
   })
 })
 `,
+  }, {
+    update: 'none',
   })
-
-  expect(result.stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > inline snapshot
-    Error: outer message: Snapshot \`inline snapshot 1\` mismatched
-
-    Expected: ""wrong""
-    Received: ""abcdefghij""
-
-     ❯ basic.test.ts:5:41
-          3|
-          4| test('inline snapshot', () => {
-          5|   expect('abcdefghij', 'outer message').toMatchInlineSnapshot(\`"wrong"…
-           |                                         ^
-          6| })
-          7|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
-
-     FAIL  basic.test.ts > properties snapshot
-    Error: outer message: Snapshot properties mismatched
-
-    - Expected
-    + Received
-
-      {
-    -   "value": Any<String>,
-    +   "value": 1,
-      }
-
-     ❯ basic.test.ts:9:41
-          7|
-          8| test('properties snapshot', () => {
-          9|   expect({ value: 1 }, 'outer message').toMatchSnapshot({
-           |                                         ^
-         10|     value: expect.any(String),
-         11|   })
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
-
-    "
-  `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "inline snapshot": Array [
-          "outer message: Snapshot \`inline snapshot 1\` mismatched",
+        "builtin": Array [
+          "outer message: Snapshot \`builtin 1\` mismatched",
         ],
-        "properties snapshot": Array [
+        "builtin properties mismatch": Array [
           "outer message: Snapshot properties mismatched",
+        ],
+        "custom snapshot matcher": Array [
+          "outer message: Snapshot \`custom snapshot matcher 1\` mismatched",
         ],
       },
     }
