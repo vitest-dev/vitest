@@ -397,21 +397,21 @@ describe('Temporal equality', () => {
 describe('expect with custom message', () => {
   describe('built-in matchers', () => {
     test('sync matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').toBe(2)).toThrow('custom message')
+      expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 to be 2 // Object.is equality]`)
     })
 
     test('async rejects matcher throws custom message on failure', async ({ expect }) => {
       const asyncAssertion = expect(Promise.reject(new Error('test error')), 'custom async message').rejects.toBe(2)
-      await expect(asyncAssertion).rejects.toThrow('custom async message')
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected Error: test error to be 2 // Object.is equality]`)
     })
 
     test('async resolves matcher throws custom message on failure', async ({ expect }) => {
       const asyncAssertion = expect(Promise.resolve(1), 'custom async message').resolves.toBe(2)
-      await expect(asyncAssertion).rejects.toThrow('custom async message')
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected 1 to be 2 // Object.is equality]`)
     })
 
     test('not matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').not.toBe(1)).toThrow('custom message')
+      expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 not to be 1 // Object.is equality]`)
     })
   })
 
@@ -426,7 +426,7 @@ describe('expect with custom message', () => {
           }
         },
       })
-      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrow('custom message')
+      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`[Error: custom message: bar is foo]`)
     })
 
     test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
@@ -453,7 +453,7 @@ describe('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
-      await expect(asyncAssertion).rejects.toThrow('custom async message')
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: bar is not foo]`)
     })
 
     test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
@@ -467,17 +467,17 @@ describe('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
-      await expect(asyncAssertion).rejects.toThrow('custom async message')
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: foo is not foo]`)
     })
   })
 
   describe('edge cases', () => {
     test('empty custom message falls back to default matcher message', () => {
-      expect(() => expect(1, '').toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+      expect(() => expect(1, '').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
     })
 
     test('undefined custom message falls back to default matcher message', () => {
-      expect(() => expect(1, undefined as any).toBe(2)).toThrow('expected 1 to be 2 // Object.is equality')
+      expect(() => expect(1, undefined as any).toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
     })
   })
 })
