@@ -294,16 +294,25 @@ export class Typechecker {
     const { root, watch, typecheck } = this.project.config
 
     const args = [
-      '--noEmit',
       '--pretty',
       'false',
-      '--incremental',
-      '--tsBuildInfoFile',
-      join(
-        process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
-        'tsconfig.tmp.tsbuildinfo',
-      ),
     ]
+
+    if (typecheck.build) {
+      args.push('--build')
+    }
+    else {
+      args.push(
+        '--noEmit',
+        '--incremental',
+        '--tsBuildInfoFile',
+        join(
+          process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
+          'tsconfig.tmp.tsbuildinfo',
+        ),
+      )
+    }
+
     // use builtin watcher because it's faster
     if (watch) {
       args.push('--watch')
@@ -312,7 +321,11 @@ export class Typechecker {
       args.push('--allowJs', '--checkJs')
     }
     if (typecheck.tsconfig) {
-      args.push('-p', resolve(root, typecheck.tsconfig))
+      if (!typecheck.build) {
+        args.push('-p')
+      }
+
+      args.push(resolve(root, typecheck.tsconfig))
     }
     this._output = ''
     this._startTime = performance.now()

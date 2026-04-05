@@ -706,6 +706,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ignoreSourceErrors: {
         description: 'Ignore type errors from source files',
       },
+      build: {
+        description: 'Use TypeScript build mode',
+      },
       tsconfig: {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',
