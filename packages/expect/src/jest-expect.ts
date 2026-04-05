@@ -676,7 +676,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   /**
    * Used for `toHaveBeenCalledBefore` and `toHaveBeenCalledAfter` to determine if the expected spy was called before the result spy.
    */
-  function isSpyCalledBeforeAnotherSpy(beforeSpy: MockInstance, afterSpy: MockInstance, failIfNoFirstInvocation: number): boolean {
+  function isSpyCalledBeforeAnotherSpy(beforeSpy: MockInstance, afterSpy: MockInstance, failIfNoFirstInvocation: unknown = true): boolean {
     const beforeInvocationCallOrder = beforeSpy.mock.invocationCallOrder
 
     const afterInvocationCallOrder = afterSpy.mock.invocationCallOrder
