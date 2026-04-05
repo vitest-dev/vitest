@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
+// TODO: rename
+
 describe('truncateThreshold', () => {
   it('default', async () => {
     const result = await runVitest({
@@ -27,9 +29,7 @@ describe('truncateThreshold', () => {
   it('40', async () => {
     const result = await runVitest({
       root: 'fixtures/chai-config',
-      chaiConfig: {
-        truncateThreshold: 40,
-      },
+      taskTitleValueFormatTruncate: 40,
     })
     expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -52,9 +52,7 @@ describe('truncateThreshold', () => {
   it('0', async () => {
     const result = await runVitest({
       root: 'fixtures/chai-config',
-      chaiConfig: {
-        truncateThreshold: 0,
-      },
+      taskTitleValueFormatTruncate: 0,
     })
     expect(result.stderr).toMatchInlineSnapshot(`""`)
     expect(result.errorTree()).toMatchInlineSnapshot(`

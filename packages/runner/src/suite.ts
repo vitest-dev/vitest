@@ -1020,8 +1020,7 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   const inspectOptions: InspectOptions = {
-    // TODO: introduce new option. taskTitleFormatInspectTruncate?
-    truncate: runner?.config?.chaiConfig?.truncateThreshold ?? 40,
+    truncate: runner.config.taskTitleValueFormatTruncate,
   }
 
   const isObjectItem = isObject(items[0])

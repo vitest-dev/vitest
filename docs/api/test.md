@@ -618,8 +618,7 @@ test.each`
 ```
 
 ::: tip
-<!-- TODO -->
-Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/chaiconfig#chaiconfig-truncatethreshold) in your config file.
+Vitest formats interpolated title values with its display formatter. If the value is too truncated, you can increase [taskTitleValueFormatTruncate](/config/tasktitlevalueformattruncate) in your config file.
 :::
 
 ## test.for
