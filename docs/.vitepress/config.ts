@@ -52,7 +52,7 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
       ['link', { rel: 'icon', href: '/logo-without-border.svg', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinyspy, node' }],
+      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, node' }],
       ['meta', { property: 'og:title', content: vitestName }],
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
@@ -133,6 +133,12 @@ export default ({ mode }: { mode: string }) => {
         //   facetFilters: ['tags:en'],
         // },
       }, */
+      },
+
+      banner: {
+        id: 'viteplus-alpha',
+        text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
+        url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
       },
 
       carbonAds: {

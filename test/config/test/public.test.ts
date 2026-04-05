@@ -1,4 +1,4 @@
-import type { BaseCoverageOptions } from 'vitest/node'
+import type { CoverageOptions } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { resolveConfig } from 'vitest/node'
@@ -106,7 +106,7 @@ test.for([
     expected: 'custom-html-dir',
   },
 ] satisfies {
-  options: BaseCoverageOptions
+  options: CoverageOptions
   expected?: string
 }[])('coverage.htmlDir inference: $options', async ({ options, expected }) => {
   const { vitestConfig } = await resolveConfig({

@@ -33,6 +33,25 @@ export default defineConfig({
         }
       },
     },
+    // Use babel plugin since Oxc (Vite 8) doesn't support ecma decorators out of the box
+    // https://github.com/oxc-project/oxc/issues/9170#issuecomment-4072166491
+    !!rolldownVersion
+    && (import('@rolldown/plugin-babel').then(({ default: babel }) =>
+      babel({
+        presets: [
+          {
+            preset: ({
+              plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
+            }),
+            rolldown: {
+              filter: {
+                id: ['**/esnext-decorator.test.ts'],
+              },
+            },
+          },
+        ],
+      }),
+    ) as any),
   ],
   define: {
     'process': {},
@@ -85,9 +104,6 @@ export default defineConfig({
     exclude: [
       '**/fixtures/**',
       ...defaultExclude,
-      // FIXME: wait for ecma decorator support in rolldown/oxc
-      // https://github.com/oxc-project/oxc/issues/9170
-      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
     ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,

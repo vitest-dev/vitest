@@ -55,7 +55,7 @@ test('invalid packages', async () => {
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
   })
 
-  // requires Vite 8 for relaxed import analysis validataion
+  // requires Vite 8 for relaxed import analysis validation
   // https://github.com/vitejs/vite/pull/21601
   if (rolldownVersion) {
     expect(stderr).toMatchInlineSnapshot(`""`)
@@ -387,6 +387,196 @@ test('mock works without loading original', () => {
     {
       "basic.test.js": {
         "mock works without loading original": "passed",
+      },
+    }
+  `)
+})
+
+test('doMock/doUnmock ordering is preserved in resolveMocks', async () => {
+  // This tests repeats doUnmock + doMock
+  //   vi.doUnmock('/mock-lib-0');
+  //   vi.doMock('/mock-lib-0', () => ({ value: 0 }));
+  //   vi.doUnmock('/mock-lib-1');
+  //   vi.doMock('/mock-lib-1', () => ({ value: 1 }));
+  //   ...
+  // then, all modules should be mocked
+  //   import('/mock-lib-0') // => { value: 0 }
+  //   import('/mock-lib-1') // => { value: 1 }
+  //   ...
+  const N = 20
+  const mockEntries = Array.from({ length: N }, (_, i) => `\
+vi.doUnmock('/mock-lib-${i}');
+vi.doMock('/mock-lib-${i}', () => ({ value: ${i} }));
+`).join('\n')
+  const importChecks = Array.from({ length: N }, (_, i) => `\
+await expect(import('/mock-lib-${i}')).resolves.toEqual({ value: ${i} });
+`).join('\n')
+
+  const { stderr, errorTree } = await runInlineTests({
+    './basic.test.js': `
+import { test, expect, vi } from 'vitest'
+
+test('many unmock + mock (all should mocked)', async () => {
+${mockEntries}
+${importChecks}
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "many unmock + mock (all should mocked)": "passed",
+      },
+    }
+  `)
+})
+
+test.for([
+  'node',
+  'playwright',
+  'webdriverio',
+])('repeating mock, importActual, and resetModules (%s)', async (mode) => {
+  const { stderr, errorTree } = await runInlineTests({
+    // external
+    './external.test.ts': `
+import { expect, test, vi } from "vitest"
+
+test("external", async () => {
+  vi.doMock(import("test-dep-simple"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib1: any = await import("test-dep-simple")
+  expect(lib1.default).toBe("test-dep-simple")
+
+  vi.resetModules();
+  vi.doMock(import("test-dep-simple"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib2: any = await import("test-dep-simple")
+  expect(lib2.default).toBe("test-dep-simple")
+  expect.soft(lib1 !== lib2).toBe(true)
+
+  vi.resetModules();
+  vi.doMock(import("test-dep-simple"), async () => ({ mocked: true }));
+  const lib3 = await import("test-dep-simple");
+  expect(lib3).toMatchObject({ mocked: true })
+
+  const lib4 = await vi.importActual("test-dep-simple");
+  expect(lib4.default).toBe("test-dep-simple")
+  const lib5 = await vi.importActual("test-dep-simple");
+  expect(lib4).toBe(lib5)
+});
+    `,
+    // builtin module
+    './builtin.test.ts': `
+import { expect, test, vi } from "vitest"
+
+test("builtin", async () => {
+  vi.doMock(import("node:path"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib1: any = await import("node:path")
+  expect(lib1).toHaveProperty('join')
+
+  vi.resetModules();
+  vi.doMock(import("node:path"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib2: any = await import("node:path")
+  expect(lib2).toHaveProperty('join')
+  expect.soft(lib1 !== lib2).toBe(true)
+
+  vi.resetModules();
+  vi.doMock(import("node:path"), async () => ({ mocked: true }));
+  const lib3 = await import("node:path");
+  expect(lib3).toMatchObject({ mocked: true })
+
+  const lib4 = await vi.importActual("node:path");
+  expect(lib4).toHaveProperty('join')
+  const lib5 = await vi.importActual("node:path");
+  expect(lib4).toBe(lib5)
+});
+    `,
+    // local module
+    './local.test.ts': `
+import { expect, test, vi } from "vitest"
+
+test("local", async () => {
+  vi.doMock(import("./local.js"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib1: any = await import("./local.js")
+  expect(lib1).toHaveProperty('local')
+
+  vi.resetModules();
+  vi.doMock(import("./local.js"), async (importActual) => {
+    const lib = await importActual();
+    return lib;
+  })
+  const lib2: any = await import("./local.js")
+  expect(lib2).toHaveProperty('local')
+  expect.soft(lib1 !== lib2).toBe(true)
+
+  vi.resetModules();
+  vi.doMock(import("./local.js"), async () => ({ mocked: true }));
+  const lib3 = await import("./local.js");
+  expect(lib3).toMatchObject({ mocked: true })
+
+  const lib4 = await vi.importActual("./local.js");
+  expect(lib4).toHaveProperty('local')
+  const lib5 = await vi.importActual("./local.js");
+  expect(lib4).toBe(lib5)
+});
+    `,
+    './local.js': `export const local = 'local'`,
+  }, modeToConfig(mode))
+
+  if (mode === 'webdriverio' || mode === 'playwright') {
+    // browser mode doesn't support resetModules nor node builtin
+    expect(errorTree()).toMatchInlineSnapshot(`
+      {
+        "builtin.test.ts": {
+          "builtin": [
+            "Cannot convert a Symbol value to a string",
+          ],
+        },
+        "external.test.ts": {
+          "external": [
+            "expected false to be true // Object.is equality",
+            "expected { default: 'test-dep-simple', …(1) } to match object { mocked: true }
+      (1 matching property omitted from actual)",
+          ],
+        },
+        "local.test.ts": {
+          "local": [
+            "expected false to be true // Object.is equality",
+            "expected { local: 'local', …(1) } to match object { mocked: true }
+      (1 matching property omitted from actual)",
+          ],
+        },
+      }
+    `)
+    return
+  }
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "builtin.test.ts": {
+        "builtin": "passed",
+      },
+      "external.test.ts": {
+        "external": "passed",
+      },
+      "local.test.ts": {
+        "local": "passed",
       },
     }
   `)

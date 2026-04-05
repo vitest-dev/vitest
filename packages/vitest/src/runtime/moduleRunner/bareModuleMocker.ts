@@ -152,27 +152,33 @@ export class BareModuleMocker implements TestModuleMocker {
       return
     }
 
-    await Promise.all(
-      BareModuleMocker.pendingIds.map(async (mock) => {
-        const { id, url, external } = await this.resolveId(
+    const resolveMock = async (mock: PendingSuiteMock) => {
+      const { id, url, external } = await this.resolveId(
+        mock.id,
+        mock.importer,
+      )
+      if (mock.action === 'unmock') {
+        this.unmockPath(id)
+      }
+      if (mock.action === 'mock') {
+        this.mockPath(
           mock.id,
-          mock.importer,
+          id,
+          url,
+          external,
+          mock.type,
+          mock.factory,
         )
-        if (mock.action === 'unmock') {
-          this.unmockPath(id)
-        }
-        if (mock.action === 'mock') {
-          this.mockPath(
-            mock.id,
-            id,
-            url,
-            external,
-            mock.type,
-            mock.factory,
-          )
-        }
-      }),
-    )
+      }
+    }
+
+    // group consecutive mocks of the same action type together,
+    // resolve in parallel inside each group, but run groups sequentially
+    // to preserve mock/unmock ordering
+    const groups = groupByConsecutiveAction(BareModuleMocker.pendingIds)
+    for (const group of groups) {
+      await Promise.all(group.map(resolveMock))
+    }
 
     BareModuleMocker.pendingIds = []
   }
@@ -366,6 +372,20 @@ export function normalizeModuleId(file: string): string {
 const windowsSlashRE = /\\/g
 function slash(p: string): string {
   return p.replace(windowsSlashRE, '/')
+}
+
+function groupByConsecutiveAction(mocks: PendingSuiteMock[]): PendingSuiteMock[][] {
+  const groups: PendingSuiteMock[][] = []
+  for (const mock of mocks) {
+    const last = groups.at(-1)
+    if (last?.[0].action === mock.action) {
+      last.push(mock)
+    }
+    else {
+      groups.push([mock])
+    }
+  }
+  return groups
 }
 
 const multipleSlashRe = /^\/+/

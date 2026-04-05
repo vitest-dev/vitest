@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vite, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
@@ -28,7 +28,7 @@ const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 
-export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
+export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8' as const
   version: string = version
 

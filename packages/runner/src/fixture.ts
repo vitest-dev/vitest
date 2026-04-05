@@ -5,6 +5,8 @@ import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from '.
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
 
+const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
+
 export interface TestFixtureItem extends FixtureOptions {
   name: string
   value: unknown
@@ -46,6 +48,10 @@ export class TestFixtures {
 
   static getFileContexts(file: File): Record<string, any>[] {
     return TestFixtures._definitions.map(f => f.getFileContext(file))
+  }
+
+  static isFixtureOptions(obj: unknown): boolean {
+    return isObject(obj) && Object.keys(obj as any).some(key => TestFixtures._fixtureOptionKeys.includes(key))
   }
 
   constructor(registrations?: FixtureRegistrations) {
@@ -125,8 +131,7 @@ export class TestFixtures {
       if (
         Array.isArray(fn)
         && fn.length >= 2
-        && isObject(fn[1])
-        && Object.keys(fn[1]).some(key => TestFixtures._fixtureOptionKeys.includes(key))
+        && TestFixtures.isFixtureOptions(fn[1])
       ) {
         _options = fn[1] as FixtureOptions
         options = {
@@ -185,6 +190,10 @@ export class TestFixtures {
         scope: options.scope ?? 'test',
         deps,
         parent,
+      }
+
+      if (isFixtureFunction(value)) {
+        Object.assign(value, { [FIXTURE_STACK_TRACE_KEY]: new Error('STACK_TRACE_ERROR') })
       }
 
       registrations.set(name, item)
@@ -291,13 +300,18 @@ export interface WithFixturesOptions {
    * Current fixtures from the context.
    */
   fixtures?: TestFixtures
+  /**
+   * The suite to use for fixture lookups.
+   * Used by beforeEach/afterEach/aroundEach hooks to pick up fixture overrides from the test's describe block.
+   */
+  suite?: Suite
 }
 
 const contextHasFixturesCache = new WeakMap<TestContext, WeakSet<TestFixtureItem>>()
 
 export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   const collector = getCurrentSuite()
-  const suite = collector.suite || collector.file
+  const suite = options?.suite || collector.suite || collector.file
   return async (hookContext?: TestContext): Promise<any> => {
     const context: (TestContext & { [key: string]: any }) | undefined = hookContext || options?.context as TestContext
 
@@ -323,7 +337,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     const usedProps = getUsedProps(fn)
 
     for (const fixture of registrations.values()) {
-      if (fixture.auto || usedProps.has(fixture.name)) {
+      if (isAutoFixture(fixture, options) || usedProps.has(fixture.name)) {
         usedFixtures.push(fixture)
       }
     }
@@ -407,6 +421,17 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
   }
 }
 
+function isAutoFixture(fixture: TestFixtureItem, options?: WithFixturesOptions): boolean {
+  if (!fixture.auto) {
+    return false
+  }
+  // suite hook doesn't automatically trigger unused test-scoped fixtures.
+  if (options?.suiteHook && fixture.scope === 'test') {
+    return false
+  }
+  return true
+}
+
 function isFixtureFunction(value: unknown): value is FixtureFn<any, any, any> {
   return typeof value === 'function'
 }
@@ -422,6 +447,7 @@ function resolveTestFixtureValue(
 
   return resolveFixtureFunction(
     fixture.value,
+    fixture.name,
     context,
     cleanupFnArray,
   )
@@ -458,6 +484,7 @@ async function resolveScopeFixtureValue(
 
   const promise = resolveFixtureFunction(
     fixture.value,
+    fixture.name,
     fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
   ).then((value) => {
@@ -474,11 +501,16 @@ async function resolveFixtureFunction(
     context: unknown,
     useFn: (arg: unknown) => Promise<void>,
   ) => Promise<void>,
+  fixtureName: string,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
+  const stackTraceError
+    = FIXTURE_STACK_TRACE_KEY in fixtureFn && fixtureFn[FIXTURE_STACK_TRACE_KEY] instanceof Error
+      ? fixtureFn[FIXTURE_STACK_TRACE_KEY]
+      : undefined
   let isUseFnArgResolved = false
 
   const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
@@ -495,6 +527,17 @@ async function resolveFixtureFunction(
       await fixtureReturn
     })
     await useReturnPromise
+  }).then(() => {
+    // fixture returned without calling use()
+    if (!isUseFnArgResolved) {
+      const error = new Error(
+        `Fixture "${fixtureName}" returned without calling "use". Make sure to call "use" in every code path of the fixture function.`,
+      )
+      if (stackTraceError?.stack) {
+        error.stack = error.message + stackTraceError.stack.replace(stackTraceError.message, '')
+      }
+      useFnArgPromise.reject(error)
+    }
   }).catch((e: unknown) => {
     // treat fixture setup error as test failure
     if (!isUseFnArgResolved) {

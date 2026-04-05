@@ -1,8 +1,8 @@
 // bar.spec.ts
 import { describe, expect, it, vi } from 'vitest'
-import { Bar } from '../../src/class-inheritence/bar'
+import { Bar } from '../../src/class-inheritance/bar'
 
-vi.mock(import('./../../src/class-inheritence/foo'))
+vi.mock(import('./../../src/class-inheritance/foo'))
 
 describe('not mocking class when parent is mocked', () => {
   describe('doSomething', () => {

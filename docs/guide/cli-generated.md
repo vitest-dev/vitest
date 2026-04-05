@@ -102,7 +102,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/reporters)
 
-Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
+Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
 ### outputFile
 
@@ -285,6 +285,20 @@ High and low watermarks for functions in the format of `<high>,<low>`
 
 Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.
 
+### coverage.excludeAfterRemap
+
+- **CLI:** `--coverage.excludeAfterRemap`
+- **Config:** [coverage.excludeAfterRemap](/config/coverage#coverage-excludeafterremap)
+
+Apply exclusions again after coverage has been remapped to original sources. (default: false)
+
+### coverage.htmlDir
+
+- **CLI:** `--coverage.htmlDir <path>`
+- **Config:** [coverage.htmlDir](/config/coverage#coverage-htmldir)
+
+Directory of HTML coverage output to be served in UI mode and HTML reporter.
+
 ### mode
 
 - **CLI:** `--mode <name>`
@@ -414,6 +428,13 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 - **Config:** [browser.trace](/config/browser/trace)
 
 Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
+
+### browser.locators.exact
+
+- **CLI:** `--browser.locators.exact`
+- **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
+
+Should locators match the text exactly by default (default: `false`)
 
 ### pool
 
@@ -853,7 +874,7 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 
 - **CLI:** `--standalone`
 
-Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)
+Start Vitest without running tests. Tests will be running only on change. If browser mode is enabled, the UI will be opened automatically. This option is ignored when CLI file filters are passed. (default: `false`)
 
 ### listTags
 
@@ -935,3 +956,10 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 - **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
+
+### experimental.vcsProvider
+
+- **CLI:** `--experimental.vcsProvider <path>`
+- **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
+
+Custom provider for detecting changed files. (default: `git`)

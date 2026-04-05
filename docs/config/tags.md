@@ -102,7 +102,7 @@ When a test has both tags, the `timeout` will be `30_000` because `flaky` has a 
 Tags can define [test options](/api/test#test-options) that will be applied to every test marked with the tag. These options are merged with the test's own options, with the test's options taking precedence.
 
 ::: warning
-The [`retry.condition`](/api/test#retry) can onle be a regexp because the config values need to be serialised.
+The [`retry.condition`](/api/test#retry) can only be a regexp because the config values need to be serialised.
 
 Tags also cannot apply other [tags](/api/test#tags) via these options.
 :::

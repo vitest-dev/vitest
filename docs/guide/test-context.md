@@ -502,7 +502,7 @@ test.describe('a nested suite', () => {
 
 Consider overriding it on the top level of the module, or by using [`injected`](#default-fixture-injected) option and providing the value in the project config.
 
-Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overriden.
+Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overridden.
 :::
 
 #### Test Scope (Default)
@@ -891,7 +891,7 @@ This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
 :::
 
 ::: tip
-Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes). Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
+Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes), including `auto` fixtures. Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
 
 ```ts
 const test = baseTest

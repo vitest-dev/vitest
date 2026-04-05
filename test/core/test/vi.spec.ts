@@ -151,6 +151,10 @@ describe('testing vi utils', () => {
       public getBar(): string {
         return this.bar
       }
+
+      static getBaz(): string {
+        return 'baz'
+      }
     }
     class FooMock implements Mocked<Foo> {
       readonly barMock: Mock<() => string> = vi.fn()
@@ -168,6 +172,8 @@ describe('testing vi utils', () => {
     if (0) {
       vi.mocked(Foo).mockImplementation(FooMock)
       vi.mocked(Foo).mockImplementation(Foo)
+      vi.mocked(Foo).getBaz.mockImplementation(() => 'baz')
+      vi.mocked(Foo, { partial: true }).getBaz.mockImplementation(() => 'baz')
     }
   })
 

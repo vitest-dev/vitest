@@ -145,7 +145,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   const runner = await initiateRunner(state, mocker, config)
   getBrowserState().runner = runner
 
-  // webdiverio context depends on the iframe state, so we need to switch the context,
+  // webdriverio context depends on the iframe state, so we need to switch the context,
   // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
   if (server.provider === 'webdriverio') {
     let switchPromise: Promise<void> | null = null

@@ -136,19 +136,21 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     // make sure the traces are finished if the test hangs
-    process.on('SIGTERM', () => {
-      if (!this.browser) {
-        return
-      }
-      const promises = []
-      for (const [trace, contextId] of this.pendingTraces.entries()) {
-        promises.push((() => {
-          const context = this.contexts.get(contextId)
-          return context?.tracing.stopChunk({ path: trace })
-        })())
-      }
-      return Promise.allSettled(promises)
-    })
+    process.on('SIGTERM', this.onSIGTERM)
+  }
+
+  private onSIGTERM = () => {
+    if (!this.browser) {
+      return
+    }
+    const promises = []
+    for (const [trace, contextId] of this.pendingTraces.entries()) {
+      promises.push((() => {
+        const context = this.contexts.get(contextId)
+        return context?.tracing.stopChunk({ path: trace })
+      })())
+    }
+    return Promise.allSettled(promises)
   }
 
   private async openBrowser(openBrowserOptions: { parallel: boolean }) {
@@ -258,7 +260,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private createMocker(): BrowserModuleMocker {
-    const idPreficates = new Map<string, (url: URL) => boolean>()
+    const idPredicates = new Map<string, (url: URL) => boolean>()
     const sessionIds = new Map<string, string[]>()
 
     function createPredicate(sessionId: string, url: string) {
@@ -294,7 +296,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const ids = sessionIds.get(sessionId) || []
       ids.push(moduleUrl.href)
       sessionIds.set(sessionId, ids)
-      idPreficates.set(predicateKey(sessionId, moduleUrl.href), predicate)
+      idPredicates.set(predicateKey(sessionId, moduleUrl.href), predicate)
       return predicate
     }
 
@@ -372,9 +374,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const key = predicateKey(sessionId, id)
-        const predicate = idPreficates.get(key)
+        const predicate = idPredicates.get(key)
         if (predicate) {
-          await page.context().unroute(predicate).finally(() => idPreficates.delete(key))
+          await page.context().unroute(predicate).finally(() => idPredicates.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
@@ -382,9 +384,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const ids = sessionIds.get(sessionId) || []
         const promises = ids.map((id) => {
           const key = predicateKey(sessionId, id)
-          const predicate = idPreficates.get(key)
+          const predicate = idPredicates.get(key)
           if (predicate) {
-            return page.context().unroute(predicate).finally(() => idPreficates.delete(key))
+            return page.context().unroute(predicate).finally(() => idPredicates.delete(key))
           }
           return null
         })
@@ -545,6 +547,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    process.off('SIGTERM', this.onSIGTERM)
+
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     if (this.browserPromise) {

@@ -159,6 +159,12 @@ export default class HTMLReporter implements Reporter {
     if (this.ctx.config.coverage.enabled && this.ctx.config.coverage.htmlDir) {
       const coverageHtmlDir = this.ctx.config.coverage.htmlDir
       const destCoverageDir = resolve(this.reporterDir, 'coverage')
+      if (coverageHtmlDir === destCoverageDir) {
+        // skip and preserve already generated coverage report.
+        // this can happen when users configures `outputFile`
+        // next to `coverage.reportsDirectory`.
+        return
+      }
       await fs.rm(destCoverageDir, { recursive: true, force: true })
       await fs.mkdir(destCoverageDir, { recursive: true })
       await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })

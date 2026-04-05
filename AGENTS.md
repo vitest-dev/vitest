@@ -35,6 +35,17 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Core directory test**: `CI=true pnpm test <test-file>` (for `test/core`)
 - **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
 
+**IMPORTANT: Do NOT use `--` when passing test filters to pnpm.**
+Using `--` causes pnpm to drop the filter, resulting in a full test run instead of a filtered one.
+
+```bash
+# WRONG - runs ALL tests (filter is ignored):
+pnpm test -- basic.test.ts -t 'expect'
+
+# CORRECT - runs only matching tests:
+pnpm test basic.test.ts -t 'expect'
+```
+
 When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchInlineSnapshot` to include the test error and its stack. If snapshot is failing, update the snapshot instead of reverting it to `toContain`.
 
 If you need to typecheck tests, run `pnpm typecheck` from the root of the workspace.
@@ -147,3 +158,13 @@ If you need to typecheck tests, run `pnpm typecheck` from the root of the worksp
 - Check existing issues and documentation
 - Review CONTRIBUTING.md for detailed guidelines
 - Follow patterns in existing code
+
+## PR Descriptions
+
+When creating a pull request, you MUST include the following HTML comment at the bottom of the PR description:
+
+```
+<!-- VITEST_AUTOMATED_PR -->
+```
+
+This allows maintainers to identify AI-assisted PRs for triage. PRs containing this marker will be automatically labeled `maybe automated` and will be closed in 3 days unless a real person confirms ownership.

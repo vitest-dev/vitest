@@ -233,7 +233,13 @@ export function parseStacktrace(
     : parseV8Stacktrace(stack)
 
   // remove assertion helper's internal stacks
-  const helperIndex = stacks.findLastIndex(s => s.method === '__VITEST_HELPER__' || s.method === 'async*__VITEST_HELPER__')
+  const helperIndex = stacks.findLastIndex(s =>
+    s.method === '__VITEST_HELPER__'
+    // firefox
+    || s.method === 'async*__VITEST_HELPER__'
+    // webkit
+    || s.method === 'async __VITEST_HELPER__',
+  )
   if (helperIndex >= 0) {
     stacks = stacks.slice(helperIndex + 1)
   }

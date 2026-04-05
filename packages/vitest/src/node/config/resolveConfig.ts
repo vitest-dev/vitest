@@ -8,12 +8,12 @@ import type {
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -23,14 +23,23 @@ import {
   defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider } from '../../utils/env'
+import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
 function resolvePath(path: string, root: string) {
+  // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
+  // /some/file
+  // /some/file.js
+  // /some/root/file
+  // /some/root/file.js
+  // etc.
+  // but we don't want to resolve files from parent directories,
+  // so we ensure passing "/" suffix such as "/some/root/"
+  // https://github.com/unjs/mlly/blob/401d42983f6f3a9112658d67b0a92ba4fb1d7efa/src/resolve.ts#L104-L110
   return normalize(
-    /* @__PURE__ */ resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
 }
@@ -494,7 +503,7 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
@@ -729,7 +738,7 @@ export function resolveConfig(
   }
 
   if (!resolved.reporters.length) {
-    resolved.reporters.push(['default', {}])
+    resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
 
     // also enable github-actions reporter as a default
     if (process.env.GITHUB_ACTIONS === 'true') {
@@ -826,6 +835,7 @@ export function resolveConfig(
 
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
+  resolved.browser.locators.exact ??= false
 
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`
@@ -950,6 +960,10 @@ export function resolveConfig(
   resolved.experimental.importDurations.thresholds.warn ??= 100
   resolved.experimental.importDurations.thresholds.danger ??= 500
 
+  if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
+    resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
+  }
+
   return resolved
 }
 
@@ -957,7 +971,7 @@ export function isBrowserEnabled(config: ResolvedConfig): boolean {
   return Boolean(config.browser?.enabled)
 }
 
-export function resolveCoverageReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
   // E.g. { reporter: "html" }
   if (!Array.isArray(configReporters)) {
     return [[configReporters, {}]]

@@ -209,7 +209,7 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
-  expect.assertions(29)
+  expect.assertions(30)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
     reporters: [
@@ -241,7 +241,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   expect(stderr).toContain('Failure screenshot')
   expect(stderr).toContain('__screenshots__/failing')
 
-  expect(stderr).toContain('Access denied to "/inaccesible/path".')
+  expect(stderr).toContain('Access denied to "/inaccessible/path".')
 
   // depending on the browser it references either `.toBe()` or `expect()`
   expect(stderr).toMatch(/failing.test.ts:11:(12|17)/)
@@ -273,6 +273,9 @@ test(`stack trace points to correct file in every browser when failed`, async ()
 
   // index() is called from a bundled file
   expect(stderr).toMatch(/failing.test.ts:39:(2|8)/)
+
+  // "not awaited but with then/catch/finally" test should not produce warnings
+  expect(stderr).not.toMatch(/failing.test.ts:4[3-8]/)
 })
 
 test('user-event', async () => {

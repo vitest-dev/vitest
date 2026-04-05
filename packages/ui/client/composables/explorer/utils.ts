@@ -43,8 +43,8 @@ export function isSlowTestTask(task: Task) {
     return false
   }
 
-  const treshold = config.value.slowTestThreshold
-  return typeof treshold === 'number' && duration > treshold
+  const threshold = config.value.slowTestThreshold
+  return typeof threshold === 'number' && duration > threshold
 }
 
 export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {

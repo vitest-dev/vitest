@@ -68,7 +68,7 @@ test('spy.mock when implementation is a normal function', () => {
   expectTypeOf(Mock).constructorParameters.toEqualTypeOf<[a: string, b?: number]>()
 })
 
-test('cann call a function mock with and without new', () => {
+test('can call a function mock with and without new', () => {
   const Mock = vi.fn(function fn(this: any) {
     this.test = true
   })

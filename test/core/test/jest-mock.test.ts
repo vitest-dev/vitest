@@ -175,8 +175,8 @@ describe('jest mock compat layer', () => {
 
     spy.mockRestore()
 
-    // Sicne Vitest 4 this is a special case where
-    // vi.fn(impl) will always return impl, unless overriden
+    // Since Vitest 4 this is a special case where
+    // vi.fn(impl) will always return impl, unless overridden
     expect(spy.getMockImplementation()).toBe(originalFn)
 
     expect(spy.mock.results).toEqual([])
