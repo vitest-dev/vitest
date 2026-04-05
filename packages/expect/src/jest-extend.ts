@@ -70,13 +70,6 @@ interface VitestErrorContext {
   meta?: object
 }
 
-function formatCustomMessage(customMessage: string | undefined, message: () => string) {
-  const generatedMessage = message()
-  return customMessage
-    ? `${customMessage}: ${generatedMessage}`
-    : generatedMessage
-}
-
 class JestExtendError extends Error {
   constructor(
     message: string,
@@ -87,6 +80,10 @@ class JestExtendError extends Error {
   ) {
     super(message)
   }
+}
+
+function formatCustomMessage(message: string, customMessage: string | undefined) {
+  return (customMessage != null ? `${customMessage}: ` : '') + message
 }
 
 function JestExtendPlugin(
@@ -113,9 +110,8 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                const errorMessage = formatCustomMessage(customMessage, message)
                 throw new JestExtendError(
-                  errorMessage,
+                  formatCustomMessage(message(), customMessage),
                   actual,
                   expected,
                   { assertionName: expectAssertionName, meta },
@@ -127,9 +123,8 @@ function JestExtendPlugin(
           const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            const errorMessage = formatCustomMessage(customMessage, message)
             throw new JestExtendError(
-              errorMessage,
+              formatCustomMessage(message(), customMessage),
               actual,
               expected,
               { assertionName: expectAssertionName, meta },
