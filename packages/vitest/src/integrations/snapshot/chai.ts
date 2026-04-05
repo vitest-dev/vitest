@@ -239,7 +239,6 @@ function toMatchSnapshotImpl(options: {
     message: options.hint,
     isInline: options.isInline,
     inlineSnapshot: options.inlineSnapshot,
-    errorMessage: undefined,
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
     // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
@@ -269,7 +268,6 @@ async function toMatchFileSnapshotImpl(options: {
   const result = getSnapshotClient().match({
     received: options.received,
     message: options.hint,
-    errorMessage: undefined,
     rawSnapshot: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
@@ -327,6 +325,8 @@ export const Snapshots = {
     return toMatchSnapshotImpl({
       assertion: this.__vitest_assertion__,
       received,
+      // `expect.extend` handles expect(..., custom) message,
+      // so avoid doubly prepend the message for custom snapshot matcher.
       includeAssertionMessage: false,
       ...normalizeArguments(propertiesOrHint, hint),
     })
