@@ -68,6 +68,20 @@ function getTest(obj: Chai.Assertion) {
   return test as Test
 }
 
+function withAssertionMessage(
+  result: SyncExpectationResult,
+  assertionMessage: string | undefined,
+): SyncExpectationResult {
+  if (!assertionMessage) {
+    return result
+  }
+
+  return {
+    ...result,
+    message: () => `${assertionMessage}: ${result.message()}`,
+  }
+}
+
 function validateAssertion(assertion: Chai.Assertion): void {
   if (chai.util.flag(assertion, 'negate')) {
     throw new Error(`${getAssertionName(assertion)} cannot be used with "not"`)
@@ -216,21 +230,23 @@ function toMatchSnapshotImpl(options: {
   validateAssertion(assertion)
   const assertionName = getAssertionName(assertion)
   const test = getTest(assertion)
-  return getSnapshotClient().match({
+  const assertionMessage = options.includeAssertionMessage === false
+    ? undefined
+    : chai.util.flag(assertion, 'message')
+  const result = getSnapshotClient().match({
     received: options.received,
     properties: options.properties,
     message: options.hint,
     isInline: options.isInline,
     inlineSnapshot: options.inlineSnapshot,
-    errorMessage: options.includeAssertionMessage === false
-      ? undefined
-      : chai.util.flag(assertion, 'message'),
+    errorMessage: undefined,
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
     // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
     error: chai.util.flag(assertion, 'error'),
     ...getTestNames(test),
   })
+  return withAssertionMessage(result, assertionMessage)
 }
 
 async function toMatchFileSnapshotImpl(options: {
@@ -247,18 +263,20 @@ async function toMatchFileSnapshotImpl(options: {
   const snapshotState = getSnapshotClient().getSnapshotState(testNames.filepath)
   const rawSnapshotFile = await snapshotState.environment.resolveRawPath(testNames.filepath, options.filepath)
   const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
-  return getSnapshotClient().match({
+  const assertionMessage = options.includeAssertionMessage === false
+    ? undefined
+    : chai.util.flag(assertion, 'message')
+  const result = getSnapshotClient().match({
     received: options.received,
     message: options.hint,
-    errorMessage: options.includeAssertionMessage === false
-      ? undefined
-      : chai.util.flag(assertion, 'message'),
+    errorMessage: undefined,
     rawSnapshot: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
     },
     ...testNames,
   })
+  return withAssertionMessage(result, assertionMessage)
 }
 
 function assertMatchResult(result: SyncExpectationResult): void {
