@@ -32,6 +32,10 @@
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
+    "./intercept-new-run-context": {
+      "types": "./dist/intercept-new-run-context.d.ts",
+      "default": "./dist/intercept-new-run-context.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -57,13 +61,15 @@
     "@bcoe/v8-coverage": "^1.0.2",
     "@vitest/utils": "workspace:*",
     "ast-v8-to-istanbul": "^1.0.0",
+    "get-port-please": "catalog:",
     "istanbul-lib-coverage": "catalog:",
     "istanbul-lib-report": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
     "obug": "catalog:",
     "std-env": "catalog:",
-    "tinyrainbow": "catalog:"
+    "tinyrainbow": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
     "@types/istanbul-lib-coverage": "catalog:",

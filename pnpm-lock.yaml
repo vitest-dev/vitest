@@ -81,6 +81,9 @@ catalogs:
     flatted:
       specifier: ^3.4.2
       version: 3.4.2
+    get-port-please:
+      specifier: ^3.2.0
+      version: 3.2.0
     istanbul-lib-coverage:
       specifier: ^3.2.2
       version: 3.2.2
@@ -702,6 +705,9 @@ importers:
       ast-v8-to-istanbul:
         specifier: ^1.0.0
         version: 1.0.0
+      get-port-please:
+        specifier: 'catalog:'
+        version: 3.2.0
       istanbul-lib-coverage:
         specifier: 'catalog:'
         version: 3.2.2
@@ -723,6 +729,9 @@ importers:
       tinyrainbow:
         specifier: 'catalog:'
         version: 3.1.0
+      ws:
+        specifier: 'catalog:'
+        version: 8.19.0
     devDependencies:
       '@types/istanbul-lib-coverage':
         specifier: 'catalog:'
@@ -7314,6 +7323,9 @@ packages:
 
   get-own-enumerable-property-symbols@3.0.2:
     resolution: {integrity: sha512-I0UBV/XOz1XkIJHEUDMZAbzCThU/H8DxmSfmdGcKPnVhu2VfFqr34jr9777IyaTYvxjedWhqVIilEDsCdP5G6g==}
+
+  get-port-please@3.2.0:
+    resolution: {integrity: sha512-I9QVvBw5U/hw3RmWpYKRumUeaDgxTPd401x364rLmWBJcOQ753eov1eTgzDqRG9bqFIfDc7gfzcQEWrUri3o1A==}
 
   get-port@7.0.0:
     resolution: {integrity: sha512-mDHFgApoQd+azgMdwylJrv2DX47ywGq1i5VFJE7fZ0dttNq3iQMfsU4IvEgBHojA3KqEudyu7Vq+oN8kNaNkWw==}
@@ -16249,6 +16261,8 @@ snapshots:
       math-intrinsics: 1.1.0
 
   get-own-enumerable-property-symbols@3.0.2: {}
+
+  get-port-please@3.2.0: {}
 
   get-port@7.0.0: {}
 

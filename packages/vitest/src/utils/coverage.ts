@@ -15,7 +15,7 @@ export interface RuntimeCoverageProviderModule {
   /**
    * Executed before tests are run in the worker thread.
    */
-  startCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
+  startCoverage?: (runtimeOptions: { isolate: boolean; trackProcessAndWorker?: boolean }) => unknown | Promise<unknown>
 
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
