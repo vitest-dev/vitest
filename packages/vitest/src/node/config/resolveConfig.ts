@@ -428,6 +428,17 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (isAgent) {
+    // default to `skipFull` and add `text-summary` reporter when `text` reporter is used on agents
+    const text = resolved.coverage.reporter.find(([name]) => name === 'text')
+    const textSummary = resolved.coverage.reporter.find(([name]) => name === 'text-summary')
+    if (text) {
+      (text as any)[1] = { skipFull: true, ...text[1] as any }
+      if (!textSummary) {
+        resolved.coverage.reporter.push(['text-summary', {}])
+      }
+    }
+  }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
   }
