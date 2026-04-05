@@ -949,7 +949,8 @@ export interface InlineConfig {
     vcsProvider?: VCSProvider | string
 
     /**
-     * TODO
+     * Parse test specifications before running them.
+     * This will apply `.only` flag and test name pattern across all files without running them.
      */
     preParse?: boolean
   }

@@ -921,7 +921,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: null,
       },
       preParse: {
-        description: 'Parse test specifications to <TODO> (default: `false`)',
+        description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
       },
     },
   },
