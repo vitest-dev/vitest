@@ -82,10 +82,6 @@ class JestExtendError extends Error {
   }
 }
 
-function formatCustomMessage(message: string, customMessage: string | undefined) {
-  return (customMessage != null ? `${customMessage}: ` : '') + message
-}
-
 function JestExtendPlugin(
   c: Chai.ChaiStatic,
   expect: ExpectStatic,
@@ -110,8 +106,9 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
+                const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
                 throw new JestExtendError(
-                  formatCustomMessage(message(), customMessage),
+                  errorMessage,
                   actual,
                   expected,
                   { assertionName: expectAssertionName, meta },
@@ -123,8 +120,9 @@ function JestExtendPlugin(
           const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
+            const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
             throw new JestExtendError(
-              formatCustomMessage(message(), customMessage),
+              errorMessage,
               actual,
               expected,
               { assertionName: expectAssertionName, meta },

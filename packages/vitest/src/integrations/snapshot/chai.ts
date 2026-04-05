@@ -109,7 +109,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         hint,
       })
       const assertPromise = resultPromise.then(result =>
-        assertMatchResult(result, chai.util.flag(this, 'message'))
+        assertMatchResult(result, chai.util.flag(this, 'message')),
       )
       return recordAsyncExpect(
         getTest(this),
@@ -255,9 +255,9 @@ async function toMatchFileSnapshotImpl(options: {
   })
 }
 
-function assertMatchResult(result: SyncExpectationResult, message?: string): void {
+function assertMatchResult(result: SyncExpectationResult, customMessage?: string): void {
   if (!result.pass) {
-    const errorMessage = (message != null ? `${message}: ` : '') + result.message()
+    const errorMessage = (customMessage ? `${customMessage}: ` : '') + result.message()
     throw Object.assign(new Error(errorMessage), {
       actual: result.actual,
       expected: result.expected,
