@@ -51,6 +51,12 @@ channel.addEventListener('message', async (e) => {
     return
   }
 
+  if (data.event.startsWith('response:')) {
+    return
+  }
+
+  let eventHandled = true
+
   switch (data.event) {
     case 'execute': {
       const { method, files, context } = data
@@ -92,15 +98,18 @@ channel.addEventListener('message', async (e) => {
       break
     }
     default: {
+      eventHandled = false
       const error = new Error(`Unknown event: ${(data as any).event}`)
       unhandledError(error, 'Unknown Event')
     }
   }
 
-  channel.postMessage({
-    event: `response:${data.event}`,
-    iframeId: getBrowserState().iframeId!,
-  })
+  if (eventHandled) {
+    channel.postMessage({
+      event: `response:${data.event}`,
+      iframeId: getBrowserState().iframeId!,
+    })
+  }
 })
 
 const url = new URL(location.href)
