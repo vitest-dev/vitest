@@ -395,7 +395,7 @@ describe('Temporal equality', () => {
 })
 
 // TODO: test expect.poll(..., { message })
-describe.only('expect with custom message', () => {
+describe('expect with custom message', () => {
   describe('built-in matchers', () => {
     test('sync matcher throws custom message on failure', () => {
       expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 to be 2 // Object.is equality]`)
@@ -416,7 +416,6 @@ describe.only('expect with custom message', () => {
     })
   })
 
-  // TODO: should prepend like chai above
   describe('custom matchers with expect.extend', () => {
     test('sync custom matcher throws custom message on failure', ({ expect }) => {
       expect.extend({
@@ -428,7 +427,7 @@ describe.only('expect with custom message', () => {
           }
         },
       })
-      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`[Error: custom message]`)
+      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`[Error: custom message: bar is foo]`)
     })
 
     test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
@@ -455,7 +454,7 @@ describe.only('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: bar is not foo]`)
     })
 
     test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
@@ -469,7 +468,7 @@ describe.only('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: foo is not foo]`)
     })
   })
 

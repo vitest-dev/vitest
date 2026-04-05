@@ -403,3 +403,57 @@ test('raw file snapshot', async () => {
   `)
   expect(result.fs.readFile('raw.txt')).toMatchInlineSnapshot(`"crazy long"`)
 })
+
+test('outer expect message is prefixed by jest-extend for Snapshots wrappers', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { test, expect, Snapshots } from 'vitest'
+
+const {
+  toMatchInlineSnapshot,
+} = Snapshots
+
+expect.extend({
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 5), inlineSnapshot)
+  },
+})
+
+test('custom snapshot matcher', () => {
+  expect('abcdefghij', 'outer message').toMatchTrimmedInlineSnapshot(\`"wrong"\`)
+})
+`,
+  })
+
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > custom snapshot matcher
+    Error: outer message: Snapshot \`custom snapshot matcher 1\` mismatched
+
+    Expected: ""wrong""
+    Received: ""abcde""
+
+     ❯ basic.test.ts:15:41
+         13|
+         14| test('custom snapshot matcher', () => {
+         15|   expect('abcdefghij', 'outer message').toMatchTrimmedInlineSnapshot(\`…
+           |                                         ^
+         16| })
+         17|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "custom snapshot matcher": Array [
+          "outer message: Snapshot \`custom snapshot matcher 1\` mismatched",
+        ],
+      },
+    }
+  `)
+})

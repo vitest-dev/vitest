@@ -210,6 +210,7 @@ function toMatchSnapshotImpl(options: {
   hint?: string
   isInline?: boolean
   inlineSnapshot?: string
+  includeAssertionMessage?: boolean
 }): SyncExpectationResult {
   const { assertion } = options
   validateAssertion(assertion)
@@ -221,7 +222,9 @@ function toMatchSnapshotImpl(options: {
     message: options.hint,
     isInline: options.isInline,
     inlineSnapshot: options.inlineSnapshot,
-    errorMessage: chai.util.flag(assertion, 'message'),
+    errorMessage: options.includeAssertionMessage === false
+      ? undefined
+      : chai.util.flag(assertion, 'message'),
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
     // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
@@ -235,6 +238,7 @@ async function toMatchFileSnapshotImpl(options: {
   received: unknown
   filepath: string
   hint?: string
+  includeAssertionMessage?: boolean
 }): Promise<SyncExpectationResult> {
   const { assertion } = options
   validateAssertion(assertion)
@@ -246,7 +250,9 @@ async function toMatchFileSnapshotImpl(options: {
   return getSnapshotClient().match({
     received: options.received,
     message: options.hint,
-    errorMessage: chai.util.flag(assertion, 'message'),
+    errorMessage: options.includeAssertionMessage === false
+      ? undefined
+      : chai.util.flag(assertion, 'message'),
     rawSnapshot: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
@@ -303,6 +309,7 @@ export const Snapshots = {
     return toMatchSnapshotImpl({
       assertion: this.__vitest_assertion__,
       received,
+      includeAssertionMessage: false,
       ...normalizeArguments(propertiesOrHint, hint),
     })
   },
@@ -337,6 +344,7 @@ export const Snapshots = {
       assertion: this.__vitest_assertion__,
       received,
       isInline: true,
+      includeAssertionMessage: false,
       ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
     })
   },
@@ -371,6 +379,7 @@ export const Snapshots = {
       received,
       filepath,
       hint,
+      includeAssertionMessage: false,
     })
   },
 }
