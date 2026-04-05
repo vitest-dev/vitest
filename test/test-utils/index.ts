@@ -1,6 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
+import type { ParsedStack, SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
@@ -242,7 +242,7 @@ export async function runVitest(
     get results() {
       return ctx?.state.getTestModules() || []
     },
-    errorTree(options?: { project?: boolean; stackTrace?: boolean }) {
+    errorTree(options?: BuildErrorTreeOptions & { project?: boolean }) {
       const modules = ctx?.state.getTestModules() || []
       const tree = options?.project
         ? buildErrorProjectTree(modules, options)
@@ -571,10 +571,15 @@ export class StableTestFileOrderSorter {
   }
 }
 
-export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
+export interface BuildErrorTreeOptions {
+  stackTrace?: boolean
+  fileLabel?: boolean
+}
+
+export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTreeOptions) {
   const root = testModules[0]?.project.config.root
 
-  function mapError(e: { message: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+  function mapError(e: { message: string; stacks?: ParsedStack[] }) {
     if (options?.stackTrace) {
       const stacks = (e.stacks || []).map((s) => {
         const loc = `${relative(root, s.file)}:${s.line}:${s.column}`
@@ -614,6 +619,7 @@ export function buildErrorTree(testModules: TestModule[], options?: { stackTrace
       }
       return moduleChildren
     },
+    options?.fileLabel ? module => `${module.relativeModuleId} (${module.meta().label})` : undefined,
   )
 }
 
@@ -622,6 +628,7 @@ export function buildTestTree(
   onTestCase?: (result: TestCase) => unknown,
   onTestSuite?: (testSuite: TestSuite, suiteChildren: Record<string, any>) => unknown,
   onTestModule?: (testModule: TestModule, moduleChildren: Record<string, any>) => unknown,
+  onTestModuleKey?: (testModule: TestModule) => string,
 ) {
   type TestTree = Record<string, any>
 
@@ -652,7 +659,7 @@ export function buildTestTree(
 
   for (const module of testModules) {
     // Use relative module ID for cleaner output
-    const key = module.relativeModuleId
+    const key = onTestModuleKey ? onTestModuleKey(module) : module.relativeModuleId
     const moduleChildren = walkCollection(module.children)
     tree[key] = onTestModule ? onTestModule(module, moduleChildren) : moduleChildren
   }
@@ -674,7 +681,7 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
   return projectTree
 }
 
-export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
+export function buildErrorProjectTree(testModules: TestModule[], options?: BuildErrorTreeOptions) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {

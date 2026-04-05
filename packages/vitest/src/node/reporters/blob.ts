@@ -7,6 +7,7 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
@@ -50,9 +51,12 @@ export class BlobReporter implements Reporter {
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
       const shard = this.ctx.config.shard
-      outputFile = shard
-        ? `.vitest-reports/blob-${shard.index}-${shard.count}.json`
-        : '.vitest-reports/blob.json'
+      const filename = [
+        'blob',
+        this.ctx.config.label,
+        shard && `${shard.index}-${shard.count}`,
+      ].filter(Boolean).join('-')
+      outputFile = `.vitest-reports/${sanitizeFilePath(filename)}.json`
     }
 
     const environmentModules: MergeReportEnvironmentModules = {}

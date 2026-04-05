@@ -144,9 +144,10 @@ on:
       - main
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
@@ -162,13 +163,13 @@ jobs:
         run: pnpm i
 
       - name: Run tests
-        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --label=${{ matrix.os }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ matrix.shardIndex }}
+          name: blob-report-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest-reports/*
           include-hidden-files: true
           retention-days: 1
@@ -177,7 +178,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-attachments-${{ matrix.shardIndex }}
+          name: blob-attachments-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest-attachments/**
           include-hidden-files: true
           retention-days: 1

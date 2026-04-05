@@ -110,6 +110,7 @@ declare module '@vitest/runner' {
   interface TaskMeta {
     typecheck?: boolean
     benchmark?: boolean
+    label?: string
   }
 
   interface File {

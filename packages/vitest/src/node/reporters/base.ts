@@ -335,6 +335,11 @@ export abstract class BaseReporter implements Reporter {
       title += ` ${c.bgBlue(c.bold(' TS '))}`
     }
 
+    const label = entity.task.file.meta.label
+    if (label) {
+      title += ` ${c.bgCyan(c.bold(` ${label} `))}`
+    }
+
     return title
   }
 
@@ -936,8 +941,9 @@ export abstract class BaseReporter implements Reporter {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
         }
 
+        const label = task.file?.meta?.label
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${label ? `${c.bgCyan(c.bold(` ${label} `))} ` : ''}${name}`,
         )
       }
 
