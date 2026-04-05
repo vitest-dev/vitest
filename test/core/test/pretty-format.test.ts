@@ -1,4 +1,7 @@
+import { inspect as nodeInspect } from 'node:util'
 import { format, plugins } from '@vitest/pretty-format'
+import { inspect as prettyInspect } from '@vitest/utils/display'
+import { inspect as loupeInspect } from 'loupe'
 import { describe, expect, test } from 'vitest'
 
 describe('maxOutputLength', () => {
@@ -886,6 +889,93 @@ describe('escapeRegex option', () => {
   })
 })
 
+describe('singleQuote option', () => {
+  test('uses double quotes by default', () => {
+    expect(format('hello')).toMatchInlineSnapshot(`""hello""`)
+  })
+
+  test('uses single quotes when true', () => {
+    expect(format('hello', { singleQuote: true })).toMatchInlineSnapshot(`"'hello'"`)
+  })
+
+  test('escapes single quotes inside string when singleQuote + escapeString', () => {
+    expect(format('it\'s', { singleQuote: true })).toMatchInlineSnapshot(`"'it\\'s'"`)
+  })
+
+  test('escapes backslash when singleQuote + escapeString', () => {
+    expect(format('a\\b', { singleQuote: true })).toMatchInlineSnapshot(`"'a\\\\b'"`)
+  })
+
+  test('does not escape double quotes when singleQuote', () => {
+    expect(format('say "hi"', { singleQuote: true })).toMatchInlineSnapshot(`"'say "hi"'"`)
+  })
+
+  test('applies to object values', () => {
+    expect(format({ a: 'b' }, { singleQuote: true, min: true })).toMatchInlineSnapshot(
+      `"{'a': 'b'}"`,
+    )
+  })
+
+  test('applies to Map keys and values', () => {
+    expect(format(new Map([['k', 'v']]), { singleQuote: true, min: true })).toMatchInlineSnapshot(
+      `"Map {'k' => 'v'}"`,
+    )
+  })
+})
+
+describe('quoteKeys option', () => {
+  test('quotes all keys by default', () => {
+    expect(format({ a: 1 }, { min: true })).toMatchInlineSnapshot(`"{"a": 1}"`)
+  })
+
+  test('does not quote valid identifiers when false', () => {
+    expect(format({ a: 1, foo_bar: 2, $x: 3 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{$x: 3, a: 1, foo_bar: 2}"`,
+    )
+  })
+
+  test('still quotes non-identifier keys when false', () => {
+    expect(format({ 'has space': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"has space": 1}"`,
+    )
+  })
+
+  test('still quotes keys starting with digit when false', () => {
+    expect(format({ '0abc': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"0abc": 1}"`,
+    )
+  })
+
+  test('still quotes empty key when false', () => {
+    expect(format({ '': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"": 1}"`,
+    )
+  })
+
+  test('still quotes key with dash when false', () => {
+    expect(format({ 'my-key': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
+      `"{"my-key": 1}"`,
+    )
+  })
+})
+
+describe('spacingInner / spacingOuter options', () => {
+  test('min: true defaults', () => {
+    // min: true → spacingInner: ' ', spacingOuter: ''
+    expect(format({ a: 1, b: 2 }, { min: true })).toMatchInlineSnapshot(`"{"a": 1, "b": 2}"`)
+  })
+
+  test('spacingOuter override with min: true', () => {
+    // override spacingOuter to add space around braces (loupe-like)
+    expect(format({ a: 1 }, { min: true, spacingOuter: ' ' })).toMatchInlineSnapshot(`"{ "a": 1 }"`)
+  })
+
+  test('spacingInner override', () => {
+    // min: true still places comma before spacingInner
+    expect(format([1, 2], { min: true, spacingInner: ' | ' })).toMatchInlineSnapshot(`"[1, | 2]"`)
+  })
+})
+
 describe('ErrorPlugin', () => {
   test('Error with message', () => {
     const err = new Error('boom')
@@ -990,13 +1080,288 @@ describe('plugins', () => {
   })
 })
 
-// -- validation --
-
 describe('validation', () => {
   test('throws on unknown option', () => {
     expect(() => {
       // @ts-expect-error testing runtime
       format({}, { badOption: true })
     }).toThrowErrorMatchingInlineSnapshot(`[Error: pretty-format: Unknown option "badOption".]`)
+  })
+})
+
+// -- prettyInspect --
+
+describe('prettyInspect', () => {
+  test('no truncation by default (truncate: 0)', () => {
+    const long = 'a'.repeat(200)
+    expect(prettyInspect(long)).toBe(`'${long}'`)
+    expect(prettyInspect(long, { truncate: 0 })).toBe(`'${long}'`)
+  })
+
+  test('no truncation when value fits within threshold', () => {
+    expect(prettyInspect('short', { truncate: 100 })).toMatchInlineSnapshot(`"'short'"`)
+  })
+
+  test('truncates string', () => {
+    const long = '0123456789012345678901234567890123456789'
+    expect(prettyInspect(long, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
+  })
+
+  test('truncates surragete pair correctly', () => {
+    expect(prettyInspect('😀'.repeat(5), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀'"`)
+    expect(prettyInspect('😀'.repeat(6), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀'"`)
+    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
+    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(5)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀'"`)
+    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+  })
+
+  test('truncates array', () => {
+    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+  })
+
+  test('truncates object', () => {
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toMatchInlineSnapshot(`"{ Object (a, b, ...) }"`)
+  })
+
+  test('truncate other types', () => {
+    expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 5 })).toMatchInlineSnapshot(`"[Map]"`)
+    expect(prettyInspect(new Set([1, 2, 3]), { truncate: 5 })).toMatchInlineSnapshot(`"[Set]"`)
+  })
+
+  test('multiline', () => {
+    expect(prettyInspect({ a: 1, b: 2 }, { multiline: true })).toMatchInlineSnapshot(`
+      "{
+        a: 1,
+        b: 2,
+      }"
+    `)
+  })
+})
+
+// -- three-way inspect comparison --
+// Compare prettyInspect output against node's util.inspect and loupe.inspect.
+// Organized by agreement pattern to show where outputs align or diverge.
+
+describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
+  const nodeOpts = { depth: null, maxArrayLength: null } // depth 2 by default
+
+  // -- all three agree --
+
+  test.for([
+    null,
+    undefined,
+    true,
+    false,
+    -0,
+    42,
+    -123,
+    3.14,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    123n,
+    -123n,
+    'hello',
+    '',
+    /test/gi,
+    new Date(10e11),
+    Symbol('test'),
+    {},
+    [],
+    [1, 2, 3],
+    [[1], [2]],
+    { a: 1, b: 2 },
+    { b: 1, a: 2 },
+    { a: { b: { c: 1 } } },
+    [{ a: 1 }, { b: 2 }],
+  ])('all three match: %s', (val) => {
+    const result = prettyInspect(val)
+    expect(result).toBe(nodeInspect(val, nodeOpts))
+    expect(result).toBe(loupeInspect(val))
+  })
+
+  // -- prettyInspect matches node, diverges from loupe --
+
+  test('custom class — matches node (loupe omits space before brace)', () => {
+    class CustomClass {
+      public key: string
+      constructor() {
+        this.key = 'value'
+      }
+    }
+    expect(prettyInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+    expect(nodeInspect(new CustomClass(), nodeOpts)).toMatchInlineSnapshot(`"CustomClass { key: 'value' }"`)
+    expect(loupeInspect(new CustomClass())).toMatchInlineSnapshot(`"CustomClass{ key: 'value' }"`)
+  })
+
+  test('0 — matches node (loupe shows +0)', () => {
+    expect(prettyInspect(0)).toMatchInlineSnapshot(`"0"`)
+    expect(nodeInspect(0)).toMatchInlineSnapshot(`"0"`)
+    expect(loupeInspect(0)).toMatchInlineSnapshot(`"+0"`)
+  })
+
+  test('non-enumerable properties — matches node (loupe shows them via getOwnPropertyNames)', () => {
+    const val = { visible: true }
+    Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(nodeInspect(val, nodeOpts)).toMatchInlineSnapshot(`"{ visible: true }"`)
+    expect(loupeInspect(val)).toMatchInlineSnapshot(`"{ visible: true, hidden: 'secret' }"`)
+  })
+
+  // -- prettyInspect diverges from both --
+
+  test('string with single quotes — no escaping (escapeString: false)', () => {
+    expect(prettyInspect('it\'s')).toMatchInlineSnapshot(`"'it's'"`)
+    expect(nodeInspect('it\'s')).toMatchInlineSnapshot(`""it's""`)
+    expect(loupeInspect('it\'s')).toMatchInlineSnapshot(`"'it\\'s'"`)
+  })
+
+  test('named function — format differences', () => {
+    function myFn() {}
+    expect(prettyInspect(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
+    expect(nodeInspect(myFn)).toMatchInlineSnapshot(`"[Function: myFn]"`)
+    expect(loupeInspect(myFn)).toMatchInlineSnapshot(`"[Function myFn]"`)
+  })
+
+  test('anonymous function', () => {
+    expect(prettyInspect((() => {}) as unknown)).toMatchInlineSnapshot(`"[Function anonymous]"`)
+    expect(nodeInspect(() => {})).toMatchInlineSnapshot(`"[Function (anonymous)]"`)
+    expect(loupeInspect(() => {})).toMatchInlineSnapshot(`"[Function]"`)
+  })
+
+  test('async function — loses AsyncFunction tag', () => {
+    async function asyncFn() {}
+    expect(prettyInspect(asyncFn)).toMatchInlineSnapshot(`"[Function asyncFn]"`)
+    expect(nodeInspect(asyncFn)).toMatchInlineSnapshot(`"[AsyncFunction: asyncFn]"`)
+    expect(loupeInspect(asyncFn)).toMatchInlineSnapshot(`"[AsyncFunction asyncFn]"`)
+  })
+
+  test('generator function — loses GeneratorFunction tag', () => {
+    function* genFn() {
+      yield 1
+    }
+    expect(prettyInspect(genFn)).toMatchInlineSnapshot(`"[Function genFn]"`)
+    expect(nodeInspect(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction: genFn]"`)
+    expect(loupeInspect(genFn)).toMatchInlineSnapshot(`"[GeneratorFunction genFn]"`)
+  })
+
+  test('Error — bracket format', () => {
+    expect(prettyInspect(new Error('boom'))).toMatchInlineSnapshot(`"[Error: boom]"`)
+    expect(nodeInspect(new Error('boom'))).toMatch('Error: boom\n')
+    expect(loupeInspect(new Error('boom'))).toMatchInlineSnapshot(`"Error: boom"`)
+  })
+
+  test('Map — space before brace, no size prefix', () => {
+    const m = new Map([['a', 1], ['b', 2]])
+    expect(prettyInspect(m)).toMatchInlineSnapshot(`"Map { 'a' => 1, 'b' => 2 }"`)
+    expect(nodeInspect(m)).toMatchInlineSnapshot(`"Map(2) { 'a' => 1, 'b' => 2 }"`)
+    expect(loupeInspect(m)).toMatchInlineSnapshot(`"Map{ 'a' => 1, 'b' => 2 }"`)
+  })
+
+  test('Set — space before brace, no size prefix', () => {
+    const s = new Set([1, 2, 3])
+    expect(prettyInspect(s)).toMatchInlineSnapshot(`"Set { 1, 2, 3 }"`)
+    expect(nodeInspect(s)).toMatchInlineSnapshot(`"Set(3) { 1, 2, 3 }"`)
+    expect(loupeInspect(s)).toMatchInlineSnapshot(`"Set{ 1, 2, 3 }"`)
+  })
+
+  test('circular reference — no ref labels', () => {
+    const val: any = {}
+    val.self = val
+    expect(prettyInspect(val)).toMatchInlineSnapshot(`"{ self: [Circular] }"`)
+    expect(nodeInspect(val)).toMatchInlineSnapshot(`"<ref *1> { self: [Circular *1] }"`)
+    // loupe: would need circular-safe call, skip
+  })
+
+  test('WeakMap', () => {
+    expect(prettyInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap {}"`)
+    expect(nodeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap { <items unknown> }"`)
+    expect(loupeInspect(new WeakMap())).toMatchInlineSnapshot(`"WeakMap{…}"`)
+  })
+
+  test('WeakSet', () => {
+    expect(prettyInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet {}"`)
+    expect(nodeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet { <items unknown> }"`)
+    expect(loupeInspect(new WeakSet())).toMatchInlineSnapshot(`"WeakSet{…}"`)
+  })
+
+  test('Promise', () => {
+    expect(prettyInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise {}"`)
+    expect(nodeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise { undefined }"`)
+    expect(loupeInspect(Promise.resolve())).toMatchInlineSnapshot(`"Promise{…}"`)
+  })
+
+  // -- truncation (prettyInspect vs loupe only) --
+  // loupe threads a character budget through recursion, truncating structurally.
+  // prettyInspect does surface-level truncation (structural summary for containers).
+
+  describe('truncation', () => {
+    test('short string — both fit', () => {
+      expect(prettyInspect('hi', { truncate: 40 })).toMatchInlineSnapshot(`"'hi'"`)
+      expect(loupeInspect('hi', { truncate: 40 })).toMatchInlineSnapshot(`"'hi'"`)
+    })
+
+    test('long string', () => {
+      const s = '0123456789012345678901234567890123456789'
+      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
+      expect(loupeInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'01234567890123456…'"`)
+    })
+
+    test('short array — both fit', () => {
+      expect(prettyInspect([1, 2, 3], { truncate: 40 })).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
+      expect(loupeInspect([1, 2, 3], { truncate: 40 })).toMatchInlineSnapshot(`"[ 1, 2, 3 ]"`)
+    })
+
+    test('long array', () => {
+      const arr = [1, 2, 3, 4, 5]
+      expect(prettyInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(loupeInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ 1, 2, …(3) ]"`)
+    })
+
+    test('array with long string values', () => {
+      const arr = ['one', 'two', 'three', 'four', 'five']
+      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(loupeInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', …(1) ]"`)
+    })
+
+    test('short object — both fit', () => {
+      expect(prettyInspect({ a: 1 }, { truncate: 40 })).toMatchInlineSnapshot(`"{ a: 1 }"`)
+      expect(loupeInspect({ a: 1 }, { truncate: 40 })).toMatchInlineSnapshot(`"{ a: 1 }"`)
+    })
+
+    test('long object', () => {
+      const obj = { one: 1, two: 2, three: 3, four: 4, five: 5 }
+      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ Object (one, two, ...) }"`)
+      expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
+    })
+
+    test('nested object — stringify adaptive maxDepth halves depth until it fits', () => {
+      const obj = { a: { b: { c: 'deep' } } }
+      // full output is "{ a: { b: { c: 'deep' } } }" (28 chars)
+      // stringify halves maxDepth, collapsing inner object to [Object]
+      expect(prettyInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: [Object] }"`)
+      expect(loupeInspect(obj, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: { …(1) } }"`)
+    })
+
+    test('Map', () => {
+      const m = new Map([['a', 1], ['b', 2], ['c', 3]])
+      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"[Map]"`)
+      expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
+    })
+
+    test('Set', () => {
+      const s = new Set([1, 2, 3, 4, 5])
+      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"[Set]"`)
+      expect(loupeInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set{ 1, …(4) }"`)
+    })
+
+    test('function', () => {
+      function myLongFunctionName() {}
+      expect(prettyInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function myLongFunctionName]"`)
+      expect(loupeInspect(myLongFunctionName, { truncate: 10 })).toMatchInlineSnapshot(`"[Function …]"`)
+    })
   })
 })

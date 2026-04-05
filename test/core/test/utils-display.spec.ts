@@ -74,11 +74,11 @@ describe('format', () => {
     ['%%', 'string'],
     ['prefix', Symbol('test')],
   ])('format(%s)', (formatString, ...args) => {
-    expect(format(formatString, ...args), `failed ${formatString}`).toBe(util.format(formatString, ...args))
+    expect(format([formatString, ...args]), `failed ${formatString}`).toBe(util.format(formatString, ...args))
   })
 
   test('cannot serialize some values', () => {
-    expect(() => format('%j', 100n)).toThrowErrorMatchingInlineSnapshot(`[TypeError: Do not know how to serialize a BigInt]`)
+    expect(() => format(['%j', 100n])).toThrowErrorMatchingInlineSnapshot(`[TypeError: Do not know how to serialize a BigInt]`)
   })
 
   test.each(
@@ -105,6 +105,6 @@ describe('format', () => {
       },
     ],
   )('formats objects $name (loupe doesn\'t respect depth)', ({ args, result }) => {
-    expect(format(...args)).toBe(result)
+    expect(format(args)).toBe(result)
   })
 })

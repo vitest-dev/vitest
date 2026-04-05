@@ -32,7 +32,7 @@ export type CompareKeys = ((a: string, b: string) => number) | null | undefined
 type RequiredOptions = Required<PrettyFormatOptions>
 
 export interface Options
-  extends Omit<RequiredOptions, 'compareKeys' | 'theme'> {
+  extends Omit<RequiredOptions, 'compareKeys' | 'theme' | 'spacingInner' | 'spacingOuter'> {
   compareKeys: CompareKeys
   theme: Theme
 }
@@ -111,6 +111,10 @@ export interface PrettyFormatOptions {
    * @default []
    */
   plugins?: Plugins
+  spacingInner?: string
+  spacingOuter?: string
+  singleQuote?: boolean
+  quoteKeys?: boolean
 }
 
 export type OptionsReceived = PrettyFormatOptions
@@ -131,6 +135,8 @@ export interface Config {
   printShadowRoot: boolean
   spacingInner: string
   spacingOuter: string
+  singleQuote: boolean
+  quoteKeys: boolean
   maxOutputLength: number
   /**
    * Per-depth budget accumulator for {@link maxOutputLength}.
