@@ -193,7 +193,7 @@ To improve user experience, Vitest will now start running the matched files when
 $ vitest --standalone math.test.ts
 ```
 
-This allows users to create re-usable `package.json` scripts for standalone mode.
+This allows users to create reusable `package.json` scripts for standalone mode.
 
 ::: code-group
 ```json [package.json]
