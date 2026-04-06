@@ -1,7 +1,5 @@
 import { expect, test } from 'vitest'
-import { kvAdapter } from '../domain/basic'
-
-expect.addSnapshotDomain(kvAdapter)
+import "../domain/basic-extend"
 
 // --- TEST CASES ---
 test('stable', async () => {
@@ -9,10 +7,10 @@ test('stable', async () => {
   await expect.poll(() => {
     trial++
     return { name: 'a', age: '23' }
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     name=a
     age=23
-  `, 'kv')
+  `)
   expect(trial).toBe(2)
 })
 
@@ -24,10 +22,10 @@ test('throw then stable', async () => {
       throw new Error(`Fail at ${trial}`)
     }
     return { name: 'b', age: '23' }
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     name=b
     age=23
-  `, 'kv')
+  `)
   expect(trial).toBe(5)
 })
 
@@ -37,38 +35,38 @@ test('unstable then stable', async () => {
     trial++
     if (trial <= 3) return { status: 'loading', trial } // unstable
     return { status: 'done' } // then stable
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     status=done
-  `, 'kv')
+  `)
   expect(trial).toBe(5)
 })
 
 test('multiple poll snapshots', async () => {
   await expect.poll(() => {
     return { x: '1' }
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     x=1
-  `, 'kv')
+  `)
 
   await expect.poll(() => {
     return { y: '2' }
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     y=2
-  `, 'kv')
+  `)
 })
 
 test('non-poll alongside poll', async () => {
-  expect({ static: 'value' }).toMatchDomainInlineSnapshot(`
+  expect({ static: 'value' }).toMatchKvInlineSnapshot(`
     static=value
-  `, 'kv')
+  `)
 
   await expect.poll(() => {
     return { polled: 'value' }
-  }, { interval: 10 }).toMatchDomainInlineSnapshot(`
+  }, { interval: 10 }).toMatchKvInlineSnapshot(`
     polled=value
-  `, 'kv')
+  `)
 
-  expect({ another: 'static' }).toMatchDomainInlineSnapshot(`
+  expect({ another: 'static' }).toMatchKvInlineSnapshot(`
     another=static
-  `, 'kv')
+  `)
 })

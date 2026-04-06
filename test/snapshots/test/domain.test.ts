@@ -95,13 +95,13 @@ test('domain snapshot', async () => {
     - status=active
     + status=inactive
 
-     ❯ basic.test.ts:11:71
-          9|
-         10| test('with regex', () => {
-         11|   expect({ name: 'bob', age: '24', score: '42', status: 'inactive' }).…
+     ❯ basic.test.ts:9:71
+          7|
+          8| test('with regex', () => {
+          9|   expect({ name: 'bob', age: '24', score: '42', status: 'inactive' }).…
            |                                                                       ^
-         12| })
-         13|
+         10| })
+         11|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -167,7 +167,7 @@ test('domain parseExpected error', async () => {
          35|       }
          36|       const key = line.slice(0, eq)
      ❯ Object.parseExpected ../domain/basic.ts:31:46
-     ❯ basic.test.ts:7:40
+     ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:17:34
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -181,7 +181,7 @@ test('domain parseExpected error', async () => {
          35|       }
          36|       const key = line.slice(0, eq)
      ❯ Object.parseExpected ../domain/basic.ts:31:46
-     ❯ basic.test.ts:11:40
+     ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:23:40
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 

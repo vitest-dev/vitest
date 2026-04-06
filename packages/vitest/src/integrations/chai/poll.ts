@@ -5,15 +5,6 @@ import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
-// these matchers own their poll lifecycle (probe/commit split)
-// poll.ts skips fn() and retry — the matcher calls poll() internally
-const snapshotPollMatchers = [
-  'toMatchDomainSnapshot',
-  'toMatchDomainInlineSnapshot',
-  'toMatchAriaSnapshot',
-  'toMatchAriaInlineSnapshot',
-]
-
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
@@ -69,7 +60,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
-    // injected so that snapshot pollAssertDomain can take over poll implementation.
+    // injected so that domain snapshot can take over poll implementation.
     chai.util.flag(assertion, '_poll.fn', fn)
     chai.util.flag(assertion, '_poll.timeout', timeout)
     chai.util.flag(assertion, '_poll.interval', interval)
@@ -121,8 +112,15 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
-            // for now, domain snapshot owns polling logic. to be consolidated later.
-            if (typeof key === 'string' && snapshotPollMatchers.includes(key)) {
+            // We use `matcher.__vitest_poll_takeover__` flag
+            // to let domain snapshot matchers take over polling logic.
+            // this is not public API yet.
+            // Need to use `getOwnPropertyDescriptor` since otherwise chai proxy breaks.
+            const pollTakeover = Object.getOwnPropertyDescriptor(
+              assertionFunction,
+              '__vitest_poll_takeover__',
+            )?.value
+            if (pollTakeover) {
               try {
                 const output = await assertionFunction.call(assertion, ...args)
                 await onSettled?.({ assertion, status: 'pass' })

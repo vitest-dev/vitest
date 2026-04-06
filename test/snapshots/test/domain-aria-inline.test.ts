@@ -16,7 +16,6 @@ test('aria inline snapshot', async () => {
 
   // purge inline snapshots to empty strings, restore test values
   editFile(testFile, s => s
-    .replace(/toMatchDomainInlineSnapshot\(`[^`]*`/g, 'toMatchDomainInlineSnapshot(``')
     .replace(/toMatchAriaInlineSnapshot\(`[^`]*`/g, 'toMatchAriaInlineSnapshot('))
 
   // create snapshots from scratch

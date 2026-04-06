@@ -11,7 +11,8 @@ import { getWorkerState } from '../runtime/utils'
 
 export { environments as builtinEnvironments } from '../integrations/env/index'
 export { populateGlobal } from '../integrations/env/utils'
-export { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from '../integrations/snapshot/chai'
+// TODO: `vitest/runtime` cannot be imported on browser mode
+export { toMatchDomainInlineSnapshot, toMatchDomainSnapshot, toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from '../integrations/snapshot/chai'
 export { VitestNodeSnapshotEnvironment as VitestSnapshotEnvironment } from '../integrations/snapshot/environments/node'
 export type {
   Environment,

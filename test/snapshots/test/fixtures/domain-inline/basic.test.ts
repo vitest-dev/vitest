@@ -1,20 +1,17 @@
 import { expect, test } from 'vitest'
-import { kvAdapter } from '../domain/basic'
+import "../domain/basic-extend"
 
-expect.addSnapshotDomain(kvAdapter)
-
-// --- TEST CASES ---
 test('all literal', () => {
-  expect({ name: 'alice', age: '30' }).toMatchDomainInlineSnapshot(`
+  expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(`
     name=alice
     age=30
-  `, 'kv')
+  `)
 })
 
 test('with regex', () => {
-  expect({ name: 'bob', score: '999', status: 'active' }).toMatchDomainInlineSnapshot(`
+  expect({ name: 'bob', score: '999', status: 'active' }).toMatchKvInlineSnapshot(`
     name=bob
-    score=/\\d+/
+    score=999
     status=active
-  `, 'kv')
+  `)
 })

@@ -1,3 +1,4 @@
+import type { MatchersObject } from '@vitest/expect'
 import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
 import type {
   AriaNode,
@@ -10,8 +11,9 @@ import {
   renderAriaTemplate,
   renderAriaTree,
 } from 'ivya/aria'
+import { toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest/internal/browser'
 
-export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
+const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',
 
   capture(received) {
@@ -54,4 +56,19 @@ export const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNo
 // ensure newlines for diff/snapshot readability
 function wrapNewlines(s: string) {
   return `\n${s}\n`
+}
+
+export const ariaMatchers: MatchersObject = {
+  toMatchAriaSnapshot(actual: unknown) {
+    return toMatchDomainSnapshot.call(this, ariaSnapshotAdapter, actual)
+  },
+  toMatchAriaInlineSnapshot(actual: Element, inlineSnapshot?: string) {
+    return toMatchDomainInlineSnapshot.call(this, ariaSnapshotAdapter, actual, inlineSnapshot)
+  },
+}
+
+for (const matcher of Object.values(ariaMatchers)) {
+  Object.assign(matcher, {
+    __vitest_poll_takeover__: true,
+  })
 }
