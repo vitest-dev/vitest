@@ -326,17 +326,18 @@ export class IframeOrchestrator {
     // enable scaling only when using the UI, without UI the iframe fills the page
     if (config.browser.ui) {
       if (config.browser.name !== 'firefox') {
-        iframe.style.setProperty('transform', 'scale(min(1, calc(100cqw / var(--viewport-width))))')
+        iframe.style.setProperty('transform', 'scale(min(1, calc(100cqw / var(--viewport-width)), calc(100cqh / var(--viewport-height))))')
       }
       else {
         // Firefox cannot resolve relative units like `cqw` directly inside `atan2()`
         // Storing it in a CSS variable first forces Firefox to resolve `100cqw` to an absolute pixel value
         iframe.style.setProperty('--container-width', '100cqw')
+        iframe.style.setProperty('--container-height', '100cqh')
         // Firefox does not support typed arithmetic (divisions between typed values): https://bugzilla.mozilla.org/show_bug.cgi?id=1264520
         // `tan(atan2(a, b))` produces a unit-less `a / b` ratio:
         //  - `atan2()` accepts two lengths and returns an `<angle>`
         //  - `tan()` converts it back to a unit-less `<number>`
-        iframe.style.setProperty('transform', 'scale(min(1, tan(atan2(var(--container-width), var(--viewport-width)))))')
+        iframe.style.setProperty('transform', 'scale(min(1, tan(atan2(var(--container-width), var(--viewport-width))), tan(atan2(var(--container-height), var(--viewport-height)))))')
       }
 
       iframe.style.setProperty('transform-origin', 'top left')

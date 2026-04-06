@@ -237,3 +237,9 @@ html.dark {
   inherits: false;
   initial-value: 0px;
 }
+
+@property --container-height {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
