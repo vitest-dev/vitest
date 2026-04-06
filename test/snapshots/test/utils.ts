@@ -1,6 +1,6 @@
 export function extractInlineSnaphsots(code: string) {
   const matches = Array.from(
-    code.matchAll(/\.toMatch(\w+)InlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
+    code.matchAll(/\.toMatch(\w*)InlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
   )
   const snapshots = matches.map((match) => {
     const end = match.index! + match[0].length

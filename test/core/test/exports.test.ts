@@ -19,6 +19,7 @@ it('exports snapshot', async ({ skip, task }) => {
       ".": {
         "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
+        "Snapshots": "object",
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",
@@ -170,11 +171,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "__INTERNAL": "object",
         "builtinEnvironments": "object",
         "populateGlobal": "function",
-        "toMatchDomainInlineSnapshot": "function",
-        "toMatchDomainSnapshot": "function",
-        "toMatchFileSnapshot": "function",
-        "toMatchInlineSnapshot": "function",
-        "toMatchSnapshot": "function",
       },
       "./snapshot": {
         "VitestSnapshotEnvironment": "function",
