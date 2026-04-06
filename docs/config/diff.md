@@ -54,16 +54,16 @@ export default {
 
 ## diff.expand
 
-- **Type**: `boolean`
-- **Default**: `true`
+- **Type:**: `boolean`
+- **Default:** `true`
 - **CLI:** `--diff.expand=false`
 
 Expand all common lines.
 
 ## diff.truncateThreshold
 
-- **Type**: `number`
-- **Default**: `0`
+- **Type:**: `number`
+- **Default:** `0`
 - **CLI:** `--diff.truncateThreshold=<path>`
 
 The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
@@ -71,29 +71,29 @@ Truncation won't take effect with default value 0.
 
 ## diff.truncateAnnotation
 
-- **Type**: `string`
-- **Default**: `'... Diff result is truncated'`
+- **Type:**: `string`
+- **Default:** `'... Diff result is truncated'`
 - **CLI:** `--diff.truncateAnnotation=<annotation>`
 
 Annotation that is output at the end of diff result if it's truncated.
 
 ## diff.truncateAnnotationColor
 
-- **Type**: `DiffOptionsColor = (arg: string) => string`
-- **Default**: `noColor = (string: string): string => string`
+- **Type:**: `DiffOptionsColor = (arg: string) => string`
+- **Default:** `noColor = (string: string): string => string`
 
 Color of truncate annotation, default is output with no color.
 
 ## diff.printBasicPrototype
 
-- **Type**: `boolean`
-- **Default**: `false`
+- **Type:**: `boolean`
+- **Default:** `false`
 
-Print basic prototype `Object` and `Array` in diff output
+Print basic prototype `Object` and `Array` in diff output.
 
 ## diff.maxDepth
 
-- **Type**: `number`
-- **Default**: `20` (or `8` when comparing different types)
+- **Type:**: `number`
+- **Default:** `20` (or `8` when comparing different types)
 
-Limit the depth to recurse when printing nested objects
+Limit the depth to recurse when printing nested objects.

@@ -992,7 +992,7 @@ test('spy function', () => {
 
 ## toHaveBeenCalledTimes
 
-- **Type**: `(amount: number) => Awaitable<void>`
+- **Type:**: `(amount: number) => Awaitable<void>`
 
 This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
 
@@ -1017,7 +1017,7 @@ test('spy function called two times', () => {
 
 ## toHaveBeenCalledWith
 
-- **Type**: `(...args: any[]) => Awaitable<void>`
+- **Type:**: `(...args: any[]) => Awaitable<void>`
 
 This assertion checks if a function was called at least once with certain parameters. Requires a spy function to be passed to `expect`.
 
@@ -1043,7 +1043,7 @@ test('spy function', () => {
 
 ## toHaveBeenCalledBefore
 
-- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+- **Type:**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
 This assertion checks if a `Mock` was called before another `Mock`.
 
@@ -1062,7 +1062,7 @@ test('calls mock1 before mock2', () => {
 
 ## toHaveBeenCalledAfter
 
-- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+- **Type:**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
 This assertion checks if a `Mock` was called after another `Mock`.
 
@@ -1081,7 +1081,7 @@ test('calls mock1 after mock2', () => {
 
 ## toHaveBeenCalledExactlyOnceWith
 
-- **Type**: `(...args: any[]) => Awaitable<void>`
+- **Type:**: `(...args: any[]) => Awaitable<void>`
 
 This assertion checks if a function was called exactly once and with certain parameters. Requires a spy function to be passed to `expect`.
 
@@ -1105,7 +1105,7 @@ test('spy function', () => {
 
 ## toHaveBeenLastCalledWith
 
-- **Type**: `(...args: any[]) => Awaitable<void>`
+- **Type:**: `(...args: any[]) => Awaitable<void>`
 
 This assertion checks if a function was called with certain parameters at its last invocation. Requires a spy function to be passed to `expect`.
 
@@ -1131,7 +1131,7 @@ test('spy function', () => {
 
 ## toHaveBeenNthCalledWith
 
-- **Type**: `(time: number, ...args: any[]) => Awaitable<void>`
+- **Type:**: `(time: number, ...args: any[]) => Awaitable<void>`
 
 This assertion checks if a function was called with certain parameters at the certain time. The count starts at 1. So, to check the second entry, you would write `.toHaveBeenNthCalledWith(2, ...)`.
 
@@ -1158,7 +1158,7 @@ test('first call of spy function called with right params', () => {
 
 ## toHaveReturned
 
-- **Type**: `() => Awaitable<void>`
+- **Type:**: `() => Awaitable<void>`
 
 This assertion checks if a function has successfully returned a value at least once (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
@@ -1182,7 +1182,7 @@ test('spy function returned a value', () => {
 
 ## toHaveReturnedTimes
 
-- **Type**: `(amount: number) => Awaitable<void>`
+- **Type:**: `(amount: number) => Awaitable<void>`
 
 This assertion checks if a function has successfully returned a value an exact amount of times (i.e., did not throw an error). Requires a spy function to be passed to `expect`.
 
@@ -1201,7 +1201,7 @@ test('spy function returns a value two times', () => {
 
 ## toHaveReturnedWith
 
-- **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type:**: `(returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters at least once. Requires a spy function to be passed to `expect`.
 
@@ -1219,7 +1219,7 @@ test('spy function returns a product', () => {
 
 ## toHaveLastReturnedWith
 
-- **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type:**: `(returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully returned a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
 
@@ -1238,7 +1238,7 @@ test('spy function returns bananas on a last call', () => {
 
 ## toHaveNthReturnedWith
 
-- **Type**: `(time: number, returnValue: any) => Awaitable<void>`
+- **Type:**: `(time: number, returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
@@ -1259,7 +1259,7 @@ test('spy function returns bananas on second call', () => {
 
 ## toHaveResolved
 
-- **Type**: `() => Awaitable<void>`
+- **Type:**: `() => Awaitable<void>`
 
 This assertion checks if a function has successfully resolved a value at least once (i.e., did not reject). Requires a spy function to be passed to `expect`.
 
@@ -1285,7 +1285,7 @@ test('spy function resolved a value', async () => {
 
 ## toHaveResolvedTimes
 
-- **Type**: `(amount: number) => Awaitable<void>`
+- **Type:**: `(amount: number) => Awaitable<void>`
 
 This assertion checks if a function has successfully resolved a value an exact amount of times (i.e., did not reject). Requires a spy function to be passed to `expect`.
 
@@ -1306,7 +1306,7 @@ test('spy function resolved a value two times', async () => {
 
 ## toHaveResolvedWith
 
-- **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type:**: `(returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully resolved a certain value at least once. Requires a spy function to be passed to `expect`.
 
@@ -1326,7 +1326,7 @@ test('spy function resolved a product', async () => {
 
 ## toHaveLastResolvedWith
 
-- **Type**: `(returnValue: any) => Awaitable<void>`
+- **Type:**: `(returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully resolved a certain value when it was last invoked. Requires a spy function to be passed to `expect`.
 
@@ -1347,7 +1347,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 ## toHaveNthResolvedWith
 
-- **Type**: `(time: number, returnValue: any) => Awaitable<void>`
+- **Type:**: `(time: number, returnValue: any) => Awaitable<void>`
 
 You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
