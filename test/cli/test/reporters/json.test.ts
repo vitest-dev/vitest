@@ -138,4 +138,35 @@ describe('json reporter', async () => {
     expect(data.testResults).toHaveLength(1)
     expect(data.testResults[0].status).toBe(expected)
   })
+
+  it('includes all meta fields when filterMetaField is not set', async () => {
+    const { stdout } = await runVitest({
+      reporters: 'json',
+      root,
+      include: ['**/json-meta.test.ts'],
+    })
+
+    const data = JSON.parse(stdout)
+    const results = data.testResults[0].assertionResults
+    const passing = results.find((r: any) => r.title === 'pass')
+
+    expect(passing.meta).toEqual({ custom: 'Passing test added this' })
+  })
+
+  it('filterMetaField filters meta fields by key', async () => {
+    const { stdout } = await runVitest({
+      reporters: [['json', {
+        filterMetaField: key => key !== 'custom',
+      }]],
+      root,
+      include: ['**/json-meta.test.ts'],
+    })
+
+    const data = JSON.parse(stdout)
+    const results = data.testResults[0].assertionResults
+
+    for (const result of results) {
+      expect(result.meta).toEqual({})
+    }
+  })
 })
