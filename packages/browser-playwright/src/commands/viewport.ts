@@ -1,11 +1,10 @@
-import type { PlaywrightBrowserProvider } from '../playwright'
 import type { UserEventCommand } from './utils'
 
 export const viewport: UserEventCommand<(options: {
   width: number
   height: number
 }) => void> = async (context, options) => {
-  const { provider, sessionId } = context
+  const { page } = context
 
-  await (provider as PlaywrightBrowserProvider).getPage(sessionId).setViewportSize(options)
+  await page.setViewportSize(options)
 }
