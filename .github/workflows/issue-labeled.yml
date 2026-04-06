@@ -9,7 +9,6 @@ on:
 # for actions-cool/issues-helper to update issues
 permissions:
   issues: write
-  pull-requests: write
 
 jobs:
   reply-labeled:
