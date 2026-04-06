@@ -25,6 +25,7 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
@@ -157,12 +158,10 @@ export function resolveConfig(
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
       logger.console.warn(
-        c.yellow(
-          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
-            viteConfig.test.environment
-          }") conflicts with --dom flag ("happy-dom"), ignoring "${
-            viteConfig.test.environment
-          }"`,
+        withLabel(
+          'yellow',
+          'Vitest',
+          `Your config.test.environment ("${viteConfig.test.environment}") conflicts with --dom flag ("happy-dom"), ignoring "${viteConfig.test.environment}"`,
         ),
       )
     }
