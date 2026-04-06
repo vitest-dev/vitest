@@ -71,9 +71,9 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.getByTestId('pass-entry')).toContainText('16 Pass')
+    await expect(page.getByTestId('pass-entry')).toContainText('17 Pass')
     await expect(page.getByTestId('fail-entry')).toContainText('2 Fail')
-    await expect(page.getByTestId('total-entry')).toContainText('18 Total')
+    await expect(page.getByTestId('total-entry')).toContainText('19 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -181,25 +181,46 @@ test.describe('ui', () => {
       await expect(annotation.getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=/)
     })
 
-    await test.step('annotated with body', async () => {
-      const item = page.getByLabel('annotated with body')
+    await test.step('annotated with body base64', async () => {
+      const item = page.getByLabel('annotated with body base64')
       await item.click({ force: true })
       await page.getByTestId('btn-report').click({ force: true })
 
       const annotation = page.getByRole('note')
       await expect(annotation).toHaveCount(1)
 
-      await expect(annotation).toContainText('body annotation')
+      await expect(annotation).toContainText('body base64 annotation')
       await expect(annotation).toContainText('notice')
       await expect(annotation).toContainText('fixtures/annotated.test.ts:25:9')
 
       const downloadPromise = page.waitForEvent('download')
       await annotation.getByRole('link').click()
       const download = await downloadPromise
-      expect(download.suggestedFilename()).toBe('body-annotation.md')
+      expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
       const downloadPath = await download.path()
       const content = readFileSync(downloadPath, 'utf-8')
-      expect(content).toBe('Hello **markdown**')
+      expect(content).toBe('Hello base64 **markdown**')
+    })
+
+    await test.step('annotated with body utf-8', async () => {
+      const item = page.getByLabel('annotated with body utf-8')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('body utf-8 annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:32:9')
+
+      const downloadPromise = page.waitForEvent('download')
+      await annotation.getByRole('link').click()
+      const download = await downloadPromise
+      expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
+      const downloadPath = await download.path()
+      const content = readFileSync(downloadPath, 'utf-8')
+      expect(content).toBe('Hello utf-8 **markdown**')
     })
   })
 
@@ -211,18 +232,20 @@ test.describe('ui', () => {
     await page.getByTestId('btn-code').click({ force: true })
 
     const annotations = page.getByRole('note')
-    await expect(annotations).toHaveCount(6)
+    await expect(annotations).toHaveCount(7)
 
     await expect(annotations.first()).toHaveText('notice: hello world')
     await expect(annotations.nth(1)).toHaveText('notice: second annotation')
     await expect(annotations.nth(2)).toHaveText('warning: beware!')
     await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
     await expect(annotations.nth(4)).toHaveText('notice: image annotation')
-    await expect(annotations.nth(5)).toHaveText(/notice: body annotation/)
+    await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
+    await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
 
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
     await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
     await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown;base64,/)
+    await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown,/)
   })
 
   test('error', async ({ page }) => {

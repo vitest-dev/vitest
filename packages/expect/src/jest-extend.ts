@@ -43,7 +43,6 @@ function getMatcherState(
 
   const matcherState: MatcherState = {
     ...getState(expect),
-    task,
     currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
@@ -54,7 +53,9 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
+    __vitest_assertion__: assertion as any,
   }
+  Object.assign(matcherState, { task })
 
   return {
     state: matcherState,
@@ -64,8 +65,19 @@ function getMatcherState(
   }
 }
 
+interface VitestErrorContext {
+  assertionName: string
+  meta?: object
+}
+
 class JestExtendError extends Error {
-  constructor(message: string, public actual?: any, public expected?: any) {
+  constructor(
+    message: string,
+    public actual?: any,
+    public expected?: any,
+    /** @internal */
+    public __vitest_error_context__?: VitestErrorContext,
+  ) {
     super(message)
   }
 }
@@ -78,7 +90,7 @@ function JestExtendPlugin(
   return (_, utils) => {
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
-        function expectWrapper(
+        function __VITEST_EXTEND_ASSERTION__(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
@@ -92,27 +104,37 @@ function JestExtendPlugin(
             && typeof (result as any).then === 'function'
           ) {
             const thenable = result as PromiseLike<SyncExpectationResult>
-            return thenable.then(({ pass, message, actual, expected }) => {
+            return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
                 const errorMessage = customMessage != null
                   ? customMessage
                   : message()
-                throw new JestExtendError(errorMessage, actual, expected)
+                throw new JestExtendError(
+                  errorMessage,
+                  actual,
+                  expected,
+                  { assertionName: expectAssertionName, meta },
+                )
               }
             })
           }
 
-          const { pass, message, actual, expected } = result as SyncExpectationResult
+          const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
             const errorMessage = customMessage != null
               ? customMessage
               : message()
-            throw new JestExtendError(errorMessage, actual, expected)
+            throw new JestExtendError(
+              errorMessage,
+              actual,
+              expected,
+              { assertionName: expectAssertionName, meta },
+            )
           }
         }
 
-        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, __VITEST_EXTEND_ASSERTION__)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,

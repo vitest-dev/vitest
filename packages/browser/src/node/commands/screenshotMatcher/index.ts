@@ -273,6 +273,7 @@ function buildOutput(
     case 'unstable-screenshot':
       return {
         pass: false,
+        outcome: outcome.type,
         reference: outcome.reference && {
           path: outcome.reference.path,
           width: outcome.reference.image.metadata.width,
@@ -286,6 +287,7 @@ function buildOutput(
     case 'missing-reference': {
       return {
         pass: false,
+        outcome: outcome.type,
         reference: {
           path: outcome.reference.path,
           width: outcome.reference.image.metadata.width,
@@ -302,11 +304,12 @@ function buildOutput(
     case 'update-reference':
     case 'matched-immediately':
     case 'matched-after-comparison':
-      return { pass: true }
+      return { pass: true, outcome: outcome.type }
 
     case 'mismatch':
       return {
         pass: false,
+        outcome: outcome.type,
         reference: {
           path: outcome.reference.path,
           width: outcome.reference.image.metadata.width,
@@ -333,6 +336,7 @@ function buildOutput(
 
       return {
         pass: false,
+        outcome: null as never,
         actual: null,
         reference: null,
         diff: null,

@@ -1,7 +1,6 @@
 import type { ApiConfig } from '../types/config'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
-import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
   | never
@@ -141,7 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
+    description: `Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -419,7 +418,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
-      locators: null,
+      locators: {
+        description: 'Options for how locators should be handled by default',
+        argument: '<options>',
+        subcommands: {
+          testIdAttribute: null,
+          exact: {
+            description: 'Should locators match the text exactly by default (default: `false`)',
+          },
+        },
+        transform(val) {
+          if (typeof val !== 'object' || val == null) {
+            return {}
+          }
+          return val
+        },
+      },
       testerHtmlPath: null,
       instances: null,
       expect: null,
@@ -900,6 +914,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       nodeLoader: {
         description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
+      },
+      vcsProvider: {
+        argument: '<path>',
+        description: 'Custom provider for detecting changed files. (default: `git`)',
+        subcommands: null,
       },
     },
   },

@@ -120,5 +120,8 @@ export default async function toMatchScreenshot(
           ]
             .filter(element => element !== null)
             .join('\n'),
+    meta: {
+      outcome: result.outcome,
+    },
   }
 }

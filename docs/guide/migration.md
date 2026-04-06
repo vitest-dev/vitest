@@ -650,6 +650,38 @@ export default defineConfig({
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
 
+### Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
+
+Jest imports snapshot composables from `jest-snapshot`. In Vitest, use `Snapshots` from `vitest` instead:
+
+```ts
+const { toMatchSnapshot } = require('jest-snapshot') // [!code --]
+import { Snapshots } from 'vitest' // [!code ++]
+const { toMatchSnapshot } = Snapshots // [!code ++]
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length))
+  },
+})
+```
+
+For inline snapshots, the same applies:
+
+```ts
+const { toMatchInlineSnapshot } = require('jest-snapshot') // [!code --]
+import { Snapshots } from 'vitest' // [!code ++]
+const { toMatchInlineSnapshot } = Snapshots // [!code ++]
+
+expect.extend({
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+})
+```
+
+See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers) for the full guide.
+
 ## Migrating from Mocha + Chai + Sinon {#mocha-chai-sinon}
 
 Vitest provides excellent support for migrating from Mocha+Chai+Sinon test suites. While Vitest uses a Jest-compatible API by default, it also provides Chai-style assertions for spy/mock testing, making migration easier.

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "4.1.0",
+  "version": "4.1.2",
   "private": true,
   "packageManager": "pnpm@10.31.0",
   "description": "Next generation testing framework powered by Vite",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^7.6.1",
     "@antfu/ni": "^28.3.0",
-    "@playwright/test": "^1.58.2",
+    "@playwright/test": "catalog:",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",

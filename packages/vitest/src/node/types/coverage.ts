@@ -96,7 +96,7 @@ export type CoverageReporterWithOptions<
 export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
 /** Fields that have default values. Internally these will always be defined. */
-type FieldsWithDefaultValues
+export type FieldsWithDefaultValues
   = | 'provider'
     | 'enabled'
     | 'clean'
@@ -106,6 +106,11 @@ type FieldsWithDefaultValues
     | 'reportOnFailure'
     | 'allowExternal'
     | 'processingConcurrency'
+    | 'reporter'
+    | 'excludeAfterRemap'
+    | 'ignoreClassMethods'
+    | 'skipFull'
+    | 'watermarks'
 
 export type ResolvedCoverageOptions
   = CoverageOptions
@@ -276,8 +281,6 @@ export interface CoverageOptions {
   /**
    * Collect coverage only for files changed since a specified commit or branch.
    * Inherits the default value from `test.changed`.
-   *
-   * @default false
    */
   changed?: boolean | string
 

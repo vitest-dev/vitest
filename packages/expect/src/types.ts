@@ -6,7 +6,6 @@
  *
  */
 
-import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
@@ -83,7 +82,13 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
-  task?: Readonly<Test>
+  /**
+   * this allows `expect.extend`-based custom matcher
+   * to implement builtin vitest/chai assertion equivalent feature.
+   * this used for custom snapshot matcher API.
+   */
+  /** @internal */
+  __vitest_assertion__: Assertion
 }
 
 export interface SyncExpectationResult {
@@ -91,6 +96,7 @@ export interface SyncExpectationResult {
   message: () => string
   actual?: any
   expected?: any
+  meta?: object
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>

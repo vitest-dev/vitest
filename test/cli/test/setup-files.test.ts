@@ -41,3 +41,45 @@ describe('setup files with forceRerunTrigger', () => {
     expect(stdout).toContain('1 passed')
   })
 })
+
+it('setup files resolution in nested folder', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+})
+
+it('setup files resolution in nested folder without extension', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested-no-ext',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+})
+
+it('setup files resolution in nested folder with bare name', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested-bare',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+})

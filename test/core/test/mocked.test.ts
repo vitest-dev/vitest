@@ -170,7 +170,7 @@ describe('mocked function which fails on toReturnWith', () => {
     expect(getError(() => expect(mock).toReturnWith(2))).toMatchSnapshot()
   })
 
-  test('oject type', () => {
+  test('object type', () => {
     const mock = vi.fn(() => {
       return { a: '1' }
     })

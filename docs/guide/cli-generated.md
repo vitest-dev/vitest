@@ -429,6 +429,13 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 
 Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
 
+### browser.locators.exact
+
+- **CLI:** `--browser.locators.exact`
+- **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
+
+Should locators match the text exactly by default (default: `false`)
+
 ### pool
 
 - **CLI:** `--pool <pool>`
@@ -949,3 +956,10 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 - **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
+
+### experimental.vcsProvider
+
+- **CLI:** `--experimental.vcsProvider <path>`
+- **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
+
+Custom provider for detecting changed files. (default: `git`)
