@@ -33,7 +33,7 @@ export class VitestPackageInstaller {
     }
 
     process.stderr.write(
-      withLabel('red', 'MISSING DEPENDENCY', `Cannot find dependency '${dependency}'`),
+      withLabel('red', 'MISSING DEPENDENCY', `Cannot find dependency '${dependency}'\n\n`),
     )
 
     if (!isTTY) {
