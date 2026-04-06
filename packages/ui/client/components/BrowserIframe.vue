@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ViewportSize } from '~/composables/browser'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 import { viewport } from '~/composables/browser'
 import { browserState } from '~/composables/client'
 import {
@@ -28,6 +29,32 @@ async function changeViewport(name: ViewportSize) {
     updateBrowserPanel()
   }
 }
+
+const testContainer = useTemplateRef('tester-ui')
+const testContainerRect = ref<DOMRectReadOnly | null>(null)
+
+const observer = new ResizeObserver(([entry]) => {
+  testContainerRect.value = entry.contentRect
+})
+onMounted(() => {
+  if (testContainer.value) {
+    observer.observe(testContainer.value)
+  }
+})
+onUnmounted(() => {
+  observer.disconnect()
+})
+
+const scale = computed(() =>
+  testContainerRect.value
+    ? Math.floor(
+        Math.min(
+          testContainerRect.value.width / viewport.value[0],
+          testContainerRect.value.height / viewport.value[1],
+        ) * 100,
+      )
+    : 100,
+)
 </script>
 
 <template>
@@ -76,9 +103,10 @@ async function changeViewport(name: ViewportSize) {
       />
       <span class="pointer-events-none" text-sm>
         {{ viewport[0] }}x{{ viewport[1] }}px
+        <span v-if="scale < 100">({{ scale }}%)</span>
       </span>
     </div>
-    <div id="tester-ui">
+    <div id="tester-ui" ref="tester-ui">
       Select a test to run
     </div>
   </div>
