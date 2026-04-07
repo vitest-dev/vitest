@@ -461,14 +461,13 @@ export const DEFAULT_OPTIONS: Options = {
   theme: DEFAULT_THEME,
   singleQuote: false,
   quoteKeys: true,
+  spacingInner: '\n',
+  spacingOuter: '\n',
 } satisfies Options
-
-// TODO: review
-const EXTRA_OPTIONS = new Set(['spacingInner', 'spacingOuter'])
 
 function validateOptions(options: OptionsReceived) {
   for (const key of Object.keys(options)) {
-    if (!Object.hasOwn(DEFAULT_OPTIONS, key) && !EXTRA_OPTIONS.has(key)) {
+    if (!Object.hasOwn(DEFAULT_OPTIONS, key)) {
       throw new Error(`pretty-format: Unknown option "${key}".`)
     }
   }

@@ -32,7 +32,7 @@ export type CompareKeys = ((a: string, b: string) => number) | null | undefined
 type RequiredOptions = Required<PrettyFormatOptions>
 
 export interface Options
-  extends Omit<RequiredOptions, 'compareKeys' | 'theme' | 'spacingInner' | 'spacingOuter'> {
+  extends Omit<RequiredOptions, 'compareKeys' | 'theme'> {
   compareKeys: CompareKeys
   theme: Theme
 }
