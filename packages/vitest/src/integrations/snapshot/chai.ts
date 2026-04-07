@@ -224,49 +224,6 @@ function toMatchDomainSnapshotImpl(opts: {
   })
 }
 
-/**
- * Composable for building custom domain-based snapshot matchers via `expect.extend`.
- *
- * Call this from a matcher and pass the domain adapter that defines capture,
- * rendering, parsing, and semantic matching behavior.
- *
- * @experimental
- */
-export function toMatchDomainSnapshot(
-  this: MatcherState,
-  domain: DomainSnapshotAdapter<any, any>,
-  received: unknown,
-): ExpectationResult {
-  return toMatchDomainSnapshotImpl({
-    assertion: this.__vitest_assertion__,
-    adapter: domain,
-    received,
-  })
-}
-
-/**
- * Composable for building custom domain-based inline snapshot matchers via `expect.extend`.
- *
- * Call this from a matcher and pass the domain adapter that defines capture,
- * rendering, parsing, and semantic matching behavior.
- *
- * @experimental
- */
-export function toMatchDomainInlineSnapshot(
-  this: MatcherState,
-  domain: DomainSnapshotAdapter<any, any>,
-  received: unknown,
-  inlineSnapshot?: string,
-): ExpectationResult {
-  return toMatchDomainSnapshotImpl({
-    assertion: this.__vitest_assertion__,
-    adapter: domain,
-    received,
-    isInline: true,
-    inlineSnapshot,
-  })
-}
-
 // toMatchSnapshot(propertiesOrHint?, hint?)
 function normalizeArguments(
   propertiesOrHint?: object | string,
@@ -463,6 +420,49 @@ export const Snapshots = {
       received,
       filepath,
       hint,
+    })
+  },
+
+  /**
+   * Composable for building custom domain-based snapshot matchers via `expect.extend`.
+   *
+   * Call this from a matcher and pass the domain adapter that defines capture,
+   * rendering, parsing, and semantic matching behavior.
+   *
+   * @experimental
+   */
+  toMatchDomainSnapshot(
+    this: MatcherState,
+    domain: DomainSnapshotAdapter<any, any>,
+    received: unknown,
+  ): ExpectationResult {
+    return toMatchDomainSnapshotImpl({
+      assertion: this.__vitest_assertion__,
+      adapter: domain,
+      received,
+    })
+  },
+
+  /**
+   * Composable for building custom domain-based inline snapshot matchers via `expect.extend`.
+   *
+   * Call this from a matcher and pass the domain adapter that defines capture,
+   * rendering, parsing, and semantic matching behavior.
+   *
+   * @experimental
+   */
+  toMatchDomainInlineSnapshot(
+    this: MatcherState,
+    domain: DomainSnapshotAdapter<any, any>,
+    received: unknown,
+    inlineSnapshot?: string,
+  ): ExpectationResult {
+    return toMatchDomainSnapshotImpl({
+      assertion: this.__vitest_assertion__,
+      adapter: domain,
+      received,
+      isInline: true,
+      inlineSnapshot,
     })
   },
 }

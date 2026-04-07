@@ -167,7 +167,7 @@ test('domain parseExpected error', async () => {
          35|       }
          36|       const key = line.slice(0, eq)
      ❯ Object.parseExpected ../domain/basic.ts:31:46
-     ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:17:34
+     ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:16:44
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -181,7 +181,7 @@ test('domain parseExpected error', async () => {
          35|       }
          36|       const key = line.slice(0, eq)
      ❯ Object.parseExpected ../domain/basic.ts:31:46
-     ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:23:40
+     ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:22:50
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 

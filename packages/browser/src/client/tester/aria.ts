@@ -11,7 +11,7 @@ import {
   renderAriaTemplate,
   renderAriaTree,
 } from 'ivya/aria'
-import { toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest/internal/browser'
+import { Snapshots } from 'vitest'
 
 const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',
@@ -60,13 +60,14 @@ function wrapNewlines(s: string) {
 
 export const ariaMatchers: MatchersObject = {
   toMatchAriaSnapshot(actual: unknown) {
-    return toMatchDomainSnapshot.call(this, ariaSnapshotAdapter, actual)
+    return Snapshots.toMatchDomainSnapshot.call(this, ariaSnapshotAdapter, actual)
   },
   toMatchAriaInlineSnapshot(actual: Element, inlineSnapshot?: string) {
-    return toMatchDomainInlineSnapshot.call(this, ariaSnapshotAdapter, actual, inlineSnapshot)
+    return Snapshots.toMatchDomainInlineSnapshot.call(this, ariaSnapshotAdapter, actual, inlineSnapshot)
   },
 }
 
+// internal flag to allow expect.poll for snapshot matchers
 for (const matcher of Object.values(ariaMatchers)) {
   Object.assign(matcher, {
     __vitest_poll_takeover__: true,

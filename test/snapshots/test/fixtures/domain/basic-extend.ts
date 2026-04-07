@@ -1,7 +1,6 @@
-import { toMatchDomainSnapshot, toMatchDomainInlineSnapshot } from "vitest/runtime"
+import { expect, Snapshots } from "vitest"
+import type { MatchersObject } from "@vitest/expect"
 import { kvAdapter } from "./basic"
-import { expect } from "vitest"
-import { MatchersObject } from "@vitest/expect"
 
 interface CustomMatchers<R = unknown> {
   toMatchKvSnapshot: () => R
@@ -14,16 +13,17 @@ declare module 'vitest' {
 
 const matchers: MatchersObject = {
   toMatchKvSnapshot(actual: unknown) {
-    return toMatchDomainSnapshot.call(this, kvAdapter, actual)
+    return Snapshots.toMatchDomainSnapshot.call(this, kvAdapter, actual)
   },
   toMatchKvInlineSnapshot(
     actual: unknown,
     inlineSnapshot?: string,
   ) {
-    return toMatchDomainInlineSnapshot.call(this, kvAdapter, actual, inlineSnapshot)
+    return Snapshots.toMatchDomainInlineSnapshot.call(this, kvAdapter, actual, inlineSnapshot)
   },
 }
 
+// internal flag to allow expect.poll for snapshot matchers
 for (const matcher of Object.values(matchers)) {
   Object.assign(matcher, {
     __vitest_poll_takeover__: true,
