@@ -9,6 +9,5 @@ declare interface Window {
 
 declare interface Error {
   VITEST_TEST_NAME?: string
-  VITEST_AFTER_ENV_TEARDOWN?: boolean
   VITEST_TEST_PATH?: string
 }

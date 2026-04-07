@@ -15,11 +15,11 @@ const entries = {
   'diff': 'src/diff/index.ts',
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
+  'source-map/node': 'src/source-map/node.ts',
   'types': 'src/types.ts',
   'constants': 'src/constants.ts',
   'offset': 'src/offset.ts',
   'timers': 'src/timers.ts',
-  'highlight': 'src/highlight.ts',
   'display': 'src/display.ts',
   'resolver': 'src/resolver.ts',
   'serialize': 'src/serialize.ts',
@@ -40,7 +40,7 @@ const plugins = [
   }),
   json(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: 'node20' },
   }),
   commonjs(),
 ]

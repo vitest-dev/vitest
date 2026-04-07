@@ -26,24 +26,28 @@
     "test:browser:preview": "PROVIDER=preview vitest",
     "test:browser:playwright": "PROVIDER=playwright vitest",
     "test:browser:webdriverio": "PROVIDER=webdriverio vitest",
-    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
+    "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html",
+    "docker": "docker compose"
   },
   "devDependencies": {
-    "@testing-library/react": "^13.4.0",
-    "@types/react": "^19.1.13",
-    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "@types/react": "^19.2.14",
+    "@types/yauzl": "catalog:",
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitest/browser": "workspace:*",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
-    "playwright": "^1.55.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "playwright": "catalog:",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "test-dep-error": "file:./deps/test-dep-error",
+    "tinyexec": "catalog:",
     "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.3.0",
-    "ws": "catalog:"
+    "vitest-browser-react": "^2.0.5",
+    "ws": "catalog:",
+    "yauzl": "catalog:"
   }
 }

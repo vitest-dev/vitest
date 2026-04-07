@@ -9,10 +9,11 @@ import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
-import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
+import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -83,7 +84,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -92,6 +93,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
         if (type === 'orchestrator') {
@@ -112,11 +114,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileLoadingAllowed(vite.config, path)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
+  }
+
+  function canWrite(project: TestProject) {
+    return (
+      project.config.browser.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+      && project.config.api.allowWrite
+      && project.vitest.config.api.allowWrite
+    )
   }
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
@@ -150,8 +161,25 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             await vitest._testRun.collected(project, files)
           }
         },
-        async onTaskAnnotate(id, annotation) {
-          return vitest._testRun.annotate(id, annotation)
+        async onTaskArtifactRecord(id, artifact) {
+          if (!canWrite(project)) {
+            if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
+              artifact.annotation.attachment = undefined
+              vitest.logger.error(
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              )
+            }
+            // remove attachments if cannot write
+            if (artifact.attachments?.length) {
+              const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
+              artifact.attachments = []
+              vitest.logger.error(
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+              )
+            }
+          }
+
+          return vitest._testRun.recordArtifact(id, artifact)
         },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
@@ -192,19 +220,38 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
-          return fs.writeFile(id, content, 'utf-8')
+          await fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
           }
-          return fs.unlink(id)
+          await fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
-          return mod?.transformResult?.map
+          const result = mod?.transformResult
+          // handle non-inline source map such as pre-bundled deps in node_modules/.vite
+          if (result && !result.map) {
+            const filePath = id.split('?')[0]
+            const extracted = extractSourcemapFromFile(result.code, filePath)
+            return extracted?.map
+          }
+          return result?.map
         },
         cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
@@ -348,9 +395,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       },
     )
 
-    vitest.onCancel(reason => rpc.onCancel(reason))
+    const offCancel = vitest.onCancel(reason => rpc.onCancel(reason))
 
-    return rpc
+    return { rpc, offCancel }
   }
 }
 

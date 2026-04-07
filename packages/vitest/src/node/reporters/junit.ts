@@ -35,6 +35,10 @@ export interface JUnitOptions {
    * @default false
    */
   addFileAttribute?: boolean
+  /**
+   * Hostname to use in the report. By default, it uses os.hostname()
+   */
+  hostname?: string
 }
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -327,6 +331,8 @@ export class JUnitReporter implements Reporter {
           id: file.id,
           type: 'test',
           name: file.name,
+          fullName: file.name,
+          fullTestName: file.name,
           mode: 'run',
           result: file.result,
           meta: {},
@@ -336,6 +342,7 @@ export class JUnitReporter implements Reporter {
           suite: null as any,
           file: null as any,
           annotations: [],
+          artifacts: [],
         } satisfies Task)
       }
 
@@ -370,7 +377,7 @@ export class JUnitReporter implements Reporter {
           {
             name: filename,
             timestamp: new Date().toISOString(),
-            hostname: hostname(),
+            hostname: this.options.hostname || hostname(),
             tests: file.tasks.length,
             failures: file.stats.failures,
             errors: 0, // An errored test is one that had an unanticipated problem. We cannot detect those.

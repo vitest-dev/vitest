@@ -9,6 +9,7 @@ test('default', async () => {
   const { ctx, stdout, stderr } = await runVitest({
     root,
     include: ['*.test.ts'],
+    cache: undefined,
   })
 
   expect(stdout).toContain('✓ basic.test.ts >')
@@ -43,10 +44,11 @@ test('use cacheDir', async () => {
     {
       root,
       include: ['*.test.ts'],
+      cache: undefined,
+      $viteConfig: {
+        cacheDir: 'node_modules/.vite-custom',
+      },
     },
-    [],
-    'test',
-    { cacheDir: 'node_modules/.vite-custom' },
   )
 
   expect(stdout).toContain('✓ basic.test.ts >')
@@ -61,6 +63,7 @@ test('preserves previous test results', async () => {
   const firstRun = await runVitest({
     root,
     include: ['basic.test.ts'],
+    cache: undefined,
   })
 
   expect(firstRun.stdout).toContain('✓ basic.test.ts >')
@@ -73,6 +76,7 @@ test('preserves previous test results', async () => {
   const secondRun = await runVitest({
     root,
     include: ['second.test.ts'],
+    cache: undefined,
   })
   expect(secondRun.stdout).toContain('✓ second.test.ts >')
   expect(secondRun.stderr).toBe('')
@@ -96,6 +100,7 @@ describe('with optimizer enabled', () => {
       root,
       include: ['*.test.ts'],
       deps,
+      cache: undefined,
     })
 
     expect(stdout).toContain('✓ basic.test.ts >')
@@ -132,10 +137,11 @@ describe('with optimizer enabled', () => {
         root,
         include: ['*.test.ts'],
         deps,
+        cache: undefined,
+        $viteConfig: {
+          cacheDir: 'node_modules/.vite-custom',
+        },
       },
-      [],
-      'test',
-      { cacheDir: 'node_modules/.vite-custom' },
     )
 
     expect(stdout).toContain('✓ basic.test.ts >')

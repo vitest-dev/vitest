@@ -1,8 +1,6 @@
-import type { Locator } from 'vitest/browser'
+import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
-
-const provider = getBrowserState().provider
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -97,6 +95,23 @@ function getParent(el: Element) {
   return parent
 }
 
+const ACTION_TRACE_COMMANDS = new Set([
+  '__vitest_click',
+  '__vitest_dblClick',
+  '__vitest_tripleClick',
+  '__vitest_wheel',
+  '__vitest_type',
+  '__vitest_clear',
+  '__vitest_fill',
+  '__vitest_selectOptions',
+  '__vitest_dragAndDrop',
+  '__vitest_hover',
+  '__vitest_upload',
+  '__vitest_tab',
+  '__vitest_keyboard',
+  '__vitest_takeScreenshot',
+])
+
 export class CommandsManager {
   private _listeners: ((command: string, args: any[]) => void)[] = []
 
@@ -113,31 +128,72 @@ export class CommandsManager {
   ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
-    const { sessionId } = getBrowserState()
+    const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
     args = args.filter(arg => arg !== undefined) // remove optional fields
+
+    const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command) ? command : undefined
+    const currentTest = getWorkerState().current
+    const shouldMarkTrace = actionTraceGroupName
+      && !!currentTest
+      && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
-    return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
-      // rethrow an error to keep the stack trace in browser
-      // const clientError = new Error(err.message)
-      clientError.message = err.message
-      clientError.name = err.name
-      clientError.stack = clientError.stack?.replace(clientError.message, err.message)
-      throw clientError
-    })
+    return traces.$(
+      'vitest.browser.tester.command',
+      {
+        attributes: {
+          'vitest.browser.command': command,
+          'code.file.path': filepath,
+        },
+      },
+      async () => {
+        if (shouldMarkTrace) {
+          await rpc.triggerCommand<void>(
+            sessionId,
+            '__vitest_groupTraceStart',
+            filepath,
+            [{
+              name: actionTraceGroupName,
+              stack: clientError.stack,
+            }],
+          )
+        }
+        try {
+          return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
+        }
+        catch (err: any) {
+          // rethrow an error to keep the stack trace in browser
+          clientError.message = err.message
+          clientError.name = err.name
+          clientError.stack = clientError.stack?.replace(clientError.message, err.message)
+          throw clientError
+        }
+        finally {
+          if (shouldMarkTrace) {
+            await rpc.triggerCommand<void>(
+              sessionId,
+              '__vitest_groupTraceEnd',
+              filepath,
+              [],
+            )
+          }
+        }
+      },
+    )
   }
 }
 
-const now = Date.now
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
-export function processTimeoutOptions<T extends { timeout?: number }>(options_?: T): T | undefined {
+export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (
     // if timeout is set, keep it
     (options_ && options_.timeout != null)
-    // timeout can only be set for playwright commands
-    || provider !== 'playwright'
   ) {
     return options_
   }
@@ -158,7 +214,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
   options_ = options_ || {} as T
   const currentTime = now()
   const endTime = startTime + timeout
-  const remainingTime = endTime - currentTime
+  const remainingTime = Math.floor(endTime - currentTime)
   if (remainingTime <= 0) {
     return options_
   }
@@ -199,7 +255,10 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
   return `${JSON.stringify(text)}${exact ? 's' : 'i'}`
 }
 
-export function convertToSelector(elementOrLocator: Element | Locator): string {
+const provider = getBrowserState().provider
+const kElementLocator = Symbol.for('$$vitest:locator-resolved')
+
+export async function convertToSelector(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<string> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
@@ -207,7 +266,11 @@ export function convertToSelector(elementOrLocator: Element | Locator): string {
     return convertElementToCssSelector(elementOrLocator)
   }
   if (isLocator(elementOrLocator)) {
-    return elementOrLocator.selector
+    if (provider === 'playwright' || kElementLocator in elementOrLocator) {
+      return elementOrLocator.selector
+    }
+    const element = await elementOrLocator.findElement(options)
+    return convertElementToCssSelector(element)
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
@@ -216,4 +279,42 @@ const kLocator = Symbol.for('$$vitest:locator')
 
 export function isLocator(element: unknown): element is Locator {
   return (!!element && typeof element === 'object' && kLocator in element)
+}
+
+const DEFAULT_WHEEL_DELTA = 100
+
+export function resolveUserEventWheelOptions(options: UserEventWheelOptions): UserEventWheelDeltaOptions {
+  let delta: UserEventWheelDeltaOptions['delta']
+
+  if (options.delta) {
+    delta = options.delta
+  }
+  else {
+    switch (options.direction) {
+      case 'up': {
+        delta = { y: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'down': {
+        delta = { y: DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'left': {
+        delta = { x: -DEFAULT_WHEEL_DELTA }
+        break
+      }
+
+      case 'right': {
+        delta = { x: DEFAULT_WHEEL_DELTA }
+        break
+      }
+    }
+  }
+
+  return {
+    delta,
+    times: options.times,
+  }
 }

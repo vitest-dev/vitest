@@ -27,7 +27,7 @@ test('non US keys', async () => {
   } else if (server.provider === 'webdriverio') {
     await expect(() =>
       userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
-    ).rejects.toThrowError()
+    ).rejects.toThrow()
   } else {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
@@ -43,7 +43,7 @@ test('non US keys', async () => {
     } else {
       await expect(() =>
         userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-      ).rejects.toThrowError()
+      ).rejects.toThrow()
     }
   } else {
     await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
@@ -63,7 +63,8 @@ test('click with modifier', async () => {
   });
 
   await userEvent.keyboard('{Shift>}')
-  await userEvent.click(el)
+  // By using an empty object as the option, this opts in to using a chain of actions instead of an elementClick in webdriver.
+  await userEvent.click(el, {})
   await userEvent.keyboard('{/Shift}')
   await expect.poll(() => el.textContent).toContain("[ok]")
 })

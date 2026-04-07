@@ -2,6 +2,8 @@
 
 <!-- Please insert your description here and provide especially info about the "what" this PR is solving -->
 
+Resolves #issue-number
+
 <!-- You can also add additional context here -->
 
 ### Please don't delete this checklist! Before submitting the PR, please make sure you do the following:

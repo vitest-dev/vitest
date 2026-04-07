@@ -1,4 +1,5 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
+import type { FileSpecification } from '@vitest/runner'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
@@ -9,6 +10,7 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
+  Traces,
 } from 'vitest/internal/browser'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -23,6 +25,14 @@ const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
 const debug = debugVar && debugVar !== 'false'
   ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
   : undefined
+
+const otelConfig = getConfig().experimental.openTelemetry
+const traces = new Traces({
+  enabled: !!(otelConfig?.enabled && otelConfig?.browserSdkPath),
+  sdkPath: `/@fs/${otelConfig?.browserSdkPath}`,
+})
+let rootTesterSpan: ReturnType<Traces['startContextSpan']> | undefined
+getBrowserState().traces = traces
 
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
@@ -60,9 +70,19 @@ channel.addEventListener('message', async (e) => {
     }
     case 'cleanup': {
       await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
+      rootTesterSpan?.span.end()
+      await traces.finish()
       break
     }
     case 'prepare': {
+      await traces.waitInit()
+      const tracesContext = traces.getContextFromCarrier(data.otelCarrier)
+      traces.recordInitSpan(tracesContext)
+      rootTesterSpan = traces.startContextSpan(
+        `vitest.browser.tester.run`,
+        tracesContext,
+      )
+      traces.bind(rootTesterSpan.context)
       await prepare(data).catch(err => unhandledError(err, 'Prepare Error'))
       break
     }
@@ -88,6 +108,7 @@ const iframeId = url.searchParams.get('iframeId')!
 
 const commands = new CommandsManager()
 getBrowserState().commands = commands
+getBrowserState().activeTraceTaskIds = new Set()
 getBrowserState().iframeId = iframeId
 
 let contextSwitched = false
@@ -100,8 +121,10 @@ async function prepareTestEnvironment(options: PrepareOptions) {
 
   const state = getWorkerState()
 
-  state.metaEnv = import.meta.env
+  // @ts-expect-error replaced with `import.meta.env` by transform
+  state.metaEnv = __vitest_browser_import_meta_env_init__
   state.onCancel = onCancel
+  state.ctx.rpc = rpc as any
   state.rpc = rpc as any
 
   const interceptor = createModuleMockerInterceptor()
@@ -122,7 +145,7 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   const runner = await initiateRunner(state, mocker, config)
   getBrowserState().runner = runner
 
-  // webdiverio context depends on the iframe state, so we need to switch the context,
+  // webdriverio context depends on the iframe state, so we need to switch the context,
   // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
   if (server.provider === 'webdriverio') {
     let switchPromise: Promise<void> | null = null
@@ -155,7 +178,7 @@ let preparedData:
   | Awaited<ReturnType<typeof prepareTestEnvironment>>
   | undefined
 
-async function executeTests(method: 'run' | 'collect', files: string[]) {
+async function executeTests(method: 'run' | 'collect', specifications: FileSpecification[]) {
   if (!preparedData) {
     throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
@@ -164,28 +187,34 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
   const { runner, state } = preparedData
 
-  state.ctx.files = files
+  state.ctx.files = specifications
   runner.setMethod(method)
 
   const version = url.searchParams.get('browserv') || ''
-  files.forEach((filename) => {
-    const currentVersion = browserHashMap.get(filename)
+  specifications.forEach(({ filepath }) => {
+    const currentVersion = browserHashMap.get(filepath)
     if (!currentVersion || currentVersion[1] !== version) {
-      browserHashMap.set(filename, version)
+      browserHashMap.set(filepath, version)
     }
   })
 
-  debug?.('prepare time', state.durations.prepare, 'ms')
+  for (const file of specifications) {
+    state.filepath = file.filepath
+    debug?.('running test file', file.filepath)
 
-  for (const file of files) {
-    state.filepath = file
-
-    if (method === 'run') {
-      await startTests([file], runner)
-    }
-    else {
-      await collectTests([file], runner)
-    }
+    await traces.$(
+      `vitest.test.runner.${method}.module`,
+      { attributes: { 'code.file.path': file.filepath },
+      },
+      async () => {
+        if (method === 'run') {
+          await startTests([file], runner)
+        }
+        else {
+          await collectTests([file], runner)
+        }
+      },
+    )
   }
 }
 
@@ -252,7 +281,6 @@ async function cleanup() {
     await rpc.wdioSwitchContext('parent')
       .catch(error => unhandledError(error, 'Cleanup Error'))
   }
-  state.environmentTeardownRun = true
   await stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.browser.isolate }).catch((error) => {
     return unhandledError(error, 'Coverage Error')
   })

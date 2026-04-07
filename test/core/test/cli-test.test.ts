@@ -1,6 +1,6 @@
 import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
-import { ReportersMap } from 'vitest/reporters'
+import { ReportersMap, rolldownVersion } from 'vitest/node'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
@@ -60,6 +60,7 @@ test('nested coverage options have correct types', async () => {
     --coverage.thresholds.100 25
 
     --coverage.provider v8
+    --coverage.changed HEAD
     --coverage.reporter text
     --coverage.reportsDirectory .\\dist\\coverage
     --coverage.customProviderModule=./folder/coverage.js
@@ -81,6 +82,7 @@ test('nested coverage options have correct types', async () => {
     enabled: true,
     reporter: ['text'],
     provider: 'v8',
+    changed: 'HEAD',
     clean: false,
     cleanOnRerun: true,
     reportsDirectory: 'dist/coverage',
@@ -234,7 +236,7 @@ test('maxConcurrency is parsed correctly', () => {
 test('cache is parsed correctly', () => {
   expect(getCLIOptions('--cache')).toEqual({ cache: {} })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
-  expect(() => getCLIOptions('--cache.dir=./cache')).toThrowError('--cache.dir is deprecated')
+  expect(() => getCLIOptions('--cache.dir=./cache')).toThrow('--cache.dir is deprecated')
 })
 
 test('shuffle is parsed correctly', () => {
@@ -275,7 +277,32 @@ test('browser by name', () => {
   expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
-test('clearScreen', async () => {
+test('browser.detailsPanelPosition is parsed correctly', () => {
+  expect(getCLIOptions('--browser.detailsPanelPosition=bottom')).toEqual({
+    browser: { detailsPanelPosition: 'bottom' },
+  })
+  expect(getCLIOptions('--browser.detailsPanelPosition right')).toEqual({
+    browser: { detailsPanelPosition: 'right' },
+  })
+  expect(getCLIOptions('--browser.detailsPanelPosition=bottom')).toEqual({
+    browser: { detailsPanelPosition: 'bottom' },
+  })
+})
+
+test('browser.locators are passed correctly', () => {
+  expect(getCLIOptions('--browser.locators')).toEqual({
+    browser: { locators: {} },
+  })
+  expect(getCLIOptions('--browser.locators.exact')).toEqual({
+    browser: { locators: { exact: true } },
+  })
+})
+
+test('clearScreen', async (ctx) => {
+  // skip vm since rolldown native modules break due to RegExp instance
+  // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
+  ctx.skip(!!rolldownVersion && ctx.task.file.projectName === 'vmThreads')
+
   const examples = [
     // vitest cli | vite clearScreen
     ['--clearScreen', undefined],
@@ -430,7 +457,7 @@ test('public parseCLI works correctly', () => {
 
   expect(() => {
     parseCLI('node --test --coverage --browser --typecheck')
-  }).toThrowError(`Expected "vitest" as the first argument, received "node"`)
+  }).toThrow(`Expected "vitest" as the first argument, received "node"`)
 
   expect(parseCLI('vitest --project=space_1 --project=space_2')).toEqual({
     filter: [],
@@ -510,4 +537,14 @@ test('should include builtin reporters list', () => {
   const listed = match![1].split(',').map(s => s.trim()).filter(Boolean)
   const expected = Object.keys(ReportersMap)
   expect(new Set(listed)).toEqual(new Set(expected))
+})
+
+test('execArgv can be passed', async () => {
+  expect(getCLIOptions('--execArgv=--cpu-prof')).toEqual({
+    execArgv: ['--cpu-prof'],
+  })
+
+  expect(getCLIOptions('--execArgv=--cpu-prof --execArgv=--cpu-prof-dir=./cpu')).toEqual({
+    execArgv: ['--cpu-prof', '--cpu-prof-dir=./cpu'],
+  })
 })

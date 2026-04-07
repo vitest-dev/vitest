@@ -1,5 +1,5 @@
 import type { TestModule } from 'vitest/node'
-import { expect, it, vi } from 'vitest'
+import { expect, it, onTestFinished, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 it(createVitest, async () => {
@@ -13,6 +13,7 @@ it(createVitest, async () => {
       },
     ],
   })
+  onTestFinished(() => ctx.close())
   const testFiles = await ctx.globTestSpecifications()
   await ctx.runTestSpecifications(testFiles, false)
 

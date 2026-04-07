@@ -30,14 +30,14 @@ describe('.toHaveTextContent', () => {
 
     expect(() =>
       expect(queryByTestId('count-value2')).toHaveTextContent('2'),
-    ).toThrowError()
+    ).toThrow()
 
     expect(() =>
       expect(queryByTestId('count-value')).toHaveTextContent('3'),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(queryByTestId('count-value')).not.toHaveTextContent('2'),
-    ).toThrowError()
+    ).toThrow()
   })
 
   test('normalizes whitespace by default', () => {
@@ -69,7 +69,7 @@ describe('.toHaveTextContent', () => {
     expect(container.querySelector('#parent')).toHaveTextContent('Step 1 of 4')
   })
 
-  test('can handle multiple levels with content spread across decendants', () => {
+  test('can handle multiple levels with content spread across descendants', () => {
     const {container} = render(`
         <span id="parent">
             <span>Step</span>
@@ -104,6 +104,6 @@ describe('.toHaveTextContent', () => {
 
     expect(() =>
       expect(container.querySelector('span')).toHaveTextContent(''),
-    ).toThrowError(/toBeEmptyDOMElement\(\)/)
+    ).toThrow(/toBeEmptyDOMElement\(\)/)
   })
 })

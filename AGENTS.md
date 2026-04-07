@@ -35,6 +35,21 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Core directory test**: `CI=true pnpm test <test-file>` (for `test/core`)
 - **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
 
+**IMPORTANT: Do NOT use `--` when passing test filters to pnpm.**
+Using `--` causes pnpm to drop the filter, resulting in a full test run instead of a filtered one.
+
+```bash
+# WRONG - runs ALL tests (filter is ignored):
+pnpm test -- basic.test.ts -t 'expect'
+
+# CORRECT - runs only matching tests:
+pnpm test basic.test.ts -t 'expect'
+```
+
+When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchInlineSnapshot` to include the test error and its stack. If snapshot is failing, update the snapshot instead of reverting it to `toContain`.
+
+If you need to typecheck tests, run `pnpm typecheck` from the root of the workspace.
+
 ### Testing Utilities
 - **`runInlineTests`** from `test/test-utils/index.ts` - You must use this for complex file system setups (>1 file)
 - **`runVitest`** from `test/test-utils/index.ts` - You can use this to run Vitest programmatically
@@ -44,7 +59,6 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 
 ### Core Packages (`packages/`)
 - `vitest` - Main testing framework
-- `vite-node` - Vite SSR runtime
 - `browser` - Browser testing support
 - `ui` - Web UI for test results
 - `runner` - Test runner core
@@ -82,6 +96,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - ESM-first approach
 - Follow existing patterns in the codebase
 - Use utilities from `@vitest/utils/*` when available. Never import from `@vitest/utils` main entry point directly.
+- Do not add comments explaining what the line does unless prompted to.
 
 ## Common Workflows
 
@@ -100,6 +115,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - Main docs in `docs/` directory
 - Built with `pnpm docs:build`
 - Local dev server: `pnpm docs`
+- When adding cli options, run `pnpm -C docs run cli-table` to update the cli-generated.md file
 
 ## Dependencies and Tools
 
@@ -142,3 +158,13 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - Check existing issues and documentation
 - Review CONTRIBUTING.md for detailed guidelines
 - Follow patterns in existing code
+
+## PR Descriptions
+
+When creating a pull request, you MUST include the following HTML comment at the bottom of the PR description:
+
+```
+<!-- VITEST_AUTOMATED_PR -->
+```
+
+This allows maintainers to identify AI-assisted PRs for triage. PRs containing this marker will be automatically labeled `maybe automated` and will be closed in 3 days unless a real person confirms ownership.

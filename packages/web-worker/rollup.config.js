@@ -18,7 +18,6 @@ const external = [
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
-  'vite-node/utils',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -29,7 +28,7 @@ const plugins = [
   nodeResolve(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 

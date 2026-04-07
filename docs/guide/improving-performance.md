@@ -1,14 +1,14 @@
 # Improving Performance
 
-## Test isolation
+## Test Isolation
 
-By default Vitest runs every test file in an isolated environment based on the [pool](/config/#pool):
+By default Vitest runs every test file in an isolated environment based on the [pool](/config/pool):
 
 - `threads` pool runs every test file in a separate [`Worker`](https://nodejs.org/api/worker_threads.html#class-worker)
 - `forks` pool runs every test file in a separate [forked child process](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `vmThreads` pool runs every test file in a separate [VM context](https://nodejs.org/api/vm.html#vmcreatecontextcontextobject-options), but it uses workers for parallelism
 
-This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/#isolate) property in the config to `false`.
+This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/isolate) property in the config to `false`.
 
 ::: code-group
 ```bash [CLI]
@@ -20,22 +20,43 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     isolate: false,
-    // you can also disable isolation only for specific pools
-    poolOptions: {
-      forks: {
-        isolate: false,
-      },
-    },
   },
 })
 ```
 :::
 
+You can also disable isolation for specific files only by using `projects`:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'Isolated',
+          isolate: true, // (default value)
+          exclude: ['**.non-isolated.test.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'Non-isolated',
+          isolate: false,
+          include: ['**.non-isolated.test.ts'],
+        },
+      },
+    ],
+  },
+})
+```
+
 :::tip
 If you are using `vmThreads` pool, you cannot disable isolation. Use `threads` pool instead to improve your tests performance.
 :::
 
-For some projects, it might also be desirable to disable parallelism to improve startup time. To do that, provide `--no-file-parallelism` flag to the CLI or set [`test.fileParallelism`](/config/#fileparallelism) property in the config to `false`.
+For some projects, it might also be desirable to disable parallelism to improve startup time. To do that, provide `--no-file-parallelism` flag to the CLI or set [`test.fileParallelism`](/config/fileparallelism) property in the config to `false`.
 
 ::: code-group
 ```bash [CLI]
@@ -52,9 +73,23 @@ export default defineConfig({
 ```
 :::
 
-## Limiting directory search
+## Limiting Directory Search
 
-You can limit the working directory when Vitest searches for files using [`test.dir`](/config/#test-dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
+You can limit the working directory when Vitest searches for files using [`test.dir`](/config/dir) option. This should make the search faster if you have unrelated folders and files in the root directory.
+
+## Caching Between Reruns
+
+In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. By enabling [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache), Vitest persists this cache to the file system so it can be reused across reruns.
+
+This improvement is most noticeable when rerunning a small number of tests that depend on a large module graph. For full test suites, parallelization already mitigates the cost because other tests populate the in-memory cache while earlier tests are still running. For example, running one test file with a huge module graph (>900 modules):
+
+```shell
+# the first run
+Duration  8.75s (transform 4.02s, setup 629ms, import 5.52s, tests 2.52s, environment 0ms, prepare 3ms)
+
+# the second run
+Duration  5.90s (transform 842ms, setup 543ms, import 2.35s, tests 2.94s, environment 0ms, prepare 3ms)
+```
 
 ## Pool
 
@@ -138,6 +173,15 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
+      - name: Upload attachments to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-attachments-${{ matrix.shardIndex }}
+          path: .vitest-attachments/**
+          include-hidden-files: true
+          retention-days: 1
+
   merge-reports:
     if: ${{ !cancelled() }}
     needs: [tests]
@@ -162,9 +206,18 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
+      - name: Download attachments from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .vitest-attachments
+          pattern: blob-attachments-*
+          merge-multiple: true
+
       - name: Merge reports
         run: npx vitest --merge-reports
 ```
+
+If your tests create file-based attachments (for example via `context.annotate` or custom artifacts), upload and restore [`attachmentsDir`](/config/attachmentsdir) in the merge job as shown above.
 
 :::
 
@@ -179,11 +232,11 @@ To reduce the load from main thread's Vite server you can use test sharding. The
 ```sh
 # Example for splitting tests on 32 CPU to 4 shards.
 # As each process needs 1 main thread, there's 7 threads for test runners (1+7)*4 = 32
-# Use VITEST_MAX_THREADS or VITEST_MAX_FORKS depending on the pool:
-VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=1/4 & \
-VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=2/4 & \
-VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=3/4 & \
-VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=4/4 & \
+# Use VITEST_MAX_WORKERS:
+VITEST_MAX_WORKERS=7 vitest run --reporter=blob --shard=1/4 & \
+VITEST_MAX_WORKERS=7 vitest run --reporter=blob --shard=2/4 & \
+VITEST_MAX_WORKERS=7 vitest run --reporter=blob --shard=3/4 & \
+VITEST_MAX_WORKERS=7 vitest run --reporter=blob --shard=4/4 & \
 wait # https://man7.org/linux/man-pages/man2/waitpid.2.html
 
 vitest run --merge-reports

@@ -1,7 +1,9 @@
+import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
   if (isPlaywrightProvider(provider)) {
@@ -14,8 +16,7 @@ export const startTracing: BrowserCommand<[]> = async ({ context, project, provi
     await context.tracing.start({
       screenshots: options.screenshots ?? true,
       snapshots: options.snapshots ?? true,
-      // currently, PW shows sources in private methods
-      sources: false,
+      sources: options.sources ?? true,
     }).catch(() => {
       provider.tracingContexts.delete(sessionId)
     })
@@ -55,6 +56,83 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
     return { tracePath: path }
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const markTrace: BrowserCommand<[payload: { name: string; selector?: string; stack?: string }]> = async (
+  context,
+  payload,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    // skip if tracing is not active
+    // this is only safe guard and this isn't expected to happen since
+    // runner already checks if tracing is active before sending this command
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    const { name, selector, stack } = payload
+    const location = parseLocation(context, stack)
+    // mark trace via group/groupEnd with dummy calls to force snapshot.
+    // https://github.com/microsoft/playwright/issues/39308
+    await context.context.tracing.group(name, { location })
+    try {
+      if (selector) {
+        const locator = getDescribedLocator(context, selector) as any
+        if (typeof locator._expect === 'function') {
+          await locator._expect('to.be.attached', {
+            isNot: false,
+            timeout: 1, // don't wait when element doesn't exist
+          })
+        }
+        else {
+          await context.page.evaluate(() => 0)
+        }
+      }
+      else {
+        await context.page.evaluate(() => 0)
+      }
+    }
+    catch {}
+    await context.context.tracing.groupEnd()
+    return
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const groupTraceStart: BrowserCommand<[payload: { name: string; stack?: string }]> = async (
+  context,
+  payload,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    const { name, stack } = payload
+    const location = parseLocation(context, stack)
+    await context.context.tracing.group(name, { location })
+    return
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+export const groupTraceEnd: BrowserCommand<[]> = async (
+  context,
+) => {
+  if (isPlaywrightProvider(context.provider)) {
+    if (!context.provider.tracingContexts.has(context.sessionId)) {
+      return
+    }
+    await context.context.tracing.groupEnd()
+    return
+  }
+  throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+function parseLocation(context: BrowserCommandContext, stack?: string): ParsedStack | undefined {
+  if (!stack) {
+    return
+  }
+  const parsedStacks = context.project.browser!.parseStacktrace(stack)
+  return parsedStacks[0]
 }
 
 function resolveTracesPath({ testPath, project }: BrowserCommandContext, name: string) {
@@ -106,20 +184,25 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
   const vitest = project.vitest
   await Promise.all(traces.map((trace) => {
     const entity = vitest.state.getReportedEntityById(testId)
-    return vitest._testRun.annotate(testId, {
-      message: relative(project.config.root, trace),
-      type: 'traces',
-      attachment: {
-        path: trace,
-        contentType: 'application/octet-stream',
+    const location = entity?.location
+      ? {
+          file: entity.module.moduleId,
+          line: entity.location.line,
+          column: entity.location.column,
+        }
+      : undefined
+    return vitest._testRun.recordArtifact(testId, {
+      type: 'internal:annotation',
+      annotation: {
+        message: relative(project.config.root, trace),
+        type: 'traces',
+        attachment: {
+          path: trace,
+          contentType: 'application/octet-stream',
+        },
+        location,
       },
-      location: entity?.location
-        ? {
-            file: entity.module.moduleId,
-            line: entity.location.line,
-            column: entity.location.column,
-          }
-        : undefined,
+      location,
     })
   }))
 }

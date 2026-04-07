@@ -49,7 +49,7 @@ it.each([
   expect(stdout).toContain('custom.spec.ts:14:1 > custom')
 
   const suiteMeta = { done: true }
-  const testMeta = { custom: 'some-custom-hanlder' }
+  const testMeta = { custom: 'some-custom-handler' }
 
   expect(finishedTestCaseMetas).toHaveLength(3)
   expect(finishedTestModuleMetas).toHaveLength(1)
@@ -97,8 +97,9 @@ it.each([
 
 it('can modify the global test name pattern', async () => {
   const { ctx } = await runVitest({
+    standalone: true,
+    watch: true,
     testNamePattern: 'custom',
-    include: ['non-existing'],
   })
 
   expect(ctx?.getGlobalTestNamePattern()).toEqual(/custom/)

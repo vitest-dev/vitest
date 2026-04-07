@@ -2,15 +2,16 @@ import type { File, Task } from '@vitest/runner'
 import type {
   FileTreeNode,
   ParentTreeNode,
+  SortUIType,
   SuiteTreeNode,
   TestTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
-import { client } from '~/composables/client'
+import { client, config } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
-import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
+import { getBadgeNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
 export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.type === 'test'
@@ -32,10 +33,47 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
-export function sortedRootTasks(tasks = explorerTree.root.tasks) {
-  return tasks.sort((a, b) => {
+export function isSlowTestTask(task: Task) {
+  if (task.type !== 'test') {
+    return false
+  }
+
+  const duration = task.result?.duration
+  if (typeof duration !== 'number') {
+    return false
+  }
+
+  const threshold = config.value.slowTestThreshold
+  return typeof threshold === 'number' && duration > threshold
+}
+
+export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {
+  const sorted = [...tasks]
+
+  sorted.sort((a, b) => {
+    if (sort === 'duration-desc' || sort === 'duration-asc') {
+      const durationA = a.duration ?? 0
+      const durationB = b.duration ?? 0
+      if (durationA !== durationB) {
+        return sort === 'duration-desc'
+          ? durationB - durationA
+          : durationA - durationB
+      }
+    }
+    else if (sort === 'asc' || sort === 'desc') {
+      const projectA = a.projectName || ''
+      const projectB = b.projectName || ''
+      if (projectA !== projectB) {
+        return sort === 'asc'
+          ? projectA.localeCompare(projectB)
+          : projectB.localeCompare(projectA)
+      }
+    }
+    // Default sort (by filepath, then project) is the fallback
     return `${a.filepath}:${a.projectName}`.localeCompare(`${b.filepath}:${b.projectName}`)
   })
+
+  return sorted
 }
 
 export function createOrUpdateFileNode(
@@ -48,7 +86,8 @@ export function createOrUpdateFileNode(
     fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
-    fileNode.duration = file.result?.duration
+    fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
+    fileNode.slow = false
     fileNode.collectDuration = file.collectDuration
     fileNode.setupDuration = file.setupDuration
     fileNode.environmentLoad = file.environmentLoad
@@ -68,10 +107,11 @@ export function createOrUpdateFileNode(
       tasks: [],
       typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
+      duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
+      slow: false,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
+      projectNameColor: explorerTree.colors.get(file.projectName || '') || getBadgeNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,
@@ -131,8 +171,8 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
-  const duration = task.result?.duration != null
-    ? Math.round(task.result?.duration)
+  const duration = typeof task.result?.duration === 'number'
+    ? Math.round(task.result.duration)
     : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
@@ -145,6 +185,7 @@ export function createOrUpdateNode(
       taskNode.name = task.name
       taskNode.mode = task.mode
       taskNode.duration = duration
+      taskNode.slow = isSlowTestTask(task)
       taskNode.state = task.result?.state
     }
     else {
@@ -160,6 +201,7 @@ export function createOrUpdateNode(
           expanded: false,
           indent: node.indent + 1,
           duration,
+          slow: isSlowTestTask(task),
           state: task.result?.state,
         } as TestTreeNode
       }
@@ -178,6 +220,7 @@ export function createOrUpdateNode(
           tasks: [],
           indent: node.indent + 1,
           duration,
+          slow: false,
           state: task.result?.state,
         } as SuiteTreeNode
       }

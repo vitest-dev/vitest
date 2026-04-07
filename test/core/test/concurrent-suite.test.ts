@@ -1,5 +1,5 @@
 import { createDefer } from '@vitest/utils/helpers'
-import { afterAll, describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 describe('basic', () => {
   const defers = [
@@ -181,3 +181,46 @@ function checkParallelSuites() {
     })
   })
 }
+
+describe('suite hook concurrency', () => {
+  const logs: string[] = []
+
+  afterAll(() => {
+    expect(logs).toEqual(['s2-before', 's2-after', 's1-before', 's1-before-2', 's1-after-2', 's1-after'])
+  })
+
+  describe.concurrent('s1', () => {
+    // before/afterAll inside same suite runs sequentially in stack order
+    beforeAll(async () => {
+      await sleep(200)
+      logs.push('s1-before')
+    })
+
+    beforeAll(async () => {
+      logs.push('s1-before-2')
+    })
+
+    afterAll(async () => {
+      logs.push('s1-after')
+    })
+
+    afterAll(async () => {
+      logs.push('s1-after-2')
+    })
+
+    test('s1-t', () => {})
+  })
+
+  describe.concurrent('s2', () => {
+    // before/afterAll in neighboring concurrent suite runs in parallel
+    beforeAll(async () => {
+      logs.push('s2-before')
+    })
+
+    afterAll(async () => {
+      logs.push('s2-after')
+    })
+
+    test('s2-t', () => {})
+  })
+})

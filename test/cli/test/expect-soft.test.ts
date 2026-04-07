@@ -1,7 +1,6 @@
 import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
-import { describe, expect, test } from 'vitest'
-import { getCurrentTest } from 'vitest/suite'
+import { describe, expect, test, TestRunner } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
@@ -9,7 +8,7 @@ describe('expect.soft', () => {
     root: resolve('./fixtures/expect-soft'),
     include: ['expects/soft.test.ts'],
     setupFiles: [],
-    testNamePattern: getCurrentTest()?.name,
+    testNamePattern: TestRunner.getCurrentTest()?.name,
     testTimeout: 4000,
     ...config,
   }, ['soft'])
@@ -44,6 +43,20 @@ describe('expect.soft', () => {
     const { stderr } = await run()
     expect.soft(stderr).toContain('Error: expected 2 to be 3')
     expect.soft(stderr).toContain('Error: expected 4 to be 3')
+  })
+
+  test('promise rejection', async () => {
+    const { stderr } = await run()
+    // both assertions should execute (not abort after first rejection)
+    expect.soft(stderr).toContain('promise rejected "Error: boom 1st" instead of resolving')
+    expect.soft(stderr).toContain('promise rejected "Error: boom 2nd" instead of resolving')
+  })
+
+  test('promise resolved instead of rejecting', async () => {
+    const { stderr } = await run()
+    // both assertions should execute
+    expect.soft(stderr).toContain('promise resolved "\'value 1\'" instead of rejecting')
+    expect.soft(stderr).toContain('promise resolved "\'value 2\'" instead of rejecting')
   })
 
   test('passed', async () => {

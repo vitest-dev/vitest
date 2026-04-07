@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ParsedStack, TestError } from 'vitest'
+import { computed } from 'vue'
 import { showLocationSource } from '~/composables/codemirror'
-import { isTestFile, openInEditor } from '~/composables/error'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter, isTestFile, openInEditor } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -51,7 +53,7 @@ function showCode(stack: ParsedStack) {
  - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
       <div
         v-tooltip.bottom="'Open in Editor'"
-        class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
+        class="i-carbon-launch c-red-700 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
         tabindex="0"
         aria-label="Open in Editor"
         @click.passive="showCode(stack)"

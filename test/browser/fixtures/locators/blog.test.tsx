@@ -3,7 +3,7 @@ import { page, userEvent } from 'vitest/browser'
 import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {
-  const screen = page.render(<Blog />)
+  const screen = await page.render(<Blog />)
 
   await expect.element(screen.getByRole('heading', { name: 'Blog' })).toBeInTheDocument()
 

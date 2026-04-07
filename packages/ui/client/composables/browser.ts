@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 export type ViewportSize
   = | 'small-mobile'
     | 'large-mobile'

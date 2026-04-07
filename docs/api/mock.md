@@ -20,8 +20,75 @@ getApplesSpy.mock.calls.length === 1
 
 You should use mock assertions (e.g., [`toHaveBeenCalled`](/api/expect#tohavebeencalled)) on [`expect`](/api/expect) to assert mock results. This API reference describes available properties and methods to manipulate mock behavior.
 
+::: warning IMPORTANT
+Vitest spies inherit implementation's [`length`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length) property when initialized, but it doesn't override it if the implementation was changed later:
+
+::: code-group
+```ts [vi.fn]
+const fn = vi.fn((arg1) => {})
+fn.length // == 1
+
+fn.mockImplementation(() => {})
+fn.length // == 1
+```
+```ts [vi.spyOn]
+const example = {
+  fn(arg1, arg2) {
+    // ...
+  }
+}
+
+const fn = vi.spyOn(example, 'fn')
+fn.length // == 2
+
+fn.mockImplementation(() => {})
+fn.length // == 2
+```
+:::
+
 ::: tip
 The custom function implementation in the types below is marked with a generic `<T>`.
+:::
+
+::: warning Class Support {#class-support}
+Shorthand methods like `mockReturnValue`, `mockReturnValueOnce`, `mockResolvedValue` and others cannot be used on a mocked class. Class constructors have [unintuitive behaviour](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/constructor) regarding the return value:
+
+```ts {2,7}
+const CorrectDogClass = vi.fn(class {
+  constructor(public name: string) {}
+})
+
+const IncorrectDogClass = vi.fn(class {
+  constructor(public name: string) {
+    return { name }
+  }
+})
+
+const Marti = new CorrectDogClass('Marti')
+const Newt = new IncorrectDogClass('Newt')
+
+Marti instanceof CorrectDogClass // ✅ true
+Newt instanceof IncorrectDogClass // ❌ false!
+```
+
+Even though the shapes are the same, the _return value_ from the constructor is assigned to `Newt`, which is a plain object, not an instance of a mock. Vitest guards you against this behaviour in shorthand methods (but not in `mockImplementation`!) and throws an error instead.
+
+If you need to mock constructed instance of a class, consider using the `class` syntax with `mockImplementation` instead:
+
+```ts
+mock.mockReturnValue({ hello: () => 'world' }) // [!code --]
+mock.mockImplementation(class { hello = () => 'world' }) // [!code ++]
+```
+
+If you need to test the behaviour where this is a valid use case, you can use `mockImplementation` with a `constructor`:
+
+```ts
+mock.mockImplementation(class {
+  constructor(name: string) {
+    return { name }
+  }
+})
+```
 :::
 
 ## getMockImplementation
@@ -67,7 +134,7 @@ expect(person.greet('Bob')).toBe('mocked')
 expect(spy.mock.calls).toEqual([['Bob']])
 ```
 
-To automatically call this method before each test, enable the [`clearMocks`](/config/#clearmocks) setting in the configuration.
+To automatically call this method before each test, enable the [`clearMocks`](/config/clearmocks) setting in the configuration.
 
 ## mockName
 
@@ -235,7 +302,7 @@ expect(person.greet('Bob')).toBe('Hello Bob')
 expect(spy.mock.calls).toEqual([['Bob']])
 ```
 
-To automatically call this method before each test, enable the [`mockReset`](/config/#mockreset) setting in the configuration.
+To automatically call this method before each test, enable the [`mockReset`](/config/mockreset) setting in the configuration.
 
 ## mockRestore
 
@@ -263,7 +330,7 @@ expect(person.greet('Bob')).toBe('Hello Bob')
 expect(spy.mock.calls).toEqual([])
 ```
 
-To automatically call this method before each test, enable the [`restoreMocks`](/config/#restoremocks) setting in the configuration.
+To automatically call this method before each test, enable the [`restoreMocks`](/config/restoremocks) setting in the configuration.
 
 ## mockResolvedValue
 
@@ -351,6 +418,40 @@ const myMockFn = vi
 console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 ```
 
+## mockThrow <Version>4.1.0</Version> {#mockthrow}
+
+```ts
+function mockThrow(value: unknown): Mock<T>
+```
+
+Accepts a value that will be thrown whenever the mock function is called.
+
+```ts
+const myMockFn = vi.fn()
+myMockFn.mockThrow(new Error('error message'))
+myMockFn() // throws Error<'error message'>
+```
+
+## mockThrowOnce <Version>4.1.0</Version> {#mockthrowonce}
+
+```ts
+function mockThrowOnce(value: unknown): Mock<T>
+```
+
+Accepts a value that will be thrown during the next function call. If chained, every consecutive call will throw the specified value.
+
+```ts
+const myMockFn = vi
+  .fn()
+  .mockReturnValue('default')
+  .mockThrowOnce(new Error('first call error'))
+  .mockThrowOnce('second call error')
+
+expect(() => myMockFn()).toThrow('first call error')
+expect(() => myMockFn()).toThrow('second call error')
+expect(myMockFn()).toEqual('default')
+```
+
 ## mock.calls
 
 ```ts
@@ -372,7 +473,7 @@ fn.mock.calls === [
 ```
 
 :::warning Objects are Stored by Reference
-Note that Vitest always stores objects by reference in all properies of the `mock` state. This means that if the properties were changed by your code, then some assertions like [`.toHaveBeenCalledWith`](/api/expect#tohavebeencalledwith) will not pass:
+Note that Vitest always stores objects by reference in all properties of the `mock` state. This means that if the properties were changed by your code, then some assertions like [`.toHaveBeenCalledWith`](/api/expect#tohavebeencalledwith) will not pass:
 
 ```ts
 const argument = {

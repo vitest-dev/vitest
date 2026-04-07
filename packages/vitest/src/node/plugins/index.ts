@@ -1,7 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
-import { relative } from 'pathe'
+import { relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
@@ -30,7 +30,7 @@ export async function VitestPlugin(
   const userConfig = deepMerge({}, options) as UserConfig
 
   async function UIPlugin() {
-    await vitest.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), vitest.version)
+    await vitest.packageInstaller.ensureInstalled('@vitest/ui', resolve(options.root || process.cwd()), vitest.version)
     return (await import('@vitest/ui')).default(vitest)
   }
 
@@ -61,9 +61,11 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         ;(options as unknown as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
 
         let open: string | boolean | undefined = false
 
@@ -74,6 +76,7 @@ export async function VitestPlugin(
         const resolveOptions = getDefaultResolveOptions()
 
         let config: ViteConfig = {
+          base: '/',
           root: viteConfig.test?.root || options.root,
           define: {
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
@@ -113,22 +116,6 @@ export async function VitestPlugin(
             },
           },
           test: {
-            poolOptions: {
-              threads: {
-                isolate:
-                  options.poolOptions?.threads?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.threads?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-              forks: {
-                isolate:
-                  options.poolOptions?.forks?.isolate
-                  ?? options.isolate
-                  ?? testConfig.poolOptions?.forks?.isolate
-                  ?? viteConfig.test?.isolate,
-              },
-            },
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },
@@ -273,8 +260,6 @@ export async function VitestPlugin(
         }
       },
       configureServer: {
-        // runs after vite:import-analysis as it relies on `server` instance on Vite 5
-        order: 'post',
         async handler(server) {
           if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
             server.watcher.on('ready', () => {

@@ -9,6 +9,7 @@ test.each([
   ['--browser.enabled'],
   ['--typecheck'],
   ['--typecheck.only'],
+  ['--static-parse'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()

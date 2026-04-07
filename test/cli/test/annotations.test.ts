@@ -1,3 +1,4 @@
+import type { TestArtifact } from '@vitest/runner'
 import type { TestAnnotation } from 'vitest'
 import { playwright } from '@vitest/browser-playwright'
 import { describe, expect, test } from 'vitest'
@@ -19,6 +20,11 @@ test('simple', async ({ annotate }) => {
   await annotate('3', { path: './test-3.js' })
   await annotate('4', 'warning', { path: './test-4.js' })
   await externalAnnotate(annotate)
+  await annotate('with base64 body', { body: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' })
+  await annotate('with Uint8Array body', { body: new Uint8Array(Array.from({ length: 256 }).map((_, i) => i)) })
+  await annotate('with contentType', { body: '', contentType: 'text/plain' })
+  await annotate('bodyEncoding utf-8', { body: 'Hello world', bodyEncoding: 'utf-8', contentType: 'text/plain' })
+  await annotate('bodyEncoding base64', { body: btoa('Hello world'), bodyEncoding: 'base64', contentType: 'text/plain' })
 })
 
 describe('suite', () => {
@@ -47,12 +53,14 @@ describe('API', () => {
   ])('annotations are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
+    const artifacts: Record<string, ReadonlyArray<TestArtifact>> = {}
 
     const { stderr } = await runInlineTests(
       {
         'basic.test.ts': annotationTest,
         'test-3.js': test3Content,
         'test-4.js': '',
+        'vitest.config.js': { test: options },
       },
       {
         includeTaskLocation: true,
@@ -61,7 +69,10 @@ describe('API', () => {
           {
             onTestCaseAnnotate(testCase, annotation) {
               const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js')
-              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} ${path}`)
+              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} path=${path} contentType=${annotation.attachment?.contentType} body=${annotation.attachment?.body}`)
+            },
+            onTestCaseArtifactRecord() {
+              events.push('[artifact]')
             },
             onTestCaseReady(testCase) {
               events.push(`[ready] ${testCase.name}`)
@@ -83,13 +94,11 @@ describe('API', () => {
                 }
                 return annotation
               })
+              // artifacts should be empty until next major so no handling needed
+              artifacts[testCase.name] = testCase.artifacts()
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 
@@ -97,19 +106,30 @@ describe('API', () => {
     expect(events).toMatchInlineSnapshot(`
       [
         "[ready] simple",
-        "[annotate] simple 1 notice undefined",
-        "[annotate] simple 2 warning undefined",
-        "[annotate] simple 3 notice <root>/.vitest-attachments/3-<hash>.js",
-        "[annotate] simple 4 warning <root>/.vitest-attachments/4-<hash>.js",
-        "[annotate] simple external notice undefined",
+        "[annotate] simple 1 notice path=undefined contentType=undefined body=undefined",
+        "[annotate] simple 2 warning path=undefined contentType=undefined body=undefined",
+        "[annotate] simple 3 notice path=<root>/.vitest-attachments/3-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple 4 warning path=<root>/.vitest-attachments/4-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple external notice path=undefined contentType=undefined body=undefined",
+        "[annotate] simple with base64 body notice path=undefined contentType=undefined body=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        "[annotate] simple with Uint8Array body notice path=undefined contentType=undefined body=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+        "[annotate] simple with contentType notice path=undefined contentType=text/plain body=",
+        "[annotate] simple bodyEncoding utf-8 notice path=undefined contentType=text/plain body=Hello world",
+        "[annotate] simple bodyEncoding base64 notice path=undefined contentType=text/plain body=SGVsbG8gd29ybGQ=",
         "[result] simple",
         "[ready] second",
-        "[annotate] second 5 notice undefined",
-        "[annotate] second 6 notice https://absolute-path.com",
+        "[annotate] second 5 notice path=undefined contentType=undefined body=undefined",
+        "[annotate] second 6 notice path=https://absolute-path.com contentType=undefined body=undefined",
         "[result] second",
       ]
     `)
 
+    expect(artifacts).toMatchInlineSnapshot(`
+      {
+        "second": [],
+        "simple": [],
+      }
+    `)
     expect(annotations).toMatchInlineSnapshot(`
       {
         "second": [
@@ -117,7 +137,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 15,
+              "line": 20,
             },
             "message": "5",
             "type": "notice",
@@ -129,7 +149,7 @@ describe('API', () => {
             "location": {
               "column": 11,
               "file": "<root>/basic.test.ts",
-              "line": 16,
+              "line": 21,
             },
             "message": "6",
             "type": "notice",
@@ -189,6 +209,74 @@ describe('API', () => {
             "message": "external",
             "type": "notice",
           },
+          {
+            "attachment": {
+              "body": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+              "bodyEncoding": "base64",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 11,
+            },
+            "message": "with base64 body",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+              "bodyEncoding": "base64",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 12,
+            },
+            "message": "with Uint8Array body",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "",
+              "bodyEncoding": "base64",
+              "contentType": "text/plain",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 13,
+            },
+            "message": "with contentType",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "Hello world",
+              "bodyEncoding": "utf-8",
+              "contentType": "text/plain",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 14,
+            },
+            "message": "bodyEncoding utf-8",
+            "type": "notice",
+          },
+          {
+            "attachment": {
+              "body": "SGVsbG8gd29ybGQ=",
+              "bodyEncoding": "base64",
+              "contentType": "text/plain",
+            },
+            "location": {
+              "column": 9,
+              "file": "<root>/basic.test.ts",
+              "line": 15,
+            },
+            "message": "bodyEncoding base64",
+            "type": "notice",
+          },
         ],
       }
     `)
@@ -234,6 +322,11 @@ describe('reporters', () => {
               # notice: 3
               # warning: 4
               # notice: external
+              # notice: with base64 body
+              # notice: with Uint8Array body
+              # notice: with contentType
+              # notice: bodyEncoding utf-8
+              # notice: bodyEncoding base64
           ok 2 - suite # time=<time> {
               1..1
               ok 1 - second # time=<time>
@@ -264,6 +357,11 @@ describe('reporters', () => {
           # notice: 3
           # warning: 4
           # notice: external
+          # notice: with base64 body
+          # notice: with Uint8Array body
+          # notice: with contentType
+          # notice: bodyEncoding utf-8
+          # notice: bodyEncoding base64
       ok 2 - basic.test.ts > suite > second # time=<time>
           # notice: 5
           # notice: 6
@@ -301,6 +399,16 @@ describe('reporters', () => {
                       <property name="warning" value="4">
                       </property>
                       <property name="notice" value="external">
+                      </property>
+                      <property name="notice" value="with base64 body">
+                      </property>
+                      <property name="notice" value="with Uint8Array body">
+                      </property>
+                      <property name="notice" value="with contentType">
+                      </property>
+                      <property name="notice" value="bodyEncoding utf-8">
+                      </property>
+                      <property name="notice" value="bodyEncoding base64">
                       </property>
                   </properties>
               </testcase>
@@ -346,9 +454,19 @@ describe('reporters', () => {
 
       ::notice file=<root>/basic.test.ts,line=10,column=9::external
 
-      ::notice file=<root>/basic.test.ts,line=15,column=11::5
+      ::notice file=<root>/basic.test.ts,line=11,column=9::with base64 body
 
-      ::notice file=<root>/basic.test.ts,line=16,column=11::6
+      ::notice file=<root>/basic.test.ts,line=12,column=9::with Uint8Array body
+
+      ::notice file=<root>/basic.test.ts,line=13,column=9::with contentType
+
+      ::notice file=<root>/basic.test.ts,line=14,column=9::bodyEncoding utf-8
+
+      ::notice file=<root>/basic.test.ts,line=15,column=9::bodyEncoding base64
+
+      ::notice file=<root>/basic.test.ts,line=20,column=11::5
+
+      ::notice file=<root>/basic.test.ts,line=21,column=11::6
       "
     `)
   })
@@ -383,12 +501,22 @@ describe('reporters', () => {
            ↳ 4
          ❯ basic.test.ts:10:9 notice
            ↳ external
+         ❯ basic.test.ts:11:9 notice
+           ↳ with base64 body
+         ❯ basic.test.ts:12:9 notice
+           ↳ with Uint8Array body
+         ❯ basic.test.ts:13:9 notice
+           ↳ with contentType
+         ❯ basic.test.ts:14:9 notice
+           ↳ bodyEncoding utf-8
+         ❯ basic.test.ts:15:9 notice
+           ↳ bodyEncoding base64
 
        ✓ basic.test.ts > suite > second <time>
 
-         ❯ basic.test.ts:15:11 notice
+         ❯ basic.test.ts:20:11 notice
            ↳ 5
-         ❯ basic.test.ts:16:11 notice
+         ❯ basic.test.ts:21:11 notice
            ↳ 6
 
       "
@@ -431,7 +559,7 @@ describe('reporters', () => {
              11|               throw new Error('thrown error')
                |                     ^
              12|             })
-             13|           
+             13|
 
          ❯ basic.test.ts:9:15 notice
            ↳ printed
@@ -472,7 +600,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed
@@ -510,7 +638,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed 1
@@ -525,7 +653,7 @@ describe('reporters', () => {
               6|               throw new Error('thrown error')
                |                     ^
               7|             })
-              8|           
+              8|
 
          ❯ basic.test.ts:5:15 notice
            ↳ printed 2

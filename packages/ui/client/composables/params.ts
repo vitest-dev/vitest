@@ -1,3 +1,5 @@
+import { toRef, useUrlSearchParams } from '@vueuse/core'
+
 export interface Params {
   file: string
   view: null | 'graph' | 'editor' | 'console'

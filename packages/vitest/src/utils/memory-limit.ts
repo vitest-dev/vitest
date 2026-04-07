@@ -8,7 +8,7 @@
 import type { ResolvedConfig } from '../node/types/config'
 import * as nodeos from 'node:os'
 
-function getDefaultThreadsCount(config: ResolvedConfig) {
+function getDefaultThreadsCount(config: Pick<ResolvedConfig, 'watch'>) {
   const numCpus
     = typeof nodeos.availableParallelism === 'function'
       ? nodeos.availableParallelism()
@@ -19,25 +19,14 @@ function getDefaultThreadsCount(config: ResolvedConfig) {
     : Math.max(numCpus - 1, 1)
 }
 
-export function getWorkerMemoryLimit(config: ResolvedConfig, pool: 'vmThreads' | 'vmForks'): string | number {
-  if (pool === 'vmForks') {
-    const opts = config.poolOptions?.vmForks ?? {}
-    if (opts.memoryLimit) {
-      return opts.memoryLimit
-    }
-    const workers = opts.maxForks ?? getDefaultThreadsCount(config)
-
-    return 1 / workers
+export function getWorkerMemoryLimit(config: Pick<ResolvedConfig, 'vmMemoryLimit' | 'maxWorkers' | 'watch'>): string | number {
+  if (config.vmMemoryLimit) {
+    return config.vmMemoryLimit
   }
-  else {
-    const opts = config.poolOptions?.vmThreads ?? {}
-    if (opts.memoryLimit) {
-      return opts.memoryLimit
-    }
-    const workers = opts.maxThreads ?? getDefaultThreadsCount(config)
 
-    return 1 / workers
-  }
+  const workers = config.maxWorkers ?? getDefaultThreadsCount(config)
+
+  return 1 / workers
 }
 
 /**

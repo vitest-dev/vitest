@@ -81,10 +81,11 @@ describe('should fail', async () => {
       dir: resolve(import.meta.dirname, '..', './failing'),
       config: resolve(import.meta.dirname, './vitest.empty.config.ts'),
       typecheck: { enabled: true },
-    },
-    )
+    })
 
-    expect(stderr.replace(resolve(import.meta.dirname, '..'), '<root>')).toMatchSnapshot()
+    const message = removeLines(stderr.replace(resolve(import.meta.dirname, '..'), '<root>'))
+
+    expect(message).toMatchSnapshot()
   })
 })
 
@@ -151,3 +152,7 @@ it('throws an error if typechecker process exists', async () => {
     expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
   }
 })
+
+function removeLines(log: string) {
+  return log.replace(/⎯{2,}/g, '⎯⎯')
+}

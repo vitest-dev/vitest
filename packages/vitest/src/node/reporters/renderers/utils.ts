@@ -14,10 +14,12 @@ import {
   F_DOWN_RIGHT,
   F_LONG_DASH,
   F_POINTER,
+  F_TODO,
 } from './figures'
 
 export const pointer: string = c.yellow(F_POINTER)
 export const skipped: string = c.dim(c.gray(F_DOWN))
+export const todo: string = c.dim(c.gray(F_TODO))
 export const benchmarkPass: string = c.green(F_DOT)
 export const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
@@ -149,17 +151,31 @@ export function getStateString(
     return c.dim(`no ${name}`)
   }
 
-  const passed = tasks.filter(i => i.result?.state === 'pass')
-  const failed = tasks.filter(i => i.result?.state === 'fail')
-  const skipped = tasks.filter(i => i.mode === 'skip')
-  const todo = tasks.filter(i => i.mode === 'todo')
+  const passed = tasks.reduce((acc, i) => {
+    // Exclude expected failures from passed count
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
+      return acc
+    }
+    return i.result?.state === 'pass' ? acc + 1 : acc
+  }, 0)
+  const failed = tasks.reduce((acc, i) => i.result?.state === 'fail' ? acc + 1 : acc, 0)
+  const skipped = tasks.reduce((acc, i) => i.mode === 'skip' ? acc + 1 : acc, 0)
+  const todo = tasks.reduce((acc, i) => i.mode === 'todo' ? acc + 1 : acc, 0)
+  const expectedFail = tasks.reduce((acc, i) => {
+    // Count tests that are marked as .fails and passed (which means they failed as expected)
+    if (i.result?.state === 'pass' && i.type === 'test' && i.fails) {
+      return acc + 1
+    }
+    return acc
+  }, 0)
 
   return (
     [
-      failed.length ? c.bold(c.red(`${failed.length} failed`)) : null,
-      passed.length ? c.bold(c.green(`${passed.length} passed`)) : null,
-      skipped.length ? c.yellow(`${skipped.length} skipped`) : null,
-      todo.length ? c.gray(`${todo.length} todo`) : null,
+      failed ? c.bold(c.red(`${failed} failed`)) : null,
+      passed ? c.bold(c.green(`${passed} passed`)) : null,
+      expectedFail ? c.cyan(`${expectedFail} expected fail`) : null,
+      skipped ? c.yellow(`${skipped} skipped`) : null,
+      todo ? c.gray(`${todo} todo`) : null,
     ]
       .filter(Boolean)
       .join(c.dim(' | ')) + (showTotal ? c.gray(` (${tasks.length})`) : '')
@@ -167,7 +183,11 @@ export function getStateString(
 }
 
 export function getStateSymbol(task: Task): string {
-  if (task.mode === 'skip' || task.mode === 'todo') {
+  if (task.mode === 'todo') {
+    return todo
+  }
+
+  if (task.mode === 'skip') {
     return skipped
   }
 
@@ -250,7 +270,7 @@ export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>,
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
   const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
-  return `${c.bold(c[bgColor](` ${label} `))} ${message ? c[color](message) : ''}`
+  return `${c.bold(c.black(c[bgColor](` ${label} `)))} ${message ? c[color](message) : ''}`
 }
 
 export function padSummaryTitle(str: string): string {
@@ -269,4 +289,15 @@ export function truncateString(text: string, maxLength: number): string {
 
 function capitalize<T extends string>(text: T) {
   return `${text[0].toUpperCase()}${text.slice(1)}` as Capitalize<T>
+}
+
+/**
+ * Returns the singular or plural form of a word based on the count.
+ */
+export function noun(count: number, singular: string, plural: string): string {
+  if (count === 1) {
+    return singular
+  }
+
+  return plural
 }

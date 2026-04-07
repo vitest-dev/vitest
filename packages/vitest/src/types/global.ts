@@ -1,5 +1,6 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
+import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
@@ -25,6 +26,7 @@ declare module '@vitest/expect' {
   interface MatcherState {
     environment: string
     snapshotState: SnapshotState
+    task?: Readonly<Test>
   }
 
   interface ExpectPollOptions {
@@ -39,7 +41,7 @@ declare module '@vitest/expect' {
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
       actual: () => T,
-      options?: ExpectPollOptions
+      options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
     assertions: (expected: number) => void
@@ -76,7 +78,7 @@ declare module '@vitest/expect' {
      */
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
-      hint?: string
+      hint?: string,
     ) => void
 
     /**
@@ -108,7 +110,6 @@ declare module '@vitest/runner' {
   interface TaskMeta {
     typecheck?: boolean
     benchmark?: boolean
-    failScreenshotPath?: string
   }
 
   interface File {

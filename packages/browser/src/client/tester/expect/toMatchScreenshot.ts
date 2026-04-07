@@ -1,8 +1,10 @@
 import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
+import type { VisualRegressionArtifact } from '@vitest/runner'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { recordArtifact } from 'vitest'
+import { getBrowserState } from '../../utils'
 import { convertToSelector } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
@@ -19,13 +21,11 @@ export default async function toMatchScreenshot(
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
 
-  const currentTest = getWorkerState().current
-
-  if (currentTest === undefined || this.currentTestName === undefined) {
+  if (this.task === undefined || this.currentTestName === undefined) {
     throw new Error('\'toMatchScreenshot\' cannot be used without test context')
   }
 
-  const counterName = `${currentTest.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
+  const counterName = `${this.task.result?.repeatCount ?? 0}${this.testPath}${this.currentTestName}`
   let counter = counters.get(counterName)
 
   if (counter === undefined) {
@@ -40,14 +40,21 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : `${this.currentTestName} ${counter.current}`
 
+  const [element, ...mask] = await Promise.all([
+    convertToSelector(actual, options),
+    ...options.screenshotOptions && 'mask' in options.screenshotOptions
+      ? (options.screenshotOptions.mask as Array<Element | Locator>)
+          .map(m => convertToSelector(m, options))
+      : [],
+  ])
+
   const normalizedOptions: Omit<ScreenshotMatcherArguments[2], 'element'> = (
     options.screenshotOptions && 'mask' in options.screenshotOptions
       ? {
           ...options,
           screenshotOptions: {
             ...options.screenshotOptions,
-            mask: (options.screenshotOptions.mask as Array<Element | Locator>)
-              .map(convertToSelector),
+            mask,
           },
         }
       // TS believes `mask` to still be defined as `ReadonlyArray<Element | Locator>`
@@ -60,30 +67,35 @@ export default async function toMatchScreenshot(
       name,
       this.currentTestName,
       {
-        element: convertToSelector(actual),
+        element,
         ...normalizedOptions,
       },
     ] satisfies ScreenshotMatcherArguments,
   )
 
-  if (result.pass === false && 'context' in currentTest) {
-    const { annotate } = currentTest.context
-
-    const annotations: ReturnType<typeof annotate>[] = []
+  if (result.pass === false) {
+    const attachments: VisualRegressionArtifact['attachments'] = []
 
     if (result.reference) {
-      annotations.push(annotate('Reference screenshot', { path: result.reference }))
+      attachments.push({ name: 'reference', ...result.reference })
     }
 
     if (result.actual) {
-      annotations.push(annotate('Actual screenshot', { path: result.actual }))
+      attachments.push({ name: 'actual', ...result.actual })
     }
 
     if (result.diff) {
-      annotations.push(annotate('Diff', { path: result.diff }))
+      attachments.push({ name: 'diff', ...result.diff })
     }
 
-    await Promise.all(annotations)
+    if (attachments.length > 0) {
+      await recordArtifact(this.task, {
+        type: 'internal:toMatchScreenshot',
+        kind: 'visual-regression',
+        message: result.message,
+        attachments,
+      })
+    }
   }
 
   return {
@@ -96,16 +108,20 @@ export default async function toMatchScreenshot(
             '',
             result.message,
             result.reference
-              ? `\nReference screenshot:\n  ${this.utils.EXPECTED_COLOR(result.reference)}`
+              ? `\nReference screenshot:\n  ${this.utils.EXPECTED_COLOR(result.reference.path)}`
               : null,
             result.actual
-              ? `\nActual screenshot:\n  ${this.utils.RECEIVED_COLOR(result.actual)}`
+              ? `\nActual screenshot:\n  ${this.utils.RECEIVED_COLOR(result.actual.path)}`
               : null,
             result.diff
-              ? this.utils.DIM_COLOR(`\nDiff image:\n  ${result.diff}`)
+              ? this.utils.DIM_COLOR(`\nDiff image:\n  ${result.diff.path}`)
               : null,
+            '',
           ]
             .filter(element => element !== null)
             .join('\n'),
+    meta: {
+      outcome: result.outcome,
+    },
   }
 }

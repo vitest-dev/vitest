@@ -4,23 +4,31 @@ import { preview } from '@vitest/browser-preview'
 import { webdriverio } from '@vitest/browser-webdriverio'
 
 const providerName = (process.env.PROVIDER || 'playwright') as 'playwright' | 'webdriverio' | 'preview'
+
+const wsEndpoint = process.env.BROWSER_WS_ENDPOINT === 'true' ? 'ws://127.0.0.1:6677/' : process.env.BROWSER_WS_ENDPOINT
+
 export const providers = {
-  playwright,
+  playwright: (options?: Parameters<typeof playwright>[0]) => playwright(wsEndpoint
+    ? {
+        ...options,
+        connectOptions: {
+          wsEndpoint,
+          exposeNetwork: '<loopback>',
+        },
+      }
+    : options),
   preview,
   webdriverio,
 }
 
 export const provider = providers[providerName]()
-export const browser = process.env.BROWSER || (provider.name !== 'playwright' ? 'chromium' : 'chrome')
-
-const devInstances: BrowserInstanceOption[] = [
-  { browser },
-]
 
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
   { browser: 'firefox' },
-  { browser: 'webkit' },
+  // hard to setup playwright webkit on some machines (e.g. ArchLinux)
+  // this allows skipping it locally by BROWSER_NO_WEBKIT=true
+  ...(process.env.BROWSER_NO_WEBKIT ? [] : [{ browser: 'webkit' as const }]),
 ]
 
 const webdriverioInstances: BrowserInstanceOption[] = [
@@ -28,8 +36,16 @@ const webdriverioInstances: BrowserInstanceOption[] = [
   { browser: 'firefox' },
 ]
 
-export const instances = process.env.BROWSER
-  ? devInstances
+export const instances: BrowserInstanceOption[] = process.env.BROWSER
+  ? [
+      {
+        browser: process.env.BROWSER as any,
+        headless:
+          wsEndpoint
+            ? true
+            : process.env.BROWSER === 'safari' ? false : undefined,
+      },
+    ]
   : provider.name === 'playwright'
     ? playwrightInstances
     : webdriverioInstances

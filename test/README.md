@@ -13,6 +13,7 @@ Place your test here if you are testing a config option.
 ## cli
 
 If you are testing a complex interaction, place your tests here.
+Type-focused fixtures live under `test/cli/dts/`.
 
 ## browser
 

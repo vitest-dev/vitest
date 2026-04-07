@@ -8,7 +8,7 @@ test('tests run according to the group order', async () => {
     'example.2-2.test.ts': `test('2-2', () => {})`,
     'example.3.test.ts': `test('3', () => {})`,
   }, {
-    globals: true,
+    $cliOptions: { globals: true },
     // run projects in the opposite order!
     projects: [
       {

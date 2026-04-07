@@ -45,6 +45,7 @@ export async function resolveOrchestrator(
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
+    __VITEST_OTEL_CARRIER__: url.searchParams.get('otelCarrier') ?? 'null',
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(browserProject.project.getProvidedContext())),
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
@@ -77,6 +78,8 @@ export async function resolveOrchestrator(
     const jsEntry = manifestContent['orchestrator.html'].file
     const base = browserProject.parent.vite.config.base || '/'
     baseHtml = baseHtml
+      .replace('href="./favicon.ico"', `href="${base}__vitest__/favicon.ico"`)
+      .replace('href="./favicon.svg"', `href="${base}__vitest__/favicon.svg"`)
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(
         '<!-- !LOAD_METADATA! -->',

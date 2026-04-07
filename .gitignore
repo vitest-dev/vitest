@@ -16,11 +16,11 @@ dist
 .vite-node
 ltex*
 .DS_Store
+.zed
 bench/test/*/*/
 **/bench.json
 **/browser/browser.json
 docs/public/user-avatars
-docs/public/sponsors
 .eslintcache
 docs/.vitepress/cache/
 !test/cli/fixtures/dotted-files/**/.cache
@@ -35,3 +35,4 @@ test/browser/html/
 test/core/html/
 .vitest-attachments
 explainFiles.txt
+.vitest-dump

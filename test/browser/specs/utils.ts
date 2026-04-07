@@ -1,10 +1,33 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { TestUserConfig } from 'vitest/node'
-import type { VitestRunnerCLIOptions } from '../../test-utils'
-import { runVitest } from '../../test-utils'
-import { browser } from '../settings'
+import type { RunVitestConfig, TestFsStructure, VitestRunnerCLIOptions } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
+import { instances, provider } from '../settings'
 
-export { browser, instances, provider } from '../settings'
+export { instances, provider } from '../settings'
+
+export async function runInlineBrowserTests(
+  structure: TestFsStructure,
+  config?: RunVitestConfig,
+  options?: VitestRunnerCLIOptions,
+) {
+  return runInlineTests(
+    structure,
+    {
+      watch: false,
+      reporters: 'none',
+      ...config,
+      browser: {
+        enabled: true,
+        provider,
+        instances,
+        headless: true,
+        ...config?.browser,
+      } as TestUserConfig['browser'],
+    },
+    options,
+  )
+}
 
 export async function runBrowserTests(
   config?: Omit<TestUserConfig, 'browser'> & { browser?: Partial<TestUserConfig['browser']> },
@@ -12,13 +35,13 @@ export async function runBrowserTests(
   viteOverrides?: Partial<ViteUserConfig>,
   runnerOptions?: VitestRunnerCLIOptions,
 ) {
-  return runVitest({
+  const result = await runVitest({
     watch: false,
     reporters: 'none',
     ...config,
-    browser: {
-      headless: browser !== 'safari',
-      ...config?.browser,
-    } as TestUserConfig['browser'],
-  }, include, 'test', viteOverrides, runnerOptions)
+    browser: { headless: true, ...config?.browser },
+    $viteConfig: viteOverrides,
+  }, include, runnerOptions)
+
+  return { ...result, stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '') }
 }

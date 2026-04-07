@@ -10,7 +10,7 @@ export interface KeyboardState {
 
 export const keyboard: UserEventCommand<(
   text: string,
-  state: KeyboardState
+  state: KeyboardState,
 ) => Promise<{ unreleased: string[] }>> = async (
   context,
   text,

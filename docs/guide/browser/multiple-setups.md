@@ -1,6 +1,6 @@
 # Multiple Setups
 
-You can specify several different browser setups using the [`browser.instances`](/guide/browser/config#browser-instances) option.
+You can specify several different browser setups using the [`browser.instances`](/config/browser/instances) option.
 
 The main advantage of using the `browser.instances` over the [test projects](/guide/projects) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
 
@@ -74,7 +74,7 @@ test('ratio works', () => {
 ```
 :::
 
-In this example Vitest will run all tests in `chromium` browser, but execute a `'./ratio-setup.ts'` file only in the first configuration and inject a different `ratio` value depending on the [`provide` field](/config/#provide).
+In this example Vitest will run all tests in `chromium` browser, but execute a `'./ratio-setup.ts'` file only in the first configuration and inject a different `ratio` value depending on the [`provide` field](/config/provide).
 
 ::: warning
 Note that you need to define the custom `name` value if you are using the same browser name because Vitest will assign the `browser` as the project name otherwise.

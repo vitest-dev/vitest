@@ -1,11 +1,11 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "4.0.0-beta.17",
+  "version": "4.1.3",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/browser#readme",
+  "homepage": "https://vitest.dev/guide/browser/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,12 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "browser",
+    "component"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -56,7 +62,7 @@
     "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
-    "dev:client": "vite build src/client --watch",
+    "dev:client": "node --watch-preserve-output --watch-path src/client scripts/build-client.js",
     "dev:node": "rollup -c --watch --watch.include 'src/**'",
     "dev": "premove dist && pnpm run --stream '/^dev:/'"
   },
@@ -64,23 +70,24 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
+    "@blazediff/core": "1.9.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "pixelmatch": "7.1.0",
     "pngjs": "^7.0.0",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.7.0",
+    "ivya": "^1.8.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "vitest": "workspace:*"

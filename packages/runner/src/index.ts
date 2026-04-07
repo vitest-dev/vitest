@@ -1,6 +1,9 @@
+export { recordArtifact } from './artifact'
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   onTestFailed,

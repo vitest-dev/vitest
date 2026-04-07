@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { h } from 'vue'
-import { render, screen } from '~/test'
+import { page, render } from '~/test'
 import DashboardEntry from './DashboardEntry.vue'
 
 const bodyTestId = 'body-content'
@@ -12,7 +12,7 @@ function div(o: { testId: string; body: string }) {
 }
 
 describe('DashboardEntry', () => {
-  it('renders the body and header slots', () => {
+  it('renders the body and header slots', async () => {
     render(DashboardEntry, {
       slots: {
         body: div({ testId: bodyTestId, body: faker.lorem.words(2) }),
@@ -20,7 +20,7 @@ describe('DashboardEntry', () => {
       },
     })
 
-    expect(screen.getByTestId(bodyTestId)).toBeTruthy()
-    expect(screen.getByTestId(headerTestId)).toBeTruthy()
+    await expect.element(page.getByTestId(bodyTestId)).toBeInTheDocument()
+    await expect.element(page.getByTestId(headerTestId)).toBeInTheDocument()
   })
 })

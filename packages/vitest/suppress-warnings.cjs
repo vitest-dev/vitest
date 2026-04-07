@@ -7,6 +7,7 @@ const ignoreWarnings = new Set([
   'Custom ESM Loaders is an experimental feature and might change at any time',
   'VM Modules is an experimental feature and might change at any time',
   'VM Modules is an experimental feature. This feature could change at any time',
+  'stripTypeScriptTypes is an experimental feature and might change at any time',
 ])
 
 const { emit } = process

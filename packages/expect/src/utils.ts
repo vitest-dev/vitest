@@ -6,14 +6,15 @@ import { noop } from '@vitest/utils/helpers'
 
 export function createAssertionMessage(
   util: Chai.ChaiUtils,
-  assertion: Assertion,
+  assertion: Chai.Assertion,
   hasArgs: boolean,
 ) {
+  const soft = util.flag(assertion, 'soft') ? '.soft' : ''
   const not = util.flag(assertion, 'negate') ? 'not.' : ''
   const name = `${util.flag(assertion, '_name')}(${hasArgs ? 'expected' : ''})`
   const promiseName = util.flag(assertion, 'promise')
   const promise = promiseName ? `.${promiseName}` : ''
-  return `expect(actual)${promise}.${not}${name}`
+  return `expect${soft}(actual)${promise}.${not}${name}`
 }
 
 export function recordAsyncExpect(
@@ -21,6 +22,7 @@ export function recordAsyncExpect(
   promise: Promise<any>,
   assertion: string,
   error: Error,
+  isSoft?: boolean,
 ): Promise<any> {
   const test = _test as Test | undefined
   // record promise for test, that resolves before test ends
@@ -40,6 +42,13 @@ export function recordAsyncExpect(
     if (!test.promises) {
       test.promises = []
     }
+    // setup `expect.soft` handler here instead of `wrapAssertion`
+    // to avoid double error tracking while keeping non-await promise detection.
+    if (isSoft) {
+      promise = promise.then(noop, (err) => {
+        handleTestError(test, err)
+      })
+    }
     test.promises.push(promise)
 
     let resolved = false
@@ -50,7 +59,7 @@ export function recordAsyncExpect(
         const stack = processor(error.stack)
         console.warn([
           `Promise returned by \`${assertion}\` was not awaited. `,
-          'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. ',
+          'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. ',
           'Please remember to await the assertion.\n',
           stack,
         ].join(''))
@@ -63,9 +72,11 @@ export function recordAsyncExpect(
         return promise.then(onFulfilled, onRejected)
       },
       catch(onRejected) {
+        resolved = true
         return promise.catch(onRejected)
       },
       finally(onFinally) {
+        resolved = true
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
@@ -83,6 +94,7 @@ function handleTestError(test: Test, err: unknown) {
   test.result.errors.push(processError(err, runner.config.diffOptions))
 }
 
+/** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */
 export function wrapAssertion(
   utils: Chai.ChaiUtils,
   name: string,
@@ -95,7 +107,14 @@ export function wrapAssertion(
     }
 
     if (!utils.flag(this, 'soft')) {
-      return fn.apply(this, args)
+      // avoid WebKit's proper tail call to preserve stacktrace offset for inline snapshot
+      // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
+      try {
+        return fn.apply(this, args)
+      }
+      finally {
+        // no lint
+      }
     }
 
     const test: Test = utils.flag(this, 'vitest-test')

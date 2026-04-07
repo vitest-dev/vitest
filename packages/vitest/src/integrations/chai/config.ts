@@ -6,5 +6,5 @@ export function setupChaiConfig(config: ChaiConfig): void {
 
 export type ChaiConfig = Omit<
   Partial<typeof chai.config>,
-  'useProxy' | 'proxyExcludedKeys'
+  'useProxy' | 'proxyExcludedKeys' | 'deepEqual'
 >

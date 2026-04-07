@@ -34,7 +34,7 @@ export const bench: BenchmarkAPI = createBenchmark(function (
   benchFns.set(task, fn)
   benchOptsMap.set(task, options)
   // vitest runner sets mode to `todo` if handler is not passed down
-  // but we store handler separetly
+  // but we store handler separately
   if (!this.todo && task.mode === 'todo') {
     task.mode = 'run'
   }
@@ -45,7 +45,7 @@ function createBenchmark(
     this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
     name: string | Function,
     fn?: BenchFunction,
-    options?: BenchOptions
+    options?: BenchOptions,
   ) => void,
 ) {
   const benchmark = createChainable(

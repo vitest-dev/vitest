@@ -1,8 +1,28 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-
+import type {
+  ModuleDefinitionDiagnostic,
+  ModuleDefinitionDurationsDiagnostic,
+  ModuleDefinitionLocation,
+  SourceModuleDiagnostic,
+  SourceModuleLocations,
+  UntrackedModuleDefinitionDiagnostic,
+} from '../types/module-locations'
 import '../types/global'
 
+// eslint-disable-next-line ts/no-namespace
+export declare namespace Experimental {
+  export {
+    ModuleDefinitionDiagnostic,
+    ModuleDefinitionDurationsDiagnostic,
+    ModuleDefinitionLocation,
+    SourceModuleDiagnostic,
+    SourceModuleLocations,
+    UntrackedModuleDefinitionDiagnostic,
+  }
+}
+
 export type {
+  ExternalResult,
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
@@ -10,6 +30,7 @@ export type {
 } from '../api/types'
 export { assert, chai, createExpect, expect, should } from '../integrations/chai'
 export { inject } from '../integrations/inject'
+export { Snapshots } from '../integrations/snapshot/chai'
 
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
@@ -21,6 +42,10 @@ export type {
   SerializedCoverageConfig,
 } from '../runtime/config'
 
+export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
+
+export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
+export { TestRunner } from '../runtime/runners/test'
 export type {
   BenchFactory,
   BenchFunction,
@@ -68,17 +93,23 @@ export type {
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
+  RawMatcherFn as Matcher,
+  ExpectationResult as MatcherResult,
   Matchers,
+  MatcherState,
 } from '@vitest/expect'
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   describe,
   it,
   onTestFailed,
   onTestFinished,
+  recordArtifact,
   suite,
   test,
 } from '@vitest/runner'
@@ -98,14 +129,25 @@ export type {
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
+  SuiteOptions,
   TaskCustomOptions,
   TaskMeta,
   TaskState,
   TestAnnotation,
+  TestAnnotationArtifact,
   TestAPI,
+  TestArtifact,
+  TestArtifactBase,
+  TestArtifactLocation,
+  TestArtifactRegistry,
+  TestAttachment,
   TestContext,
   TestFunction,
   TestOptions,
+  VitestRunnerConfig as TestRunnerConfig,
+
+  TestTags,
+  VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 
 export type { CancelReason } from '@vitest/runner'
@@ -129,10 +171,16 @@ export type {
   MockedFunction,
   MockedObject,
   MockInstance,
+  MockResult,
+  MockResultIncomplete,
+  MockResultReturn,
+  MockResultThrow,
+  MockSettledResult,
+  MockSettledResultFulfilled,
+  MockSettledResultIncomplete,
+  MockSettledResultRejected,
 } from '@vitest/spy'
 
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
-
-export { EvaluatedModules } from 'vite/module-runner'

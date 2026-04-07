@@ -14,7 +14,7 @@ const grandparent = queryByTestId('grandparent')
 const parent = queryByTestId('parent')
 const child = queryByTestId('child')
 const svgElement = queryByTestId('svg-element')
-const nonExistantElement = queryByTestId('not-exists')
+const nonExistentElement = queryByTestId('not-exists')
 const fakeElement = {thisIsNot: 'an html element'}
 
 test('.toContainElement positive test cases', () => {
@@ -27,43 +27,43 @@ test('.toContainElement positive test cases', () => {
   expect(child).not.toContainElement(parent)
   expect(child).not.toContainElement(grandparent)
   expect(child).not.toContainElement(svgElement)
-  expect(grandparent).not.toContainElement(nonExistantElement)
+  expect(grandparent).not.toContainElement(nonExistentElement)
 })
 
 test('.toContainElement negative test cases', () => {
   expect(() =>
-    expect(nonExistantElement).not.toContainElement(child),
-  ).toThrowError()
-  expect(() => expect(parent).toContainElement(grandparent)).toThrowError()
+    expect(nonExistentElement).not.toContainElement(child),
+  ).toThrow()
+  expect(() => expect(parent).toContainElement(grandparent)).toThrow()
   expect(() =>
-    expect(nonExistantElement).toContainElement(grandparent),
-  ).toThrowError()
+    expect(nonExistentElement).toContainElement(grandparent),
+  ).toThrow()
   expect(() =>
-    expect(grandparent).toContainElement(nonExistantElement),
-  ).toThrowError()
+    expect(grandparent).toContainElement(nonExistentElement),
+  ).toThrow()
   expect(() =>
-    expect(nonExistantElement).toContainElement(nonExistantElement),
-  ).toThrowError()
+    expect(nonExistentElement).toContainElement(nonExistentElement),
+  ).toThrow()
   expect(() =>
     // @ts-expect-error testing invalid assertion
-    expect(nonExistantElement).toContainElement(fakeElement),
-  ).toThrowError()
+    expect(nonExistentElement).toContainElement(fakeElement),
+  ).toThrow()
   expect(() =>
-    expect(fakeElement).toContainElement(nonExistantElement),
-  ).toThrowError()
+    expect(fakeElement).toContainElement(nonExistentElement),
+  ).toThrow()
   expect(() =>
-    expect(fakeElement).not.toContainElement(nonExistantElement),
-  ).toThrowError()
-  expect(() => expect(fakeElement).toContainElement(grandparent)).toThrowError()
+    expect(fakeElement).not.toContainElement(nonExistentElement),
+  ).toThrow()
+  expect(() => expect(fakeElement).toContainElement(grandparent)).toThrow()
     // @ts-expect-error testing invalid assertion
-  expect(() => expect(grandparent).toContainElement(fakeElement)).toThrowError()
+  expect(() => expect(grandparent).toContainElement(fakeElement)).toThrow()
     // @ts-expect-error testing invalid assertion
-  expect(() => expect(fakeElement).toContainElement(fakeElement)).toThrowError()
-  expect(() => expect(grandparent).not.toContainElement(child)).toThrowError()
+  expect(() => expect(fakeElement).toContainElement(fakeElement)).toThrow()
+  expect(() => expect(grandparent).not.toContainElement(child)).toThrow()
   expect(() =>
     expect(grandparent).not.toContainElement(svgElement),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(grandparent).not.toContainElement(undefined),
-  ).toThrowError()
+  ).toThrow()
 })

@@ -9,6 +9,8 @@ import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
 
+export type { CustomComparatorsRegistry } from './commands/screenshotMatcher/types'
+
 export function defineBrowserCommand<T extends unknown[]>(
   fn: BrowserCommand<T>,
 ): BrowserCommand<T> {
@@ -17,6 +19,8 @@ export function defineBrowserCommand<T extends unknown[]>(
 
 // export type { ProjectBrowser } from './project'
 export { parseKeyDef, resolveScreenshotPath } from './utils'
+
+export { asLocator } from 'ivya'
 
 export const createBrowserServer: BrowserServerFactory = async (options) => {
   const project = options.project
@@ -47,6 +51,7 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
   let cacheDir: string
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
+    define: project.config.viteDefine,
     base: '/',
     root: project.config.root,
     logLevel,
@@ -69,6 +74,7 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
     configLoader: project.vite.config.inlineConfig.configLoader,
     // watch is handled by Vitest
     server: {
+      ...project.options?.server,
       hmr: false,
       watch: null,
     },

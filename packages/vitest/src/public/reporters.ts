@@ -1,4 +1,5 @@
 export {
+  AgentReporter,
   BenchmarkReporter,
   BenchmarkReportsMap,
   DefaultReporter,
@@ -25,3 +26,5 @@ export type {
   Reporter,
   TestRunEndReason,
 } from '../node/reporters'
+
+console.warn('Importing from "vitest/reporters" is deprecated since Vitest 4.1. Please use "vitest/node" instead.')

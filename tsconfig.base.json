@@ -17,6 +17,7 @@
       "@vitest/mocker": ["./packages/mocker/src/index.ts"],
       "@vitest/mocker/node": ["./packages/mocker/src/node/index.ts"],
       "@vitest/mocker/browser": ["./packages/mocker/src/browser/index.ts"],
+      "@vitest/mocker/transforms": ["./packages/mocker/src/node/transforms.ts"],
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
       "@vitest/browser-playwright": ["./packages/browser-playwright/src/index.ts"],
@@ -25,13 +26,12 @@
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/public/index.ts"],
       "vitest/internal/browser": ["./packages/vitest/src/public/browser.ts"],
-      "vitest/internal/module-runner": ["./packages/vitest/src/public/module-runner.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
       "vitest/*": ["./packages/vitest/src/public/*"],
-      "vite-node": ["./packages/vite-node/src/index.ts"],
-      "vite-node/*": ["./packages/vite-node/src/*"]
+      "#test-utils": ["./test/test-utils/index.ts"]
     },
+    "allowImportingTsExtensions": true,
     "strict": true,
     "declaration": true,
     "noEmit": true,

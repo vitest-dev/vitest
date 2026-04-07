@@ -1,0 +1,43 @@
+name: Setup Playwright
+description: Setup and cache Playwright browser binaries
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve package versions
+      id: resolve-package-versions
+      shell: bash
+      run: >
+        echo "$(
+          node -e "
+            const fs = require('fs');
+            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+            const pattern = (name) => new RegExp(name + ':\\\s+specifier: [\\\s\\\w\\\.^]+version: (\\\d+\\\.\\\d+\\\.\\\d+)');
+            const playwrightVersion = lockfile.match(pattern('playwright'))[1];
+            console.log('PLAYWRIGHT_VERSION=' + playwrightVersion);
+          "
+        )" >> $GITHUB_OUTPUT
+
+    - name: Print versions
+      shell: bash
+      run: echo "${{ toJson(steps.resolve-package-versions.outputs) }}"
+
+    - name: Check resolved package versions
+      shell: bash
+      if: |
+        contains(fromJSON('[null, "", "undefined"]'), steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION)
+      run: echo "Failed to resolve package versions. See log above." && exit 1
+
+    - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+      uses: actions/cache@v5
+      id: playwright-cache
+      with:
+        path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        key: ${{ runner.os }}-playwright-${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
+    - name: Install Playwright Dependencies
+      shell: bash
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpm exec playwright install --with-deps --only-shell

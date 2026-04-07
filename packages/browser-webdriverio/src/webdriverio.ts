@@ -1,7 +1,9 @@
+import type { CustomComparatorsRegistry } from '@vitest/browser'
 import type { Capabilities } from '@wdio/types'
 import type {
   ScreenshotComparatorRegistry,
   ScreenshotMatcherOptions,
+  SelectorOptions,
 } from 'vitest/browser'
 import type {
   BrowserCommand,
@@ -116,14 +118,19 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     if (this.topLevelContext == null || !this.browser) {
       throw new Error(`The browser has no open pages.`)
     }
-    await this.browser.send({
-      method: 'browsingContext.setViewport',
-      params: {
-        context: this.topLevelContext,
-        devicePixelRatio: 1,
-        viewport: options,
-      },
-    })
+    if (this.browser.isBidi) {
+      await this.browser.send({
+        method: 'browsingContext.setViewport',
+        params: {
+          context: this.topLevelContext,
+          devicePixelRatio: 1,
+          viewport: options,
+        },
+      })
+    }
+    else {
+      await this.browser.setWindowSize(options.width, options.height)
+    }
   }
 
   getCommandsContext(): {
@@ -214,9 +221,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const host = inspector.host || '127.0.0.1'
 
       args.push(`--remote-debugging-port=${port}`)
-      args.push(`--remote-debugging-address=${host}`)
 
-      this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
+      if (host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+        this.project.vitest.logger.warn(`Custom inspector host "${host}" will be ignored. Chrome only allows remote debugging on localhost.`)
+      }
+      this.project.vitest.logger.log(`Debugger listening on ws://127.0.0.1:${port}`)
 
       capabilities[key] ??= {}
       capabilities[key]!.args = args
@@ -260,7 +269,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async getCDPSession(_sessionId: string): Promise<CDPSession> {
     return {
-      send: (method: string, params: any) => {
+      send: (method, params) => {
         if (!this.browser) {
           throw new Error(`The environment was torn down.`)
         }
@@ -282,15 +291,28 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 }
 
 declare module 'vitest/browser' {
-  export interface UserEventClickOptions extends Partial<ClickOptions> {}
-  export interface UserEventHoverOptions extends MoveToOptions {}
-
+  export interface UserEventClickOptions extends Partial<ClickOptions>, SelectorOptions {}
+  export interface UserEventHoverOptions extends MoveToOptions, SelectorOptions {}
   export interface UserEventDragAndDropOptions extends DragAndDropOptions {
     sourceX?: number
     sourceY?: number
     targetX?: number
     targetY?: number
   }
+  export interface UserEventFillOptions extends SelectorOptions {}
+  export interface UserEventSelectOptions extends SelectorOptions {}
+  export interface UserEventClearOptions extends SelectorOptions {}
+  export interface UserEventDoubleClickOptions extends SelectorOptions {}
+  export interface UserEventTripleClickOptions extends SelectorOptions {}
+  export interface UserEventWheelBaseOptions extends SelectorOptions {}
+  export interface LocatorScreenshotOptions extends SelectorOptions {}
+}
+
+interface WebdriverCDPSession {
+  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
+  on: (event: string, listener: (...args: unknown[]) => void) => void
+  once: (event: string, listener: (...args: unknown[]) => void) => void
+  off: (event: string, listener: (...args: unknown[]) => void) => void
 }
 
 declare module 'vitest/node' {
@@ -306,8 +328,10 @@ declare module 'vitest/node' {
     extends Omit<
       ScreenshotMatcherOptions,
       'comparatorName' | 'comparatorOptions'
-    > {}
+    >, CustomComparatorsRegistry {}
 
   export interface ToMatchScreenshotComparators
     extends ScreenshotComparatorRegistry {}
+
+  export interface CDPSession extends WebdriverCDPSession {}
 }

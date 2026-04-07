@@ -1,7 +1,8 @@
-import type { ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
+import type { Assertion, ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
 import type { Locator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
+import { getBrowserState, getWorkerState } from '../utils'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
 
@@ -12,11 +13,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  return expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+  const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
-    chai.util.flag(this, '_poll.element', true)
 
     const isNot = chai.util.flag(this, 'negate') as boolean
     const name = chai.util.flag(this, '_name') as string
@@ -28,6 +28,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       // we know that `toHaveLength` requires multiple elements,
       // but types generally expect a single one
       return elementOrLocator.elements() as unknown as HTMLElement
+    }
+
+    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
+      // `toMatchScreenshot` should only run once after the element resolves
+      chai.util.flag(this, '_poll.assert_once', true)
     }
 
     // element selector uses prettyDOM under the hood, which is an expensive call
@@ -47,6 +52,34 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
     return result
   }, processTimeoutOptions(options))
+
+  chai.util.flag(expectElement, '_poll.element', true)
+
+  // ask `expect.poll` to invoke trace after the assertion
+  const currentTest = getWorkerState().current
+  if (currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+    const sourceError = new Error('__vitest_mark_trace__')
+    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: 'pass' | 'fail' }) => {
+      const isNot = chai.util.flag(meta.assertion, 'negate')
+      const name = chai.util.flag(meta.assertion, '_name') || '<unknown>'
+      const baseName = `expect.element().${isNot ? 'not.' : ''}${name}`
+      const traceName = meta.status === 'fail' ? `${baseName} [ERROR]` : baseName
+      const selector = !elementOrLocator || elementOrLocator instanceof Element
+        ? undefined
+        : elementOrLocator.selector
+      await getBrowserState().commands.triggerCommand(
+        '__vitest_markTrace',
+        [{
+          name: traceName,
+          selector,
+          stack: sourceError.stack,
+        }],
+        sourceError,
+      )
+    })
+  }
+
+  return expectElement
 }
 
 expect.extend(matchers)

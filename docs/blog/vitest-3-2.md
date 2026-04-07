@@ -47,7 +47,7 @@ This option will be removed completely in a future major, replaced by `projects`
 
 The new [annotation API](/guide/test-annotations) allows you to annotate any test with a custom message and attachment. These annotations are visible in the UI, HTML, junit, tap and GitHub Actions reporters. Vitest will also print related annotation in the CLI if the test fails.
 
-<img src="/annotation-api-cute-puppy-example.png" />
+<img src="/annotation-api-cute-puppy-example.png" alt="an example of annotation with a cute puppy" />
 
 ## Scoped Fixtures
 
@@ -68,11 +68,11 @@ const test = baseTest.extend({
 
 The file fixture is similar to using `beforeAll` and `afterAll` at the top level of the file, but it won't be called if the fixture is not used in any test.
 
-The `worker` fixture is initiated once per worker, but note that by default Vitest creates one worker for every test, so you need to disable [isolation](/config/#isolate) to benefit from it.
+The `worker` fixture is initiated once per worker, but note that by default Vitest creates one worker for every test, so you need to disable [isolation](/config/isolate) to benefit from it.
 
 ## Custom Project Name Colors
 
-You can now set a custom [color](/config/#name) when using `projects`:
+You can now set a custom [color](/config/name) when using `projects`:
 
 ::: details Config Example
 ```ts{6-9,14-17}
@@ -106,11 +106,11 @@ export default defineConfig({
 ```
 :::
 
-<img src="/v3-2-custom-colors.png" />
+<img src="/v3-2-custom-colors.png" alt="an example of project names with custom backgrounds" />
 
 ## Custom Browser Locators API
 
-Built-in locators might not be enough to express your application’s needs. Instead of falling back to CSS and losing the retry-ability protection that Vitest provides through its locator API, we now recommend extending locators using the new [`locators.extend` API](/guide/browser/locators#custom-locators).
+Built-in locators might not be enough to express your application’s needs. Instead of falling back to CSS and losing the retry-ability protection that Vitest provides through its locator API, we now recommend extending locators using the new [`locators.extend` API](/api/browser/locators#custom-locators).
 
 ```ts
 import { locators } from '@vitest/browser/context'
@@ -172,7 +172,7 @@ locators.extend({
 await page.getByRole('textbox').clickAndFill('Hello World')
 ```
 
-Please, refer to the [`locators.extend` API](/guide/browser/locators#custom-locators) for more information.
+Please, refer to the [`locators.extend` API](/api/browser/locators#custom-locators) for more information.
 
 ## Explicit Resource Management in `vi.spyOn` and `vi.fn`
 
@@ -192,7 +192,7 @@ it('calls console.log', () => {
 
 Vitest now provides an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) object to the test body. You can use it to stop any resource that supports this Web API.
 
-The signal is aborted when test times out, another test fails and [`--bail` flag](/config/#bail) is set to a non-zero value, or the user presses Ctrl+C in the terminal.
+The signal is aborted when test times out, another test fails and [`--bail` flag](/config/bail) is set to a non-zero value, or the user presses Ctrl+C in the terminal.
 
 For example, you can stop a `fetch` request when tests are interrupted:
 
@@ -204,7 +204,7 @@ it('stop request when test times out', async ({ signal }) => {
 
 ## Coverage V8 AST-aware remapping
 
-Vitest now uses `ast-v8-to-istanbul` package developed by one of the Vitest maintainers, [AriPerkkio](https://github.com/AriPerkkio). This brings v8 coverage report in line with istanbul, but has a better performance! Enable this feature by setting [`coverage.experimentalAstAwareRemapping`](/config/#coverage-experimentalastawareremapping) to `true`.
+Vitest now uses `ast-v8-to-istanbul` package developed by one of the Vitest maintainers, [AriPerkkio](https://github.com/AriPerkkio). This brings v8 coverage report in line with istanbul, but has a better performance! Enable this feature by setting [`coverage.experimentalAstAwareRemapping`](/config/coverage#coverage-experimentalastawareremapping) to `true`.
 
 We are planning to make this the default remapping mode in the next major. The old `v8-to-istanbul` will be removed completely. Feel free to join discussion at https://github.com/vitest-dev/vitest/issues/7928.
 
@@ -267,7 +267,7 @@ expect.toBeFoo('foo')
 
 ## `sequence.groupOrder`
 
-The new [`sequence.groupOrder`](/config/#grouporder) option controls the order in which the project runs its tests when using multiple [projects](/guide/projects).
+The new [`sequence.groupOrder`](/config/sequence#sequence-grouporder) option controls the order in which the project runs its tests when using multiple [projects](/guide/projects).
 
 - Projects with the same group order number will run together, and groups are run from lowest to highest.
 - If you don’t set this option, all projects run in parallel.

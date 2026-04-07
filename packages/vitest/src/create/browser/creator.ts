@@ -220,9 +220,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://vitest.dev/guide/browser/playwright'
+      return 'https://vitest.dev/config/browser/playwright'
     case 'webdriverio':
-      return 'https://vitest.dev/guide/browser/webdriverio'
+      return 'https://vitest.dev/config/browser/webdriverio'
   }
 }
 
@@ -276,7 +276,7 @@ async function generateFrameworkConfigFile(options: {
     `      provider: ${options.provider}(),`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
     `      instances: [`,
-    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
     `      ],`,
     `    },`,
     `  },`,

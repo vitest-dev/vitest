@@ -7,7 +7,6 @@
  */
 
 import type { MockInstance } from '@vitest/spy'
-import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -18,7 +17,7 @@ export type Tester = (
   this: TesterContext,
   a: any,
   b: any,
-  customTesters: Array<Tester>
+  customTesters: Array<Tester>,
 ) => boolean | undefined
 
 export interface TesterContext {
@@ -26,7 +25,7 @@ export interface TesterContext {
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
 }
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -46,23 +45,33 @@ export interface MatcherState {
   customTesters: Array<Tester>
   assertionCalls: number
   currentTestName?: string
+  /**
+   * @deprecated exists only in types
+   */
   dontThrow?: () => void
+  /**
+   * @deprecated exists only in types
+   */
   error?: Error
   equals: (
     a: unknown,
     b: unknown,
     customTesters?: Array<Tester>,
-    strictCheck?: boolean
+    strictCheck?: boolean,
   ) => boolean
+  /**
+   * @deprecated exists only in types
+   */
   expand?: boolean
   expectedAssertionsNumber?: number | null
   expectedAssertionsNumberErrorGen?: (() => Error) | null
   isExpectingAssertions?: boolean
   isExpectingAssertionsError?: Error | null
   isNot: boolean
-  // environment: VitestEnvironment
   promise: string
-  // snapshotState: SnapshotState
+  /**
+   * @deprecated exists only in types
+   */
   suppressedErrors: Array<Error>
   testPath?: string
   utils: ReturnType<typeof getMatcherUtils> & {
@@ -73,6 +82,13 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
+  /**
+   * this allows `expect.extend`-based custom matcher
+   * to implement builtin vitest/chai assertion equivalent feature.
+   * this used for custom snapshot matcher API.
+   */
+  /** @internal */
+  __vitest_assertion__: Assertion
 }
 
 export interface SyncExpectationResult {
@@ -80,6 +96,7 @@ export interface SyncExpectationResult {
   message: () => string
   actual?: any
   expected?: any
+  meta?: object
 }
 
 export type AsyncExpectationResult = Promise<SyncExpectationResult>
@@ -129,14 +146,14 @@ interface CustomMatcher {
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
 
   /**
-   * Matches if the received value is one of the values in the expected array.
+   * Matches if the received value is one of the values in the expected array or set.
    *
    * @example
    * expect(1).toBeOneOf([1, 2, 3])
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T>) => any
+  toBeOneOf: <T>(sample: Array<T> | Set<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
@@ -177,13 +194,22 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
   /**
    * Matches if the received number is within a certain precision of the expected number.
    *
-   * @param precision - Optional decimal precision for comparison. Default is 2.
-   *
    * @example
    * expect(10.45).toEqual(expect.closeTo(10.5, 1));
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value validates against a Standard Schema.
+   *
+   * @param schema - A Standard Schema V1 compatible schema object
+   *
+   * @example
+   * expect(user).toEqual(expect.schemaMatching(z.object({ name: z.string() })))
+   * expect(['hello', 'world']).toEqual([expect.schemaMatching(z.string()), expect.schemaMatching(z.string())])
+   */
+  schemaMatching: (schema: unknown) => any
 }
 
 type WithAsymmetricMatcher<T> = T | AsymmetricMatcher<unknown>
@@ -388,13 +414,13 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    */
   toHaveProperty: <E>(
     property: string | (string | number)[],
-    value?: E
+    value?: E,
   ) => void
 
   /**
    * Using exact equality with floating point numbers is a bad idea.
    * Rounding means that intuitive things fail.
-   * The default for `precision` is 2.
+   * The default for `numDigits` is 2.
    *
    * @example
    * expect(price).toBeCloseTo(9.99, 2);
@@ -418,6 +444,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalledTimes(2);
+   * @deprecated Use `toHaveBeenCalledTimes` instead
    */
   toBeCalledTimes: (times: number) => void
 
@@ -439,6 +466,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalled();
+   * @deprecated Use `toHaveBeenCalled` instead
    */
   toBeCalled: () => void
 
@@ -459,6 +487,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toBeCalledWith('arg1', 42);
+   * @deprecated Use `toHaveBeenCalledWith` instead
    */
   toBeCalledWith: <E extends any[]>(...args: E) => void
 
@@ -473,16 +502,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveBeenNthCalledWith: <E extends any[]>(n: number, ...args: E) => void
 
   /**
-   * Ensure that a mock function is called with specific arguments on an Nth call.
-   *
-   * Alias for `expect.toHaveBeenNthCalledWith`.
-   *
-   * @example
-   * expect(mockFunc).nthCalledWith(2, 'secondArg');
-   */
-  nthCalledWith: <E extends any[]>(nthCall: number, ...args: E) => void
-
-  /**
    * If you have a mock function, you can use `.toHaveBeenLastCalledWith`
    * to test what arguments it was last called with.
    *
@@ -494,17 +513,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveBeenLastCalledWith: <E extends any[]>(...args: E) => void
 
   /**
-   * If you have a mock function, you can use `.lastCalledWith`
-   * to test what arguments it was last called with.
-   *
-   * Alias for `expect.toHaveBeenLastCalledWith`.
-   *
-   * @example
-   * expect(mockFunc).lastCalledWith('lastArg');
-   */
-  lastCalledWith: <E extends any[]>(...args: E) => void
-
-  /**
    * Used to test that a function throws when it is called.
    *
    * Also under the alias `expect.toThrowError`.
@@ -512,8 +520,9 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrow('Error message');
    * expect(() => parseJSON('invalid')).toThrow(SyntaxError);
+   * expect(() => { throw 42 }).toThrow(42);
    */
-  toThrow: (expected?: string | Constructable | RegExp | Error) => void
+  toThrow: (expected?: any) => void
 
   /**
    * Used to test that a function throws when it is called.
@@ -523,8 +532,10 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * @example
    * expect(() => functionWithError()).toThrowError('Error message');
    * expect(() => parseJSON('invalid')).toThrowError(SyntaxError);
+   * expect(() => { throw 42 }).toThrowError(42);
+   * @deprecated Use `toThrow` instead
    */
-  toThrowError: (expected?: string | Constructable | RegExp | Error) => void
+  toThrowError: (expected?: any) => void
 
   /**
    * Use to test that the mock function successfully returned (i.e., did not throw an error) at least one time
@@ -533,6 +544,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturn();
+   * @deprecated Use `toHaveReturned` instead
    */
   toReturn: () => void
 
@@ -554,6 +566,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturnTimes(3);
+   * @deprecated Use `toHaveReturnedTimes` instead
    */
   toReturnTimes: (times: number) => void
 
@@ -575,6 +588,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    *
    * @example
    * expect(mockFunc).toReturnWith('returnValue');
+   * @deprecated Use `toHaveReturnedWith` instead
    */
   toReturnWith: <E>(value: E) => void
 
@@ -601,18 +615,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
   toHaveLastReturnedWith: <E>(value: E) => void
 
   /**
-   * Use to test the specific value that a mock function last returned.
-   * If the last call to the mock function threw an error, then this matcher will fail
-   * no matter what value you provided as the expected return value.
-   *
-   * Alias for `expect.toHaveLastReturnedWith`.
-   *
-   * @example
-   * expect(mockFunc).lastReturnedWith('lastValue');
-   */
-  lastReturnedWith: <E>(value: E) => void
-
-  /**
    * Use to test the specific value that a mock function returned for the nth call.
    * If the nth call to the mock function threw an error, then this matcher will fail
    * no matter what value you provided as the expected return value.
@@ -623,18 +625,6 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMa
    * expect(mockFunc).toHaveNthReturnedWith(2, 'nthValue');
    */
   toHaveNthReturnedWith: <E>(nthCall: number, value: E) => void
-
-  /**
-   * Use to test the specific value that a mock function returned for the nth call.
-   * If the nth call to the mock function threw an error, then this matcher will fail
-   * no matter what value you provided as the expected return value.
-   *
-   * Alias for `expect.toHaveNthReturnedWith`.
-   *
-   * @example
-   * expect(mockFunc).nthReturnedWith(2, 'nthValue');
-   */
-  nthReturnedWith: <E>(nthCall: number, value: E) => void
 }
 
 type VitestAssertion<A, T> = {
@@ -656,6 +646,7 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
   JestAssertion<T>,
+  ChaiMockAssertion,
   Matchers<T> {
   /**
    * Ensures a value is of a specific type.
@@ -673,7 +664,7 @@ export interface Assertion<T = any>
       | 'object'
       | 'string'
       | 'symbol'
-      | 'undefined'
+      | 'undefined',
   ) => void
 
   /**
@@ -780,6 +771,156 @@ export interface Assertion<T = any>
    * await expect(someAsyncFunc).rejects.toThrow('error');
    */
   rejects: PromisifyAssertion<T>
+}
+
+/**
+ * Chai-style assertions for spy/mock testing.
+ * These provide sinon-chai compatible assertion names that delegate to Jest-style implementations.
+ */
+export interface ChaiMockAssertion {
+  /**
+   * Checks that a spy was called at least once.
+   * Chai-style equivalent of `toHaveBeenCalled`.
+   *
+   * @example
+   * expect(spy).to.have.been.called
+   */
+  readonly called: Assertion
+
+  /**
+   * Checks that a spy was called a specific number of times.
+   * Chai-style equivalent of `toHaveBeenCalledTimes`.
+   *
+   * @example
+   * expect(spy).to.have.callCount(3)
+   */
+  callCount: (count: number) => void
+
+  /**
+   * Checks that a spy was called with specific arguments at least once.
+   * Chai-style equivalent of `toHaveBeenCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledWith('arg1', 'arg2')
+   */
+  calledWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that a spy was called exactly once.
+   * Chai-style equivalent of `toHaveBeenCalledOnce`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledOnce
+   */
+  readonly calledOnce: Assertion
+
+  /**
+   * Checks that a spy was called exactly once with specific arguments.
+   * Chai-style equivalent of `toHaveBeenCalledExactlyOnceWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledOnceWith('arg1', 'arg2')
+   */
+  calledOnceWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that the last call to a spy was made with specific arguments.
+   * Chai-style equivalent of `toHaveBeenLastCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.lastCalledWith('arg1', 'arg2')
+   */
+  lastCalledWith: <E extends any[]>(...args: E) => void
+
+  /**
+   * Checks that the nth call to a spy was made with specific arguments.
+   * Chai-style equivalent of `toHaveBeenNthCalledWith`.
+   *
+   * @example
+   * expect(spy).to.have.been.nthCalledWith(2, 'arg1', 'arg2')
+   */
+  nthCalledWith: <E extends any[]>(n: number, ...args: E) => void
+
+  /**
+   * Checks that a spy returned a specific value at least once.
+   * Chai-style equivalent of `toHaveReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.returned('value')
+   */
+  returned: <E>(value: E) => void
+
+  /**
+   * Checks that a spy returned a specific value at least once.
+   * Chai-style equivalent of `toHaveReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.returnedWith('value')
+   */
+  returnedWith: <E>(value: E) => void
+
+  /**
+   * Checks that a spy returned successfully a specific number of times.
+   * Chai-style equivalent of `toHaveReturnedTimes`.
+   *
+   * @example
+   * expect(spy).to.have.returnedTimes(3)
+   */
+  returnedTimes: (count: number) => void
+
+  /**
+   * Checks that the last return value of a spy matches the expected value.
+   * Chai-style equivalent of `toHaveLastReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.lastReturnedWith('value')
+   */
+  lastReturnedWith: <E>(value: E) => void
+
+  /**
+   * Checks that the nth return value of a spy matches the expected value.
+   * Chai-style equivalent of `toHaveNthReturnedWith`.
+   *
+   * @example
+   * expect(spy).to.have.nthReturnedWith(2, 'value')
+   */
+  nthReturnedWith: <E>(n: number, value: E) => void
+
+  /**
+   * Checks that a spy was called before another spy.
+   * Chai-style equivalent of `toHaveBeenCalledBefore`.
+   *
+   * @example
+   * expect(spy1).to.have.been.calledBefore(spy2)
+   */
+  calledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * Checks that a spy was called after another spy.
+   * Chai-style equivalent of `toHaveBeenCalledAfter`.
+   *
+   * @example
+   * expect(spy1).to.have.been.calledAfter(spy2)
+   */
+  calledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * Checks that a spy was called exactly twice.
+   * Chai-style equivalent of `toHaveBeenCalledTimes(2)`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledTwice
+   */
+  readonly calledTwice: Assertion
+
+  /**
+   * Checks that a spy was called exactly three times.
+   * Chai-style equivalent of `toHaveBeenCalledTimes(3)`.
+   *
+   * @example
+   * expect(spy).to.have.been.calledThrice
+   */
+  readonly calledThrice: Assertion
 }
 
 declare global {

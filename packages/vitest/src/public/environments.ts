@@ -5,3 +5,5 @@ export type {
   EnvironmentReturn,
   VmEnvironmentReturn,
 } from '../types/environment'
+
+console.warn('Importing from "vitest/environments" is deprecated since Vitest 4.1. Please use "vitest/runtime" instead.')

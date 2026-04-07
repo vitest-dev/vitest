@@ -4,16 +4,16 @@ import type { UserEventCommand } from './utils'
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
   selector,
-  options = {},
+  options,
 ) => {
   const browser = context.browser
-  await browser.$(selector).click(options as any)
+  await browser.$(selector).click(options)
 }
 
 export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   context,
   selector,
-  _options = {},
+  _options,
 ) => {
   const browser = context.browser
   await browser.$(selector).doubleClick()
@@ -22,7 +22,7 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
 export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   context,
   selector,
-  _options = {},
+  _options,
 ) => {
   const browser = context.browser
   await browser

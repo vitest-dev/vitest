@@ -2,7 +2,7 @@ import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } f
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
@@ -28,9 +28,19 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+  /**
+   * Parse files statically instead of running them to collect tests
+   * @experimental
+   */
+  staticParse?: boolean
+  /**
+   * How many tests to process at the same time
+   * @experimental
+   */
+  staticParseConcurrency?: number
 
   /**
-   * Override vite config's configLoader from cli.
+   * Override vite config's configLoader from CLI.
    * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
    * This is only available with **vite version 6.1.0** and above.
    * @experimental
@@ -83,7 +93,7 @@ export async function startVitest(
 
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone) {
-      ctx.init()
+      ctx.standalone()
     }
     else {
       ctx.start(cliFilters)
@@ -91,15 +101,22 @@ export async function startVitest(
   })
 
   try {
-    if (ctx.config.mergeReports) {
+    if (ctx.config.listTags) {
+      await ctx.listTags()
+    }
+    else if (ctx.config.clearCache) {
+      await ctx.experimental_clearCache()
+    }
+    else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
     }
     else if (ctx.config.standalone) {
-      await ctx.init()
+      await ctx.standalone()
     }
     else {
       await ctx.start(cliFilters)
     }
+    return ctx
   }
   catch (e) {
     if (e instanceof FilesNotFoundError) {
@@ -125,14 +142,12 @@ export async function startVitest(
     ctx.logger.error('\n\n')
     return ctx
   }
-
-  if (ctx.shouldKeepServer()) {
-    return ctx
+  finally {
+    if (!ctx?.shouldKeepServer()) {
+      stdinCleanup?.()
+      await ctx.close()
+    }
   }
-
-  stdinCleanup?.()
-  await ctx.close()
-  return ctx
 }
 
 export async function prepareVitest(

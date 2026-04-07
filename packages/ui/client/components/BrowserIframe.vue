@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import type { ViewportSize } from '~/composables/browser'
+import { useWindowSize } from '@vueuse/core'
+import { computed } from 'vue'
 import { viewport } from '~/composables/browser'
 import { browserState } from '~/composables/client'
 import {
-  hideRightPanel,
+  detailsPanelVisible,
+  detailsPosition,
   panels,
   showNavigationPanel,
-  showRightPanel,
   updateBrowserPanel,
 } from '~/composables/navigation'
+import IconButton from './IconButton.vue'
 
 const sizes: Record<ViewportSize, [width: number, height: number]> = {
   'small-mobile': [320, 568],
@@ -83,19 +86,11 @@ const marginLeft = computed(() => {
       <div class="i-carbon-content-delivery-network" />
       <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Browser UI</span>
       <IconButton
-        v-show="panels.details.main > 0"
-        v-tooltip.bottom="'Hide Right Panel'"
-        title="Hide Right Panel"
+        v-show="detailsPosition === 'right' && !detailsPanelVisible"
+        v-tooltip.bottom="'Show Details Panel'"
+        title="Show Details Panel"
         icon="i-carbon:side-panel-close"
-        rotate-180
-        @click="hideRightPanel()"
-      />
-      <IconButton
-        v-show="panels.details.main === 0"
-        v-tooltip.bottom="'Show Right Panel'"
-        title="Show Right Panel"
-        icon="i-carbon:side-panel-close"
-        @click="showRightPanel()"
+        @click="detailsPanelVisible = true"
       />
     </div>
     <div p="l3 y2 r2" flex="~ gap-2" items-center bg-header border="b-2 base">

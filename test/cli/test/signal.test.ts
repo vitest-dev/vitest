@@ -96,11 +96,11 @@ test('cancelling test run aborts the signal', async () => {
       import { test } from 'vitest'
       test('aborted', async ({ signal, task }) => {
         return new Promise(resolve => {
-          console.log('ready')
           signal.addEventListener('abort', () => {
             task.meta.aborted = true
             resolve()
           })
+          console.log('ready')
         })
       }, Infinity)
     `,
@@ -126,13 +126,13 @@ test('cancelling test run aborts the signal in all concurrent tests', async () =
         { timeout: Infinity },
          async (number, { signal, task }) => {
           return new Promise(resolve => {
-            if (number === 3) {
-              console.log('ready')
-            }
             signal.addEventListener('abort', () => {
               task.meta.aborted = true
               resolve()
             })
+            if (number === 3) {
+              console.log('ready')
+            }
           })
         })
     `,

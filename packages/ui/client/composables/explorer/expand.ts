@@ -1,4 +1,4 @@
-import type { Filter, UITaskTreeNode } from '~/composables/explorer/types'
+import type { Filter, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
 import { findById } from '~/composables/client'
 import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
@@ -25,7 +25,7 @@ import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode }
  */
 export function runExpandNode(
   id: string,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   const entry = createOrUpdateSuiteTask(
@@ -86,7 +86,7 @@ export function runExpandNode(
  * @param filter The filter applied.
  */
 export function runExpandAll(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   expandAllNodes(explorerTree.root.tasks, false)

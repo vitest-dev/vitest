@@ -10,9 +10,10 @@ test('correctly imports external dependencies with a development condition', asy
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"development"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"development"',
+      },
     },
   })
 
@@ -30,9 +31,10 @@ test('correctly imports external dependencies with a production condition', asyn
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    define: {
-      TEST_CONDITION: '"production"',
+    $viteConfig: {
+      define: {
+        TEST_CONDITION: '"production"',
+      },
     },
   })
 
@@ -49,17 +51,18 @@ test('correctly imports external dependencies with a custom condition', async ()
         external: [/conditions-pkg/],
       },
     },
-  }, [], 'test', {
-    resolve: {
-      conditions: ['custom'],
-    },
-    ssr: {
+    $viteConfig: {
       resolve: {
         conditions: ['custom'],
       },
-    },
-    define: {
-      TEST_CONDITION: '"custom"',
+      ssr: {
+        resolve: {
+          conditions: ['custom'],
+        },
+      },
+      define: {
+        TEST_CONDITION: '"custom"',
+      },
     },
   })
 
@@ -79,7 +82,7 @@ test('conditions (inline direct)', async () => {
     root: 'fixtures/conditions',
     server: {
       deps: {
-        inline: ['@vitest/test-dep-conditions'],
+        inline: ['test-dep-conditions'],
       },
     },
   })
@@ -92,10 +95,31 @@ test('conditions (inline indirect)', async () => {
     root: 'fixtures/conditions',
     server: {
       deps: {
-        inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
+        inline: ['test-dep-conditions', 'test-dep-conditions-indirect'],
       },
     },
   })
 
   expect(stderr).toBe('')
+})
+
+test('project resolve.conditions', async () => {
+  const { stderr, errorTree } = await runVitest({
+    root: 'fixtures/conditions-projects',
+  })
+  expect(stderr).toBe('')
+  expect(errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "project-a": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+      "project-b": {
+        "basic.test.js": {
+          "conditions": "passed",
+        },
+      },
+    }
+  `)
 })

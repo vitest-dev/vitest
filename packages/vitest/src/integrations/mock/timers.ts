@@ -127,7 +127,6 @@ export class FakeTimers {
 
   runAllTicks(): void {
     if (this._checkFakeTimers()) {
-      // @ts-expect-error method not exposed
       this._clock.runMicrotasks()
     }
   }
@@ -210,6 +209,23 @@ export class FakeTimers {
     }
 
     return 0
+  }
+
+  setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number): void {
+    if (this._checkFakeTimers()) {
+      if (mode === 'manual') {
+        this._clock.setTickMode({ mode: 'manual' })
+      }
+      else if (mode === 'nextTimerAsync') {
+        this._clock.setTickMode({ mode: 'nextAsync' })
+      }
+      else if (mode === 'interval') {
+        this._clock.setTickMode({ mode: 'interval', delta: interval })
+      }
+      else {
+        throw new Error(`Invalid tick mode: ${mode}`)
+      }
+    }
   }
 
   configure(config: FakeTimerInstallOpts): void {

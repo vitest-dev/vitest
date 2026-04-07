@@ -4,7 +4,7 @@ import { parseModule } from 'magicast'
 
 import { expect, test, vi } from 'vitest'
 import { defineConfig } from 'vitest/config'
-import { BaseCoverageProvider } from 'vitest/coverage'
+import { BaseCoverageProvider } from 'vitest/node'
 
 const initialThresholds = { lines: 1, branches: 2, functions: 3, statements: 4 }
 const coveredThresholds = { lines: 50, branches: 60, functions: 70, statements: 80 }

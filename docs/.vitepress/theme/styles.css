@@ -1,0 +1,60 @@
+@import "@voidzero-dev/vitepress-theme/src/styles/index.css";
+
+@source "./**/*.vue";
+
+/* Vitest */
+:root[data-variant="vitest"] {
+  --color-brand: #008039;
+  /* TODO: home page wcag-aa color contrast (remove this once fixed at void0 theme):
+   * - why vitest section and texts
+   * - vitest, resources, versions and social
+   * - footer
+   */
+  --color-grey: #867e8e;
+}
+
+:root.dark:not([data-theme])[data-variant="vitest"],
+:root[data-theme="dark"][data-variant="vitest"] {
+  --color-brand: var(--color-zest);
+}
+
+:root[data-variant="vitest"]:not(.dark):not([data-theme="light"]),
+:root[data-theme="light"][data-variant="vitest"] {
+  --color-brand: #008039;
+  /* TODO: code block (remove this once fixed at void0 theme) */
+  --vp-code-color: #007d38;
+}
+
+
+.highlighted-word {
+  background-color: var(--vp-code-line-highlight-color);
+  transition: background-color 0.5s;
+  display: inline-block;
+}
+
+/* credit goes to https://dylanatsmith.com/wrote/styling-the-kbd-element */
+html:not(.dark) .VPContent kbd {
+  --kbd-color-background: #f7f7f7;
+  --kbd-color-border: #cbcccd;
+  --kbd-color-text: #222325;
+}
+
+.VPContent kbd {
+  --kbd-color-background: #898b90;
+  --kbd-color-border: #3d3e42;
+  --kbd-color-text: #222325;
+
+  background-color: var(--kbd-color-background);
+  color: var(--kbd-color-text);
+  border-radius: 0.25rem;
+  border: 1px solid var(--kbd-color-border);
+  box-shadow: 0 2px 0 1px var(--kbd-color-border);
+  font-family: var(--font-family-sans-serif);
+  font-size: 0.75em;
+  line-height: 1;
+  min-width: 0.75rem;
+  text-align: center;
+  padding: 2px 5px;
+  position: relative;
+  top: -1px;
+}

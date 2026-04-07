@@ -17,7 +17,7 @@ import type {
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
-import { parseErrorStacktrace } from '../../../utils/src/source-map'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 
@@ -168,6 +168,24 @@ export default class SnapshotState {
       return stacks[promiseIndex + 3]
     }
 
+    // inline snapshot function can be named __INLINE_SNAPSHOT_OFFSET_<n>__
+    // to specify a custom stack offset
+    for (let i = 0; i < stacks.length; i++) {
+      const match = stacks[i].method.match(/__INLINE_SNAPSHOT_OFFSET_(\d+)__/)
+      if (match) {
+        return stacks[i + Number(match[1])] ?? null
+      }
+    }
+
+    // custom matcher registered via expect.extend() — the wrapper function
+    // in jest-extend.ts is named __VITEST_EXTEND_ASSERTION__
+    const customMatcherIndex = stacks.findIndex(i =>
+      i.method.includes('__VITEST_EXTEND_ASSERTION__'),
+    )
+    if (customMatcherIndex !== -1) {
+      return stacks[customMatcherIndex + 3] ?? null
+    }
+
     // inline snapshot function is called __INLINE_SNAPSHOT__
     // in integrations/snapshot/chai.ts
     const stackIndex = stacks.findIndex(i =>
@@ -179,14 +197,15 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string; assertionName?: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
+        ...options.stack,
         snapshot: receivedSerialized,
         testId: options.testId,
-        ...options.stack,
+        assertionName: options.assertionName,
       })
     }
     else if (options.rawSnapshot) {
@@ -258,6 +277,24 @@ export default class SnapshotState {
     }
   }
 
+  probeExpectedSnapshot(
+    options: Pick<SnapshotMatchOptions, 'testName' | 'testId' | 'isInline' | 'inlineSnapshot'>,
+  ): {
+    data?: string
+    markAsChecked: () => void
+  } {
+    const count = this._counters.get(options.testName) + 1
+    const key = testNameToKey(options.testName, count)
+    return {
+      data: options?.isInline ? options.inlineSnapshot : this._snapshotData[key],
+      markAsChecked: () => {
+        this._counters.increment(options.testName)
+        this._testIdToKeys.get(options.testId).push(key)
+        this._uncheckedKeys.delete(key)
+      },
+    }
+  }
+
   match({
     testId,
     testName,
@@ -267,6 +304,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    assertionName,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     // this also increments counter for inline snapshots. maybe we shouldn't?
     this._counters.increment(testName)
@@ -395,6 +433,7 @@ export default class SnapshotState {
             stack,
             testId,
             rawSnapshot,
+            assertionName,
           })
         }
         else {
@@ -406,6 +445,7 @@ export default class SnapshotState {
           stack,
           testId,
           rawSnapshot,
+          assertionName,
         })
         this.added.increment(testId)
       }

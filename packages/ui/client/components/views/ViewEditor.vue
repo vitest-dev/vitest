@@ -2,13 +2,16 @@
 import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
 import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
+import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
-import { client, isReport } from '~/composables/client'
+import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
 import { openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
+import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
   file?: RunnerTestFile
@@ -155,14 +158,14 @@ function createErrorElement(e: TestError) {
   const div = document.createElement('div')
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
-  pre.className = 'c-red-600 dark:c-red-400'
+  pre.className = 'c-red-700 dark:c-red-400'
   pre.textContent = `${' '.repeat(stack.column)}^ ${e.name}: ${
     e?.message || ''
   }`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className
-    = 'i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
+    = 'i-carbon-launch c-red-700 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em'
   span.tabIndex = 0
   span.ariaLabel = 'Open in Editor'
   createTooltip(
@@ -382,7 +385,7 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{ lineNumbers: true, readOnly: isReport, saving }"
+    v-bind="{ lineNumbers: true, readOnly: isReport || !config.api?.allowWrite, saving }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"

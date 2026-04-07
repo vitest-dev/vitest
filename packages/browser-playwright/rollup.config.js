@@ -14,7 +14,6 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   /^@?vitest(\/|$)/,
   'vite',
-  'playwright-core/types/protocol',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -26,7 +25,7 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 

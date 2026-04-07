@@ -1,6 +1,6 @@
 # @vitest/browser-webdriverio
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/browser-webdriverio?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/browser-webdriverio)
+[![NPM version](https://img.shields.io/npm/v/@vitest/browser-webdriverio?color=a1b858&label=)](https://npmx.dev/package/@vitest/browser-webdriverio)
 
 Run your Vitest [browser tests](https://vitest.dev/guide/browser/) using [webdriverio](https://webdriver.io/docs/api/browser) API. Note that Vitest does not use webdriverio as a test runner, but only as a browser provider.
 
@@ -32,7 +32,7 @@ export default defineConfig({
         // ...custom webdriverio options
       }),
       instances: [
-        { name: 'chromium' },
+        { browser: 'chrome' },
       ],
     },
   },
@@ -45,4 +45,4 @@ Then run Vitest in the browser mode:
 npx vitest --browser
 ```
 
-[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/browser-webdriverio) | [Documentation](https://vitest.dev/guide/browser/webdriverio)
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/packages/browser-webdriverio) | [Documentation](https://vitest.dev/config/browser/webdriverio)
