@@ -1038,7 +1038,7 @@ test('spy function', () => {
 
 ## toHaveBeenCalledTimes
 
-- **Type:**: `(amount: number) => Awaitable<void>`
+- **Type:** `(amount: number) => Awaitable<void>`
 
 This assertion checks if a function was called a certain amount of times. Requires a spy function to be passed to `expect`.
 
