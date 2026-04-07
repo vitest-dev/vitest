@@ -101,7 +101,7 @@ To run tests once without watching for file changes, use `vitest run`. You can a
 
 ## Configuring Vitest
 
-Vitest reads your `vite.config.ts` by default, so your existing Vite plugins and configuration work out-of-the-box. You can also create a dedicated `vitest.config.ts` for test-specific settings. See the [Config Reference](/config/) for details.
+Vitest reads your `vite.config.*` by default, so your existing Vite plugins and configuration work out-of-the-box. You can also create a dedicated `vitest.config.*` for test-specific settings. See the [Config Reference](/config/) for details.
 
 ## IDE Integrations
 

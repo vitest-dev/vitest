@@ -140,6 +140,6 @@ AI tends to produce names like "should correctly return the formatted price stri
 
 ### Watch Mode
 
-Vitest runs in watch mode by default, waiting for file changes and re-running tests interactively. Vitest tries to detect AI and CI environments and disable watch mode automatically, but this detection can be fragile.
+Vitest runs in watch mode by default, waiting for file changes and re-running tests interactively. Vitest tries to detect CI and non-interactive or agent environments and disable watch mode automatically, but this detection can be fragile.
 
 When telling an AI agent to run tests, always use `vitest run` or `vitest --no-watch` to ensure the process exits after the tests finish.
