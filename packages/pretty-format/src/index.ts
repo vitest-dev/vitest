@@ -248,6 +248,7 @@ function printComplexValue(
         refs,
         printer,
         ' => ',
+        val.size,
       )}}`
   }
   if (toStringed === '[object Set]') {
@@ -260,6 +261,7 @@ function printComplexValue(
         depth,
         refs,
         printer,
+        val.size,
       )}}`
   }
 
@@ -297,6 +299,7 @@ const ErrorPlugin: NewPlugin = {
       ...rest,
     }
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+    // TODO: should use printObjectProperties with compareKeys disbled
     return hitMaxDepth
       ? `[${name}]`
       : `${name} {${printIteratorEntries(

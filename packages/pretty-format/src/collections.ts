@@ -37,6 +37,7 @@ export function printIteratorEntries(
   refs: Refs,
   printer: Printer,
   separator = ': ',
+  length?: number,
 ): string {
   let result = ''
   let width = 0
@@ -51,7 +52,7 @@ export function printIteratorEntries(
       result += indentationNext
 
       if (width++ === config.maxWidth) {
-        result += '…'
+        result += typeof length === 'number' ? `…(${length - width + 1})` : '…'
         break
       }
 
@@ -100,6 +101,7 @@ export function printIteratorValues(
   depth: number,
   refs: Refs,
   printer: Printer,
+  length?: number,
 ): string {
   let result = ''
   let width = 0
@@ -114,7 +116,7 @@ export function printIteratorValues(
       result += indentationNext
 
       if (width++ === config.maxWidth) {
-        result += '…'
+        result += typeof length === 'number' ? `…(${length - width + 1})` : '…'
         break
       }
 
@@ -163,7 +165,7 @@ export function printListItems(
       result += indentationNext
 
       if (i === config.maxWidth) {
-        result += '…'
+        result += `…(${length - i})`
         break
       }
 
@@ -216,7 +218,7 @@ export function printObjectProperties(
       result += indentationNext
 
       if (i === config.maxWidth) {
-        result += '…'
+        result += `…(${keys.length - i})`
         break
       }
 
