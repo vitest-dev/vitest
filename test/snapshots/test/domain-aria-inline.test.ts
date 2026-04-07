@@ -1,14 +1,8 @@
-import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, test } from 'vitest'
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
-
-const SPLITTER = '// --- TEST CASES ---'
-
-function readTestCases(file: string) {
-  return readFileSync(file, 'utf-8').split(SPLITTER)[1]
-}
+import { readInlineSnapshots } from './utils'
 
 test('aria inline snapshot', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-aria-inline')
@@ -29,29 +23,17 @@ test('aria inline snapshot', async () => {
       },
     }
   `)
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
-    test('simple heading', () => {
-      document.body.innerHTML = \`
-        <h1>Hello World</h1>
-        <p>Some description</p>
-      \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(document.body).toMatchAriaInlineSnapshot(\`
         - heading "Hello World" [level=1]
         - paragraph: Some description
       \`)
-    })
 
-    test('semantic match with regex in snapshot', () => {
-      document.body.innerHTML = \`
-        <p>Original</p>
-        <button aria-label="1234">Pattern</button>
-      \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(document.body).toMatchAriaInlineSnapshot(\`
         - paragraph: Original
         - button "1234": Pattern
       \`)
-    })
     "
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
@@ -150,29 +132,17 @@ test('aria inline snapshot', async () => {
   `)
 
   // verify inline snapshot in source was rewritten correctly
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
-    test('simple heading', () => {
-      document.body.innerHTML = \`
-        <h1>Hello World</h1>
-        <p>Some description</p>
-      \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(document.body).toMatchAriaInlineSnapshot(\`
         - heading "Hello World" [level=1]
         - paragraph: Some description
       \`)
-    })
 
-    test('semantic match with regex in snapshot', () => {
-      document.body.innerHTML = \`
-        <p>Changed</p>
-        <button aria-label="9999">Pattern</button>
-      \`
-      expect(document.body).toMatchAriaInlineSnapshot(\`
+    expect(document.body).toMatchAriaInlineSnapshot(\`
         - paragraph: Changed
         - button /\\\\d+/: Pattern
       \`)
-    })
     "
   `)
 })

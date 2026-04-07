@@ -1,12 +1,7 @@
-import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
-import { extractInlineSnaphsots } from './utils'
-
-function readTestCases(file: string) {
-  return extractInlineSnaphsots(readFileSync(file, 'utf-8'))
-}
+import { readInlineSnapshots } from './utils'
 
 test('domain inline snapshot with poll', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-poll-inline')
@@ -30,7 +25,7 @@ test('domain inline snapshot with poll', async () => {
       },
     }
   `)
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
     expect.poll(() => {
         trial++
@@ -152,7 +147,7 @@ test('domain inline snapshot with poll', async () => {
       },
     }
   `)
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
     expect.poll(() => {
         trial++
@@ -214,7 +209,7 @@ test('domain inline snapshot with poll', async () => {
       },
     }
   `)
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
     expect.poll(() => {
         trial++

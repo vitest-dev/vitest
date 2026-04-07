@@ -1,12 +1,7 @@
-import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
-import { extractInlineSnaphsots } from './utils'
-
-function readTestCases(file: string) {
-  return extractInlineSnaphsots(readFileSync(file, 'utf-8'))
-}
+import { readInlineSnapshots } from './utils'
 
 test('domain inline snapshot', async () => {
   const root = join(import.meta.dirname, 'fixtures/domain-inline')
@@ -27,7 +22,7 @@ test('domain inline snapshot', async () => {
       },
     }
   `)
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
     expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(\`
         name=alice
@@ -120,7 +115,7 @@ test('domain inline snapshot', async () => {
 
   // verify inline snapshot in source was rewritten correctly
   //    score regex preserved, status updated to 'inactive'
-  expect(readTestCases(testFile)).toMatchInlineSnapshot(`
+  expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
     expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(\`
         name=alice
