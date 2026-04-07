@@ -559,26 +559,26 @@ function createIndent(indent: number): string {
 export function format(val: unknown, options?: OptionsReceived): string {
   if (options) {
     validateOptions(options)
-    if (options.plugins) {
-      const plugin = findPlugin(options.plugins, val)
-      if (plugin !== null) {
-        return printPlugin(plugin, val, getConfig(options), '', 0, [])
-      }
-    }
+  }
+
+  const config = getConfig(options)
+  const plugin = findPlugin(config.plugins, val)
+  if (plugin !== null) {
+    return printPlugin(plugin, val, config, '', 0, [])
   }
 
   const basicResult = printBasicValue(
     val,
-    getPrintFunctionName(options),
-    getEscapeRegex(options),
-    getEscapeString(options),
-    options?.singleQuote ?? DEFAULT_OPTIONS.singleQuote,
+    config.printFunctionName,
+    config.escapeRegex,
+    config.escapeString,
+    config.singleQuote,
   )
   if (basicResult !== null) {
     return basicResult
   }
 
-  return printComplexValue(val, getConfig(options), '', 0, [])
+  return printComplexValue(val, config, '', 0, [])
 }
 
 export type {
