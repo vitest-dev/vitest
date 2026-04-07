@@ -37,6 +37,7 @@ export interface Options
   theme: Theme
 }
 
+// TODO: min behavior is confusing. should do something about it.
 export interface PrettyFormatOptions {
   /**
    * Call `toJSON` on objects before formatting them.
@@ -86,7 +87,9 @@ export interface PrettyFormatOptions {
    * Whether to minimize added whitespace, including indentation and line breaks.
    *
    * When `true`, pretty-format defaults `spacingInner` to `' '`, `spacingOuter` to `''`,
-   * and ignores indentation. Explicit `spacingInner` / `spacingOuter` overrides still apply.
+   * and ignores indentation. It also omits basic `Object` / `Array` prefixes in the
+   * same cases as `printBasicPrototype: false`.
+   * Explicit `spacingInner` / `spacingOuter` overrides still apply.
    * @default false
    */
   min?: boolean
