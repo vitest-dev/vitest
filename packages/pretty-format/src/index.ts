@@ -134,6 +134,9 @@ function printBasicValue(
   if (typeOf === 'string') {
     const q = singleQuote ? '\'' : '"'
     if (escapeString) {
+      // escape quote in each case, e.g.
+      //   it's me -> 'it\'s me'
+      //   say "hi" -> "say \"hi\""
       const escapePattern = singleQuote ? /['\\]/g : /["\\]/g
       return `${q}${val.replaceAll(escapePattern, '\\$&')}${q}`
     }
