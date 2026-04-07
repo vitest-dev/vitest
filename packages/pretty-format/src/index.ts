@@ -270,7 +270,6 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-      // TOOD: review
       (min || !config.printBasicPrototype) && getConstructorName(val) === 'Object'
         ? ''
         : `${getConstructorName(val)} `

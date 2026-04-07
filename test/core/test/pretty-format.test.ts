@@ -1219,6 +1219,13 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
     expect(loupeInspect(0)).toMatchInlineSnapshot(`"+0"`)
   })
 
+  test('typed array', () => {
+    const input = new Uint8Array([1, 2, 3])
+    expect(prettyInspect(input)).toMatchInlineSnapshot(`"Uint8Array [ 1, 2, 3 ]"`)
+    expect(nodeInspect(input, nodeOpts)).toMatchInlineSnapshot(`"Uint8Array(3) [ 1, 2, 3 ]"`)
+    expect(loupeInspect(input)).toMatchInlineSnapshot(`"Uint8Array[ 1, 2, 3 ]"`)
+  })
+
   test('non-enumerable properties — matches node (loupe shows them via getOwnPropertyNames)', () => {
     const val = { visible: true }
     Object.defineProperty(val, 'hidden', { enumerable: false, value: 'secret' })
