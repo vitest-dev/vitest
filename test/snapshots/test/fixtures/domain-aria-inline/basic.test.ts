@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest'
 
-// --- TEST CASES ---
 test('simple heading', () => {
   document.body.innerHTML = `
     <h1>Hello World</h1>

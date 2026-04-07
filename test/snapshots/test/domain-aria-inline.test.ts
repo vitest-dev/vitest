@@ -96,13 +96,13 @@ test('aria inline snapshot', async () => {
     + - paragraph: Changed
       - button /\\d+/: Pattern
 
-     ❯ basic.test.ts:20:24
-         18|     <button aria-label="9999">Pattern</button>
-         19|   \`
-         20|   expect(document.body).toMatchAriaInlineSnapshot(\`
+     ❯ basic.test.ts:19:24
+         17|     <button aria-label="9999">Pattern</button>
+         18|   \`
+         19|   expect(document.body).toMatchAriaInlineSnapshot(\`
            |                        ^
-         21|     - paragraph: Original
-         22|     - button /\\\\d+/: Pattern
+         20|     - paragraph: Original
+         21|     - button /\\\\d+/: Pattern
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

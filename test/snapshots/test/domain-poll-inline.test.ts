@@ -104,16 +104,16 @@ test('domain inline snapshot with poll', async () => {
     + name=a
       age=23
 
-     ❯ basic.test.ts:10:24
-          8|     trial++
-          9|     return { name: 'a', age: '23' }
-         10|   }, { interval: 10 }).toMatchKvInlineSnapshot(\`
+     ❯ basic.test.ts:9:24
+          7|     trial++
+          8|     return { name: 'a', age: '23' }
+          9|   }, { interval: 10 }).toMatchKvInlineSnapshot(\`
            |                        ^
-         11|     name=a-changed
-         12|     age=23
+         10|     name=a-changed
+         11|     age=23
 
     Caused by: Error: Matcher did not succeed in time.
-     ❯ basic.test.ts:7:3
+     ❯ basic.test.ts:6:3
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest'
 import "../domain/basic-extend"
 
-// --- TEST CASES ---
 test('stable', async () => {
   let trial = 0
   await expect.poll(() => {
