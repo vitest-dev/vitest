@@ -224,6 +224,7 @@ export function printObjectProperties(
       }
 
       const key = keys[i]
+      // TODO: review
       const name = !config.quoteKeys && typeof key === 'string' && /^[a-z_$][\w$]*$/i.test(key)
         ? key
         : printer(key, config, indentationNext, depth, refs)

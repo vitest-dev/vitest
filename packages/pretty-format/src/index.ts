@@ -270,6 +270,7 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
+      // TOOD: review
       (min || !config.printBasicPrototype) && getConstructorName(val) === 'Object'
         ? ''
         : `${getConstructorName(val)} `
@@ -460,6 +461,7 @@ export const DEFAULT_OPTIONS: Options = {
   quoteKeys: true,
 } satisfies Options
 
+// TODO: review
 const EXTRA_OPTIONS = new Set(['spacingInner', 'spacingOuter'])
 
 function validateOptions(options: OptionsReceived) {
