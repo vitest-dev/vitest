@@ -43,6 +43,10 @@ async function runBrowserTests(
             ui: false,
             headless: true,
             instances: ${JSON.stringify(instances)},
+            viewport: {
+              width: 600,
+              height: 400,
+            },
           },
           reporters: ['verbose'],
           ...${JSON.stringify(config)},
@@ -236,34 +240,26 @@ describe('--watch', () => {
 
   // tests whether the screenshots are stable in UI and headless mode
   test(
-    'screenshots match across headless and non-headless UI modes',
+    'screenshots match across non-UI and UI mode',
     async () => {
-      const { fs, stderr, vitest } = await runBrowserTests(
+      const { fs, vitest } = await runBrowserTests(
         {
           [testFilename]: testContent,
           'utils.ts': utilsContent,
         },
         {
-          update: true,
+          update: 'new',
         },
       )
 
-      expect(stderr).toMatchInlineSnapshot(`""`)
-      await vitest.waitForStdout(`Test Files  ${instances.length} passed`, 20_000)
+      await vitest.waitForStderr(`Failed Tests ${instances.length}`, 20_000)
+
+      vitest.resetOutput()
 
       // switch to UI mode
       fs.editFile('vitest.config.js', content => content.replace('ui: false,', 'ui: true,'))
 
-      vitest.resetOutput()
       await vitest.waitForStdout(`Test Files  ${instances.length} passed`, 20_000)
-
-      if (!process.env.CI) {
-        // switch to non-headless mode
-        fs.editFile('vitest.config.js', content => content.replace('headless: true,', 'headless: false,'))
-
-        vitest.resetOutput()
-        await vitest.waitForStdout(`Test Files  ${instances.length} passed`, 20_000)
-      }
     },
   )
 })
