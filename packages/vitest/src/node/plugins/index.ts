@@ -19,6 +19,7 @@ import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
+  mergeResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
@@ -82,10 +83,11 @@ export async function VitestPlugin(
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
             'process.env.NODE_ENV': 'process.env.NODE_ENV',
           },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
+          resolve: mergeResolveOptions(
+            viteConfig.resolve,
+            resolveOptions,
+            testConfig.alias,
+          ),
           server: {
             ...testConfig.api,
             open,

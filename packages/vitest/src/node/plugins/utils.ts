@@ -1,4 +1,5 @@
 import type {
+  AliasOptions,
   DepOptimizationOptions,
   UserConfig as ViteConfig,
 } from 'vite'
@@ -122,6 +123,24 @@ export function getDefaultResolveOptions(): vite.ResolveOptions {
     // same for `module` condition and Vite 5 doesn't even allow excluding it,
     // but now it's possible since Vite 6.
     conditions: getDefaultServerConditions(),
+  }
+}
+
+export function mergeResolveOptions(
+  userResolve: ViteConfig['resolve'],
+  defaultResolve: vite.ResolveOptions,
+  testAlias: AliasOptions | undefined,
+): ViteConfig['resolve'] {
+  return {
+    // Spread user's resolve options first to preserve custom settings
+    // like extensions, dedupe, preserveSymlinks, etc.
+    ...userResolve,
+    // Override mainFields and conditions with Vitest's required defaults
+    // These are critical for Vitest's test environment to work correctly
+    mainFields: defaultResolve.mainFields,
+    conditions: defaultResolve.conditions,
+    // Use test alias if provided, otherwise preserve user's alias
+    alias: testAlias ?? userResolve?.alias,
   }
 }
 

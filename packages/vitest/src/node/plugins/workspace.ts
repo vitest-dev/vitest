@@ -19,6 +19,7 @@ import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
+  mergeResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
@@ -147,10 +148,11 @@ export function WorkspaceVitestPlugin(
             // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
             'process.env.NODE_ENV': 'process.env.NODE_ENV',
           },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
+          resolve: mergeResolveOptions(
+            viteConfig.resolve,
+            resolveOptions,
+            testConfig.alias,
+          ),
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
