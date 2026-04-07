@@ -710,6 +710,20 @@ describe('maxDepth option', () => {
 })
 
 describe('maxWidth option', () => {
+  test('object', () => {
+    // TODO?
+    const input = { one: 1, two: 2, three: 3, four: 4, five: 5 }
+    expect(format(input, { maxWidth: 3 })).toMatchInlineSnapshot(`
+      "Object {
+        "five": 5,
+        "four": 4,
+        "one": 1,
+        "three": 3,
+        "two": 2,
+      }"
+    `)
+  })
+
   test('truncates arrays', () => {
     expect(format([1, 2, 3, 4, 5], { maxWidth: 3 })).toMatchInlineSnapshot(
       `
@@ -1104,18 +1118,18 @@ describe('prettyInspect', () => {
 
   test('truncates string', () => {
     const long = '0123456789012345678901234567890123456789'
-    expect(prettyInspect(long, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
+    expect(prettyInspect(long, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234567…'"`)
   })
 
   test('truncates surragete pair correctly', () => {
     expect(prettyInspect('😀'.repeat(5), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀'"`)
     expect(prettyInspect('😀'.repeat(6), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀'"`)
-    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
-    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀...'"`)
+    expect(prettyInspect('😀'.repeat(7), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀…'"`)
+    expect(prettyInspect('😀'.repeat(8), { truncate: 14 })).toMatchInlineSnapshot(`"'😀😀😀😀😀😀…'"`)
     expect(prettyInspect(`a${'😀'.repeat(5)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀'"`)
-    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
-    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
-    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀...'"`)
+    expect(prettyInspect(`a${'😀'.repeat(6)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
+    expect(prettyInspect(`a${'😀'.repeat(7)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
+    expect(prettyInspect(`a${'😀'.repeat(8)}`, { truncate: 14 })).toMatchInlineSnapshot(`"'a😀😀😀😀😀…'"`)
   })
 
   test('truncates array', () => {
@@ -1123,7 +1137,7 @@ describe('prettyInspect', () => {
   })
 
   test('truncates object', () => {
-    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toMatchInlineSnapshot(`"{ Object (a, b, ...) }"`)
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toMatchInlineSnapshot(`"{ Object (a, b, …) }"`)
   })
 
   test('truncate other types', () => {
@@ -1306,7 +1320,7 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('long string', () => {
       const s = '0123456789012345678901234567890123456789'
-      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234...'"`)
+      expect(prettyInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'012345678901234567…'"`)
       expect(loupeInspect(s, { truncate: 20 })).toMatchInlineSnapshot(`"'01234567890123456…'"`)
     })
 
@@ -1334,7 +1348,7 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('long object', () => {
       const obj = { one: 1, two: 2, three: 3, four: 4, five: 5 }
-      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ Object (one, two, ...) }"`)
+      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ Object (one, two, …) }"`)
       expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
     })
 

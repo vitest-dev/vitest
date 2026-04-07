@@ -235,23 +235,24 @@ export function inspect(
 
   // if stringify's adaptive maxDepth (down to 1) fails to truncate enough,
   // - for known types (e.g. string, object), do something reasonable.
-  // - for other values, fallback to maxDepth = 0 which should show minimal output (though it can technically exeed the threshold for some cases)
+  // - for other values, fallback to maxDepth = 0 which should can show minimal output.
 
   const type = Object.prototype.toString.call(obj)
   if (typeof obj === 'string') {
-    let end = threshold - 4
+    let end = threshold - 1
     if (end > 0 && isHighSurrogate(formatted[end - 1])) {
       end = end - 1
     }
-    return `'${formatted.slice(1, end)}...'`
+    return `'${formatted.slice(1, end)}…'`
   }
+  // TODO: binary search maxWidth to fit truncation
   if (type === '[object Array]') {
     return `[ Array(${(obj as any[]).length}) ]`
   }
   if (type === '[object Object]') {
     const keys = Object.keys(obj as object)
     const kstr = keys.length > 2
-      ? `${keys.slice(0, 2).join(', ')}, ...`
+      ? `${keys.slice(0, 2).join(', ')}, …`
       : keys.join(', ')
     return `{ Object (${kstr}) }`
   }

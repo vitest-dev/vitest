@@ -191,6 +191,7 @@ export function printListItems(
   return result
 }
 
+// TODO: why not use printIteratorEntries and support maxWidth for objects?
 /**
  * Return properties of an object
  * with spacing, indentation, and comma
