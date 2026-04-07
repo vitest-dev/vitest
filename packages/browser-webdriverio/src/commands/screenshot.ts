@@ -62,6 +62,12 @@ export async function takeScreenshot(
   if (context.project.config.browser.ui) {
     // refactor with `using` and `Symbol.asyncDispose` when support for Node <24 is dropped
     await context.browser.execute(() => {
+      const document = window.frameElement?.ownerDocument
+
+      if (!document) {
+        throw new Error('cannot access parent document')
+      }
+
       const stylesheet = document.createElement('style')
 
       stylesheet.id = 'vitest:screenshot-stylesheet'
@@ -85,6 +91,12 @@ export async function takeScreenshot(
 
   if (context.project.config.browser.ui) {
     await context.browser.execute(() => {
+      const document = window.frameElement?.ownerDocument
+
+      if (!document) {
+        throw new Error('cannot access parent document')
+      }
+
       const stylesheet = document.getElementById('vitest:screenshot-stylesheet')
 
       if (stylesheet) {
