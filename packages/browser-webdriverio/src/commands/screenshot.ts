@@ -66,7 +66,7 @@ export async function takeScreenshot(
 
       stylesheet.id = 'vitest:screenshot-stylesheet'
       stylesheet.textContent = /* css */`
-        iframe {
+        iframe[data-vitest] {
           position: absolute !important;
           inset: 0 !important;
           z-index: ${Number.MAX_SAFE_INTEGER} !important;
