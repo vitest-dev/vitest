@@ -224,8 +224,8 @@ export function printObjectProperties(
       }
 
       const key = keys[i]
-      const name = !config.quoteKeys && typeof key === 'string' && /^[a-z_$][\w$]*$/i.test(key)
-        ? key
+      const name = !config.quoteKeys && isUnquotableKey(key)
+        ? key as string
         : printer(key, config, indentationNext, depth, refs)
       const value = printer(val[key], config, indentationNext, depth, refs)
 
@@ -243,4 +243,12 @@ export function printObjectProperties(
   }
 
   return result
+}
+
+// https://github.com/nodejs/node/blob/61102cdbb3d59155ad5bb4fc9419627a31e63f7a/lib/internal/util/inspect.js#L249
+// /^[a-zA-Z_][a-zA-Z_0-9]*$/
+const keyStrRegExp = /^[a-z_]\w*$/i
+
+function isUnquotableKey(key: string | symbol): boolean {
+  return typeof key === 'string' && key !== '__proto__' && keyStrRegExp.test(key)
 }

@@ -936,38 +936,49 @@ describe('singleQuote option', () => {
 })
 
 describe('quoteKeys option', () => {
-  test('quotes all keys by default', () => {
-    expect(format({ a: 1 }, { min: true })).toMatchInlineSnapshot(`"{"a": 1}"`)
+  test('forced quote', () => {
+    const input = {
+      '': 0,
+      '$a': 0,
+      '0a': 0,
+      'a$': 0,
+      'a-b': 0,
+    }
+    expect(format(input, { quoteKeys: false })).toMatchInlineSnapshot(`
+      "Object {
+        "": 0,
+        "$a": 0,
+        "0a": 0,
+        "a$": 0,
+        "a-b": 0,
+      }"
+    `)
   })
 
-  test('does not quote valid identifiers when false', () => {
-    expect(format({ a: 1, foo_bar: 2, $x: 3 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
-      `"{$x: 3, a: 1, foo_bar: 2}"`,
-    )
+  test('no quote', () => {
+    const input = {
+      a: 0,
+      a0: 0,
+      a_b: 0,
+    }
+    expect(format(input, { quoteKeys: false })).toMatchInlineSnapshot(`
+      "Object {
+        a: 0,
+        a0: 0,
+        a_b: 0,
+      }"
+    `)
   })
 
-  test('still quotes non-identifier keys when false', () => {
-    expect(format({ 'has space': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
-      `"{"has space": 1}"`,
-    )
-  })
-
-  test('still quotes keys starting with digit when false', () => {
-    expect(format({ '0abc': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
-      `"{"0abc": 1}"`,
-    )
-  })
-
-  test('still quotes empty key when false', () => {
-    expect(format({ '': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
-      `"{"": 1}"`,
-    )
-  })
-
-  test('still quotes key with dash when false', () => {
-    expect(format({ 'my-key': 1 }, { quoteKeys: false, min: true })).toMatchInlineSnapshot(
-      `"{"my-key": 1}"`,
-    )
+  test('prototype', () => {
+    const input = Object.create(null)
+    // eslint-disable-next-line
+    input.__proto__ = 0
+    expect(format(input, { quoteKeys: false })).toMatchInlineSnapshot(`
+      "Object {
+        "__proto__": 0,
+      }"
+    `)
   })
 })
 
