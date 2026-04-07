@@ -299,16 +299,16 @@ const ErrorPlugin: NewPlugin = {
       ...rest,
     }
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
-    // TODO: should use printObjectProperties with compareKeys disbled
     return hitMaxDepth
       ? `[${name}]`
-      : `${name} {${printIteratorEntries(
-        Object.entries(entries).values(),
+      : `${name} {${printObjectProperties(
+        entries,
         config,
         indentation,
         depth,
         refs,
         printer,
+        null,
       )}}`
   },
 }

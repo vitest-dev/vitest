@@ -205,9 +205,10 @@ export function printObjectProperties(
   depth: number,
   refs: Refs,
   printer: Printer,
+  compareKeysOverride: CompareKeys = config.compareKeys,
 ): string {
   let result = ''
-  const keys = getKeysOfEnumerableProperties(val, config.compareKeys)
+  const keys = getKeysOfEnumerableProperties(val, compareKeysOverride)
 
   if (keys.length > 0) {
     result += config.spacingOuter
