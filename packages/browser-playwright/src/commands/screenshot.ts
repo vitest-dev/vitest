@@ -11,7 +11,7 @@ interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | '
 }
 
 const SCREENSHOT_STYLES = /* css */`
-  iframe[data-vitest] {
+  iframe[data-vitest="true"] {
     position: absolute !important;
     inset: 0 !important;
     z-index: ${Number.MAX_SAFE_INTEGER} !important;
