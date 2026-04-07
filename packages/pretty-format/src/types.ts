@@ -84,6 +84,9 @@ export interface PrettyFormatOptions {
   maxOutputLength?: number
   /**
    * Whether to minimize added whitespace, including indentation and line breaks.
+   *
+   * When `true`, pretty-format defaults `spacingInner` to `' '`, `spacingOuter` to `''`,
+   * and ignores indentation. Explicit `spacingInner` / `spacingOuter` overrides still apply.
    * @default false
    */
   min?: boolean
@@ -111,9 +114,49 @@ export interface PrettyFormatOptions {
    * @default []
    */
   plugins?: Plugins
+  /**
+   * Whitespace inserted after commas between items or entries.
+   *
+   * For example, in `{a: 1, b: 2}` or `[1, 2]`, this controls the gap after each comma:
+   * `{a: 1,${spacingInner}b: 2}`
+   * `[1,${spacingInner}2]`
+   *
+   * Defaults to `'\n'` in regular mode and `' '` when `min` is `true`.
+   * Can be overridden independently of `min`.
+   */
   spacingInner?: string
+  /**
+   * Whitespace inserted immediately inside collection/object delimiters.
+   *
+   * For example, this controls the space or newline right after the opening delimiter
+   * and right before the closing delimiter:
+   * `{${spacingOuter}a: 1${spacingOuter}}`
+   * `[${spacingOuter}1${spacingOuter}]`
+   *
+   * Defaults to `'\n'` in regular mode and `''` when `min` is `true`.
+   * Can be overridden independently of `min`.
+   */
   spacingOuter?: string
+  /**
+   * Whether to print strings using single quotes instead of double quotes.
+   *
+   * For example:
+   * `"hello"` when `false`
+   * `'hello'` when `true`
+   *
+   * @default false
+   */
   singleQuote?: boolean
+  /**
+   * Whether to always quote object property keys.
+   *
+   * For example:
+   * `{"a": 1}` when `true`
+   * `{a: 1}` when `false` and the key is a valid identifier
+   * `{"my-key": 1}` still stays quoted because it is not a valid identifier
+   *
+   * @default true
+   */
   quoteKeys?: boolean
 }
 
