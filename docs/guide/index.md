@@ -95,6 +95,8 @@ Test Files  1 passed (1)
 If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
 :::
 
+Your first test is passing! Continue to [Writing Tests](/guide/learn/writing-tests) to learn about organizing tests, reading test output, and the core testing patterns you'll use every day.
+
 ## Configuring Vitest
 
 Vitest reads your `vite.config.ts` by default, so your existing Vite plugins and configuration work out-of-the-box. You can also create a dedicated `vitest.config.ts` for test-specific settings. See the [Config Reference](/config/) for details.
