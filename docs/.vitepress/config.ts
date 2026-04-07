@@ -755,6 +755,21 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/learn/snapshots',
                 docFooterText: 'Snapshot Testing | Learn',
               },
+              {
+                text: 'Testing in Practice',
+                link: '/guide/learn/testing-in-practice',
+                docFooterText: 'Testing in Practice | Learn',
+              },
+              {
+                text: 'Debugging Tests',
+                link: '/guide/learn/debugging-tests',
+                docFooterText: 'Debugging Tests | Learn',
+              },
+              {
+                text: 'Writing Tests with AI',
+                link: '/guide/learn/writing-tests-with-ai',
+                docFooterText: 'Writing Tests with AI | Learn',
+              },
             ],
           },
           {

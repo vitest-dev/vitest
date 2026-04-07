@@ -4,8 +4,8 @@ prev:
   text: Mock Functions
   link: /guide/learn/mock-functions
 next:
-  text: Browser Mode
-  link: /guide/browser/
+  text: Testing in Practice
+  link: /guide/learn/testing-in-practice
 ---
 
 # Snapshot Testing
