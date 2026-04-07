@@ -485,4 +485,10 @@ If you don't use these features, you can disable this to improve performance.
 - **Type:** `boolean`
 - **Default:** `false`
 
-Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them.
+Parses test specifications before running them. This applies the [`.only`](/api/test#test-only) modifier and the [`-t`](/config/testnamepattern) test name pattern across all files without executing them. For example, if only a single test is marked with `.only`, Vitest will skip all other tests in all files.
+
+::: tip
+This option is recommended when using [`.only`](/api/test#test-only) or the [`-t`](/config/testnamepattern) flag.
+
+Enabling it unconditionally may slow down your test runs due to the additional parsing step.
+:::
