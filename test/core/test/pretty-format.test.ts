@@ -1131,16 +1131,20 @@ describe('prettyInspect', () => {
   })
 
   test('truncates array', () => {
-    expect(prettyInspect([1, 2, 3, 4, 5], { truncate: 10 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+    expect(prettyInspect([1, 2, 3, 4, 5, 6], { truncate: 20 })).toMatchInlineSnapshot(`"[ 1, 2, 3, 4, 5, 6 ]"`)
+    expect(prettyInspect([1, 2, 3, 4, 5, 6, 7], { truncate: 20 })).toMatchInlineSnapshot(`"[ 1, 2, 3, 4, 5, … ]"`)
   })
 
   test('truncates object', () => {
-    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 15 })).toMatchInlineSnapshot(`"{ Object (a, b, …) }"`)
+    expect(prettyInspect({ a: 1, b: 2, c: 3 }, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: 1, b: 2, c: 3 }"`)
+    expect(prettyInspect({ a: 1, b: 2, c: 3, d: 4 }, { truncate: 20 })).toMatchInlineSnapshot(`"{ a: 1, b: 2, … }"`)
   })
 
   test('truncate other types', () => {
-    expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 5 })).toMatchInlineSnapshot(`"[Map]"`)
-    expect(prettyInspect(new Set([1, 2, 3]), { truncate: 5 })).toMatchInlineSnapshot(`"[Set]"`)
+    expect(prettyInspect(new Map([['a', 1]]), { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1 }"`)
+    expect(prettyInspect(new Map([['a', 1], ['b', 2]]), { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, … }"`)
+    expect(prettyInspect(new Set([1, 2, 3, 4]), { truncate: 20 })).toMatchInlineSnapshot(`"Set { 1, 2, 3, 4 }"`)
+    expect(prettyInspect(new Set([1, 2, 3, 4, 5]), { truncate: 20 })).toMatchInlineSnapshot(`"Set { 1, 2, 3, … }"`)
   })
 
   test('multiline', () => {
@@ -1329,13 +1333,13 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('long array', () => {
       const arr = [1, 2, 3, 4, 5]
-      expect(prettyInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(prettyInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ 1, 2, 3, … ]"`)
       expect(loupeInspect(arr, { truncate: 15 })).toMatchInlineSnapshot(`"[ 1, 2, …(3) ]"`)
     })
 
     test('array with long string values', () => {
       const arr = ['one', 'two', 'three', 'four', 'five']
-      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ Array(5) ]"`)
+      expect(prettyInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', … ]"`)
       expect(loupeInspect(arr, { truncate: 40 })).toMatchInlineSnapshot(`"[ 'one', 'two', 'three', 'four', …(1) ]"`)
     })
 
@@ -1346,7 +1350,7 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('long object', () => {
       const obj = { one: 1, two: 2, three: 3, four: 4, five: 5 }
-      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ Object (one, two, …) }"`)
+      expect(prettyInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, four: 4, … }"`)
       expect(loupeInspect(obj, { truncate: 40 })).toMatchInlineSnapshot(`"{ one: 1, two: 2, three: 3, …(2) }"`)
     })
 
@@ -1360,13 +1364,13 @@ describe('inspect comparison (prettyInspect vs node vs loupe)', () => {
 
     test('Map', () => {
       const m = new Map([['a', 1], ['b', 2], ['c', 3]])
-      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"[Map]"`)
+      expect(prettyInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map { 'a' => 1, … }"`)
       expect(loupeInspect(m, { truncate: 20 })).toMatchInlineSnapshot(`"Map{ …(3) }"`)
     })
 
     test('Set', () => {
       const s = new Set([1, 2, 3, 4, 5])
-      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"[Set]"`)
+      expect(prettyInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set { 1, 2, … }"`)
       expect(loupeInspect(s, { truncate: 15 })).toMatchInlineSnapshot(`"Set{ 1, …(4) }"`)
     })
 
