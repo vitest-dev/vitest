@@ -70,6 +70,14 @@ Add a `.npmrc` file with following line next to the `package.json`:
 VITEST_MODULE_DIRECTORIES=/node_modules/,/packages/
 ```
 
+## Using Unreleased Commits
+
+Each commit on the main branch and PRs with a `cr-tracked` label are published to [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new). You can install a specific commit with:
+
+```bash
+npm i https://pkg.pr.new/vitest@{commit}
+```
+
 ## Pull Request Guidelines
 
 - Checkout a topic branch from a base branch, e.g. `main`, and merge back against that branch.
