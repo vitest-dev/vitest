@@ -767,11 +767,10 @@ add(4);
 
 
 
-      const update = __vi_import_0__.update;
       class A {
         remove = 1
         add = null
-        update = update
+        update = __vi_import_0__.update
         del = () => __vi_import_0__.del()
         call = __vi_import_0__.call(4)
       }
