@@ -16,10 +16,10 @@ Often while writing tests, you need to do some work before tests run (initialize
 
 The most common hooks are [`beforeEach`](/api/hooks#beforeeach) and [`afterEach`](/api/hooks#aftereach). As the names suggest, `beforeEach` runs before every test in the file, and `afterEach` runs after every test, even if the test fails. This makes them perfect for ensuring each test starts with a known state.
 
-```ts
+```js
 import { afterEach, beforeEach, expect, test } from 'vitest'
 
-let items: string[]
+let items
 
 beforeEach(() => {
   items = ['apple', 'banana', 'cherry']
@@ -47,10 +47,10 @@ Without these hooks, the second test's `push` would affect any test that runs af
 
 Some setup is too expensive to repeat for every test. If you need to connect to a database, start a server, or load a large file, doing that before every test would slow your suite down dramatically. That's what [`beforeAll`](/api/hooks#beforeall) and [`afterAll`](/api/hooks#afterall) are for. They run once for the entire file:
 
-```ts
+```js
 import { afterAll, beforeAll, expect, test } from 'vitest'
 
-let db: Database
+let db
 
 beforeAll(async () => {
   db = await connectToDatabase()
@@ -77,11 +77,11 @@ The database connection is created once, shared across all tests, and then close
 
 Hooks defined inside a `describe` block only apply to the tests within that block. Top-level hooks apply to every test in the file. This lets you set up different state for different groups of tests:
 
-```ts
+```js
 import { beforeEach, describe, expect, test } from 'vitest'
 
 describe('math operations', () => {
-  let value: number
+  let value
 
   beforeEach(() => {
     value = 0
@@ -99,7 +99,7 @@ describe('math operations', () => {
 })
 
 describe('string operations', () => {
-  let text: string
+  let text
 
   beforeEach(() => {
     text = 'hello'
@@ -117,7 +117,7 @@ Each `describe` block has its own `beforeEach` that only affects the tests insid
 
 When you have hooks at multiple levels, it's helpful to understand the order they run in. Top-level hooks wrap around inner hooks, forming a nesting structure:
 
-```ts
+```js
 import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest'
 
 beforeAll(() => console.log('1 - beforeAll'))
@@ -153,7 +153,7 @@ Notice the pattern: outer `beforeEach` runs first (setting up the broadest conte
 
 Sometimes you create a resource inside a test that needs to be cleaned up afterwards. You could use `afterEach`, but that means the cleanup is separated from the setup, which can make the test harder to follow. [`onTestFinished`](/api/hooks#ontestfinished) lets you register a cleanup function right where you create the resource:
 
-```ts
+```js
 import { expect, onTestFinished, test } from 'vitest'
 
 test('creates a temporary file', () => {
@@ -168,7 +168,7 @@ test('creates a temporary file', () => {
 
 A similar pattern works with `beforeEach`. You can return a cleanup function and Vitest will call it after each test. This is especially nice when the setup and teardown are closely related:
 
-```ts
+```js
 import { beforeEach } from 'vitest'
 
 beforeEach(() => {
@@ -185,7 +185,7 @@ The examples above use `let` variables and `beforeEach` to set up shared state. 
 
 Vitest offers a better pattern for this with [`test.extend`](/guide/test-context#extend-test-context). You define reusable **fixtures** that are automatically created for each test and cleaned up afterwards:
 
-```ts [my-test.ts]
+```js [my-test.js]
 import { test as baseTest } from 'vitest'
 
 export const test = baseTest
@@ -199,7 +199,7 @@ export const test = baseTest
   })
 ```
 
-```ts [my-test.test.ts]
+```js [my-test.test.js]
 import { expect } from 'vitest'
 import { test } from './my-test.js'
 
@@ -216,7 +216,7 @@ See the [Test Context](/guide/test-context) guide for the full details on fixtur
 
 If you have setup code that should run before every test file in your project (things like polyfills, global configuration, or custom matchers), you can put it in a setup file and point to it with the [`setupFiles`](/config/setupfiles) config option:
 
-```ts [vitest.config.ts]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -226,7 +226,7 @@ export default defineConfig({
 })
 ```
 
-```ts [test/setup.ts]
+```js [test/setup.js]
 // This runs before every test file
 import { expect } from 'vitest'
 import { customMatchers } from './custom-matchers'

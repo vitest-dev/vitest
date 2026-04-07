@@ -16,10 +16,10 @@ JavaScript code frequently runs asynchronously. Whether you're fetching data, re
 
 The most straightforward approach is to make your test function `async`. Vitest will automatically wait for the returned promise to resolve before considering the test complete. If the promise rejects, the test fails with the rejection reason.
 
-```ts
+```js
 import { expect, test } from 'vitest'
 
-function fetchUser(id: number) {
+function fetchUser(id) {
   return Promise.resolve({ id, name: 'Alice' })
 }
 
@@ -35,7 +35,7 @@ This is the pattern you'll use the vast majority of the time. It reads just like
 
 Sometimes you'd rather assert on a promise directly instead of `await`-ing it into a variable first. The [`.resolves`](/api/expect#resolves) and [`.rejects`](/api/expect#rejects) helpers let you do this. They unwrap the promise and then apply the matcher to the resolved or rejected value:
 
-```ts
+```js
 test('resolves to Alice', async () => {
   await expect(fetchUser(1)).resolves.toMatchObject({ name: 'Alice' })
 })
@@ -53,13 +53,13 @@ Don't forget the `await` before `expect`. Vitest will detect unawaited assertion
 
 Some older APIs use callbacks instead of promises. Since Vitest works with promises, the simplest approach is to wrap the callback in a `Promise`:
 
-```ts
-function fetchData(callback: (data: string) => void) {
+```js
+function fetchData(callback) {
   setTimeout(() => callback('peanut butter'), 100)
 }
 
 test('the data is peanut butter', async () => {
-  const data = await new Promise<string>((resolve) => {
+  const data = await new Promise((resolve) => {
     fetchData(resolve)
   })
   expect(data).toBe('peanut butter')
@@ -74,7 +74,7 @@ By default, each test has a 5-second timeout. If a test takes longer than that (
 
 You can set a [custom timeout](/api/test#timeout) as the third argument to `test`, which is useful for tests that legitimately need more time:
 
-```ts
+```js
 test('long-running operation', async () => {
   await someSlowOperation()
 }, 10_000) // 10 seconds
@@ -82,7 +82,7 @@ test('long-running operation', async () => {
 
 If you find yourself needing longer timeouts across many tests, you can change the default for all tests with the [`testTimeout`](/config/testtimeout) config option:
 
-```ts [vitest.config.ts]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -96,7 +96,7 @@ export default defineConfig({
 
 By default, tests within a file run one after another. This is usually what you want, especially when tests share setup code. But if you have many independent async tests that each spend most of their time waiting (on network, disk, timers, etc.), running them concurrently with [`test.concurrent`](/api/test#concurrent) can significantly speed things up:
 
-```ts
+```js
 test.concurrent('first async test', async () => {
   const result = await fetchUser(1)
   expect(result.name).toBe('Alice')
@@ -114,7 +114,7 @@ See the [Parallelism](/guide/parallelism) guide for the full picture of how Vite
 
 By default, Vitest reports unhandled promise rejections as errors in the test run. If a promise rejects somewhere in your code and nothing catches it, the test run will fail, even if all your assertions passed. This is intentional: unhandled rejections usually indicate real bugs, like a forgotten `await` or a fire-and-forget promise that silently fails.
 
-```ts
+```js
 test('this causes an unhandled rejection error', () => {
   // This promise rejects but is never awaited or caught
   Promise.reject(new Error('oops'))
@@ -123,7 +123,7 @@ test('this causes an unhandled rejection error', () => {
 
 To fix this, make sure you `await` all promises or catch expected rejections:
 
-```ts
+```js
 test('handle the rejection', async () => {
   // Either await the promise
   await expect(Promise.reject(new Error('oops'))).rejects.toThrow('oops')

@@ -58,7 +58,7 @@ AI-generated tests can look convincing at first glance but still have problems. 
 
 Watch for tests that call a function but only check that it doesn't throw, or tests that assert on the mock itself rather than the behavior. A test like this gives false confidence:
 
-```ts
+```js
 test('creates a user', () => {
   const user = createUser('Alice', 'alice@example.com')
   expect(user).toBeDefined() // this passes for almost anything
@@ -67,7 +67,7 @@ test('creates a user', () => {
 
 A better assertion checks the actual properties:
 
-```ts
+```js
 test('creates a user with the correct fields', () => {
   const user = createUser('Alice', 'alice@example.com')
   expect(user).toMatchObject({

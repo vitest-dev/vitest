@@ -67,7 +67,7 @@ vitest src/user.test.ts -t "sets the default role"
 
 You can also add [`.only`](/api/test#only) to the test itself:
 
-```ts
+```js
 test.only('sets the default role', () => {
   // only this test runs in the file
 })
@@ -81,9 +81,9 @@ If the test passes when run alone but fails when run with others, you have a tes
 
 This is one of the most common and frustrating issues. A test passes when you run it alone, but fails when the full suite runs. The usual cause is that some other test modifies shared state (a global variable, a module-level cache, a database) and doesn't clean up after itself.
 
-```ts
+```js
 // This is a problem: `users` is shared between tests
-const users: string[] = []
+const users = []
 
 test('adds a user', () => {
   users.push('Alice')
@@ -98,7 +98,7 @@ test('starts empty', () => {
 
 The fix is to reset the state before each test with [`beforeEach`](/api/hooks#beforeeach), or better yet, use [`test.extend`](/guide/test-context#extend-test-context) to create fresh state for each test automatically:
 
-```ts
+```js
 const test = baseTest.extend('users', () => [] as string[])
 
 test('adds a user', ({ users }) => {
@@ -116,7 +116,7 @@ test('starts empty', ({ users }) => {
 
 Tests that involve promises can fail intermittently or in confusing ways if the async flow isn't handled correctly. The most common mistake is forgetting an `await`:
 
-```ts
+```js
 // This test always passes, even if fetchUser rejects!
 test('fetches user', () => {
   // Missing await: the test finishes before the promise settles
@@ -126,7 +126,7 @@ test('fetches user', () => {
 
 Vitest will usually warn you about unawaited assertions at the end of the test. If you see that warning, add the missing `await`:
 
-```ts
+```js
 test('fetches user', async () => {
   await expect(fetchUser(1)).resolves.toMatchObject({ name: 'Alice' })
 })
@@ -150,7 +150,7 @@ If a mock from one test leaks into another, you'll get unexpected behavior. For 
 
 The easiest fix is to enable automatic mock restoration in your config:
 
-```ts [vitest.config.ts]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -168,7 +168,7 @@ This calls [`mockRestore()`](/api/mock#mockrestore) on every mock after each tes
 
 There's nothing wrong with adding `console.log` to your tests. It's the fastest way to inspect values and understand what's happening:
 
-```ts
+```js
 test('transforms data correctly', () => {
   const input = getData()
   console.log('input:', input)

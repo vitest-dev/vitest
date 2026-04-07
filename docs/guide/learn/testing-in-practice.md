@@ -18,8 +18,8 @@ When you sit down to write tests for a function or module, start by thinking abo
 
 Consider a `formatPrice` function:
 
-```ts [formatPrice.ts]
-export function formatPrice(amount: number, currency: string): string {
+```js [formatPrice.js]
+export function formatPrice(amount, currency) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -29,7 +29,7 @@ export function formatPrice(amount: number, currency: string): string {
 
 The contract here is: given an amount and a currency code, return a formatted price string. Good tests for this function would cover:
 
-```ts [formatPrice.test.ts]
+```js [formatPrice.test.js]
 import { expect, test } from 'vitest'
 import { formatPrice } from './formatPrice.js'
 
@@ -66,7 +66,7 @@ Most tests follow a natural three-part structure, sometimes called "Arrange, Act
 2. **Call** the function or perform the action you're testing
 3. **Check** that the result matches your expectations
 
-```ts
+```js
 test('removes an item from the list', () => {
   // Set up
   const list = new ShoppingList()
@@ -91,8 +91,8 @@ After covering the main behavior, think about the boundaries. What happens at th
 
 Here's an example with a `parseAge` function that takes user input and returns a number:
 
-```ts [parseAge.ts]
-export function parseAge(input: string): number {
+```js [parseAge.js]
+export function parseAge(input) {
   const age = Number(input)
   if (Number.isNaN(age) || age < 0 || age > 150) {
     throw new Error(`Invalid age: ${input}`)
@@ -103,7 +103,7 @@ export function parseAge(input: string): number {
 
 The happy path is straightforward, but the edge cases are where bugs hide:
 
-```ts [parseAge.test.ts]
+```js [parseAge.test.js]
 import { expect, test } from 'vitest'
 import { parseAge } from './parseAge.js'
 
@@ -174,7 +174,7 @@ Some teams prefer a separate `__tests__` or `test` directory instead. Either app
 
 When a module exports multiple functions, use `describe` blocks to group the tests for each one. This keeps the test output organized and makes it clear which function a failing test belongs to:
 
-```ts
+```js
 describe('formatPrice', () => {
   test('formats USD prices', () => { /* ... */ })
   test('handles zero', () => { /* ... */ })
@@ -196,20 +196,14 @@ Test names matter more than you might expect. When a test fails in CI, the name 
 
 Let's put it all together. Here's a small `TodoList` module:
 
-```ts [todoList.ts]
-export interface Todo {
-  id: number
-  text: string
-  completed: boolean
-}
-
+```js [todoList.js]
 let nextId = 1
 
 export function createTodoList() {
-  const items: Todo[] = []
+  const items = []
 
   return {
-    add(text: string): Todo {
+    add(text) {
       if (!text.trim()) {
         throw new Error('Todo text cannot be empty')
       }
@@ -218,7 +212,7 @@ export function createTodoList() {
       return todo
     },
 
-    remove(id: number): void {
+    remove(id) {
       const index = items.findIndex(item => item.id === id)
       if (index === -1) {
         throw new Error(`Todo with id ${id} not found`)
@@ -226,7 +220,7 @@ export function createTodoList() {
       items.splice(index, 1)
     },
 
-    toggle(id: number): void {
+    toggle(id) {
       const todo = items.find(item => item.id === id)
       if (!todo) {
         throw new Error(`Todo with id ${id} not found`)
@@ -234,11 +228,11 @@ export function createTodoList() {
       todo.completed = !todo.completed
     },
 
-    getAll(): readonly Todo[] {
+    getAll() {
       return items
     },
 
-    getCompleted(): readonly Todo[] {
+    getCompleted() {
       return items.filter(item => item.completed)
     },
   }
@@ -256,7 +250,7 @@ Looking at this code, we can identify the behaviors to test:
 
 Here's how the test file might look:
 
-```ts [todoList.test.ts]
+```js [todoList.test.js]
 import { describe, expect, test } from 'vitest'
 import { createTodoList } from './todoList.js'
 

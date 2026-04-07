@@ -18,7 +18,7 @@ Vitest provides mocking utilities through the [`vi`](/api/vi) object.
 
 The simplest way to create a mock is with [`vi.fn()`](/api/vi#vi-fn). This gives you a function that does nothing by default (returns `undefined`), but tracks every call made to it:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 
 test('mock function basics', () => {
@@ -40,7 +40,7 @@ test('mock function basics', () => {
 
 A mock that always returns `undefined` isn't very useful on its own. You'll usually want to control what it returns so you can test how your code reacts to different values:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 
 test('mock return values', () => {
@@ -59,7 +59,7 @@ test('mock return values', () => {
 
 If the function you're mocking is async, use [`mockResolvedValue`](/api/mock#mockresolvedvalue) and [`mockRejectedValue`](/api/mock#mockrejectedvalue) to control the promise outcome:
 
-```ts
+```js
 test('mock async return values', async () => {
   const fetchUser = vi.fn()
 
@@ -76,12 +76,12 @@ test('mock async return values', async () => {
 
 Sometimes you need more than a fixed return value. You want the mock to actually do something with its arguments. [`mockImplementation`](/api/mock#mockimplementation) lets you provide a full replacement function:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 
 test('mock with custom implementation', () => {
   const add = vi.fn()
-  add.mockImplementation((a: number, b: number) => a + b)
+  add.mockImplementation((a, b) => a + b)
 
   expect(add(1, 2)).toBe(3)
   expect(add(10, 20)).toBe(30)
@@ -90,15 +90,15 @@ test('mock with custom implementation', () => {
 
 As a shorthand, you can pass the implementation directly to `vi.fn()`:
 
-```ts
-const add = vi.fn((a: number, b: number) => a + b)
+```js
+const add = vi.fn((a, b) => a + b)
 ```
 
 ## Inspecting Calls
 
 One of the most powerful things about mock functions is that they remember every call made to them. You can assert on how many times a function was called, what arguments it received, and what it returned:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 
 test('inspecting mock calls', () => {
@@ -124,7 +124,7 @@ test('inspecting mock calls', () => {
 
 The `.mock` property gives you full access to the call history. In addition to `.mock.calls`, you can also inspect `.mock.results` to see what the mock returned (or threw) on each call:
 
-```ts
+```js
 const double = vi.fn(x => x * 2)
 
 double(5)
@@ -139,7 +139,7 @@ expect(double.mock.results).toEqual([
 ::: warning
 `.mock.calls` stores references to the arguments, not copies. If you pass an object to a mock and then mutate it afterwards, the recorded call will reflect the mutated state, not the state at the time of the call:
 
-```ts
+```js
 const fn = vi.fn()
 const obj = { count: 1 }
 
@@ -152,8 +152,8 @@ expect(fn).toHaveBeenCalledWith({ count: 1 })
 
 If you need to assert on the original values, you can use `mockImplementation` to capture a clone at call time:
 
-```ts
-const calls: Array<{ count: number }> = []
+```js
+const calls = []
 const fn = vi.fn((obj) => {
   calls.push(structuredClone(obj))
 })
@@ -172,11 +172,11 @@ Alternatively, you can make your assertion before the mutation happens.
 
 [`vi.spyOn`](/api/vi#vi-spyon) is different from `vi.fn()` in an important way. Instead of creating a brand new function, it wraps an *existing* method on an object. The original implementation still works by default, but you can observe every call and optionally override the behavior:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 
 const calculator = {
-  add(a: number, b: number) {
+  add(a, b) {
     return a + b
   },
 }
@@ -212,11 +212,11 @@ Mock functions accumulate state as tests run. They remember every call, every re
 
 In practice, the easiest approach is to restore all mocks automatically after each test:
 
-```ts
+```js
 import { afterEach, expect, test, vi } from 'vitest'
 
 const calculator = {
-  add: (a: number, b: number) => a + b,
+  add: (a, b) => a + b,
 }
 
 afterEach(() => {
@@ -232,7 +232,7 @@ test('spy is restored after the test', () => {
 
 Even better, you can configure this globally with the [`restoreMocks`](/config/restoremocks) option so you don't need the `afterEach` at all:
 
-```ts [vitest.config.ts]
+```js [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -246,7 +246,7 @@ export default defineConfig({
 
 Sometimes you need to replace an [entire module](/guide/mocking/modules) rather than a single function. For example, a database client or a logger that you don't want running during tests. [`vi.mock`](/api/vi#vi-mock) lets you replace a module's exports with mock implementations:
 
-```ts
+```js
 import { expect, test, vi } from 'vitest'
 import { getUser } from './db.js'
 

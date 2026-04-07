@@ -18,10 +18,10 @@ This approach is particularly useful when you're testing something that produces
 
 To create a snapshot test, pass a value to [`toMatchSnapshot()`](/api/expect#tomatchsnapshot):
 
-```ts
+```js
 import { expect, test } from 'vitest'
 
-function generateGreeting(name: string) {
+function generateGreeting(name) {
   return {
     message: `Hello, ${name}!`,
     timestamp: null,
@@ -65,7 +65,7 @@ External snapshot files work well, but they mean you have to jump to a different
 
 Start by writing the assertion without any argument:
 
-```ts
+```js
 test('generates a greeting', () => {
   expect(generateGreeting('Alice')).toMatchInlineSnapshot()
 })
@@ -73,7 +73,7 @@ test('generates a greeting', () => {
 
 When you run the test, Vitest will **automatically fill in** the snapshot as a string argument:
 
-```ts
+```js
 test('generates a greeting', () => {
   expect(generateGreeting('Alice')).toMatchInlineSnapshot(`
     {
@@ -113,7 +113,7 @@ Be careful when updating snapshots. Always review the diff to confirm the change
 
 Sometimes the output you're testing is large enough that even an external `.snap` file feels awkward, or you want to view the snapshot with proper syntax highlighting in your editor. [`toMatchFileSnapshot()`](/api/expect#tomatchfilesnapshot) lets you save the snapshot to a file with any extension you want:
 
-```ts
+```js
 test('renders the component', async () => {
   const html = renderComponent()
   await expect(html).toMatchFileSnapshot('./fixtures/component.html')
