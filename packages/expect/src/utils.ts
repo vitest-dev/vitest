@@ -86,6 +86,8 @@ export function recordAsyncExpect(
 }
 
 function handleTestError(test: Test, err: unknown) {
+  // TODO: want to check err instanceof TestSyntaxError here
+  // but `TestSyntaxError` lives in @vitest/runner.
   test.result ||= { state: 'fail' }
   test.result.state = 'fail'
   test.result.errors ||= []

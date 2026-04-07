@@ -47,4 +47,12 @@ export class AroundHookMultipleCallsError extends Error {
 // `test.fails` doesn't flip the test result when this error is thrown
 export class TestSyntaxError extends Error {
   public name = 'TestSyntaxError'
+
+  constructor(message: string) {
+    super(message)
+    Object.defineProperty(this, '__vitest_test_syntax_error__', {
+      value: true,
+      enumerable: false,
+    })
+  }
 }

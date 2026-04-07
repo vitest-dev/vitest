@@ -67,9 +67,6 @@ function getTest(obj: Chai.Assertion) {
     throw new Error(`'${getAssertionName(obj)}' cannot be used without test context`)
   }
   if (test.fails) {
-    // TODO: where do we move?
-    test.result ||= { state: 'fail' }
-    test.result.testSyntaxError = true
     throw new TestSyntaxError(`'${getAssertionName(obj)}' cannot be used with 'test.fails'`)
   }
   return test
