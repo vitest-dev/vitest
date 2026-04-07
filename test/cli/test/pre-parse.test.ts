@@ -175,6 +175,146 @@ test('does not execute files where all tests are filtered by testNamePattern', a
   `)
 })
 
+test('filters tests by tagsFilter', async () => {
+  const { buildTree, stderr } = await runInlineTests({
+    'a.test.js': `
+      import { test } from 'vitest'
+      test('unit test', { tags: ['unit'], meta: { ran: true } }, () => {})
+      test('e2e test', { tags: ['e2e'], meta: { ran: true } }, () => {})
+    `,
+    'b.test.js': `
+      import { test } from 'vitest'
+      test('another unit', { tags: ['unit'], meta: { ran: true } }, () => {})
+      test('integration', { tags: ['integration'], meta: { ran: true } }, () => {})
+    `,
+  }, {
+    experimental: { preParse: true },
+    tags: [
+      { name: 'unit' },
+      { name: 'e2e' },
+      { name: 'integration' },
+    ],
+    tagsFilter: ['unit'],
+  })
+
+  expect(stderr).toBe('')
+  expect(buildTree(t => ({ state: t.result().state, meta: t.meta() }))).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "e2e test": {
+          "meta": {
+            "ran": true,
+          },
+          "state": "skipped",
+        },
+        "unit test": {
+          "meta": {
+            "ran": true,
+          },
+          "state": "passed",
+        },
+      },
+      "b.test.js": {
+        "another unit": {
+          "meta": {
+            "ran": true,
+          },
+          "state": "passed",
+        },
+        "integration": {
+          "meta": {
+            "ran": true,
+          },
+          "state": "skipped",
+        },
+      },
+    }
+  `)
+})
+
+test('does not execute files where all tests are filtered by tagsFilter', async () => {
+  const { buildTree, stderr } = await runInlineTests({
+    'a.test.js': `
+      import { test } from 'vitest'
+      test('e2e test', { tags: ['e2e'], meta: { ran: true } }, () => {})
+    `,
+    'b.test.js': `
+      import { test } from 'vitest'
+      test('unit test', { tags: ['unit'], meta: { ran: true } }, () => {})
+    `,
+  }, {
+    experimental: { preParse: true },
+    tags: [
+      { name: 'unit' },
+      { name: 'e2e' },
+    ],
+    tagsFilter: ['unit'],
+  })
+
+  expect(stderr).toBe('')
+  expect(buildTree(t => ({ state: t.result().state, meta: t.meta() }))).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "e2e test": {
+          "meta": {},
+          "state": "skipped",
+        },
+      },
+      "b.test.js": {
+        "unit test": {
+          "meta": {
+            "ran": true,
+          },
+          "state": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('filters tests by testLines', async () => {
+  const { fs, ctx, buildTree } = await runInlineTests({
+    // line 1: import
+    // line 2: test 1
+    // line 3: test 2
+    'a.test.js': `import { test } from 'vitest'
+test('test 1', { meta: { ran: true } }, () => {})
+test('test 2', { meta: { ran: true } }, () => {})
+`,
+    'b.test.js': `import { test } from 'vitest'
+test('test 3', { meta: { ran: true } }, () => {})
+test('test 4', { meta: { ran: true } }, () => {})
+`,
+  }, {
+    experimental: { preParse: true },
+    includeTaskLocation: true,
+    standalone: true,
+    watch: true,
+  })
+
+  const vitest = ctx!
+  const project = vitest.getRootProject()
+  const specifications = [
+    project.createSpecification(fs.resolveFile('./a.test.js'), { testLines: [3] }),
+    project.createSpecification(fs.resolveFile('./b.test.js')),
+  ]
+
+  await vitest.experimental_parseSpecifications(specifications)
+
+  expect(buildTree(t => t.task.mode)).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "test 1": "skip",
+        "test 2": "run",
+      },
+      "b.test.js": {
+        "test 3": "run",
+        "test 4": "run",
+      },
+    }
+  `)
+})
+
 test('handles describe.only across files', async () => {
   const { buildTree, stderr } = await runInlineTests({
     'a.test.js': `

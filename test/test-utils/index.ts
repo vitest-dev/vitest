@@ -41,6 +41,7 @@ export interface VitestRunnerCLIOptions {
 export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestCliOptions
+  $cliFilters?: string[]
 }
 
 const process_ = process
@@ -57,7 +58,7 @@ const process_ = process
  */
 export async function runVitest(
   config: RunVitestConfig,
-  cliFilters: string[] = [],
+  cliFilters: string[] = config.$cliFilters || [],
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs

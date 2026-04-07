@@ -485,10 +485,30 @@ If you don't use these features, you can disable this to improve performance.
 - **Type:** `boolean`
 - **Default:** `false`
 
-Parses test specifications before running them. This applies the [`.only`](/api/test#test-only) modifier and the [`-t`](/config/testnamepattern) test name pattern across all files without executing them. For example, if only a single test is marked with `.only`, Vitest will skip all other tests in all files.
+Parses test specifications before running them. This applies the [`.only`](/api/test#test-only) modifier, the [`-t`](/config/testnamepattern) test name pattern, [`--tags-filter`](/guide/test-tags#syntax), [test lines](/api/advanced/test-specification#testlines), and [test IDs](/api/advanced/test-specification#testids) across all files without executing them. For example, if only a single test is marked with `.only`, Vitest will skip all other tests in all files.
 
 ::: tip
-This option is recommended when using [`.only`](/api/test#test-only) or the [`-t`](/config/testnamepattern) flag.
+This option is recommended when using [`.only`](/api/test#test-only), the [`-t`](/config/testnamepattern) flag, or [`--tags-filter`](/guide/test-tags#syntax).
 
 Enabling it unconditionally may slow down your test runs due to the additional parsing step.
+:::
+
+::: warning
+Pre-parsing uses static analysis (AST parsing) instead of executing your test files. This means that test names, tags, and modifiers (`.only`, `.skip`, `.todo`) must be statically analyzable. Dynamic test names (e.g., names stored in variables or returned from function calls) and non-literal tags will not be resolved correctly.
+
+```ts
+// ✅ works — static string literal
+test('adds numbers', () => {})
+
+// ✅ works — static tags
+test('my test', { tags: ['unit'] }, () => {})
+
+// ❌ won't match correctly — dynamic name
+const name = getName()
+test(name, () => {})
+
+// ❌ won't match correctly — dynamic tags
+const tags = getTags()
+test('my test', { tags }, () => {})
+```
 :::
