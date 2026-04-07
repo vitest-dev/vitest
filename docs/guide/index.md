@@ -97,6 +97,8 @@ If you are using Bun as your package manager, make sure to use `bun run test` co
 
 Your first test is passing! Continue to [Writing Tests](/guide/learn/writing-tests) to learn about organizing tests, reading test output, and the core testing patterns you'll use every day.
 
+To run tests once without watching for file changes, use `vitest run`. You can also pass additional flags like `--reporter` or `--coverage`. For a full list of CLI options, run `npx vitest --help` or see the [CLI guide](/guide/cli).
+
 ## Configuring Vitest
 
 Vitest reads your `vite.config.ts` by default, so your existing Vite plugins and configuration work out-of-the-box. You can also create a dedicated `vitest.config.ts` for test-specific settings. See the [Config Reference](/config/) for details.
