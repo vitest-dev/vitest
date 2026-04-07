@@ -1054,7 +1054,7 @@ export class Vitest {
     // Phase 2: cross-file .only resolution
     const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
     for (const { file, specification } of results) {
-      const config = specification.project.serializedConfig
+      const config = specification.project.config
       interpretTaskModes(
         file,
         config.testNamePattern,
@@ -1078,7 +1078,7 @@ export class Vitest {
     const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })
-    const config = specification.project.serializedConfig
+    const config = specification.project.config
     const hasOnly = someTasksAreOnly(file)
     interpretTaskModes(
       file,
