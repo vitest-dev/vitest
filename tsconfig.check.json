@@ -19,6 +19,7 @@
     "./test/typescript/**",
     "./test/browser/**",
     "**/coverage/fixtures/**",
-    "./test/watch/fixtures/**"
+    "./test/watch/fixtures/**",
+    "./test/config/fixtures/tsconfig-paths/**"
   ]
 }
