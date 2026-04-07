@@ -1,6 +1,7 @@
 import type { AsyncExpectationResult, ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
+import { TestSyntaxError } from '@vitest/runner'
 import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
@@ -61,11 +62,14 @@ function getAssertionName(assertion: Chai.Assertion): string {
 }
 
 function getTest(obj: Chai.Assertion) {
-  const test = chai.util.flag(obj, 'vitest-test')
+  const test = chai.util.flag(obj, 'vitest-test') as Test | undefined
   if (!test) {
     throw new Error(`'${getAssertionName(obj)}' cannot be used without test context`)
   }
-  return test as Test
+  if (test.fails) {
+    throw new TestSyntaxError(`'${getAssertionName(obj)}' cannot be used with 'test.fails'`)
+  }
+  return test
 }
 
 function validateAssertion(assertion: Chai.Assertion): void {

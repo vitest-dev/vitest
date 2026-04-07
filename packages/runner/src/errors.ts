@@ -43,3 +43,8 @@ export class AroundHookTeardownError extends Error {
 export class AroundHookMultipleCallsError extends Error {
   public name = 'AroundHookMultipleCallsError'
 }
+
+// `test.fails` doesn't flip the test result when this error is thrown
+export class TestSyntaxError extends Error {
+  public name = 'TestSyntaxError'
+}

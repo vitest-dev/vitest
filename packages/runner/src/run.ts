@@ -24,7 +24,7 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
-import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
+import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError, TestSyntaxError } from './errors'
 import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, TestFixtures } from './fixture'
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
@@ -761,8 +761,8 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
-  // if test is marked to be failed, flip the result
-  if (test.fails) {
+  // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
+  if (test.fails && !test.result.testSyntaxError) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
@@ -796,6 +796,10 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
     result.state = 'skip'
     result.note = err.message
     return
+  }
+
+  if (err instanceof TestSyntaxError) {
+    result.testSyntaxError = true
   }
 
   result.state = 'fail'
