@@ -65,7 +65,7 @@ You can nest `describe` blocks for further organization, but keep nesting shallo
 
 ## Test Files
 
-By default, Vitest looks for any file that contains `.test.` or `.spec.` in its name, such as `utils.test.ts`, `app.spec.js`, or `math.test.tsx`. It searches in all subdirectories, so it doesn't matter where you place them.
+By default, Vitest looks for any file that contains `.test.` or `.spec.` in its name, such as `utils.test.js`, `app.spec.js`, or `math.test.jsx`. It searches in all subdirectories, so it doesn't matter where you place them.
 
 The exact patterns are:
 
@@ -76,10 +76,10 @@ There's no single "right" way to organize your test files. Some teams prefer pla
 
 ```
 src/
-  utils.ts
-  utils.test.ts       # co-located with the source
+  utils.js
+  utils.test.js       # co-located with the source
   __tests__/
-    utils.test.ts      # in a test directory
+    utils.test.js      # in a test directory
 ```
 
 If the default patterns don't work for your project, you can customize which files are included with the [`include`](/config/include) and [`exclude`](/config/exclude) config options.
@@ -89,7 +89,7 @@ If the default patterns don't work for your project, you can customize which fil
 When you run `vitest` and only a single test file matches, the output is expanded into a tree structure showing `describe` groups and individual tests along with their duration:
 
 ```txt
-✓ src/utils.test.ts (3 tests) 5ms
+✓ src/utils.test.js (3 tests) 5ms
   ✓ Math.sqrt 4ms
     ✓ returns the square root of perfect squares 2ms
     ✓ returns NaN for negative numbers 1ms
@@ -102,9 +102,9 @@ Test Files  1 passed (1)
 When multiple test files run, Vitest collapses each file into a single line to keep the output manageable:
 
 ```txt
-✓ src/utils.test.ts (3 tests) 5ms
-✓ src/math.test.ts (2 tests) 3ms
-✓ src/strings.test.ts (4 tests) 7ms
+✓ src/utils.test.js (3 tests) 5ms
+✓ src/math.test.js (2 tests) 3ms
+✓ src/strings.test.js (4 tests) 7ms
 
 Test Files  3 passed (3)
      Tests  9 passed (9)
@@ -113,13 +113,13 @@ Test Files  3 passed (3)
 When a test fails, Vitest shows you exactly what went wrong. You'll see the expected value, the actual value, a diff highlighting the difference, and a code snippet of the surrounding lines with the failing assertion highlighted. It also includes the file and line number so you can jump straight to the source:
 
 ```txt
-FAIL  src/utils.test.ts > Math.sqrt > returns the square root of perfect squares
+FAIL  src/utils.test.js > Math.sqrt > returns the square root of perfect squares
 AssertionError: expected 3 to be 2
 
 - Expected   2
 + Received   3
 
-  ❯ src/utils.test.ts:5:28
+  ❯ src/utils.test.js:5:28
       3|   it('returns the square root of perfect squares', () => {
       4|     expect(Math.sqrt(4)).toBe(2)
       5|     expect(Math.sqrt(9)).toBe(2)

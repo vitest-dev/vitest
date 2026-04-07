@@ -17,7 +17,7 @@ This page covers how to investigate test failures in Vitest: reading error outpu
 When a test fails, Vitest gives you several pieces of information. Let's look at a real failure and break it down:
 
 ```diff
-FAIL  src/user.test.ts > createUser > sets the default role
+FAIL  src/user.test.js > createUser > sets the default role
 AssertionError: expected { name: 'Alice', role: 'viewer' } to deeply equal { name: 'Alice', role: 'member' }
 
 - Expected
@@ -29,7 +29,7 @@ AssertionError: expected { name: 'Alice', role: 'viewer' } to deeply equal { nam
 +   "role": "viewer",
   }
 
-  ❯ src/user.test.ts:8:22
+  ❯ src/user.test.js:8:22
       6|   test('sets the default role', () => {
       7|     const user = createUser('Alice')
       8|     expect(user).toEqual({ name: 'Alice', role: 'member' })
@@ -40,7 +40,7 @@ AssertionError: expected { name: 'Alice', role: 'viewer' } to deeply equal { nam
 
 There's a lot here, but each part tells you something:
 
-**The header** (`FAIL src/user.test.ts > createUser > sets the default role`) tells you which file, describe block, and test failed. This is the full path in the test tree.
+**The header** (`FAIL src/user.test.js > createUser > sets the default role`) tells you which file, describe block, and test failed. This is the full path in the test tree.
 
 **The assertion message** (`expected { ... } to deeply equal { ... }`) tells you what kind of check failed and shows the two values being compared.
 
@@ -56,13 +56,13 @@ When a test fails and the cause isn't immediately clear, the first step is to is
 
 ```bash
 # Run only the failing test file
-vitest src/user.test.ts
+vitest src/user.test.js
 
 # Run only tests matching a name pattern
 vitest -t "sets the default role"
 
 # Combine both for maximum precision
-vitest src/user.test.ts -t "sets the default role"
+vitest src/user.test.js -t "sets the default role"
 ```
 
 You can also add [`.only`](/api/test#only) to the test itself:

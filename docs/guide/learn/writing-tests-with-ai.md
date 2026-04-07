@@ -26,28 +26,30 @@ Include your Vitest config, especially if you've enabled [`globals`](/config/glo
 
 If the code under test has dependencies that need mocking, share those files too (or at least their type signatures). The AI can't write a useful mock for a database client it's never seen.
 
+::: tip
 If your project has an `AGENTS.md` or similar file with coding conventions, include that as well. Many AI tools pick up on these automatically and will follow the rules defined there.
+:::
 
 ## Writing Good Prompts
 
-Specific prompts produce better tests than generic ones. Compare:
+Specific prompts produce better tests than generic ones. Compare these two:
 
-**Vague:** "Write tests for `userService.ts`"
+**Vague:** "Write tests for `userService.js`"
 
 This will produce tests, but they'll likely be shallow: one happy-path test per function, minimal edge case coverage, and generic test names.
 
-**Better:** "Write tests for the `createUser` function in `userService.ts`. Cover validation errors (missing name, invalid email format, duplicate email), the successful creation path, and verify that the password is hashed before being stored."
+**Better:** "Write tests for the `createUser` function in `userService.js`. Cover validation errors (missing name, invalid email format, duplicate email), the successful creation path, and verify that the password is hashed before being stored."
 
 This tells the AI exactly which function to focus on, which scenarios matter, and what behavior to verify. The output will be more thorough and more relevant.
 
-Here are some more ways to improve your prompts:
+### Tips for Better Prompts
 
 - Ask for edge cases explicitly. "Include tests for empty inputs, boundary values, and error handling" produces more comprehensive coverage than leaving it to the AI's judgment. Without this nudge, most tools will generate a handful of happy-path tests and stop there.
 - Mention specific Vitest features if you want them used. "Use `toMatchInlineSnapshot` for the error messages" or "use `test.each` for the different currency formats" guides the AI toward the right tools instead of letting it fall back to repetitive copy-paste tests.
 - If you're testing async code, say so. "The function returns a Promise" or "this calls an external API" helps the AI use `async`/`await` and appropriate matchers like `.resolves` and `.rejects`.
 - Tell the AI what *not* to do. "Test against the real implementation, don't mock any modules" or "don't use snapshot tests" prevents common defaults you don't want. AI tools tend to over-mock, and an explicit constraint prevents that.
 - Describe the test structure you want. "Group tests by method using `describe` blocks" or "use `test.extend` fixtures for the database connection instead of `beforeEach`" saves you from restructuring the output afterwards.
-- Reference existing tests when asking for additions. "Follow the same style as the tests in `auth.test.ts`" is more effective than describing the style from scratch. The AI will pick up on naming conventions, assertion patterns, and import styles from the example.
+- Reference existing tests when asking for additions. "Follow the same style as the tests in `auth.test.js`" is more effective than describing the style from scratch. The AI will pick up on naming conventions, assertion patterns, and import styles from the example.
 - If the first result isn't right, iterate. "These tests are too focused on implementation details. Rewrite them to only assert on the return values and thrown errors" is a valid follow-up. Refining through conversation often produces better results than trying to write the perfect prompt upfront.
 
 ## Reviewing AI-Generated Tests
@@ -86,19 +88,25 @@ Ask yourself: if someone changed the internals but the function still returned t
 
 ### Do the tests actually run?
 
-This might sound obvious, but always run the tests before committing. AI-generated tests can have import errors, reference functions that don't exist, or use APIs incorrectly. A test that looks correct in a chat window might fail immediately when you actually execute it.
+Always run the tests before committing. AI-generated tests can have import errors, reference functions that don't exist, or use APIs incorrectly. A test that looks correct in a chat window might fail immediately when you actually execute it:
 
 ```bash
-vitest run src/userService.test.ts
+vitest run src/userService.test.js
 ```
 
 ### Are there real edge cases?
 
-AI tools tend to generate happy-path tests and skip the hard cases. After reviewing the generated tests, ask yourself: what happens with empty input? What about `null` or `undefined`? What if the network request fails? What if the list is empty? If these scenarios aren't covered, ask the AI to add them, or write them yourself.
+AI tools tend to generate happy-path tests and skip the hard cases. After reviewing the generated tests, ask yourself: what happens with empty input? What about `null` or `undefined`? What if the network request fails? What if the list is empty?
+
+If these scenarios aren't covered, ask the AI to add them, or write them yourself.
 
 ### Are snapshot tests overused?
 
-AI loves snapshot tests because they're easy to generate: just call `toMatchSnapshot()` on everything. But snapshots should be used deliberately for structured output (HTML, error messages, serialized data), not as a lazy substitute for specific assertions. If you see a test that snapshots a simple return value like a number or a boolean, replace it with a direct assertion.
+AI loves snapshot tests because they're easy to generate: just call `toMatchSnapshot()` on everything. But snapshots should be used deliberately for structured output (HTML, error messages, serialized data), not as a lazy substitute for specific assertions.
+
+::: warning
+If you see a test that snapshots a simple return value like a number or a boolean, replace it with a direct assertion. See [Snapshot Testing](/guide/learn/snapshots#when-to-use-snapshots) for when snapshots are the right tool.
+:::
 
 ## Iterating on the Output
 
@@ -114,10 +122,24 @@ Over time, as the AI sees more of your codebase and test patterns, its output wi
 
 ## Common Pitfalls
 
-The most frequent issue with AI-generated Vitest tests is using the wrong API surface. AI models are trained on a lot of Jest code, so they sometimes generate `jest.fn()` instead of `vi.fn()`, or `jest.mock` instead of `vi.mock`. These will fail immediately. A related problem is imports: if your config has `globals: true`, the AI might still add `import { test, expect } from 'vitest'` (harmless but unnecessary), or the reverse, generating tests without imports when globals aren't enabled. If you keep seeing Jest APIs, point the AI to the [Vitest API reference](/api/vi) or include it in the context.
+### Wrong APIs
 
-Watch out for mock cleanup. AI-generated tests often set up spies with `vi.spyOn` or replace modules with `vi.mock` but never restore them. If your config doesn't have [`restoreMocks: true`](/config/restoremocks), these mocks leak between tests and cause confusing failures. The easiest fix is enabling that config option globally. On a related note, AI tools tend to mock modules using string paths (`vi.mock('./module.js')`) when the `import()` form (`vi.mock(import('./module.js'))`) is preferable for type safety and automatic refactoring. See [Mock Functions](/guide/learn/mock-functions#mocking-modules) for why this matters.
+The most frequent issue with AI-generated Vitest tests is using the wrong API surface. AI models are trained on a lot of Jest code, so they sometimes generate `jest.fn()` instead of `vi.fn()`, or `jest.mock` instead of `vi.mock`. These will fail immediately.
 
-Test names are another giveaway. AI tends to produce names like "should correctly return the formatted price string when given a valid positive number and a supported currency code." These are hard to scan when you have dozens of tests. Shorter names that describe the behavior work better: "formats USD prices", "throws for negative amounts", "returns empty array when no items match."
+A related problem is imports: if your config has `globals: true`, the AI might still add `import { test, expect } from 'vitest'` (harmless but unnecessary), or the reverse, generating tests without imports when globals aren't enabled. If you keep seeing Jest APIs, point the AI to the [Vitest API reference](/api/vi) or include it in the context.
 
-Finally, be aware that Vitest runs in watch mode by default, waiting for file changes and re-running tests interactively. Vitest tries to detect AI and CI environments and disable watch mode automatically, but this detection can be fragile. When telling an AI agent to run tests, always use `vitest run` or `vitest --no-watch` to ensure the process exits after the tests finish.
+### Mock Cleanup
+
+AI-generated tests often set up spies with `vi.spyOn` or replace modules with `vi.mock` but never restore them. If your config doesn't have [`restoreMocks: true`](/config/restoremocks), these mocks leak between tests and cause confusing failures. The easiest fix is enabling that config option globally.
+
+On a related note, AI tools tend to mock modules using string paths (`vi.mock('./module.js')`) when the `import()` form (`vi.mock(import('./module.js'))`) is preferable for type safety and automatic refactoring. See [Mock Functions](/guide/learn/mock-functions#mocking-modules) for why this matters.
+
+### Verbose Test Names
+
+AI tends to produce names like "should correctly return the formatted price string when given a valid positive number and a supported currency code." These are hard to scan when you have dozens of tests. Shorter names that describe the behavior work better: "formats USD prices", "throws for negative amounts", "returns empty array when no items match."
+
+### Watch Mode
+
+Vitest runs in watch mode by default, waiting for file changes and re-running tests interactively. Vitest tries to detect AI and CI environments and disable watch mode automatically, but this detection can be fragile.
+
+When telling an AI agent to run tests, always use `vitest run` or `vitest --no-watch` to ensure the process exits after the tests finish.

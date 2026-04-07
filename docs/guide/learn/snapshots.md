@@ -38,7 +38,7 @@ The first time you run this test, there's no existing snapshot to compare agains
 
 ```
 __snapshots__/
-  example.test.ts.snap
+  example.test.js.snap
 ```
 
 If you open that file, you'll see a serialized representation of the value:
