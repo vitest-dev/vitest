@@ -752,6 +752,9 @@ class A {
   remove = 1
   add = null
 }
+
+remove(2);
+add(4);
 `,
       ),
     ).toMatchInlineSnapshot(`
@@ -761,12 +764,13 @@ class A {
 
 
 
-      const add = __vi_import_0__.add;
-      const remove = __vi_import_0__.remove;
       class A {
         remove = 1
         add = null
-      }"
+      }
+      
+      __vi_import_0__.remove(2);
+      __vi_import_0__.add(4);"
     `)
   })
 

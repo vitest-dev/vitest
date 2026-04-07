@@ -311,6 +311,11 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
     return false
   }
 
+  // class property
+  if (parent.type === 'PropertyDefinition' && !parent.computed) {
+    return false
+  }
+
   // property key
   if (isStaticPropertyKey(id, parent)) {
     return false
