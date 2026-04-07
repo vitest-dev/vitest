@@ -97,13 +97,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ahahah",
       }
 
-     ❯ basic.test.ts:51:25
-         49|
-         50| test('file', () => {
-         51|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
+     ❯ basic.test.ts:50:25
+         48|
+         49| test('file', () => {
+         50|   expect(\`hahaha-edit\`).toMatchCustomSnapshot()
            |                         ^
-         52| })
-         53|
+         51| })
+         52|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
 
@@ -119,13 +119,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:55:25
-         53|
-         54| test('properties 1', () => {
-         55|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 1', () => {
+         54|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         56| })
-         57|
+         55| })
+         56|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
 
@@ -141,13 +141,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:59:25
-         57|
-         58| test('properties 2', () => {
-         59|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:58:25
+         56|
+         57| test('properties 2', () => {
+         58|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         60| })
-         61|
+         59| })
+         60|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
 
@@ -164,13 +164,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-ihihih",
       }
 
-     ❯ basic.test.ts:63:3
-         61|
-         62| test('raw', async () => {
-         63|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
+     ❯ basic.test.ts:62:3
+         60|
+         61| test('raw', async () => {
+         62|   await expect(\`hihihi-edit\`).toMatchCustomFileSnapshot('./__snapshots…
            |   ^
-         64| })
-         65|
+         63| })
+         64|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
 
@@ -187,13 +187,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-eheheh",
       }
 
-     ❯ basic.test.ts:67:25
-         65|
-         66| test('inline', () => {
-         67|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
+     ❯ basic.test.ts:66:25
+         64|
+         65| test('inline', () => {
+         66|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         68|     Object {
-         69|       "length": 6,
+         67|     Object {
+         68|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
 
@@ -239,13 +239,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-opopop",
       }
 
-     ❯ basic.test.ts:55:25
-         53|
-         54| test('properties 1', () => {
-         55|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
+     ❯ basic.test.ts:54:25
+         52|
+         53| test('properties 1', () => {
+         54|   expect(\`popopo-edit\`).toMatchCustomSnapshot({ length: 6 })
            |                         ^
-         56| })
-         57|
+         55| })
+         56|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
@@ -261,13 +261,13 @@ test('custom snapshot matcher', async () => {
     +   "reversed": "tide-epepep",
       }
 
-     ❯ basic.test.ts:59:25
-         57|
-         58| test('properties 2', () => {
-         59|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
+     ❯ basic.test.ts:58:25
+         56|
+         57| test('properties 2', () => {
+         58|   expect(\`pepepe-edit\`).toMatchCustomSnapshot({ length: expect.toSatis…
            |                         ^
-         60| })
-         61|
+         59| })
+         60|
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
