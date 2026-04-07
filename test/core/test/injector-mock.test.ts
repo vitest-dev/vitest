@@ -754,6 +754,7 @@ class A {
   update = update
   del = () => del()
   call = call(4)
+  timeout = null
 }
 
 remove(2);
@@ -774,6 +775,7 @@ add(4);
         update = update
         del = () => __vi_import_0__.del()
         call = __vi_import_0__.call(4)
+        timeout = null
       }
       
       __vi_import_0__.remove(2);
