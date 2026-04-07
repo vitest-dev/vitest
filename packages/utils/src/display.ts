@@ -234,7 +234,7 @@ export function inspect(
   }
 
   // if stringify's adaptive maxDepth (down to 1) fails to truncate enough,
-  // - for known types (e.g. string, object), do something reasonable.
+  // - for known types (e.g. string, object, array, etc), apply best effort truncation.
   // - for other values, fallback to maxDepth = 0 which should can show minimal output.
 
   const type = Object.prototype.toString.call(obj)
@@ -245,22 +245,42 @@ export function inspect(
     }
     return `'${formatted.slice(1, end)}…'`
   }
-  // TODO: binary search maxWidth to fit truncation
-  if (type === '[object Array]') {
-    return `[ Array(${(obj as any[]).length}) ]`
-  }
-  if (type === '[object Object]') {
-    const keys = Object.keys(obj as object)
-    const kstr = keys.length > 2
-      ? `${keys.slice(0, 2).join(', ')}, …`
-      : keys.join(', ')
-    return `{ Object (${kstr}) }`
+  if (
+    type === '[object Array]'
+    || type === '[object Object]'
+    || type === '[object Set]'
+    || type === '[object Map]'
+  ) {
+    return stringifyByMaxWidth(obj, threshold, {
+      ...prettyFormatOptions,
+      ...stringifyOptions,
+      maxDepth: 1,
+    })
   }
 
   return stringify(obj, undefined, {
     ...prettyFormatOptions,
     ...stringifyOptions,
     maxDepth: 0,
+  })
+}
+
+function stringifyByMaxWidth(object: unknown, threshold: number, options: StringifyOptions): string {
+  // TODO: binary search
+  let maxWidth = threshold
+  while (maxWidth > 0) {
+    const result = stringify(object, undefined, {
+      ...options,
+      maxWidth,
+    })
+    if (result.length <= threshold) {
+      return result
+    }
+    maxWidth = Math.floor(maxWidth / 2)
+  }
+  return stringify(object, undefined, {
+    ...options,
+    maxWidth: 0,
   })
 }
 
