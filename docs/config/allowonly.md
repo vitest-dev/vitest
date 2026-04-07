@@ -5,7 +5,7 @@ outline: deep
 
 # allowOnly
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `!process.env.CI`
 - **CLI:** `--allowOnly`, `--allowOnly=false`
 

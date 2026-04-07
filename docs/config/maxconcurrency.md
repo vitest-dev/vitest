@@ -5,7 +5,7 @@ outline: deep
 
 # maxConcurrency
 
-- **Type:**: `number`
+- **Type:** `number`
 - **Default:** `5`
 - **CLI**: `--max-concurrency=10`, `--maxConcurrency=10`
 

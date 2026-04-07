@@ -5,7 +5,7 @@ outline: deep
 
 # css
 
-- **Type:**: `boolean | { include?, exclude?, modules? }`
+- **Type:** `boolean | { include?, exclude?, modules? }`
 
 Configure if CSS should be processed. When excluded, CSS files will be replaced with empty strings to bypass the subsequent processing. CSS Modules will return a proxy to not affect runtime.
 
@@ -15,7 +15,7 @@ This option is not applied to [browser tests](/guide/browser/).
 
 ## css.include
 
-- **Type:**: `RegExp | RegExp[]`
+- **Type:** `RegExp | RegExp[]`
 - **Default:** `[]`
 
 RegExp pattern for files that should return actual CSS and will be processed by Vite pipeline.
@@ -26,19 +26,19 @@ To process all CSS files, use `/.+/`.
 
 ## css.exclude
 
-- **Type:**: `RegExp | RegExp[]`
+- **Type:** `RegExp | RegExp[]`
 - **Default:** `[]`
 
 RegExp pattern for files that will return an empty CSS file.
 
 ## css.modules
 
-- **Type:**: `{ classNameStrategy? }`
+- **Type:** `{ classNameStrategy? }`
 - **Default:** `{}`
 
 ### css.modules.classNameStrategy
 
-- **Type:**: `'stable' | 'scoped' | 'non-scoped'`
+- **Type:** `'stable' | 'scoped' | 'non-scoped'`
 - **Default:** `'stable'`
 
 If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. You can choose one of the options:

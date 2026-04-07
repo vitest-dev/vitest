@@ -5,7 +5,7 @@ outline: deep
 
 # sequence
 
-- **Type:**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`
+- **Type:** `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`
 
 Options for how tests should be sorted.
 
@@ -17,7 +17,7 @@ npx vitest --sequence.shuffle --sequence.seed=1000
 
 ## sequence.sequencer <CRoot />
 
-- **Type:**: `TestSequencerConstructor`
+- **Type:** `TestSequencerConstructor`
 - **Default:** `BaseSequencer`
 
 A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
@@ -91,7 +91,7 @@ Tests in these projects will run in this order:
 
 ## sequence.shuffle
 
-- **Type:**: `boolean | { files?, tests? }`
+- **Type:** `boolean | { files?, tests? }`
 - **Default:** `false`
 - **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
 
@@ -101,7 +101,7 @@ Vitest usually uses cache to sort tests, so long-running tests start earlier, wh
 
 ### sequence.shuffle.files {#sequence-shuffle-files}
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI**: `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
 
@@ -109,7 +109,7 @@ Whether to randomize files, be aware that long running tests will not start earl
 
 ### sequence.shuffle.tests {#sequence-shuffle-tests}
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI**: `--sequence.shuffle.tests`, `--sequence.shuffle.tests=false`
 
@@ -117,7 +117,7 @@ Whether to randomize tests.
 
 ## sequence.concurrent {#sequence-concurrent}
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
 
@@ -129,7 +129,7 @@ When you run tests with `sequence.concurrent` and `expect.requireAssertions` set
 
 ## sequence.seed <CRoot />
 
-- **Type:**: `number`
+- **Type:** `number`
 - **Default:** `Date.now()`
 - **CLI**: `--sequence.seed=1000`
 
@@ -137,7 +137,7 @@ Sets the randomization seed, if tests are running in random order.
 
 ## sequence.hooks
 
-- **Type:**: `'stack' | 'list' | 'parallel'`
+- **Type:** `'stack' | 'list' | 'parallel'`
 - **Default:** `'stack'`
 - **CLI**: `--sequence.hooks=<value>`
 
@@ -153,7 +153,7 @@ This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is 
 
 ## sequence.setupFiles {#sequence-setupfiles}
 
-- **Type:**: `'list' | 'parallel'`
+- **Type:** `'list' | 'parallel'`
 - **Default:** `'parallel'`
 - **CLI**: `--sequence.setupFiles=<value>`
 

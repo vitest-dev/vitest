@@ -5,7 +5,7 @@ outline: deep
 
 # logHeapUsage
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI:** `--logHeapUsage`, `--logHeapUsage=false`
 

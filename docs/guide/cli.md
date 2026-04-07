@@ -191,7 +191,7 @@ vitest --api=false
 
 ### changed
 
-- **Type:**: `boolean | string`
+- **Type:** `boolean | string`
 - **Default:** false
 
 Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
@@ -204,7 +204,7 @@ If paired with the [`forceRerunTriggers`](/config/forcereruntriggers) config opt
 
 ### shard
 
-- **Type:**: `string`
+- **Type:** `string`
 - **Default:** disabled
 
 Test suite shard to execute in a format of `<index>`/`<count>`, where

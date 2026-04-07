@@ -5,7 +5,7 @@ outline: deep
 
 # passWithNoTests <CRoot />
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI:** `--passWithNoTests`, `--passWithNoTests=false`
 

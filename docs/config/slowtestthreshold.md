@@ -5,7 +5,7 @@ outline: deep
 
 # slowTestThreshold <CRoot />
 
-- **Type:**: `number`
+- **Type:** `number`
 - **Default:** `300`
 - **CLI**: `--slow-test-threshold=<number>`, `--slowTestThreshold=<number>`
 

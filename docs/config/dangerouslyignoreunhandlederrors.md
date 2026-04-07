@@ -5,7 +5,7 @@ outline: deep
 
 # dangerouslyIgnoreUnhandledErrors <CRoot />
 
-- **Type:**: `boolean`
+- **Type:** `boolean`
 - **Default:** `false`
 - **CLI:**
   - `--dangerouslyIgnoreUnhandledErrors`
