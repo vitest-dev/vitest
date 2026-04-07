@@ -320,6 +320,7 @@ export class IframeOrchestrator {
     iframe.setAttribute('name', 'vitest-iframe')
 
     iframe.style.setProperty('border', 'none')
+    iframe.style.setProperty('background-color', '#fff')
     iframe.style.setProperty('width', 'var(--viewport-width)')
     iframe.style.setProperty('height', 'var(--viewport-height)')
 
