@@ -363,14 +363,14 @@ This asymmetry is what makes `--update` work correctly: `match` returns a `resol
 Register a custom matcher with `expect.extend(...)` and call the snapshot composables from `vitest`:
 
 ```ts [setup.ts]
-import { expect, toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest'
+import { expect, Snaphsots } from 'vitest'
 
 expect.extend({
   toMatchMyDomainSnapshot(received: unknown) {
-    return toMatchDomainSnapshot.call(this, myAdapter, received)
+    return Snaphsots.toMatchDomainSnapshot.call(this, myAdapter, received)
   },
   toMatchMyDomainInlineSnapshot(received: unknown, inlineSnapshot?: string) {
-    return toMatchDomainInlineSnapshot.call(
+    return Snaphsots.toMatchDomainInlineSnapshot.call(
       this,
       myAdapter,
       received,
@@ -463,15 +463,15 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
 ```
 
 ```ts [setup.ts]
-import { expect, toMatchDomainInlineSnapshot, toMatchDomainSnapshot } from 'vitest'
+import { expect, Snapshots } from 'vitest'
 import { kvAdapter } from './kv-adapter'
 
 expect.extend({
   toMatchKvSnapshot(received: unknown) {
-    return toMatchDomainSnapshot.call(this, kvAdapter, received)
+    return Snapshots.toMatchDomainSnapshot.call(this, kvAdapter, received)
   },
   toMatchKvInlineSnapshot(received: unknown, inlineSnapshot?: string) {
-    return toMatchDomainInlineSnapshot.call(this, kvAdapter, received, inlineSnapshot)
+    return Snapshots.toMatchDomainInlineSnapshot.call(this, kvAdapter, received, inlineSnapshot)
   },
 })
 ```
