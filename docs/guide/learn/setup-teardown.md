@@ -229,7 +229,7 @@ export default defineConfig({
 ```js [test/setup.js]
 // This runs before every test file
 import { expect } from 'vitest'
-import { customMatchers } from './custom-matchers'
+import { customMatchers } from './custom-matchers.js'
 
 expect.extend(customMatchers)
 ```
