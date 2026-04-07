@@ -754,7 +754,6 @@ class A {
   update = update
   del = () => del()
   call = call(4)
-  timeout = null
 }
 
 remove(2);
