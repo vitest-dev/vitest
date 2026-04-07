@@ -114,16 +114,10 @@ Over time, as the AI sees more of your codebase and test patterns, its output wi
 
 ## Common Pitfalls
 
-Here are patterns that frequently appear in AI-generated Vitest tests and should be fixed:
+The most frequent issue with AI-generated Vitest tests is using the wrong API surface. AI models are trained on a lot of Jest code, so they sometimes generate `jest.fn()` instead of `vi.fn()`, or `jest.mock` instead of `vi.mock`. These will fail immediately. A related problem is imports: if your config has `globals: true`, the AI might still add `import { test, expect } from 'vitest'` (harmless but unnecessary), or the reverse, generating tests without imports when globals aren't enabled. If you keep seeing Jest APIs, point the AI to the [Vitest API reference](/api/vi) or include it in the context.
 
-**Importing from the wrong place.** If your config has `globals: true`, the AI might still add `import { test, expect } from 'vitest'`. The tests will still work, but the imports are unnecessary. The reverse is also common: generating tests without imports when globals aren't enabled.
+Watch out for mock cleanup. AI-generated tests often set up spies with `vi.spyOn` or replace modules with `vi.mock` but never restore them. If your config doesn't have [`restoreMocks: true`](/config/restoremocks), these mocks leak between tests and cause confusing failures. The easiest fix is enabling that config option globally. On a related note, AI tools tend to mock modules using string paths (`vi.mock('./module.js')`) when the `import()` form (`vi.mock(import('./module.js'))`) is preferable for type safety and automatic refactoring. See [Mock Functions](/guide/learn/mock-functions#mocking-modules) for why this matters.
 
-**Using Jest-specific APIs.** AI models trained on a lot of Jest code sometimes generate `jest.fn()` instead of `vi.fn()`, or use `jest.mock` instead of `vi.mock`. These will fail in Vitest. If you see Jest-specific APIs, point the AI to the [Vitest API reference](/api/vi).
+Test names are another giveaway. AI tends to produce names like "should correctly return the formatted price string when given a valid positive number and a supported currency code." These are hard to scan when you have dozens of tests. Shorter names that describe the behavior work better: "formats USD prices", "throws for negative amounts", "returns empty array when no items match."
 
-**Mocking modules with strings instead of imports.** As covered in [Mock Functions](/guide/learn/mock-functions#mocking-modules), using `vi.mock(import('./module.js'))` instead of `vi.mock('./module.js')` gives you better TypeScript support and automatic refactoring. AI tools often default to the string form.
-
-**Not cleaning up mocks.** AI-generated tests sometimes set up mocks with `vi.spyOn` or `vi.mock` without restoring them. If your config doesn't have [`restoreMocks: true`](/config/restoremocks), these mocks can leak between tests. Either add cleanup or enable the config option.
-
-**Overly descriptive test names.** AI tends to generate names like "should correctly return the formatted price string when given a valid positive number and a supported currency code". Shorter names that describe the behavior are easier to scan: "formats USD prices" or "throws for negative amounts".
-
-**Running in watch mode by accident.** Vitest runs in watch mode by default, which waits for file changes and re-runs tests interactively. Vitest tries to detect AI/CI environments and disable watch mode automatically, but this detection can be fragile. When telling an AI agent to run tests, always use `vitest run` or `vitest --no-watch` to ensure the process exits after the tests finish.
+Finally, be aware that Vitest runs in watch mode by default, waiting for file changes and re-running tests interactively. Vitest tries to detect AI and CI environments and disable watch mode automatically, but this detection can be fragile. When telling an AI agent to run tests, always use `vitest run` or `vitest --no-watch` to ensure the process exits after the tests finish.
