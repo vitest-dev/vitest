@@ -17,7 +17,7 @@ import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
 import os, { tmpdir } from 'node:os'
-import { getTasks, hasFailed, interpretTaskModes, limitConcurrency, someTasksAreOnly } from '@vitest/runner/utils'
+import { createTagsFilter, getTasks, hasFailed, interpretTaskModes, limitConcurrency, someTasksAreOnly } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, toArray } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
@@ -1051,6 +1051,9 @@ export class Vitest {
       }),
     ))
 
+    const tagsFilter = this.config.tagsFilter
+      ? createTagsFilter(this.config.tagsFilter, this.config.tags)
+      : undefined
     // Phase 2: cross-file .only resolution
     const globalHasOnly = results.some(({ file }) => someTasksAreOnly(file))
     for (const { file, specification } of results) {
@@ -1058,9 +1061,9 @@ export class Vitest {
       interpretTaskModes(
         file,
         config.testNamePattern,
-        undefined,
-        undefined,
-        undefined,
+        specification.testLines,
+        specification.testIds,
+        tagsFilter,
         globalHasOnly,
         false,
         config.allowOnly,
@@ -1080,12 +1083,15 @@ export class Vitest {
     })
     const config = specification.project.config
     const hasOnly = someTasksAreOnly(file)
+    const tagsFilter = this.config.tagsFilter
+      ? createTagsFilter(this.config.tagsFilter, this.config.tags)
+      : undefined
     interpretTaskModes(
       file,
       config.testNamePattern,
-      undefined,
-      undefined,
-      undefined,
+      specification.testLines,
+      specification.testIds,
+      tagsFilter,
       hasOnly,
       false,
       config.allowOnly,
