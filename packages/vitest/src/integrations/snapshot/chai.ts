@@ -301,7 +301,7 @@ export const Snapshots = {
     hint?: string,
   ): SyncExpectationResult {
     return toMatchSnapshotImpl({
-      assertion: this.__vitest_assertion__,
+      assertion: this.assertion,
       received,
       ...normalizeArguments(propertiesOrHint, hint),
     })
@@ -334,7 +334,7 @@ export const Snapshots = {
     hint?: string,
   ): SyncExpectationResult {
     return toMatchSnapshotImpl({
-      assertion: this.__vitest_assertion__,
+      assertion: this.assertion,
       received,
       isInline: true,
       ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
@@ -367,7 +367,7 @@ export const Snapshots = {
     hint?: string,
   ): AsyncExpectationResult {
     return toMatchFileSnapshotImpl({
-      assertion: this.__vitest_assertion__,
+      assertion: this.assertion,
       received,
       filepath,
       hint,
