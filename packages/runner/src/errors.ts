@@ -50,6 +50,9 @@ export class TestSyntaxError extends Error {
 
   constructor(message: string) {
     super(message)
+    // use custom property so this survives when the error
+    // is serialized on `packages/expect` side (e.g. for `expect.soft`)
+    // and `packages/runner` can still detect it during `test.fails` handling
     Object.defineProperty(this, '__vitest_test_syntax_error__', {
       value: true,
       enumerable: false,
