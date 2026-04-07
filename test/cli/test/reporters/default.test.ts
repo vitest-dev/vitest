@@ -267,6 +267,100 @@ describe('default reporter', async () => {
     `)
   })
 
+  test('test.each/for title truncate', async () => {
+    // default (40)
+    let result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "$ (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "$ (array: 5) [ Array(5) ]": "passed",
+          "$ (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "$ (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "$ (object: 5) { Object (one, two, ...) }": "passed",
+          "$ (string: 30) '012345678901234567890123456789'": "passed",
+          "$ (string: 40) '01234567890123456789012345678901234...'": "passed",
+          "$ (string: 50) '01234567890123456789012345678901234...'": "passed",
+          "% (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "% (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "% (array: 5) [ Array(5) ]": "passed",
+          "% (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "% (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "% (object: 5) { Object (one, two, ...) }": "passed",
+          "% (string: 30) '012345678901234567890123456789'": "passed",
+          "% (string: 40) '01234567890123456789012345678901234...'": "passed",
+          "% (string: 50) '01234567890123456789012345678901234...'": "passed",
+        },
+      }
+    `)
+
+    // 20
+    result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+      taskTitleValueFormatTruncate: 20,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ Array(3) ]": "passed",
+          "$ (array: 4) [ Array(4) ]": "passed",
+          "$ (array: 5) [ Array(5) ]": "passed",
+          "$ (object: 3) { Object (one, two, ...) }": "passed",
+          "$ (object: 4) { Object (one, two, ...) }": "passed",
+          "$ (object: 5) { Object (one, two, ...) }": "passed",
+          "$ (string: 30) '012345678901234...'": "passed",
+          "$ (string: 40) '012345678901234...'": "passed",
+          "$ (string: 50) '012345678901234...'": "passed",
+          "% (array: 3) [ Array(3) ]": "passed",
+          "% (array: 4) [ Array(4) ]": "passed",
+          "% (array: 5) [ Array(5) ]": "passed",
+          "% (object: 3) { Object (one, two, ...) }": "passed",
+          "% (object: 4) { Object (one, two, ...) }": "passed",
+          "% (object: 5) { Object (one, two, ...) }": "passed",
+          "% (string: 30) '012345678901234...'": "passed",
+          "% (string: 40) '012345678901234...'": "passed",
+          "% (string: 50) '012345678901234...'": "passed",
+        },
+      }
+    `)
+
+    // no truncate
+    result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+      taskTitleValueFormatTruncate: 0,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "$ (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "$ (array: 5) [ 'one', 'two', 'three', 'four', 'five' ]": "passed",
+          "$ (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "$ (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "$ (object: 5) { one: 1, two: 2, three: 3, four: 4, five: 5 }": "passed",
+          "$ (string: 30) '012345678901234567890123456789'": "passed",
+          "$ (string: 40) '0123456789012345678901234567890123456789'": "passed",
+          "$ (string: 50) '01234567890123456789012345678901234567890123456789'": "passed",
+          "% (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "% (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "% (array: 5) [ 'one', 'two', 'three', 'four', 'five' ]": "passed",
+          "% (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "% (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "% (object: 5) { one: 1, two: 2, three: 3, four: 4, five: 5 }": "passed",
+          "% (string: 30) '012345678901234567890123456789'": "passed",
+          "% (string: 40) '0123456789012345678901234567890123456789'": "passed",
+          "% (string: 50) '01234567890123456789012345678901234567890123456789'": "passed",
+        },
+      }
+    `)
+  })
+
   test('project name color', async () => {
     const { stdout } = await runVitestCli(
       { preserveAnsi: true },

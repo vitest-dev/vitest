@@ -1,3 +1,4 @@
+import type { InspectOptions } from '@vitest/utils/display'
 import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
@@ -18,7 +19,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, inspect, InspectOptions } from '@vitest/utils/display'
+import { format, formatRegExp, inspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
