@@ -518,7 +518,7 @@ export async function runInlineTests(
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], options)
+  }, config?.$cliFilters ?? [], options)
   return {
     fs,
     root,
