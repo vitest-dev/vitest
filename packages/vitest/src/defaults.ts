@@ -1,11 +1,11 @@
 import type {
   BenchmarkUserOptions,
-  CoverageV8Options,
-  ResolvedCoverageOptions,
+  CoverageOptions,
   UserConfig,
 } from './node/types/config'
+import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
-import { isCI } from './utils/env'
+import { isAgent, isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
@@ -25,7 +25,7 @@ export const benchmarkConfigDefaults: Required<
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: ResolvedCoverageOptions = {
+export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDefaultValues>> = {
   provider: 'v8',
   enabled: false,
   clean: true,
@@ -34,10 +34,10 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   exclude: [],
   reportOnFailure: false,
   reporter: [
-    ['text', {}],
-    ['html', {}],
-    ['clover', {}],
-    ['json', {}],
+    'text',
+    'html',
+    'clover',
+    'json',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
@@ -45,6 +45,14 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     20,
     os.availableParallelism?.() ?? os.cpus().length,
   ),
+  ignoreClassMethods: [],
+  skipFull: false,
+  watermarks: {
+    statements: [50, 80],
+    functions: [50, 80],
+    branches: [50, 80],
+    lines: [50, 80],
+  },
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
@@ -78,7 +86,7 @@ export const configDefaults: Readonly<{
   css: {
     include: never[]
   }
-  coverage: CoverageV8Options
+  coverage: CoverageOptions
   fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
@@ -89,12 +97,13 @@ export const configDefaults: Readonly<{
   }
   slowTestThreshold: number
   disableConsoleIntercept: boolean
+  detectAsyncLeaks: boolean
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI && process.stdin.isTTY,
+  watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
-  environment: 'node' as const,
+  environment: 'node',
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -115,7 +124,7 @@ export const configDefaults: Readonly<{
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults as CoverageV8Options,
+  coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
@@ -126,4 +135,5 @@ export const configDefaults: Readonly<{
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
+  detectAsyncLeaks: false,
 })

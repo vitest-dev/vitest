@@ -24,21 +24,21 @@ test('fetch, Request, Response, and BroadcastChannel are available', () => {
 })
 
 test('Fetch API accepts other APIs', async () => {
-  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrowError()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrowError()
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrowError()
-  expect.soft(() => new Request(new URL('https://localhost'))).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { signal: new AbortController().signal })).not.toThrow()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new FormData() })).not.toThrow()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: new Blob() })).not.toThrow()
+  expect.soft(() => new Request(new URL('https://localhost'))).not.toThrow()
 
   const request = new Request('http://localhost')
   expect.soft(request.headers).toBeInstanceOf(Headers)
 
   expect.soft(
     () => new Request('http://localhost', { method: 'POST', body: new URLSearchParams([['key', 'value']]) }),
-  ).not.toThrowError()
+  ).not.toThrow()
 
   const searchParams = new URLSearchParams()
   searchParams.set('key', 'value')
-  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrowError()
+  expect.soft(() => new Request('http://localhost', { method: 'POST', body: searchParams })).not.toThrow()
 
   const clone = request.clone()
   expect.soft(clone).toBeInstanceOf(Request)
@@ -65,7 +65,7 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element', async () => {
@@ -89,7 +89,7 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   test('can pass down form data from a FORM element with a submitter', async () => {
@@ -120,23 +120,23 @@ describe('FormData', () => {
         body: formData,
       })
       await req.formData()
-    })()).resolves.not.toThrowError()
+    })()).resolves.not.toThrow()
   })
 
   // https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData#exceptions
-  test('cannot pass down form data from a FORM element with a non-sumbit sumbitter', async () => {
+  test('cannot pass down form data from a FORM element with a non-submit submitter', async () => {
     const form = document.createElement('form')
     document.body.append(form)
     const submitter = document.createElement('button')
     submitter.type = 'button'
     form.append(submitter)
 
-    expect(() => new FormData(form, submitter)).toThrowError(
+    expect(() => new FormData(form, submitter)).toThrow(
       new TypeError('The specified element is not a submit button'),
     )
   })
 
-  test('cannot pass down form data from a FORM element with a sumbitter from a wrong form', async () => {
+  test('cannot pass down form data from a FORM element with a submitter from a wrong form', async () => {
     const form1 = document.createElement('form')
     const form2 = document.createElement('form')
     document.body.append(form1, form2)
@@ -226,6 +226,20 @@ test('can pass down the same abort signal many times without a warning', ({ onTe
   }))
 })
 
+test('DOM APIs addEventListener allow null as third parameter', () => {
+  const element = document.createElement('div')
+  document.body.append(element)
+  const spy = vi.fn()
+
+  // eslint-disable-next-line ts/ban-ts-comment
+  // @ts-expect-error
+  element.addEventListener('click', spy, null)
+
+  element.click()
+
+  expect(spy).toHaveBeenCalledTimes(1)
+})
+
 test('atob and btoa are available', () => {
   expect(atob('aGVsbG8gd29ybGQ=')).toBe('hello world')
   expect(btoa('hello world')).toBe('aGVsbG8gd29ybGQ=')
@@ -272,7 +286,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex flex-col flex-row"
       Received: "flex flex-col""
     `)
@@ -283,7 +297,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(stripVTControlCharacters(processError(err).diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(processError(err).diff!)).toMatchInlineSnapshot(`
       "Expected: "flex-col"
       Received: "flex flex-col""
     `)
@@ -303,6 +317,11 @@ test('URL.createObjectUrl works properly', () => {
   expect(() => {
     URL.createObjectURL(new File([], 'name.js'))
   }).not.toThrow()
+})
+
+test('compat classes preserve their .name property', () => {
+  expect(URL.name).toBe('URL')
+  expect(Request.name).toBe('Request')
 })
 
 test('jsdom global is exposed', () => {

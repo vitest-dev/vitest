@@ -11,7 +11,7 @@ import { selectedTest } from './params'
 import 'codemirror/mode/javascript/javascript'
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'
-// import 'codemirror/mode/htmlmixed/htmlmixed'
+import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
@@ -67,7 +67,7 @@ export function useCodeMirror(
 export async function showTaskSource(task: Task) {
   navigateTo({
     file: task.file.id,
-    line: task.location?.line ?? 0,
+    line: task.location?.line ?? 1,
     view: 'editor',
     test: task.id,
     column: null,

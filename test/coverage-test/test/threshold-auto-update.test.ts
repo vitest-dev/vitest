@@ -65,7 +65,8 @@ test('thresholds.autoUpdate updates thresholds', async () => {
           }
         }
       },
-    })"
+    })
+    "
   `)
 })
 

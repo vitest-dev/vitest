@@ -1,5 +1,6 @@
 import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
 
@@ -53,9 +54,11 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
       return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).catch(onRejected)
     },
     finally(onFinally) {
+      awaited = true
       return (promiseResult ||= promise(sourceError)).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
@@ -78,9 +81,12 @@ export interface BrowserRunnerState {
   iframeId?: string
   sessionId: string
   testerId: string
+  otelCarrier?: OTELCarrier
   method: 'run' | 'collect'
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
+  activeTraceTaskIds: Set<string>
+  traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

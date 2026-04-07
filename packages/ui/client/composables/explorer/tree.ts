@@ -14,7 +14,7 @@ import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
 import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
-  search,
+  searchMatcher,
 } from '~/composables/explorer/state'
 
 export class ExplorerTree {
@@ -50,6 +50,8 @@ export class ExplorerTree {
       testsIgnore: 0,
       testsSkipped: 0,
       testsTodo: 0,
+      testsExpectedFail: 0,
+      testsSlow: 0,
       totalTests: 0,
       failedSnapshot: false,
       failedSnapshotEnabled: false,
@@ -67,11 +69,12 @@ export class ExplorerTree {
     runLoadFiles(
       remoteFiles,
       true,
-      search.value.trim(),
+      searchMatcher.value.matcher,
       {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       },
     )
@@ -121,11 +124,12 @@ export class ExplorerTree {
           start,
           end,
           this.summary,
-          search.value.trim(),
+          searchMatcher.value.matcher,
           {
             failed: filter.failed,
             success: filter.success,
             skipped: filter.skipped,
+            slow: filter.slow,
             onlyTests: filter.onlyTests,
           },
           end ? this.executionTime : performance.now() - this.startTime,
@@ -137,11 +141,12 @@ export class ExplorerTree {
         start,
         end,
         this.summary,
-        search.value.trim(),
+        searchMatcher.value.matcher,
         {
           failed: filter.failed,
           success: filter.success,
           skipped: filter.skipped,
+          slow: filter.slow,
           onlyTests: filter.onlyTests,
         },
         end ? this.executionTime : performance.now() - this.startTime,
@@ -155,10 +160,11 @@ export class ExplorerTree {
     tests: File[],
     filesSummary: FilteredTests,
   ) {
-    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, search.value.trim(), {
+    return collectTestsTotalData(filtered, onlyTests, tests, filesSummary, searchMatcher.value.matcher, {
       failed: filter.failed,
       success: filter.success,
       skipped: filter.skipped,
+      slow: filter.slow,
       onlyTests: filter.onlyTests,
     })
   }
@@ -171,10 +177,11 @@ export class ExplorerTree {
 
   expandNode(id: string) {
     queueMicrotask(() => {
-      runExpandNode(id, search.value.trim(), {
+      runExpandNode(id, searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -188,10 +195,11 @@ export class ExplorerTree {
 
   expandAllNodes() {
     queueMicrotask(() => {
-      runExpandAll(search.value.trim(), {
+      runExpandAll(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })
@@ -199,10 +207,11 @@ export class ExplorerTree {
 
   filterNodes() {
     queueMicrotask(() => {
-      runFilter(search.value.trim(), {
+      runFilter(searchMatcher.value.matcher, {
         failed: filter.failed,
         success: filter.success,
         skipped: filter.skipped,
+        slow: filter.slow,
         onlyTests: filter.onlyTests,
       })
     })

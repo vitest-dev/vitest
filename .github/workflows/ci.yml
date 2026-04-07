@@ -37,6 +37,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Generate CLI docs
+        run: pnpm -C docs run cli-table
+
       # check uncommited LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
         run: git diff --exit-code
@@ -67,7 +70,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
           files: |
             docs/**
@@ -101,7 +104,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
 
       - name: Install
         run: pnpm i
@@ -117,10 +120,7 @@ jobs:
       - name: Test Examples
         run: pnpm run test:examples
 
-      - name: Unit Test UI
-        run: pnpm run -C packages/ui test:ui
-
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
@@ -150,7 +150,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
 
       - name: Install
         run: pnpm i
@@ -186,8 +186,8 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
-      - uses: browser-actions/setup-firefox@5914774dda97099441f02628f8d46411fcfbd208 # v1.7.0
+      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
 
       - name: Install
         run: pnpm i
@@ -219,11 +219,11 @@ jobs:
         with:
           node-version: 22
 
-      - uses: browser-actions/setup-chrome@b94431e051d1c52dcbe9a7092a4f10f827795416 # v2.1.0
+      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
 
       - name: Install
         run: |
-          yq -i '.overrides.vite = "npm:rolldown-vite"' pnpm-workspace.yaml
+          yq -i '.overrides.vite = "npm:vite@8"' pnpm-workspace.yaml
           git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
@@ -232,15 +232,17 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm run test:ci:no-bail
 
       - name: Test Examples
+        if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
       - name: Test Browser (playwright)
+        if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-rolldown

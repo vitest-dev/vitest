@@ -3,18 +3,13 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
-import type { BrowserCommands } from 'vitest/browser'
+import type { BrowserCommands, CDPSession } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
-export interface CDPSession {
-  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
-  on: (event: string, listener: (...args: unknown[]) => void) => void
-  once: (event: string, listener: (...args: unknown[]) => void) => void
-  off: (event: string, listener: (...args: unknown[]) => void) => void
-}
+export type { CDPSession }
 
 export interface BrowserModuleMocker {
   register: (sessionId: string, module: MockedModule) => Promise<void>
@@ -50,7 +45,7 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
@@ -173,6 +168,14 @@ export interface BrowserConfigOptions {
   ui?: boolean
 
   /**
+   * Default position for the details panel in browser mode
+   * 'right' shows the details panel on the right side (horizontal split)
+   * 'bottom' shows the details panel at the bottom (vertical split)
+   * @default 'right'
+   */
+  detailsPanelPosition?: 'right' | 'bottom'
+
+  /**
    * Default viewport size
    */
   viewport?: {
@@ -197,6 +200,11 @@ export interface BrowserConfigOptions {
      * @default 'data-testid'
      */
     testIdAttribute?: string
+    /**
+     * Should locators match the text exactly by default
+     * @default false
+     */
+    exact?: boolean
   }
 
   /**
@@ -280,7 +288,7 @@ export interface BrowserConfigOptions {
   /**
    * Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
    *
-   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/#onunhandlederror) option instead.
+   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/onunhandlederror) option instead.
    *
    * Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
    * @default true
@@ -391,14 +399,14 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+    exact: boolean
   }
   trace: {
     mode: BrowserTraceViewMode
     tracesDir?: string
     screenshots?: boolean
     snapshots?: boolean
-    // TODO: map locations to test ones
-    // sources?: boolean
+    sources?: boolean
   }
 }
 
@@ -447,12 +455,12 @@ type ToMatchScreenshotResolvePath = (data: {
   screenshotDirectory: string
   /**
    * Absolute path to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   root: string
   /**
    * Path to the test file, relative to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   testFileDirectory: string
   /**
@@ -466,7 +474,7 @@ type ToMatchScreenshotResolvePath = (data: {
   testName: string
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * {@linkcode https://vitest.dev/config/attachmentsdir|attachmentsDir},
    * if none is provided, its default value.
    */
   attachmentsDir: string

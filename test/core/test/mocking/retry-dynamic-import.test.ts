@@ -13,6 +13,6 @@ describe('retry-dynamic-import', () => {
     vi.doMock('../../src/mocks/dynamic-module', () => {
       throw new Error('foobar')
     })
-    await expect(retryDynamicImport()).rejects.toThrowError(new Error('import dynamic module failed.'))
+    await expect(retryDynamicImport()).rejects.toThrow(new Error('import dynamic module failed.'))
   })
 })

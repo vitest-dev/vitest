@@ -65,6 +65,14 @@ export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
 
+export function splitFileAndPostfix(path: string): {
+  file: string
+  postfix: string
+} {
+  const file = cleanUrl(path)
+  return { file, postfix: path.slice(file.length) }
+}
+
 const externalRE = /^(?:[a-z]+:)?\/\//
 export const isExternalUrl = (url: string): boolean => externalRE.test(url)
 
@@ -93,6 +101,36 @@ export function withTrailingSlash(path: string): string {
     return `${path}/`
   }
   return path
+}
+
+export function filterOutComments(s: string): string {
+  const result: string[] = []
+  let commentState: 'none' | 'singleline' | 'multiline' = 'none'
+  for (let i = 0; i < s.length; ++i) {
+    if (commentState === 'singleline') {
+      if (s[i] === '\n') {
+        commentState = 'none'
+      }
+    }
+    else if (commentState === 'multiline') {
+      if (s[i - 1] === '*' && s[i] === '/') {
+        commentState = 'none'
+      }
+    }
+    else if (commentState === 'none') {
+      if (s[i] === '/' && s[i + 1] === '/') {
+        commentState = 'singleline'
+      }
+      else if (s[i] === '/' && s[i + 1] === '*') {
+        commentState = 'multiline'
+        i += 2
+      }
+      else {
+        result.push(s[i])
+      }
+    }
+  }
+  return result.join('')
 }
 
 const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
@@ -330,6 +368,25 @@ function isMergeableObject(item: any): item is object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 
+export function ordinal(i: number): string {
+  const j = i % 10
+  const k = i % 100
+
+  if (j === 1 && k !== 11) {
+    return `${i}st`
+  }
+
+  if (j === 2 && k !== 12) {
+    return `${i}nd`
+  }
+
+  if (j === 3 && k !== 13) {
+    return `${i}rd`
+  }
+
+  return `${i}th`
+}
+
 /**
  * Deep merge :P
  *
@@ -367,4 +424,8 @@ export function deepMerge<T extends object = object>(
   }
 
   return deepMerge(target, ...sources)
+}
+
+export function unique<T>(array: T[]): T[] {
+  return Array.from(new Set(array))
 }

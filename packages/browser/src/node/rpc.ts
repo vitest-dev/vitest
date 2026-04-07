@@ -6,13 +6,14 @@ import type { WebSocket } from 'ws'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
-import { existsSync, promises as fs, readFileSync } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname, join, resolve } from 'pathe'
-import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
+import { dirname, join } from 'pathe'
+import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -113,11 +114,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileLoadingAllowed(vite.config, path)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
+  }
+
+  function canWrite(project: TestProject) {
+    return (
+      project.config.browser.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+      && project.config.api.allowWrite
+      && project.vitest.config.api.allowWrite
+    )
   }
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
@@ -152,6 +162,23 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
         },
         async onTaskArtifactRecord(id, artifact) {
+          if (!canWrite(project)) {
+            if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
+              artifact.annotation.attachment = undefined
+              vitest.logger.error(
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              )
+            }
+            // remove attachments if cannot write
+            if (artifact.attachments?.length) {
+              const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
+              artifact.attachments = []
+              vitest.logger.error(
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+              )
+            }
+          }
+
           return vitest._testRun.recordArtifact(id, artifact)
         },
         async onTaskUpdate(method, packs, events) {
@@ -193,34 +220,36 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
-          return fs.writeFile(id, content, 'utf-8')
+          await fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
           }
-          return fs.unlink(id)
+          await fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
           const result = mod?.transformResult
-          // this can happen for bundled dependencies in node_modules/.vite
+          // handle non-inline source map such as pre-bundled deps in node_modules/.vite
           if (result && !result.map) {
-            const sourceMapUrl = retrieveSourceMapURL(result.code)
-            if (!sourceMapUrl) {
-              return null
-            }
-            const filepathDir = dirname(id)
-            const sourceMapPath = resolve(filepathDir, sourceMapUrl)
-            try {
-              const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
-              return map
-            }
-            catch {
-              return null
-            }
+            const filePath = id.split('?')[0]
+            const extracted = extractSourcemapFromFile(result.code, filePath)
+            return extracted?.map
           }
           return result?.map
         },
@@ -370,21 +399,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     return { rpc, offCancel }
   }
-}
-
-function retrieveSourceMapURL(source: string): string | null {
-  const re = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
-  // keep executing the search to find the *last* sourceMappingURL to avoid
-  // picking up sourceMappingURLs from comments, strings, etc.
-  let lastMatch, match
-  // eslint-disable-next-line no-cond-assign
-  while ((match = re.exec(source))) {
-    lastMatch = match
-  }
-  if (!lastMatch) {
-    return null
-  }
-  return lastMatch[1]
 }
 
 // Serialization support utils.

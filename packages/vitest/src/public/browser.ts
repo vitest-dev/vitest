@@ -8,10 +8,12 @@ export {
   loadSnapshotSerializers,
   setupCommonEnv,
 } from '../runtime/setup-common'
+export { type OTELCarrier, Traces } from '../utils/traces'
 export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
 export type { LoupeOptions, ParsedStack, StringifyOptions } from '@vitest/utils'
 export {
+  browserFormat,
   format,
   inspect,
   stringify,
@@ -41,6 +43,11 @@ export interface BrowserCommands {
   ) => Promise<void>
   removeFile: (path: string) => Promise<void>
 }
+
+export interface CDPSession {
+  // methods are defined by the provider type augmentation
+}
+
 /**
  * @internal
  */

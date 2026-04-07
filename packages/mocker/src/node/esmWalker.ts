@@ -5,6 +5,7 @@ import type {
   Identifier,
   ImportExpression,
   Literal,
+  MetaProperty,
   Pattern,
   Property,
   VariableDeclaration,
@@ -43,7 +44,7 @@ interface Visitors {
     info: IdentifierInfo,
     parentStack: Node[],
   ) => void
-  onImportMeta?: (node: Node) => void
+  onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
   onCallExpression?: (node: Positioned<CallExpression>) => void
 }
@@ -142,7 +143,7 @@ export function esmWalker(
       }
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {
-        onImportMeta?.(node as Node)
+        onImportMeta?.(node as Positioned<MetaProperty>)
       }
       else if (node.type === 'ImportExpression') {
         onDynamicImport?.(node as Positioned<ImportExpression>)
@@ -156,6 +157,17 @@ export function esmWalker(
           // record the identifier, for DFS -> BFS
           identifiers.push([node, parentStack.slice(0)])
         }
+      }
+      else if (node.type === 'ClassDeclaration' && node.id) {
+        // A class declaration name could shadow an import, so add its name to the parent scope
+        const parentScope = findParentScope(parentStack)
+        if (parentScope) {
+          setScope(parentScope, node.id.name)
+        }
+      }
+      else if (node.type === 'ClassExpression' && node.id) {
+        // A class expression name could shadow an import, so add its name to the scope
+        setScope(node, node.id.name)
       }
       else if (isFunctionNode(node)) {
         // If it is a function declaration, it could be shadowing an import

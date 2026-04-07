@@ -33,6 +33,8 @@ exports['toUpperCase 1'] = '"FOOBAR"'
 
 The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. On subsequent test runs, Vitest will compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code that should be fixed, or the implementation has changed and the snapshot needs to be updated.
 
+Vitest stores a serialized representation of the received value. Snapshot rendering is powered by [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). [`snapshotFormat`](/config/snapshotformat) allows configuring general snapshot formatting behavior in Vitest. For further customization, you can implement your own [custom serializers](#custom-serializer) or [custom snapshot matchers](#custom-snapshot-matchers).
+
 ::: warning
 When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
@@ -79,6 +81,12 @@ Or you can use the `--update` or `-u` flag in the CLI to make Vitest update snap
 vitest -u
 ```
 
+### CI behavior
+
+By default, Vitest does not write snapshots in CI (`process.env.CI` is truthy) and any snapshot mismatches, missing snapshots, and obsolete snapshots fail the run. See [`update`](/config/update) for the details.
+
+An **obsolete snapshot** is a snapshot entry (or snapshot file) that no longer matches any collected test. This usually happens after removing or renaming tests.
+
 ## File Snapshots
 
 When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `` ` ``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
@@ -98,7 +106,7 @@ It will compare with the content of `./test/basic.output.html`. And can be writt
 
 ## Visual Snapshots
 
-For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/api/browser/assertions#tomatchscreenshot-experimental) assertion:
+For visual regression testing of UI components and pages, Vitest provides built-in support through [browser mode](/guide/browser/) with the [`toMatchScreenshot()`](/api/browser/assertions#tomatchscreenshot) assertion:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -136,7 +144,7 @@ expect.addSnapshotSerializer({
 })
 ```
 
-We also support [snapshotSerializers](/config/#snapshotserializers) option to implicitly add custom serializers.
+We also support [snapshotSerializers](/config/snapshotserializers) option to implicitly add custom serializers.
 
 ```ts [path/to/custom-serializer.ts]
 import { SnapshotSerializer } from 'vitest'
@@ -192,7 +200,80 @@ Pretty foo: Object {
 }
 ```
 
-We are using Jest's `pretty-format` for serializing snapshots. You can read more about it here: [pretty-format](https://github.com/facebook/jest/blob/main/packages/pretty-format/README.md#serialize).
+## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
+
+You can build custom snapshot matchers using the composable functions exposed on `Snapshots` from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
+
+```ts
+import { expect, test, Snapshots } from 'vitest'
+
+const { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } = Snapshots
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    return toMatchSnapshot.call(this, received.slice(0, length))
+  },
+  toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+  },
+  async toMatchTrimmedFileSnapshot(received: string, file: string) {
+    return toMatchFileSnapshot.call(this, received.slice(0, 10), file)
+  },
+})
+
+test('file snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedSnapshot(10)
+})
+
+test('inline snapshot', () => {
+  expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
+})
+
+test('raw file snapshot', async () => {
+  await expect('extra long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
+})
+```
+
+The composables return `{ pass, message }` so you can further customize the error:
+
+```ts
+import { Snapshots } from 'vitest'
+
+const { toMatchSnapshot } = Snapshots
+
+expect.extend({
+  toMatchTrimmedSnapshot(received: string, length: number) {
+    const result = toMatchSnapshot.call(this, received.slice(0, length))
+    return { ...result, message: () => `Trimmed snapshot failed: ${result.message()}` }
+  },
+})
+```
+
+::: warning
+For inline snapshot matchers, the snapshot argument must be the last parameter (or second-to-last when using property matchers). Vitest rewrites the last string argument in the source code, so custom arguments before the snapshot work, but custom arguments after it are not supported.
+:::
+
+::: tip
+File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
+:::
+
+For TypeScript, extend the `Assertion` interface:
+
+```ts
+import 'vitest'
+
+declare module 'vitest' {
+  interface Assertion<T = any> {
+    toMatchTrimmedSnapshot: (length: number) => T
+    toMatchTrimmedInlineSnapshot: (inlineSnapshot?: string) => T
+    toMatchTrimmedFileSnapshot: (file: string) => Promise<T>
+  }
+}
+```
+
+::: tip
+See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
+:::
 
 ## Difference from Jest
 
@@ -209,7 +290,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 #### 2. `printBasicPrototype` is default to `false`
 
-Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
+Both Jest and Vitest snapshots are powered by `pretty-format`, but Vitest applies its own snapshot defaults on top of [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). In particular, Vitest sets `printBasicPrototype` to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it is `true` by default.
 
 ```ts
 import { expect, test } from 'vitest'

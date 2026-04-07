@@ -1,7 +1,16 @@
 <p align="center">
-<a href="https://vitest.dev">
-<img src="https://user-images.githubusercontent.com/11247099/145112184-a9ff6727-661c-439d-9ada-963124a281f7.png" height="150">
-</a>
+  <br>
+  <br>
+  <a href="https://vitest.dev" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://vitest.dev/vitest-light.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://vitest.dev/vitest-dark.svg">
+      <img alt="Vitest logo" src="https://vitest.dev/vitest-dark.svg" height="60">
+    </picture>
+  </a>
+  <br>
+  <br>
+  <br>
 </p>
 
 <h1 align="center">
@@ -11,7 +20,7 @@ Vitest
 Next generation testing framework powered by Vite.
 <p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
+  <a href="https://npmx.dev/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label=" alt="current vitest version badge"></a>
 <p>
 
 <p align="center">
@@ -37,7 +46,7 @@ Next generation testing framework powered by Vite.
 - [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs
 - [Smart & instant watch mode](https://vitest.dev/guide/features.html#watch-mode), like HMR for tests!
 - [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [`v8`](https://v8.dev/blog/javascript-code-coverage) or [`istanbul`](https://istanbul.js.org/).
-- [Tinyspy](https://github.com/tinylibs/tinyspy) built-in for mocking, stubbing, and spies.
+- Jest-compatible mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
 - [Browser Mode](https://vitest.dev/guide/browser/) for running component tests in the browser
 - Components testing ([Vue](https://github.com/vitest-tests/browser-examples/tree/main/examples/vue), [React](https://github.com/vitest-tests/browser-examples/tree/main/examples/react), [Svelte](https://github.com/vitest-tests/browser-examples/tree/main/examples/svelte), [Lit](./examples/lit), [Marko](https://github.com/marko-js/examples/tree/master/examples/library-ts))
@@ -78,11 +87,17 @@ $ npx vitest
 
 ## Sponsors
 
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg' alt="vitest's sponsors"/>
+  </a>
+</p>
+
 ### Vladimir Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg' alt="vladimir's sponsors"/>
   </a>
 </p>
 
@@ -90,7 +105,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="anthony's sponsors"/>
   </a>
 </p>
 
@@ -98,7 +113,7 @@ $ npx vitest
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg'/>
+    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg' alt="patak's sponsors"/>
   </a>
 </p>
 

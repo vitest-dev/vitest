@@ -2,6 +2,7 @@ import type { Test } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -35,6 +36,12 @@ export class DotReporter extends BaseReporter {
 
   // Ignore default logging of base reporter
   printTestModule(): void {}
+
+  onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
+    super.onTestRunStart(_specifications)
+
+    this.renderer?.start()
+  }
 
   onWatcherRerun(files: string[], trigger?: string): void {
     this.tests.clear()

@@ -13,10 +13,10 @@ Path to config file
 
 ### update
 
-- **CLI:** `-u, --update`
+- **CLI:** `-u, --update [type]`
 - **Config:** [update](/config/update)
 
-Update snapshot
+Update snapshot (accepts boolean, "new", "all" or "none")
 
 ### watch
 
@@ -70,6 +70,20 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
+### api.allowExec
+
+- **CLI:** `--api.allowExec`
+- **Config:** [api.allowExec](/config/api#api-allowexec)
+
+Allow API to execute code. (Be careful when enabling this option in untrusted environments)
+
+### api.allowWrite
+
+- **CLI:** `--api.allowWrite`
+- **Config:** [api.allowWrite](/config/api#api-allowwrite)
+
+Allow API to edit files. (Be careful when enabling this option in untrusted environments)
+
 ### silent
 
 - **CLI:** `--silent [value]`
@@ -88,7 +102,7 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/reporters)
 
-Specify reporters (default, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
+Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)
 
 ### outputFile
 
@@ -151,7 +165,7 @@ Directory to write coverage report to (default: ./coverage)
 - **CLI:** `--coverage.reporter <name>`
 - **Config:** [coverage.reporter](/config/coverage#coverage-reporter)
 
-Coverage reporters to use. Visit [`coverage.reporter`](/config/#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)
+Coverage reporters to use. Visit [`coverage.reporter`](/config/coverage#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)
 
 ### coverage.reportOnFailure
 
@@ -264,6 +278,27 @@ High and low watermarks for branches in the format of `<high>,<low>`
 
 High and low watermarks for functions in the format of `<high>,<low>`
 
+### coverage.changed
+
+- **CLI:** `--coverage.changed <commit/branch>`
+- **Config:** [coverage.changed](/config/coverage#coverage-changed)
+
+Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.
+
+### coverage.excludeAfterRemap
+
+- **CLI:** `--coverage.excludeAfterRemap`
+- **Config:** [coverage.excludeAfterRemap](/config/coverage#coverage-excludeafterremap)
+
+Apply exclusions again after coverage has been remapped to original sources. (default: false)
+
+### coverage.htmlDir
+
+- **CLI:** `--coverage.htmlDir <path>`
+- **Config:** [coverage.htmlDir](/config/coverage#coverage-htmldir)
+
+Directory of HTML coverage output to be served in UI mode and HTML reporter.
+
 ### mode
 
 - **CLI:** `--mode <name>`
@@ -332,6 +367,20 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
+### browser.api.allowExec
+
+- **CLI:** `--browser.api.allowExec`
+- **Config:** [browser.api.allowExec](/config/browser/api#api-allowexec)
+
+Allow API to execute code. (Be careful when enabling this option in untrusted environments)
+
+### browser.api.allowWrite
+
+- **CLI:** `--browser.api.allowWrite`
+- **Config:** [browser.api.allowWrite](/config/browser/api#api-allowwrite)
+
+Allow API to edit files. (Be careful when enabling this option in untrusted environments)
+
 ### browser.isolate
 
 - **CLI:** `--browser.isolate`
@@ -345,6 +394,13 @@ Run every browser test file in isolation. To disable isolation, use `--browser.i
 - **Config:** [browser.ui](/config/browser/ui)
 
 Show Vitest UI when running tests (default: `!process.env.CI`)
+
+### browser.detailsPanelPosition
+
+- **CLI:** `--browser.detailsPanelPosition <position>`
+- **Config:** [browser.detailsPanelPosition](/config/browser/detailspanelposition)
+
+Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)
 
 ### browser.fileParallelism
 
@@ -372,6 +428,13 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 - **Config:** [browser.trace](/config/browser/trace)
 
 Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
+
+### browser.locators.exact
+
+- **CLI:** `--browser.locators.exact`
+- **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
+
+Should locators match the text exactly by default (default: `false`)
 
 ### pool
 
@@ -429,6 +492,13 @@ Pass when no tests are found
 
 Show the size of heap for each test when running in node
 
+### detectAsyncLeaks
+
+- **CLI:** `--detectAsyncLeaks`
+- **Config:** [detectAsyncLeaks](/config/detectasyncleaks)
+
+Detect asynchronous resources leaking from the test file (default: `false`)
+
 ### allowOnly
 
 - **CLI:** `--allowOnly`
@@ -476,7 +546,7 @@ Set the randomization seed. This option will have no effect if `--sequence.shuff
 - **CLI:** `--sequence.hooks <order>`
 - **Config:** [sequence.hooks](/config/sequence#sequence-hooks)
 
-Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/#sequence-hooks) for more information (default: `"parallel"`)
+Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](/config/sequence#sequence-hooks) for more information (default: `"parallel"`)
 
 ### sequence.setupFiles
 
@@ -518,12 +588,26 @@ Default hook timeout in milliseconds (default: `10000`). Use `0` to disable time
 
 Stop test execution when given number of tests have failed (default: `0`)
 
-### retry
+### retry.count
 
-- **CLI:** `--retry <times>`
-- **Config:** [retry](/config/retry)
+- **CLI:** `--retry.count <times>`
+- **Config:** [retry.count](/config/retry#retry-count)
 
-Retry the test specific number of times if it fails (default: `0`)
+Number of times to retry a test if it fails (default: `0`)
+
+### retry.delay
+
+- **CLI:** `--retry.delay <ms>`
+- **Config:** [retry.delay](/config/retry#retry-delay)
+
+Delay in milliseconds between retry attempts (default: `0`)
+
+### retry.condition
+
+- **CLI:** `--retry.condition <pattern>`
+- **Config:** [retry.condition](/config/retry#retry-condition)
+
+Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)
 
 ### diff.aAnnotation
 
@@ -718,7 +802,7 @@ Default timeout of a teardown function in milliseconds (default: `10000`)
 - **CLI:** `--maxConcurrency <number>`
 - **Config:** [maxConcurrency](/config/maxconcurrency)
 
-Maximum number of concurrent tests in a suite (default: `5`)
+Maximum number of concurrent tests and suites during test file execution (default: `5`)
 
 ### expect.requireAssertions
 
@@ -790,7 +874,13 @@ Use `bundle` to bundle the config with esbuild or `runner` (experimental) to pro
 
 - **CLI:** `--standalone`
 
-Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)
+Start Vitest without running tests. Tests will be running only on change. If browser mode is enabled, the UI will be opened automatically. This option is ignored when CLI file filters are passed. (default: `false`)
+
+### listTags
+
+- **CLI:** `--listTags [type]`
+
+List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.
 
 ### clearCache
 
@@ -798,9 +888,85 @@ Start Vitest without running tests. Tests will be running only on change. This o
 
 Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.
 
+### tagsFilter
+
+- **CLI:** `--tagsFilter <expression>`
+
+Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](/guide/test-tags#syntax) for more information.
+
+### strictTags
+
+- **CLI:** `--strictTags`
+- **Config:** [strictTags](/config/stricttags)
+
+Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)
+
 ### experimental.fsModuleCache
 
 - **CLI:** `--experimental.fsModuleCache`
 - **Config:** [experimental.fsModuleCache](/config/experimental#experimental-fsmodulecache)
 
 Enable caching of modules on the file system between reruns.
+
+### experimental.importDurations.print
+
+- **CLI:** `--experimental.importDurations.print <boolean|on-warn>`
+- **Config:** [experimental.importDurations.print](/config/experimental#experimental-importdurations-print)
+
+When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).
+
+### experimental.importDurations.limit
+
+- **CLI:** `--experimental.importDurations.limit <number>`
+- **Config:** [experimental.importDurations.limit](/config/experimental#experimental-importdurations-limit)
+
+Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).
+
+### experimental.importDurations.failOnDanger
+
+- **CLI:** `--experimental.importDurations.failOnDanger`
+- **Config:** [experimental.importDurations.failOnDanger](/config/experimental#experimental-importdurations-failondanger)
+
+Fail the test run if any import exceeds the danger threshold (default: false).
+
+### experimental.importDurations.thresholds.warn
+
+- **CLI:** `--experimental.importDurations.thresholds.warn <number>`
+- **Config:** [experimental.importDurations.thresholds.warn](/config/experimental#experimental-importdurations-thresholds-warn)
+
+Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).
+
+### experimental.importDurations.thresholds.danger
+
+- **CLI:** `--experimental.importDurations.thresholds.danger <number>`
+- **Config:** [experimental.importDurations.thresholds.danger](/config/experimental#experimental-importdurations-thresholds-danger)
+
+Danger threshold - imports exceeding this are shown in red (default: 500).
+
+### experimental.viteModuleRunner
+
+- **CLI:** `--experimental.viteModuleRunner`
+- **Config:** [experimental.viteModuleRunner](/config/experimental#experimental-vitemodulerunner)
+
+Control whether Vitest uses Vite's module runner to run the code or fallback to the native `import`. (default: `true`)
+
+### experimental.nodeLoader
+
+- **CLI:** `--experimental.nodeLoader`
+- **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
+
+Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
+
+### experimental.vcsProvider
+
+- **CLI:** `--experimental.vcsProvider <path>`
+- **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
+
+Custom provider for detecting changed files. (default: `git`)
+
+### experimental.preParse
+
+- **CLI:** `--experimental.preParse`
+- **Config:** [experimental.preParse](/config/experimental#experimental-preparse)
+
+Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)

@@ -1,0 +1,238 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`html reporter > resolves to "failing" status for test file "json-fail" > tests are failing 1`] = `
+{
+  "config": {},
+  "files": [
+    {
+      "collectDuration": 0,
+      "environmentLoad": 0,
+      "file": [Circular],
+      "filepath": "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+      "fullName": "json-fail.test.ts",
+      "id": 0,
+      "importDurations": {},
+      "meta": {},
+      "mode": "run",
+      "name": "json-fail.test.ts",
+      "pool": "forks",
+      "prepareDuration": 0,
+      "projectName": "",
+      "result": {
+        "duration": 0,
+        "startTime": 0,
+        "state": "fail",
+      },
+      "setupDuration": 0,
+      "tags": [],
+      "tasks": [
+        {
+          "annotations": [],
+          "artifacts": [],
+          "file": [Circular],
+          "fullName": "json-fail.test.ts > should fail",
+          "fullTestName": "should fail",
+          "id": 0,
+          "location": {
+            "column": 1,
+            "line": 5,
+          },
+          "logs": [
+            {
+              "content": "json-fail>should fail
+",
+              "size": 1,
+              "taskId": 0,
+              "time": 0,
+              "type": "stdout",
+            },
+          ],
+          "meta": {},
+          "mode": "run",
+          "name": "should fail",
+          "result": {
+            "duration": 0,
+            "errors": [
+              {
+                "actual": "2",
+                "diff": "- Expected
++ Received
+
+- 1
++ 2",
+                "expected": "1",
+                "message": "expected 2 to deeply equal 1",
+                "name": "AssertionError",
+                "ok": false,
+                "operator": "strictEqual",
+                "showDiff": true,
+                "stack": "AssertionError: expected 2 to deeply equal 1",
+                "stacks": [
+                  {
+                    "column": 13,
+                    "file": "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+                    "line": 8,
+                    "method": "",
+                  },
+                ],
+              },
+            ],
+            "repeatCount": 0,
+            "retryCount": 0,
+            "startTime": 0,
+            "state": "fail",
+          },
+          "tags": [
+            "fail",
+          ],
+          "timeout": 5000,
+          "type": "test",
+        },
+      ],
+      "type": "suite",
+      "viteEnvironment": "ssr",
+    },
+  ],
+  "moduleGraph": {
+    "": {
+      "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": {
+        "externalized": [],
+        "graph": {
+          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": [],
+        },
+        "inlined": [
+          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+        ],
+      },
+    },
+  },
+  "paths": [
+    "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+  ],
+  "projects": [
+    "",
+  ],
+  "sources": {
+    "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": "import { expect, test } from 'vitest'
+
+// I am comment1
+// I am comment2
+test('should fail', { tags: ['fail'] }, () => {
+  // eslint-disable-next-line no-console
+  console.log('json-fail>should fail')
+  expect(2).toEqual(1)
+})
+",
+  },
+  "unhandledErrors": [],
+}
+`;
+
+exports[`html reporter > resolves to "passing" status for test file "all-passing-or-skipped" > tests are passing 1`] = `
+{
+  "config": {},
+  "files": [
+    {
+      "collectDuration": 0,
+      "environmentLoad": 0,
+      "file": [Circular],
+      "filepath": "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+      "fullName": "all-passing-or-skipped.test.ts",
+      "id": 0,
+      "importDurations": {},
+      "meta": {},
+      "mode": "run",
+      "name": "all-passing-or-skipped.test.ts",
+      "pool": "forks",
+      "prepareDuration": 0,
+      "projectName": "",
+      "result": {
+        "duration": 0,
+        "startTime": 0,
+        "state": "pass",
+      },
+      "setupDuration": 0,
+      "tags": [],
+      "tasks": [
+        {
+          "annotations": [],
+          "artifacts": [],
+          "file": [Circular],
+          "fullName": "all-passing-or-skipped.test.ts > 2 + 3 = 5",
+          "fullTestName": "2 + 3 = 5",
+          "id": 0,
+          "location": {
+            "column": 1,
+            "line": 3,
+          },
+          "meta": {},
+          "mode": "run",
+          "name": "2 + 3 = 5",
+          "result": {
+            "duration": 0,
+            "repeatCount": 0,
+            "retryCount": 0,
+            "startTime": 0,
+            "state": "pass",
+          },
+          "tags": [],
+          "timeout": 5000,
+          "type": "test",
+        },
+        {
+          "annotations": [],
+          "artifacts": [],
+          "file": [Circular],
+          "fullName": "all-passing-or-skipped.test.ts > 3 + 3 = 6",
+          "fullTestName": "3 + 3 = 6",
+          "id": "1111755131_1",
+          "location": {
+            "column": 6,
+            "line": 7,
+          },
+          "meta": {},
+          "mode": "skip",
+          "name": "3 + 3 = 6",
+          "tags": [],
+          "timeout": 5000,
+          "type": "test",
+        },
+      ],
+      "type": "suite",
+      "viteEnvironment": "ssr",
+    },
+  ],
+  "moduleGraph": {
+    "": {
+      "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": {
+        "externalized": [],
+        "graph": {
+          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": [],
+        },
+        "inlined": [
+          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+        ],
+      },
+    },
+  },
+  "paths": [
+    "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+  ],
+  "projects": [
+    "",
+  ],
+  "sources": {
+    "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'
+
+test('2 + 3 = 5', () => {
+  expect(2 + 3).toBe(5)
+})
+
+test.skip('3 + 3 = 6', () => {
+  expect(3 + 3).toBe(6)
+})
+",
+  },
+  "unhandledErrors": [],
+}
+`;

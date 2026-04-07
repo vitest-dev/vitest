@@ -4,6 +4,7 @@ import type {
   ImportDuration,
   SequenceHooks,
   SequenceSetupFiles,
+  SerializableRetry,
   Suite,
   TaskEventPack,
   TaskResultPack,
@@ -11,6 +12,8 @@ import type {
   TestAnnotation,
   TestArtifact,
   TestContext,
+  TestOptions,
+  TestTags,
 } from './tasks'
 
 /**
@@ -19,10 +22,10 @@ import type {
 export interface VitestRunnerConfig {
   root: string
   setupFiles: string[]
-  name?: string
+  name: string | undefined
   passWithNoTests: boolean
-  testNamePattern?: RegExp
-  allowOnly?: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -30,15 +33,18 @@ export interface VitestRunnerConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  chaiConfig?: {
+  chaiConfig: {
     truncateThreshold?: number
-  }
+  } | undefined
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
-  retry: number
-  includeTaskLocation?: boolean
+  retry: SerializableRetry
+  includeTaskLocation: boolean | undefined
   diffOptions?: DiffOptions
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
 }
 
 /**
@@ -46,7 +52,32 @@ export interface VitestRunnerConfig {
  */
 export interface FileSpecification {
   filepath: string
-  testLocations: number[] | undefined
+  // file can be marked via a jsdoc comment to have tags,
+  // these are _not_ tags to filter tests by
+  fileTags?: string[]
+  testLocations?: number[] | undefined
+  testNamePattern?: RegExp | undefined
+  testTagsFilter?: string[] | undefined
+  testIds?: string[] | undefined
+}
+
+export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle'> {
+  /**
+   * The name of the tag. This is what you use in the `tags` array in tests.
+   */
+  name: keyof TestTags extends never
+    ? string
+    : TestTags[keyof TestTags]
+  /**
+   * A description for the tag. This will be shown in the CLI help and UI.
+   */
+  description?: string
+  /**
+   * Priority for merging options when multiple tags with the same options are applied to a test.
+   *
+   * Lower number means higher priority. E.g., priority 1 takes precedence over priority 3.
+   */
+  priority?: number
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -108,7 +139,7 @@ export interface VitestRunner {
     options: { retry: number; repeats: number },
   ) => unknown
   /**
-   * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
+   * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
    * All `after` hooks were also called by this point.
    */
   onAfterRetryTask?: (
@@ -188,11 +219,11 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
-
   /**
-   * Return the worker context for fixtures specified with `scope: 'worker'`
+   * The current Vite environment that processes the files on the server.
    */
-  getWorkerContext?: () => Record<string, unknown>
+  viteEnvironment?: string
+
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 
   // eslint-disable-next-line ts/method-signature-style
@@ -200,8 +231,10 @@ export interface VitestRunner {
   // eslint-disable-next-line ts/method-signature-style
   trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
 
-  /** @private */
+  /** @internal */
+  _currentSpecification?: FileSpecification | undefined
+  /** @internal */
   _currentTaskStartTime?: number
-  /** @private */
+  /** @internal */
   _currentTaskTimeout?: number
 }

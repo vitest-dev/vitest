@@ -1,3 +1,6 @@
+// Note: this augments `screenshotOptions` types
+import type {} from '@vitest/browser-playwright'
+
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
@@ -29,6 +32,7 @@ const defaultOptions = {
     scale: 'device',
   },
   timeout: 5_000,
+  strict: true,
   resolveDiffPath: ({
     arg,
     ext,
@@ -66,6 +70,20 @@ type SupportedCodecs = Parameters<typeof getCodec>[0]
 
 const supportedExtensions = ['png'] satisfies SupportedCodecs[]
 
+export interface ResolvedOptions {
+  codec: ReturnType<typeof getCodec>
+  comparator: ReturnType<typeof getComparator>
+  resolvedOptions: GlobalOptions
+  paths: {
+    reference: string
+    diffs: {
+      reference: string
+      actual: string
+      diff: string
+    }
+  }
+}
+
 export function resolveOptions(
   {
     context,
@@ -78,19 +96,7 @@ export function resolveOptions(
     testName: string
     options: ScreenshotMatcherOptions
   },
-): {
-  codec: ReturnType<typeof getCodec>
-  comparator: ReturnType<typeof getComparator>
-  resolvedOptions: GlobalOptions
-  paths: {
-    reference: string
-    diffs: {
-      reference: string
-      actual: string
-      diff: string
-    }
-  }
-} {
+): ResolvedOptions {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
   }

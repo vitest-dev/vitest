@@ -24,7 +24,7 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
-    transform: { target: 'node18' },
+    transform: { target: 'node20' },
   }),
 ]
 

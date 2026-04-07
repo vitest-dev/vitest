@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
-import { ModuleRunner } from 'vite/module-runner'
+import { EvaluatedModules, ModuleRunner } from 'vite/module-runner'
 import { VitestTransport } from '../../runtime/moduleRunner/moduleTransport'
 import { environments } from './index'
 
@@ -24,6 +24,7 @@ export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRun
   if (!cachedLoader || cachedLoader.isClosed()) {
     _loaders.delete(root)
 
+    const evaluatedModules = new EvaluatedModules()
     const moduleRunner = new ModuleRunner({
       hmr: false,
       sourcemapInterceptor: 'prepareStackTrace',
@@ -46,35 +47,29 @@ export function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRun
         async resolveId(id, importer) {
           return rpc.resolve(id, importer, '__vitest__')
         },
-      }),
+      }, evaluatedModules, new WeakMap()),
     })
     _loaders.set(root, moduleRunner)
   }
   return _loaders.get(root)!
 }
 
-export async function loadEnvironment(
+export async function loadNativeEnvironment(
   name: string,
   root: string,
-  rpc: WorkerRPC,
   traces: Traces,
-): Promise<{ environment: Environment; loader?: ModuleRunner }> {
-  if (isBuiltinEnvironment(name)) {
-    return { environment: environments[name] }
-  }
-  const loader = createEnvironmentLoader(root, rpc)
-  const packageId
-    = name[0] === '.' || name[0] === '/'
-      ? resolve(root, name)
-      : (await traces.$(
-          'vitest.runtime.environment.resolve',
-          () => rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'),
-        ))
-          ?.id ?? resolve(root, name)
+): Promise<Environment> {
+  const packageId = name[0] === '.' || name[0] === '/'
+    ? pathToFileURL(resolve(root, name)).toString()
+    : import.meta.resolve(`vitest-environment-${name}`, pathToFileURL(root).toString())
   const pkg = await traces.$(
     'vitest.runtime.environment.import',
-    () => loader.import(packageId) as Promise<{ default: Environment }>,
+    () => import(packageId) as Promise<{ default: Environment }>,
   )
+  return resolveEnvironmentFromModule(name, packageId, pkg)
+}
+
+function resolveEnvironmentFromModule(name: string, packageId: string, pkg: { default: Environment }) {
   if (!pkg || !pkg.default || typeof pkg.default !== 'object') {
     throw new TypeError(
       `Environment "${name}" is not a valid environment. `
@@ -99,6 +94,36 @@ export async function loadEnvironment(
       ? 'ssr'
       : 'client'
   }
+  return environment
+}
+
+export async function loadEnvironment(
+  name: string,
+  root: string,
+  rpc: WorkerRPC,
+  traces: Traces,
+  viteModuleRunner: boolean,
+): Promise<{ environment: Environment; loader?: ModuleRunner }> {
+  if (isBuiltinEnvironment(name)) {
+    return { environment: environments[name] }
+  }
+  if (!viteModuleRunner) {
+    return { environment: await loadNativeEnvironment(name, root, traces) }
+  }
+  const loader = createEnvironmentLoader(root, rpc)
+  const packageId
+    = name[0] === '.' || name[0] === '/'
+      ? resolve(root, name)
+      : (await traces.$(
+          'vitest.runtime.environment.resolve',
+          () => rpc.resolve(`vitest-environment-${name}`, undefined, '__vitest__'),
+        ))
+          ?.id ?? resolve(root, name)
+  const pkg = await traces.$(
+    'vitest.runtime.environment.import',
+    () => loader.import(packageId) as Promise<{ default: Environment }>,
+  )
+  const environment = resolveEnvironmentFromModule(name, packageId, pkg)
   return {
     environment,
     loader,

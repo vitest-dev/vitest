@@ -1,6 +1,6 @@
 # @vitest/browser-webdriverio
 
-[![NPM version](https://img.shields.io/npm/v/@vitest/browser-webdriverio?color=a1b858&label=)](https://www.npmjs.com/package/@vitest/browser-webdriverio)
+[![NPM version](https://img.shields.io/npm/v/@vitest/browser-webdriverio?color=a1b858&label=)](https://npmx.dev/package/@vitest/browser-webdriverio)
 
 Run your Vitest [browser tests](https://vitest.dev/guide/browser/) using [webdriverio](https://webdriver.io/docs/api/browser) API. Note that Vitest does not use webdriverio as a test runner, but only as a browser provider.
 

@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sequential 1`] = `
+"F1 / S1 / B1
+F1 / S1 / B1
+F1 / S1 / B1
+F1 / S1 / B2
+F1 / S1 / B2
+F1 / S1 / B2
+F1 / S2 / B1
+F1 / S2 / B1
+F1 / S2 / B1
+F1 / B1
+F1 / B1
+F1 / B1
+F2 / S1 / B1
+F2 / S1 / B1
+F2 / S1 / B1
+"
+`;
+
+exports[`summary 1`] = `
+"
+
+  good - summary.bench.ts > suite-a
+    (?) faster than bad
+
+  good - summary.bench.ts > suite-b
+
+  good - summary.bench.ts > suite-b > suite-b-nested
+
+"
+`;

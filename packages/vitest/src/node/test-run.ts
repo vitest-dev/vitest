@@ -11,15 +11,16 @@ import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
@@ -170,6 +171,18 @@ export class TestRun {
         else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
+            getSourceMap(file) {
+              // This only handles external modules since
+              // source map is already applied for inlined modules.
+              // Module node exists due to Vitest fetch module,
+              // but transformResult should be empty for external modules.
+              const mod = project.vite.moduleGraph.getModuleById(file)
+              if (!mod?.transformResult && existsSync(file)) {
+                const code = readFileSync(file, 'utf-8')
+                const result = extractSourcemapFromFile(code, file)
+                return result?.map
+              }
+            },
           })
         }
       })
@@ -181,6 +194,13 @@ export class TestRun {
     const entity = task && this.vitest.state.getReportedEntity(task)
 
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+
+    if (event === 'suite-failed-early' && entity.type === 'module') {
+      // the file failed during import
+      await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleEnd', entity)
+      return
+    }
 
     if (event === 'suite-prepare' && entity.type === 'suite') {
       return await this.vitest.report('onTestSuiteReady', entity)
@@ -207,6 +227,11 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', entity)
       }
 
+      return
+    }
+
+    if (event === 'test-cancel' && entity.type === 'test') {
+      // This is used to just update state of the task
       return
     }
 

@@ -13,7 +13,7 @@ Vitest runs tests in a pool. By default, there are several pool runners:
 - `typescript` to run typechecking on tests
 
 ::: tip
-See [`vitest-pool-example`](https://www.npmjs.com/package/vitest-pool-example) for example of a custom pool runner implementation.
+See [`vitest-pool-example`](https://npmx.dev/package/vitest-pool-example) for example of a custom pool runner implementation.
 :::
 
 ## Usage
@@ -120,7 +120,7 @@ Your `CustomPoolRunner` will be controlling how your custom test runner worker l
 In your worker file, you can import helper utilities from `vitest/worker`:
 
 ```ts [my-worker.ts]
-import { init, runBaseTests } from 'vitest/worker'
+import { init, runBaseTests, setupEnvironment } from 'vitest/worker'
 
 init({
   post: (response) => {
@@ -141,7 +141,8 @@ init({
   deserialize: (value) => {
     // Optional, provide custom deserializer for `on` callbacks
   },
-  runTests: state => runBaseTests('run', state),
-  collectTests: state => runBaseTests('collect', state),
+  runTests: (state, traces) => runBaseTests('run', state, traces),
+  collectTests: (state, traces) => runBaseTests('collect', state, traces),
+  setup: setupEnvironment,
 })
 ```

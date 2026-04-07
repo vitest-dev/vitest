@@ -11,10 +11,14 @@ import type {
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+import type {
+  Traces,
+} from 'vitest/internal/browser'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
+import { BenchmarkRunner, recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -23,7 +27,6 @@ import {
   loadSnapshotSerializers,
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
@@ -57,11 +60,14 @@ export function createBrowserRunner(
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
+    private _otel!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
+      this.viteEnvironment = '__browser__'
+      this._otel = getBrowserState().traces
     }
 
     setMethod(method: TestExecutionMethod) {
@@ -75,16 +81,15 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
       const trace = this.config.browser.trace
       const test = args[0]
-      if (trace === 'off') {
-        return
-      }
       const { retry, repeats } = args[1]
-      if (trace === 'on-all-retries' && retry === 0) {
+      const shouldTrace = trace !== 'off'
+        && !(trace === 'on-all-retries' && retry === 0)
+        && !(trace === 'on-first-retry' && retry !== 1)
+      if (!shouldTrace) {
+        getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
-      }
+      getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
       if (retry) {
         title += ` (retry x${retry})`
@@ -101,16 +106,13 @@ export function createBrowserRunner(
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
-      const trace = this.config.browser.trace
-      if (trace === 'off') {
+      if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
         return
       }
-      if (trace === 'on-all-retries' && retry === 0) {
-        return
-      }
-      if (trace === 'on-first-retry' && retry !== 1) {
-        return
-      }
+      await this.commands.triggerCommand('__vitest_markTrace', [{
+        name: `onAfterRetryTask [${test.result?.state}]`,
+        stack: test.result?.errors?.[0].stack,
+      }])
       const name = getTraceName(test, retry, repeats)
       if (!this.traces.has(test.id)) {
         this.traces.set(test.id, [])
@@ -154,14 +156,28 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+      // check custom matcher metadata in JestExtendError
+      const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
+      if (
+        this.config.browser.screenshotFailures
+        && document.body.clientHeight > 0
+        && task.result?.state === 'fail'
+        && task.type === 'test'
+        && !(
+          lastErrorContext
+          && Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot'
+          && Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot')
+      ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
         } as any /** TODO */).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
-          task.meta.failScreenshotPath = screenshot
+          await recordArtifact(task, {
+            type: 'internal:failureScreenshot',
+            attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+          } as const)
         }
       }
     }
@@ -295,9 +311,10 @@ export function createBrowserRunner(
       }
     }
 
-    // disable tracing in the browser for now
-    trace = undefined
-    __setTraces = undefined
+    trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
+      const options: import('@opentelemetry/api').SpanOptions = typeof attributes === 'object' ? { attributes } : {}
+      return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
+    }
   }
 }
 
@@ -316,7 +333,7 @@ export async function initiateRunner(
     return cachedRunner
   }
   const runnerClass
-    = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
+    = config.mode === 'test' ? TestRunner : BenchmarkRunner
 
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>

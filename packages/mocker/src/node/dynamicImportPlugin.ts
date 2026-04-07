@@ -42,6 +42,10 @@ export function injectDynamicImport(
   parse: Rollup.PluginContext['parse'],
   options: DynamicImportPluginOptions = {},
 ): DynamicImportInjectorResult | undefined {
+  if (code.includes('wrapDynamicImport')) {
+    return
+  }
+
   const s = new MagicString(code)
 
   let ast: ReturnType<Rollup.PluginContext['parse']>

@@ -21,3 +21,7 @@ export default defineConfig({
   },
 })
 ```
+
+::: warning
+Be aware that this option may cause problems with async [concurrent tests](/api/test#test-concurrent). If enabled, the completion of one test will clear the mock history and implementation for all mocks, including those currently being used by other tests in progress.
+:::

@@ -35,7 +35,7 @@ Browser Mode catches issues that DOM simulation libraries might miss, including:
 
 :::
 
-### Purpose of this Guide
+### Purpose of This Guide
 
 This guide focuses specifically on **component testing patterns and best practices** using Vitest's capabilities. While many examples use Browser Mode (as it's the recommended approach), the focus here is on component-specific testing strategies rather than browser configuration details.
 
@@ -123,7 +123,7 @@ test('ProductList filters and displays products correctly', async () => {
 
 ## Testing Library Integration
 
-While Vitest provides official packages for popular frameworks ([`vitest-browser-vue`](https://www.npmjs.com/package/vitest-browser-vue), [`vitest-browser-react`](https://www.npmjs.com/package/vitest-browser-react), [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte)), you can integrate with [Testing Library](https://testing-library.com/) for frameworks not yet officially supported.
+While Vitest provides official packages for popular frameworks ([`vitest-browser-vue`](https://npmx.dev/package/vitest-browser-vue), [`vitest-browser-react`](https://npmx.dev/package/vitest-browser-react), [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte)), you can integrate with [Testing Library](https://testing-library.com/) for frameworks not yet officially supported.
 
 ### When to Use Testing Library
 
@@ -168,8 +168,8 @@ Popular Testing Library packages that work well with Vitest:
 
 - [`@testing-library/solid`](https://github.com/solidjs/solid-testing-library) - For Solid.js
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) - For Marko
-- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) - Alternative to [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte)
-- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) - Alternative to [`vitest-browser-vue`](https://www.npmjs.com/package/vitest-browser-vue)
+- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) - Alternative to [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte)
+- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) - Alternative to [`vitest-browser-vue`](https://npmx.dev/package/vitest-browser-vue)
 
 ::: tip Migration Path
 If your framework gets official Vitest support later, you can gradually migrate by replacing Testing Library's `render` function while keeping most of your test logic intact.

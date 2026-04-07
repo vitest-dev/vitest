@@ -36,4 +36,6 @@ export const globalApis: string[] = [
   'afterEach',
   'onTestFinished',
   'onTestFailed',
+  'aroundEach',
+  'aroundAll',
 ]

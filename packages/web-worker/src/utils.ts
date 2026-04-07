@@ -31,11 +31,14 @@ function createClonedMessageEvent(
   debug('clone worker message %o', data)
   const origin = typeof location === 'undefined' ? undefined : location.origin
   const ports = transfer?.filter((t): t is MessagePort => t instanceof MessagePort)
+  const transferWithoutPorts = transfer?.filter( // `ports` must be excluded from the `transfer` option passed to `structuredClone` to keep the MessagePort objects working correctly in the same thread.
+    t => !(t instanceof MessagePort),
+  )
 
   if (typeof structuredClone === 'function' && clone === 'native') {
     debug('create message event, using native structured clone')
     return new MessageEvent('message', {
-      data: structuredClone(data, { transfer }),
+      data: structuredClone(data, { transfer: transferWithoutPorts }),
       origin,
       ports,
     })

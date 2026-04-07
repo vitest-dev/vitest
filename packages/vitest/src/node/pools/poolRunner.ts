@@ -5,7 +5,7 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment, WorkerExecuteContext } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { TestProject } from '../project'
-import type { PoolOptions, PoolRunnerOTEL, PoolWorker, WorkerRequest, WorkerResponse } from './types'
+import type { PoolOptions, PoolRunnerOTEL, PoolTask, PoolWorker, WorkerRequest, WorkerResponse } from './types'
 import { EventEmitter } from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
 import { createBirpc } from 'birpc'
@@ -15,8 +15,24 @@ enum RunnerState {
   IDLE = 'idle',
   STARTING = 'starting',
   STARTED = 'started',
+  START_FAILURE = 'start_failure',
   STOPPING = 'stopping',
   STOPPED = 'stopped',
+}
+
+interface StopOptions {
+  /**
+   * **Do not use unless you have good reason to.**
+   *
+   * Indicates whether to skip waiting for worker's response for `{ type: 'stop' }` message or not.
+   * By default `.stop()` terminates the workers gracefully by sending them stop-message
+   * and waiting for workers response, so that workers can do proper teardown.
+   *
+   * Force exit is used when user presses `CTRL+c` twice in row and intentionally does
+   * non-graceful exit. For example in cases where worker is stuck on synchronous thread
+   * blocking function call and it won't response to `{ type: 'stop' }` messages.
+   */
+  force: boolean
 }
 
 const START_TIMEOUT = 60_000
@@ -28,7 +44,7 @@ export class PoolRunner {
   public poolId: number | undefined = undefined
 
   public readonly project: TestProject
-  public readonly environment: ContextTestEnvironment
+  public environment: ContextTestEnvironment
 
   private _state: RunnerState = RunnerState.IDLE
   private _operationLock: DeferPromise<void> | null = null
@@ -96,6 +112,15 @@ export class PoolRunner {
     )
 
     this._offCancel = vitest.onCancel(reason => this._rpc.onCancel(reason))
+  }
+
+  /**
+   * "reconfigure" can only be called if `environment` is different, since different project always
+   * requires a new PoolRunner instance.
+   */
+  public reconfigure(task: PoolTask): void {
+    this.environment = task.context.environment
+    this._otel?.span.setAttribute('vitest.environment', this.environment.name)
   }
 
   postMessage(message: WorkerRequest): void {
@@ -207,7 +232,7 @@ export class PoolRunner {
       this._state = RunnerState.STARTED
     }
     catch (error: any) {
-      this._state = RunnerState.IDLE
+      this._state = RunnerState.START_FAILURE
       startSpan?.recordException(error)
       throw error
     }
@@ -218,7 +243,7 @@ export class PoolRunner {
     }
   }
 
-  async stop(): Promise<void> {
+  async stop(options?: StopOptions): Promise<void> {
     // Wait for any ongoing operation to complete
     if (this._operationLock) {
       await this._operationLock
@@ -261,6 +286,11 @@ export class PoolRunner {
               resolve()
               this.off('message', onStop)
             }
+          }
+
+          // Don't wait for graceful exit's response when force exiting
+          if (options?.force) {
+            return onStop({ type: 'stopped', __vitest_worker_response__: true })
           }
 
           this.on('message', onStop)

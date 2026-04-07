@@ -58,6 +58,7 @@ describe('API', () => {
         'test-4.js': '',
       },
       {
+        ...options,
         includeTaskLocation: true,
         reporters: [
           'default',
@@ -99,10 +100,6 @@ describe('API', () => {
             },
           },
         ],
-      },
-      {},
-      {
-        test: options,
       },
     )
 
@@ -199,6 +196,7 @@ describe('API', () => {
             "attachments": [
               {
                 "body": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                "bodyEncoding": "base64",
               },
             ],
             "location": {
@@ -212,6 +210,7 @@ describe('API', () => {
             "attachments": [
               {
                 "body": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+                "bodyEncoding": "base64",
               },
             ],
             "location": {
@@ -225,6 +224,7 @@ describe('API', () => {
             "attachments": [
               {
                 "body": "",
+                "bodyEncoding": "base64",
                 "contentType": "text/plain",
               },
             ],
@@ -246,7 +246,7 @@ describe('API', () => {
     `)
   })
 
-  test('cannot record artifacts when the test finished running', async () => {
+  test('can record artifacts even after the test finished running', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.ts': `
         import { recordArtifact } from 'vitest'
@@ -261,7 +261,7 @@ describe('API', () => {
         })
       `,
     }, { globals: true })
-    expect(stderr).toContain('Cannot record a test artifact outside of the test run. The test "finished early" finished running with the "pass" state already.')
+    expect(stderr).toBe('')
   })
 })
 
@@ -366,10 +366,10 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
-        .replace(/\d+m?s/g, '<duration>'),
+        .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>
@@ -398,10 +398,10 @@ describe('reporters', () => {
 
     expect(
       stdout
-        .replace(/\d+\.\d+\.\d+/, '<version>')
+        .replace(/\d+\.\d+\.\d+(-beta\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
-        .replace(/\d+m?s/g, '<duration>'),
+        .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>

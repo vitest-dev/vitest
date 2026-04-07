@@ -228,6 +228,8 @@ export async function collectTests(
     file,
     ctx.config.testNamePattern,
     undefined,
+    undefined,
+    undefined,
     hasOnly,
     false,
     ctx.config.allowOnly,

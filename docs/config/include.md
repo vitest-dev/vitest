@@ -10,7 +10,7 @@ title: include | Config
 
 A list of [glob patterns](https://superchupu.dev/tinyglobby/comparison) that match your test files. These patterns are resolved relative to the [`root`](/config/root) ([`process.cwd()`](https://nodejs.org/api/process.html#processcwd) by default).
 
-Vitest uses the [`tinyglobby`](https://www.npmjs.com/package/tinyglobby) package to resolve the globs.
+Vitest uses the [`tinyglobby`](https://npmx.dev/package/tinyglobby) package to resolve the globs.
 
 ::: tip NOTE
 When using coverage, Vitest automatically adds test files `include` patterns to coverage's default `exclude` patterns. See [`coverage.exclude`](/config/coverage#exclude).
@@ -40,12 +40,16 @@ export default defineConfig({
   test: {
     projects: [
       {
-        name: 'unit',
-        include: ['./test/unit/*.test.js'],
+        test: {
+          name: 'unit',
+          include: ['./test/unit/*.test.js'],
+        },
       },
       {
-        name: 'e2e',
-        include: ['./test/e2e/*.test.js'],
+        test: {
+          name: 'e2e',
+          include: ['./test/e2e/*.test.js'],
+        },
       },
     ],
   },

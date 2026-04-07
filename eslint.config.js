@@ -43,6 +43,7 @@ export default antfu(
       'no-empty-pattern': 'off',
       'antfu/indent-binary-ops': 'off',
       'unused-imports/no-unused-imports': 'error',
+      'pnpm/json-enforce-catalog': 'off',
       'style/member-delimiter-style': [
         'error',
         {
@@ -59,6 +60,10 @@ export default antfu(
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
       'ts/no-unsafe-function-type': 'off',
+
+      'markdown/fenced-code-language': 'off',
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -106,6 +111,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
@@ -114,6 +120,7 @@ export default antfu(
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
       'import/no-mutable-exports': 'off',
+      'no-throw-literal': 'off',
     },
   },
   {

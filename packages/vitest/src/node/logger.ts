@@ -131,6 +131,37 @@ export class Logger {
     return code
   }
 
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
+  printTags(): void {
+    const vitest = this.ctx
+    const rootProject = vitest.getRootProject()
+    const projects = [
+      rootProject,
+      ...vitest.projects.filter(p => p !== rootProject),
+    ]
+
+    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+
+    if (!hasTags) {
+      process.exitCode = 1
+      return this.printNoTestTagsFound()
+    }
+
+    for (const project of projects) {
+      const name = project.name
+      if (name) {
+        this.log(formatProjectName(project, ''))
+      }
+      project.config.tags.forEach((tag) => {
+        const tagLog = `${tag.name}${tag.description ? `: ${tag.description}` : ''}`
+        this.log(`  ${tagLog}`)
+      })
+    }
+  }
+
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
@@ -201,7 +232,8 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    if (this.ctx.config.sequence.sequencer === RandomSequencer) {
+    // Log seed if either files (RandomSequencer) or tests are shuffled
+    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
@@ -226,7 +258,7 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
     }
     else {
       this.log()
@@ -269,7 +301,7 @@ export class Logger {
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
         type: (err as any).type || 'Unhandled Error',
       })
     })

@@ -1,5 +1,5 @@
 import { SerializedConfig } from 'vitest'
-import { StringifyOptions, BrowserCommands } from 'vitest/internal/browser'
+import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
 
@@ -17,11 +17,12 @@ export type BufferEncoding =
   | 'binary'
   | 'hex'
 
-export interface CDPSession {
-  // methods are defined by the provider type augmentation
-}
+export { CDPSession };
 
-export interface ScreenshotOptions {
+export interface ScreenshotOptions extends SelectorOptions {
+  /**
+   * The HTML element to screenshot.
+   */
   element?: Element | Locator
   /**
    * Path relative to the current test file.
@@ -38,6 +39,14 @@ export interface ScreenshotOptions {
    * @default true
    */
   save?: boolean
+}
+
+export interface MarkOptions {
+  /**
+   * Optional stack string used to resolve marker location.
+   * Useful for wrapper libraries that need to forward the end-user callsite.
+   */
+  stack?: string
 }
 
 interface StandardScreenshotComparators {
@@ -157,7 +166,7 @@ export interface ScreenshotMatcherOptions<
   comparatorOptions?: ScreenshotComparatorRegistry[ComparatorName]
   screenshotOptions?: Omit<
     ScreenshotOptions,
-    'element' | 'base64' | 'path' | 'save' | 'type'
+    'element' | 'base64' | 'path' | 'save' | 'type' | 'strict' | 'timeout'
   >
   /**
    * Time to wait until a stable screenshot is found.
@@ -168,6 +177,13 @@ export interface ScreenshotMatcherOptions<
    * @default 5000
    */
   timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
 }
 
 export interface UserEvent {
@@ -207,6 +223,25 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#tripleclick} testing-library API
    */
   tripleClick: (element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>
+  /**
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
+   *
+   * @param element - The target element to receive wheel events.
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await userEvent.wheel(container, { delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await userEvent.wheel(container, { direction: 'up', times: 5 })
+   */
+  wheel(element: Element | Locator, options: UserEventWheelOptions): Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -345,6 +380,58 @@ export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 export interface UserEventUploadOptions {}
 
+/**
+ * Base options shared by all wheel event configurations.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelBaseOptions {
+  /**
+   * Number of wheel events to fire. Defaults to `1`.
+   *
+   * Useful for triggering multiple scroll steps in a single call.
+   */
+  times?: number
+}
+
+/**
+ * Wheel options using pixel-based `delta` values for precise scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDeltaOptions extends UserEventWheelBaseOptions {
+  /**
+   * Precise scroll delta values in pixels. At least one axis must be specified.
+   *
+   * - Positive `y` scrolls down, negative `y` scrolls up.
+   * - Positive `x` scrolls right, negative `x` scrolls left.
+   */
+  delta: { x: number; y?: number } | { x?: number; y: number }
+  direction?: undefined
+}
+
+/**
+ * Wheel options using semantic `direction` values for simpler scroll control.
+ *
+ * @since 4.1.0
+ */
+export interface UserEventWheelDirectionOptions extends UserEventWheelBaseOptions {
+  /**
+   * Semantic scroll direction. Use this for readable tests when exact pixel values don't matter.
+   */
+  direction: 'up' | 'down' | 'left' | 'right'
+  delta?: undefined
+}
+
+/**
+ * Options for triggering wheel events.
+ *
+ * Specify scrolling using either `delta` for precise pixel values, or `direction` for semantic scrolling. These are mutually exclusive.
+ *
+ * @since 4.1.0
+ */
+export type UserEventWheelOptions = UserEventWheelDeltaOptions | UserEventWheelDirectionOptions
+
 export interface LocatorOptions {
   /**
    * Whether to find an exact match: case-sensitive and whole-string. Default to false. Ignored when locating by a
@@ -408,7 +495,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
   selected?: boolean
 }
 
-interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
+export interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface LocatorSelectors {
   /**
@@ -443,13 +530,29 @@ export interface LocatorSelectors {
    */
   getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
-   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](https://vitest.dev/config/browser/locators#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/api/browser/locators#getbytestid}
    */
   getByTestId: (text: string | RegExp) => Locator
 }
 
 export interface FrameLocator extends LocatorSelectors {}
+
+export interface SelectorOptions {
+  /**
+   * How long to wait until a single element is found. By default, this has the same timeout as the test.
+   *
+   * Vitest will try to find the element in ever increasing intervals: 0, 20, 50, 100, 100, 500.
+   */
+  timeout?: number
+  /**
+   * Allow only a single element with the same locator.
+   *
+   * If Vitest finds multiple elements, it will throw an error immediately without retrying.
+   * @default true
+   */
+  strict?: boolean
+}
 
 export interface Locator extends LocatorSelectors {
   /**
@@ -489,6 +592,24 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+  /**
+   * Triggers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event|`wheel` event} on an element.
+   *
+   * @param options - Scroll configuration using `delta` or `direction`.
+   * @returns A promise that resolves when all wheel events have been dispatched.
+   *
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/interactivity#userevent-wheel}
+   *
+   * @example
+   * // Scroll down by 100 pixels
+   * await container.wheel({ delta: { y: 100 } })
+   *
+   * @example
+   * // Scroll up 5 times
+   * await container.wheel({ direction: 'up', times: 5 })
+   */
+  wheel(options: UserEventWheelOptions): Promise<void>
   /**
    * Clears the input element content
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-clear}
@@ -537,6 +658,12 @@ export interface Locator extends LocatorSelectors {
     base64: string
   }>
   screenshot(options?: LocatorScreenshotOptions): Promise<string>
+
+  /**
+   * Add a trace marker for this locator when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/locators#mark}
+   */
+  mark(name: string, options?: MarkOptions): Promise<void>
 
   /**
    * Returns an element matching the selector.
@@ -600,13 +727,27 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/locators#filter}
    */
   filter(options: LocatorOptions): Locator
+  /**
+   * This method returns an element matching the locator.
+   * Unlike [`.element()`](https://vitest.dev/api/browser/locators#element),
+   * this method will wait and retry until a matching element appears in the DOM,
+   * using increasing intervals (0, 20, 50, 100, 100, 500ms).
+   *
+   * **WARNING:**
+   *
+   * This is an escape hatch for library authors and 3d-party APIs that do not support locators directly.
+   * If you are interacting with the element, use builtin methods instead.
+   * @since 4.1.0
+   * @see {@link https://vitest.dev/api/browser/locators#findelement}
+   */
+  findElement(options?: SelectorOptions): Promise<HTMLElement | SVGElement>
 }
 
 export interface UserEventTabOptions {
   shift?: boolean
 }
 
-export interface UserEventTypeOptions {
+export interface UserEventTypeOptions extends SelectorOptions {
   skipClick?: boolean
   skipAutoClose?: boolean
 }
@@ -688,6 +829,16 @@ export interface BrowserPage extends LocatorSelectors {
     base64: string
   }>
   /**
+   * Add a trace marker when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/context#mark}
+   */
+  mark(name: string, options?: MarkOptions): Promise<void>
+  /**
+   * Group multiple operations under a trace marker when browser tracing is enabled.
+   * @see {@link https://vitest.dev/api/browser/context#mark}
+   */
+  mark<T>(name: string, body: () => T | Promise<T>, options?: MarkOptions): Promise<T>
+  /**
    * Extend default `page` object with custom methods.
    */
   extend(methods: Partial<BrowserPage>): BrowserPage
@@ -754,7 +905,7 @@ export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 
 export const utils: {
   /**
-   * This is simillar to calling `page.elementLocator`, but it returns only
+   * This is similar to calling `page.elementLocator`, but it returns only
    * locator selectors.
    */
   getElementLocatorSelectors(element: Element): LocatorSelectors
@@ -777,7 +928,6 @@ export const utils: {
   /**
    * Configures default options of `prettyDOM` and `debug` functions.
    * This will also affect `vitest-browser-{framework}` package.
-   * @experimental
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**

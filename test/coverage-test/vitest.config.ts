@@ -1,3 +1,5 @@
+import type { TestProjectInlineConfiguration } from 'vitest/config'
+import Module from 'node:module'
 import { defineConfig } from 'vitest/config'
 
 const GENERIC_TESTS = 'test/**.test.ts'
@@ -88,6 +90,8 @@ export default defineConfig({
             '**/query-param-transforms.test.ts',
             '**/test/cjs-dependency.test.ts',
             '**/test/source-maps.test.ts',
+            '**/test/mock-autospy.test.ts',
+            '**/test/mock-importActual.test.ts',
           ],
           exclude: [FIXTURES],
         },
@@ -120,10 +124,45 @@ export default defineConfig({
             '**/query-param-transforms.test.ts',
             '**/test/cjs-dependency.test.ts',
             '**/test/source-maps.test.ts',
+            '**/test/mock-autospy.test.ts',
+            '**/test/mock-importActual.test.ts',
           ],
           exclude: [FIXTURES],
         },
       },
+
+      // Test cases for native runner
+      // @ts-expect-error Module.registerHooks is only available in Node.js v21+
+      ...(Module.registerHooks
+        ? [
+            {
+              extends: true,
+              test: {
+                name: { label: 'native', color: 'green' },
+                env: { COVERAGE_PROVIDER: 'v8', VITE_MODULE_RUNNER: 'false' },
+                include: [GENERIC_TESTS, V8_TESTS],
+                exclude: [
+                  ISTANBUL_TESTS,
+                  UNIT_TESTS,
+                  CUSTOM_TESTS,
+                  BROWSER_TESTS,
+                  FIXTURES,
+
+                  // Unsupported features
+                  '**/vue.test.ts',
+                  '**/workspace.multi-transform.test.ts',
+                  '**/web-worker.test.ts',
+                  '**/virtual-files.test.ts',
+                  '**/query-param-transforms.test.ts',
+                  '**/multi-environment.test.ts',
+                  '**/import-meta-env.test.ts',
+                  '**/decorators.test.ts',
+                  '**/import-attributes.test.ts',
+                ],
+              },
+            } satisfies TestProjectInlineConfiguration,
+          ]
+        : []),
 
       // Test cases that aren't provider specific
       {

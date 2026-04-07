@@ -7,7 +7,7 @@
     "test": "echo \"No tests\""
   },
   "devDependencies": {
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.2",
     "tinyrainbow": "catalog:",
     "vite": "latest",
     "vitest": "workspace:*"

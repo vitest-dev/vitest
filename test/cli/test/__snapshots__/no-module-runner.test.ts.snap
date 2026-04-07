@@ -1,0 +1,913 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`supported > v8 coverage works 1`] = `
+{
+  "<process-cwd>/fixtures/no-module-runner/src/basic.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 3,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 24,
+            "line": 1,
+          },
+          "start": {
+            "column": 23,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 1,
+          },
+          "start": {
+            "column": 38,
+            "line": 1,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 2,
+      "seen": {
+        "f:1:23:1:24": 0,
+        "s:1:23:1:Infinity": 0,
+        "s:1:38:1:Infinity": 1,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/basic.ts",
+    "s": {
+      "0": 3,
+      "1": 3,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 1,
+        },
+        "start": {
+          "column": 23,
+          "line": 1,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 1,
+        },
+        "start": {
+          "column": 38,
+          "line": 1,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/dependency.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 19,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 42,
+            "line": 1,
+          },
+        },
+        "name": "add",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 1,
+      "seen": {
+        "f:1:16:1:19": 0,
+        "s:2:2:2:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/dependency.ts",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/from-async.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 1,
+      "seen": {
+        "s:3:23:3:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/from-async.ts",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 3,
+        },
+        "start": {
+          "column": 23,
+          "line": 3,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/in-source/add.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 135,
+      "1": 269,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 19,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 39,
+            "line": 1,
+          },
+        },
+        "name": "add",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 22,
+            "line": 2,
+          },
+          "start": {
+            "column": 21,
+            "line": 2,
+          },
+        },
+        "line": 2,
+        "loc": {
+          "end": {
+            "column": 36,
+            "line": 2,
+          },
+          "start": {
+            "column": 31,
+            "line": 2,
+          },
+        },
+        "name": "(anonymous_1)",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 2,
+      "lastStatement": 2,
+      "seen": {
+        "f:1:16:1:19": 0,
+        "f:2:21:2:22": 1,
+        "s:2:2:2:Infinity": 0,
+        "s:2:31:2:36": 1,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/in-source/add.ts",
+    "s": {
+      "0": 135,
+      "1": 269,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+      "1": {
+        "end": {
+          "column": 36,
+          "line": 2,
+        },
+        "start": {
+          "column": 31,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/in-source/fibonacci.ts": {
+    "b": {
+      "0": [
+        1,
+        0,
+      ],
+    },
+    "branchMap": {
+      "0": {
+        "line": 4,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 6,
+          },
+          "start": {
+            "column": 2,
+            "line": 4,
+          },
+        },
+        "locations": [
+          {
+            "end": {
+              "column": null,
+              "line": 6,
+            },
+            "start": {
+              "column": 2,
+              "line": 4,
+            },
+          },
+          {
+            "end": {},
+            "start": {},
+          },
+        ],
+        "type": "if",
+      },
+    },
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 25,
+            "line": 3,
+          },
+          "start": {
+            "column": 16,
+            "line": 3,
+          },
+        },
+        "line": 3,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 8,
+          },
+          "start": {
+            "column": 45,
+            "line": 3,
+          },
+        },
+        "name": "fibonacci",
+      },
+    },
+    "meta": {
+      "lastBranch": 1,
+      "lastFunction": 1,
+      "lastStatement": 3,
+      "seen": {
+        "b:4:2:6:Infinity:undefined:undefined:undefined:undefined": 0,
+        "f:3:16:3:25": 0,
+        "s:4:2:6:Infinity": 0,
+        "s:5:4:5:Infinity": 1,
+        "s:7:2:7:Infinity": 2,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/in-source/fibonacci.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 6,
+        },
+        "start": {
+          "column": 2,
+          "line": 4,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 5,
+        },
+        "start": {
+          "column": 4,
+          "line": 5,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 7,
+        },
+        "start": {
+          "column": 2,
+          "line": 7,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/in-source/index.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 0,
+      "seen": {},
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/in-source/index.ts",
+    "s": {},
+    "statementMap": {},
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/index.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 1,
+      "seen": {
+        "s:2:23:2:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/index.ts",
+    "s": {
+      "0": 2,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 23,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/minus.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 21,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 52,
+            "line": 1,
+          },
+        },
+        "name": "minus",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 1,
+      "seen": {
+        "f:1:16:1:21": 0,
+        "s:2:2:2:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/minus.ts",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/mock-async.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 1,
+      "seen": {
+        "s:1:22:1:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/mock-async.ts",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 1,
+        },
+        "start": {
+          "column": 22,
+          "line": 1,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/mock-js.d.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 0,
+      "seen": {},
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/mock-js.d.ts",
+    "s": {},
+    "statementMap": {},
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/mock-js.js": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 22,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 25,
+            "line": 1,
+          },
+        },
+        "name": "mockJs",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 1,
+      "seen": {
+        "f:1:16:1:22": 0,
+        "s:2:2:2:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/mock-js.js",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/mock-sync.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 24,
+            "line": 1,
+          },
+          "start": {
+            "column": 16,
+            "line": 1,
+          },
+        },
+        "line": 1,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 3,
+          },
+          "start": {
+            "column": 27,
+            "line": 1,
+          },
+        },
+        "name": "syncMock",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 1,
+      "seen": {
+        "f:1:16:1:24": 0,
+        "s:2:2:2:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/mock-sync.ts",
+    "s": {
+      "0": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 2,
+        },
+        "start": {
+          "column": 2,
+          "line": 2,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/no-mock.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 0,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 25,
+            "line": 2,
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+          },
+        },
+        "line": 2,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 4,
+          },
+          "start": {
+            "column": 37,
+            "line": 2,
+          },
+        },
+        "name": "notMocked",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 1,
+      "lastStatement": 1,
+      "seen": {
+        "f:2:16:2:25": 0,
+        "s:3:2:3:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/no-mock.ts",
+    "s": {
+      "0": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 3,
+        },
+        "start": {
+          "column": 2,
+          "line": 3,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/redirect.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {},
+    "fnMap": {},
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 0,
+      "lastStatement": 1,
+      "seen": {
+        "s:1:0:1:Infinity": 0,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/redirect.ts",
+    "s": {
+      "0": 0,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 1,
+        },
+        "start": {
+          "column": 0,
+          "line": 1,
+        },
+      },
+    },
+  },
+  "<process-cwd>/fixtures/no-module-runner/src/setups.ts": {
+    "b": {},
+    "branchMap": {},
+    "f": {
+      "0": 9,
+      "1": 9,
+      "2": 1,
+    },
+    "fnMap": {
+      "0": {
+        "decl": {
+          "end": {
+            "column": 34,
+            "line": 6,
+          },
+          "start": {
+            "column": 33,
+            "line": 6,
+          },
+        },
+        "line": 6,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 8,
+          },
+          "start": {
+            "column": 39,
+            "line": 6,
+          },
+        },
+        "name": "(anonymous_0)",
+      },
+      "1": {
+        "decl": {
+          "end": {
+            "column": 34,
+            "line": 10,
+          },
+          "start": {
+            "column": 33,
+            "line": 10,
+          },
+        },
+        "line": 10,
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 12,
+          },
+          "start": {
+            "column": 39,
+            "line": 10,
+          },
+        },
+        "name": "(anonymous_1)",
+      },
+      "2": {
+        "decl": {
+          "end": {
+            "column": 30,
+            "line": 14,
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+          },
+        },
+        "line": 14,
+        "loc": {
+          "end": {
+            "column": null,
+            "line": 19,
+          },
+          "start": {
+            "column": 33,
+            "line": 14,
+          },
+        },
+        "name": "getSetupStates",
+      },
+    },
+    "meta": {
+      "lastBranch": 0,
+      "lastFunction": 3,
+      "lastStatement": 7,
+      "seen": {
+        "f:10:33:10:34": 1,
+        "f:14:16:14:30": 2,
+        "f:6:33:6:34": 0,
+        "s:10:27:12:Infinity": 4,
+        "s:11:2:11:Infinity": 5,
+        "s:15:2:18:Infinity": 6,
+        "s:3:14:3:Infinity": 0,
+        "s:4:14:4:Infinity": 1,
+        "s:6:27:8:Infinity": 2,
+        "s:7:2:7:Infinity": 3,
+      },
+    },
+    "path": "<process-cwd>/fixtures/no-module-runner/src/setups.ts",
+    "s": {
+      "0": 1,
+      "1": 1,
+      "2": 1,
+      "3": 9,
+      "4": 1,
+      "5": 9,
+      "6": 1,
+    },
+    "statementMap": {
+      "0": {
+        "end": {
+          "column": null,
+          "line": 3,
+        },
+        "start": {
+          "column": 14,
+          "line": 3,
+        },
+      },
+      "1": {
+        "end": {
+          "column": null,
+          "line": 4,
+        },
+        "start": {
+          "column": 14,
+          "line": 4,
+        },
+      },
+      "2": {
+        "end": {
+          "column": null,
+          "line": 8,
+        },
+        "start": {
+          "column": 27,
+          "line": 6,
+        },
+      },
+      "3": {
+        "end": {
+          "column": null,
+          "line": 7,
+        },
+        "start": {
+          "column": 2,
+          "line": 7,
+        },
+      },
+      "4": {
+        "end": {
+          "column": null,
+          "line": 12,
+        },
+        "start": {
+          "column": 27,
+          "line": 10,
+        },
+      },
+      "5": {
+        "end": {
+          "column": null,
+          "line": 11,
+        },
+        "start": {
+          "column": 2,
+          "line": 11,
+        },
+      },
+      "6": {
+        "end": {
+          "column": null,
+          "line": 18,
+        },
+        "start": {
+          "column": 2,
+          "line": 15,
+        },
+      },
+    },
+  },
+}
+`;

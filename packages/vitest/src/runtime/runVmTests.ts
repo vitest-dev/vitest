@@ -1,7 +1,7 @@
 import type { FileSpecification } from '@vitest/runner'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
-import type { VitestModuleRunner } from './moduleRunner/moduleRunner'
+import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
@@ -16,6 +16,7 @@ import {
 } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
+import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
@@ -25,7 +26,7 @@ export async function run(
   method: 'run' | 'collect',
   files: FileSpecification[],
   config: SerializedConfig,
-  moduleRunner: VitestModuleRunner,
+  moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<void> {
   const workerState = getWorkerState()
@@ -78,8 +79,6 @@ export async function run(
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
-  testRunner.getWorkerContext = undefined
-
   workerState.onCancel((reason) => {
     closeInspector(config)
     testRunner.cancel?.(reason)
@@ -97,11 +96,19 @@ export async function run(
         workerState.filepath = file.filepath
 
         if (method === 'run') {
+          const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
+
           await traces.$(
             `vitest.test.runner.${method}.module`,
             { attributes: { 'code.file.path': file.filepath } },
             () => startTests([file], testRunner),
           )
+
+          const leaks = await collectAsyncLeaks?.()
+
+          if (leaks?.length) {
+            workerState.rpc.onAsyncLeaks(leaks)
+          }
         }
         else {
           await traces.$(

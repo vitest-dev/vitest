@@ -3,7 +3,7 @@ import type { ContextTestEnvironment } from '../types/worker'
 import type { Vitest } from './core'
 import type { PoolTask } from './pools/types'
 import type { TestProject } from './project'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { BuiltinPool, ResolvedConfig } from './types/config'
 import * as nodeos from 'node:os'
 import { isatty } from 'node:tty'
@@ -12,7 +12,7 @@ import { version as viteVersion } from 'vite'
 import { rootDir } from '../paths'
 import { isWindows } from '../utils/env'
 import { getWorkerMemoryLimit, stringToBytes } from '../utils/memory-limit'
-import { getSpecificationsEnvironments } from '../utils/test-helpers'
+import { getSpecificationsOptions } from '../utils/test-helpers'
 import { createBrowserPool } from './pools/browser'
 import { Pool } from './pools/pool'
 
@@ -87,7 +87,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     let workerId = 0
 
     const sorted = await sequencer.sort(specs)
-    const environments = await getSpecificationsEnvironments(specs)
+    const { environments, tags } = await getSpecificationsOptions(specs)
     const groups = groupSpecs(sorted, environments)
 
     const projectEnvs = new WeakMap<TestProject, Partial<NodeJS.ProcessEnv>>()
@@ -138,8 +138,10 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         let execArgv = projectExecArgvs.get(project)
         if (!execArgv) {
+          const conditions = resolveConditions(project)
           execArgv = [
             ...options.execArgv,
+            ...conditions,
             ...project.config.execArgv,
           ]
           projectExecArgvs.set(project, execArgv)
@@ -147,12 +149,19 @@ export function createPool(ctx: Vitest): ProcessPool {
 
         taskGroup.push({
           context: {
-            files: specs.map(spec => ({ filepath: spec.moduleId, testLocations: spec.testLines })),
+            files: specs.map(spec => ({
+              filepath: spec.moduleId,
+              fileTags: tags.get(spec),
+              testLocations: spec.testLines,
+              testNamePattern: spec.testNamePattern,
+              testIds: spec.testIds,
+              testTagsFilter: spec.testTagsFilter,
+            })),
             invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
+            environment,
           },
-          environment,
           project,
           env,
           execArgv,
@@ -229,36 +238,6 @@ export function createPool(ctx: Vitest): ProcessPool {
 }
 
 function resolveOptions(ctx: Vitest) {
-  // in addition to resolve.conditions Vite also adds production/development,
-  // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
-  const viteMajor = Number(viteVersion.split('.')[0])
-
-  const potentialConditions = new Set(viteMajor >= 6
-    ? (ctx.vite.config.ssr.resolve?.conditions ?? [])
-    : [
-        'production',
-        'development',
-        ...ctx.vite.config.resolve.conditions,
-      ])
-
-  const conditions = [...potentialConditions]
-    .filter((condition) => {
-      if (condition === 'production') {
-        return ctx.vite.config.isProduction
-      }
-      if (condition === 'development') {
-        return !ctx.vite.config.isProduction
-      }
-      return true
-    })
-    .map((condition) => {
-      if (viteMajor >= 6 && condition === 'development|production') {
-        return ctx.vite.config.isProduction ? 'production' : 'development'
-      }
-      return condition
-    })
-    .flatMap(c => ['--conditions', c])
-
   // Instead of passing whole process.execArgv to the workers, pick allowed options.
   // Some options may crash worker, e.g. --prof, --title. nodejs/node#41103
   const execArgv = process.execArgv.filter(
@@ -271,10 +250,9 @@ function resolveOptions(ctx: Vitest) {
   const options: PoolProcessOptions = {
     execArgv: [
       ...execArgv,
-      ...conditions,
       '--experimental-import-meta-resolve',
       // https://github.com/vitest-dev/vitest/issues/8896
-      ...((globalThis as any).Deno ? [] : ['--require', suppressWarningsPath]),
+      ...((globalThis as any).Deno || process.versions.pnp ? [] : ['--require', suppressWarningsPath]),
     ],
     env: {
       TEST: 'true',
@@ -286,6 +264,39 @@ function resolveOptions(ctx: Vitest) {
   }
 
   return options
+}
+
+function resolveConditions(project: TestProject) {
+  // in addition to resolve.conditions Vite also adds production/development,
+  // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
+  const viteMajor = Number(viteVersion.split('.')[0])
+  const viteConfig = project.vite.config
+
+  const potentialConditions = new Set(viteMajor >= 6
+    ? (viteConfig.ssr.resolve?.conditions ?? [])
+    : [
+        'production',
+        'development',
+        ...(viteConfig.resolve.conditions ?? []),
+      ])
+
+  return [...potentialConditions]
+    .filter((condition) => {
+      if (condition === 'production') {
+        return viteConfig.isProduction
+      }
+      if (condition === 'development') {
+        return !viteConfig.isProduction
+      }
+      return true
+    })
+    .map((condition) => {
+      if (viteMajor >= 6 && condition === 'development|production') {
+        return viteConfig.isProduction ? 'production' : 'development'
+      }
+      return condition
+    })
+    .flatMap(c => ['--conditions', c])
 }
 
 function resolveMaxWorkers(project: TestProject) {
@@ -332,7 +343,7 @@ function getMemoryLimit(config: ResolvedConfig, pool: string) {
   return null
 }
 
-function groupSpecs(specs: TestSpecification[], environments: Awaited<ReturnType<typeof getSpecificationsEnvironments>>) {
+function groupSpecs(specs: TestSpecification[], environments: WeakMap<TestSpecification, ContextTestEnvironment>) {
   // Test files are passed to test runner one at a time, except for Typechecker or when "--maxWorker=1 --no-isolate"
   type SpecsForRunner = TestSpecification[]
 

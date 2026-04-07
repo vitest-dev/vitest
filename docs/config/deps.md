@@ -44,7 +44,7 @@ Enable dependency optimization.
 
 Options that are applied to external files when the environment is set to `client`. By default, `jsdom` and `happy-dom` use `client` environment, while `node` and `edge` environments use `ssr`, so these options will have no affect on files inside those environments.
 
-Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](#server-deps-external).
+Usually, files inside `node_modules` are externalized, but these options also affect files in [`server.deps.external`](/config/server#server-deps-external).
 
 ### deps.client.transformAssets
 
@@ -56,7 +56,7 @@ Should Vitest process assets (.png, .svg, .jpg, etc) files and resolve them like
 This module will have a default export equal to the path to the asset, if no query is specified.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
+At the moment, this option only works with [`vmThreads`](/config/pool#vmthreads) and [`vmForks`](/config/pool#vmforks) pools.
 :::
 
 ### deps.client.transformCss
@@ -66,10 +66,10 @@ At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmFor
 
 Should Vitest process CSS (.css, .scss, .sass, etc) files and resolve them like Vite does in the browser.
 
-If CSS files are disabled with [`css`](#css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
+If CSS files are disabled with [`css`](/config/css) options, this option will just silence `ERR_UNKNOWN_FILE_EXTENSION` errors.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
+At the moment, this option only works with [`vmThreads`](/config/pool#vmthreads) and [`vmForks`](/config/pool#vmforks) pools.
 :::
 
 ### deps.client.transformGlobPattern
@@ -82,7 +82,7 @@ Regexp pattern to match external files that should be transformed.
 By default, files inside `node_modules` are externalized and not transformed, unless it's CSS or an asset, and corresponding option is not disabled.
 
 ::: warning
-At the moment, this option only works with [`vmThreads`](#vmthreads) and [`vmForks`](#vmforks) pools.
+At the moment, this option only works with [`vmThreads`](/config/pool#vmthreads) and [`vmForks`](/config/pool#vmforks) pools.
 :::
 
 ## deps.interopDefault
@@ -113,7 +113,7 @@ By default, Vitest assumes you are using a bundler to bypass this and will not f
 - **Type:** `string[]`
 - **Default**: `['node_modules']`
 
-A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](#root) of the project.
+A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/root) of the project.
 
 This option will also affect if a file should be treated as a module when externalizing dependencies. By default, Vitest imports external modules with native Node.js bypassing Vite transformation step.
 

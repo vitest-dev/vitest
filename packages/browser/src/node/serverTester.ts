@@ -53,6 +53,7 @@ export async function resolveTester(
     __VITEST_TYPE__: '"tester"',
     __VITEST_METHOD__: JSON.stringify('none'),
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
+    __VITEST_OTEL_CARRIER__: JSON.stringify(null),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: '{}',
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),

@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
@@ -76,8 +76,12 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
@@ -101,6 +105,7 @@ export interface SerializedConfig {
     }
     locators: {
       testIdAttribute: string
+      exact: boolean
     }
     screenshotFailures: boolean
     providerOptions: {
@@ -109,9 +114,11 @@ export interface SerializedConfig {
     }
     trace: BrowserTraceViewMode
     trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
     includeSamples: boolean
@@ -119,15 +126,34 @@ export interface SerializedConfig {
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
+    importDurations: {
+      print: boolean | 'on-warn'
+      limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
+    }
+    viteModuleRunner: boolean
+    nodeLoader: boolean
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
   }
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
+  slowTestThreshold: number | undefined
+  isAgent: boolean
 }
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
 }

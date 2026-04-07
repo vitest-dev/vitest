@@ -5,9 +5,11 @@ import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
-import c from 'tinyrainbow'
+import c, { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { isAgent } from '../../utils/env'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -73,6 +75,10 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
 }
 
 export function createCLI(options: CliParseOptions = {}): CAC {
+  if (isAgent) {
+    disableDefaultColors()
+  }
+
   const cli = cac('vitest')
 
   cli.version(version)
@@ -195,6 +201,7 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
 
+  setupTabCompletions(cli)
   return cli
 }
 
@@ -288,7 +295,7 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   if (typeof argv.typecheck?.only === 'boolean') {
     argv.typecheck.enabled ??= true
   }
-  if (argv.clearCache) {
+  if (argv.clearCache || argv.listTags) {
     argv.watch = false
     argv.run = true
   }
@@ -337,7 +344,13 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       run: true,
     }, undefined, undefined, cliFilters)
     if (!options.filesOnly) {
-      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(
+        cliFilters.map(normalize),
+        {
+          staticParse: options.staticParse,
+          staticParseConcurrency: options.staticParseConcurrency,
+        },
+      )
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')

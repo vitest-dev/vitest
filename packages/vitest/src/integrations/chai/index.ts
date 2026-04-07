@@ -10,7 +10,6 @@ import {
   setState,
 } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
-import { getTestName } from '@vitest/runner/utils'
 import { getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
@@ -51,7 +50,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
         return getWorkerState().filepath
       },
       currentTestName: test
-        ? getTestName(test as Test)
+        ? test.fullTestName ?? ''
         : globalState.currentTestName,
     },
     expect,

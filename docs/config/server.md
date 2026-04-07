@@ -15,9 +15,9 @@ These options should be used only as the last resort to improve performance by e
 Normally, Vitest should do this automatically.
 :::
 
-## deps
+## server.deps
 
-### external
+### server.deps.external
 
 - **Type:** `(string | RegExp)[]`
 - **Default:** files inside [`moduleDirectories`](/config/deps#moduledirectories)
@@ -48,7 +48,7 @@ If a string is provided, it is first normalized by prefixing the `/node_modules/
 If a `RegExp` is provided, it is matched against the full file path.
 :::
 
-### inline
+### server.deps.inline
 
 - **Type:** `(string | RegExp)[] | true`
 - **Default:** everything that is not externalized
@@ -63,11 +63,11 @@ If a string is provided, it is first normalized by prefixing the `/node_modules/
 If a `RegExp` is provided, it is matched against the full file path.
 :::
 
-### fallbackCJS
+### server.deps.fallbackCJS
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-When a dependency is a valid ESM package, try to guess the cjs version based on the path. This might be helpful, if a dependency has the wrong ESM file.
+When enabled, Vitest will try to guess a CommonJS build for an ESM entry by checking a few common CJS/UMD file name and folder patterns (like `.mjs`, `.umd.js`, `.cjs.js`, `umd/`, `cjs/`, `lib/`).
 
-This might potentially cause some misalignment if a package has different logic in ESM and CJS mode.
+This is a best-effort heuristic to work around confusing or incorrect ESM/CJS packaging and may not work for all dependencies.

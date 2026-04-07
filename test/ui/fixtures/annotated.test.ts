@@ -20,3 +20,18 @@ test('annotated image test', async ({ annotate }) => {
     path: './fixtures/cute-puppy.jpg'
   })
 })
+
+test('annotated with body base64', async ({ annotate }) => {
+  await annotate('body base64 annotation', {
+    contentType: 'text/markdown',
+    body: btoa('Hello base64 **markdown**'),
+  })
+})
+
+test('annotated with body utf-8', async ({ annotate }) => {
+  await annotate('body utf-8 annotation', {
+    contentType: 'text/markdown',
+    body: 'Hello utf-8 **markdown**',
+    bodyEncoding: 'utf-8',
+  })
+})

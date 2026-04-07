@@ -41,7 +41,7 @@ export interface VitestRunner {
    */
   onAfterTryTask?: (test: Test, options: { retry: number; repeats: number }) => unknown
   /**
-   * Called after the retry resolution happend. Unlike `onAfterTryTask`, the test now has a new state.
+   * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
    * All `after` hooks were also called by this point.
    */
   onAfterRetryTask?: (test: Test, options: { retry: number; repeats: number }) => unknown
@@ -106,14 +106,12 @@ export interface VitestRunner {
 When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property:
 
 ```ts [runner.ts]
-import type { RunnerTestFile } from 'vitest'
-import type { VitestRunner, VitestRunnerConfig } from 'vitest/suite'
-import { VitestTestRunner } from 'vitest/runners'
+import type { RunnerTestFile, SerializedConfig, TestRunner, VitestTestRunner } from 'vitest'
 
-class CustomRunner extends VitestTestRunner implements VitestRunner {
-  public config: VitestRunnerConfig
+class CustomRunner extends TestRunner implements VitestTestRunner {
+  public config: SerializedConfig
 
-  constructor(config: VitestRunnerConfig) {
+  constructor(config: SerializedConfig) {
     this.config = config
   }
 
@@ -200,7 +198,7 @@ interface Suite extends TaskBase {
 }
 ```
 
-Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to travers the tasks from the bottom up.
+Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to traverse the tasks from the bottom up.
 
 ```ts
 interface Test<ExtraContext = object> extends TaskBase {
@@ -281,17 +279,15 @@ Vitest exposes `createTaskCollector` utility to create your own `test` method. I
 A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
 ```js [custom.js]
-import { createTaskCollector, getCurrentSuite } from 'vitest/suite'
-
-export { afterAll, beforeAll, describe } from 'vitest'
+export { afterAll, beforeAll, describe, TestRunner } from 'vitest'
 
 // this function will be called during collection phase:
 // don't call function handler here, add it to suite tasks
 // with "getCurrentSuite().task()" method
 // note: createTaskCollector provides support for "todo"/"each"/...
-export const myCustomTask = createTaskCollector(
+export const myCustomTask = TestRunner.createTaskCollector(
   function (name, fn, timeout) {
-    getCurrentSuite().task(name, {
+    TestRunner.getCurrentSuite().task(name, {
       ...this, // so "todo"/"skip"/... is tracked correctly
       meta: {
         customPropertyToDifferentiateTask: true

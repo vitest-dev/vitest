@@ -80,6 +80,14 @@ export const page: {
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
   /**
+   * Add a trace marker when browser tracing is enabled.
+   */
+  mark(name: string, options?: { stack?: string }): Promise<void>
+  /**
+   * Group multiple operations under a trace marker when browser tracing is enabled.
+   */
+  mark<T>(name: string, body: () => T | Promise<T>, options?: { stack?: string }): Promise<T>
+  /**
    * Extend default `page` object with custom methods.
    */
   extend(methods: Partial<BrowserPage>): BrowserPage
@@ -114,6 +122,40 @@ The `getBy*` API is explained at [Locators API](/api/browser/locators).
 ::: warning WARNING <Version>3.2.0</Version>
 Note that `screenshot` will always return a base64 string if `save` is set to `false`.
 The `path` is also ignored in that case.
+:::
+
+### mark
+
+```ts
+function mark(name: string, options?: { stack?: string }): Promise<void>
+function mark<T>(
+  name: string,
+  body: () => T | Promise<T>,
+  options?: { stack?: string },
+): Promise<T>
+```
+
+Adds a named marker to the trace timeline for the current test.
+
+Pass `options.stack` to override the callsite location in trace metadata. This is useful for wrapper libraries that need to preserve the end-user source location.
+
+If you pass a callback, Vitest creates a trace group with this name, runs the callback, and closes the group automatically.
+
+```ts
+import { page } from 'vitest/browser'
+
+await page.mark('before submit')
+await page.getByRole('button', { name: 'Submit' }).click()
+await page.mark('after submit')
+
+await page.mark('submit flow', async () => {
+  await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
+  await page.getByRole('button', { name: 'Submit' }).click()
+})
+```
+
+::: tip
+This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
 :::
 
 ### frameLocator
@@ -199,7 +241,7 @@ Utility functions useful for custom render libraries.
 ```ts
 export const utils: {
   /**
-   * This is simillar to calling `page.elementLocator`, but it returns only
+   * This is similar to calling `page.elementLocator`, but it returns only
    * locator selectors.
    */
   getElementLocatorSelectors(element: Element): LocatorSelectors
@@ -222,7 +264,6 @@ export const utils: {
   /**
    * Configures default options of `prettyDOM` and `debug` functions.
    * This will also affect `vitest-browser-{framework}` package.
-   * @experimental
    */
   configurePrettyDOM(options: StringifyOptions): void
   /**
@@ -231,3 +272,71 @@ export const utils: {
   getElementError(selector: string, container?: Element): Error
 }
 ```
+
+### configurePrettyDOM <Version>4.0.0</Version> {#configureprettydom}
+
+The `configurePrettyDOM` function allows you to configure default options for the `prettyDOM` and `debug` functions. This is useful for customizing how HTML is formatted in test failure messages.
+
+```ts
+import { utils } from 'vitest/browser'
+
+utils.configurePrettyDOM({
+  maxDepth: 3,
+  filterNode: 'script, style, [data-test-hide]'
+})
+```
+
+#### Options
+
+- **`maxDepth`** - Maximum depth to print nested elements (default: `Infinity`)
+- **`maxLength`** - Maximum length of the output string (default: `7000`)
+- **`filterNode`** - A CSS selector string or function to filter out nodes from the output. When a string is provided, elements matching the selector will be excluded. When a function is provided, it should return `false` to exclude a node.
+- **`highlight`** - Enable syntax highlighting (default: `true`)
+- And other options from [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format)
+
+#### Filtering with CSS Selectors <Version>4.1.0</Version> {#filtering-with-css-selectors}
+
+The `filterNode` option allows you to hide irrelevant markup (like scripts, styles, or hidden elements) from test failure messages, making it easier to identify the actual cause of failures.
+
+```ts
+import { utils } from 'vitest/browser'
+
+// Filter out common noise elements
+utils.configurePrettyDOM({
+  filterNode: 'script, style, [data-test-hide]'
+})
+
+// Or use directly with prettyDOM
+const html = utils.prettyDOM(element, undefined, {
+  filterNode: 'script, style'
+})
+```
+
+**Common Patterns:**
+
+Filter out scripts and styles:
+```ts
+utils.configurePrettyDOM({ filterNode: 'script, style' })
+```
+
+Hide specific elements with data attributes:
+```ts
+utils.configurePrettyDOM({ filterNode: '[data-test-hide]' })
+```
+
+Hide nested content within an element:
+```ts
+// Hides all children of elements with data-test-hide-content
+utils.configurePrettyDOM({ filterNode: '[data-test-hide-content] *' })
+```
+
+Combine multiple selectors:
+```ts
+utils.configurePrettyDOM({
+  filterNode: 'script, style, [data-test-hide], svg'
+})
+```
+
+::: tip
+This feature is inspired by Testing Library's [`defaultIgnore`](https://testing-library.com/docs/dom-testing-library/api-configuration/#defaultignore) configuration.
+:::

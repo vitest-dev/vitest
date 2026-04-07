@@ -23,7 +23,7 @@
   // ],
 
   "vitest.ignoreWorkspace": true,
-  "vitest.configSearchPatternInclude": "test/{core,cli,config,browser}/{vitest,vite}.{config.ts,config.unit.mts}",
+  "vitest.configSearchPatternInclude": "test/{core,cli,config,browser,reporters}/{vitest,vite}.{config.ts,config.unit.mts}",
   "testing.automaticallyOpenTestResults": "neverOpen",
 
   // Enable eslint for all supported languages
@@ -40,5 +40,5 @@
     "yaml"
   ],
   // Use the project's typescript version
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }

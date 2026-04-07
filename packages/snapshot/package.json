@@ -1,11 +1,11 @@
 {
   "name": "@vitest/snapshot",
   "type": "module",
-  "version": "4.0.14",
+  "version": "4.1.3",
   "description": "Vitest snapshot manager",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/snapshot#readme",
+  "homepage": "https://vitest.dev/guide/snapshot",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,11 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "snapshot"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -43,12 +48,12 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
     "pathe": "catalog:"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",
-    "@vitest/utils": "workspace:*",
     "natural-compare": "^1.4.0"
   }
 }

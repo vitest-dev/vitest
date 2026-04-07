@@ -227,6 +227,38 @@ test('renders name', async () => {
 `,
 }
 
+const preactExample = {
+  name: 'HelloWorld.jsx',
+  js: `
+export default function HelloWorld({ name }) {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+}
+`,
+  ts: `
+export default function HelloWorld({ name }: { name: string }) {
+  return (
+    <div>
+      <h1>Hello {name}!</h1>
+    </div>
+  )
+}
+`,
+  test: `
+import { expect, test } from 'vitest'
+import { render } from 'vitest-browser-preact'
+import HelloWorld from './HelloWorld.<EXT>x'
+
+test('renders name', async () => {
+  const { getByText } = render(<HelloWorld name="Vitest" />)
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
+})
+`,
+}
+
 const vanillaExample = {
   name: 'HelloWorld.js',
   js: `
@@ -274,6 +306,7 @@ function getExampleTest(framework: string) {
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
       }
     case 'preact':
+      return preactExample
     case 'react':
       return {
         ...jsxExample,

@@ -43,23 +43,23 @@ test('.toBeInTheDocument', () => {
   const expectNotToBe = /expect.*not\.toBeInTheDocument/
   const userInputNode = /an HTMLElement or an SVGElement/
   const notFound = /element could not be found in the document/
-  expect(() => expect(htmlElement).not.toBeInTheDocument()).toThrowError(
+  expect(() => expect(htmlElement).not.toBeInTheDocument()).toThrow(
     expectNotToBe,
   )
-  expect(() => expect(svgElement).not.toBeInTheDocument()).toThrowError(
+  expect(() => expect(svgElement).not.toBeInTheDocument()).toThrow(
     expectNotToBe,
   )
-  expect(() => expect(detachedElement).toBeInTheDocument()).toThrowError(
+  expect(() => expect(detachedElement).toBeInTheDocument()).toThrow(
     expectToBe,
   )
-  expect(() => expect(fakeElement).toBeInTheDocument()).toThrowError(
+  expect(() => expect(fakeElement).toBeInTheDocument()).toThrow(
     userInputNode,
   )
-  expect(() => expect(nullElement).toBeInTheDocument()).toThrowError(
+  expect(() => expect(nullElement).toBeInTheDocument()).toThrow(
     notFound,
   )
-  expect(() => expect(undefinedElement).toBeInTheDocument()).toThrowError(
+  expect(() => expect(undefinedElement).toBeInTheDocument()).toThrow(
     notFound,
   )
-  expect(() => expect(undefinedElement).not.toBeInTheDocument()).not.toThrowError()
+  expect(() => expect(undefinedElement).not.toBeInTheDocument()).not.toThrow()
 })

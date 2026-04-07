@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { describe, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 const toMatchTest = /* ts */`
@@ -172,15 +172,18 @@ describe('serial', { concurrent: true }, () => {
       name: 'test-bound extend & local extend',
       test: testBoundLocalExtend,
     },
-  ] as const)('works with $name', async ({ options, test }, { expect }) => {
-    const { stdout } = await runInlineTests(
+  ] as const)('works with $name', async ({ options, test }, { task, expect }) => {
+    const { stdout, stderr } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
+      undefined,
+      task,
     )
 
+    expect(stderr).toBe('')
     expect(stdout.replace(/[\d.]+ms/g, '<time>')).toMatchInlineSnapshot(`
       "TAP version 13
       1..1
@@ -209,13 +212,15 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'global import',
       test: withConcurrency(globalImport),
     },
-  ] as const)('fails with $name', async ({ options, test }, { expect }) => {
+  ] as const)('fails with $name', async ({ options, test }, { task, expect }) => {
     const { stdout, ctx } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'], ...options },
+      undefined,
+      task,
     )
 
     expect(
@@ -262,13 +267,15 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'test-bound extend & local extend',
       test: withConcurrency(testBoundLocalExtend),
     },
-  ])('works with $name', async ({ test }, { expect }) => {
+  ])('works with $name', async ({ test }, { task, expect }) => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
       { reporters: ['tap'] },
+      undefined,
+      task,
     )
 
     expect(stdout.replace(/[\d.]+m?s/g, '<time>')).toMatchInlineSnapshot(`

@@ -3,6 +3,7 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { cleanUrl } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join, resolve } from 'pathe'
@@ -10,7 +11,8 @@ import { isWindows } from '../utils/env'
 
 export class VitestResolver {
   public readonly options: ExternalizeOptions
-  private externalizeCache = new Map<string, Promise<string | false>>()
+  private externalizeConcurrentCache = new Map<string, Promise<string | false | undefined>>()
+  public externalizeCache: Map<string, string | false | undefined> = new Map()
 
   constructor(cacheDir: string, config: ResolvedConfig) {
     // sorting to make cache consistent
@@ -37,8 +39,26 @@ export class VitestResolver {
     }
   }
 
-  public shouldExternalize(file: string): Promise<string | false | undefined> {
-    return shouldExternalize(normalizeId(file), this.options, this.externalizeCache)
+  public wasExternalized(file: string): string | false {
+    const normalizedFile = normalizeId(file)
+    if (!this.externalizeCache.has(normalizedFile)) {
+      return false
+    }
+    return this.externalizeCache.get(normalizedFile) ?? false
+  }
+
+  public async shouldExternalize(file: string): Promise<string | false | undefined> {
+    const normalizedFile = normalizeId(file)
+    if (this.externalizeCache.has(normalizedFile)) {
+      return this.externalizeCache.get(normalizedFile)!
+    }
+
+    return shouldExternalize(normalizeId(file), this.options, this.externalizeConcurrentCache).then((result) => {
+      this.externalizeCache.set(normalizedFile, result)
+      return result
+    }).finally(() => {
+      this.externalizeConcurrentCache.delete(normalizedFile)
+    })
   }
 }
 
@@ -109,6 +129,10 @@ export function guessCJSversion(id: string): string | undefined {
 
 // The code from https://github.com/unjs/mlly/blob/c5bcca0cda175921344fd6de1bc0c499e73e5dac/src/syntax.ts#L51-L98
 async function isValidNodeImport(id: string) {
+  // clean url to strip off `?v=...` query etc.
+  // node can natively import files with query params, so externalizing them is safe.
+  id = cleanUrl(id)
+
   const extension = extname(id)
 
   if (BUILTIN_EXTENSIONS.has(extension)) {

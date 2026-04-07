@@ -4,12 +4,14 @@ it('decorators work', () => {
   expect(Sut.mocked).toBe(true)
   expect(new Sut()).toBeInstanceOf(Sut)
 })
-
 function exampleDecorator(ClassExample: any, context: ClassDecoratorContext): any {
   if (context.kind !== 'class') {
     throw new Error('not a class to decorate')
   }
-  ClassExample.mocked = true
+  // https://github.com/babel/babel/issues/17875#issuecomment-4072950690
+  context.addInitializer(() => {
+    ClassExample.mocked = true
+  })
   return ClassExample
 }
 

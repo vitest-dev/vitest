@@ -1,7 +1,6 @@
 import type { ApiConfig } from '../types/config'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
-import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
   | never
@@ -46,6 +45,12 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description:
       'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
+  allowExec: {
+    description: 'Allow API to execute code. (Be careful when enabling this option in untrusted environments)',
+  },
+  allowWrite: {
+    description: 'Allow API to edit files. (Be careful when enabling this option in untrusted environments)',
+  },
   middlewareMode: null,
 })
 
@@ -78,7 +83,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   update: {
     shorthand: 'u',
-    description: 'Update snapshot',
+    description: 'Update snapshot (accepts boolean, "new", "all" or "none")',
+    argument: '[type]',
   },
   watch: {
     shorthand: 'w',
@@ -105,6 +111,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[port]',
     description: `Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to ${defaultPort}`,
     subcommands: apiConfig(defaultPort),
+    transform(portOrOptions) {
+      if (typeof portOrOptions === 'number') {
+        return { port: portOrOptions }
+      }
+      return portOrOptions
+    },
   },
   silent: {
     description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
@@ -128,7 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
+    description: `Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -180,7 +192,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       reporter: {
         description:
-          'Coverage reporters to use. Visit [`coverage.reporter`](https://vitest.dev/config/#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)',
+          'Coverage reporters to use. Visit [`coverage.reporter`](https://vitest.dev/config/coverage#coverage-reporter) for more information (default: `["text", "html", "clover", "json"]`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
         array: true,
@@ -293,6 +305,27 @@ export const cliOptionsConfig: VitestCLIOptions = {
           },
         },
       },
+      changed: {
+        description:
+          'Collect coverage only for files changed since a specified commit or branch (e.g., `origin/main` or `HEAD~1`). Inherits value from `--changed` by default.',
+        argument: '<commit/branch>',
+        transform(value) {
+          if (value === 'true' || value === 'yes' || value === true) {
+            return true
+          }
+          if (value === 'false' || value === 'no' || value === false) {
+            return false
+          }
+          return value
+        },
+      },
+      excludeAfterRemap: {
+        description: 'Apply exclusions again after coverage has been remapped to original sources. (default: false)',
+      },
+      htmlDir: {
+        description: 'Directory of HTML coverage output to be served in UI mode and HTML reporter.',
+        argument: '<path>',
+      },
     },
   },
   mode: {
@@ -356,6 +389,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Show Vitest UI when running tests (default: `!process.env.CI`)',
       },
+      detailsPanelPosition: {
+        description:
+          'Default position for the details panel in browser mode. Either `right` (horizontal split) or `bottom` (vertical split) (default: `right`)',
+        argument: '<position>',
+      },
       fileParallelism: {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
@@ -380,7 +418,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
-      locators: null,
+      locators: {
+        description: 'Options for how locators should be handled by default',
+        argument: '<options>',
+        subcommands: {
+          testIdAttribute: null,
+          exact: {
+            description: 'Should locators match the text exactly by default (default: `false`)',
+          },
+        },
+        transform(val) {
+          if (typeof val !== 'object' || val == null) {
+            return {}
+          }
+          return val
+        },
+      },
       testerHtmlPath: null,
       instances: null,
       expect: null,
@@ -422,6 +475,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   logHeapUsage: {
     description: 'Show the size of heap for each test when running in node',
+  },
+  detectAsyncLeaks: {
+    description: 'Detect asynchronous resources leaking from the test file (default: `false`)',
   },
   allowOnly: {
     description:
@@ -467,7 +523,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       hooks: {
         description:
-          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/#sequence-hooks) for more information (default: `"parallel"`)',
+          'Changes the order in which hooks are executed. Accepted values are: "stack", "list" and "parallel". Visit [`sequence.hooks`](https://vitest.dev/config/sequence#sequence-hooks) for more information (default: `"parallel"`)',
         argument: '<order>',
       },
       setupFiles: {
@@ -530,6 +586,29 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Retry the test specific number of times if it fails (default: `0`)',
     argument: '<times>',
+    subcommands: {
+      count: {
+        description:
+          'Number of times to retry a test if it fails (default: `0`)',
+        argument: '<times>',
+      },
+      delay: {
+        description:
+          'Delay in milliseconds between retry attempts (default: `0`)',
+        argument: '<ms>',
+      },
+      condition: {
+        description:
+          'Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)',
+        argument: '<pattern>',
+        transform: (value) => {
+          if (typeof value === 'string') {
+            return new RegExp(value, 'i')
+          }
+          return value
+        },
+      },
+    },
   },
   diff: {
     description:
@@ -675,7 +754,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   maxConcurrency: {
-    description: 'Maximum number of concurrent tests in a suite (default: `5`)',
+    description: 'Maximum number of concurrent tests and suites during test file execution (default: `5`)',
     argument: '<number>',
   },
   expect: {
@@ -749,7 +828,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   standalone: {
     description:
-      'Start Vitest without running tests. Tests will be running only on change. This option is ignored when CLI file filters are passed. (default: `false`)',
+      'Start Vitest without running tests. Tests will be running only on change. If browser mode is enabled, the UI will be opened automatically. This option is ignored when CLI file filters are passed. (default: `false`)',
   },
   mergeReports: {
     description:
@@ -762,8 +841,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
       return value
     },
   },
+  listTags: {
+    description: 'List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.',
+    argument: '[type]',
+  },
   clearCache: {
     description: 'Delete all Vitest caches, including `experimental.fsModuleCache`, without running any tests. This will reduce the performance in the subsequent test run.',
+  },
+  tagsFilter: {
+    description: 'Run only tests with the specified tags. You can use logical operators `&&` (and), `||` (or) and `!` (not) to create complex expressions, see [Test Tags](https://vitest.dev/guide/test-tags#syntax) for more information.',
+    argument: '<expression>',
+    array: true,
+  },
+  strictTags: {
+    description: 'Should Vitest throw an error if test has a tag that is not defined in the config. (default: `true`)',
   },
 
   experimental: {
@@ -775,6 +866,63 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       fsModuleCachePath: null,
       openTelemetry: null,
+      importDurations: {
+        description: 'Configure import duration collection and CLI display. Note that UI\'s "Module Graph" tab can always show import breakdown regardless of the `print` setting.',
+        argument: '',
+        transform(value) {
+          if (typeof value === 'boolean') {
+            return { print: value }
+          }
+          return value
+        },
+        subcommands: {
+          print: {
+            description: 'When to print import breakdown to CLI terminal. Use `true` to always print, `false` to never print, or `on-warn` to print only when imports exceed the warn threshold (default: false).',
+            argument: '<boolean|on-warn>',
+            transform(value) {
+              if (value === 'on-warn') {
+                return 'on-warn'
+              }
+              return value
+            },
+          },
+          limit: {
+            description: 'Maximum number of imports to collect and display (default: 0, or 10 if print or UI is enabled).',
+            argument: '<number>',
+          },
+          failOnDanger: {
+            description: 'Fail the test run if any import exceeds the danger threshold (default: false).',
+          },
+          thresholds: {
+            description: 'Duration thresholds in milliseconds for coloring and warnings.',
+            argument: '',
+            subcommands: {
+              warn: {
+                description: 'Warning threshold - imports exceeding this are shown in yellow/orange (default: 100).',
+                argument: '<number>',
+              },
+              danger: {
+                description: 'Danger threshold - imports exceeding this are shown in red (default: 500).',
+                argument: '<number>',
+              },
+            },
+          },
+        },
+      },
+      viteModuleRunner: {
+        description: 'Control whether Vitest uses Vite\'s module runner to run the code or fallback to the native `import`. (default: `true`)',
+      },
+      nodeLoader: {
+        description: 'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
+      },
+      vcsProvider: {
+        argument: '<path>',
+        description: 'Custom provider for detecting changed files. (default: `git`)',
+        subcommands: null,
+      },
+      preParse: {
+        description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
+      },
     },
   },
   // disable CLI options
@@ -810,8 +958,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  staticParse: null,
+  staticParseConcurrency: null,
   projects: null,
   watchTriggerPatterns: null,
+  tags: null,
 }
 
 export const benchCliOptionsConfig: Pick<
@@ -836,6 +987,13 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
+  },
+  staticParse: {
+    description: 'Parse files statically instead of running them to collect tests (default: false)',
+  },
+  staticParseConcurrency: {
+    description: 'How many tests to process at the same time (default: os.availableParallelism())',
+    argument: '<limit>',
   },
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',

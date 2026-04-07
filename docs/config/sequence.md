@@ -24,9 +24,9 @@ A custom class that defines methods for sharding and sorting. You can extend `Ba
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
 
-If [`sequencer.groupOrder`](#grouporder) is specified, the sequencer will be called once for each group and pool.
+If [`sequence.groupOrder`](#sequence-grouporder) is specified, the sequencer will be called once for each group and pool.
 
-## groupOrder
+## sequence.groupOrder
 
 - **Type:** `number`
 - **Default:** `0`
@@ -38,7 +38,7 @@ Controls the order in which this project runs its tests when using multiple [pro
 - If several projects use the same group order, they will run at the same time.
 
 This setting only affects the order in which projects run, not the order of tests within a project.
-To control test isolation or the order of tests inside a project, use the [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+To control test isolation or the order of tests inside a project, use the [`isolate`](/config/isolate) and [`sequence.sequencer`](/config/sequence#sequence-sequencer) options.
 
 ::: details Example
 Consider this example:
@@ -97,7 +97,7 @@ Tests in these projects will run in this order:
 
 If you want files and tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
-Vitest usually uses cache to sort tests, so long running tests start earlier - this makes tests run faster. If your files and tests will run in random order you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another run previously.
+Vitest usually uses cache to sort tests, so long-running tests start earlier, which makes tests run faster. If your files and tests run in random order, you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another test run previously.
 
 ### sequence.shuffle.files {#sequence-shuffle-files}
 
@@ -145,10 +145,10 @@ Changes the order in which hooks are executed.
 
 - `stack` will order "after" hooks in reverse order, "before" hooks will run in the order they were defined
 - `list` will order all hooks in the order they are defined
-- `parallel` will run hooks in a single group in parallel (hooks in parent suites will still run before the current suite's hooks)
+- `parallel` runs hooks in a single group in parallel (hooks in parent suites still run before the current suite's hooks). The actual number of simultaneously running hooks is limited by [`maxConcurrency`](/config/maxconcurrency).
 
 ::: tip
-This option doesn't affect [`onTestFinished`](/api/#ontestfinished). It is always called in reverse order.
+This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is always called in reverse order.
 :::
 
 ## sequence.setupFiles {#sequence-setupfiles}

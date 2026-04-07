@@ -10,18 +10,23 @@ import { tab } from './tab'
 import {
   annotateTraces,
   deleteTracing,
+  groupTraceEnd,
+  groupTraceStart,
+  markTrace,
   startChunkTrace,
   startTracing,
   stopChunkTrace,
 } from './trace'
 import { type } from './type'
 import { upload } from './upload'
+import { wheel } from './wheel'
 
 export default {
   __vitest_upload: upload as typeof upload,
   __vitest_click: click as typeof click,
   __vitest_dblClick: dblClick as typeof dblClick,
   __vitest_tripleClick: tripleClick as typeof tripleClick,
+  __vitest_wheel: wheel as typeof wheel,
   __vitest_takeScreenshot: takeScreenshot as typeof takeScreenshot,
   __vitest_type: type as typeof type,
   __vitest_clear: clear as typeof clear,
@@ -37,4 +42,7 @@ export default {
   __vitest_startTracing: startTracing as typeof startTracing,
   __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
   __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
+  __vitest_markTrace: markTrace as typeof markTrace,
+  __vitest_groupTraceStart: groupTraceStart as typeof groupTraceStart,
+  __vitest_groupTraceEnd: groupTraceEnd as typeof groupTraceEnd,
 }

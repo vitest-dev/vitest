@@ -233,16 +233,18 @@ function start(filters?: string[]): Promise<TestRunResult>
 Initialize reporters, the coverage provider, and run tests. This method accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
 ::: warning
-This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
+This method should not be called if [`vitest.standalone()`](#standalone) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was initialised.
 :::
 
 This method is called automatically by [`startVitest`](/guide/advanced/tests) if `config.mergeReports` and `config.standalone` are not set.
 
-## init
+## standalone <Version type="experimental">4.1.1</Version> {#standalone}
 
 ```ts
-function init(): Promise<void>
+function standalone(): Promise<void>
 ```
+
+- **Alias**: `init` <Deprecated />
 
 Initialize reporters and the coverage provider. This method doesn't run any tests. If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
 
@@ -302,6 +304,21 @@ function rerunTestSpecifications(
 
 This method emits `reporter.onWatcherRerun` and `onTestsRerun` events, then it runs tests with [`runTestSpecifications`](#runtestspecifications). If there were no errors in the main process, it will emit `reporter.onWatcherStart` event.
 
+## runTestFiles <Version>4.1.0</Version> {#runtestfiles}
+
+```ts
+function runTestFiles(
+  filepaths: string[],
+  allTestsRun = false
+): Promise<TestRunResult>
+```
+
+This automatically creates specifications to run based on filepaths filters.
+
+This is different from [`start`](#start) because it does not create a coverage provider, trigger `onInit` and `onWatcherStart` events, or throw an error if there are no files to run (in this case, the function will return empty arrays without triggering a test run).
+
+This function accepts the same filters as [`start`](#start) and the CLI.
+
 ## updateSnapshot
 
 ```ts
@@ -334,7 +351,7 @@ This makes this method very slow, unless you disable isolation before collecting
 function cancelCurrentRun(reason: CancelReason): Promise<void>
 ```
 
-This method will gracefully cancel all ongoing tests. It will wait for started tests to finish running and will not run tests that were scheduled to run but haven't started yet.
+This method will gracefully cancel all ongoing tests. It will stop the on-going tests and will not run tests that were scheduled to run but haven't started yet.
 
 ## setGlobalTestNamePattern
 
@@ -342,7 +359,7 @@ This method will gracefully cancel all ongoing tests. It will wait for started t
 function setGlobalTestNamePattern(pattern: string | RegExp): void
 ```
 
-This methods overrides the global [test name pattern](/config/#testnamepattern).
+This methods overrides the global [test name pattern](/config/testnamepattern).
 
 ::: warning
 This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
@@ -362,7 +379,7 @@ Returns the regexp used for the global test name pattern.
 function resetGlobalTestNamePattern(): void
 ```
 
-This methods resets the [test name pattern](/config/#testnamepattern). It means Vitest won't skip any tests now.
+This methods resets the [test name pattern](/config/testnamepattern). It means Vitest won't skip any tests now.
 
 ::: warning
 This method doesn't start running any tests. To run tests without a pattern, call [`runTestSpecifications`](#runtestspecifications).
@@ -437,7 +454,7 @@ function exit(force = false): Promise<void>
 
 Closes all projects and exit the process. If `force` is set to `true`, the process will exit immediately after closing the projects.
 
-This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
+This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/teardowntimeout) milliseconds.
 
 ## shouldKeepServer
 
@@ -463,9 +480,7 @@ function onCancel(fn: (reason: CancelReason) => Awaitable<void>): () => void
 
 Register a handler that will be called when the test run is cancelled with [`vitest.cancelCurrentRun`](#cancelcurrentrun).
 
-::: warning EXPERIMENTAL
-Since 4.0.10, `onCancel` returns a teardown function that will remove the listener.
-:::
+Since 4.0.10, `onCancel` experimentally returns a teardown function that will remove the listener. Since 4.1.0 this behaviour is considered stable.
 
 ## onClose
 
@@ -532,10 +547,10 @@ If there is a test run happening, returns a promise that will resolve when the t
 function createCoverageProvider(): Promise<CoverageProvider | null>
 ```
 
-Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`init`](#init) methods.
+Creates a coverage provider if `coverage` is enabled in the config. This is done automatically if you are running tests with [`start`](#start) or [`standalone`](#standalone) methods.
 
 ::: warning
-This method will also clean all previous reports if [`coverage.clean`](/config/#coverage-clean) is not set to `false`.
+This method will also clean all previous reports if [`coverage.clean`](/config/coverage#coverage-clean) is not set to `false`.
 :::
 
 ## enableCoverage <Version>4.0.0</Version> {#enablecoverage}
@@ -564,7 +579,7 @@ function getSeed(): number | null
 
 Returns the seed, if tests are running in a random order.
 
-## experimental_parseSpecification <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecification}
+## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 
 ```ts
 function experimental_parseSpecification(
@@ -595,7 +610,7 @@ Vitest will only collect tests defined in the file. It will never follow imports
 Vitest collects all `it`, `test`, `suite` and `describe` definitions even if they were not imported from the `vitest` entry point.
 :::
 
-## experimental_parseSpecifications <Version>4.0.0</Version> <Badge type="warning">experimental</Badge> {#parsespecifications}
+## experimental_parseSpecifications <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecifications}
 
 ```ts
 function experimental_parseSpecifications(
@@ -608,10 +623,67 @@ function experimental_parseSpecifications(
 
 This method will [collect tests](#parsespecification) from an array of specifications. By default, Vitest will run only `os.availableParallelism()` number of specifications at a time to reduce the potential performance degradation. You can specify a different number in a second argument.
 
-## experimental_clearCache <Version type="experimental">4.0.11</Version> <Badge type="warning">experimental</Badge> {#clearcache}
+## experimental_clearCache <Version type="experimental">4.0.11</Version> <Experimental /> {#clearcache}
 
 ```ts
 function experimental_clearCache(): Promise<void>
 ```
 
 Deletes all Vitest caches, including [`experimental.fsModuleCache`](/config/experimental#experimental-fsmodulecache).
+
+## experimental_getSourceModuleDiagnostic <Version type="experimental">4.0.15</Version> <Experimental /> {#getsourcemodulediagnostic}
+
+```ts
+export function experimental_getSourceModuleDiagnostic(
+  moduleId: string,
+  testModule?: TestModule,
+): Promise<SourceModuleDiagnostic>
+```
+
+::: details Types
+```ts
+export interface ModuleDefinitionLocation {
+  line: number
+  column: number
+}
+
+export interface SourceModuleLocations {
+  modules: ModuleDefinitionDiagnostic[]
+  untracked: ModuleDefinitionDiagnostic[]
+}
+
+export interface ModuleDefinitionDiagnostic {
+  start: ModuleDefinitionLocation
+  end: ModuleDefinitionLocation
+  startIndex: number
+  endIndex: number
+  url: string
+  resolvedId: string
+}
+
+export interface ModuleDefinitionDurationsDiagnostic extends ModuleDefinitionDiagnostic {
+  selfTime: number
+  totalTime: number
+  external?: boolean
+}
+
+export interface UntrackedModuleDefinitionDiagnostic {
+  url: string
+  resolvedId: string
+  selfTime: number
+  totalTime: number
+  external?: boolean
+}
+
+export interface SourceModuleDiagnostic {
+  modules: ModuleDefinitionDurationsDiagnostic[]
+  untrackedModules: UntrackedModuleDefinitionDiagnostic[]
+}
+```
+:::
+
+Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not provided, `selfTime` and `totalTime` will be aggregated across all tests that were running the last time. If the module was not transformed or executed, the diagnostic will be empty.
+
+::: warning
+At the moment, the [browser](/guide/browser/) modules are not supported.
+:::

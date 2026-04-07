@@ -1,5 +1,6 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Vitest } from '../core'
+import type { Logger } from '../logger'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
@@ -7,12 +8,12 @@ import type {
   ResolvedConfig,
   UserConfig,
 } from '../types/config'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
+import { join, normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -22,14 +23,24 @@ import {
   defaultPort,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider } from '../../utils/env'
+import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
 function resolvePath(path: string, root: string) {
+  // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
+  // /some/file
+  // /some/file.js
+  // /some/root/file
+  // /some/root/file.js
+  // etc.
+  // but we don't want to resolve files from parent directories,
+  // so we ensure passing "/" suffix such as "/some/root/"
+  // https://github.com/unjs/mlly/blob/401d42983f6f3a9112658d67b0a92ba4fb1d7efa/src/resolve.ts#L104-L110
   return normalize(
-    /* @__PURE__ */ resolveModule(path, { paths: [root] })
+    /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
 }
@@ -55,9 +66,14 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
+/**
+ * @deprecated Internal function
+ */
 export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
+  parentApi?: ApiConfig,
+  logger?: Logger,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -97,6 +113,26 @@ export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConf
     api = { middlewareMode: true }
   }
 
+  // if the API server is exposed to network, disable write operations by default
+  if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
+    // assigned to browser
+    if (parentApi) {
+      if (api.allowWrite == null && api.allowExec == null) {
+        logger?.error(
+          c.yellow(
+            `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
+          ),
+        )
+      }
+    }
+    api.allowWrite ??= parentApi?.allowWrite ?? false
+    api.allowExec ??= parentApi?.allowExec ?? false
+  }
+  else {
+    api.allowWrite ??= parentApi?.allowWrite ?? true
+    api.allowExec ??= parentApi?.allowExec ?? true
+  }
+
   return api
 }
 
@@ -122,12 +158,10 @@ export function resolveConfig(
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
       logger.console.warn(
-        c.yellow(
-          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
-            viteConfig.test.environment
-          }") conflicts with --dom flag ("happy-dom"), ignoring "${
-            viteConfig.test.environment
-          }"`,
+        withLabel(
+          'yellow',
+          'Vitest',
+          `Your config.test.environment ("${viteConfig.test.environment}") conflicts with --dom flag ("happy-dom"), ignoring "${viteConfig.test.environment}"`,
         ),
       )
     }
@@ -142,15 +176,59 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
+    logger.console.warn(
+      c.yellow('Warning: retry.condition function cannot be used inside a config file. '
+        + 'Use a RegExp pattern instead, or define the function in your test file.'),
+    )
+
+    resolved.retry = {
+      ...resolved.retry,
+      condition: undefined,
+    }
+  }
+
   if (options.pool && typeof options.pool !== 'string') {
     resolved.pool = options.pool.name
     resolved.poolRunner = options.pool
+  }
+
+  if ('poolOptions' in resolved) {
+    logger.deprecate('`test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework')
   }
 
   resolved.pool ??= 'forks'
 
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
+
+  // shallow copy tags array to avoid mutating user config
+  resolved.tags = [...resolved.tags || []]
+  const definedTags = new Set<string>()
+  resolved.tags.forEach((tag) => {
+    if (!tag.name || typeof tag.name !== 'string') {
+      throw new Error(`Each tag defined in "test.tags" must have a "name" property, received: ${JSON.stringify(tag)}`)
+    }
+    if (definedTags.has(tag.name)) {
+      throw new Error(`Tag name "${tag.name}" is already defined in "test.tags". Tag names must be unique.`)
+    }
+    if (tag.name.match(/\s/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain spaces.`)
+    }
+    if (tag.name.match(/([!()*|&])/)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot contain "!", "*", "&", "|", "(", or ")".`)
+    }
+    if (tag.name.match(/^\s*(and|or|not)\s*$/i)) {
+      throw new Error(`Tag name "${tag.name}" is invalid. Tag names cannot be a logical operator like "and", "or", "not".`)
+    }
+    if (typeof tag.retry === 'object' && typeof tag.retry.condition === 'function') {
+      throw new TypeError(`Tag "${tag.name}": retry.condition function cannot be used inside a config file. Use a RegExp pattern instead, or define the function in your test file.`)
+    }
+    if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
+      throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
+    }
+    definedTags.add(tag.name)
+  })
 
   resolved.name = typeof options.name === 'string'
     ? options.name
@@ -280,6 +358,14 @@ export function resolveConfig(
     }
   }
 
+  if (resolved.coverage.enabled && resolved.coverage.provider === 'istanbul' && resolved.experimental?.viteModuleRunner === false) {
+    throw new Error(`"Istanbul" coverage provider is not compatible with "experimental.viteModuleRunner: false". Please, enable "viteModuleRunner" or switch to "v8" coverage provider.`)
+  }
+
+  if (browser.enabled && resolved.detectAsyncLeaks) {
+    logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
+  }
+
   const containsChromium = hasBrowserChromium(vitest, resolved)
   const hasOnlyChromium = hasOnlyBrowserChromium(vitest, resolved)
 
@@ -341,6 +427,20 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (isAgent) {
+    // default to `skipFull` and add `text-summary` reporter when `text` reporter is used on agents
+    const text = resolved.coverage.reporter.find(([name]) => name === 'text')
+    const textSummary = resolved.coverage.reporter.find(([name]) => name === 'text-summary')
+    if (text) {
+      (text as any)[1] = { skipFull: true, ...text[1] as any }
+      if (!textSummary) {
+        resolved.coverage.reporter.push(['text-summary', {}])
+      }
+    }
+  }
+  if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
+    resolved.coverage.changed = resolved.changed
+  }
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
@@ -355,6 +455,31 @@ export function resolveConfig(
       throw new Error(
         `You cannot set "coverage.reportsDirectory" as ${reportsDirectory}. Vitest needs to be able to remove this directory before test run`,
       )
+    }
+
+    if (resolved.coverage.htmlDir) {
+      resolved.coverage.htmlDir = resolve(
+        resolved.root,
+        resolved.coverage.htmlDir,
+      )
+    }
+
+    // infer default htmlDir based on builtin reporter's html output location
+    if (!resolved.coverage.htmlDir) {
+      const htmlReporter = resolved.coverage.reporter.find(([name]) => name === 'html' || name === 'html-spa')
+      if (htmlReporter) {
+        const [, options] = htmlReporter
+        const subdir = options && typeof options === 'object' && 'subdir' in options && typeof options.subdir === 'string'
+          ? options.subdir
+          : undefined
+        resolved.coverage.htmlDir = resolve(reportsDirectory, subdir || '.')
+      }
+      else {
+        const lcovReporter = resolved.coverage.reporter.find(([name]) => name === 'lcov')
+        if (lcovReporter) {
+          resolved.coverage.htmlDir = resolve(reportsDirectory, 'lcov-report')
+        }
+      }
     }
   }
 
@@ -388,7 +513,7 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
@@ -460,7 +585,9 @@ export function resolveConfig(
     expand: resolved.expandSnapshotDiff ?? false,
     snapshotFormat: resolved.snapshotFormat || {},
     updateSnapshot:
-      isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
+      UPDATE_SNAPSHOT === 'all' || UPDATE_SNAPSHOT === 'new' || UPDATE_SNAPSHOT === 'none'
+        ? UPDATE_SNAPSHOT
+        : isCI && !UPDATE_SNAPSHOT ? 'none' : UPDATE_SNAPSHOT ? 'all' : 'new',
     resolveSnapshotPath: options.resolveSnapshotPath,
     // resolved inside the worker
     snapshotEnvironment: null as any,
@@ -621,7 +748,7 @@ export function resolveConfig(
   }
 
   if (!resolved.reporters.length) {
-    resolved.reporters.push(['default', {}])
+    resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
 
     // also enable github-actions reporter as a default
     if (process.env.GITHUB_ACTIONS === 'true') {
@@ -666,7 +793,8 @@ export function resolveConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  if (resolved.sequence.sequencer === RandomSequencer) {
+  // Set seed if either files or tests are shuffled
+  if (resolved.sequence.sequencer === RandomSequencer || resolved.sequence.shuffle) {
     resolved.sequence.seed ??= Date.now()
   }
 
@@ -688,12 +816,18 @@ export function resolveConfig(
 
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
+  if (resolved.browser.isolate) {
+    logger.console.warn(
+      c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
+    )
+  }
   resolved.browser.isolate ??= resolved.isolate ?? true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
   // disable in headless mode by default, and if CI is detected
   resolved.browser.ui ??= resolved.browser.headless === true ? false : !isCI
   resolved.browser.commands ??= {}
+  resolved.browser.detailsPanelPosition ??= 'right'
   if (resolved.browser.screenshotDirectory) {
     resolved.browser.screenshotDirectory = resolve(
       resolved.root,
@@ -711,6 +845,7 @@ export function resolveConfig(
 
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
+  resolved.browser.locators.exact ??= false
 
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`
@@ -745,6 +880,8 @@ export function resolveConfig(
   resolved.browser.api = resolveApiServerConfig(
     resolved.browser,
     defaultBrowserPort,
+    resolved.api,
+    logger,
   ) || {
     port: defaultBrowserPort,
   }
@@ -795,10 +932,10 @@ export function resolveConfig(
     )
   }
 
-  resolved.testTimeout ??= resolved.browser.enabled ? 30_000 : 5_000
+  resolved.testTimeout ??= resolved.browser.enabled ? 15_000 : 5_000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30_000 : 10_000
 
-  resolved.experimental ??= {}
+  resolved.experimental ??= {} as any
   if (resolved.experimental.openTelemetry?.sdkPath) {
     const sdkPath = resolve(
       resolved.root,
@@ -806,11 +943,35 @@ export function resolveConfig(
     )
     resolved.experimental.openTelemetry.sdkPath = pathToFileURL(sdkPath).toString()
   }
+  if (resolved.experimental.openTelemetry?.browserSdkPath) {
+    const browserSdkPath = resolve(
+      resolved.root,
+      resolved.experimental.openTelemetry.browserSdkPath,
+    )
+    resolved.experimental.openTelemetry.browserSdkPath = browserSdkPath
+  }
   if (resolved.experimental.fsModuleCachePath) {
     resolved.experimental.fsModuleCachePath = resolve(
       resolved.root,
       resolved.experimental.fsModuleCachePath,
     )
+  }
+  resolved.experimental.importDurations ??= {} as any
+  resolved.experimental.importDurations.print ??= false
+  resolved.experimental.importDurations.failOnDanger ??= false
+  if (resolved.experimental.importDurations.limit == null) {
+    const shouldCollect
+      = resolved.experimental.importDurations.print
+        || resolved.experimental.importDurations.failOnDanger
+        || resolved.ui
+    resolved.experimental.importDurations.limit = shouldCollect ? 10 : 0
+  }
+  resolved.experimental.importDurations.thresholds ??= {} as any
+  resolved.experimental.importDurations.thresholds.warn ??= 100
+  resolved.experimental.importDurations.thresholds.danger ??= 500
+
+  if (typeof resolved.experimental.vcsProvider === 'string' && resolved.experimental.vcsProvider !== 'git') {
+    resolved.experimental.vcsProvider = resolvePath(resolved.experimental.vcsProvider, resolved.root)
   }
 
   return resolved
@@ -820,7 +981,7 @@ export function isBrowserEnabled(config: ResolvedConfig): boolean {
   return Boolean(config.browser?.enabled)
 }
 
-export function resolveCoverageReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+export function resolveCoverageReporters(configReporters: NonNullable<CoverageOptions['reporter']>): CoverageReporterWithOptions[] {
   // E.g. { reporter: "html" }
   if (!Array.isArray(configReporters)) {
     return [[configReporters, {}]]

@@ -43,13 +43,21 @@ export async function createVitest(
     plugins: await VitestPlugin(restOptions, ctx),
   }
 
-  const server = await createViteServer(
-    mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })),
-  )
+  try {
+    const server = await createViteServer(
+      mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })),
+    )
 
-  if (ctx.config.api?.port) {
-    await server.listen()
+    if (ctx.config.api?.port) {
+      await server.listen()
+    }
+
+    return ctx
   }
-
-  return ctx
+  // Vitest can fail at any point inside "setServer" or inside a custom plugin
+  // Then we need to make sure everything was properly closed (like the logger)
+  catch (error) {
+    await ctx.close()
+    throw error
+  }
 }

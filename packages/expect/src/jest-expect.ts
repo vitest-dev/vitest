@@ -4,7 +4,7 @@ import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
-import { assertTypes } from '@vitest/utils/helpers'
+import { assertTypes, ordinal } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import {
@@ -16,6 +16,7 @@ import {
   arrayBufferEquality,
   generateToBeMessage,
   getObjectSubset,
+  isError,
   iterableEquality,
   equals as jestEquals,
   sparseArrayEquality,
@@ -632,7 +633,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
   })
   def(
-    ['toHaveBeenNthCalledWith', 'nthCalledWith'],
+    'toHaveBeenNthCalledWith',
     function (times: number, ...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
@@ -641,12 +642,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const isCalled = times <= callCount
       this.assert(
         nthCall && equalsArgumentArray(nthCall, args),
-        `expected ${ordinalOf(
+        `expected ${ordinal(
           times,
         )} "${spyName}" call to have been called with #{exp}${
           isCalled ? `` : `, but called only ${callCount} times`
         }`,
-        `expected ${ordinalOf(
+        `expected ${ordinal(
           times,
         )} "${spyName}" call to not have been called with #{exp}`,
         args,
@@ -656,7 +657,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     },
   )
   def(
-    ['toHaveBeenLastCalledWith', 'lastCalledWith'],
+    'toHaveBeenLastCalledWith',
     function (...args: any[]) {
       const spy = getSpy(this)
       const spyName = spy.getMockName()
@@ -808,7 +809,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (expected instanceof Error) {
+      if (isError(expected)) {
         const equal = jestEquals(thrown, expected, [
           ...customTesters,
           iterableEquality,
@@ -837,8 +838,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      throw new Error(
-        `"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`,
+      const equal = jestEquals(thrown, expected, [
+        ...customTesters,
+        iterableEquality,
+      ])
+      return this.assert(
+        equal,
+        'expected a thrown value to equal #{exp}',
+        'expected a thrown value not to equal #{exp}',
+        expected,
+        thrown,
       )
     },
   )
@@ -975,7 +984,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         action: 'resolve',
       },
       {
-        name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
+        name: 'toHaveLastReturnedWith',
         condition: (spy, value) => {
           const result = spy.mock.results.at(-1)
           return Boolean(
@@ -1018,7 +1027,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         action: 'resolve',
       },
       {
-        name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
+        name: 'toHaveNthReturnedWith',
         condition: (spy, index, value) => {
           const result = spy.mock.results[index - 1]
           return (
@@ -1037,7 +1046,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const results
         = action === 'return' ? spy.mock.results : spy.mock.settledResults
       const result = results[nthCall - 1]
-      const ordinalCall = `${ordinalOf(nthCall)} call`
+      const ordinalCall = `${ordinal(nthCall)} call`
 
       this.assert(
         condition(spy, nthCall, value),
@@ -1089,7 +1098,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = obj.then(
+            const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
                 return result.call(this, ...args)
@@ -1102,19 +1111,24 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                   { showDiff: false },
                 ) as Error
                 _error.cause = err
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
               promise,
               createAssertionMessage(utils, this, !!args.length),
               error,
+              utils.flag(this, 'soft'),
             )
           }
         },
@@ -1157,7 +1171,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = wrapper.then(
+            const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(
                   `promise resolved "${utils.inspect(
@@ -1169,23 +1183,28 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
                     actual: value,
                   },
                 ) as any
-                _error.stack = (error.stack as string).replace(
-                  error.message,
-                  _error.message,
-                )
                 throw _error
               },
               (err: any) => {
                 utils.flag(this, 'object', err)
                 return result.call(this, ...args)
               },
-            )
+            ).catch((err: any) => {
+              if (isError(err) && error.stack) {
+                err.stack = error.stack.replace(
+                  error.message,
+                  err.message,
+                )
+              }
+              throw err
+            })
 
             return recordAsyncExpect(
               test,
               promise,
               createAssertionMessage(utils, this, !!args.length),
               error,
+              utils.flag(this, 'soft'),
             )
           }
         },
@@ -1196,32 +1215,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   )
 }
 
-function ordinalOf(i: number) {
-  const j = i % 10
-  const k = i % 100
-
-  if (j === 1 && k !== 11) {
-    return `${i}st`
-  }
-
-  if (j === 2 && k !== 12) {
-    return `${i}nd`
-  }
-
-  if (j === 3 && k !== 13) {
-    return `${i}rd`
-  }
-
-  return `${i}th`
-}
-
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
   if (spy.mock.calls.length) {
     msg += c.gray(
-      `\n\nReceived: \n\n${spy.mock.calls
+      `\n\nReceived:\n\n${spy.mock.calls
         .map((callArg, i) => {
           let methodCall = c.bold(
-            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
+            `  ${ordinal(i + 1)} ${spy.getMockName()} call:\n\n`,
           )
           if (showActualCall) {
             methodCall += diff(showActualCall, callArg, {
@@ -1255,10 +1255,10 @@ function formatReturns(
 ) {
   if (results.length) {
     msg += c.gray(
-      `\n\nReceived: \n\n${results
+      `\n\nReceived:\n\n${results
         .map((callReturn, i) => {
           let methodCall = c.bold(
-            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+            `  ${ordinal(i + 1)} ${spy.getMockName()} call return:\n\n`,
           )
           if (showActualReturn) {
             methodCall += diff(showActualReturn, callReturn.value, {

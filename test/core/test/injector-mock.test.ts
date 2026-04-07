@@ -1,8 +1,8 @@
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
-import { describe, expect, it, test } from 'vitest'
-import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
+import { describe, expect, it, test, vi } from 'vitest'
+import { hoistMockAndResolve } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { generateCodeFrame } from '../../../packages/vitest/src/node/printError.js'
 
 function parse(code: string, options: any): any {
@@ -20,11 +20,11 @@ const hoistMocksOptions: HoistMocksPluginOptions = {
 }
 
 function hoistSimple(code: string, url = '') {
-  return hoistMocks(code, url, parse, hoistMocksOptions)
+  return hoistMockAndResolve(code, url, parse, hoistMocksOptions)
 }
 
 function hoistSimpleCode(code: string) {
-  return hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
+  return hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
 }
 
 test('hoists mock, unmock, hoisted', () => {
@@ -111,7 +111,7 @@ test('correctly access import', () => {
 
 describe('transform', () => {
   const hoistSimpleCodeWithoutMocks = (code: string) => {
-    return hoistMocks(`import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`, '/test.js', parse, hoistMocksOptions)?.code.trim()
+    return hoistMockAndResolve(`import {vi} from "vitest";\n${code}\nvi.mock('faker');\n`, '/test.js', parse, hoistMocksOptions)?.code.trim()
   }
   test('default import', () => {
     expect(
@@ -126,7 +126,7 @@ describe('transform', () => {
 
   test('can use imported variables inside the mock', () => {
     expect(
-      hoistMocks(`
+      hoistMockAndResolve(`
 import { vi } from 'vitest'
 import user from './user'
 import { admin } from './admin'
@@ -153,7 +153,7 @@ vi.mock('./mock.js', () => ({
 
   test('can use hoisted variables inside the mock', () => {
     expect(
-      hoistMocks(`
+      hoistMockAndResolve(`
 import { vi } from 'vitest'
 const { user, admin } = await vi.hoisted(async () => {
   const { default: user } = await import('./user')
@@ -915,21 +915,55 @@ export default (function getRandom() {
   // #8002
   test('with hashbang', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
+      hoistSimpleCode(
         `#!/usr/bin/env node
+vi.mock('foo');
 console.log("it can parse the hashbang")`,
       ),
-    ).toMatchInlineSnapshot(`undefined`)
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+      import { vi } from "vitest"
+      vi.mock('foo');
+      console.log("it can parse the hashbang")"
+    `)
   })
 
   test('import hoisted after hashbang', () => {
     expect(
-      hoistSimpleCodeWithoutMocks(
+      hoistSimpleCode(
         `#!/usr/bin/env node
+vi.mock('foo');
 console.log(foo);
 import foo from "foo"`,
       ),
-    ).toMatchInlineSnapshot(`undefined`)
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+      import { vi } from "vitest"
+      vi.mock('foo');
+      const __vi_import_0__ = await import("foo");
+      console.log(__vi_import_0__.default);"
+    `)
+  })
+
+  test('import hoisted after hashbang', () => {
+    expect(
+      hoistSimpleCode(
+        `#!/usr/bin/env node
+import { vi } from './proxy'
+vi.mock('foo');
+console.log(foo);
+import foo from "foo"`,
+      ),
+    ).toMatchInlineSnapshot(`
+      "#!/usr/bin/env node
+
+      if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' option") }
+      __vi_import_0__.vi.mock('foo');
+      const __vi_import_0__ = await import("./proxy");
+      const __vi_import_1__ = await import("foo");
+
+      console.log(__vi_import_1__.default);"
+    `)
   })
 
   // #10289
@@ -1114,6 +1148,52 @@ const Baz = class extends Foo {}
         bar: class Bar {}
       }
       const Baz = class extends __vi_import_0__.default {}"
+    `)
+  })
+
+  test('classDeclaration shadowing import', () => {
+    const input = `\
+import { Bar } from "./repro.js"
+{
+  class Bar {
+    test() {}
+  }
+  const Zoo = class Zoo extends Bar {}
+}
+`
+    expect(hoistSimpleCodeWithoutMocks(input)).toMatchInlineSnapshot(`
+      "vi.mock('faker');
+      const __vi_import_0__ = await import("./repro.js");
+      import {vi} from "vitest";
+
+      {
+        class Bar {
+          test() {}
+        }
+        const Zoo = class Zoo extends Bar {}
+      }"
+    `)
+  })
+
+  test('classExpression name shadowing import', () => {
+    const input = `\
+import { Foo } from "./foo.js"
+const Bar = class Foo {
+  static create() {
+    return new Foo()
+  }
+}
+`
+    expect(hoistSimpleCodeWithoutMocks(input)).toMatchInlineSnapshot(`
+      "vi.mock('faker');
+      const __vi_import_0__ = await import("./foo.js");
+      import {vi} from "vitest";
+
+      const Bar = class Foo {
+        static create() {
+          return new Foo()
+        }
+      }"
     `)
   })
 
@@ -1337,7 +1417,7 @@ test('hi', () => {
   expect(1 + 1).toEqual(2)
 })
       `)).toMatchInlineSnapshot(`
-        "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+        "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' option") }
         __vi_import_0__.vi.mock('vite')
         const __vi_import_0__ = await import("./proxy-module");
 
@@ -1352,7 +1432,7 @@ test('hi', () => {
 describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
-      hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
+      hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
     }
     catch (err: any) {
       return err
@@ -1507,5 +1587,148 @@ export const mocked = vi.unmock('./mocked')
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
+  })
+
+  it('shows an error when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+// correct
+vi.mock('./hello-world-1')
+
+if (condition) {
+  vi.mock('./hello-world-2')
+}
+
+test('some test', () => {
+  vi.mock('./hello-world-3')
+})
+
+test('some test', () => {
+  if (condition) {
+    vi.mock('./hello-world-4')
+    vi.hoisted(() => {})
+    vi.mock(import('./hello-world-5'))
+    const variable = vi.hoisted(() => {})
+  }
+})
+
+describe('some suite', () => {
+  if (condition) {
+    vi.mock('./hello-world-6')
+  }
+})
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+      vi.mock('./hello-world-2')
+      vi.mock('./hello-world-3')
+      vi.mock('./hello-world-4')
+      vi.hoisted(() => {})
+      vi.mock('./hello-world-5')
+      const variable = vi.hoisted(() => {})
+      vi.mock('./hello-world-6')
+
+      // correct
+
+      if (condition) {
+        }
+
+      test('some test', () => {
+        })
+
+      test('some test', () => {
+        if (condition) {
+                        }
+      })
+
+      describe('some suite', () => {
+        if (condition) {
+            }
+      })"
+    `)
+    expect(warn).toMatchInlineSnapshot(`
+      [MockFunction warn] {
+        "calls": [
+          [
+            "Warning: A vi.mock('./hello-world-2') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-3') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-4') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock(import('./hello-world-5')) call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+          [
+            "Warning: A vi.mock('./hello-world-6') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works",
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    `)
+  })
+
+  it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    onTestFinished(() => warn.mockRestore())
+    const result = hoistSimpleCode(`
+if (import.meta.vitest) {
+  vi.mock('./hello-world-1')
+}
+      `)
+    expect(result).toMatchInlineSnapshot(`
+      "import { vi } from "vitest"
+      vi.mock('./hello-world-1')
+
+      if (import.meta.vitest) {
+        }"
+    `)
+    expect(warn).not.toHaveBeenCalled()
   })
 })

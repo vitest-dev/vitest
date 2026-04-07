@@ -14,6 +14,8 @@ declare global {
   let afterAll: typeof import('vitest')['afterAll']
   let beforeEach: typeof import('vitest')['beforeEach']
   let afterEach: typeof import('vitest')['afterEach']
+  let aroundEach: typeof import('vitest')['aroundEach']
+  let aroundAll: typeof import('vitest')['aroundAll']
   let onTestFailed: typeof import('vitest')['onTestFailed']
   let onTestFinished: typeof import('vitest')['onTestFinished']
 }

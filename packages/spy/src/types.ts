@@ -1,3 +1,5 @@
+import type { Disposable } from '@vitest/spy/optional-types.js'
+
 export interface MockResultReturn<T> {
   type: 'return'
   /**
@@ -47,7 +49,7 @@ export type MockParameters<T extends Procedure | Constructable> = T extends Cons
     ? Parameters<T> : never
 
 export type MockReturnType<T extends Procedure | Constructable> = T extends Constructable
-  ? void
+  ? InstanceType<T>
   : T extends Procedure
     ? ReturnType<T> : never
 
@@ -224,7 +226,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
   /**
    * Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
    *
-   * To automatically call this method before each test, enable the [`clearMocks`](https://vitest.dev/config/#clearmocks) setting in the configuration.
+   * To automatically call this method before each test, enable the [`clearMocks`](https://vitest.dev/config/clearmocks) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockclear
    */
   mockClear(): this
@@ -234,7 +236,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
    * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`. It is useful for completely resetting a mock to its default state.
    *
-   * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/#mockreset) setting in the configuration.
+   * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/mockreset) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockreset
    */
   mockReset(): this
@@ -318,6 +320,28 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
   mockReturnValueOnce(value: MockReturnType<T>): this
+  /**
+   * Accepts a value that will be thrown whenever the mock function is called.
+   * @see https://vitest.dev/api/mock#mockthrow
+   * @example
+   * const myMockFn = vi.fn().mockThrow(new Error('error'))
+   * myMockFn() // throws 'error'
+   */
+  mockThrow(value: unknown): this
+  /**
+   * Accepts a value that will be thrown during the next function call. If chained, every consecutive call will throw the specified value.
+   * @example
+   * const myMockFn = vi
+   *   .fn()
+   *   .mockReturnValue('default')
+   *   .mockThrowOnce(new Error('first call error'))
+   *   .mockThrowOnce('second call error')
+   *
+   * expect(() => myMockFn()).toThrowError('first call error')
+   * expect(() => myMockFn()).toThrowError('second call error')
+   * expect(myMockFn()).toEqual('default')
+   */
+  mockThrowOnce(value: unknown): this
   /**
    * Accepts a value that will be resolved when the async function is called. TypeScript will only accept values that match the return type of the original function.
    * @example
@@ -406,18 +430,47 @@ export type PartialMock<T extends Procedure | Constructable = Procedure> = Mock<
   >
 >
 
+type DeepPartial<T> = T extends Procedure
+  ? T
+  : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T
+
+type DeepPartialMaybePromise<T> = T extends Promise<Awaited<T>>
+  ? Promise<DeepPartial<Awaited<T>>>
+  : DeepPartial<T>
+
+type DeepPartialResultFunction<T> = T extends Constructable
+  ? ({
+    new (...args: ConstructorParameters<T>): InstanceType<T>
+  })
+  | ({
+    (this: InstanceType<T>, ...args: ConstructorParameters<T>): void
+  })
+  : T extends Procedure
+    ? (...args: Parameters<T>) => DeepPartialMaybePromise<ReturnType<T>>
+    : T
+
+type DeepPartialMock<T extends Procedure | Constructable = Procedure> = Mock<
+  DeepPartialResultFunction<
+    T extends Mock
+      ? NonNullable<ReturnType<T['getMockImplementation']>>
+      : T
+  >
+>
+
 export type MaybeMockedConstructor<T> = T extends Constructable
   ? Mock<T>
   : T
-export type MockedFunction<T extends Procedure | Constructable> = Mock<T> & {
-  [K in keyof T]: T[K];
-}
-export type PartiallyMockedFunction<T extends Procedure | Constructable> = PartialMock<T> & {
-  [K in keyof T]: T[K];
-}
+export type MockedFunction<T extends Procedure | Constructable> = Mock<T>
+  & MockedObject<T>
+export type PartiallyMockedFunction<T extends Procedure | Constructable> = PartialMock<T>
+  & MockedObject<T>
 export type MockedFunctionDeep<T extends Procedure | Constructable> = Mock<T>
   & MockedObjectDeep<T>
-export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = PartialMock<T>
+export type PartiallyMockedFunctionDeep<T extends Procedure | Constructable> = DeepPartialMock<T>
   & MockedObjectDeep<T>
 export type MockedObject<T> = MaybeMockedConstructor<T> & {
   [K in Methods<T>]: T[K] extends Procedure ? MockedFunction<T[K]> : T[K];

@@ -51,7 +51,7 @@ export default defineConfig({
 :::
 
 ::: info
-If the [root project](/api/advanced/vitest#getroottestproject) is not part of user projects, its `name` will not be resolved.
+If the [root project](/api/advanced/vitest#getrootproject) is not part of user projects, its `name` will not be resolved.
 :::
 
 ## vitest
@@ -78,7 +78,7 @@ project.serializedConfig === project.serializedConfig // ❌
 
 ## globalConfig
 
-The test config that [`Vitest`](/api/advanced/vitest) was initialized with. If this is the [root project](/api/advanced/vitest#getroottestproject), `globalConfig` and `config` will reference the same object. This config is useful for values that cannot be set on the project level, like `coverage` or `reporters`.
+The test config that [`Vitest`](/api/advanced/vitest) was initialized with. If this is the [root project](/api/advanced/vitest#getrootproject), `globalConfig` and `config` will reference the same object. This config is useful for values that cannot be set on the project level, like `coverage` or `reporters`.
 
 ```ts
 import type { ResolvedConfig } from 'vitest/node'
@@ -117,7 +117,7 @@ function provide<T extends keyof ProvidedContext & string>(
 ): void
 ```
 
-A way to provide custom values to tests in addition to [`config.provide`](/config/#provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
+A way to provide custom values to tests in addition to [`config.provide`](/config/provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
 
 ::: code-group
 ```ts [node.js]
@@ -137,7 +137,7 @@ const value = inject('key')
 The values can be provided dynamically. Provided value in tests will be updated on their next run.
 
 ::: tip
-This method is also available to [global setup files](/config/#globalsetup) for cases where you cannot use the public API:
+This method is also available to [global setup files](/config/globalsetup) for cases where you cannot use the public API:
 
 ```js
 export default function setup({ provide }) {
@@ -179,7 +179,7 @@ function createSpecification(
 ): TestSpecification
 ```
 
-Create a [test specification](/api/advanced/test-specification) that can be used in [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/api/advanced/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/#testnamepattern) is defined, then it will also be applied.
+Create a [test specification](/api/advanced/test-specification) that can be used in [`vitest.runTestSpecifications`](/api/advanced/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/api/advanced/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/testnamepattern) is defined, then it will also be applied.
 
 ```ts
 import { createVitest } from 'vitest/node'
@@ -206,7 +206,7 @@ Also note that `project.createSpecification` always returns a new instance.
 function isRootProject(): boolean
 ```
 
-Checks if the current project is the root project. You can also get the root project by calling [`vitest.getRootProject()`](#getrootproject).
+Checks if the current project is the root project. You can also get the root project by calling [`vitest.getRootProject()`](/api/advanced/vitest#getrootproject).
 
 ## globTestFiles
 
@@ -233,7 +233,7 @@ project.globTestFiles(['basic/foo.js:10']) // ❌
 ```
 
 ::: tip
-Vitest uses [fast-glob](https://www.npmjs.com/package/fast-glob) to find test files. `test.dir`, `test.root`, `root` or `process.cwd()` define the `cwd` option.
+Vitest uses [fast-glob](https://npmx.dev/package/fast-glob) to find test files. `test.dir`, `test.root`, `root` or `process.cwd()` define the `cwd` option.
 
 This method looks at several config options:
 

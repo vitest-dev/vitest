@@ -6,10 +6,12 @@ import type { ExternalModulesExecutor } from '../external-executor'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
+import type { TestModuleRunner } from './testModuleRunner'
 import * as viteModuleRunner from 'vite/module-runner'
 import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
+import { injectQuery } from './utils'
 
 export type CreateImportMeta = (modulePath: string) => viteModuleRunner.ModuleRunnerImportMeta | Promise<viteModuleRunner.ModuleRunnerImportMeta>
 export const createNodeImportMeta: CreateImportMeta = (modulePath: string) => {
@@ -42,15 +44,19 @@ function createImportMetaResolver() {
 }
 
 // @ts-expect-error overriding private method
-export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
+export class VitestModuleRunner
+  extends viteModuleRunner.ModuleRunner
+  implements TestModuleRunner {
   public mocker: VitestMocker
   public moduleExecutionInfo: ModuleExecutionInfo
   private _otel: Traces
+  private _callstacks: WeakMap<EvaluatedModuleNode, string[]>
 
   constructor(private vitestOptions: VitestModuleRunnerOptions) {
     const options = vitestOptions
-    const transport = new VitestTransport(options.transport)
     const evaluatedModules = options.evaluatedModules
+    const callstacks = new WeakMap<EvaluatedModuleNode, string[]>()
+    const transport = new VitestTransport(options.transport, evaluatedModules, callstacks)
     super(
       {
         transport,
@@ -61,6 +67,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
       },
       options.evaluator,
     )
+    this._callstacks = callstacks
     this._otel = vitestOptions.traces || new Traces({ enabled: false })
     this.moduleExecutionInfo = options.getWorkerState().moduleExecutionInfo
     this.mocker = options.mocker || new VitestMocker(this, {
@@ -95,7 +102,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
    * Vite checks that the module has exports emulating the Node.js behaviour,
    * but Vitest is more relaxed.
    *
-   * We should keep the Vite behavour when there is a `strict` flag.
+   * We should keep the Vite behavior when there is a `strict` flag.
    * @internal
    */
   processImport(exports: Record<string, any>): Record<string, any> {
@@ -150,17 +157,33 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner {
     metadata?: SSRImportMetadata,
     ignoreMock = false,
   ): Promise<any> {
+    // Track for a better error message if dynamic import is not resolved properly
+    this._callstacks.set(mod, callstack)
+
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
+      const mockedModule = mod.meta.mockedModule as MockedModule
+      const mockId = this.mocker.getMockPath(mod.id)
+      // bypass mock and force "importActual" behavior when:
+      // - mock was removed by doUnmock (stale mockedModule in meta)
+      // - self-import: mock factory/file is importing the module it's mocking
+      const isStale = !this.mocker.getDependencyMock(mod.id)
+      const isSelfImport = callstack.includes(mockId)
+        || callstack.includes(url)
+        || ('redirect' in mockedModule && callstack.includes(mockedModule.redirect))
+      if (isStale || isSelfImport) {
+        const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
+        return this._cachedRequest(node.url, node, callstack, metadata)
+      }
       mocked = await this.mocker.requestWithMockedModule(
         url,
         mod,
         callstack,
-        mod.meta.mockedModule as MockedModule,
+        mockedModule,
       )
     }
     else {

@@ -1,6 +1,6 @@
 # vitest
 
-[![NPM version](https://img.shields.io/npm/v/vitest?color=a1b858&label=)](https://www.npmjs.com/package/vitest)
+[![NPM version](https://img.shields.io/npm/v/vitest?color=a1b858&label=)](https://npmx.dev/package/vitest)
 
 Next generation testing framework powered by Vite.
 

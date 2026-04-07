@@ -11,7 +11,7 @@ export default defineConfig({
     {
       name: 'example',
       resolveId(source) {
-        if (source === 'virtual-module') {
+        if (source === 'virtual-module' || source === 'virtual-module-direct' || source === 'virtual-module-indirect') {
           return source
         }
       },
@@ -21,8 +21,37 @@ export default defineConfig({
             export const value = 'original';
           `
         }
+        if (id === 'virtual-module-direct') {
+          return `
+            export const value = 'original-direct';
+          `
+        }
+        if (id === 'virtual-module-indirect') {
+          return `
+            export const value = 'original-indirect';
+          `
+        }
       },
     },
+    // Use babel plugin since Oxc (Vite 8) doesn't support ecma decorators out of the box
+    // https://github.com/oxc-project/oxc/issues/9170#issuecomment-4072166491
+    !!rolldownVersion
+    && (import('@rolldown/plugin-babel').then(({ default: babel }) =>
+      babel({
+        presets: [
+          {
+            preset: ({
+              plugins: [['@babel/plugin-proposal-decorators', { version: '2023-11' }]],
+            }),
+            rolldown: {
+              filter: {
+                id: ['**/esnext-decorator.test.ts'],
+              },
+            },
+          },
+        ],
+      }),
+    ) as any),
   ],
   define: {
     'process': {},
@@ -65,6 +94,8 @@ export default defineConfig({
   test: {
     api: {
       port: 3023,
+      allowExec: false,
+      allowWrite: false,
     },
     name: 'core',
     includeSource: [
@@ -73,9 +104,6 @@ export default defineConfig({
     exclude: [
       '**/fixtures/**',
       ...defaultExclude,
-      // FIXME: wait for ecma decorator support in rolldown/oxc
-      // https://github.com/oxc-project/oxc/issues/9170
-      ...(rolldownVersion ? ['**/esnext-decorator.test.ts'] : []),
     ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
@@ -156,6 +184,9 @@ export default defineConfig({
         return false
       }
       if (log.startsWith(`[vitest]`) && log.includes(`did not use 'function' or 'class' in its implementation`)) {
+        return false
+      }
+      if (log.startsWith('Importing from') && log.includes('is deprecated since Vitest 4.1')) {
         return false
       }
     },

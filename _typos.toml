@@ -1,0 +1,32 @@
+[files]
+extend-exclude = [
+  "*.js.map",
+  "*.svg",
+  "test/cli/test/fixtures/reporters/html/**",
+]
+
+[default.extend-words]
+# AsyncLocalStorage abbreviation
+als = "als"
+# Stylus CSS preprocessor extension
+styl = "styl"
+# Yarn Plug'n'Play
+Pn = "Pn"
+PnP = "PnP"
+# Variable prefix pattern (b-a annotation diff)
+ba = "ba"
+# Ordinal suffix
+nd = "nd"
+# Test string with backtick escaping: 'som`e`'
+som = "som"
+# Line truncation artifacts in test output
+afte = "afte"
+wrapp = "wrapp"
+# Test data string
+fo = "fo"
+# Latin lorem ipsum
+optio = "optio"
+# Product name (evalite.dev)
+Evalite = "Evalite"
+# Typo in upstream tinyhighlight LICENSE (TODO: fix upstream)
+Additionaly = "Additionaly"

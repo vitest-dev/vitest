@@ -10,6 +10,7 @@ const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  '@vitest/spy/optional-types.js',
 ]
 
 const dtsUtils = createDtsUtils()
@@ -17,7 +18,7 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   ...dtsUtils.isolatedDecl(),
   oxc({
-    transform: { target: 'node14' },
+    transform: { target: 'node20' },
   }),
 ]
 

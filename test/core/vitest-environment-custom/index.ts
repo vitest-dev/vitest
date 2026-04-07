@@ -1,4 +1,4 @@
-import type { Environment } from 'vitest/environments'
+import type { Environment } from 'vitest/runtime'
 import vm from 'node:vm'
 import { createDebug } from 'obug'
 
@@ -19,6 +19,8 @@ export default <Environment>{
       AbortController,
       EventTarget,
       Event,
+      TextDecoder,
+      TextEncoder,
     })
     return {
       getVmContext() {

@@ -17,6 +17,8 @@ By default, Vitest uses `utf-8` encoding but you can override it with options.
 
 ::: tip
 This API follows [`server.fs`](https://vitejs.dev/config/server-options.html#server-fs-allow) limitations for security reasons.
+
+If [`browser.api.allowWrite`](/config/browser/api) or [`api.allowWrite`](/config/api#api-allowwrite) are disabled, `writeFile` and `removeFile` functions won't do anything.
 :::
 
 ```ts
@@ -38,7 +40,7 @@ it('handles files', async () => {
 
 ## CDP Session
 
-Vitest exposes access to raw Chrome Devtools Protocol via the `cdp` method exported from `vitest/browser`. It is mostly useful to library authors to build tools on top of it.
+Vitest exposes access to raw Chrome DevTools Protocol via the `cdp` method exported from `vitest/browser`. It is mostly useful to library authors to build tools on top of it.
 
 ```ts
 import { cdp } from 'vitest/browser'

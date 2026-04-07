@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
@@ -17,6 +17,7 @@ import type {
 } from '../reporters'
 import type { TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSequencerConstructor } from '../sequencers/types'
+import type { VCSProvider } from '../vcs/vcs'
 import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
@@ -44,7 +45,22 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 export type ApiConfig = Pick<
   ServerOptions,
   'port' | 'strictPort' | 'host' | 'middlewareMode'
->
+> & {
+  /**
+   * Allow any write operations from the API server.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowWrite?: boolean
+  /**
+   * Allow running test files via the API.
+   * If `api.host` is exposed to network and `allowWrite` is true,
+   * anyone connected to the API server can run arbitrary code on your machine.
+   *
+   * @default true if `api.host` is exposed to network, false otherwise
+   */
+  allowExec?: boolean
+}
 
 export interface EnvironmentOptions {
   /**
@@ -365,7 +381,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  update?: boolean
+  update?: boolean | 'all' | 'new' | 'none'
 
   /**
    * Watch mode
@@ -382,10 +398,10 @@ export interface InlineConfig {
   root?: string
 
   /**
-   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * Custom reporter for output. Can contain one or more built-in reporter names, reporter instances,
    * and/or paths to custom reporters.
    *
-   * @default []
+   * @default ['default'] (or ['default', 'github-actions'] when `process.env.GITHUB_ACTIONS === 'true'`)
    */
   reporters?:
     | Arrayable<ReporterName | InlineReporter>
@@ -471,7 +487,7 @@ export interface InlineConfig {
   coverage?: CoverageOptions
 
   /**
-   * run test names with the specified pattern
+   * Run test names with the specified pattern
    */
   testNamePattern?: string | RegExp
 
@@ -585,6 +601,13 @@ export interface InlineConfig {
    * Show heap usage after each test. Useful for debugging memory leaks.
    */
   logHeapUsage?: boolean
+
+  /**
+   * Detect asynchronous resources leaking from the test file.
+   *
+   * @default false
+   */
+  detectAsyncLeaks?: boolean
 
   /**
    * Custom environment variables assigned to `process.env` before running tests.
@@ -783,11 +806,17 @@ export interface InlineConfig {
   bail?: number
 
   /**
-   * Retry the test specific number of times if it fails.
+   * Retry configuration for tests.
+   * - If a number, specifies how many times to retry failed tests
+   * - If an object, allows fine-grained retry control
    *
-   * @default 0
+   * ⚠️ WARNING: Function form is NOT supported in a config file
+   * because configurations are serialized when passed to worker threads.
+   * Use the function form only in test files directly.
+   *
+   * @default 0 // Don't retry
    */
-  retry?: number
+  retry?: SerializableRetry
 
   /**
    * Show full diff when snapshot fails instead of a patch.
@@ -847,8 +876,97 @@ export interface InlineConfig {
     openTelemetry?: {
       enabled: boolean
       sdkPath?: string
+      browserSdkPath?: string
     }
+    /**
+     * Configure import duration collection and display.
+     *
+     * The `limit` option controls how many imports to collect and display.
+     * The `print` option controls CLI terminal output.
+     * UI can always toggle the breakdown display regardless of `print` setting.
+     */
+    importDurations?: {
+      /**
+       * When to print import breakdown to CLI terminal after tests finish.
+       * - `true`: Always print
+       * - `false`: Never print (default)
+       * - `'on-warn'`: Print only when any import exceeds the warn threshold
+       * @default false
+       */
+      print?: boolean | 'on-warn'
+      /**
+       * Maximum number of imports to collect and display.
+       * @default 0 (or 10 if `print` or UI is enabled)
+       */
+      limit?: number
+      /**
+       * Fail the test run if any import exceeds the danger threshold.
+       * When failing, the breakdown is always printed regardless of `print` setting.
+       * @default false
+       */
+      failOnDanger?: boolean
+      /**
+       * Duration thresholds in milliseconds for coloring and warnings.
+       */
+      thresholds?: {
+        /**
+         * Warning threshold - imports exceeding this are shown in yellow/orange.
+         * @default 100
+         */
+        warn?: number
+        /**
+         * Danger threshold - imports exceeding this are shown in red.
+         * @default 500
+         */
+        danger?: number
+      }
+    }
+
+    /**
+     * Controls whether Vitest uses Vite's module runner to run the code or fallback to the native `import`.
+     *
+     * If Node.js cannot process the code, consider registering [module loader](https://nodejs.org/api/module.html#customization-hooks) via `execArgv`.
+     * @default true
+     */
+    viteModuleRunner?: boolean
+    /**
+     * If module runner is disabled, Vitest uses a module loader to transform files to support
+     * `import.meta.vitest` and `vi.mock`.
+     *
+     * If you don't use these features, you can disable this.
+     *
+     * This option only affects `loader.load` method, Vitest always defines a `loader.resolve` to populate the module graph.
+     */
+    nodeLoader?: boolean
+
+    /**
+     * Custom provider for detecting changed files. Used with the `--changed` flag
+     * to determine which files have been modified.
+     *
+     * By default, Vitest uses Git to detect changed files. You can provide a custom
+     * implementation of the `VCSProvider` interface to use a different version control system.
+     */
+    vcsProvider?: VCSProvider | string
+
+    /**
+     * Parse test specifications before running them.
+     * This will apply `.only` flag and test name pattern across all files without running them.
+     */
+    preParse?: boolean
   }
+
+  /**
+   * Define tags available in your test files.
+   *
+   * If test defines a tag that is not listed here, an error will be thrown.
+   */
+  tags?: TestTagDefinition[]
+
+  /**
+   * Should Vitest throw an error if test has a tag that is not defined in the config.
+   * @default true
+   */
+  strictTags?: boolean
 }
 
 export interface TypecheckConfig {
@@ -984,6 +1102,17 @@ export interface UserConfig extends InlineConfig {
    * @experimental
    */
   clearCache?: boolean
+
+  /**
+   * Tags expression to filter tests to run. Multiple filters will be applied using AND logic.
+   * @see {@link https://vitest.dev/guide/test-tags#syntax}
+   */
+  tagsFilter?: string[]
+
+  /**
+   * Log all available tags instead of running tests.
+   */
+  listTags?: boolean | 'json'
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1016,6 +1145,7 @@ export interface ResolvedConfig
     | 'name'
     | 'vmMemoryLimit'
     | 'fileParallelism'
+    | 'tagsFilter'
   > {
   mode: VitestRunMode
 
@@ -1043,6 +1173,7 @@ export interface ResolvedConfig
   reporters: (InlineReporter | ReporterWithOptions)[]
 
   defines: Record<string, any>
+  viteDefine: Record<string, any>
 
   api: ApiConfig & { token: string }
   cliExclude?: string[]
@@ -1085,6 +1216,19 @@ export interface ResolvedConfig
 
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
+  tagsFilter?: string[]
+
+  experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
+    importDurations: {
+      print: boolean | 'on-warn'
+      limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
+    }
+  }
 }
 
 type NonProjectOptions
@@ -1114,6 +1258,7 @@ type NonProjectOptions
     | 'inspectBrk'
     | 'coverage'
     | 'watchTriggerPatterns'
+    | 'tagsFilter' // CLI option only
 
 export interface ServerDepsOptions {
   /**

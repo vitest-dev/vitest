@@ -60,6 +60,11 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
 - ⚠️ There are some minor limitations set by V8 engine. See [`ast-v8-to-istanbul` | Limitations](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#limitations).
 - ❌ Does not work on environments that don't use V8, such as Firefox or Bun. Or on environments that don't expose V8 coverage via profiler, such as Cloudflare Workers.
 
+<script setup>
+import ArrowDown from '../.vitepress/components/ArrowDown.vue'
+import Box from '../.vitepress/components/Box.vue'
+</script>
+
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
   <Box>Test file</Box>
   <ArrowDown />
@@ -74,7 +79,7 @@ Coverage collection is performed during runtime by instructing V8 using [`node:i
   <Box>Coverage report</Box>
 </div>
 
-## Istanbul provider
+## Istanbul Provider
 
 [Istanbul code coverage tooling](https://istanbul.js.org/) has existed since 2012 and is very well battle-tested.
 This provider works on any Javascript runtime as coverage tracking is done by instrumenting user's source files.
@@ -133,7 +138,7 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 ## Coverage Setup
 
 ::: tip
-All coverage options are listed in [Coverage Config Reference](/config/#coverage).
+All coverage options are listed in [Coverage Config Reference](/config/coverage).
 :::
 
 To test with coverage enabled, you can pass the `--coverage` flag in CLI or set `coverage.enabled` in `vitest.config.ts`:
@@ -160,12 +165,12 @@ export default defineConfig({
 ```
 :::
 
-## Including and excluding files from coverage report
+## Including and Excluding Files from Coverage Report
 
-You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
+You can define what files are shown in coverage report by configuring [`coverage.include`](/config/coverage#coverage-include) and [`coverage.exclude`](/config/coverage#coverage-exclude).
 
 By default Vitest will show only files that were imported during test run.
-To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/#coverage-include) with a pattern that will pick your source files:
+To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/coverage#coverage-include) with a pattern that will pick your source files:
 
 ::: code-group
 ```ts [vitest.config.ts] {6}
@@ -199,7 +204,7 @@ export default defineConfig({
 ```
 :::
 
-To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/#coverage-exclude):
+To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/coverage#coverage-exclude):
 
 ::: code-group
 ```ts [vitest.config.ts] {7}
@@ -345,6 +350,10 @@ Comments which are considered as [legal comments](https://esbuild.github.io/api/
 You can include a `@preserve` keyword in the ignore hint.
 Beware that these ignore hints may now be included in final production build as well.
 
+::: tip
+Follow https://github.com/vitest-dev/vitest/issues/2021 for updates about `@preserve` usage.
+:::
+
 ```diff
 -/* istanbul ignore if */
 +/* istanbul ignore if -- @preserve */
@@ -358,6 +367,30 @@ if (condition) {
 ### Examples
 
 ::: code-group
+
+```ts [lines: start/stop]
+/* istanbul ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* istanbul ignore stop -- @preserve */
+
+console.log('Included')
+
+/* v8 ignore start -- @preserve */
+if (parameter) { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+else { // [!code error]
+  console.log('Ignored') // [!code error]
+} // [!code error]
+/* v8 ignore stop -- @preserve */
+
+console.log('Included')
+```
 
 ```ts [if else]
 /* v8 ignore if -- @preserve */
@@ -466,14 +499,21 @@ If code coverage generation is slow on your project, see [Profiling Test Perform
 
 ## Vitest UI
 
-You can check your coverage report in [Vitest UI](/guide/ui).
+You can check your coverage report in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
 
-Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
-- enable `coverage.enabled=true` in your configuration file or run Vitest with `--coverage.enabled=true` flag
-- add `html` to the `coverage.reporter` list: you can also enable `subdir` option to put coverage report in a subdirectory
+This is integrated with builtin coverage reporters with HTML output (`html`, `html-spa`, and `lcov` reporters). `html` reporter is enabled by default and this works out of the box. To integrate with custom reporters, you can configure [`coverage.htmlDir`](/config/coverage#coverage-htmldir).
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
 
 <img alt="html coverage in Vitest UI" img-light src="/ui-coverage-1-light.png">
 <img alt="html coverage in Vitest UI" img-dark src="/ui-coverage-1-dark.png">
+
+## Coverage in Agent Environments
+
+When Vitest detects it is running inside an AI coding agent, it automatically adjusts the default `text` reporter to reduce output and minimize token usage:
+
+- `skipFull: true` is set on the `text` reporter, so files with 100% coverage are omitted from the terminal output.
+- The [`text-summary`](/config/coverage#coverage-reporter) reporter is added automatically, so the agent always sees a concise totals table even when `skipFull` hides all individual files.
+
+These adjustments only apply when the `text` reporter is already part of the active reporter list (it is included in the default). Explicitly configured reporters are never removed.

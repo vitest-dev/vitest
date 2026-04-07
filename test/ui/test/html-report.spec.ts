@@ -1,11 +1,12 @@
 import type { PreviewServer } from 'vite'
+import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
 const port = 9001
-const pageUrl = `http://localhost:${port}/`
+const pageUrl = `http://localhost:${port}/custom/base/`
 
 test.describe('html report', () => {
   let previewServer: PreviewServer
@@ -23,8 +24,6 @@ test.describe('html report', () => {
         reporters: 'html',
         coverage: {
           enabled: true,
-          reportsDirectory: 'html/coverage',
-          reporter: ['html'],
         },
       },
       {},
@@ -36,27 +35,14 @@ test.describe('html report', () => {
 
     // run vite preview server
     previewServer = await preview({
+      base: '/custom/base/',
       build: { outDir: 'html' },
       preview: { port, strictPort: true },
     })
   })
 
   test.afterAll(async () => {
-    await new Promise<void>((resolve, reject) => {
-      // if there is no preview server, `startVitest` failed already
-      if (!previewServer) {
-        resolve()
-        return
-      }
-      previewServer.httpServer.close((err) => {
-        if (err) {
-          reject(err)
-        }
-        else {
-          resolve()
-        }
-      })
-    })
+    await previewServer?.close()
   })
 
   test('basic', async ({ page }) => {
@@ -66,7 +52,9 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('13 Pass 1 Fail 14 Total')
+    await expect(page.getByTestId('pass-entry')).toContainText('17 Pass')
+    await expect(page.getByTestId('fail-entry')).toContainText('2 Fail')
+    await expect(page.getByTestId('total-entry')).toContainText('19 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -78,7 +66,7 @@ test.describe('html report', () => {
     await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
     // report
-    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
@@ -102,7 +90,7 @@ test.describe('html report', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const sample = page.getByTestId('details-panel').getByLabel('fixtures/error.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('fixtures/error.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
@@ -167,7 +155,51 @@ test.describe('html report', () => {
       await expect(annotation).toContainText('notice')
       await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-      await expect(annotation.getByRole('img')).toHaveAttribute('src', /data\/\w+/)
+      const img = annotation.getByRole('img')
+      await expect(img).toHaveAttribute('src', /data\/\w+/)
+      await expect(img).not.toHaveJSProperty('naturalWidth', 0)
+    })
+
+    await test.step('annotated with body base64', async () => {
+      const item = page.getByLabel('annotated with body base64')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('body base64 annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:25:9')
+
+      const downloadPromise = page.waitForEvent('download')
+      await annotation.getByRole('link').click()
+      const download = await downloadPromise
+      expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
+      const downloadPath = await download.path()
+      const content = readFileSync(downloadPath, 'utf-8')
+      expect(content).toBe('Hello base64 **markdown**')
+    })
+
+    await test.step('annotated with body utf-8', async () => {
+      const item = page.getByLabel('annotated with body utf-8')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const annotation = page.getByRole('note')
+      await expect(annotation).toHaveCount(1)
+
+      await expect(annotation).toContainText('body utf-8 annotation')
+      await expect(annotation).toContainText('notice')
+      await expect(annotation).toContainText('fixtures/annotated.test.ts:32:9')
+
+      const downloadPromise = page.waitForEvent('download')
+      await annotation.getByRole('link').click()
+      const download = await downloadPromise
+      expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
+      const downloadPath = await download.path()
+      const content = readFileSync(downloadPath, 'utf-8')
+      expect(content).toBe('Hello utf-8 **markdown**')
     })
   })
 
@@ -179,15 +211,56 @@ test.describe('html report', () => {
     await page.getByTestId('btn-code').click({ force: true })
 
     const annotations = page.getByRole('note')
-    await expect(annotations).toHaveCount(5)
+    await expect(annotations).toHaveCount(7)
 
     await expect(annotations.first()).toHaveText('notice: hello world')
     await expect(annotations.nth(1)).toHaveText('notice: second annotation')
     await expect(annotations.nth(2)).toHaveText('warning: beware!')
     await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
     await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+    await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
+    await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
 
-    await expect(annotations.last().getByRole('link')).toHaveAttribute('href', /data\/\w+/)
     await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
+    await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown;base64,/)
+    await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown,/)
+  })
+
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await page.getByPlaceholder('Search...').fill('tag:db')
+
+    // only one test with the tag "db"
+    await expect(page.getByText('PASS (1)')).toBeVisible()
+    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+    await expect(page.getByText('No matched test')).toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('tag:unknown')
+    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
+  })
+
+  test('visual regression in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    await test.step('attachments get processed', async () => {
+      const item = page.getByLabel('visual regression test')
+      await item.click({ force: true })
+      await page.getByTestId('btn-report').click({ force: true })
+
+      const artifact = page.getByRole('note')
+      await expect(artifact).toHaveCount(1)
+
+      await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
+      await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
+      await expect(artifact.getByRole('tablist')).toHaveText('Reference')
+      await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /data\/\w+\.png/)
+      const vrImg = artifact.getByRole('tabpanel').getByRole('img')
+      await expect(vrImg).toHaveAttribute('src', /data\/\w+\.png/)
+      await expect(vrImg).not.toHaveJSProperty('naturalWidth', 0)
+    })
   })
 })

@@ -1,11 +1,11 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "4.0.14",
+  "version": "4.1.3",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils#readme",
+  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/utils",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -52,13 +52,13 @@
       "types": "./dist/display.d.ts",
       "default": "./dist/display.js"
     },
-    "./highlight": {
-      "types": "./dist/highlight.d.ts",
-      "default": "./dist/highlight.js"
-    },
     "./source-map": {
       "types": "./dist/source-map.d.ts",
       "default": "./dist/source-map.js"
+    },
+    "./source-map/node": {
+      "types": "./dist/source-map/node.d.ts",
+      "default": "./dist/source-map/node.js"
     },
     "./serialize": {
       "types": "./dist/serialize.d.ts",
@@ -73,6 +73,9 @@
     "*": {
       "source-map": [
         "dist/source-map.d.ts"
+      ],
+      "source-map/node": [
+        "dist/source-map/node.d.ts"
       ]
     }
   },
@@ -86,13 +89,14 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "convert-source-map": "^2.0.0",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "catalog:",
+    "@types/convert-source-map": "^2.0.3",
     "@types/estree": "catalog:",
     "diff-sequences": "^29.6.3",
-    "loupe": "^3.2.1",
-    "tinyhighlight": "^0.3.2"
+    "loupe": "^3.2.1"
   }
 }

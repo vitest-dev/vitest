@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { computed } from 'vue'
-import { browserState, config } from '~/composables/client'
+import { config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { mapLeveledTaskStacks } from '~/composables/error'
-import { openScreenshot, useScreenshot } from '~/composables/screenshot'
-import IconButton from '../IconButton.vue'
-import Modal from '../Modal.vue'
-import ScreenshotError from './ScreenshotError.vue'
+import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
@@ -60,13 +57,6 @@ const failed = computed(() => {
     ? mapLeveledTaskStacks(isDark.value, failedFlatMap)
     : failedFlatMap
 })
-
-const {
-  currentTask,
-  showScreenshot,
-  showScreenshotModal,
-  currentScreenshotUrl,
-} = useScreenshot()
 </script>
 
 <template>
@@ -87,22 +77,7 @@ const {
         >
           <div flex="~ gap-2 items-center">
             <span>{{ task.name }}</span>
-            <template v-if="browserState && task.meta?.failScreenshotPath">
-              <IconButton
-                v-tooltip.bottom="'View screenshot error'"
-                class="!op-100"
-                icon="i-carbon:image"
-                title="View screenshot error"
-                @click="showScreenshotModal(task)"
-              />
-              <IconButton
-                v-tooltip.bottom="'Open screenshot error in editor'"
-                class="!op-100"
-                icon="i-carbon:image-reference"
-                title="Open screenshot error in editor"
-                @click="openScreenshot(task)"
-              />
-            </template>
+            <FailureScreenshot :task="task" />
           </div>
           <div
             v-if="task.result?.htmlError"
@@ -111,7 +86,7 @@ const {
           >
             <pre v-html="task.result.htmlError" />
           </div>
-          <template v-else-if="task.result?.errors">
+          <template v-else-if="task.result?.errors && config.root">
             <ViewReportError
               v-for="(error, idx) of task.result.errors"
               :key="idx"
@@ -128,20 +103,6 @@ const {
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
         All tests passed in this file
       </div>
-    </template>
-    <template v-if="browserState">
-      <Modal v-model="showScreenshot" direction="right">
-        <template v-if="currentTask">
-          <Suspense>
-            <ScreenshotError
-              :file="currentTask.file.filepath"
-              :name="currentTask.name"
-              :url="currentScreenshotUrl"
-              @close="showScreenshot = false"
-            />
-          </Suspense>
-        </template>
-      </Modal>
     </template>
   </div>
 </template>

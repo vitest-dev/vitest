@@ -1,6 +1,6 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { TestFunction } from 'vitest'
+import type { SuiteAPI, TestAPI } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { existsSync, readFileSync } from 'node:fs'
 import { unlink } from 'node:fs/promises'
@@ -8,29 +8,23 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
+import { toArray } from '@vitest/utils/helpers'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { onTestFailed, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
-import { getCurrentTest } from 'vitest/suite'
-import * as testUtils from '../test-utils'
+import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import * as testUtils from '../test-utils/index'
 
-export function test(name: string, fn: TestFunction, skip = false) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestTest.skipIf(skip)(name, fn)
-  }
-}
+export const test: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestTest
+  : (() => {}) as any as TestAPI
 
-export function describe(name: string, fn: () => void) {
-  if (process.env.COVERAGE_TEST !== 'true') {
-    return vitestDescribe(name, () => fn())
-  }
-}
+export const describe: SuiteAPI = process.env.COVERAGE_TEST !== 'true'
+  ? vitestDescribe
+  : (() => {}) as any as SuiteAPI
 
-export function coverageTest(name: string, fn: TestFunction) {
-  if (process.env.COVERAGE_TEST === 'true') {
-    return vitestTest(name, fn)
-  }
-}
+export const coverageTest: TestAPI = process.env.COVERAGE_TEST !== 'true'
+  ? (() => {}) as any as TestAPI
+  : vitestTest
 
 export async function runVitest(config: TestUserConfig, options = { throwOnError: true }, viteOverrides: ViteUserConfig = {}) {
   const provider = process.env.COVERAGE_PROVIDER as any
@@ -39,31 +33,47 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     config: 'fixtures/configs/vitest.config.ts',
     pool: 'threads',
     ...config,
-    browser: config.browser,
-  }, [], 'test', {
-    ...viteOverrides,
-    test: {
-      env: {
-        COVERAGE_TEST: 'true',
-        ...config.env,
-      },
-      coverage: {
-        enabled: true,
-        reporter: [],
-        ...config.coverage,
-        provider,
-        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-      },
-      browser: {
-        enabled: process.env.COVERAGE_BROWSER === 'true',
-        headless: true,
-        instances: [{ browser: 'chromium' }],
-        provider: playwright(),
-      },
+    env: {
+      COVERAGE_TEST: 'true',
+      ...config.env,
     },
+    coverage: {
+      enabled: true,
+      reporter: [],
+      ...config.coverage,
+      provider,
+      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+    },
+    browser: {
+      enabled: process.env.COVERAGE_BROWSER === 'true',
+      headless: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      ...config.browser,
+    },
+    experimental: {
+      ...config.experimental,
+      viteModuleRunner: process.env.VITE_MODULE_RUNNER === 'false' ? false : config.experimental?.viteModuleRunner,
+    },
+    setupFiles: [
+      resolve(import.meta.dirname, 'setup.native.ts'),
+      ...config.setupFiles ?? [],
+    ],
+
+    projects: config.projects?.map((project) => {
+      if (typeof project !== 'string' && 'test' in project) {
+        project.test ||= {}
+        project.test.setupFiles = toArray(project.test.setupFiles)
+        project.test.setupFiles.push(resolve(import.meta.dirname, 'setup.native.ts'))
+      }
+
+      return project
+    }),
+
+    $viteConfig: viteOverrides,
   })
 
-  if (getCurrentTest()) {
+  if (TestRunner.getCurrentTest()) {
     onTestFailed(() => {
       console.error('stderr:', result.stderr)
       console.error('stdout:', result.stdout)
@@ -129,6 +139,10 @@ export function isV8Provider() {
 
 export function isBrowser() {
   return process.env.COVERAGE_BROWSER === 'true'
+}
+
+export function isNativeRunner() {
+  return process.env.VITE_MODULE_RUNNER === 'false'
 }
 
 export function normalizeURL(importMetaURL: string) {

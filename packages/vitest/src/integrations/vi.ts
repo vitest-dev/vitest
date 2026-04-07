@@ -6,6 +6,7 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from '@vitest/spy'
+import type { Disposable } from 'vitest/optional-runtime-types.js'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/moduleRunner/moduleMocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
@@ -43,12 +44,12 @@ export interface VitestUtils {
   runOnlyPendingTimersAsync: () => Promise<VitestUtils>
   /**
    * This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired.
-   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10,000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimers: () => VitestUtils
   /**
    * This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers.
-   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/#faketimers-looplimit)).
+   * If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](https://vitest.dev/config/faketimers#faketimers-looplimit)).
    */
   runAllTimersAsync: () => Promise<VitestUtils>
   /**
@@ -96,6 +97,16 @@ export interface VitestUtils {
    * Removes all timers that are scheduled to run. These timers will never run in the future.
    */
   clearAllTimers: () => VitestUtils
+
+  /**
+   * Controls how fake timers are advanced.
+   * @param mode The mode to use for advancing timers.
+   * - `manual`: The default behavior. Timers will only advance when you call one of `vi.advanceTimers...()` methods.
+   * - `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
+   * - `interval`: Timers are advanced automatically by a specified interval.
+   * @param interval The interval in milliseconds to use when `mode` is `'interval'`.
+   */
+  setTimerTickMode: ((mode: 'manual' | 'nextTimerAsync') => VitestUtils) & ((mode: 'interval', interval?: number) => VitestUtils)
 
   /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
@@ -159,6 +170,40 @@ export interface VitestUtils {
   waitFor: typeof waitFor
 
   /**
+   * Wraps a function to create an assertion helper. When an assertion fails inside the helper,
+   * the error stack trace will point to where the helper was called, not inside the helper itself.
+   * Works with both synchronous and asynchronous functions, and supports `expect.soft()`.
+   *
+   * @example
+   * ```ts
+   * const myEqual = vi.defineHelper((x, y) => {
+   *   expect(x).toEqual(y)
+   * })
+   *
+   * test('example', () => {
+   *   myEqual('left', 'right') // Error points to this line
+   * })
+   * ```
+   * Example output:
+   * ```
+   * FAIL  example.test.ts > example
+   * AssertionError: expected 'left' to deeply equal 'right'
+   *
+   * Expected: "right"
+   * Received: "left"
+   *
+   *  ❯ example.test.ts:6:3
+   *       4| test('example', () => {
+   *       5|   myEqual('left', 'right')
+   *        |   ^
+   *       6| })
+   * ```
+   * @param fn The assertion function to wrap
+   * @returns A wrapped function with the same signature
+   */
+  defineHelper: <F extends (...args: any) => any>(fn: F) => F
+
+  /**
    * This is similar to [`vi.waitFor`](https://vitest.dev/api/vi#vi-waitfor), but if the callback throws any errors, execution is immediately interrupted and an error message is received.
    *
    * If the callback returns a falsy value, the next check will continue until a truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
@@ -220,11 +265,13 @@ export interface VitestUtils {
    * Mocking algorithm is described in [documentation](https://vitest.dev/guide/mocking/modules).
    * @param path Path to the module. Can be aliased, if your Vitest config supports it
    * @param factory Mocked module factory. The result of this function will be an exports object
+   *
+   * @returns A disposable object that calls {@link doUnmock()} when disposed
    */
   // eslint-disable-next-line ts/method-signature-style
-  doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): void
+  doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): Disposable
   // eslint-disable-next-line ts/method-signature-style
-  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): void
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): Disposable
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
@@ -308,7 +355,7 @@ export interface VitestUtils {
    * Type helper for TypeScript. Just returns the object that was passed.
    *
    * When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that
-   * the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
+   * the first level values are mocked. You can pass down `{ partial: true, deep: true }` to make nested objects also partial recursively.
    * @example
    * ```ts
    * import example from './example.js'
@@ -553,12 +600,28 @@ function createVitest(): VitestUtils {
       return utils
     },
 
+    setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number) {
+      timers().setTimerTickMode(mode, interval)
+      return utils
+    },
+
     // mocks
 
     spyOn,
     fn,
     waitFor,
     waitUntil,
+    defineHelper: (fn) => {
+      return function __VITEST_HELPER__(...args: any[]): any {
+        const result = fn(...args)
+        if (result && typeof result === 'object' && typeof result.then === 'function') {
+          return (async function __VITEST_HELPER__() {
+            return await result
+          })()
+        }
+        return result
+      } as any
+    },
     hoisted<T>(factory: () => T): T {
       assertTypes(factory, '"vi.hoisted" factory', ['function'])
       return factory()
@@ -617,6 +680,14 @@ function createVitest(): VitestUtils {
               )
           : factory,
       )
+
+      const rv = {} as Disposable
+      if (Symbol.dispose) {
+        rv[Symbol.dispose] = () => {
+          _mocker().queueUnmock(path, importer)
+        }
+      }
+      return rv
     },
 
     doUnmock(path: string | Promise<unknown>) {

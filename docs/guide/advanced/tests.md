@@ -27,10 +27,6 @@ for (const testModule of testModules) {
 }
 ```
 
-::: tip
-[`TestModule`](/api/advanced/test-module), [`TestSuite`](/api/advanced/test-suite) and [`TestCase`](/api/advanced/test-case) APIs are not experimental and follow SemVer since Vitest 2.1.
-:::
-
 ## `createVitest`
 
 Creates a [Vitest](/api/advanced/vitest) instances without running tests.

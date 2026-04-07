@@ -68,3 +68,8 @@ test('console.time', async () => {
   await new Promise(r => setTimeout(r, 500))
   console.timeEnd('[console-time-fake]')
 })
+
+test('log with placeholders', () => {
+  console.log('hello from %s', "one")
+  console.log('hello from %s', "two", { hello: 'object' })
+})

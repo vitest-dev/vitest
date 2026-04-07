@@ -3,11 +3,12 @@ import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { setupInspect } from './inspector'
+import * as listeners from './listeners'
 import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
 import { onCancel, rpcDone } from './rpc'
+import { EnvironmentTeardownError } from './utils'
 
 const resolvingModules = new Set<string>()
-const globalListeners = new Set<() => unknown>()
 
 async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: VitestWorker, traces: Traces) {
   const prepareStart = performance.now()
@@ -21,7 +22,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
     // do not close the RPC channel so that we can get the error messages sent to the main thread
     cleanups.push(async () => {
       await Promise.all(rpc.$rejectPendingCalls(({ method, reject }) => {
-        reject(new Error(`[vitest-worker]: Closing rpc while "${method}" was pending`))
+        reject(new EnvironmentTeardownError(`[vitest-worker]: Closing rpc while "${method}" was pending`))
       }))
     })
 
@@ -40,7 +41,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
       },
       rpc,
       onCancel,
-      onCleanup: listener => globalListeners.add(listener),
+      onCleanup: listeners.onCleanup,
       providedContext: ctx.providedContext,
       onFilterStackTrace(stack) {
         return createStackString(parseStacktrace(stack))
@@ -73,7 +74,7 @@ export function collect(ctx: ContextRPC, worker: VitestWorker, traces: Traces): 
 }
 
 export async function teardown(): Promise<void> {
-  await Promise.all([...globalListeners].map(l => l()))
+  await listeners.cleanup()
 }
 
 const env = process.env

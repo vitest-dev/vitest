@@ -167,14 +167,13 @@ export class ObjectContaining extends AsymmetricMatcher<
         result = false
         break
       }
-      const value = Object.getOwnPropertyDescriptor(this.sample, property)?.value ?? this.sample[property]
-      const otherValue = Object.getOwnPropertyDescriptor(other, property)?.value ?? other[property]
+      const value = this.sample[property]
+      const otherValue = other[property]
       if (!equals(
         value,
         otherValue,
         customTesters,
-      )
-      ) {
+      )) {
         result = false
         break
       }

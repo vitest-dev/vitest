@@ -336,11 +336,11 @@ This allows you to assert whether an element contains another element as a desce
 ```ts
 const ancestor = getByTestId('ancestor')
 const descendant = getByTestId('descendant')
-const nonExistantElement = getByTestId('does-not-exist')
+const nonExistingElement = getByTestId('does-not-exist')
 
 await expect.element(ancestor).toContainElement(descendant)
 await expect.element(descendant).not.toContainElement(ancestor)
-await expect.element(ancestor).not.toContainElement(nonExistantElement)
+await expect.element(ancestor).not.toContainElement(nonExistingElement)
 ```
 
 ## toContainHTML
@@ -370,7 +370,7 @@ await expect.element(getByTestId('parent')).toContainHTML('</span>')
 ::: warning
 Chances are you probably do not need to use this matcher. We encourage testing from the perspective of how the user perceives the app in a browser. That's why testing against a specific DOM structure is not advised.
 
-It could be useful in situations where the code being tested renders html that was obtained from an external source, and you want to validate that that html code was used as intended.
+It could be useful in situations where the code being tested renders html that was obtained from an external source, and you want to validate that html code was used as intended.
 
 It should not be used to check DOM structure that you control. Please, use [`toContainElement`](#tocontainelement) instead.
 :::
@@ -1152,10 +1152,9 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
 - `comparatorName: "pixelmatch" = "pixelmatch"`
 
-  The name of the algorithm/library used for comparing images.
+  The algorithm/library used for comparing images.
 
-  Currently, [`"pixelmatch"`](https://github.com/mapbox/pixelmatch) is the only
-  supported comparator.
+  `"pixelmatch"` is the only built-in comparator, but you can use custom ones by [registering them in the config file](/config/browser/expect#browser-expect-tomatchscreenshot-comparators).
 
 - `comparatorOptions: object`
 
@@ -1210,7 +1209,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 
 #### `"pixelmatch"` comparator options
 
-The following options are available when using the `"pixelmatch"` comparator:
+The `"pixelmatch"` comparator uses [`@blazediff/core`](https://blazediff.dev/docs/core) under the hood. The following options are available when using it:
 
 - `allowedMismatchedPixelRatio: number | undefined = undefined`
 

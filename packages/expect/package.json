@@ -1,11 +1,11 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "4.0.14",
+  "version": "4.1.3",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/expect#readme",
+  "homepage": "https://vitest.dev/api/expect",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,12 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "chai",
+    "assertion"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -33,7 +39,7 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "@standard-schema/spec": "^1.0.0",
+    "@standard-schema/spec": "^1.1.0",
     "@types/chai": "catalog:",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",

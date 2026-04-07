@@ -8,6 +8,8 @@ import VisualRegression from './VisualRegression.vue'
 const diff = {
   name: 'diff',
   path: '/__diff.png',
+  width: 500,
+  height: 200,
 } as const
 
 const reference = {
