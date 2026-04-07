@@ -2,13 +2,11 @@
 import type { ViewportSize } from '~/composables/browser'
 import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
 import { viewport } from '~/composables/browser'
-import { browserState } from '~/composables/client'
 import {
   detailsPanelVisible,
   detailsPosition,
   panels,
   showNavigationPanel,
-  updateBrowserPanel,
 } from '~/composables/navigation'
 import IconButton from './IconButton.vue'
 
@@ -25,9 +23,6 @@ function isViewport(name: ViewportSize) {
 
 async function changeViewport(name: ViewportSize) {
   viewport.value = sizes[name]
-  if (browserState?.provider === 'webdriverio') {
-    updateBrowserPanel()
-  }
 }
 
 const testContainer = useTemplateRef('tester-ui')
