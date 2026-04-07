@@ -768,6 +768,7 @@ export class Vitest {
       )
 
       if (this.config.experimental.preParse) {
+        // This populates specification.testModule with parsed information
         await this.experimental_parseSpecifications(specifications)
         specifications = specifications.filter(({ testModule }) => {
           return !testModule || testModule.task.mode !== 'skip'
