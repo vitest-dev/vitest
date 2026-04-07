@@ -21,7 +21,7 @@ function getKeysOfEnumerableProperties(object: Record<string, unknown>, compareK
     }
   }
 
-  return keys as Array<string>
+  return keys
 }
 
 /**
@@ -199,7 +199,7 @@ export function printListItems(
  * without surrounding punctuation (for example, braces)
  */
 export function printObjectProperties(
-  val: Record<string, unknown>,
+  val: Record<string | symbol, unknown>,
   config: Config,
   indentation: string,
   depth: number,
@@ -224,7 +224,6 @@ export function printObjectProperties(
       }
 
       const key = keys[i]
-      // TODO: review
       const name = !config.quoteKeys && typeof key === 'string' && /^[a-z_$][\w$]*$/i.test(key)
         ? key
         : printer(key, config, indentationNext, depth, refs)
