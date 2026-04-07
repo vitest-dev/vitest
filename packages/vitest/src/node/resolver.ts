@@ -147,8 +147,13 @@ async function isValidNodeImport(id: string) {
 
   const package_ = findNearestPackageData(dirname(id))
 
-  if (package_.type === 'module') {
-    return true
+  if (package_) {
+    if (package_.type === 'module') {
+      return true
+    }
+    if (!package_.type && isSyntaxDetectionEnabled(process.versions.node)) {
+      return true
+    }
   }
 
   if (/\.(?:\w+-)?esm?(?:-\w+)?\.js$|\/esm?\//.test(id)) {
@@ -164,6 +169,19 @@ async function isValidNodeImport(id: string) {
   catch {
     return false
   }
+}
+
+// Newer node has module syntax detection enabled.
+// This allows "invalid/faux ESM" to be imported natively,
+// which would've been previously "SyntaxError: Cannot use import statement outside a module".
+// https://nodejs.org/docs/latest-v20.x/api/packages.html#syntax-detection
+function isSyntaxDetectionEnabled(nodeVersion: string): boolean {
+  const currentVersion = nodeVersion.split('.')
+  const major = Number.parseInt(currentVersion[0], 10)
+  const minor = Number.parseInt(currentVersion[1], 10)
+  const isSupported
+    = (major === 20 && minor >= 19) || (major === 22 && minor >= 7) || major > 22
+  return isSupported
 }
 
 export async function shouldExternalize(
