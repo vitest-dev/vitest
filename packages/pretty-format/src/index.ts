@@ -232,7 +232,7 @@ function printComplexValue(
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-        (min || !config.printBasicPrototype) && val.constructor.name === 'Array'
+        !config.printBasicPrototype && val.constructor.name === 'Array'
           ? ''
           : `${val.constructor.name} `
       }[${printListItems(val, config, indentation, depth, refs, printer)}]`
@@ -270,7 +270,7 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-      (min || !config.printBasicPrototype) && getConstructorName(val) === 'Object'
+      !config.printBasicPrototype && getConstructorName(val) === 'Object'
         ? ''
         : `${getConstructorName(val)} `
     }{${printObjectProperties(
@@ -533,7 +533,7 @@ function getConfig(options?: OptionsReceived): Config {
     maxWidth: options?.maxWidth ?? DEFAULT_OPTIONS.maxWidth,
     min: options?.min ?? DEFAULT_OPTIONS.min,
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
-    printBasicPrototype: options?.printBasicPrototype ?? true,
+    printBasicPrototype: options?.printBasicPrototype ?? !options?.min,
     printFunctionName: getPrintFunctionName(options),
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.spacingInner ?? (options?.min ? ' ' : '\n'),

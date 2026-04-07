@@ -37,7 +37,7 @@ export interface Options
   theme: Theme
 }
 
-// TODO: min behavior is confusing. should do something about it.
+// TODO: do better jsdoc
 export interface PrettyFormatOptions {
   /**
    * Call `toJSON` on objects before formatting them.
@@ -87,15 +87,17 @@ export interface PrettyFormatOptions {
    * Whether to minimize added whitespace, including indentation and line breaks.
    *
    * When `true`, pretty-format defaults `spacingInner` to `' '`, `spacingOuter` to `''`,
-   * and ignores indentation. It also omits basic `Object` / `Array` prefixes in the
-   * same cases as `printBasicPrototype: false`.
+   * and ignores indentation. It also changes the default for `printBasicPrototype`
+   * from `true` to `false`, although an explicit `printBasicPrototype` still wins.
    * Explicit `spacingInner` / `spacingOuter` overrides still apply.
    * @default false
    */
   min?: boolean
   /**
    * Whether to print `Object` / `Array` prefixes for plain objects and arrays.
-   * @default true
+   *
+   * Defaults to `true`, unless `min` is `true`, in which case it defaults to `false`.
+   * An explicit `printBasicPrototype` value always overrides the `min` default.
    */
   printBasicPrototype?: boolean
   /**
