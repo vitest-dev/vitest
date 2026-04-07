@@ -266,22 +266,37 @@ export function inspect(
 }
 
 function stringifyByMaxWidth(object: unknown, threshold: number, options: StringifyOptions): string {
-  // TODO: binary search
-  let maxWidth = threshold
-  while (maxWidth > 0) {
-    const result = stringify(object, undefined, {
-      ...options,
-      maxWidth,
-    })
-    if (result.length <= threshold) {
-      return result
+  const cache = new Map<number, string>()
+  const stringifyWithWidth = (maxWidth: number) => {
+    let result = cache.get(maxWidth)
+    if (result == null) {
+      result = stringify(object, undefined, {
+        ...options,
+        maxWidth,
+      })
+      cache.set(maxWidth, result)
     }
-    maxWidth = Math.floor(maxWidth / 2)
+    return result
   }
-  return stringify(object, undefined, {
-    ...options,
-    maxWidth: 0,
-  })
+
+  let low = 0
+  let high = threshold
+  let best = stringifyWithWidth(0)
+
+  while (low <= high) {
+    const maxWidth = Math.floor((low + high) / 2)
+    const result = stringifyWithWidth(maxWidth)
+
+    if (result.length <= threshold) {
+      best = result
+      low = maxWidth + 1
+    }
+    else {
+      high = maxWidth - 1
+    }
+  }
+
+  return best
 }
 
 // https://github.com/chaijs/loupe/pull/79
