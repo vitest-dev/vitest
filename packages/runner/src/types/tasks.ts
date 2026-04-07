@@ -197,12 +197,6 @@ export interface TaskResult {
    * @internal
    */
   pending?: boolean
-  /**
-   * Whether the task throws `TestSyntaxError`, in which case
-   * `test.fails` shouldn't flip the result.
-   * @internal
-   */
-  testSyntaxError?: boolean
 }
 
 /** The time spent importing & executing a non-externalized file. */
