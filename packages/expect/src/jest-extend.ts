@@ -106,9 +106,7 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                const errorMessage = customMessage != null
-                  ? customMessage
-                  : message()
+                const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
                 throw new JestExtendError(
                   errorMessage,
                   actual,
@@ -122,9 +120,7 @@ function JestExtendPlugin(
           const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            const errorMessage = customMessage != null
-              ? customMessage
-              : message()
+            const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
             throw new JestExtendError(
               errorMessage,
               actual,
