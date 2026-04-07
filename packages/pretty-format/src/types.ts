@@ -37,7 +37,6 @@ export interface Options
   theme: Theme
 }
 
-// TODO: do better jsdoc
 export interface PrettyFormatOptions {
   /**
    * Call `toJSON` on objects before formatting them.
