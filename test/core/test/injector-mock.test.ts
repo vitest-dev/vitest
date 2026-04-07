@@ -746,11 +746,12 @@ const obj = {
     expect(
       hoistSimpleCodeWithoutMocks(
         `
-import { remove, add } from 'vue'
+import { remove, add, update } from 'vue'
 
 class A {
   remove = 1
   add = null
+  update = update
 }
 
 remove(2);
@@ -763,10 +764,12 @@ add(4);
       import {vi} from "vitest";
 
 
-
+      
+      const update = __vi_import_0__.update;
       class A {
         remove = 1
         add = null
+        update = update
       }
       
       __vi_import_0__.remove(2);

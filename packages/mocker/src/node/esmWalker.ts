@@ -313,7 +313,8 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
 
   // class property
   if (parent.type === 'PropertyDefinition' && !parent.computed) {
-    return false
+    // Default values can still reference identifiers
+    return id === parent.value
   }
 
   // property key
