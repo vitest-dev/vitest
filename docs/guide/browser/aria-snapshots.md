@@ -3,7 +3,7 @@ title: ARIA Snapshots | Guide
 outline: deep
 ---
 
-# ARIA Snapshots
+# ARIA Snapshots <Badge type="warning">experimental</Badge> <Version>4.1.4</Version>
 
 ARIA snapshots let you test the accessibility structure of your pages. Instead of asserting against raw HTML or visual output, you assert against the accessibility tree — the same structure that screen readers and other assistive technologies use.
 

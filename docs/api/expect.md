@@ -1010,7 +1010,7 @@ The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
 
-## toMatchAriaSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatcharisnapshot}
+## toMatchAriaSnapshot <Version type="experimental">4.1.4</Version> <Experimental /> {#tomatcharisnapshot}
 
 - **Type:** `() => void`
 
@@ -1030,7 +1030,7 @@ test('navigation accessibility', () => {
 })
 ```
 
-## toMatchAriaInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchariainlinesnapshot}
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.4</Version> <Experimental /> {#tomatchariainlinesnapshot}
 
 - **Type:** `(snapshot?: string) => void`
 
