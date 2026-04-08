@@ -80,4 +80,10 @@ export default defineConfig(configEnv => mergeConfig(
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
+## Automatic Dependency Installation
+
+Vitest will prompt you to install certain dependencies if they are not already installed. You can disable this behavior by setting the `VITEST_SKIP_INSTALL_CHECKS=1` environment variable.
+
+## Config Options
+
 Configuration options that are not supported inside a [project](/guide/projects) config have <CRoot /> icon next to them. This means they can only be set in the root Vitest config.
