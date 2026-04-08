@@ -184,6 +184,35 @@ Also, prefer real implementations when they're fast and reliable. If a dependenc
 Only reach for mocks when the real thing is slow, flaky, or has side effects you can't control in a test.
 :::
 
+## Fixing Bugs with Tests
+
+When you find a bug, it's tempting to jump straight into the code and fix it. A better approach is to write a failing test first that reproduces the bug, then fix the code and watch the test turn green.
+
+This has several benefits. The test proves the bug is real and not just a misunderstanding. It documents exactly what was broken. And it prevents the same bug from coming back later, because the test will catch it if someone accidentally reintroduces the same problem.
+
+Here's what this looks like in practice. Suppose users report that `parseAge` crashes when given a string with leading spaces like `" 25"`. First, write a test that reproduces the problem:
+
+```js
+test('handles leading spaces', () => {
+  expect(parseAge(' 25')).toBe(25)
+})
+```
+
+Run it and confirm it fails. Now you know exactly what's broken and have a clear target. Fix the implementation:
+
+```js
+export function parseAge(input) {
+  const age = Number(input.trim())
+  // ...
+}
+```
+
+Run the test again. It passes. The bug is fixed, and you have a regression test that will catch it if someone removes the `.trim()` call later.
+
+::: tip
+If you use AI agents to fix bugs, configure them to follow the same principle: reproduce the issue with a failing test first, then fix the code. This prevents the agent from "fixing" a bug by changing the test instead of the code, and gives you confidence that the fix actually works.
+:::
+
 ## Organizing Test Files
 
 There's no single right way to organize tests, but some patterns scale better than others.
