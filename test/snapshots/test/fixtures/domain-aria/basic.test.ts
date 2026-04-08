@@ -3,7 +3,11 @@ import { expect, test } from 'vitest'
 test('simple heading and paragraph', () => {
   document.body.innerHTML = `
 <h1>Hello World</h1>
-<p>Some description</p>
+<p>
+Some
+<br/>
+description
+</p>
 `
   expect(document.body).toMatchAriaSnapshot()
 })
