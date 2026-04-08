@@ -20,7 +20,7 @@ import { render } from './utils'
 const dataTestId = 'inline-test'
 
 test('${testName}', async ({ expect }) => {
-  render('<div data-testid="' + dataTestId + '" style="background-color: ${bgColor};">Inline Test</div>')
+  render('<div data-testid="' + dataTestId + '" style="background-color: ${bgColor}; font-size: 20px;">Inline Test</div>')
 
   await expect(page.getByTestId(dataTestId)).toMatchScreenshot()
 })
@@ -33,29 +33,30 @@ async function runBrowserTests(
   return runInlineTests({
     ...structure,
     'vitest.config.js': `
-      import { ${provider.name} } from '@vitest/browser-${provider.name}'
       export default {
         test: {
           browser: {
-            enabled: true,
-            screenshotFailures: false,
-            provider: ${provider.name}(),
             ui: false,
-            headless: true,
-            instances: ${JSON.stringify(instances)},
-            viewport: {
-              width: 600,
-              height: 400,
-            },
           },
-          reporters: ['verbose'],
-          ...${JSON.stringify(config)},
         },
       }`,
   }, {
     $cliOptions: {
       watch: true,
     },
+    browser: {
+      enabled: true,
+      screenshotFailures: false,
+      provider,
+      headless: true,
+      instances,
+      viewport: {
+        width: 400,
+        height: 200,
+      },
+    },
+    reporters: ['verbose'],
+    ...config,
   })
 }
 
@@ -238,7 +239,7 @@ describe('--watch', () => {
     )
   })
 
-  // tests whether the screenshots are stable in UI and headless mode
+  // tests whether the screenshots are stable in non-UI and UI mode
   test(
     'screenshots match across non-UI and UI mode',
     async () => {
