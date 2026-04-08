@@ -122,6 +122,12 @@ test('toBeDefined', async () => {
   }))
 })
 
+test('custom message', async () => {
+  await expect(() =>
+    expect.poll(() => 1, { timeout: 100, interval: 10, message: 'custom' }).toBe(2),
+  ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
+})
+
 test('should set _isLastPollAttempt flag on last call', async () => {
   const fn = vi.fn(function (this: object) {
     return chai.util.flag(this, '_isLastPollAttempt')

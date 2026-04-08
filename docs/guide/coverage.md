@@ -508,3 +508,12 @@ This is integrated with builtin coverage reporters with HTML output (`html`, `ht
 
 <img alt="html coverage in Vitest UI" img-light src="/ui-coverage-1-light.png">
 <img alt="html coverage in Vitest UI" img-dark src="/ui-coverage-1-dark.png">
+
+## Coverage in Agent Environments
+
+When Vitest detects it is running inside an AI coding agent, it automatically adjusts the default `text` reporter to reduce output and minimize token usage:
+
+- `skipFull: true` is set on the `text` reporter, so files with 100% coverage are omitted from the terminal output.
+- The [`text-summary`](/config/coverage#coverage-reporter) reporter is added automatically, so the agent always sees a concise totals table even when `skipFull` hides all individual files.
+
+These adjustments only apply when the `text` reporter is already part of the active reporter list (it is included in the default). Explicitly configured reporters are never removed.

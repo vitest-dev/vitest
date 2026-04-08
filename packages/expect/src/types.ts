@@ -83,12 +83,11 @@ export interface MatcherState {
   soft?: boolean
   poll?: boolean
   /**
-   * this allows `expect.extend`-based custom matcher
-   * to implement builtin vitest/chai assertion equivalent feature.
-   * this used for custom snapshot matcher API.
+   * The same assertion instance that chai plugins receive.
+   * @experimental
+   * @see {@link https://www.chaijs.com/guide/plugins/} Core Plugin Concepts
    */
-  /** @internal */
-  __vitest_assertion__: Assertion
+  readonly assertion: Assertion
 }
 
 export interface SyncExpectationResult {
