@@ -13,7 +13,7 @@ defineProps<{
       Trace
     </template>
     <template #message>
-      {{ trace.entries.length }} steps recorded.
+      TODO
     </template>
   </ArtifactTemplate>
 </template>

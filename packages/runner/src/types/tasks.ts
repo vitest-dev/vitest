@@ -1358,22 +1358,13 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
-// TODO: design
-export interface BrowserTraceArtifactStep {
-  name: string
-  timestamp: number
-  stack?: string
-  selector?: string
-}
-
 /**
  * @experimental
- *
- * Artifact type for browser trace metadata and payload attachments.
  */
 export interface BrowserTraceArtifact extends TestArtifactBase {
   type: 'internal:browserTrace'
-  entries: BrowserTraceArtifactStep[]
+  // TODO: should save a dedicated file/binary as attachments?
+  data: unknown
 }
 
 interface FailureScreenshotArtifactAttachment extends TestAttachment {

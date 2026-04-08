@@ -1,5 +1,4 @@
 import type {
-  BrowserTraceArtifact,
   CancelReason,
   File,
   Suite,
@@ -32,7 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { consumeBrowserTraceEntries } from './trace-state'
+import { consumeBrowserTrace } from './trace-state'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -131,7 +130,7 @@ export function createBrowserRunner(
       await super.onAfterRunTask?.(task)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
-      const traces2 = consumeBrowserTraceEntries(task.id)
+      const traceData = consumeBrowserTrace(task.id)
       if (traces.length) {
         if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
           await this.commands.triggerCommand(
@@ -147,11 +146,11 @@ export function createBrowserRunner(
           )
         }
       }
-      if (traces2.length) {
+      if (traceData) {
         await recordArtifact(task, {
           type: 'internal:browserTrace',
-          entries: traces2,
-        } satisfies BrowserTraceArtifact)
+          data: traceData,
+        })
       }
 
       if (this.config.bail && task.result?.state === 'fail') {
