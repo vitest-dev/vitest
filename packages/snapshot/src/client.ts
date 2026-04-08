@@ -310,7 +310,7 @@ export class SnapshotClient {
     expectedSnapshot.markAsChecked()
 
     if (!stableResult?.rendered) {
-      // upper `expect.poll` manipulates error via `throwWithCause`,
+      // the original caller `expect.poll` later manipulates error via `throwWithCause`,
       // so here we can directly throw `lastPollError` if exists.
       if (stableResult?.lastPollError) {
         throw stableResult.lastPollError
