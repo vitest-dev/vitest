@@ -1358,13 +1358,7 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
-export interface BrowserTraceArtifactAttachment extends TestAttachment {
-  name: string
-}
-
-// TODO: silly
 export interface BrowserTraceArtifactStep {
-  kind: 'mark' | 'group' | 'retry'
   name: string
   timestamp: number
   stack?: string
@@ -1378,7 +1372,6 @@ export interface BrowserTraceArtifactStep {
  */
 export interface BrowserTraceArtifact extends TestArtifactBase {
   type: 'internal:browserTrace'
-  kind: 'trace2'
   entries: BrowserTraceArtifactStep[]
 }
 

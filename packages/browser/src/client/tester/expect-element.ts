@@ -69,7 +69,6 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
         ? undefined
         : elementOrLocator.selector
       recordBrowserTraceEntry({
-        kind: 'mark',
         name: traceName,
         selector,
         stack: sourceError.stack,

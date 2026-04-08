@@ -210,7 +210,6 @@ export abstract class Locator {
     }
     return ensureAwaited((error) => {
       recordBrowserTraceEntry({
-        kind: 'mark',
         name,
         selector: this.selector,
         stack: options?.stack ?? error?.stack,

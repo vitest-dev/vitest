@@ -111,9 +111,7 @@ export function createBrowserRunner(
       if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
         return
       }
-      // TODO: silly. not the entry itself, but retry should just isolate traces.
       recordBrowserTraceEntry({
-        kind: 'retry',
         name: `onAfterRetryTask [${test.result?.state}]`,
         stack: test.result?.errors?.[0].stack,
       }, test.id)
@@ -155,7 +153,6 @@ export function createBrowserRunner(
       if (traces2.length) {
         await recordArtifact(task, {
           type: 'internal:browserTrace',
-          kind: 'trace2',
           entries: traces2,
         } satisfies BrowserTraceArtifact)
       }

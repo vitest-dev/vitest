@@ -1,8 +1,6 @@
 import { getWorkerState } from '../utils'
 
 export interface BrowserTraceEntry {
-  // TODO: silly
-  kind: 'mark' | 'group' | 'retry'
   name: string
   timestamp: number
   stack?: string

@@ -20,14 +20,11 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   for (const artifact of test.artifacts) {
     switch (artifact.type) {
       case 'internal:browserTrace': {
-        if (artifact.kind === 'trace2') {
-          handledArtifacts.push({
-            artifact,
-            component: TraceView,
-            props: { trace: artifact } satisfies ComponentProps<typeof TraceView>,
-          })
-        }
-
+        handledArtifacts.push({
+          artifact,
+          component: TraceView,
+          props: { trace: artifact } satisfies ComponentProps<typeof TraceView>,
+        })
         continue
       }
       case 'internal:toMatchScreenshot': {

@@ -367,7 +367,6 @@ export const page: BrowserPage = {
       return ensureAwaited(async (error) => {
         if (hasActiveTrace) {
           recordBrowserTraceEntry({
-            kind: 'group',
             name,
             stack: options?.stack ?? error?.stack,
           })
@@ -397,7 +396,6 @@ export const page: BrowserPage = {
 
     return ensureAwaited((error) => {
       recordBrowserTraceEntry({
-        kind: 'mark',
         name,
         stack: bodyOrOptions?.stack ?? error?.stack,
       })
