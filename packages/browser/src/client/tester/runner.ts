@@ -31,7 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { consumeBrowserTrace } from './trace-state'
+import { consumeBrowserTrace } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig

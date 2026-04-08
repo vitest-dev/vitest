@@ -5,7 +5,7 @@ import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
-import { recordBrowserTraceEntry } from './trace-state'
+import { recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
