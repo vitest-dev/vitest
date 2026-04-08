@@ -154,14 +154,14 @@ export class TestProject {
     /** @internal */
     pool?: string,
     /** @internal */
-    meta?: TaskMeta,
+    metaOverride?: TaskMeta,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this),
       locationsOrOptions,
-      meta,
+      metaOverride,
     )
   }
 

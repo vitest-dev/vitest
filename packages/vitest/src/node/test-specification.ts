@@ -31,10 +31,6 @@ export class TestSpecification {
    */
   public readonly pool: Pool
   /**
-   * Internal metadata used to derive the file task identity.
-   */
-  public readonly meta: TaskMeta
-  /**
    * Line numbers of the test locations to run.
    */
   public readonly testLines: number[] | undefined
@@ -60,22 +56,18 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
-    meta?: TaskMeta,
+    // merge-reports uses the original `file.meta` from the test run
+    metaOverride?: TaskMeta,
   ) {
     const projectName = project.config.name
-    const resolvedMeta = meta ?? {
-      typecheck: pool === 'typescript',
-      __vitest_label__: project.config.label,
-    }
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      resolvedMeta,
+      metaOverride ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.label },
     )
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
-    this.meta = resolvedMeta
     if (Array.isArray(testLinesOrOptions)) {
       this.testLines = testLinesOrOptions
     }

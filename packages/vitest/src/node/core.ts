@@ -1044,13 +1044,8 @@ export class Vitest {
     // Phase 1: parse all files in parallel (without mode interpretation)
     const results = await Promise.all(specifications.map(specification =>
       limit(async () => {
-        const file = await astCollectTests(specification.project, specification.moduleId, specification.meta).catch((error) => {
-          return createFailedFileTask(
-            specification.project,
-            specification.moduleId,
-            error,
-            specification.meta,
-          )
+        const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
+          return createFailedFileTask(specification.project, specification.moduleId, error)
         })
         return { file, specification }
       }),
@@ -1083,13 +1078,8 @@ export class Vitest {
     if (this.mode !== 'test') {
       throw new Error(`The \`experimental_parseSpecification\` does not support "${this.mode}" mode.`)
     }
-    const file = await astCollectTests(specification.project, specification.moduleId, specification.meta).catch((error) => {
-      return createFailedFileTask(
-        specification.project,
-        specification.moduleId,
-        error,
-        specification.meta,
-      )
+    const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
+      return createFailedFileTask(specification.project, specification.moduleId, error)
     })
     const config = specification.project.config
     const hasOnly = someTasksAreOnly(file)
