@@ -91,7 +91,7 @@ describe('--watch', () => {
       await vitest.waitForStdout(`Test Files  ${instances.length} passed`)
 
       for (const instance of instances) {
-        expect(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
+        expect(vitest.stdout).toContain(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
       }
 
       for (const referencePath of references) {
@@ -157,7 +157,7 @@ describe('--watch', () => {
         await vitest.waitForStdout(`Test Files  ${instances.length} passed`)
 
         for (const instance of instances) {
-          expect(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
+          expect(vitest.stdout).toContain(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
         }
 
         // only atime should change since reference should NOT be updated
@@ -208,7 +208,7 @@ describe('--watch', () => {
         await vitest.waitForStdout(`Test Files  ${instances.length} passed`)
 
         for (const instance of instances) {
-          expect(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
+          expect(vitest.stdout).toContain(`✓ |${instance.browser}| basic.test.ts > screenshot-snapshot`)
         }
 
         // atime, ctime, mtime, and size should change since reference should be updated
