@@ -100,14 +100,6 @@ AI tools tend to generate happy-path tests and skip the hard cases. After review
 
 If these scenarios aren't covered, ask the AI to add them, or write them yourself.
 
-### Are snapshot tests overused?
-
-AI loves snapshot tests because they're easy to generate: just call `toMatchSnapshot()` on everything. But snapshots should be used deliberately for structured output (HTML, error messages, serialized data), not as a lazy substitute for specific assertions.
-
-::: warning
-If you see a test that snapshots a simple return value like a number or a boolean, replace it with a direct assertion. See [Snapshot Testing](/guide/learn/snapshots#when-to-use-snapshots) for when snapshots are the right tool.
-:::
-
 ## Iterating on the Output
 
 Treat AI-generated tests as a first draft, not a finished product. A good workflow looks like:
