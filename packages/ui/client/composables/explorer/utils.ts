@@ -84,7 +84,7 @@ export function createOrUpdateFileNode(
 
   if (fileNode) {
     fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
-    fileNode.label = file.meta?.label
+    fileNode.label = file.meta?.__vitest_label__
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined
@@ -107,7 +107,7 @@ export function createOrUpdateFileNode(
       children: new Set(),
       tasks: [],
       typecheck: !!file.meta && 'typecheck' in file.meta,
-      label: file.meta?.label,
+      label: file.meta?.__vitest_label__,
       indent: 0,
       duration: typeof file.result?.duration === 'number' ? Math.round(file.result.duration) : undefined,
       slow: false,

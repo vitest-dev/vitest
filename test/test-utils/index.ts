@@ -620,7 +620,9 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
       }
       return moduleChildren
     },
-    options?.fileLabel ? module => `${module.relativeModuleId} (${module.meta().label})` : undefined,
+    options?.fileLabel
+      ? module => `${module.relativeModuleId} (${module.meta().__vitest_label__})`
+      : undefined,
   )
 }
 

@@ -193,13 +193,18 @@ export function calculateSuiteHash(parent: Suite): void {
   })
 }
 
+interface HashMeta {
+  typecheck?: boolean
+  __vitest_label__?: string
+}
+
 export function createFileTask(
   filepath: string,
   root: string,
   projectName: string | undefined,
   pool?: string,
   viteEnvironment?: string,
-  meta?: { typecheck?: boolean; label?: string },
+  meta?: HashMeta,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
@@ -229,13 +234,13 @@ export function createFileTask(
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
-  meta?: { typecheck?: boolean; label?: string },
+  meta?: HashMeta,
 ): string {
   const seed = [
     file,
     projectName || '',
     meta?.typecheck ? '__typecheck__' : '',
-    meta?.label || '',
+    meta?.__vitest_label__ || '',
   ].join('\0')
   return generateHash(seed)
 }

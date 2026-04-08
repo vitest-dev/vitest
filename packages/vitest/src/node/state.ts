@@ -148,7 +148,7 @@ export class StateManager {
       const currentFile = existing.find(
         i => i.projectName === file.projectName
           && i.meta.typecheck === file.meta.typecheck
-          && i.meta.label === file.meta.label,
+          && i.meta.__vitest_label__ === file.meta.__vitest_label__,
       )
       // keep logs for the previous file because it should always be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests

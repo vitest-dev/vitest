@@ -60,7 +60,7 @@ const isTypecheck = computed(() => {
   return !!current.value?.meta?.typecheck
 })
 
-const label = computed(() => current.value?.meta?.label)
+const label = computed(() => current.value?.meta?.__vitest_label__)
 
 function open() {
   const filePath = current.value?.filepath
