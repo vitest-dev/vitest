@@ -230,7 +230,8 @@ export function getIframeScale(): number {
     throw new Error(`Cannot find iframe element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
 
-  // we can safely use `a` as both vertical and horizontal scale are the same
+  // DOMMatrix parses the computed 2D transform matrix [a, b, c, d, e, f]
+  // `a` and `d` are the x and y scale factors - since we only apply uniform scaling, `a === d`
   const scale = new DOMMatrix(getComputedStyle(iframe).transform).a
 
   return scale
