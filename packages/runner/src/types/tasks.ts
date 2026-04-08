@@ -1358,6 +1358,30 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
+export interface BrowserTraceArtifactAttachment extends TestAttachment {
+  name: string
+}
+
+// TODO: silly
+export interface BrowserTraceArtifactStep {
+  kind: 'mark' | 'group' | 'retry'
+  name: string
+  timestamp: number
+  stack?: string
+  selector?: string
+}
+
+/**
+ * @experimental
+ *
+ * Artifact type for browser trace metadata and payload attachments.
+ */
+export interface BrowserTraceArtifact extends TestArtifactBase {
+  type: 'internal:browserTrace'
+  kind: 'trace2'
+  entries: BrowserTraceArtifactStep[]
+}
+
 interface FailureScreenshotArtifactAttachment extends TestAttachment {
   path: string
   /** Original file system path to the screenshot, before attachment resolution */
@@ -1457,7 +1481,8 @@ export interface TestArtifactRegistry {}
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
 export type TestArtifact
-  = | FailureScreenshotArtifact
+  = | BrowserTraceArtifact
+    | FailureScreenshotArtifact
     | TestAnnotationArtifact
     | VisualRegressionArtifact
     | TestArtifactRegistry[keyof TestArtifactRegistry]

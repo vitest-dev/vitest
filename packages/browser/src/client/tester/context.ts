@@ -19,6 +19,7 @@ import type { Locator as LocatorAPI } from './locators/index'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
+import { recordBrowserTraceEntry } from './trace-state'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
 
 // this file should not import anything directly, only types and utils
@@ -365,6 +366,11 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         if (hasActiveTrace) {
+          recordBrowserTraceEntry({
+            kind: 'group',
+            name,
+            stack: options?.stack ?? error?.stack,
+          })
           await triggerCommand(
             '__vitest_groupTraceStart',
             [{
@@ -389,14 +395,21 @@ export const page: BrowserPage = {
       return Promise.resolve()
     }
 
-    return ensureAwaited(error => triggerCommand(
-      '__vitest_markTrace',
-      [{
+    return ensureAwaited((error) => {
+      recordBrowserTraceEntry({
+        kind: 'mark',
         name,
         stack: bodyOrOptions?.stack ?? error?.stack,
-      }],
-      error,
-    ))
+      })
+      return triggerCommand(
+        '__vitest_markTrace',
+        [{
+          name,
+          stack: bodyOrOptions?.stack ?? error?.stack,
+        }],
+        error,
+      )
+    })
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)

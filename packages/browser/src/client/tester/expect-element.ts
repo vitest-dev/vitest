@@ -4,6 +4,7 @@ import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
 import { matchers } from './expect'
+import { recordBrowserTraceEntry } from './trace-state'
 import { processTimeoutOptions } from './tester-utils'
 
 const kLocator = Symbol.for('$$vitest:locator')
@@ -67,6 +68,12 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.selector
+      recordBrowserTraceEntry({
+        kind: 'mark',
+        name: traceName,
+        selector,
+        stack: sourceError.stack,
+      })
       await getBrowserState().commands.triggerCommand(
         '__vitest_markTrace',
         [{

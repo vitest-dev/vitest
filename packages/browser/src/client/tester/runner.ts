@@ -1,4 +1,5 @@
 import type {
+  BrowserTraceArtifact,
   CancelReason,
   File,
   Suite,
@@ -31,6 +32,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
+import { consumeBrowserTraceEntries, recordBrowserTraceEntry } from './trace-state'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -109,6 +111,12 @@ export function createBrowserRunner(
       if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
         return
       }
+      // TODO: silly. not the entry itself, but retry should just isolate traces.
+      recordBrowserTraceEntry({
+        kind: 'retry',
+        name: `onAfterRetryTask [${test.result?.state}]`,
+        stack: test.result?.errors?.[0].stack,
+      }, test.id)
       await this.commands.triggerCommand('__vitest_markTrace', [{
         name: `onAfterRetryTask [${test.result?.state}]`,
         stack: test.result?.errors?.[0].stack,
@@ -129,6 +137,7 @@ export function createBrowserRunner(
       await super.onAfterRunTask?.(task)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
+      const traces2 = consumeBrowserTraceEntries(task.id)
       if (traces.length) {
         if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
           await this.commands.triggerCommand(
@@ -142,6 +151,13 @@ export function createBrowserRunner(
             [{ testId: task.id, traces }],
           )
         }
+      }
+      if (traces2.length) {
+        await recordArtifact(task, {
+          type: 'internal:browserTrace',
+          kind: 'trace2',
+          entries: traces2,
+        } satisfies BrowserTraceArtifact)
       }
 
       if (this.config.bail && task.result?.state === 'fail') {

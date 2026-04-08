@@ -28,6 +28,7 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
+import { recordBrowserTraceEntry } from '../trace-state'
 import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 
 export { ensureAwaited } from '../../utils'
@@ -207,15 +208,23 @@ export abstract class Locator {
     if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
       return Promise.resolve()
     }
-    return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
-      '__vitest_markTrace',
-      [{
+    return ensureAwaited((error) => {
+      recordBrowserTraceEntry({
+        kind: 'mark',
         name,
         selector: this.selector,
         stack: options?.stack ?? error?.stack,
-      }],
-      error,
-    ))
+      })
+      return getBrowserState().commands.triggerCommand<void>(
+        '__vitest_markTrace',
+        [{
+          name,
+          selector: this.selector,
+          stack: options?.stack ?? error?.stack,
+        }],
+        error,
+      )
+    })
   }
 
   protected abstract locator(selector: string): Locator
