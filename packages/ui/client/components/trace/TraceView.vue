@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BrowserTraceArtifact } from 'vitest'
+import type { BrowserTraceArtifact } from '@vitest/runner'
 import ArtifactTemplate from '../artifacts/ArtifactTemplate.vue'
 
 defineProps<{

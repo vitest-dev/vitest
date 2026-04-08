@@ -28,8 +28,8 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
-import { recordBrowserTraceEntry } from '../trace-state'
 import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
+import { recordBrowserTraceEntry } from '../trace-state'
 
 export { ensureAwaited } from '../../utils'
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'

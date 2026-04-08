@@ -47,6 +47,8 @@ export type {
   TaskResultPack,
   TaskState,
   TaskUpdateEvent,
+  BrowserTraceArtifact,
+  BrowserTraceArtifactStep,
   Test,
   TestAnnotation,
   TestAnnotationArtifact,

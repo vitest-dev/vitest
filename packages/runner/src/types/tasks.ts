@@ -1358,6 +1358,7 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
+// TODO: design
 export interface BrowserTraceArtifactStep {
   name: string
   timestamp: number

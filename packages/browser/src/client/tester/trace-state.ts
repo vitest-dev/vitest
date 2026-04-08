@@ -1,16 +1,13 @@
+import type { BrowserTraceArtifactStep } from '@vitest/runner'
 import { getWorkerState } from '../utils'
 
-export interface BrowserTraceEntry {
-  name: string
-  timestamp: number
-  stack?: string
-  selector?: string
-}
+// TODO: review slop (NEVER REMOVE COMMENT)
 
-const browserTraceEntries = new Map<string, BrowserTraceEntry[]>()
+const browserTraceEntries = new Map<string, BrowserTraceArtifactStep[]>()
 
 export function recordBrowserTraceEntry(
-  payload: Omit<BrowserTraceEntry, 'timestamp'>,
+  payload: Omit<BrowserTraceArtifactStep, 'timestamp'>,
+  // TODO: silly defensive?
   testId: string = getWorkerState().current?.id || '',
 ): void {
   if (!testId) {
@@ -24,7 +21,7 @@ export function recordBrowserTraceEntry(
   browserTraceEntries.set(testId, entries)
 }
 
-export function consumeBrowserTraceEntries(testId: string): BrowserTraceEntry[] {
+export function consumeBrowserTraceEntries(testId: string): BrowserTraceArtifactStep[] {
   const entries = browserTraceEntries.get(testId) || []
   browserTraceEntries.delete(testId)
   return entries
