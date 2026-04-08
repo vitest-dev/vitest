@@ -59,51 +59,10 @@ export async function takeScreenshot(
   // webdriverio expects the path to contain the extension and only works with PNG files
   const savePathWithExtension = savePath.endsWith('.png') ? savePath : `${savePath}.png`
 
-  if (context.project.config.browser.ui) {
-    // refactor with `using` and `Symbol.asyncDispose` when support for Node <24 is dropped
-    await context.browser.execute(() => {
-      const document = window.frameElement?.ownerDocument
-
-      if (!document) {
-        throw new Error('cannot access parent document')
-      }
-
-      const stylesheet = document.createElement('style')
-
-      stylesheet.id = 'vitest:screenshot-stylesheet'
-      stylesheet.textContent = /* css */`
-        iframe[data-vitest="true"] {
-          position: absolute !important;
-          inset: 0 !important;
-          z-index: ${Number.MAX_SAFE_INTEGER} !important;
-          transform: none !important;
-        }
-      `
-
-      document.head.appendChild(stylesheet)
-    })
-  }
-
   // there seems to be a bug in webdriverio, `X:/` gets appended to cwd, so we convert to `X:\`
   const buffer = await element.saveScreenshot(
     platformNormalize(savePathWithExtension),
   )
-
-  if (context.project.config.browser.ui) {
-    await context.browser.execute(() => {
-      const document = window.frameElement?.ownerDocument
-
-      if (!document) {
-        throw new Error('cannot access parent document')
-      }
-
-      const stylesheet = document.getElementById('vitest:screenshot-stylesheet')
-
-      if (stylesheet) {
-        document.head.removeChild(stylesheet)
-      }
-    })
-  }
 
   if (!options.save) {
     await rm(savePathWithExtension, { force: true })
