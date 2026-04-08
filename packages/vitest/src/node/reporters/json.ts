@@ -74,6 +74,7 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /** @experimental */
   filterMeta?: (key: string, value: unknown) => unknown
 }
 
