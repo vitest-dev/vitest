@@ -68,7 +68,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.selector
-      recordBrowserTraceEntry({
+      recordBrowserTraceEntry(currentTest, {
         name: traceName,
         selector,
         stack: sourceError.stack,

@@ -366,7 +366,7 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         if (hasActiveTrace) {
-          recordBrowserTraceEntry({
+          recordBrowserTraceEntry(currentTest, {
             name,
             stack: options?.stack ?? error?.stack,
           })
@@ -395,7 +395,7 @@ export const page: BrowserPage = {
     }
 
     return ensureAwaited((error) => {
-      recordBrowserTraceEntry({
+      recordBrowserTraceEntry(currentTest, {
         name,
         stack: bodyOrOptions?.stack ?? error?.stack,
       })

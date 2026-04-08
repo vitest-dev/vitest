@@ -1,4 +1,4 @@
-import { getWorkerState } from '../utils'
+import type { Task } from '@vitest/runner'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 
@@ -16,26 +16,25 @@ interface BrowserTraceData {
 const browserTraceEntries = new Map<string, BrowserTraceArtifactStep[]>()
 
 export function recordBrowserTraceEntry(
+  task: Task,
   payload: Omit<BrowserTraceArtifactStep, 'timestamp'>,
-  // TODO: silly defensive?
-  testId: string = getWorkerState().current?.id || '',
 ): void {
-  if (!testId) {
-    return
-  }
-  const entries = browserTraceEntries.get(testId) || []
+  // TODO: split entries by
+  // task.repeats
+  // task.retry
+  const entries = browserTraceEntries.get(task.id) || []
   entries.push({
     ...payload,
     timestamp: Date.now(),
   })
-  browserTraceEntries.set(testId, entries)
+  browserTraceEntries.set(task.id, entries)
 }
 
-export function consumeBrowserTrace(testId: string): BrowserTraceData | undefined {
+export function getBrowserTrace(testId: string): BrowserTraceData | undefined {
   const steps = browserTraceEntries.get(testId)
   browserTraceEntries.delete(testId)
   if (!steps?.length) {
-    return undefined
+    return
   }
   return { steps }
 }

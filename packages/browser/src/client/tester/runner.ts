@@ -31,7 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { consumeBrowserTrace } from './trace'
+import { getBrowserTrace } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -130,7 +130,6 @@ export function createBrowserRunner(
       await super.onAfterRunTask?.(task)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
-      const traceData = consumeBrowserTrace(task.id)
       if (traces.length) {
         if (trace === 'retain-on-failure' && task.result?.state === 'pass') {
           await this.commands.triggerCommand(
@@ -139,13 +138,13 @@ export function createBrowserRunner(
           )
         }
         else {
-          // TODO: separate group entries by retries
           await this.commands.triggerCommand(
             '__vitest_annotateTraces',
             [{ testId: task.id, traces }],
           )
         }
       }
+      const traceData = getBrowserTrace(task.id)
       if (traceData) {
         await recordArtifact(task, {
           type: 'internal:browserTrace',

@@ -209,7 +209,7 @@ export abstract class Locator {
       return Promise.resolve()
     }
     return ensureAwaited((error) => {
-      recordBrowserTraceEntry({
+      recordBrowserTraceEntry(currentTest, {
         name,
         selector: this.selector,
         stack: options?.stack ?? error?.stack,
