@@ -139,7 +139,7 @@ describe('json reporter', async () => {
     expect(data.testResults[0].status).toBe(expected)
   })
 
-  it('includes all meta fields when filterMetaField is not set', async () => {
+  it('includes all meta fields when filterMeta is not set', async () => {
     const { stdout } = await runVitest({
       reporters: 'json',
       root,
@@ -153,10 +153,10 @@ describe('json reporter', async () => {
     expect(passing.meta).toEqual({ custom: 'Passing test added this' })
   })
 
-  it('filterMetaField filters meta fields by key', async () => {
+  it('filterMeta filters meta fields by key', async () => {
     const { stdout } = await runVitest({
       reporters: [['json', {
-        filterMetaField: key => key !== 'custom',
+        filterMeta: key => key !== 'custom',
       }]],
       root,
       include: ['**/json-meta.test.ts'],

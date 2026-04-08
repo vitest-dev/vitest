@@ -417,14 +417,14 @@ Example of a JSON report:
 Since Vitest 3, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
 :::
 
-The `meta` field in each assertion result can be filtered via the `filterMetaField` reporter option. It receives the key and value of each field and should return `false` to exclude the field from the report:
+The `meta` field in each assertion result can be filtered via the `filterMeta` reporter option. It receives the key and value of each field and should return a falsy value to exclude the field from the report:
 
 ```ts
 export default defineConfig({
   test: {
     reporters: [
       ['json', {
-        filterMetaField: (key, value) => key !== 'internalField',
+        filterMeta: (key, value) => key !== 'internalField',
       }]
     ]
   },
