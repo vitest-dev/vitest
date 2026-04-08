@@ -288,7 +288,7 @@ export function createFailedFileTask(project: TestProject, filepath: string, err
     config.name,
     config.pool,
     undefined,
-    { typecheck: false, __vitest_label__: config.label },
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.label },
   )
   const file: ParsedFile = {
     ...baseFile,
@@ -342,7 +342,7 @@ function createFileTask(
     config.name,
     config.pool,
     undefined,
-    { typecheck: false, __vitest_label__: config.label },
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.label },
   )
   const file: ParsedFile = {
     ...baseFile,
