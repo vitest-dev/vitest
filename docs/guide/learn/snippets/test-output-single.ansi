@@ -1,0 +1,8 @@
+ [32m✓[39m src/utils.test.js [90m(3 tests)[39m [32m5ms[39m
+   [32m✓[39m Math.sqrt [32m4ms[39m
+     [32m✓[39m returns the square root of perfect squares [32m2ms[39m
+     [32m✓[39m returns NaN for negative numbers [32m1ms[39m
+     [32m✓[39m returns 0 for 0 [32m1ms[39m
+
+ [1mTest Files[22m  [32m1 passed[39m (1)
+ [1m     Tests[22m  [32m3 passed[39m (3)

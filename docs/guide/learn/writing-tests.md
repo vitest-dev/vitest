@@ -26,6 +26,7 @@ test('Math.sqrt works for perfect squares', () => {
 })
 ```
 
+::: details Use `test` or `it`?
 You might also see tests written with [`it`](/api/test) instead of `test`. They behave identically. `it` is just an alias that some people prefer because it reads more naturally with a descriptive name:
 
 ```js
@@ -36,26 +37,27 @@ it('should compute square roots', () => {
 })
 ```
 
-Use whichever you prefer. Both work the same way, and you can mix them freely in a project. If you want to enforce a consistent choice across your codebase, the [`consistent-test-it`](https://github.com/vitest-dev/eslint-plugin-vitest/blob/main/docs/rules/consistent-test-it.md) lint rule (also available in [oxlint](https://oxc.rs/docs/guide/usage/linter/rules/jest/consistent-test-it.html)) can help with that.
+Use whichever you prefer. Both work the same way, and you can mix them freely in a project. If you want to enforce a consistent choice across your codebase, the [`consistent-test-it`](https://github.com/vitest-dev/eslint-plugin-vitest/blob/main/docs/rules/consistent-test-it.md) ESLint rule (also available in [oxlint](https://oxc.rs/docs/guide/usage/linter/rules/jest/consistent-test-it.html)) can help with that.
+:::
 
 ## Grouping Tests with `describe`
 
 As your test files grow, you'll want to organize related tests together. [`describe`](/api/describe) creates a test suite, which is a named group of tests:
 
 ```js
-import { describe, expect, it } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 describe('Math.sqrt', () => {
-  it('returns the square root of perfect squares', () => {
+  test('returns the square root of perfect squares', () => {
     expect(Math.sqrt(4)).toBe(2)
     expect(Math.sqrt(9)).toBe(3)
   })
 
-  it('returns NaN for negative numbers', () => {
+  test('returns NaN for negative numbers', () => {
     expect(Math.sqrt(-1)).toBeNaN()
   })
 
-  it('returns 0 for 0', () => {
+  test('returns 0 for 0', () => {
     expect(Math.sqrt(0)).toBe(0)
   })
 })
@@ -88,45 +90,15 @@ If the default patterns don't work for your project, you can customize which fil
 
 When you run `vitest` and only a single test file matches, the output is expanded into a tree structure showing `describe` groups and individual tests along with their duration:
 
-```txt
-✓ src/utils.test.js (3 tests) 5ms
-  ✓ Math.sqrt 4ms
-    ✓ returns the square root of perfect squares 2ms
-    ✓ returns NaN for negative numbers 1ms
-    ✓ returns 0 for 0 1ms
-
-Test Files  1 passed (1)
-     Tests  3 passed (3)
-```
+<<< ./snippets/test-output-single.ansi
 
 When multiple test files run, Vitest collapses each file into a single line to keep the output manageable:
 
-```txt
-✓ src/utils.test.js (3 tests) 5ms
-✓ src/math.test.js (2 tests) 3ms
-✓ src/strings.test.js (4 tests) 7ms
-
-Test Files  3 passed (3)
-     Tests  9 passed (9)
-```
+<<< ./snippets/test-output-multiple.ansi
 
 When a test fails, Vitest shows you exactly what went wrong. You'll see the expected value, the actual value, a diff highlighting the difference, and a code snippet of the surrounding lines with the failing assertion highlighted. It also includes the file and line number so you can jump straight to the source:
 
-```txt
-FAIL  src/utils.test.js > Math.sqrt > returns the square root of perfect squares
-AssertionError: expected 3 to be 2
-
-- Expected   2
-+ Received   3
-
-  ❯ src/utils.test.js:5:28
-      3|   it('returns the square root of perfect squares', () => {
-      4|     expect(Math.sqrt(4)).toBe(2)
-      5|     expect(Math.sqrt(9)).toBe(2)
-                                  ^
-      6|   })
-      7|
-```
+<<< ./snippets/test-output-fail.ansi
 
 Between the diff and the code snippet, you can usually understand what went wrong without needing to add extra `console.log` statements or open the file yourself.
 

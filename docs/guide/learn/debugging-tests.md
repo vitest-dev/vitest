@@ -16,27 +16,7 @@ This page covers how to investigate test failures in Vitest: reading error outpu
 
 When a test fails, Vitest gives you several pieces of information. Let's look at a real failure and break it down:
 
-```diff
-FAIL  src/user.test.js > createUser > sets the default role
-AssertionError: expected { name: 'Alice', role: 'viewer' } to deeply equal { name: 'Alice', role: 'member' }
-
-- Expected
-+ Received
-
-  {
-    "name": "Alice",
--   "role": "member",
-+   "role": "viewer",
-  }
-
-  ❯ src/user.test.js:8:22
-      6|   test('sets the default role', () => {
-      7|     const user = createUser('Alice')
-      8|     expect(user).toEqual({ name: 'Alice', role: 'member' })
-                          ^
-      9|   })
-     10| })
-```
+<<< ./snippets/debug-output-fail.ansi
 
 There's a lot here, but each part tells you something:
 
@@ -217,3 +197,12 @@ If you're stuck, these resources can help:
 - The [Common Errors](/guide/common-errors) page covers specific error messages and their solutions
 - [GitHub Issues](https://github.com/vitest-dev/vitest/issues) for searching known bugs and workarounds
 - The [Discord community](https://chat.vitest.dev) for real-time help from other Vitest users and maintainers
+
+<style>
+.vp-doc code.diff-add {
+  color: var(--vp-c-green-2) !important;
+}
+.vp-doc code.diff-remove {
+  color: var(--vp-c-red-2) !important;
+}
+</style>
