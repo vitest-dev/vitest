@@ -74,6 +74,7 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
     configLoader: project.vite.config.inlineConfig.configLoader,
     // watch is handled by Vitest
     server: {
+      ...project.options?.server,
       hmr: false,
       watch: null,
     },

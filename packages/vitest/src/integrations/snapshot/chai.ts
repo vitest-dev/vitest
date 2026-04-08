@@ -1,4 +1,4 @@
-import type { ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
+import type { AsyncExpectationResult, ChaiPlugin, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
@@ -89,7 +89,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           received: utils.flag(this, 'object'),
           ...normalizeArguments(propertiesOrHint, hint),
         })
-        return assertMatchResult(result)
+        return assertMatchResult(result, chai.util.flag(this, 'message'))
       }),
     )
   }
@@ -108,7 +108,9 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         filepath,
         hint,
       })
-      const assertPromise = resultPromise.then(result => assertMatchResult(result))
+      const assertPromise = resultPromise.then(result =>
+        assertMatchResult(result, chai.util.flag(this, 'message')),
+      )
       return recordAsyncExpect(
         getTest(this),
         assertPromise,
@@ -134,7 +136,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         isInline: true,
         ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
       })
-      return assertMatchResult(result)
+      return assertMatchResult(result, chai.util.flag(this, 'message'))
     }),
   )
   utils.addMethod(
@@ -149,7 +151,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         received: getError(received, promise),
         ...normalizeArguments(propertiesOrHint, hint),
       })
-      return assertMatchResult(result)
+      return assertMatchResult(result, chai.util.flag(this, 'message'))
     }),
   )
   utils.addMethod(
@@ -169,7 +171,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         isInline: true,
         ...normalizeInlineArguments(undefined, inlineSnapshotOrHint, hint),
       })
-      return assertMatchResult(result)
+      return assertMatchResult(result, chai.util.flag(this, 'message'))
     }),
   )
   utils.addMethod(chai.expect, 'addSnapshotSerializer', addSerializer)
@@ -221,7 +223,6 @@ function toMatchSnapshotImpl(options: {
     message: options.hint,
     isInline: options.isInline,
     inlineSnapshot: options.inlineSnapshot,
-    errorMessage: chai.util.flag(assertion, 'message'),
     // pass `assertionName` for inline snapshot stack probing
     assertionName,
     // set by async assertion (e.g. resolves/rejects) for inline snapshot stack probing
@@ -246,7 +247,6 @@ async function toMatchFileSnapshotImpl(options: {
   return getSnapshotClient().match({
     received: options.received,
     message: options.hint,
-    errorMessage: chai.util.flag(assertion, 'message'),
     rawSnapshot: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
@@ -255,9 +255,10 @@ async function toMatchFileSnapshotImpl(options: {
   })
 }
 
-function assertMatchResult(result: SyncExpectationResult): void {
+function assertMatchResult(result: SyncExpectationResult, customMessage?: string): void {
   if (!result.pass) {
-    throw Object.assign(new Error(result.message()), {
+    const errorMessage = (customMessage ? `${customMessage}: ` : '') + result.message()
+    throw Object.assign(new Error(errorMessage), {
       actual: result.actual,
       expected: result.expected,
       diffOptions: {
@@ -268,100 +269,109 @@ function assertMatchResult(result: SyncExpectationResult): void {
 }
 
 /**
- * Composable for building custom snapshot matchers via `expect.extend`.
- * Call with `this` bound to the matcher state. Returns `{ pass, message }`
- * compatible with the custom matcher return contract.
- *
- * @example
- * ```ts
- * import { toMatchSnapshot } from 'vitest/runtime'
- *
- * expect.extend({
- *   toMatchTrimmedSnapshot(received: string) {
- *     return toMatchSnapshot.call(this, received.slice(0, 10))
- *   },
- * })
- * ```
+ * Composable snapshot matcher helpers for building custom snapshot matchers
+ * with `expect.extend`.
  *
  * @experimental
  * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
  */
-export function toMatchSnapshot(
-  this: MatcherState,
-  received: unknown,
-  propertiesOrHint?: object | string,
-  hint?: string,
-): SyncExpectationResult {
-  return toMatchSnapshotImpl({
-    assertion: this.__vitest_assertion__,
-    received,
-    ...normalizeArguments(propertiesOrHint, hint),
-  })
-}
+export const Snapshots = {
+  /**
+   * Composable for building custom snapshot matchers via `expect.extend`.
+   * Call with `this` bound to the matcher state. Returns `{ pass, message }`
+   * compatible with the custom matcher return contract.
+   *
+   * @example
+   * ```ts
+   * import { Snapshots } from 'vitest/runtime'
+   *
+   * expect.extend({
+   *   toMatchTrimmedSnapshot(received: string) {
+   *     return Snapshots.toMatchSnapshot.call(this, received.slice(0, 10))
+   *   },
+   * })
+   * ```
+   *
+   * @experimental
+   * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+   */
+  toMatchSnapshot(
+    this: MatcherState,
+    received: unknown,
+    propertiesOrHint?: object | string,
+    hint?: string,
+  ): SyncExpectationResult {
+    return toMatchSnapshotImpl({
+      assertion: this.__vitest_assertion__,
+      received,
+      ...normalizeArguments(propertiesOrHint, hint),
+    })
+  },
 
-/**
- * Composable for building custom inline snapshot matchers via `expect.extend`.
- * Call with `this` bound to the matcher state. Returns `{ pass, message }`
- * compatible with the custom matcher return contract.
- *
- * @example
- * ```ts
- * import { toMatchInlineSnapshot } from 'vitest/runtime'
- *
- * expect.extend({
- *   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
- *     return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
- *   },
- * })
- * ```
- *
- * @experimental
- * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
- */
-export function toMatchInlineSnapshot(
-  this: MatcherState,
-  received: unknown,
-  propertiesOrInlineSnapshot?: object | string,
-  inlineSnapshotOrHint?: string,
-  hint?: string,
-): SyncExpectationResult {
-  return toMatchSnapshotImpl({
-    assertion: this.__vitest_assertion__,
-    received,
-    isInline: true,
-    ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
-  })
-}
+  /**
+   * Composable for building custom inline snapshot matchers via `expect.extend`.
+   * Call with `this` bound to the matcher state. Returns `{ pass, message }`
+   * compatible with the custom matcher return contract.
+   *
+   * @example
+   * ```ts
+   * import { Snapshots } from 'vitest/runtime'
+   *
+   * expect.extend({
+   *   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
+   *     return Snapshots.toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
+   *   },
+   * })
+   * ```
+   *
+   * @experimental
+   * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+   */
+  toMatchInlineSnapshot(
+    this: MatcherState,
+    received: unknown,
+    propertiesOrInlineSnapshot?: object | string,
+    inlineSnapshotOrHint?: string,
+    hint?: string,
+  ): SyncExpectationResult {
+    return toMatchSnapshotImpl({
+      assertion: this.__vitest_assertion__,
+      received,
+      isInline: true,
+      ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
+    })
+  },
 
-/**
- * Composable for building custom file snapshot matchers via `expect.extend`.
- * Call with `this` bound to the matcher state. Returns a `Promise<{ pass, message }>`
- * compatible with the custom matcher return contract.
- *
- * @example
- * ```ts
- * import { toMatchFileSnapshot } from 'vitest/runtime'
- *
- * expect.extend({
- *   async toMatchTrimmedFileSnapshot(received: string, file: string) {
- *     return toMatchFileSnapshot.call(this, received.slice(0, 10), file)
- *   },
- * })
- * ```
- *
- * @experimental
- * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
- */
-export function toMatchFileSnapshot(
-  this: MatcherState,
-  received: unknown,
-  filepath: string,
-  hint?: string,
-): Promise<SyncExpectationResult> {
-  return toMatchFileSnapshotImpl({
-    assertion: this.__vitest_assertion__,
-    received,
-    filepath,
-    hint,
-  })
+  /**
+   * Composable for building custom file snapshot matchers via `expect.extend`.
+   * Call with `this` bound to the matcher state. Returns a `Promise<{ pass, message }>`
+   * compatible with the custom matcher return contract.
+   *
+   * @example
+   * ```ts
+   * import { Snapshots } from 'vitest/runtime'
+   *
+   * expect.extend({
+   *   async toMatchTrimmedFileSnapshot(received: string, file: string) {
+   *     return Snapshots.toMatchFileSnapshot.call(this, received.slice(0, 10), file)
+   *   },
+   * })
+   * ```
+   *
+   * @experimental
+   * @see https://vitest.dev/guide/snapshot.html#custom-snapshot-matchers
+   */
+  toMatchFileSnapshot(
+    this: MatcherState,
+    received: unknown,
+    filepath: string,
+    hint?: string,
+  ): AsyncExpectationResult {
+    return toMatchFileSnapshotImpl({
+      assertion: this.__vitest_assertion__,
+      received,
+      filepath,
+      hint,
+    })
+  },
 }
