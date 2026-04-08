@@ -7,7 +7,7 @@ outline: deep
 
 - **Type:** `number`
 - **Default:** `5`
-- **CLI**: `--max-concurrency=10`, `--maxConcurrency=10`
+- **CLI:** `--max-concurrency=10`, `--maxConcurrency=10`
 
 The maximum number of tests and hooks that can run at the same time when using `test.concurrent` or `describe.concurrent`.
 

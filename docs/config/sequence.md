@@ -93,7 +93,7 @@ Tests in these projects will run in this order:
 
 - **Type:** `boolean | { files?, tests? }`
 - **Default:** `false`
-- **CLI**: `--sequence.shuffle`, `--sequence.shuffle=false`
+- **CLI:** `--sequence.shuffle`, `--sequence.shuffle=false`
 
 If you want files and tests to run randomly, you can enable it with this option, or CLI argument [`--sequence.shuffle`](/guide/cli).
 
@@ -103,7 +103,7 @@ Vitest usually uses cache to sort tests, so long-running tests start earlier, wh
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **CLI**: `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
+- **CLI:** `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
 
 Whether to randomize files, be aware that long running tests will not start earlier if you enable this option.
 
@@ -111,7 +111,7 @@ Whether to randomize files, be aware that long running tests will not start earl
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **CLI**: `--sequence.shuffle.tests`, `--sequence.shuffle.tests=false`
+- **CLI:** `--sequence.shuffle.tests`, `--sequence.shuffle.tests=false`
 
 Whether to randomize tests.
 
@@ -119,7 +119,7 @@ Whether to randomize tests.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **CLI**: `--sequence.concurrent`, `--sequence.concurrent=false`
+- **CLI:** `--sequence.concurrent`, `--sequence.concurrent=false`
 
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
@@ -131,7 +131,7 @@ When you run tests with `sequence.concurrent` and `expect.requireAssertions` set
 
 - **Type:** `number`
 - **Default:** `Date.now()`
-- **CLI**: `--sequence.seed=1000`
+- **CLI:** `--sequence.seed=1000`
 
 Sets the randomization seed, if tests are running in random order.
 
@@ -139,7 +139,7 @@ Sets the randomization seed, if tests are running in random order.
 
 - **Type:** `'stack' | 'list' | 'parallel'`
 - **Default:** `'stack'`
-- **CLI**: `--sequence.hooks=<value>`
+- **CLI:** `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.
 
@@ -155,7 +155,7 @@ This option doesn't affect [`onTestFinished`](/api/hooks#ontestfinished). It is 
 
 - **Type:** `'list' | 'parallel'`
 - **Default:** `'parallel'`
-- **CLI**: `--sequence.setupFiles=<value>`
+- **CLI:** `--sequence.setupFiles=<value>`
 
 Changes the order in which setup files are executed.
 

@@ -11,7 +11,7 @@ Options for configuring [typechecking](/guide/testing-types) test environment.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **CLI**: `--typecheck`, `--typecheck.enabled`
+- **CLI:** `--typecheck`, `--typecheck.enabled`
 
 Enable typechecking alongside your regular tests.
 
@@ -19,7 +19,7 @@ Enable typechecking alongside your regular tests.
 
 - **Type:** `boolean`
 - **Default:** `false`
-- **CLI**: `--typecheck.only`
+- **CLI:** `--typecheck.only`
 
 Run only typecheck tests, when typechecking is enabled. When using CLI, this option will automatically enable typechecking.
 

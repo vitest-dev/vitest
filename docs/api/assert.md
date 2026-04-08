@@ -36,7 +36,7 @@ test('assert.fail', () => {
 ## isOk
 
 - **Type:** `<T>(value: T, message?: string) => asserts value`
-- **Alias** `ok`
+- **Alias:** `ok`
 
 Assert that the given `value` is truthy.
 
@@ -52,7 +52,7 @@ test('assert.isOk', () => {
 ## isNotOk
 
 - **Type:** `<T>(value: T, message?: string) => void`
-- **Alias** `notOk`
+- **Alias:** `notOk`
 
 Assert that the given `value` is falsy.
 
