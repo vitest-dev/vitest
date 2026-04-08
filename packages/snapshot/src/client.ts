@@ -48,6 +48,7 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+  assertionName?: string
 }
 
 /** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
@@ -119,6 +120,7 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
+      assertionName,
     } = options
     let { received } = options
 
@@ -173,6 +175,7 @@ export class SnapshotClient {
       error,
       inlineSnapshot,
       rawSnapshot,
+      assertionName,
     })
 
     return {

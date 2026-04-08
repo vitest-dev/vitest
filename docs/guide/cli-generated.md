@@ -970,3 +970,10 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 - **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
 
 Custom provider for detecting changed files. (default: `git`)
+
+### experimental.preParse
+
+- **CLI:** `--experimental.preParse`
+- **Config:** [experimental.preParse](/config/experimental#experimental-preparse)
+
+Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)

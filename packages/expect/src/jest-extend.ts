@@ -53,6 +53,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
+    __vitest_assertion__: assertion as any,
   }
   Object.assign(matcherState, { task })
 
@@ -89,7 +90,7 @@ function JestExtendPlugin(
   return (_, utils) => {
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
-        function expectWrapper(
+        function __VITEST_EXTEND_ASSERTION__(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
@@ -105,9 +106,7 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                const errorMessage = customMessage != null
-                  ? customMessage
-                  : message()
+                const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
                 throw new JestExtendError(
                   errorMessage,
                   actual,
@@ -121,9 +120,7 @@ function JestExtendPlugin(
           const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            const errorMessage = customMessage != null
-              ? customMessage
-              : message()
+            const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
             throw new JestExtendError(
               errorMessage,
               actual,
@@ -133,7 +130,7 @@ function JestExtendPlugin(
           }
         }
 
-        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, __VITEST_EXTEND_ASSERTION__)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,

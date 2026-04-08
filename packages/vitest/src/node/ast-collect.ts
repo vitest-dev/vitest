@@ -8,8 +8,6 @@ import {
   calculateSuiteHash,
   createTaskName,
   generateHash,
-  interpretTaskModes,
-  someTasksAreOnly,
   validateTags,
 } from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
@@ -472,17 +470,6 @@ function createFileTask(
       latestSuite.tasks.push(task)
     })
   calculateSuiteHash(file)
-  const hasOnly = someTasksAreOnly(file)
-  interpretTaskModes(
-    file,
-    config.testNamePattern,
-    undefined,
-    undefined,
-    undefined,
-    hasOnly,
-    false,
-    config.allowOnly,
-  )
   markDynamicTests(file.tasks)
   if (!file.tasks.length) {
     file.result = {
