@@ -3,7 +3,7 @@ import type { Params } from './params'
 import { useLocalStorage, watchOnce } from '@vueuse/core'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { viewport } from './browser'
-import { client, config, findById } from './client'
+import { browserState, client, config, findById } from './client'
 import { testRunState } from './client/state'
 import { showTaskSource } from './codemirror'
 import { activeFileId, columnNumber, lineNumber, selectedTest, viewMode } from './params'
@@ -155,10 +155,38 @@ export function showCoverage() {
   activeFileId.value = ''
 }
 
+function calculateBrowserPanel() {
+  // we don't scale webdriverio provider because it doesn't support scaling
+  // TODO: find a way to make this universal - maybe show browser separately(?)
+  if (browserState?.provider === 'webdriverio') {
+    const parentWindow = window.outerWidth * (panels.details.size / 100)
+    // 40 is 20px padding for each side
+    const tabWidth = ((viewport.value[0] + 20) / parentWindow) * 100
+    return tabWidth
+  }
+  return 33
+}
+
 export function showNavigationPanel() {
   panels.navigation = 33
   panels.details.size = 67
   mainSizes.value = [33, 67]
+}
+
+export function updateBrowserPanel() {
+  // we don't need to change the size of the browser panel if the right
+  // panel is hidden
+  if (panels.details.main === 0) {
+    return
+  }
+
+  panels.details.browser = calculateBrowserPanel()
+  panels.details.main = 100 - panels.details.browser
+
+  detailSizes.value = [
+    panels.details.browser,
+    panels.details.main,
+  ]
 }
 
 export function toggleDetailsPosition() {
