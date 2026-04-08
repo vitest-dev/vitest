@@ -15,7 +15,6 @@ export {
   createTaskCollector,
   describe,
   getCurrentSuite,
-  getRunner,
   it,
   suite,
   test,

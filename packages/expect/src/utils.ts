@@ -1,6 +1,5 @@
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
-import { getRunner } from '@vitest/runner'
 import { processError } from '@vitest/utils/error'
 import { noop } from '@vitest/utils/helpers'
 
@@ -90,8 +89,8 @@ function handleTestError(test: Test, err: unknown) {
   test.result ||= { state: 'fail' }
   test.result.state = 'fail'
   test.result.errors ||= []
-  const runner = getRunner()
-  test.result.errors.push(processError(err, runner.config.diffOptions))
+  const diffOptions = (globalThis as any).__vitest_worker__?.diffOptions
+  test.result.errors.push(processError(err, diffOptions))
 }
 
 /** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */
