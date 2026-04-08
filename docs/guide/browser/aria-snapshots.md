@@ -158,6 +158,8 @@ ARIA snapshots use a YAML-like syntax. Each line represents a node in the access
 
 ::: info
 ARIA snapshot templates use a **subset of YAML** syntax. Only the features needed for accessibility trees are supported: scalar values, nested mappings via indentation, and sequences (`- item`). Advanced YAML features like anchors, tags, flow collections, and multi-line scalars are not supported.
+
+Captured text is also whitespace-normalized before it is rendered into the snapshot. Newlines, `<br>` line breaks, tabs, and repeated whitespace collapse to single spaces, so multi-line DOM text is emitted as a single-line snapshot value.
 :::
 
 Each accessible element in the tree is represented as a YAML node:
@@ -204,6 +206,20 @@ Some content appears in the snapshot as a text node instead of a role-based elem
 
 ```yaml
 - text: Hello world
+```
+
+Text values are always serialized on a single line after whitespace normalization. For example:
+
+```html
+<p>
+Line 1
+Line 2<br />Line 3
+Line 4
+</p>
+```
+
+```yaml
+- paragraph: Line 1 Line 2 Line 3 Line 4
 ```
 
 ### Children
