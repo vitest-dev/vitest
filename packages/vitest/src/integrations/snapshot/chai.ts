@@ -438,7 +438,7 @@ export const Snapshots = {
     received: unknown,
   ): ExpectationResult {
     return toMatchDomainSnapshotImpl({
-      assertion: this.__vitest_assertion__,
+      assertion: this.assertion,
       adapter: domain,
       received,
     })
@@ -459,7 +459,7 @@ export const Snapshots = {
     inlineSnapshot?: string,
   ): ExpectationResult {
     return toMatchDomainSnapshotImpl({
-      assertion: this.__vitest_assertion__,
+      assertion: this.assertion,
       adapter: domain,
       received,
       isInline: true,
