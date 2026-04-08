@@ -53,7 +53,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
-    __vitest_assertion__: assertion as any,
+    assertion: assertion as any,
   }
   Object.assign(matcherState, { task })
 
