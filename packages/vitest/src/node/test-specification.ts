@@ -31,6 +31,10 @@ export class TestSpecification {
    */
   public readonly pool: Pool
   /**
+   * Internal metadata used to derive the file task identity.
+   */
+  public readonly meta: TaskMeta
+  /**
    * Line numbers of the test locations to run.
    */
   public readonly testLines: number[] | undefined
@@ -59,14 +63,19 @@ export class TestSpecification {
     meta?: TaskMeta,
   ) {
     const projectName = project.config.name
+    const resolvedMeta = meta ?? {
+      typecheck: pool === 'typescript',
+      __vitest_label__: project.config.label,
+    }
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      meta ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.label },
+      resolvedMeta,
     )
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
+    this.meta = resolvedMeta
     if (Array.isArray(testLinesOrOptions)) {
       this.testLines = testLinesOrOptions
     }

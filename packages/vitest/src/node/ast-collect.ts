@@ -1,4 +1,4 @@
-import type { File, Suite, Task, Test } from '@vitest/runner'
+import type { File, Suite, Task, TaskMeta, Test } from '@vitest/runner'
 import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
@@ -7,7 +7,7 @@ import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
   createTaskName,
-  generateHash,
+  generateFileHash,
   validateTags,
 } from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
@@ -281,12 +281,16 @@ function astParseFile(filepath: string, code: string) {
   }
 }
 
-export function createFailedFileTask(project: TestProject, filepath: string, error: Error): File {
+export function createFailedFileTask(project: TestProject, filepath: string, error: Error, meta?: TaskMeta): File {
   const testFilepath = relative(project.config.root, filepath)
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
+    id: /* @__PURE__ */ generateFileHash(
+      testFilepath,
+      project.config.name,
+      meta ?? { __vitest_label__: project.config.label },
+    ),
     name: testFilepath,
     fullName: testFilepath,
     mode: 'run',
@@ -335,12 +339,18 @@ function createFileTask(
   config: SerializedConfig,
   filepath: string,
   fileTags: string[] | undefined,
+  meta?: TaskMeta,
 ) {
   const { definitions, ast } = astParseFile(testFilepath, code)
+  // TODO: use createFileTask from packages/runner
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${config.name || ''}`),
+    id: /* @__PURE__ */ generateFileHash(
+      testFilepath,
+      config.name,
+      meta ?? { __vitest_label__: config.label },
+    ),
     name: testFilepath,
     fullName: testFilepath,
     mode: 'run',
@@ -488,6 +498,7 @@ function createFileTask(
 export async function astCollectTests(
   project: TestProject,
   filepath: string,
+  meta?: TaskMeta,
 ): Promise<File> {
   const request = await transformSSR(project, filepath)
   const testFilepath = relative(project.config.root, filepath)
@@ -497,6 +508,7 @@ export async function astCollectTests(
       project,
       filepath,
       new Error(`Failed to parse ${testFilepath}. Vite didn't return anything.`),
+      meta,
     )
   }
   return createFileTask(
@@ -506,6 +518,7 @@ export async function astCollectTests(
     project.serializedConfig,
     filepath,
     request.fileTags,
+    meta,
   )
 }
 
