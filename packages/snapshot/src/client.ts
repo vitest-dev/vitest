@@ -256,7 +256,7 @@ export class SnapshotClient {
 
     return {
       pass,
-      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
     }
@@ -337,7 +337,7 @@ export class SnapshotClient {
 
     return {
       pass,
-      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
     }
