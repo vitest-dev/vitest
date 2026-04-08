@@ -1014,9 +1014,7 @@ The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the s
 
 - **Type:** `() => void`
 
-Captures the accessibility tree of a DOM element and compares it against a stored snapshot. Inspired by [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots).
-
-The snapshot uses a YAML-like format describing the accessible roles, names, and states of the element tree.
+Captures the accessibility tree of a DOM element and generate a snapshot file or compares it against a stored snapshot. See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -1032,23 +1030,11 @@ test('navigation accessibility', () => {
 })
 ```
 
-On first run, Vitest generates a snapshot entry like:
-
-```
-- navigation "Actions":
-  - button: Save
-  - button: Cancel
-```
-
-See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
-
 ## toMatchAriaInlineSnapshot <Version type="experimental">4.1.3</Version> <Experimental /> {#tomatchariainlinesnapshot}
 
 - **Type:** `(snapshot?: string) => void`
 
-Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file.
-
-See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file. See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
 
 ```ts
 import { expect, test } from 'vitest'

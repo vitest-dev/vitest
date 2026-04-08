@@ -52,7 +52,7 @@ Given a page with this HTML:
 
 Use `toMatchAriaSnapshot()` to store the snapshot in a `.snap` file alongside your test:
 
-```ts
+```ts [basic.test.ts]
 import { expect, test } from 'vitest'
 
 test('login form', async () => {
@@ -62,11 +62,15 @@ test('login form', async () => {
 
 On first run, Vitest generates a snapshot file entry:
 
-```yaml
+```js [__snapshots__/basic.test.ts.snap]
+// Vitest Snapshot ...
+
+exports[`login form 1`] = `
 - form "Log In":
-    - textbox "Email"
-    - textbox "Password"
-    - button "Submit"
+  - textbox "Email"
+  - textbox "Password"
+  - button "Submit"
+`
 ```
 
 ### Inline Snapshots
