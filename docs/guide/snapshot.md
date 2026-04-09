@@ -261,6 +261,27 @@ For inline snapshot matchers, the snapshot argument must be the last parameter (
 File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
 :::
 
+::: warning
+If your custom inline snapshot matcher is `async` (i.e. it `await`s before calling `toMatchInlineSnapshot`), Vitest cannot automatically infer the call location for inline snapshot rewriting. You must capture the call site manually **before** any `await`, by setting the `'error'` flag on the chai assertion:
+
+```ts
+import { expect, chai, Snapshots } from 'vitest'
+
+const { toMatchInlineSnapshot } = Snapshots
+
+expect.extend({
+  async toMatchTransformedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    // capture call site before any await
+    chai.util.flag(this, 'error', new Error())
+    const transformed = await transform(received)
+    return toMatchInlineSnapshot.call(this, transformed, inlineSnapshot)
+  },
+})
+```
+
+Without this, inline snapshot auto-update will point to the wrong line.
+:::
+
 For TypeScript, extend the `Assertion` interface:
 
 ```ts
