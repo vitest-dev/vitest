@@ -22,6 +22,11 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     return
   }
   const { serialized, selectorId } = step.snapshot
+  // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
+  // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
+  // doc.open/close resets the iframe document to a blank state before rebuild.
+  // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
+  // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
   doc.open()
   doc.close()
@@ -32,12 +37,29 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     mirror,
   })
   if (selectorId != null) {
-    // note that `el instanceof HTMLElement` fails since
-    // `el` is from a different realm (iframe).
-    const el = mirror.getNode(selectorId) as HTMLElement | null
+    const el = mirror.getNode(selectorId)
     if (el) {
-      el.style.outline = '2px solid #3b82f6'
-      el.style.outlineOffset = '2px'
+      // Overlay highlight technique adapted from Playwright's highlight.ts:
+      // https://github.com/microsoft/playwright/blob/main/packages/injected/src/highlight.ts
+      // getBoundingClientRect() gives viewport-relative coords; position:fixed overlay matches.
+      // Simplified version: no shadow DOM glass pane, no tooltip.
+      iframe.contentWindow!.requestAnimationFrame(() => {
+        const rect = (el as Element).getBoundingClientRect()
+        const overlay = doc.createElement('div')
+        overlay.style.cssText = `
+          position: fixed;
+          pointer-events: none;
+          z-index: 2147483647;
+          left: ${rect.left}px;
+          top: ${rect.top}px;
+          width: ${rect.width}px;
+          height: ${rect.height}px;
+          background: rgba(59, 130, 246, 0.15);
+          border: 2px solid #3b82f6;
+          box-sizing: border-box;
+        `
+        doc.documentElement.appendChild(overlay)
+      })
     }
   }
 }, { immediate: true })
