@@ -1,6 +1,7 @@
 import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import { getBrowserState, getWorkerState } from '../utils'
+import { recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -173,6 +174,11 @@ export class CommandsManager {
         }
         finally {
           if (shouldMarkTrace) {
+            // TODO: selector
+            recordBrowserTraceEntry(currentTest, {
+              name: actionTraceGroupName,
+              stack: clientError.stack,
+            })
             await rpc.triggerCommand<void>(
               sessionId,
               '__vitest_groupTraceEnd',
