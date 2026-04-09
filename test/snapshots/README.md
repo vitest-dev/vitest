@@ -1,6 +1,6 @@
 # Snapshot Tests
 
-This directory contains integration tests for Vitest's snapshot functionality. It uses a meta-testing approach where integration tests programmatically run fixture tests to validate snapshot behavior.
+This directory contains integration tests for Vitest's snapshot functionality. It uses a meta-testing approach where integration tests programmatically run fixture tests to validate snapshot behavior, such as, snapshot update, snapshot error formatting, summary reporting, obsolete snapshots handling, etc.
 
 ```bash
 # Run all integration tests
