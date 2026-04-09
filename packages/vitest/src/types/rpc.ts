@@ -1,7 +1,6 @@
-import type { CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
+import type { CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
-import type { TestBenchmark } from '../runtime/types/benchmark'
 import type { OTELCarrier } from '../utils/traces'
 import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 

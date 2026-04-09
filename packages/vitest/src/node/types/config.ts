@@ -1180,10 +1180,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark?: Required<
-    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  >
-  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark: Required<BenchmarkUserOptions>
   shard?: {
     index: number
     count: number

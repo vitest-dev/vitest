@@ -1,5 +1,5 @@
 import type { Awaitable, TestError } from '@vitest/utils'
-import type { Statistics } from 'tinybench'
+import type { BenchOptions, Fn, Statistics } from 'tinybench'
 import type { Bench } from '../benchmark'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
@@ -822,6 +822,11 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     ) => TestAPI<ExtraContext>
     describe: SuiteAPI<ExtraContext>
     suite: SuiteAPI<ExtraContext>
+    // TODO: jsdoc, just a shorthand for a simple bench -- use `bench` inside the test for more complex operations
+    bench: {
+      (name: string, fnOpts: BenchOptions, fn: Fn): void
+      (name: string, fn: Fn): void
+    }
   }
 
 export interface InternalTestContext extends Record<

@@ -1,3 +1,4 @@
+import type { BenchOptions, Fn } from 'tinybench'
 import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
@@ -383,6 +384,7 @@ function createSuiteCollector(
       meta: testMeta,
       annotations: [],
       artifacts: [],
+      benchmarks: [],
       tags: testTags,
     }
     const handler = options.handler
@@ -828,6 +830,18 @@ export function createTaskCollector(
         test(formatTitle(_name, toArray(item), idx), options, handlerWrapper)
       })
     }
+  }
+
+  taskFn.bench = function (name: string, optsOrFn: Fn | BenchOptions, fn?: Fn) {
+    const implementation = typeof fn === 'function'
+      ? fn
+      : typeof optsOrFn === 'function'
+        ? optsOrFn
+        : () => {}
+    const options = typeof optsOrFn === 'object' ? optsOrFn : undefined
+    return test(name, async ({ bench }) => {
+      await bench('<placeholder>', implementation).run(options)
+    })
   }
 
   taskFn.skipIf = function (this: TestAPI, condition: any) {

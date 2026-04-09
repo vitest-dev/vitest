@@ -1,4 +1,4 @@
-import type { BenchOptions, Task as BenchTask, Fn, FnOptions } from 'tinybench'
+import type { BenchOptions, Fn, FnOptions, TaskResult, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo } from 'tinybench'
 import type { Test, TestBenchmark, TestBenchmarkTask, VitestRunner } from './types'
 import { Bench as Tinybench } from 'tinybench'
 
@@ -13,15 +13,17 @@ type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
 }[number], never>
 
+type BenchResult = TaskResult & TaskResultRuntimeInfo & TaskResultTimestampProviderInfo
+
 interface BenchmarkStorage<T extends string> {
-  get: (name: T) => BenchTask
+  get: (name: T) => BenchResult
 }
 
 export interface BenchRegistration<Name extends string> {
   name: Name
   fn: Fn
   fnOpts?: FnOptions
-  run: (options?: BenchOptions) => Promise<BenchTask>
+  run: (options?: BenchOptions) => Promise<BenchResult>
   /**
    * @internal
    */
@@ -85,7 +87,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         if (!task) {
           throw new Error(`task "${name}" was not defined`)
         }
-        return task
+        return task.result
       },
     }
   }
@@ -143,9 +145,9 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
       fnOpts,
       async run(options) {
         const bench = createTinybench(options).add(name, fn, fnOpts)
-        await bench.run()
+        await bench.run() // TODO: deal with error
         await recordBenchmark(bench)
-        return bench.getTask(name)!
+        return bench.getTask(name)!.result
       },
     }
   }
@@ -165,14 +167,14 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         const bench = createTinybench(options).add(name, fn, fnOpts)
         await bench.run()
         // TODO: store result to baseline file
-        return bench.getTask(name)!
+        return bench.getTask(name)!.result
       },
     }
   }
 
   bench.run = async (...registrations) => {
     const bench = createRegisteredTinybench('compare', registrations)
-    await bench.run()
+    await bench.run() // TODO: deal with error
     await recordBenchmark(bench)
     return createCompareStorage(bench)
   }

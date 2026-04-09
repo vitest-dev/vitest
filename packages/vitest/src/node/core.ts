@@ -43,7 +43,7 @@ import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from 
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
-import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
+import { getDefaultTestProject, resolveDefaultProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReporters } from './reporters/utils'
@@ -583,7 +583,7 @@ export class Vitest {
     if (!project) {
       return []
     }
-    return resolveBrowserProjects(this, new Set([project.name]), [project])
+    return resolveDefaultProjects(this, new Set([project.name]), [project])
   }
 
   /**

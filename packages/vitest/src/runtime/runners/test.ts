@@ -7,6 +7,7 @@ import type {
   Suite,
   Task,
   Test,
+  TestBenchmark,
   TestContext,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
@@ -14,7 +15,6 @@ import type {
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
-import type { TestBenchmark } from '../types/benchmark'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import {
   createTaskCollector,
@@ -30,7 +30,6 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
@@ -285,15 +284,6 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
-
-  /**
-   * @deprecated
-   */
-  static getBenchFn: typeof getBenchFn = getBenchFn
-  /**
-   * @deprecated
-   */
-  static getBenchOptions: typeof getBenchOptions = getBenchOptions
 }
 
 function clearModuleMocks(config: SerializedConfig) {

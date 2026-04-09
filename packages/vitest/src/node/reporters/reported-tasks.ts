@@ -8,10 +8,10 @@ import type {
   TaskMeta,
   TestAnnotation,
   TestArtifact,
+  TestBenchmark,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { DevEnvironment } from 'vite'
-import type { TestBenchmark } from '../../runtime/types/benchmark'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 

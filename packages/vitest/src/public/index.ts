@@ -34,7 +34,8 @@ export { Snapshots } from '../integrations/snapshot/chai'
 
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
-export { bench } from '../runtime/benchmark'
+// TODO: backwards compatible? test.bench for a simple wrapper around test('', ({ bench }) => bench())
+// export { bench } from '../runtime/benchmark'
 
 export type {
   RuntimeConfig,
@@ -44,7 +45,6 @@ export type {
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 
-export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
 export { TestRunner } from '../runtime/runners/test'
 // export type {
 //   BenchFactory,

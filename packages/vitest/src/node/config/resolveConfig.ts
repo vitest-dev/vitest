@@ -21,7 +21,7 @@ import {
   defaultInspectPort,
   defaultPort,
 } from '../../constants'
-import { configDefaults } from '../../defaults'
+import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { withLabel } from '../reporters/renderers/utils'
@@ -235,6 +235,11 @@ export function resolveConfig(
 
   if (resolved.environment === 'browser') {
     throw new Error(`Looks like you set "test.environment" to "browser". To enable Browser Mode, use "test.browser.enabled" instead.`)
+  }
+
+  resolved.benchmark = {
+    ...benchmarkConfigDefaults,
+    ...resolved.benchmark,
   }
 
   const inspector = resolved.inspect || resolved.inspectBrk

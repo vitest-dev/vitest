@@ -197,10 +197,64 @@ export async function resolveProjects(
     names.add(name)
   }
 
-  return resolveBrowserProjects(vitest, names, resolvedProjects)
+  return resolveDefaultProjects(vitest, names, resolvedProjects)
 }
 
-export async function resolveBrowserProjects(
+export async function resolveDefaultProjects(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+): Promise<TestProject[]> {
+  await resolveBrowserProjects(vitest, names, resolvedProjects)
+
+  let lastGroupOrder = Math.max(0, ...resolvedProjects.map(p => p.config.sequence.groupOrder))
+  console.log({ lastGroupOrder })
+
+  resolvedProjects.forEach((project) => {
+    if (!project.config.benchmark.enabled) {
+      return
+    }
+
+    // TODO: if --project=bench is called, we shouldn't throw in the plugin
+    const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
+    console.log('name', name)
+    if (!vitest.matchesProjectFilter(name)) {
+      return
+    }
+
+    if (names.has(name)) {
+      throw new Error(`Cannot create a benchmark project because the name ${name} is already in use.`)
+    }
+    names.add(name)
+
+    const benchmark = project.config.benchmark
+    const benchmarkProject = TestProject._cloneTestProject(project, {
+      ...project.config,
+      name,
+      include: benchmark.include,
+      exclude: benchmark.exclude,
+      includeSource: benchmark.includeSource,
+      maxWorkers: 1,
+      maxConcurrency: 1,
+      // Spread because we disable it in the original project
+      benchmark: { ...benchmark },
+      sequence: {
+        ...project.config.sequence,
+        concurrent: false,
+        // benchmarks should always run in a separate isolated group
+        groupOrder: ++lastGroupOrder,
+      },
+      // TODO: mark if benchmark project?
+    })
+    // disable benchmark in the original project
+    benchmark.enabled = false
+    resolvedProjects.push(benchmarkProject)
+    console.log('project added', benchmarkProject.config.include)
+  })
+  return resolvedProjects
+}
+
+async function resolveBrowserProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
@@ -259,7 +313,7 @@ export async function resolveBrowserProjects(
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
       clonedConfig.name = name
-      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      const clone = TestProject._cloneTestProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
 

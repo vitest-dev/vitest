@@ -17,10 +17,10 @@ export const defaultExclude: string[] = [
 export const benchmarkConfigDefaults: Required<
   Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
 > = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
   includeSamples: false,
 }
 
