@@ -1,5 +1,3 @@
-[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90m/Users/vladimir/Projects/vitest/test/core[39m
-
  [32m✓[39m [30m[41m bench [49m[39m test/basic.bench.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3446[2mms[22m[39m
    [33m[2m✓[22m[39m different libraries[33m 3445[2mms[22m[39m
      [1mname [22m  [1m           hz[22m  [1m   min[22m  [1m   max[22m  [1m  mean[22m  [1m   p75[22m  [1m   p99[22m  [1m  p995[22m  [1m  p999[22m  [1m   rme[22m  [1msamples[22m
