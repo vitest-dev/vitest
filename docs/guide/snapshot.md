@@ -4,6 +4,10 @@ title: Snapshot | Guide
 
 # Snapshot
 
+::: tip
+For a beginner-friendly introduction to snapshot testing, see the [Snapshot Testing](/guide/learn/snapshots) tutorial.
+:::
+
 <CourseLink href="https://vueschool.io/lessons/snapshots-in-vitest?friend=vueuse">Learn Snapshot by video from Vue School</CourseLink>
 
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
