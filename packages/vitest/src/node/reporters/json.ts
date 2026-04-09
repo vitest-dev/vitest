@@ -168,7 +168,7 @@ export class JsonReporter implements Reporter {
             ? (() => {
                 const filtered: Record<string, unknown> = {}
                 for (const key in t.meta) {
-                  const value = t.meta[key]
+                  const value = t.meta[key as keyof TaskMeta]
                   if (filterMeta(key, value)) {
                     filtered[key] = value
                   }
