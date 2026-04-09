@@ -5,9 +5,14 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-// - how to highlight selectorq
+// - unify trace/snapshot related typings with packages/browser
 // - remount on selected test change
 // - make it unit-testable for better iteration
+
+interface RrwebSnapshot {
+  serialized: unknown
+  nodeId?: number
+}
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
@@ -22,24 +27,22 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step?.snapshot || !iframe) {
     return
   }
+  const { serialized, nodeId } = step.snapshot as RrwebSnapshot
   const doc = iframe.contentDocument!
   doc.open()
   doc.close()
-  rebuild(step.snapshot, {
+  const mirror = createMirror()
+  rebuild(serialized, {
     doc,
     cache: createCache(),
-    mirror: createMirror(),
+    mirror,
   })
-  // TODO: slop?
-  if (step.selector) {
-    try {
-      const el = doc.querySelector(step.selector) as HTMLElement | null
-      if (el) {
-        el.style.outline = '2px solid #3b82f6'
-        el.style.outlineOffset = '2px'
-      }
+  if (nodeId != null) {
+    const el = mirror.getNode(nodeId) as HTMLElement | null
+    if (el) {
+      el.style.outline = '2px solid #3b82f6'
+      el.style.outlineOffset = '2px'
     }
-    catch {}
   }
 }, { immediate: true })
 </script>

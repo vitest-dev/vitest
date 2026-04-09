@@ -28,7 +28,7 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
-import { convertElementToCssSelector, escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
+import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
 import { recordBrowserTraceEntry } from '../trace'
 
 export { ensureAwaited } from '../../utils'
@@ -70,7 +70,6 @@ export const selectorEngine: Ivya = Ivya.create({
 })
 
 ;(globalThis as any).__vitest_selector_engine__ = selectorEngine
-;(globalThis as any).__vitest_css_from_element__ = convertElementToCssSelector
 
 const kLocator = Symbol.for('$$vitest:locator')
 
