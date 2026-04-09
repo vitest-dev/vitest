@@ -428,6 +428,22 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
+  it.fails('expect without matcher', () => {
+    expect(1)
+  })
+
+  it('expect with matcher', () => {
+    expect(1).toBe(1)
+  })
+
+  it('expect with .resolves matcher', async () => {
+    await expect(Promise.resolve(1)).resolves.toBe(1)
+  })
+
+  it('expect with .rejects matcher', async () => {
+    await expect(Promise.reject(new Error('err'))).rejects.toThrow('err')
+  })
+
   it.fails('toBe with null/undefined values', () => {
     expect(undefined).toBe(true)
     expect(null).toBe(true)

@@ -80,6 +80,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           return assertionFunction
         }
 
+        const state = chai.util.flag(assertion, '_vitest_expect_state') as { called: boolean } | undefined
+        if (state) {
+          state.called = true
+        }
+
         if (typeof key === 'string' && unsupported.includes(key)) {
           throw new SyntaxError(
             `expect.poll() is not supported in combination with .${key}(). Use vi.waitFor() if your assertion condition is unstable.`,

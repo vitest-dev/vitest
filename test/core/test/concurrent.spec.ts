@@ -7,13 +7,13 @@ function delay(ms: number) {
 test.concurrent('test1', async ({ expect }) => {
   expect.assertions(1)
   await delay(10).then(() => {
-    expect(1).eq(1)
+    expect(1).toBe(1)
   })
 })
 
 test.concurrent('test2', async ({ expect }) => {
   expect.assertions(1)
   await delay(100).then(() => {
-    expect(2).eq(2)
+    expect(2).toBe(2)
   })
 })

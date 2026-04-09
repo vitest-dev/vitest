@@ -1075,6 +1075,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       utils.flag(this, 'error', error)
       const test: Test = utils.flag(this, 'vitest-test')
       const obj = utils.flag(this, 'object')
+      const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+      if (state) {
+        state.called = true
+      }
 
       if (utils.flag(this, 'poll')) {
         throw new SyntaxError(
@@ -1098,6 +1102,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
+            const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+            if (state) {
+              state.called = true
+            }
             const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -1148,6 +1156,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const test: Test = utils.flag(this, 'vitest-test')
       const obj = utils.flag(this, 'object')
       const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+      const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+      if (state) {
+        state.called = true
+      }
 
       if (utils.flag(this, 'poll')) {
         throw new SyntaxError(
@@ -1171,6 +1183,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
+            const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+            if (state) {
+              state.called = true
+            }
             const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(

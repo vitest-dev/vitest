@@ -320,7 +320,7 @@ test('getter only property', () => {
 
 test('truncate large diff', () => {
   const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
-  expect(diff.length).lessThan(200_000)
+  expect(diff.length).toBeLessThan(200_000)
   expect(diff.trim()).toMatch(/\.\.\.$/)
 }, 60_000)
 

@@ -104,6 +104,13 @@ export function wrapAssertion(
       utils.flag(this, '_name', name)
     }
 
+    if (name !== 'withTest') {
+      const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+      if (state) {
+        state.called = true
+      }
+    }
+
     if (!utils.flag(this, 'soft')) {
       // avoid WebKit's proper tail call to preserve stacktrace offset for inline snapshot
       // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit

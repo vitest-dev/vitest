@@ -101,6 +101,10 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Chai.Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
+      const state = utils.flag(this, '_vitest_expect_state') as { called: boolean } | undefined
+      if (state) {
+        state.called = true
+      }
       // validate early synchronously just not to break some existing tests
       validateAssertion(this)
       const resultPromise = toMatchFileSnapshotImpl({
