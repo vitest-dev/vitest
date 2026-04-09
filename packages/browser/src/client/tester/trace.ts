@@ -4,7 +4,7 @@ import type { Task } from '@vitest/runner'
 
 // TODO: design trace format
 export interface BrowserTraceData {
-  steps: BrowserTraceEntry[]
+  entries: BrowserTraceEntry[]
 }
 
 export interface BrowserTraceEntry {
@@ -76,10 +76,10 @@ function takeSnapshot(selector?: string): TraceSnapshot {
 }
 
 export function getBrowserTrace(testId: string): BrowserTraceData | undefined {
-  const steps = browserTraceEntries.get(testId)
+  const entries = browserTraceEntries.get(testId)
   browserTraceEntries.delete(testId)
-  if (!steps?.length) {
+  if (!entries?.length) {
     return
   }
-  return { steps }
+  return { entries }
 }

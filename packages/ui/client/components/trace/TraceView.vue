@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const data = computed(() => props.trace.data as BrowserTraceData)
 const selectedIndex = ref(0)
-const selectedStep = computed(() => data.value.steps[selectedIndex.value])
+const selectedStep = computed(() => data.value.entries[selectedIndex.value])
 const iframeEl = ref<HTMLIFrameElement>()
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
@@ -69,7 +69,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   <div class="grid gap-4 md:grid-cols-[220px_1fr]" style="height: 500px">
     <div flex="~ col gap-1" overflow-auto>
       <button
-        v-for="(step, index) of data.steps"
+        v-for="(step, index) of data.entries"
         :key="index"
         type="button"
         class="text-left px-2 py-1 rounded text-sm truncate"
