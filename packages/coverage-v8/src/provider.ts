@@ -20,6 +20,9 @@ import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   startOffset: number
+
+  /** Whether script ran outside Vite, e.g. in sub-processes or worker threads */
+  isExtendedContext?: boolean
 }
 
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
@@ -34,6 +37,18 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
+
+    if (this.options.trackProcessAndWorker) {
+      const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')
+
+      if (isAnyThreadsPools) {
+        // Work-around for https://github.com/nodejs/node/issues/46378
+        // Node never does anything with this directory, it's just required so that
+        // the next Workers read **their** env.NODE_V8_COVERAGE.
+        // Node never creates this .unused directory at all.
+        process.env.NODE_V8_COVERAGE = `${this.coverageFilesDirectory}/.unused`
+      }
+    }
   }
 
   createCoverageMap(): CoverageMap {
@@ -46,15 +61,25 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const coverageMap = this.createCoverageMap()
     let merged: RawCoverage = { result: [] }
 
+    const trackProcessAndWorker = this.options.trackProcessAndWorker
+
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
         merged = mergeProcessCovs([merged, coverage])
+
+        // mergeProcessCovs sometimes loses trackProcessAndWorker
+        const fromExtendedContext = trackProcessAndWorker ? coverage.result.filter(r => r.isExtendedContext) : []
 
         // mergeProcessCovs sometimes loses startOffset, e.g. in vue
         merged.result.forEach((result) => {
           if (!result.startOffset) {
             const original = coverage.result.find(r => r.url === result.url)
             result.startOffset = original?.startOffset || 0
+          }
+
+          if (trackProcessAndWorker && !result.isExtendedContext) {
+            const actual = fromExtendedContext.find(r => r.url === result.url)
+            result.isExtendedContext = actual?.isExtendedContext
           }
         })
       },
@@ -331,8 +356,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   private async getSources(
     url: string,
-    onTransform: (filepath: string) => Promise<Vite.TransformResult | undefined | null>,
+    onTransform: (filepath: string, isExtendedContext?: ScriptCoverageWithOffset['isExtendedContext']) => Promise<Vite.TransformResult | undefined | null>,
     functions: Profiler.FunctionCoverage[] = [],
+    isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false,
   ): Promise<{
     code: string
     map?: Vite.Rollup.SourceMap
@@ -342,7 +368,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       ? url.slice(8)
       : removeStartsWith(url, FILE_PROTOCOL)
     // TODO: do we still need to "catch" here? why would it fail?
-    const transformResult = await onTransform(filepath).catch(() => null)
+    const transformResult = await onTransform(filepath, isExtendedContext).catch(() => null)
 
     const map = transformResult?.map as Vite.Rollup.SourceMap | undefined
     const code = transformResult?.code
@@ -385,8 +411,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       throw new Error(`Cannot access browser module graph because it was torn down.`)
     }
 
-    const onTransform = async (filepath: string) => {
-      const result = await this.transformFile(filepath, project, environment)
+    const onTransform = async (filepath: string, isExtendedContext: ScriptCoverageWithOffset['isExtendedContext'] = false) => {
+      const result = await this.transformFile(filepath, project, environment, !isExtendedContext)
       if (result && environment === '__browser__' && project.browser) {
         return { ...result, code: `${result.code}// <inline-source-map>` }
       }
@@ -423,7 +449,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       }
 
       await Promise.all(
-        chunk.map(async ({ url, functions, startOffset }) => {
+        chunk.map(async ({ url, functions, startOffset, isExtendedContext }) => {
           let timeout: ReturnType<typeof setTimeout> | undefined
           let start: number | undefined
 
@@ -436,6 +462,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
             url,
             onTransform,
             functions,
+            isExtendedContext,
           )
 
           coverageMap.merge(await this.remapCoverage(

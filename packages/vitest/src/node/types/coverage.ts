@@ -111,6 +111,7 @@ export type FieldsWithDefaultValues
     | 'ignoreClassMethods'
     | 'skipFull'
     | 'watermarks'
+    | 'trackProcessAndWorker'
 
 export type ResolvedCoverageOptions
   = CoverageOptions
@@ -263,6 +264,14 @@ export interface CoverageOptions {
    * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
    */
   processingConcurrency?: number
+
+  /**
+   * Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run.
+   * Supported only by `v8` provider.
+   *
+   * @default false
+   */
+  trackProcessAndWorker?: boolean
 
   /**
    * Set to array of class method names to ignore for coverage
