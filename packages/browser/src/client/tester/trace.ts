@@ -1,21 +1,21 @@
 import type { Task } from '@vitest/runner'
-import { snapshot } from 'rrweb-snapshot'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-
-type RrwebSnapshot = NonNullable<ReturnType<typeof snapshot>>
 
 // TODO: design trace format
 interface BrowserTraceArtifactStep {
   name: string
   stack?: string
   selector?: string
-  snapshot?: RrwebSnapshot
+  snapshot: unknown
 }
 
 interface BrowserTraceData {
   steps: BrowserTraceArtifactStep[]
 }
+
+// lazily loaded when trace is enabled on runner.ts
+declare let __vitest_dom_snapshot__: typeof import('rrweb-snapshot')
 
 // TODO: why global
 const browserTraceEntries: Map<string, BrowserTraceArtifactStep[]>
@@ -31,7 +31,7 @@ export function recordBrowserTraceEntry(
   const entries = browserTraceEntries.get(task.id) || []
   entries.push({
     ...payload,
-    snapshot: snapshot(document) ?? undefined,
+    snapshot: __vitest_dom_snapshot__.snapshot(document),
   })
   browserTraceEntries.set(task.id, entries)
 }

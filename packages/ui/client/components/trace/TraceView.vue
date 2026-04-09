@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { BrowserTraceArtifact } from '@vitest/runner'
-import { rebuild, createCache, createMirror, snapshot as rrwebSnapshot } from 'rrweb-snapshot'
-import { ref, computed, watch } from 'vue'
+import type { snapshot as rrwebSnapshot } from 'rrweb-snapshot'
+import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
+import { computed, ref, watch } from 'vue'
+
+// TODO: review slop (NEVER REMOVE COMMENT)
+// - share types with browser/trace.ts
 
 type RrwebSnapshot = NonNullable<ReturnType<typeof rrwebSnapshot>>
 
 interface TraceStep {
   name: string
-  timestamp: number
   stack?: string
   selector?: string
   snapshot?: RrwebSnapshot

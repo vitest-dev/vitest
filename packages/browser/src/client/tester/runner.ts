@@ -90,6 +90,8 @@ export function createBrowserRunner(
         getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
+      const { snapshot } = await import('rrweb-snapshot')
+      ;(window as any).__vitest_dom_snapshot__ = { snapshot }
       getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
       if (retry) {
