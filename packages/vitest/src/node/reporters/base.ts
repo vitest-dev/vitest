@@ -540,12 +540,7 @@ export abstract class BaseReporter implements Reporter {
 
     const leakCount = this.printLeaksSummary()
 
-    if (this.ctx.config.mode === 'benchmark') {
-      this.reportBenchmarkSummary(files)
-    }
-    else {
-      this.reportTestSummary(files, errors, leakCount)
-    }
+    this.reportTestSummary(files, errors, leakCount)
   }
 
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
@@ -860,36 +855,37 @@ export abstract class BaseReporter implements Reporter {
     return leakWithStacks.size
   }
 
-  reportBenchmarkSummary(files: File[]): void {
-    const benches = getTests(files)
-    const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
+  // TODO
+  // reportBenchmarkSummary(files: File[]): void {
+  //   const benches = getTests(files)
+  //   const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
-    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
+  //   this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
 
-    for (const bench of topBenches) {
-      const group = bench.suite || bench.file
+  //   for (const bench of topBenches) {
+  //     const group = bench.suite || bench.file
 
-      if (!group) {
-        continue
-      }
+  //     if (!group) {
+  //       continue
+  //     }
 
-      const groupName = this.getFullName(group, separator)
-      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+  //     const groupName = this.getFullName(group, separator)
+  //     const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
 
-      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
+  //     this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
-      const siblings = group.tasks
-        .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
-        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+  //     const siblings = group.tasks
+  //       .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
+  //       .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
 
-      for (const sibling of siblings) {
-        const number = (sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)
-        this.log(c.green(`    ${number}x `) + c.gray('faster than ') + sibling.name)
-      }
+  //     for (const sibling of siblings) {
+  //       const number = (sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)
+  //       this.log(c.green(`    ${number}x `) + c.gray('faster than ') + sibling.name)
+  //     }
 
-      this.log('')
-    }
-  }
+  //     this.log('')
+  //   }
+  // }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
     const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []

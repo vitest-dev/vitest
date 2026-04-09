@@ -147,7 +147,7 @@ export async function runVitest(
   ;(viteConfig as any).test = rest
 
   try {
-    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
+    ctx = await startVitest(cliFilters, {
       root,
       config: configFile,
       standalone,

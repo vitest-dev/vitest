@@ -11,7 +11,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
-    mode: config.mode,
     isolate: config.isolate,
     maxWorkers: config.maxWorkers,
     base: config.base,

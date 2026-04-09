@@ -16,7 +16,6 @@ export interface SerializedConfig {
   runner: string | undefined
   isolate: boolean
   maxWorkers: number
-  mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
   root: string

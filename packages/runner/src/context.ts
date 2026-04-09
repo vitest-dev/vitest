@@ -167,7 +167,7 @@ export function createTestContext(
 
   context.signal = abortController.signal
   context.task = test
-  context.bench = createBench(test)
+  context.bench = createBench(test, runner)
 
   context.skip = (condition?: boolean | string, note?: string): never => {
     if (condition === false) {

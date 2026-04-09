@@ -1,5 +1,5 @@
 import type { BenchOptions, Task as BenchTask, Fn, FnOptions } from 'tinybench'
-import type { Test } from './types'
+import type { Test, TestBenchmark, TestBenchmarkTask, VitestRunner } from './types'
 import { Bench as Tinybench } from 'tinybench'
 
 const now = globalThis.performance
@@ -7,6 +7,7 @@ const now = globalThis.performance
   : Date.now
 
 const kRegistration: unique symbol = Symbol('registration')
+const kBaseline: unique symbol = Symbol('baseline')
 
 type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
@@ -21,11 +22,17 @@ export interface BenchRegistration<Name extends string> {
   fn: Fn
   fnOpts?: FnOptions
   run: (options?: BenchOptions) => Promise<BenchTask>
-  runSync: (options?: BenchOptions) => BenchTask
   /**
    * @internal
    */
   [kRegistration]: true
+}
+
+export interface BaselineRegistration<Name extends string> extends BenchRegistration<Name> {
+  /**
+   * @internal
+   */
+  [kBaseline]: true
 }
 
 interface BenchCompare {
@@ -33,18 +40,13 @@ interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchOptions]): Promise<BenchmarkStorage<ExtractBenchNames<Args>>>
 }
 
-interface BenchCompareSync {
-  <Args extends BenchRegistration<any>[]>(...args: Args): BenchmarkStorage<ExtractBenchNames<Args>>
-  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchOptions]): BenchmarkStorage<ExtractBenchNames<Args>>
-}
-
 export interface Bench {
   <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions): BenchRegistration<Name>
-  compare: BenchCompare
-  compareSync: BenchCompareSync
+  withBaseline: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => BaselineRegistration<Name>
+  run: BenchCompare
 }
 
-export function createBench(test: Test): Bench {
+export function createBench(test: Test, runner: VitestRunner): Bench {
   let benchIdx = 0
   const createTinybench = (options?: BenchOptions) => {
     const currentIndex = ++benchIdx
@@ -88,6 +90,47 @@ export function createBench(test: Test): Bench {
     }
   }
 
+  const serializeBenchmark = (bench: Tinybench): TestBenchmark => {
+    const tasks = bench.tasks.map<TestBenchmarkTask>((t) => {
+      const result = t.result
+      if (result.state === 'errored') {
+        throw result.error
+      }
+      if (result.state !== 'completed') {
+        // TODO: different handling for different results
+        // TODO: have a test for each state
+        throw new Error(`task did not complete: received ${result.state}`)
+      }
+      return {
+        name: t.name,
+        latency: {
+          ...result.latency,
+          samples: undefined,
+        },
+        throughput: {
+          ...result.throughput,
+          samples: undefined,
+        },
+        period: result.period,
+        totalTime: result.totalTime,
+        rank: 0,
+      }
+    }).sort((a, b) => a.latency.mean - b.latency.mean)
+    tasks.forEach((task, idx) => {
+      task.rank = idx + 1
+    })
+    return {
+      name: bench.name || test.fullTestName,
+      tasks,
+    }
+  }
+
+  const recordBenchmark = async (bench: Tinybench) => {
+    const serializedBenchmark = serializeBenchmark(bench)
+    test.benchmarks.push(serializedBenchmark)
+    await runner.onTestBenchmark?.(test, serializedBenchmark)
+  }
+
   const bench: Bench = function bench(
     name,
     fn,
@@ -101,61 +144,38 @@ export function createBench(test: Test): Bench {
       async run(options) {
         const bench = createTinybench(options).add(name, fn, fnOpts)
         await bench.run()
-        return bench.getTask(name)!
-      },
-      runSync(options) {
-        const bench = createTinybench(options).add(name, fn, fnOpts)
-        bench.runSync()
+        await recordBenchmark(bench)
         return bench.getTask(name)!
       },
     }
   }
 
-  bench.compare = async (...registrations) => {
-    const bench = createRegisteredTinybench('compare', registrations)
-    await bench.run()
-    return createCompareStorage(bench)
+  bench.withBaseline = function withBaseline(
+    name,
+    fn,
+    fnOpts,
+  ) {
+    return {
+      [kRegistration]: true,
+      [kBaseline]: true,
+      name,
+      fn,
+      fnOpts,
+      async run(options) {
+        const bench = createTinybench(options).add(name, fn, fnOpts)
+        await bench.run()
+        // TODO: store result to baseline file
+        return bench.getTask(name)!
+      },
+    }
   }
 
-  bench.compareSync = (...registrations) => {
-    const bench = createRegisteredTinybench('compareSync', registrations)
-    bench.runSync()
+  bench.run = async (...registrations) => {
+    const bench = createRegisteredTinybench('compare', registrations)
+    await bench.run()
+    await recordBenchmark(bench)
     return createCompareStorage(bench)
   }
 
   return bench
 }
-
-// CHORE: rewrite
-// const tasks = benchTasks.map<TestBenchmarkTask>((t) => {
-//   const result = t.result
-//   if (result.state === 'errored') {
-//     throw result.error
-//   }
-//   if (result.state !== 'completed') {
-//     // TODO: different handling for different results
-//     // TODO: have a test for each state
-//     throw new Error(`task did not complete: received ${result.state}`)
-//   }
-//   return {
-//     name: t.name,
-//     latency: {
-//       ...result.latency,
-//       samples: undefined,
-//     },
-//     throughput: {
-//       ...result.throughput,
-//       samples: undefined,
-//     },
-//     period: result.period,
-//     totalTime: result.totalTime,
-//     rank: 0,
-//   }
-// }).sort((a, b) => a.latency.mean - b.latency.mean)
-// tasks.forEach((task, idx) => {
-//   task.rank = idx + 1
-// })
-// const benchmark: TestBenchmark = {
-//   name: bench.name || test.fullTestName,
-//   tasks,
-// }

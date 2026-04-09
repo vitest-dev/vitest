@@ -73,7 +73,7 @@ export interface EnvironmentOptions {
 
 export type { HappyDOMOptions, JSDOMOptions }
 
-export type VitestRunMode = 'test' | 'benchmark'
+export type VitestRunMode = 'test'
 
 export interface ProjectName {
   label: string
@@ -1147,8 +1147,6 @@ export interface ResolvedConfig
     | 'fileParallelism'
     | 'tagsFilter'
   > {
-  mode: VitestRunMode
-
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
