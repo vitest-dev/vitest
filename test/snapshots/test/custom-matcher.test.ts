@@ -85,9 +85,8 @@ test('custom snapshot matcher', async () => {
     .replace('`popopo`', '`popopo-edit`')
     .replace('`pepepe`', '`pepepe-edit`')
     .replace('`hihihi`', '`hihihi-edit`')
-    .replace('`hehehe`', '`hehehe-edit`')
     .replace('`huhuhu`', '`huhuhu-edit`')
-  )
+    .replace('`hehehe`', '`hehehe-edit`'))
 
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
