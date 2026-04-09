@@ -1,4 +1,11 @@
 export type {
+  BaselineRegistration,
+  Bench,
+  BenchRegistration,
+  BenchResult,
+  BenchStorage,
+} from './benchmark'
+export type {
   CancelReason,
   FileSpecification,
   TestTagDefinition,

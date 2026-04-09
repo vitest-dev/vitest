@@ -1,4 +1,4 @@
-import type { BenchOptions, Fn, FnOptions, TaskResult, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo } from 'tinybench'
+import type { BenchOptions, Fn, FnOptions, TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo } from 'tinybench'
 import type { Test, TestBenchmark, TestBenchmarkTask, VitestRunner } from './types'
 import { Bench as Tinybench } from 'tinybench'
 
@@ -13,9 +13,10 @@ type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
 }[number], never>
 
-type BenchResult = TaskResult & TaskResultRuntimeInfo & TaskResultTimestampProviderInfo
+// We throw an error if benchmark did not complete, so it will always be TaskResultCompleted
+export type BenchResult = TaskResultCompleted & TaskResultRuntimeInfo & TaskResultTimestampProviderInfo
 
-interface BenchmarkStorage<T extends string> {
+export interface BenchStorage<T extends string> {
   get: (name: T) => BenchResult
 }
 
@@ -38,8 +39,8 @@ export interface BaselineRegistration<Name extends string> extends BenchRegistra
 }
 
 interface BenchCompare {
-  <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchmarkStorage<ExtractBenchNames<Args>>>
-  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchOptions]): Promise<BenchmarkStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
 }
 
 export interface Bench {
@@ -80,14 +81,14 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     return bench
   }
 
-  const createCompareStorage = <T extends string>(bench: Tinybench): BenchmarkStorage<T> => {
+  const createCompareStorage = <T extends string>(bench: Tinybench): BenchStorage<T> => {
     return {
       get(name: T) {
         const task = bench.getTask(name)
         if (!task) {
           throw new Error(`task "${name}" was not defined`)
         }
-        return task.result
+        return task.result as BenchResult
       },
     }
   }
@@ -147,7 +148,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         const bench = createTinybench(options).add(name, fn, fnOpts)
         await bench.run() // TODO: deal with error
         await recordBenchmark(bench)
-        return bench.getTask(name)!.result
+        return bench.getTask(name)!.result as BenchResult
       },
     }
   }
@@ -167,7 +168,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         const bench = createTinybench(options).add(name, fn, fnOpts)
         await bench.run()
         // TODO: store result to baseline file
-        return bench.getTask(name)!.result
+        return bench.getTask(name)!.result as BenchResult
       },
     }
   }
