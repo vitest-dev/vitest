@@ -5,14 +5,8 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-// - unify trace/snapshot related typings with packages/browser
 // - remount on selected test change
 // - make it unit-testable for better iteration
-
-interface RrwebSnapshot {
-  serialized: unknown
-  nodeId?: number
-}
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
@@ -27,7 +21,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step?.snapshot || !iframe) {
     return
   }
-  const { serialized, nodeId } = step.snapshot as RrwebSnapshot
+  const { serialized, selectorId } = step.snapshot
   const doc = iframe.contentDocument!
   doc.open()
   doc.close()
@@ -37,8 +31,10 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
-  if (nodeId != null) {
-    const el = mirror.getNode(nodeId) as HTMLElement | null
+  if (selectorId != null) {
+    // note that `el instanceof HTMLElement` fails since
+    // `el` is from a different realm (iframe).
+    const el = mirror.getNode(selectorId) as HTMLElement | null
     if (el) {
       el.style.outline = '2px solid #3b82f6'
       el.style.outlineOffset = '2px'

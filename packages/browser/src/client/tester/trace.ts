@@ -11,13 +11,13 @@ export interface BrowserTraceEntry {
   name: string
   // TODO: resolve location (need to go server? no just do all on final record time.)
   stack?: string
-  snapshot: RrwebSnapshot
+  selector?: string
+  snapshot: TraceSnapshot
 }
 
-// internal rrweb snapshot shape — private to trace.ts and viewer
-interface RrwebSnapshot {
-  serialized: ReturnType<typeof import('rrweb-snapshot')['snapshot']>
-  nodeId?: number
+interface TraceSnapshot {
+  serialized: unknown
+  selectorId?: number
 }
 
 // lazily loaded when trace is enabled on runner.ts
@@ -33,18 +33,15 @@ const browserTraceEntries: Map<string, BrowserTraceEntry[]>
 // TODO: should we avoid accumulating? send snapshot and clear to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
-  payload: Omit<BrowserTraceEntry, 'snapshot'> & { selector?: string },
+  options: Omit<BrowserTraceEntry, 'snapshot'>,
 ): void {
   // TODO: split entries by
   // task.repeats
   // task.retry
+  const snapshot = takeSnapshot(options.selector)
+  const entry: BrowserTraceEntry = { ...options, snapshot }
   const entries = browserTraceEntries.get(task.id) || []
-  const { selector, ...rest } = payload
-  const { snapshot: rrwebSnapshot, nodeId } = takeSnapshot(selector)
-  entries.push({
-    ...rest,
-    snapshot: { serialized: rrwebSnapshot, nodeId } satisfies RrwebSnapshot,
-  })
+  entries.push(entry)
   browserTraceEntries.set(task.id, entries)
 }
 
@@ -54,22 +51,28 @@ export function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(selector?: string): { snapshot: RrwebSnapshot['serialized']; nodeId?: number } {
+function takeSnapshot(selector?: string): TraceSnapshot {
   const { snapshot, createMirror } = __vitest_dom_snapshot__
   const mirror = createMirror()
   const serialized = snapshot(document, { mirror })
-  if (!selector) {
-    return { snapshot: serialized }
+  if (selector) {
+    try {
+      const engine = __vitest_selector_engine__
+      const el = engine.querySelector(
+        engine.parseSelector(selector),
+        document.documentElement,
+        false,
+      )
+      if (el) {
+        const id = mirror.getId(el)
+        if (id !== -1) {
+          return { serialized, selectorId: id }
+        }
+      }
+    }
+    catch {}
   }
-  try {
-    const engine = __vitest_selector_engine__
-    const el = engine.querySelector(engine.parseSelector(selector), document.documentElement, false)
-    const nodeId = el ? mirror.getId(el) : undefined
-    return { snapshot: serialized, nodeId: nodeId !== -1 ? nodeId : undefined }
-  }
-  catch {
-    return { snapshot: serialized }
-  }
+  return { serialized }
 }
 
 export function getBrowserTrace(testId: string): BrowserTraceData | undefined {
