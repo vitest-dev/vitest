@@ -1,15 +1,16 @@
 import type { VitestClient } from '@vitest/ws-client'
 import type { BirpcReturn } from 'birpc'
 import type {
-  ModuleGraphData,
   RunnerTestFile,
   SerializedConfig,
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
+import type { SerializedProjectEnvironmentModules } from '../../../../vitest/src/utils/module-graph-serialization'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
+import { deriveModuleGraphData } from '../../../../vitest/src/utils/module-graph-serialization'
 import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {
@@ -17,7 +18,7 @@ interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedConfig
   projects: string[]
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  environmentModules: Record<string, SerializedProjectEnvironmentModules>
   unhandledErrors: unknown[]
   // filename -> source
   sources: Record<string, string>
@@ -55,8 +56,8 @@ export function createStaticClient(): VitestClient {
     getResolvedProjectLabels: () => {
       return []
     },
-    getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+    getModuleGraph: async (projectName, id, browser) => {
+      return deriveModuleGraphData(metadata.environmentModules[projectName], id, browser)
     },
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
