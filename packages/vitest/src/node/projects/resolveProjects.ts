@@ -208,7 +208,6 @@ export async function resolveDefaultProjects(
   await resolveBrowserProjects(vitest, names, resolvedProjects)
 
   let lastGroupOrder = Math.max(0, ...resolvedProjects.map(p => p.config.sequence.groupOrder))
-  console.log({ lastGroupOrder })
 
   resolvedProjects.forEach((project) => {
     if (!project.config.benchmark.enabled) {
@@ -217,7 +216,6 @@ export async function resolveDefaultProjects(
 
     // TODO: if --project=bench is called, we shouldn't throw in the plugin
     const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
-    console.log('name', name)
     if (!vitest.matchesProjectFilter(name)) {
       return
     }
@@ -236,6 +234,8 @@ export async function resolveDefaultProjects(
       includeSource: benchmark.includeSource,
       maxWorkers: 1,
       maxConcurrency: 1,
+      testTimeout: 60_000,
+      hookTimeout: 120_000,
       // Spread because we disable it in the original project
       benchmark: { ...benchmark },
       sequence: {
@@ -249,7 +249,6 @@ export async function resolveDefaultProjects(
     // disable benchmark in the original project
     benchmark.enabled = false
     resolvedProjects.push(benchmarkProject)
-    console.log('project added', benchmarkProject.config.include)
   })
   return resolvedProjects
 }

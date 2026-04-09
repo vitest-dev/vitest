@@ -876,10 +876,15 @@ export abstract class BaseReporter implements Reporter {
   }
 
   protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string): void {
+    let printedCount = 0
     for (const benchmark of benchmarks) {
       const { tasks } = benchmark
       if (tasks.length === 0) {
         continue
+      }
+
+      if (printedCount > 0) {
+        this.log('')
       }
 
       const rows = tasks.map(t => renderBenchmarkRow(t))
@@ -887,6 +892,7 @@ export abstract class BaseReporter implements Reporter {
       const indent = ` ${basePadding}  `
 
       this.log(`${indent}${padBenchRow(BENCH_TABLE_HEAD, widths).map(c.bold).join('  ')}`)
+      printedCount++
 
       for (const task of tasks) {
         const padded = padBenchRow(renderBenchmarkRow(task), widths)
