@@ -49,7 +49,7 @@ expect.extend({
     actual: string,
     inlineSnapshot?: string,
   ) {
-    chai.util.flag(this.assertion, 'error', new Error("__STACK_TRACE__"))
+    chai.util.flag(this.assertion, 'error', new Error())
     await Promise.resolve()
     const inner = async () => {
       await Promise.resolve()
