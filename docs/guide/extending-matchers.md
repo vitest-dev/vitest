@@ -108,7 +108,7 @@ expect.extend({ customMatcher })
 ```
 
 ::: tip
-To build custom **snapshot matchers** (wrappers around `toMatchSnapshot` / `toMatchInlineSnapshot` / `toMatchFileSnapshot`), use the composable functions from `vitest/runtime`. See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers).
+To build custom **snapshot matchers** (wrappers around `toMatchSnapshot()` / `toMatchInlineSnapshot()` / `toMatchFileSnapshot()`), use `Snapshots` exported from `vitest`. See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers).
 :::
 
 Matcher function has access to `this` context with the following properties:
@@ -154,6 +154,10 @@ The name of the current [`environment`](/config/environment) (for example, `jsdo
 ## `soft`
 
 Was assertion called as a [`soft`](/api/expect#soft) one. You don't need to respect it, Vitest will always catch the error.
+
+## `assertion` <Advanced /> <Version type="experimental">4.1.4</Version> {#assertion}
+
+The underlying [Chai assertion](https://www.chaijs.com/guide/plugins/) object. This is the same instance that Chai plugins receive, giving you access to Chai's flag system and chainable methods. This can be useful for building custom matchers that need to interact with Chai's internals.
 
 ::: tip
 These are not all of the available properties, only the most useful ones. The other state values are used by Vitest internally.

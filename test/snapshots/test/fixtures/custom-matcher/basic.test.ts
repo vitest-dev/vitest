@@ -1,16 +1,21 @@
-import { expect, test } from 'vitest'
-import { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } from "vitest/runtime"
+import { expect, test, Snapshots, chai } from 'vitest'
+
+const {
+  toMatchFileSnapshot,
+  toMatchInlineSnapshot,
+  toMatchSnapshot,
+} = Snapshots
 
 // custom snapshot matcher to wraper input code string
 interface CustomMatchers<R = unknown> {
   toMatchCustomSnapshot: (properties?: object) => R
   toMatchCustomInlineSnapshot: (snapshot?: string) => R
   toMatchCustomFileSnapshot: (filepath: string) => Promise<R>
+  toMatchCustomAsyncInlineSnapshot: (snapshot?: string) => Promise<R>
 }
 
 declare module 'vitest' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
 function formatCustom(input: string) {
@@ -40,6 +45,21 @@ expect.extend({
     const result = await toMatchFileSnapshot.call(this, actualCustom, filepath)
     return { ...result, message: () => `[custom error] ${result.message()}` }
   },
+  async toMatchCustomAsyncInlineSnapshot(
+    actual: string,
+    inlineSnapshot?: string,
+  ) {
+    chai.util.flag(this.assertion, 'error', new Error())
+    await Promise.resolve()
+    const inner = async () => {
+      await Promise.resolve()
+      const actualCustom = formatCustom(actual)
+      const result = toMatchInlineSnapshot.call(this, actualCustom, inlineSnapshot)
+      return { ...result, message: () => `[custom error] ${result.message()}` }
+    }
+    const result = await inner();
+    return result;
+  }
 })
 
 test('file', () => {
@@ -58,7 +78,6 @@ test('raw', async () => {
   await expect(`hihihi`).toMatchCustomFileSnapshot('./__snapshots__/raw.txt')
 })
 
-// -- TEST INLINE START --
 test('inline', () => {
   expect(`hehehe`).toMatchCustomInlineSnapshot(`
     Object {
@@ -67,4 +86,12 @@ test('inline', () => {
     }
   `)
 })
-// -- TEST INLINE END --
+
+test('async inline', async () => {
+  await expect(`huhuhu`).toMatchCustomAsyncInlineSnapshot(`
+    Object {
+      "length": 6,
+      "reversed": "uhuhuh",
+    }
+  `)
+})

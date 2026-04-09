@@ -16,7 +16,7 @@ import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { inspect } from 'node:util'
+import { inspect, stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
@@ -41,6 +41,7 @@ export interface VitestRunnerCLIOptions {
 export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestCliOptions
+  $cliFilters?: string[]
 }
 
 const process_ = process
@@ -57,7 +58,7 @@ const process_ = process
  */
 export async function runVitest(
   config: RunVitestConfig,
-  cliFilters: string[] = [],
+  cliFilters: string[] = config.$cliFilters || [],
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs
@@ -242,7 +243,7 @@ export async function runVitest(
     get results() {
       return ctx?.state.getTestModules() || []
     },
-    errorTree(options?: { project?: boolean; stackTrace?: boolean }) {
+    errorTree(options?: { project?: boolean; stackTrace?: boolean; diff?: boolean }) {
       const modules = ctx?.state.getTestModules() || []
       const tree = options?.project
         ? buildErrorProjectTree(modules, options)
@@ -517,7 +518,7 @@ export async function runInlineTests(
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], options)
+  }, config?.$cliFilters ?? [], options)
   return {
     fs,
     root,
@@ -571,18 +572,22 @@ export class StableTestFileOrderSorter {
   }
 }
 
-export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
+export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
   const root = testModules[0]?.project.config.root
 
-  function mapError(e: { message: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+  function mapError(e: { message: string; diff?: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+    let message = e.message
+    if (options?.diff && e.diff) {
+      message = [message, stripVTControlCharacters(e.diff)].join('\n')
+    }
     if (options?.stackTrace) {
       const stacks = (e.stacks || []).map((s) => {
         const loc = `${relative(root, s.file)}:${s.line}:${s.column}`
         return s.method ? `    at ${s.method} (${loc})` : `    at ${loc}`
       })
-      return [e.message, ...stacks].join('\n')
+      message = [message, ...stacks].join('\n')
     }
-    return e.message
+    return message
   }
 
   return buildTestTree(
@@ -674,7 +679,7 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
   return projectTree
 }
 
-export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean }) {
+export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {
