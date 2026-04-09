@@ -174,9 +174,10 @@ export class CommandsManager {
         }
         finally {
           if (shouldMarkTrace) {
-            // TODO: selector
+            // TODO: action duration?
             recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
+              selector: typeof args[0] === 'string' ? args[0] : undefined,
               stack: clientError.stack,
             })
             await rpc.triggerCommand<void>(
