@@ -24,7 +24,7 @@ describe('delayed execution', () => {
     vi.useFakeTimers()
   })
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.clearAllMocks()
   })
   it('should execute the function', () => {
     executeAfterTwoHours(mock)

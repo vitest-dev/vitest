@@ -418,7 +418,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
-      locators: null,
+      locators: {
+        description: 'Options for how locators should be handled by default',
+        argument: '<options>',
+        subcommands: {
+          testIdAttribute: null,
+          exact: {
+            description: 'Should locators match the text exactly by default (default: `false`)',
+          },
+        },
+        transform(val) {
+          if (typeof val !== 'object' || val == null) {
+            return {}
+          }
+          return val
+        },
+      },
       testerHtmlPath: null,
       instances: null,
       expect: null,
@@ -904,6 +919,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         description: 'Custom provider for detecting changed files. (default: `git`)',
         subcommands: null,
+      },
+      preParse: {
+        description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
       },
     },
   },

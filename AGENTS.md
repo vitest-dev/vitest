@@ -158,3 +158,13 @@ If you need to typecheck tests, run `pnpm typecheck` from the root of the worksp
 - Check existing issues and documentation
 - Review CONTRIBUTING.md for detailed guidelines
 - Follow patterns in existing code
+
+## PR Descriptions
+
+When creating a pull request, you MUST include the following HTML comment at the bottom of the PR description:
+
+```
+<!-- VITEST_AUTOMATED_PR -->
+```
+
+This allows maintainers to identify AI-assisted PRs for triage. PRs containing this marker will be automatically labeled `maybe automated` and will be closed in 3 days unless a real person confirms ownership.

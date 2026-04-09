@@ -19,6 +19,7 @@ it('exports snapshot', async ({ skip, task }) => {
       ".": {
         "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
+        "Snapshots": "object",
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",

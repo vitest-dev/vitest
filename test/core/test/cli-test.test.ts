@@ -289,6 +289,15 @@ test('browser.detailsPanelPosition is parsed correctly', () => {
   })
 })
 
+test('browser.locators are passed correctly', () => {
+  expect(getCLIOptions('--browser.locators')).toEqual({
+    browser: { locators: {} },
+  })
+  expect(getCLIOptions('--browser.locators.exact')).toEqual({
+    browser: { locators: { exact: true } },
+  })
+})
+
 test('clearScreen', async (ctx) => {
   // skip vm since rolldown native modules break due to RegExp instance
   // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957

@@ -5,7 +5,7 @@ import type { VMModule } from './vm/types'
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { isBareImport } from '@vitest/utils/helpers'
+import { isBareImport, splitFileAndPostfix } from '@vitest/utils/helpers'
 import { findNearestPackageData } from '@vitest/utils/resolver'
 import { extname, normalize } from 'pathe'
 import { CommonjsExecutor } from './vm/commonjs-executor'
@@ -125,7 +125,8 @@ export class ExternalModulesExecutor {
       return { type: 'data', url: identifier, path: identifier }
     }
 
-    const extension = extname(identifier)
+    const { file, postfix } = splitFileAndPostfix(identifier)
+    const extension = extname(file)
     if (extension === '.node' || isBuiltin(identifier)) {
       return { type: 'builtin', url: identifier, path: identifier }
     }
@@ -138,10 +139,8 @@ export class ExternalModulesExecutor {
     }
 
     const isFileUrl = identifier.startsWith('file://')
-    const pathUrl = isFileUrl
-      ? fileURLToPath(identifier.split('?')[0])
-      : identifier
-    const fileUrl = isFileUrl ? identifier : pathToFileURL(pathUrl).toString()
+    const pathUrl = isFileUrl ? fileURLToPath(file) : file
+    const fileUrl = isFileUrl ? identifier : `${pathToFileURL(file)}${postfix}`
 
     let type: 'module' | 'commonjs' | 'vite' | 'wasm'
     if (this.vite.canResolve(fileUrl)) {

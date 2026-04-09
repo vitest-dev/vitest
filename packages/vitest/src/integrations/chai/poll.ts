@@ -3,6 +3,7 @@ import type { Test } from '@vitest/runner'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
+import { vi } from '../vi'
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -59,6 +60,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    // injected so that domain snapshot can take over poll implementation.
+    chai.util.flag(assertion, '_poll.fn', fn)
+    chai.util.flag(assertion, '_poll.timeout', timeout)
+    chai.util.flag(assertion, '_poll.interval', interval)
     const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
@@ -81,9 +86,52 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           )
         }
 
-        return function (this: any, ...args: any[]) {
+        // Core poll stack-trace trick:
+        //   1. capture STACK_TRACE_ERROR here before entering the async poll loop
+        //   2. when the matcher eventually fails, rethrow via throwWithCause()
+        //      so the final error keeps this earlier stack
+        //
+        // For example, when user writes:
+        //    await expect.poll(...).toBeSomething()
+        // STACK_TRACE_ERROR.stack would look like
+        //   at ...(more internal stacks)...
+        //   at __VITEST_POLL_CHAIN__ .../packages/vitest/dist/...
+        //   at .../my-file.test.ts:12:3   (this points to `toBeSomething()` callsite in user test file)
+        // Vitest later filters out internal stacks from `vitest/dist`, so the reported errors correctly
+        // points to the user callsite for poll assertion errors.
+        //
+        // Inline snapshots piggyback on the same idea. We pass
+        // STACK_TRACE_ERROR through `chai.util.flag(assertion, 'error', ...)`.
+        // Inline snapshot assertion access the same error stack for
+        // extracting inline snapshot location to validate and update new snapshots.
+        return function __VITEST_POLL_CHAIN__(this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
           const promise = async () => {
+            chai.util.flag(assertion, '_name', key)
+            chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
+
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+
+            // We use `matcher.__vitest_poll_takeover__` flag
+            // to let domain snapshot matchers take over polling logic.
+            // this is not public API yet.
+            // Need to use `getOwnPropertyDescriptor` since otherwise chai proxy breaks.
+            const pollTakeover = Object.getOwnPropertyDescriptor(
+              assertionFunction,
+              '__vitest_poll_takeover__',
+            )?.value
+            if (pollTakeover) {
+              try {
+                const output = await assertionFunction.call(assertion, ...args)
+                await onSettled?.({ assertion, status: 'pass' })
+                return output
+              }
+              catch (err) {
+                await onSettled?.({ assertion, status: 'fail' })
+                throwWithCause(err, STACK_TRACE_ERROR)
+              }
+            }
+
             const { setTimeout, clearTimeout } = getSafeTimers()
 
             let executionPhase: 'fn' | 'assertion' = 'fn'
@@ -92,10 +140,6 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const timerId = setTimeout(() => {
               hasTimedOut = true
             }, timeout)
-
-            chai.util.flag(assertion, '_name', key)
-
-            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
 
             try {
               while (true) {
@@ -123,6 +167,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   }
 
                   await delay(interval, setTimeout)
+                  if (vi.isFakeTimers()) {
+                    vi.advanceTimersByTime(interval)
+                  }
                 }
               }
             }

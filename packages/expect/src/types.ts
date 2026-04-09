@@ -6,7 +6,6 @@
  *
  */
 
-import type { Test } from '@vitest/runner'
 import type { MockInstance } from '@vitest/spy'
 import type { Formatter } from 'tinyrainbow'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
@@ -83,7 +82,12 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
-  task?: Readonly<Test>
+  /**
+   * The same assertion instance that chai plugins receive.
+   * @experimental
+   * @see {@link https://www.chaijs.com/guide/plugins/} Core Plugin Concepts
+   */
+  readonly assertion: Assertion
 }
 
 export interface SyncExpectationResult {

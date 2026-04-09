@@ -66,6 +66,21 @@ test('fake timers don\'t break it', async () => {
   expect(diff >= 100).toBe(true)
 })
 
+test('fake timers are advanced on each poll interval', async ({ onTestFinished }) => {
+  vi.useFakeTimers()
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+
+  let didAdvance = false
+
+  setTimeout(() => {
+    didAdvance = true
+  }, 50)
+
+  await expect.poll(() => didAdvance, { interval: 100 }).toBe(true)
+})
+
 test('custom matcher works correctly', async () => {
   const fn = vi.fn()
   let idx = 0
@@ -105,6 +120,12 @@ test('toBeDefined', async () => {
       message: 'Matcher did not succeed in time.',
     }),
   }))
+})
+
+test('custom message', async () => {
+  await expect(() =>
+    expect.poll(() => 1, { timeout: 100, interval: 10, message: 'custom' }).toBe(2),
+  ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
 })
 
 test('should set _isLastPollAttempt flag on last call', async () => {
