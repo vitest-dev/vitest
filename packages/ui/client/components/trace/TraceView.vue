@@ -6,6 +6,8 @@ import { computed, ref, watch } from 'vue'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - share types with browser/trace.ts
+// - how to highlight selector
+// - remount on selected test change
 
 type RrwebSnapshot = NonNullable<ReturnType<typeof rrwebSnapshot>>
 

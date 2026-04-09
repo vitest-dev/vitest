@@ -366,11 +366,6 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         if (hasActiveTrace) {
-          // TODO: show single snapshot at the end + duration?
-          recordBrowserTraceEntry(currentTest, {
-            name,
-            stack: options?.stack ?? error?.stack,
-          })
           await triggerCommand(
             '__vitest_groupTraceStart',
             [{
@@ -385,6 +380,11 @@ export const page: BrowserPage = {
         }
         finally {
           if (hasActiveTrace) {
+            // TODO: support nested trace
+            recordBrowserTraceEntry(currentTest, {
+              name,
+              stack: options?.stack ?? error?.stack,
+            })
             await triggerCommand('__vitest_groupTraceEnd', [], error)
           }
         }
