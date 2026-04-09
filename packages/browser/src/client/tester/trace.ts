@@ -1,12 +1,16 @@
 import type { Task } from '@vitest/runner'
+import { snapshot } from 'rrweb-snapshot'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 
+type RrwebSnapshot = NonNullable<ReturnType<typeof snapshot>>
+
+// TODO: design trace format
 interface BrowserTraceArtifactStep {
   name: string
-  timestamp: number
   stack?: string
   selector?: string
+  snapshot?: RrwebSnapshot
 }
 
 interface BrowserTraceData {
@@ -19,7 +23,7 @@ const browserTraceEntries: Map<string, BrowserTraceArtifactStep[]>
 
 export function recordBrowserTraceEntry(
   task: Task,
-  payload: Omit<BrowserTraceArtifactStep, 'timestamp'>,
+  payload: Omit<BrowserTraceArtifactStep, 'timestamp' | 'snapshot'>,
 ): void {
   // TODO: split entries by
   // task.repeats
@@ -27,7 +31,7 @@ export function recordBrowserTraceEntry(
   const entries = browserTraceEntries.get(task.id) || []
   entries.push({
     ...payload,
-    timestamp: Date.now(),
+    snapshot: snapshot(document) ?? undefined,
   })
   browserTraceEntries.set(task.id, entries)
 }

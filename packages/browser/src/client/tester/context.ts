@@ -366,6 +366,7 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         if (hasActiveTrace) {
+          // TODO: show single snapshot at the end + duration?
           recordBrowserTraceEntry(currentTest, {
             name,
             stack: options?.stack ?? error?.stack,

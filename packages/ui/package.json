@@ -84,6 +84,7 @@
     "floating-vue": "^5.2.2",
     "mime": "^4.1.0",
     "rollup": "^4.59.0",
+    "rrweb-snapshot": "2.0.0-alpha.20",
     "splitpanes": "^4.0.4",
     "typescript": "^5.9.3",
     "unocss": "catalog:",
