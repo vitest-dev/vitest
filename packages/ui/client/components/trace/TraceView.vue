@@ -5,7 +5,7 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-// - how to highlight selector
+// - how to highlight selectorq
 // - remount on selected test change
 // - make it unit-testable for better iteration
 
@@ -30,6 +30,17 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror: createMirror(),
   })
+  // TODO: slop?
+  if (step.selector) {
+    try {
+      const el = doc.querySelector(step.selector) as HTMLElement | null
+      if (el) {
+        el.style.outline = '2px solid #3b82f6'
+        el.style.outlineOffset = '2px'
+      }
+    }
+    catch {}
+  }
 }, { immediate: true })
 </script>
 
