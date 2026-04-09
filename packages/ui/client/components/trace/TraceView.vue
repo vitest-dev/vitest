@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - how to highlight selector
 // - remount on selected test change
+// - make it unit-testable for better iteration
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
