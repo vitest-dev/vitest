@@ -1,22 +1,39 @@
 import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
+import { randomUUID } from 'node:crypto'
+import { readdir, readFile } from 'node:fs/promises'
 import inspector from 'node:inspector/promises'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
-const session = new inspector.Session()
 let enabled = false
 
-const mod: CoverageProviderModule = {
-  async startCoverage({ isolate }) {
+const mod: CoverageProviderModule & {
+  extendedContextCoverageDir?: string
+  // Use unknown to avoid bundling node:inspector
+  session?: unknown | null
+} = {
+  extendedContextCoverageDir: undefined,
+  session: null,
+
+  async startCoverage({ isolate, trackProcessAndWorker, reportsDirectory }) {
     if (isolate === false && enabled) {
       return
     }
 
     enabled = true
+
+    if (trackProcessAndWorker) {
+      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
+      process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
+    }
+
+    this.session ||= new inspector.Session()
+    const session = this.session as inspector.Session
 
     session.connect()
     await session.post('Profiler.enable')
@@ -28,16 +45,43 @@ const mod: CoverageProviderModule = {
       return { result: [] }
     }
 
+    const session = this.session as inspector.Session
+
+    if (!session) {
+      throw new Error('V8 provider missing inspector session.')
+    }
+
     const coverage = await session.post('Profiler.takePreciseCoverage')
     const result: ScriptCoverageWithOffset[] = []
 
     // Reduce amount of data sent over rpc by doing some early result filtering
-    for (const entry of coverage.result) {
+    for (const entry of coverage.result as ScriptCoverageWithOffset[]) {
       if (filterResult(entry)) {
-        result.push({
-          ...entry,
-          startOffset: options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0,
-        })
+        entry.startOffset = options?.moduleExecutionInfo?.get(normalize(fileURLToPath(entry.url)))?.startOffset || 0
+
+        result.push(entry)
+      }
+    }
+
+    if (this.extendedContextCoverageDir) {
+      const filenames = await readdir(this.extendedContextCoverageDir)
+      const contents = await Promise.all(
+        filenames
+          .filter(filename => filename.endsWith('.json'))
+          .map(filename => readFile(`${this.extendedContextCoverageDir}/${filename}`, 'utf8')),
+      )
+
+      for (const content of contents) {
+        const json: { result: ScriptCoverageWithOffset[] } = JSON.parse(content)
+
+        for (const entry of json.result) {
+          if (filterResult(entry)) {
+            entry.startOffset = 0
+            entry.isExtendedContext = true
+
+            result.push(entry)
+          }
+        }
       }
     }
 
@@ -49,9 +93,16 @@ const mod: CoverageProviderModule = {
       return
     }
 
+    const session = this.session as inspector.Session
+
+    if (!session) {
+      throw new Error('V8 provider missing inspector session.')
+    }
+
     await session.post('Profiler.stopPreciseCoverage')
     await session.post('Profiler.disable')
     session.disconnect()
+    this.session = null
   },
 
   async getProvider(): Promise<V8CoverageProvider> {

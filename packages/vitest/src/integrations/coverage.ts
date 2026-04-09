@@ -3,21 +3,25 @@ import type { RuntimeCoverageModuleLoader } from '../utils/coverage'
 import { resolveCoverageProviderModule } from '../utils/coverage'
 
 export async function startCoverageInsideWorker(
-  options: SerializedCoverageConfig | undefined,
+  options: SerializedCoverageConfig,
   loader: RuntimeCoverageModuleLoader,
   runtimeOptions: { isolate: boolean },
 ): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.startCoverage?.(runtimeOptions)
+    return coverageModule.startCoverage?.({
+      ...runtimeOptions,
+      trackProcessAndWorker: options.trackProcessAndWorker,
+      reportsDirectory: options.reportsDirectory,
+    })
   }
 
   return null
 }
 
 export async function takeCoverageInsideWorker(
-  options: SerializedCoverageConfig | undefined,
+  options: SerializedCoverageConfig,
   loader: RuntimeCoverageModuleLoader,
 ): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
@@ -30,7 +34,7 @@ export async function takeCoverageInsideWorker(
 }
 
 export async function stopCoverageInsideWorker(
-  options: SerializedCoverageConfig | undefined,
+  options: SerializedCoverageConfig,
   loader: RuntimeCoverageModuleLoader,
   runtimeOptions: { isolate: boolean },
 ): Promise<unknown> {
