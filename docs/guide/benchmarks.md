@@ -43,7 +43,9 @@ test('compare JSON libraries', async ({ bench }) => {
 })
 ```
 
-When comparing benchmarks, Vitest runs them using interleaved iterations to reduce environmental bias (CPU throttling, GC pressure, etc.) and prints a comparison table after the test completes.
+When comparing benchmarks, Vitest runs them using interleaved iterations to reduce environmental bias (CPU throttling, GC pressure, etc.) and prints a comparison table after the test completes:
+
+<<< ./snippets/benchmark-table.ansi
 
 ### Options
 
