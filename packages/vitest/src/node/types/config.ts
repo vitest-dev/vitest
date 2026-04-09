@@ -73,6 +73,9 @@ export interface EnvironmentOptions {
 
 export type { HappyDOMOptions, JSDOMOptions }
 
+/**
+ * @deprecated
+ */
 export type VitestRunMode = 'test'
 
 export interface ProjectName {
