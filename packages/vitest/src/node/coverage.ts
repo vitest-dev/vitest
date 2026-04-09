@@ -277,7 +277,8 @@ export class BaseCoverageProvider {
     // If there's a result from previous run, overwrite it
     entry[environment][testFilenames] = filename
 
-    const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
+    const promise = fs.mkdir(this.coverageFilesDirectory, { recursive: true })
+      .then(() => fs.writeFile(filename, JSON.stringify(coverage), 'utf-8'))
     this.pendingPromises.push(promise)
   }
 
