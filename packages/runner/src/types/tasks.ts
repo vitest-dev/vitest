@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
-import type { Bench, BenchOptions, Task as BenchTask, Fn, FnOptions, Statistics } from 'tinybench'
+import type { Statistics } from 'tinybench'
+import type { Bench } from '../benchmark'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction, kChainableContext } from '../utils/chain'
@@ -1209,15 +1210,6 @@ export interface RuntimeContext {
   currentSuite: SuiteCollector | null
 }
 
-export interface BenchManager {
-  // TODO: jsdoc
-  readonly instance: Bench
-  get completed(): boolean
-  add: (name: string, fn: Fn, fnOpts?: FnOptions) => BenchTask
-  // TODO: return value
-  run: () => Promise<void>
-}
-
 /**
  * User's custom test context.
  */
@@ -1227,10 +1219,8 @@ export interface TestContext {
    */
   readonly task: Readonly<Test>
 
-  /**
-   * The bench instance to run your benchmarks with
-   */
-  readonly bench: (options?: BenchOptions) => BenchManager
+  // TODO: types
+  readonly bench: Bench
 
   /**
    * An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be aborted if the test times out or
