@@ -1,32 +1,18 @@
 <script setup lang="ts">
 import type { BrowserTraceArtifact } from '@vitest/runner'
-import type { snapshot as rrwebSnapshot } from 'rrweb-snapshot'
+import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-// - share types with browser/trace.ts
 // - how to highlight selector
 // - remount on selected test change
-
-type RrwebSnapshot = NonNullable<ReturnType<typeof rrwebSnapshot>>
-
-interface TraceStep {
-  name: string
-  stack?: string
-  selector?: string
-  snapshot?: RrwebSnapshot
-}
-
-interface TraceData {
-  steps: TraceStep[]
-}
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
 }>()
 
-const data = computed(() => props.trace.data as TraceData)
+const data = computed(() => props.trace.data as BrowserTraceData)
 const selectedIndex = ref(0)
 const selectedStep = computed(() => data.value.steps[selectedIndex.value])
 const iframeEl = ref<HTMLIFrameElement>()
