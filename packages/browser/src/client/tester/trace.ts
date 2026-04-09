@@ -9,6 +9,7 @@ export interface BrowserTraceData {
 
 export interface BrowserTraceEntry {
   name: string
+  // TODO: resolve location (need to go server?)
   stack?: string
   selector?: string
   snapshot: unknown
@@ -21,6 +22,7 @@ declare let __vitest_dom_snapshot__: typeof import('rrweb-snapshot')
 const browserTraceEntries: Map<string, BrowserTraceEntry[]>
   = ((globalThis as any).__vitest_browser_trace__ ??= new Map())
 
+// TODO: should we avoid accumulating? send snapshot and clear to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
   payload: Omit<BrowserTraceEntry, 'timestamp' | 'snapshot'>,
