@@ -136,7 +136,7 @@ export function resolveOptions(
     root,
     screenshotDirectory: relative(
       root,
-      join(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__'),
+      resolve(root, context.project.config.browser.screenshotDirectory ?? '__screenshots__'),
     ),
     attachmentsDir: relative(root, context.project.config.attachmentsDir),
     testFileDirectory: relative(root, dirname(context.testPath)),
