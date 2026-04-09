@@ -13,7 +13,9 @@ interface BrowserTraceData {
   steps: BrowserTraceArtifactStep[]
 }
 
-const browserTraceEntries = new Map<string, BrowserTraceArtifactStep[]>()
+// TODO: why global
+const browserTraceEntries: Map<string, BrowserTraceArtifactStep[]>
+  = ((globalThis as any).__vitest_browser_trace__ ??= new Map())
 
 export function recordBrowserTraceEntry(
   task: Task,
