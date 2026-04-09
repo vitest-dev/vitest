@@ -299,6 +299,13 @@ Apply exclusions again after coverage has been remapped to original sources. (de
 
 Directory of HTML coverage output to be served in UI mode and HTML reporter.
 
+### coverage.trackProcessAndWorker
+
+- **CLI:** `--coverage.trackProcessAndWorker`
+- **Config:** [coverage.trackProcessAndWorker](/config/coverage#coverage-trackprocessandworker)
+
+Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)
+
 ### mode
 
 - **CLI:** `--mode <name>`
