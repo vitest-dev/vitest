@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { BrowserTraceArtifact } from '@vitest/runner'
+import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
+import { getLocationString, openLocation } from '~/composables/location'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - remount on selected test change
@@ -10,6 +12,7 @@ import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
+  test: RunnerTestCase
 }>()
 
 const data = computed(() => props.trace.data as BrowserTraceData)
@@ -72,11 +75,20 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         v-for="(step, index) of data.entries"
         :key="index"
         type="button"
-        class="text-left px-2 py-1 rounded text-sm truncate"
+        class="text-left px-2 py-1 rounded text-sm"
         :class="selectedIndex === index ? 'bg-blue-500/20' : 'hover:bg-gray/10'"
         @click="selectedIndex = index"
       >
-        {{ step.name }}
+        <div truncate>
+          {{ step.name }}
+        </div>
+        <div
+          v-if="step.location"
+          class="text-xs opacity-50 truncate cursor-pointer hover:opacity-80"
+          @click.stop="openLocation(test, step.location)"
+        >
+          {{ getLocationString(step.location) }}
+        </div>
       </button>
     </div>
     <div flex="~ col" overflow-hidden>

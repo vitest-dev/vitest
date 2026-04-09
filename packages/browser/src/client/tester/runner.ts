@@ -147,10 +147,10 @@ export function createBrowserRunner(
       }
       const traceData = getBrowserTrace(task.id)
       if (traceData) {
-        await recordArtifact(task, {
-          type: 'internal:browserTrace',
-          data: traceData,
-        })
+        await this.commands.triggerCommand(
+          '__vitest_recordBrowserTrace',
+          [{ testId: task.id, data: traceData }],
+        )
       }
 
       if (this.config.bail && task.result?.state === 'fail') {

@@ -9,8 +9,9 @@ export interface BrowserTraceData {
 
 export interface BrowserTraceEntry {
   name: string
-  // TODO: resolve location (need to go server? no just do all on final record time.)
   stack?: string
+  // resolved server-side from stack in __vitest_recordBrowserTrace command
+  location?: { file: string; line: number; column: number }
   selector?: string
   snapshot: TraceSnapshot
 }

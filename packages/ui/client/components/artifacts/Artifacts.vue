@@ -23,7 +23,7 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
         handledArtifacts.push({
           artifact,
           component: TraceView,
-          props: { trace: artifact } satisfies ComponentProps<typeof TraceView>,
+          props: { trace: artifact, test } satisfies ComponentProps<typeof TraceView>,
         })
         continue
       }
