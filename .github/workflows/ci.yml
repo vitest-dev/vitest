@@ -120,6 +120,9 @@ jobs:
       - name: Test Examples
         run: pnpm run test:examples
 
+      - name: Unit Test UI
+        run: pnpm -C packages/ui test:ui
+
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

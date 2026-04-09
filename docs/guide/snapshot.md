@@ -4,6 +4,10 @@ title: Snapshot | Guide
 
 # Snapshot
 
+::: tip
+For a beginner-friendly introduction to snapshot testing, see the [Snapshot Testing](/guide/learn/snapshots) tutorial.
+:::
+
 <CourseLink href="https://vueschool.io/lessons/snapshots-in-vitest?friend=vueuse">Learn Snapshot by video from Vue School</CourseLink>
 
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
@@ -119,6 +123,38 @@ test('button looks correct', async () => {
 ```
 
 This captures screenshots and compares them against reference images to detect unintended visual changes. Learn more in the [Visual Regression Testing guide](/guide/browser/visual-regression-testing).
+
+## ARIA Snapshots <Badge type="warning">experimental</Badge> <Version>4.1.4</Version>
+
+ARIA snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Based on [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to visual regression testing — asserting structure and meaning rather than pixels.
+
+For example, given this HTML:
+
+```html
+<nav aria-label="Main">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+</nav>
+```
+
+You can assert its accessibility tree:
+
+```ts
+import { expect, test } from 'vitest'
+import { page } from 'vitest/browser'
+
+test('navigation structure', async () => {
+  await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
+    - navigation "Main":
+      - link "Home":
+        - /url: /
+      - link "About":
+        - /url: /about
+  `)
+})
+```
+
+See the dedicated [ARIA Snapshots guide](/guide/browser/aria-snapshots) for syntax details, retry behavior in Browser Mode, and file vs. inline snapshot examples. See [`toMatchAriaSnapshot`](/api/expect#tomatcharisnapshot) and [`toMatchAriaInlineSnapshot`](/api/expect#tomatchariainlinesnapshot) for the full API reference.
 
 ## Custom Serializer
 
@@ -257,6 +293,26 @@ For inline snapshot matchers, the snapshot argument must be the last parameter (
 File snapshot matchers must be `async` — `toMatchFileSnapshot` returns a `Promise`. Remember to `await` the result in the matcher and in your test.
 :::
 
+::: warning
+When custom inline snapshot matcher is aynchronous, Vitest cannot automatically infer the call location for inline snapshot rewriting. You must capture the call site by setting the `'error'` flag on the chai assertion object:
+
+```ts
+import { expect, chai, Snapshots } from 'vitest'
+
+const { toMatchInlineSnapshot } = Snapshots
+
+expect.extend({
+  async toMatchTransformedInlineSnapshot(received: string, inlineSnapshot?: string) {
+    // capture call site synchronously at the top of matcher implementation
+    chai.util.flag(this.assertion, 'error', new Error())
+    const transformed = await transform(received)
+    return toMatchInlineSnapshot.call(this, transformed, inlineSnapshot)
+  },
+})
+```
+
+:::
+
 For TypeScript, extend the `Assertion` interface:
 
 ```ts
@@ -274,6 +330,192 @@ declare module 'vitest' {
 ::: tip
 See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
 :::
+
+## Custom Snapshot Domain <Badge type="warning">experimental</Badge> <Version>4.1.4</Version> {#custom-snapshot-domain}
+
+Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further: it owns the entire comparison pipeline for a custom matcher, including how to capture a value, render it, parse a stored snapshot, and match them semantically.
+
+### The adapter interface
+
+A domain adapter implements four methods and is generic over two types — `Captured` (what the value actually is) and `Expected` (what the stored snapshot parses into):
+
+```ts
+import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+
+const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
+  name: 'my-domain',
+
+  // Extract structured data from the received value
+  capture(received: unknown): Captured { /* ... */ },
+
+  // Render captured data as the snapshot string (what gets stored)
+  render(captured: Captured): string { /* ... */ },
+
+  // Parse a stored snapshot string into a structured expected value
+  parseExpected(input: string): Expected { /* ... */ },
+
+  // Compare captured vs expected, return pass/fail and resolved output
+  match(captured: Captured, expected: Expected): DomainMatchResult { /* ... */ },
+}
+```
+
+#### `DomainMatchResult`
+
+The `match` method returns a `DomainMatchResult` with two optional string fields beyond `pass`:
+
+- **`resolved`** — the captured value viewed through the template's lens. Where the template uses patterns (e.g. regexes) or omits details, the resolved string adopts those patterns. Where the template doesn't match, it uses literal captured values. This serves as both the actual side of diffs and the value written on `--update`. When omitted, falls back to `render(capture(received))`.
+
+- **`expected`** — the stored template re-rendered as a string. Used as the expected side of diffs. When omitted, falls back to the raw snapshot string from the snap file or inline snapshot.
+
+:::details Why are `Captured` and `Expected` separate types?
+
+When a snapshot is first generated, `render(captured)` produces a plain string that gets stored. But once stored, the user can **hand-edit** it — replacing literals with regex patterns, relaxing assertions, or adding domain-specific query syntax. After editing, `parseExpected(input)` parses this modified string into a type that is _richer_ than what `capture` produces.
+
+For example, in the [key-value adapter](#example-key-value-adapter) below, `Captured` values are always `string`, but `Expected` values can be `string | RegExp`:
+
+```ts
+type KVCaptured = Record<string, string>
+type KVExpected = Record<string, string | RegExp>
+```
+
+This asymmetry is what makes `--update` work correctly: `match` returns a `resolved` string that updates changed literal parts while **preserving** the user's hand-edited patterns. If both sides were the same type, there would be no way to distinguish "what the value actually is" from "what the user chose to assert" — and every update would overwrite the user's patterns.
+
+:::
+
+### Build a matcher from the adapter
+
+Register a custom matcher with `expect.extend(...)` and call the snapshot composables from `vitest`:
+
+```ts [setup.ts]
+import { expect, Snaphsots } from 'vitest'
+
+expect.extend({
+  toMatchMyDomainSnapshot(received: unknown) {
+    return Snaphsots.toMatchDomainSnapshot.call(this, myAdapter, received)
+  },
+  toMatchMyDomainInlineSnapshot(received: unknown, inlineSnapshot?: string) {
+    return Snaphsots.toMatchDomainInlineSnapshot.call(
+      this,
+      myAdapter,
+      received,
+      inlineSnapshot,
+    )
+  },
+})
+```
+
+Then use your matcher in tests:
+
+```ts
+expect(value).toMatchMyDomainSnapshot()
+expect(value).toMatchMyDomainInlineSnapshot(`key=value`)
+```
+
+### Example: key-value adapter
+
+A minimal adapter that stores objects as `key=value` lines, with regex pattern and subset key match support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
+
+```ts [kv-adapter.ts]
+import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+
+type KVCaptured = Record<string, string>
+type KVExpected = Record<string, string | RegExp>
+
+function renderKV(obj: Record<string, unknown>) {
+  return `\n${Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n')}\n`
+}
+
+export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
+  name: 'kv',
+
+  capture(received: unknown): KVCaptured {
+    if (received && typeof received === 'object') {
+      return Object.fromEntries(
+        Object.entries(received).map(([k, v]) => [k, String(v)]),
+      )
+    }
+    throw new TypeError('kv adapter expects a plain object')
+  },
+
+  render(captured: KVCaptured): string {
+    return renderKV(captured)
+  },
+
+  parseExpected(input: string): KVExpected {
+    const entries = input.trim().split('\n').map((line) => {
+      const eq = line.indexOf('=')
+      const key = line.slice(0, eq)
+      const raw = line.slice(eq + 1)
+      const value = (raw.startsWith('/') && raw.endsWith('/') && raw.length > 1)
+        ? new RegExp(raw.slice(1, -1))
+        : raw
+      return [key, value]
+    })
+    return Object.fromEntries(entries)
+  },
+
+  match(captured: KVCaptured, expected: KVExpected): DomainMatchResult {
+    const resolvedLines: string[] = []
+    let pass = true
+
+    for (const [key, actualValue] of Object.entries(captured)) {
+      const expectedValue = expected[key]
+
+      // non-asserted keys are skipped (works as subset match)
+      if (typeof expectedValue === 'undefined') {
+        continue
+      }
+
+      // preserve matched pattern for normalized diff and partial update
+      if (expectedValue instanceof RegExp && expectedValue.test(actualValue)) {
+        resolvedLines.push(`${key}=/${expectedValue.source}/`)
+        continue
+      }
+
+      resolvedLines.push(`${key}=${actualValue}`)
+      pass &&= actualValue === expectedValue
+    }
+
+    return {
+      pass,
+      message: pass ? undefined : 'KV entries do not match',
+      resolved: `\n${resolvedLines.join('\n')}\n`,
+      expected: `\n${renderKV(expected)}\n`,
+    }
+  },
+}
+```
+
+```ts [setup.ts]
+import { expect, Snapshots } from 'vitest'
+import { kvAdapter } from './kv-adapter'
+
+expect.extend({
+  toMatchKvSnapshot(received: unknown) {
+    return Snapshots.toMatchDomainSnapshot.call(this, kvAdapter, received)
+  },
+  toMatchKvInlineSnapshot(received: unknown, inlineSnapshot?: string) {
+    return Snapshots.toMatchDomainInlineSnapshot.call(this, kvAdapter, received, inlineSnapshot)
+  },
+})
+```
+
+```ts [example.test.ts]
+import { expect, test } from 'vitest'
+
+test('user data', () => {
+  const user = { name: 'Alice', score: '42' }
+  expect(user).toMatchKvSnapshot()
+})
+
+test('user data inline', () => {
+  const user = { name: 'Alice', age: 100, score: '42' }
+  expect(user).toMatchKvInlineSnapshot(`
+    name=Alice
+    score=/\\d+/
+  `)
+})
+```
 
 ## Difference from Jest
 
