@@ -57,6 +57,7 @@ export async function VitestPlugin(
           removeUndefinedValues(viteConfig.test ?? {}),
           options,
         )
+        handleTraceViewConfig(testConfig, vitest)
         testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
 
         // store defines for globalThis to make them
@@ -221,6 +222,7 @@ export async function VitestPlugin(
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge({}, configDefaults, viteConfigTest, options)
+        handleTraceViewConfig(options, vitest)
         options.api = resolveApiServerConfig(options, defaultPort)
 
         // we replace every "import.meta.env" with "process.env"
@@ -298,4 +300,13 @@ function removeUndefinedValues<T extends Record<string, any>>(
     }
   }
   return obj
+}
+
+// TODO: no idea
+function handleTraceViewConfig(config: UserConfig, vitest: Vitest) {
+  const browser = config.browser
+  const traceView = browser?.traceView ?? vitest._cliOptions.browser?.traceView
+  if (browser?.enabled && traceView && config.watch) {
+    config.ui = true
+  }
 }
