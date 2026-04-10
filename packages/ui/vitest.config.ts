@@ -7,11 +7,12 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     optimizeDeps: {
-      include: ['vue-router', 'splitpanes', 'd3-graph-controller', 'vue-virtual-scroller'],
+      include: ['vue-router', 'splitpanes', 'd3-graph-controller', 'vue-virtual-scroller', 'rrweb-snapshot'],
     },
     test: {
       browser: {
         enabled: true,
+        traceView: true,
         provider: playwright({
           actionTimeout: 5000,
         }),
