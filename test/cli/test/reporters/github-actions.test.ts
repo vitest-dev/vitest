@@ -121,6 +121,37 @@ describe(GithubActionsReporter, () => {
       `)
     })
 
+    it('includes project name in heading when set', async ({ onTestFinished }) => {
+      const outputPath = resolve(tmpdir(), randomUUID())
+
+      onTestFinished(async () => {
+        await rm(outputPath).catch(() => {
+          console.error(`Could not remove ${outputPath}`)
+        })
+      })
+
+      const workspacePath = resolve(import.meta.dirname, '..', '..', '..', '..')
+
+      await runVitest({
+        name: 'my-project',
+        reporters: new GithubActionsReporter({
+          jobSummary: {
+            outputPath,
+            fileLinks: {
+              commitHash: 'aaa',
+              repository: 'owner/repo',
+              workspacePath,
+            },
+          },
+        }),
+        root: './fixtures/reporters/github-actions',
+      })
+
+      const summary = await readFile(outputPath, 'utf8')
+
+      expect(summary.startsWith('## Vitest Test Report (my-project)\n')).toBe(true)
+    })
+
     it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options) => {
       const outputPath = resolve(tmpdir(), randomUUID())
 
