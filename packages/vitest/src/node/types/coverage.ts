@@ -356,11 +356,11 @@ interface Thresholds {
  */
 export interface CoverageInstrumenter {
   /** Instrument source code synchronously. Returns the instrumented code string. */
-  instrumentSync(code: string, filename: string, inputSourceMap?: any): string
+  instrumentSync: (code: string, filename: string, inputSourceMap?: any) => string
   /** Get the source map of the last instrumented file. */
-  lastSourceMap(): any
+  lastSourceMap: () => any
   /** Get the Istanbul-compatible file coverage object of the last instrumented file. */
-  lastFileCoverage(): any
+  lastFileCoverage: () => any
 }
 
 /** @deprecated Use `CoverageOptions` instead */
