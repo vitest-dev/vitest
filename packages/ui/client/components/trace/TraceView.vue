@@ -97,7 +97,6 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         >
           {{ step.selector }}
         </div>
-        <!-- TODO: clicking link should also update current step -->
         <div
           v-if="step.location"
           class="text-xs opacity-50 truncate cursor-pointer hover:opacity-80"
