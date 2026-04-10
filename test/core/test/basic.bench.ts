@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 
 test('different libraries', async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('lib 1', () => {}),
     bench('lib 2', () => {}),
     bench('lib 3', () => {}),

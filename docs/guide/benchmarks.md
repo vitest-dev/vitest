@@ -24,7 +24,7 @@ The `bench()` function registers a benchmark without executing it. Calling `.run
 
 ## Comparing Benchmarks
 
-Use `bench.run()` to compare multiple benchmarks against each other:
+Use `bench.compare()` to compare multiple benchmarks against each other:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -32,7 +32,7 @@ import { expect, test } from 'vitest'
 test('compare JSON libraries', async ({ bench }) => {
   const input = '{"key":"value","nested":{"a":1}}'
 
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('JSON.parse', () => {
       JSON.parse(input)
     }),
@@ -49,11 +49,11 @@ When comparing benchmarks, Vitest runs them using interleaved iterations to redu
 
 ### Options
 
-You can pass options as the last argument to `bench.run()`:
+You can pass options as the last argument to `bench.compare()`:
 
 ```ts
 test('compare with options', async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('lib1', () => { lib1() }),
     bench('lib2', () => { lib2() }),
     {
@@ -68,7 +68,7 @@ You can also pass per-benchmark hooks:
 
 ```ts
 test('benchmarks with setup', async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('with-cache', () => {
       readFromCache()
     }),
@@ -93,7 +93,7 @@ Use `toBeFasterThan()` and `toBeSlowerThan()` matchers to assert relative perfor
 import { expect, test } from 'vitest'
 
 test('lib1 is faster than lib2', async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('lib1', () => { lib1() }),
     bench('lib2', () => { lib2() }),
   )
@@ -134,7 +134,7 @@ Since benchmarks can be noisy, use the `retry` option to automatically retry fai
 
 ```ts
 test('performance comparison', { retry: 3 }, async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('lib1', () => { lib1() }),
     bench('lib2', () => { lib2() }),
   )
@@ -160,11 +160,11 @@ test('no performance regression', async ({ bench }) => {
 <!-- TODO -->
 - **Updating baselines**: use the `--update` flag to update stored baselines.
 
-Baselines work inside `bench.run()` too — you can mix regular and baseline benchmarks:
+Baselines work inside `bench.compare()` too — you can mix regular and baseline benchmarks:
 
 ```ts
 test('compare against baseline', async ({ bench }) => {
-  const result = await bench.run(
+  const result = await bench.compare(
     bench('current implementation', () => { current() }),
     bench.withBaseline('previous implementation', () => { previous() }),
   )

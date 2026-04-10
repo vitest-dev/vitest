@@ -46,7 +46,7 @@ interface BenchCompare {
 export interface Bench {
   <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions): BenchRegistration<Name>
   withBaseline: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => BaselineRegistration<Name>
-  run: BenchCompare
+  compare: BenchCompare
 }
 
 export function createBench(test: Test, runner: VitestRunner): Bench {
@@ -173,7 +173,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     }
   }
 
-  bench.run = async (...registrations) => {
+  bench.compare = async (...registrations) => {
     const bench = createRegisteredTinybench('compare', registrations)
     await bench.run() // TODO: deal with error
     await recordBenchmark(bench)

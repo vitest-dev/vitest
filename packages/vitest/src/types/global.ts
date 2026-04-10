@@ -97,7 +97,7 @@ declare module '@vitest/expect' {
      * Compares mean latency — lower is faster.
      *
      * @example
-     * const result = await bench.run(
+     * const result = await bench.compare(
      *   bench('lib1', () => { lib1() }),
      *   bench('lib2', () => { lib2() }),
      * )
@@ -114,7 +114,7 @@ declare module '@vitest/expect' {
      * Compares mean latency — higher is slower.
      *
      * @example
-     * const result = await bench.run(
+     * const result = await bench.compare(
      *   bench('lib1', () => { lib1() }),
      *   bench('lib2', () => { lib2() }),
      * )
