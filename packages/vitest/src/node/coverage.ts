@@ -465,28 +465,53 @@ export class BaseCoverageProvider {
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
+    const perFile = this.options.thresholds?.perFile
+
+    // When perFile is an object, resolve its threshold values for per-file checks.
+    // When perFile is true, the same global thresholds are reused per file.
+    const perFileThresholds: ResolvedThreshold['thresholds'] | null
+      = perFile && typeof perFile === 'object'
+        ? resolveGlobThresholds(perFile)
+        : null
+
     for (const { coverageMap, thresholds, name } of allThresholds) {
       if (
         thresholds.branches === undefined
         && thresholds.functions === undefined
         && thresholds.lines === undefined
         && thresholds.statements === undefined
+        && !perFileThresholds
       ) {
         continue
       }
 
-      // Construct list of coverage summaries where thresholds are compared against
-      const summaries = this.options.thresholds?.perFile
-        ? coverageMap.files().map((file: string) => ({
-            file,
-            summary: coverageMap.fileCoverageFor(file).toSummary(),
-          }))
-        : [{ file: null, summary: coverageMap.getCoverageSummary() }]
+      // Construct list of coverage summaries where thresholds are compared against.
+      // When perFile is an object, we need BOTH the global aggregate (checked against
+      // the top-level thresholds) AND each individual file (checked against perFileThresholds).
+      // When perFile is true, only per-file entries are produced using the same thresholds.
+      // Otherwise only the global aggregate is produced.
+      const summaries = perFileThresholds
+          ? [
+              { file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds },
+              ...coverageMap.files().map((file: string) => ({
+                file,
+                summary: coverageMap.fileCoverageFor(file).toSummary(),
+                activeThresholds: perFileThresholds,
+              })),
+            ]
+          : perFile
+            ? coverageMap.files().map((file: string) => ({
+                file,
+                summary: coverageMap.fileCoverageFor(file).toSummary(),
+                activeThresholds: thresholds,
+              }))
+            : [{ file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds }]
 
       // Check thresholds of each summary
-      for (const { summary, file } of summaries) {
+      for (const { summary, file, activeThresholds } of summaries) {
+
         for (const thresholdKey of THRESHOLD_KEYS) {
-          const threshold = thresholds[thresholdKey]
+          const threshold = activeThresholds[thresholdKey]
 
           if (threshold === undefined) {
             continue
@@ -510,7 +535,7 @@ export class BaseCoverageProvider {
               let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
               } threshold (${threshold}%)`
 
-              if (this.options.thresholds?.perFile && file) {
+              if (perFile && file) {
                 errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
               }
 
@@ -532,7 +557,7 @@ export class BaseCoverageProvider {
               let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
               } threshold (${absoluteThreshold})`
 
-              if (this.options.thresholds?.perFile && file) {
+              if (perFile && file) {
                 errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
               }
 

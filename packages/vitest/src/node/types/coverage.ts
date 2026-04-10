@@ -294,8 +294,25 @@ interface Thresholds {
   /** Set global thresholds to `100` */
   100?: boolean
 
-  /** Check thresholds per file. */
-  perFile?: boolean
+  /**
+   * Check thresholds per file.
+   *
+   * When set to `true`, the same global threshold values (`lines`, `branches`, etc.)
+   * are enforced on each individual file.
+   *
+   * When set to an object, those specific threshold values are enforced per file
+   * while the top-level thresholds still apply globally.
+   *
+   * @example
+   * ```ts
+   * // Each file must have at least 50% coverage, globally at least 80%
+   * thresholds: {
+   *   lines: 80,
+   *   perFile: { lines: 50 },
+   * }
+   * ```
+   */
+  perFile?: boolean | { lines?: number; branches?: number; functions?: number; statements?: number }
 
   /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
