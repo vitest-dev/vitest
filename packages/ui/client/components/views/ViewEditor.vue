@@ -11,11 +11,6 @@ import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
 import { openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
-import {
-  activeTraceLocationsByFile,
-  selectedTraceStepIndex,
-  selectTraceStepAtFileLine,
-} from '~/composables/trace-view'
 import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
@@ -125,10 +120,8 @@ const annotations = computed(() => {
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
 const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
-const traceMarkerLines: number[] = []
 
 const hasBeenEdited = ref(false)
-const TRACE_GUTTER_ID = 'trace-step-gutter'
 
 function clearListeners() {
   listeners.forEach(([el, l, t]) => {
@@ -144,52 +137,6 @@ useResizeObserver(editor, () => {
 
 function codemirrorChanges() {
   draft.value = serverCode.value !== codemirrorRef.value!.getValue()
-}
-
-function clearTraceMarkers(cmValue?: CodeMirror.EditorFromTextArea) {
-  traceMarkerLines.forEach((line) => {
-    cmValue?.setGutterMarker(line, TRACE_GUTTER_ID, null)
-  })
-  traceMarkerLines.length = 0
-}
-
-function createTraceMarker(file: string, line: number, indexes: number[]) {
-  const marker = document.createElement('button')
-  marker.type = 'button'
-  marker.className = 'trace-step-marker'
-
-  if (indexes.includes(selectedTraceStepIndex.value)) {
-    marker.classList.add('trace-step-marker-active')
-  }
-
-  marker.title = indexes.length > 1
-    ? `Trace steps: ${indexes.length}`
-    : 'Trace step'
-  marker.addEventListener('click', () => {
-    selectTraceStepAtFileLine(file, line)
-  })
-  return marker
-}
-
-function syncTraceMarkers() {
-  const cmValue = codemirrorRef.value
-  clearTraceMarkers(cmValue)
-
-  const filepath = props.file?.filepath
-  if (!cmValue || !filepath) {
-    return
-  }
-
-  const lineEntries = activeTraceLocationsByFile.value.get(filepath)
-  if (!lineEntries) {
-    return
-  }
-
-  lineEntries.forEach((indexes, line) => {
-    const lineIndex = line - 1
-    cmValue.setGutterMarker(lineIndex, TRACE_GUTTER_ID, createTraceMarker(filepath, line, indexes))
-    traceMarkerLines.push(lineIndex)
-  })
 }
 
 watch(
@@ -357,14 +304,6 @@ watchDebounced(() => [finished.value, saving.value, currentPosition.value] as co
   }
 }, { debounce: 100, flush: 'post' })
 
-watch(
-  () => [codemirrorRef.value, props.file?.filepath, activeTraceLocationsByFile.value, selectedTraceStepIndex.value] as const,
-  () => {
-    syncTraceMarkers()
-  },
-  { flush: 'post', immediate: true },
-)
-
 async function onSave(content: string) {
   if (saving.value) {
     return
@@ -438,10 +377,7 @@ async function onSave(content: string) {
 }
 
 // we need to remove listeners before unmounting the component: the watcher will not be called
-onBeforeUnmount(() => {
-  clearListeners()
-  clearTraceMarkers(codemirrorRef.value)
-})
+onBeforeUnmount(clearListeners)
 </script>
 
 <template>
@@ -449,34 +385,9 @@ onBeforeUnmount(() => {
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{
-      gutters: ['CodeMirror-linenumbers', TRACE_GUTTER_ID],
-      lineNumbers: true,
-      readOnly: isReport || !config.api?.allowWrite,
-      saving,
-    }"
+    v-bind="{ lineNumbers: true, readOnly: isReport || !config.api?.allowWrite, saving }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"
   />
 </template>
-
-<style scoped>
-:deep(.trace-step-marker) {
-  width: 8px;
-  height: 8px;
-  margin: 0 auto;
-  border: 1px solid rgb(59 130 246 / 0.55);
-  border-radius: 9999px;
-  background: transparent;
-  cursor: pointer;
-}
-
-:deep(.trace-step-marker-active) {
-  background: rgb(59 130 246 / 0.8);
-}
-
-:deep(.CodeMirror-gutters .CodeMirror-gutter.trace-step-gutter) {
-  width: 12px;
-}
-</style>
