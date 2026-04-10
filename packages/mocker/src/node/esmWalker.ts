@@ -255,17 +255,13 @@ export function esmWalker(
   identifiers.forEach(([node, stack]) => {
     if (!isInScope(node.name, stack)) {
       const parent = stack[0]
-      const grandparent = stack[1]
       const hasBindingShortcut
         = isStaticProperty(parent)
           && parent.shorthand
           && (!isNodeInPattern(parent)
             || isInDestructuringAssignment(parent, parentStack))
 
-      const classDeclaration
-        = (parent.type === 'PropertyDefinition'
-          && grandparent?.type === 'ClassBody')
-        || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+      const classDeclaration = (parent.type === 'ClassDeclaration' && node === parent.superClass)
 
       const classExpression
         = parent.type === 'ClassExpression' && node === parent.id
@@ -309,6 +305,12 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   // class method name
   if (parent.type === 'MethodDefinition' && !parent.computed) {
     return false
+  }
+
+  // class property
+  if (parent.type === 'PropertyDefinition' && !parent.computed) {
+    // Default values can still reference identifiers
+    return id === parent.value
   }
 
   // property key
