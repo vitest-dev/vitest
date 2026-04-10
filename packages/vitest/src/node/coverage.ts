@@ -491,25 +491,24 @@ export class BaseCoverageProvider {
       // When perFile is true, only per-file entries are produced using the same thresholds.
       // Otherwise only the global aggregate is produced.
       const summaries = perFileThresholds
-          ? [
-              { file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds },
-              ...coverageMap.files().map((file: string) => ({
-                file,
-                summary: coverageMap.fileCoverageFor(file).toSummary(),
-                activeThresholds: perFileThresholds,
-              })),
-            ]
-          : perFile
-            ? coverageMap.files().map((file: string) => ({
-                file,
-                summary: coverageMap.fileCoverageFor(file).toSummary(),
-                activeThresholds: thresholds,
-              }))
-            : [{ file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds }]
+        ? [
+            { file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds },
+            ...coverageMap.files().map((file: string) => ({
+              file,
+              summary: coverageMap.fileCoverageFor(file).toSummary(),
+              activeThresholds: perFileThresholds,
+            })),
+          ]
+        : perFile
+          ? coverageMap.files().map((file: string) => ({
+              file,
+              summary: coverageMap.fileCoverageFor(file).toSummary(),
+              activeThresholds: thresholds,
+            }))
+          : [{ file: null, summary: coverageMap.getCoverageSummary(), activeThresholds: thresholds }]
 
       // Check thresholds of each summary
       for (const { summary, file, activeThresholds } of summaries) {
-
         for (const thresholdKey of THRESHOLD_KEYS) {
           const threshold = activeThresholds[thresholdKey]
 
