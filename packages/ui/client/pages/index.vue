@@ -117,7 +117,6 @@ function allowBrowserEvents() {
               @resized="onModuleResized"
             >
               <Pane :size="detailSizes[0]" min-size="10">
-                <!-- TODO: trigger detailsPosition = 'bottom' when opening trace -->
                 <!-- TODO: make detailsPosition toggle available when trace view -->
                 <Splitpanes
                   v-if="browserState && showTracePane"

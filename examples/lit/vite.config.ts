@@ -14,6 +14,8 @@ export default defineConfig({
       instances: [
         { browser: 'chromium' },
       ],
+      // TODO: make it default on trace view?
+      detailsPanelPosition: 'bottom',
     },
   },
 })
