@@ -21,7 +21,7 @@ export const benchmarkConfigDefaults: Required<
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  includeSamples: false,
+  retainSamples: false,
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.

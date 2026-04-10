@@ -26,5 +26,5 @@ export interface BenchmarkUserOptions {
    * This is disabled by default to reduce memory usage.
    * @default false
    */
-  includeSamples?: boolean
+  retainSamples?: boolean
 }

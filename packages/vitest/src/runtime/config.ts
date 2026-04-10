@@ -120,7 +120,8 @@ export interface SerializedConfig {
   detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
-    includeSamples: boolean
+    enabled: boolean
+    retainSamples: boolean
   } | undefined
   serializedDefines: string
   experimental: {

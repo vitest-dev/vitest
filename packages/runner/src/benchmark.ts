@@ -56,6 +56,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     return new Tinybench({
       signal: test.context.signal,
       name: `${test.fullTestName} ${currentIndex}`,
+      retainSamples: runner.config.benchmark.retainSamples,
       ...options,
       now,
     })
@@ -106,14 +107,8 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
       }
       return {
         name: t.name,
-        latency: {
-          ...result.latency,
-          samples: undefined,
-        },
-        throughput: {
-          ...result.throughput,
-          samples: undefined,
-        },
+        latency: result.latency,
+        throughput: result.throughput,
         period: result.period,
         totalTime: result.totalTime,
         rank: 0,

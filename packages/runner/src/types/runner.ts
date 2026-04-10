@@ -27,6 +27,10 @@ export interface VitestRunnerConfig {
   passWithNoTests: boolean
   testNamePattern: RegExp | undefined
   allowOnly: boolean
+  benchmark: {
+    enabled: boolean
+    retainSamples: boolean
+  }
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
