@@ -152,6 +152,7 @@ export type {
 } from '../node/types/config'
 export type {
   BaseCoverageOptions,
+  CoverageInstrumenter,
   CoverageIstanbulOptions,
   CoverageOptions,
   CoverageProvider,
