@@ -917,6 +917,12 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
+      '@vitest/browser-preview':
+        specifier: workspace:*
+        version: link:../browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../browser-webdriverio
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
