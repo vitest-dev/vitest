@@ -1,4 +1,11 @@
 export type {
+  BaselineRegistration,
+  Bench,
+  BenchRegistration,
+  BenchResult,
+  BenchStorage,
+} from './benchmark'
+export type {
   CancelReason,
   FileSpecification,
   TestTagDefinition,
@@ -39,6 +46,7 @@ export type {
   Task,
   TaskBase,
   TaskCustomOptions,
+  TaskEventData,
   TaskEventPack,
   TaskHook,
   TaskMeta,
@@ -57,6 +65,8 @@ export type {
   TestArtifactLocation,
   TestArtifactRegistry,
   TestAttachment,
+  TestBenchmark,
+  TestBenchmarkTask,
   TestContext,
   TestFunction,
   TestOptions,

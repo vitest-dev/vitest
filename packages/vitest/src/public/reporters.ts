@@ -1,7 +1,5 @@
 export {
   AgentReporter,
-  BenchmarkReporter,
-  BenchmarkReportsMap,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
@@ -11,12 +9,10 @@ export {
   ReportersMap,
   TapFlatReporter,
   TapReporter,
-  VerboseBenchmarkReporter,
   VerboseReporter,
 } from '../node/reporters'
 export type {
   BaseReporter,
-  BenchmarkBuiltinReporters,
   BuiltinReporterOptions,
   BuiltinReporters,
   JsonAssertionResult,

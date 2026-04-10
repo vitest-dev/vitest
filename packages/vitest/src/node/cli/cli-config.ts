@@ -329,7 +329,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   mode: {
-    description: 'Override Vite mode (default: `test` or `benchmark`)',
+    description: 'Override Vite mode (default: `test`)',
     argument: '<name>',
   },
   isolate: {

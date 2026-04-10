@@ -11,6 +11,7 @@ import type {
   Test,
   TestAnnotation,
   TestArtifact,
+  TestBenchmark,
   TestContext,
   TestOptions,
   TestTags,
@@ -26,6 +27,10 @@ export interface VitestRunnerConfig {
   passWithNoTests: boolean
   testNamePattern: RegExp | undefined
   allowOnly: boolean
+  benchmark: {
+    enabled: boolean
+    retainSamples: boolean
+  }
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -230,6 +235,9 @@ export interface VitestRunner {
   trace?<T>(name: string, cb: () => T): T
   // eslint-disable-next-line ts/method-signature-style
   trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
+
+  // TODO: docs
+  onTestBenchmark?: (test: Test, benchmark: TestBenchmark) => unknown
 
   /** @internal */
   _currentSpecification?: FileSpecification | undefined

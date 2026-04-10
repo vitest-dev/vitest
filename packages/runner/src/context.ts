@@ -10,6 +10,7 @@ import type {
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
+import { createBench } from './benchmark'
 import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
@@ -166,6 +167,7 @@ export function createTestContext(
 
   context.signal = abortController.signal
   context.task = test
+  context.bench = createBench(test, runner)
 
   context.skip = (condition?: boolean | string, note?: string): never => {
     if (condition === false) {

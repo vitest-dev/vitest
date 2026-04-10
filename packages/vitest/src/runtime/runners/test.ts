@@ -7,6 +7,7 @@ import type {
   Suite,
   Task,
   Test,
+  TestBenchmark,
   TestContext,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
@@ -29,7 +30,6 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getBenchFn, getBenchOptions } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
@@ -261,6 +261,11 @@ export class TestRunner implements VitestTestRunner {
     return importDurations
   }
 
+  async onTestBenchmark(test: Test, benchmark: TestBenchmark): Promise<void> {
+    // TODO: move to overrides
+    await this.workerState.rpc.onTestBenchmark(test.id, benchmark)
+  }
+
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {
     const options: SpanOptions = typeof attributes === 'object' ? { attributes } : {}
     return this._otel.$(`vitest.test.runner.${name}`, options, cb || attributes as () => T)
@@ -279,15 +284,6 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
-
-  /**
-   * @deprecated
-   */
-  static getBenchFn: typeof getBenchFn = getBenchFn
-  /**
-   * @deprecated
-   */
-  static getBenchOptions: typeof getBenchOptions = getBenchOptions
 }
 
 function clearModuleMocks(config: SerializedConfig) {

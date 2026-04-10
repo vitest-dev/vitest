@@ -1,8 +1,7 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { Test } from '@vitest/runner'
+import type { BenchResult, Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
 interface SnapshotMatcher<T> {
@@ -92,6 +91,40 @@ declare module '@vitest/expect' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
+
+    /**
+     * Asserts that a benchmark result is faster than another benchmark result.
+     * Compares mean latency — lower is faster.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'))
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'), { delta: 0.1 })
+     */
+    toBeFasterThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
+
+    /**
+     * Asserts that a benchmark result is slower than another benchmark result.
+     * Compares mean latency — higher is slower.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'))
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'), { delta: 0.2 })
+     */
+    toBeSlowerThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
   }
 }
 
@@ -119,9 +152,5 @@ declare module '@vitest/runner' {
 
   interface TaskBase {
     logs?: UserConsoleLog[]
-  }
-
-  interface TaskResult {
-    benchmark?: BenchmarkResult
   }
 }

@@ -16,7 +16,6 @@ export interface SerializedConfig {
   runner: string | undefined
   isolate: boolean
   maxWorkers: number
-  mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
   root: string
@@ -121,7 +120,8 @@ export interface SerializedConfig {
   detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
   benchmark: {
-    includeSamples: boolean
+    enabled: boolean
+    retainSamples: boolean
   } | undefined
   serializedDefines: string
   experimental: {

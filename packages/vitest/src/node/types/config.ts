@@ -73,7 +73,10 @@ export interface EnvironmentOptions {
 
 export type { HappyDOMOptions, JSDOMOptions }
 
-export type VitestRunMode = 'test' | 'benchmark'
+/**
+ * @deprecated
+ */
+export type VitestRunMode = 'test'
 
 export interface ProjectName {
   label: string
@@ -1147,8 +1150,6 @@ export interface ResolvedConfig
     | 'fileParallelism'
     | 'tagsFilter'
   > {
-  mode: VitestRunMode
-
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
@@ -1179,10 +1180,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark?: Required<
-    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  >
-  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark: Required<BenchmarkUserOptions>
   shard?: {
     index: number
     count: number

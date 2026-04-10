@@ -383,6 +383,7 @@ function createSuiteCollector(
       meta: testMeta,
       annotations: [],
       artifacts: [],
+      benchmarks: [],
       tags: testTags,
     }
     const handler = options.handler

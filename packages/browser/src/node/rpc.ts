@@ -181,6 +181,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
           return vitest._testRun.recordArtifact(id, artifact)
         },
+        async onTestBenchmark(testId, benchmark) {
+          return vitest._testRun.recordBenchmark(testId, benchmark)
+        },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)
