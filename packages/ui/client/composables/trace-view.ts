@@ -4,6 +4,8 @@ import { ref, watch } from 'vue'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
+// TODO: review slop (NEVER REMOVE COMMENT)
+
 export const activeTrace = ref<BrowserTraceArtifact>()
 export const activeTraceTest = ref<RunnerTestCase>()
 export const selectedTraceStepIndex = ref(0)
