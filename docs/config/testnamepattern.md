@@ -5,7 +5,7 @@ outline: deep
 
 # testNamePattern <CRoot /> {#testnamepattern}
 
-- **Type** `string | RegExp`
+- **Type:** `string | RegExp`
 - **CLI:** `-t <pattern>`, `--testNamePattern=<pattern>`, `--test-name-pattern=<pattern>`
 
 Run tests with full names matching the pattern.
