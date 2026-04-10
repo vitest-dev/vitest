@@ -274,11 +274,9 @@ export interface CoverageOptions {
   /**
    * Custom instrumenter factory to use instead of the default `istanbul-lib-instrument`.
    *
-   * The factory receives the resolved coverage options and must return an object
-   * implementing the `Instrumenter` interface:
-   * - `instrumentSync(code, filename, inputSourceMap?)` — returns instrumented code
-   * - `lastSourceMap()` — returns the source map of the last instrumented file
-   * - `lastFileCoverage()` — returns the coverage object of the last instrumented file
+   * The factory receives options including `coverageVariable` (the global variable
+   * name Vitest uses to store coverage data) and must return an object implementing
+   * the `CoverageInstrumenter` interface.
    *
    * This allows using faster instrumenters (e.g., oxc-coverage-instrument, SWC) while
    * keeping the Istanbul coverage pipeline for collection, merging, and reporting.
@@ -292,13 +290,13 @@ export interface CoverageOptions {
    *   test: {
    *     coverage: {
    *       provider: 'istanbul',
-   *       instrumenter: (options) => createOxcInstrumenter(options),
+   *       instrumenter: options => createOxcInstrumenter(options),
    *     }
    *   }
    * })
    * ```
    */
-  instrumenter?: (options: ResolvedCoverageOptions) => CoverageInstrumenter
+  instrumenter?: (options: InstrumenterOptions) => CoverageInstrumenter
 
   /**
    * Directory of HTML coverage output to be served in UI mode and HTML reporter.
@@ -345,6 +343,16 @@ interface Thresholds {
 
   /** Thresholds for lines */
   lines?: number
+}
+
+/**
+ * Options passed to the custom instrumenter factory.
+ */
+export interface InstrumenterOptions {
+  /** Global variable name that Vitest uses to store coverage data at runtime. */
+  coverageVariable: string
+  /** Class method names to exclude from function coverage. */
+  ignoreClassMethods: string[]
 }
 
 /**

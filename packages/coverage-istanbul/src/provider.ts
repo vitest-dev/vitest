@@ -32,7 +32,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     this._initialize(ctx)
 
     if (this.options.instrumenter) {
-      this.instrumenter = this.options.instrumenter(this.options) as Instrumenter
+      this.instrumenter = this.options.instrumenter({
+        coverageVariable: COVERAGE_STORE_KEY,
+        ignoreClassMethods: this.options.ignoreClassMethods,
+      }) as Instrumenter
     }
     else {
       this.instrumenter = createInstrumenter({
