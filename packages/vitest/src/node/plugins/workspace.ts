@@ -79,6 +79,9 @@ export function WorkspaceVitestPlugin(
             workspaceNames.push(instance.name)
           }
         })
+        if (viteConfig.test?.benchmark?.enabled) {
+          workspaceNames.push(name ? `${name} (bench)` : 'bench')
+        }
 
         const filters = project.vitest.config.project
         // if there is `--project=...` filter, check if any of the potential projects match

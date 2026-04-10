@@ -134,6 +134,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     fn,
     fnOpts,
   ) {
+    validateBenchmarkProject(runner)
     return {
       [kRegistration]: true,
       name,
@@ -153,6 +154,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     fn,
     fnOpts,
   ) {
+    validateBenchmarkProject(runner)
     return {
       [kRegistration]: true,
       [kBaseline]: true,
@@ -169,6 +171,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
   }
 
   bench.compare = async (...registrations) => {
+    validateBenchmarkProject(runner)
     const bench = createRegisteredTinybench('compare', registrations)
     await bench.run() // TODO: deal with error
     await recordBenchmark(bench)
@@ -176,4 +179,15 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
   }
 
   return bench
+}
+
+function validateBenchmarkProject(runner: VitestRunner) {
+  if (!runner.config.benchmark.enabled) {
+    throw new Error(
+      `Cannot run a benchmark within a regular test run. `
+      + `Benchmarks are inherintly flaky, so Vitest groups them into its own project based on \`benchmark.include\` pattern. `
+      + `Are you using the \`bench\` function within a regular test? `
+      + `See more at https://vitest.dev/guide/benchmarking#stability`,
+    )
+  }
 }

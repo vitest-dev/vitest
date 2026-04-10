@@ -210,13 +210,15 @@ export async function resolveDefaultProjects(
   let lastGroupOrder = Math.max(0, ...resolvedProjects.map(p => p.config.sequence.groupOrder))
 
   resolvedProjects.forEach((project) => {
-    if (!project.config.benchmark.enabled) {
+    const benchmark = project.config.benchmark
+    if (!benchmark.enabled) {
       return
     }
 
     // TODO: if --project=bench is called, we shouldn't throw in the plugin
     const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
     if (!vitest.matchesProjectFilter(name)) {
+      benchmark.enabled = false
       return
     }
 
@@ -225,7 +227,6 @@ export async function resolveDefaultProjects(
     }
     names.add(name)
 
-    const benchmark = project.config.benchmark
     const benchmarkProject = TestProject._cloneTestProject(project, {
       ...project.config,
       name,
@@ -532,11 +533,15 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
 
 function getPotentialProjectNames(project: TestProject) {
   const names = [project.name]
+  // TODO: include benchmarks in browsers
   if (project.config.browser.instances) {
     names.push(...project.config.browser.instances.map(i => i.name!))
   }
   else if (project.config.browser.name) {
     names.push(project.config.browser.name)
+  }
+  if (project.config.benchmark.enabled) {
+    names.push(project.name ? `${project.name} (bench)` : 'bench')
   }
   return names
 }
