@@ -203,7 +203,7 @@ export abstract class BaseReporter implements Reporter {
   protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
     const testResult = test.result()
 
-    const { duration = 0 } = test.diagnostic() || {}
+    const diagnostic = test.diagnostic()
     const padding = this.getTestIndentation(test.task)
     const suffix = this.getTestCaseSuffix(test)
 
@@ -212,7 +212,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     // also print slow tests
-    else if (duration > this.ctx.config.slowTestThreshold) {
+    else if (diagnostic?.slow) {
       this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)} ${suffix}`)
     }
 
@@ -372,7 +372,9 @@ export abstract class BaseReporter implements Reporter {
       return ''
     }
 
-    const color = duration > this.ctx.config.slowTestThreshold
+    const slowTestThreshold = ('slowTestThreshold' in task && task.slowTestThreshold)
+      || this.ctx.config.slowTestThreshold
+    const color = duration > slowTestThreshold
       ? c.yellow
       : c.green
 

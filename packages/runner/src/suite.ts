@@ -384,6 +384,7 @@ function createSuiteCollector(
       annotations: [],
       artifacts: [],
       tags: testTags,
+      slowTestThreshold: options.slowTestThreshold,
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {

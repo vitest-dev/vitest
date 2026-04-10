@@ -340,6 +340,11 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    */
   artifacts: TestArtifact[]
   fullTestName: string
+  /**
+   * Threshold in milliseconds for a test to be considered slow.
+   * Overrides the global `slowTestThreshold` config option.
+   */
+  slowTestThreshold?: number
 }
 
 export type Task = Test | Suite | File
@@ -582,6 +587,11 @@ export interface TestOptions {
    * Custom test metadata available to reporters.
    */
   meta?: Partial<TaskMeta>
+  /**
+   * Threshold in milliseconds for a test to be considered slow.
+   * Overrides the global `slowTestThreshold` config option.
+   */
+  slowTestThreshold?: number
 }
 
 export interface TestTags {}
