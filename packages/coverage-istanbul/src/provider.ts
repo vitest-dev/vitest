@@ -31,27 +31,35 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
 
-    this.instrumenter = createInstrumenter({
-      produceSourceMap: true,
-      autoWrap: false,
-      esModules: true,
-      compact: false,
-      coverageVariable: COVERAGE_STORE_KEY,
-      coverageGlobalScope: 'globalThis',
-      coverageGlobalScopeFunc: false,
-      ignoreClassMethods: this.options.ignoreClassMethods,
-      parserPlugins: [
-        ...istanbulDefaults.instrumenter.parserPlugins,
-        ['importAttributes', { deprecatedAssertSyntax: true }],
-      ],
-      generatorOpts: {
-        // @ts-expect-error missing type
-        importAttributesKeyword: 'with',
-      },
+    if (this.options.instrumenter) {
+      this.instrumenter = this.options.instrumenter({
+        coverageVariable: COVERAGE_STORE_KEY,
+        ignoreClassMethods: this.options.ignoreClassMethods,
+      }) as Instrumenter
+    }
+    else {
+      this.instrumenter = createInstrumenter({
+        produceSourceMap: true,
+        autoWrap: false,
+        esModules: true,
+        compact: false,
+        coverageVariable: COVERAGE_STORE_KEY,
+        coverageGlobalScope: 'globalThis',
+        coverageGlobalScopeFunc: false,
+        ignoreClassMethods: this.options.ignoreClassMethods,
+        parserPlugins: [
+          ...istanbulDefaults.instrumenter.parserPlugins,
+          ['importAttributes', { deprecatedAssertSyntax: true }],
+        ],
+        generatorOpts: {
+          // @ts-expect-error missing type
+          importAttributesKeyword: 'with',
+        },
 
-      // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
-      ignoreLines: true,
-    })
+        // Custom option from the patched istanbul-lib-instrument: https://github.com/istanbuljs/istanbuljs/pull/835
+        ignoreLines: true,
+      })
+    }
   }
 
   requiresTransform(id: string): boolean {

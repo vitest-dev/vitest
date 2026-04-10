@@ -1,5 +1,5 @@
 import type { defineConfig } from 'vitest/config'
-import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import type { CoverageInstrumenter, CoverageProviderModule, InstrumenterOptions, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
@@ -206,5 +206,33 @@ test('reporters, mixed variations', () => {
       ['html', { verbose: true, subdir: 'string' }],
       ['custom-reporter-4', { some: 'option', width: 123 }],
     ],
+  })
+})
+
+test('custom instrumenter', () => {
+  // Custom instrumenter factory function
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: _options => ({
+      instrumentSync: (code, _filename, _sourceMap?) => code,
+      lastSourceMap: () => ({}),
+      lastFileCoverage: () => ({}),
+    }),
+  })
+
+  // Without instrumenter (default behavior)
+  assertType<Coverage>({
+    provider: 'istanbul',
+  })
+
+  // Verify CoverageInstrumenter type can be used as return type
+  const factory: (opts: InstrumenterOptions) => CoverageInstrumenter = _opts => ({
+    instrumentSync: code => code,
+    lastSourceMap: () => null,
+    lastFileCoverage: () => ({}),
+  })
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: factory,
   })
 })
