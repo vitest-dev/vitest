@@ -1,3 +1,9 @@
+import fs from 'node:fs'
+
+export function readInlineSnapshots(file: string) {
+  return extractInlineSnaphsots(fs.readFileSync(file, 'utf-8'))
+}
+
 export function extractInlineSnaphsots(code: string) {
   const matches = Array.from(
     code.matchAll(/\.toMatch(\w*)InlineSnapshot\(\s*`[\s\S]*?`\s*\)/g),
