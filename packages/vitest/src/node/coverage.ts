@@ -268,7 +268,7 @@ export class BaseCoverageProvider {
       )
     }
 
-    return error instanceof Error ? error : new Error(String(error))
+    return error
   }
 
   onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
