@@ -19,6 +19,7 @@ import {
 } from './trace'
 import { type } from './type'
 import { upload } from './upload'
+import { viewport } from './viewport'
 import { wheel } from './wheel'
 
 export default {
@@ -45,4 +46,5 @@ export default {
   __vitest_markTrace: markTrace as typeof markTrace,
   __vitest_groupTraceStart: groupTraceStart as typeof groupTraceStart,
   __vitest_groupTraceEnd: groupTraceEnd as typeof groupTraceEnd,
+  __vitest_viewport: viewport as typeof viewport,
 }

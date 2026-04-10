@@ -61,15 +61,20 @@ export class Cli {
     this.stderr = ''
   }
 
-  waitForStdout(expected: string) {
-    return this.waitForOutput(expected, 'stdout', this.waitForStdout)
+  waitForStdout(expected: string, timeout?: number) {
+    return this.waitForOutput(expected, 'stdout', this.waitForStdout, timeout)
   }
 
-  waitForStderr(expected: string) {
-    return this.waitForOutput(expected, 'stderr', this.waitForStderr)
+  waitForStderr(expected: string, timeout?: number) {
+    return this.waitForOutput(expected, 'stderr', this.waitForStderr, timeout)
   }
 
-  private waitForOutput(expected: string, source: Source, caller: Parameters<typeof Error.captureStackTrace>[1]) {
+  private waitForOutput(
+    expected: string,
+    source: Source,
+    caller: Parameters<typeof Error.captureStackTrace>[1],
+    timeout?: number,
+  ) {
     const error = new Error('Timeout')
     Error.captureStackTrace(error, caller)
 
@@ -78,15 +83,15 @@ export class Cli {
         return resolve()
       }
 
-      const timeout = setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         error.message = `Timeout when waiting for error "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
         reject(error)
-      }, process.env.CI ? 20_000 : 4_000)
+      }, timeout ?? process.env.CI ? 20_000 : 4_000)
 
       const listener = () => {
         if (this[source].includes(expected)) {
-          if (timeout) {
-            clearTimeout(timeout)
+          if (timeoutId) {
+            clearTimeout(timeoutId)
           }
 
           resolve()
