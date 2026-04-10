@@ -5,7 +5,11 @@ import { mergeConfig } from 'vite'
 import { defineConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
-// only playwright works so far
+// known working set of tests for providers
+// pnpm -C packages/ui test:ui
+// PROVIDER=webdriverio pnpm -C packages/ui test:ui SmallTab
+// PROVIDER=preview pnpm -C packages/ui test:ui SmallTab -t access
+
 const providerName = (process.env.PROVIDER || 'playwright') as
   | 'playwright'
   | 'webdriverio'
@@ -25,7 +29,6 @@ const testConfig = defineConfig({
     browser: {
       enabled: true,
       traceView: true,
-      headless: providerName !== 'preview',
       provider:
         providerName === 'preview'
           ? preview()

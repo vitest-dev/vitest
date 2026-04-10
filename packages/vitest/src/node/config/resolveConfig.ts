@@ -910,7 +910,12 @@ export function resolveConfig(
   if (resolved.browser.enabled && resolved.browser.traceView) {
     resolved.browser.detailsPanelPosition = 'bottom'
     resolved.browser.ui = false
-    // TODO: cannot force `--ui` because api/open config is decided early during `VitestPlugin.config`
+    if (resolved.browser.provider?.name === 'preview') {
+      resolved.browser.ui = true
+      resolved.browser.headless = false
+    }
+    // we try to enable `--ui` early in `VitestPlugin.config`,
+    // but we show warning if we somehow reach here
     if (resolved.watch && !resolved.ui) {
       logger.console.warn(
         c.yellow(

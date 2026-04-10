@@ -292,11 +292,14 @@ export async function VitestPlugin(
   ].filter(notNullish)
 }
 
-// TODO: no idea
+// traceView should auto enable UI but doing this during `resolveConfig` woudl be too late
+// since it depends on enabling `@vitest/ui` plugin, so we hack here.
+// TODO: actually not? can `@vitest/ui` just exports configureServer function?
 function handleTraceViewConfig(config: UserConfig, vitest: Vitest) {
   const browser = config.browser
   const traceView = browser?.traceView ?? vitest._cliOptions.browser?.traceView
-  if (browser?.enabled && traceView && config.watch) {
+  const providerName = browser?.provider?.name ?? vitest._cliOptions.browser?.provider?.name
+  if (browser?.enabled && traceView && config.watch && providerName !== 'preview') {
     config.ui = true
   }
 }
