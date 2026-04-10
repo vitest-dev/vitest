@@ -108,7 +108,7 @@ Each attempt — retry or repeat — is recorded as a separate trace. When a tes
 |                        | `browser.traceView`  | `browser.trace`                                |
 | ---------------------- | -------------------- | ---------------------------------------------- |
 | Viewer                 | Vitest UI (built-in) | Playwright Trace Viewer / trace.playwright.dev |
-| Format                 | rrweb DOM snapshots  | Playwright `.trace.zip`                        |
+| Format                 | [rrweb](https://github.com/rrweb-io/rrweb) DOM snapshots  | Playwright `.trace.zip`                        |
 | Requires external tool | No                   | Yes (`npx playwright show-trace`)              |
 
 You can enable both at the same time. See [Playwright Trace Files](./trace-view-playwright.md) for the `browser.trace` workflow.
