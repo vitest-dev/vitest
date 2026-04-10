@@ -1,4 +1,5 @@
 export { recordArtifact } from './artifact'
+export { TestSyntaxError } from './errors'
 export {
   afterAll,
   afterEach,

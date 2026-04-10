@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { editFile, runVitest } from '../../test-utils'
+import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
@@ -26,4 +26,95 @@ test('--update works for workspace project', async () => {
   })
   expect.soft(stdout).include('Snapshots  1 updated')
   expect.soft(exitCode).toBe(0)
+})
+
+test('test.fails fails snapshot', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+test.fails('file', () => {
+  expect('a').toMatchSnapshot()
+})
+
+test.fails('inline', () => {
+  expect('b').toMatchInlineSnapshot()
+})
+
+test.fails('soft', () => {
+  expect.soft('c').toMatchSnapshot()
+  expect.soft('d').toMatchInlineSnapshot()
+})
+`,
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > file
+    TestSyntaxError: 'toMatchSnapshot' cannot be used with 'test.fails'
+     ❯ basic.test.ts:5:15
+          3|
+          4| test.fails('file', () => {
+          5|   expect('a').toMatchSnapshot()
+           |               ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+     FAIL  basic.test.ts > inline
+    TestSyntaxError: 'toMatchInlineSnapshot' cannot be used with 'test.fails'
+     ❯ basic.test.ts:9:15
+          7|
+          8| test.fails('inline', () => {
+          9|   expect('b').toMatchInlineSnapshot()
+           |               ^
+         10| })
+         11|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+     FAIL  basic.test.ts > soft
+    TestSyntaxError: 'toMatchSnapshot' cannot be used with 'test.fails'
+     ❯ basic.test.ts:13:20
+         11|
+         12| test.fails('soft', () => {
+         13|   expect.soft('c').toMatchSnapshot()
+           |                    ^
+         14|   expect.soft('d').toMatchInlineSnapshot()
+         15| })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+     FAIL  basic.test.ts > soft
+    TestSyntaxError: 'toMatchInlineSnapshot' cannot be used with 'test.fails'
+     ❯ basic.test.ts:14:20
+         12| test.fails('soft', () => {
+         13|   expect.soft('c').toMatchSnapshot()
+         14|   expect.soft('d').toMatchInlineSnapshot()
+           |                    ^
+         15| })
+         16|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "file": Array [
+          "'toMatchSnapshot' cannot be used with 'test.fails'",
+        ],
+        "inline": Array [
+          "'toMatchInlineSnapshot' cannot be used with 'test.fails'",
+        ],
+        "soft": Array [
+          "'toMatchSnapshot' cannot be used with 'test.fails'",
+          "'toMatchInlineSnapshot' cannot be used with 'test.fails'",
+        ],
+      },
+    }
+  `)
 })
