@@ -71,7 +71,7 @@ await page.mark("content rendered");
 await page.getByRole("button", { name: "Sign in" }).mark("sign in button");
 ```
 
-To group multiple operations under a single entry:
+You can also pass a callback to `page.mark()`, but note that grouping is not currently supported — the mark entry appears only at the end of the callback, after all inner actions have already been recorded individually:
 
 ```ts
 await page.mark("sign in flow", async () => {
