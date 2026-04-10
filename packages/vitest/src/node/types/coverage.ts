@@ -272,6 +272,35 @@ export interface CoverageOptions {
   ignoreClassMethods?: string[]
 
   /**
+   * Custom instrumenter factory to use instead of the default `istanbul-lib-instrument`.
+   *
+   * The factory receives the resolved coverage options and must return an object
+   * implementing the `Instrumenter` interface:
+   * - `instrumentSync(code, filename, inputSourceMap?)` — returns instrumented code
+   * - `lastSourceMap()` — returns the source map of the last instrumented file
+   * - `lastFileCoverage()` — returns the coverage object of the last instrumented file
+   *
+   * This allows using faster instrumenters (e.g., oxc-coverage-instrument, SWC) while
+   * keeping the Istanbul coverage pipeline for collection, merging, and reporting.
+   *
+   * @example
+   * ```ts
+   * import { defineConfig } from 'vitest/config'
+   * import { createOxcInstrumenter } from 'oxc-coverage-instrument/vitest'
+   *
+   * export default defineConfig({
+   *   test: {
+   *     coverage: {
+   *       provider: 'istanbul',
+   *       instrumenter: (options) => createOxcInstrumenter(options),
+   *     }
+   *   }
+   * })
+   * ```
+   */
+  instrumenter?: (options: ResolvedCoverageOptions) => CoverageInstrumenter
+
+  /**
    * Directory of HTML coverage output to be served in UI mode and HTML reporter.
    * This is automatically configured for builtin reporter with html output (`html`, `html-spa`, and `lcov` reporters).
    * Use this option to override with custom coverage reporting location.
@@ -316,6 +345,22 @@ interface Thresholds {
 
   /** Thresholds for lines */
   lines?: number
+}
+
+/**
+ * Interface for custom coverage instrumenters.
+ *
+ * Matches the subset of istanbul-lib-instrument's `Instrumenter` that Vitest
+ * actually uses. Implement this to plug in a faster instrumenter while keeping
+ * the Istanbul coverage pipeline for collection, merging, and reporting.
+ */
+export interface CoverageInstrumenter {
+  /** Instrument source code synchronously. Returns the instrumented code string. */
+  instrumentSync(code: string, filename: string, inputSourceMap?: any): string
+  /** Get the source map of the last instrumented file. */
+  lastSourceMap(): any
+  /** Get the Istanbul-compatible file coverage object of the last instrumented file. */
+  lastFileCoverage(): any
 }
 
 /** @deprecated Use `CoverageOptions` instead */
