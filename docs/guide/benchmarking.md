@@ -1,10 +1,10 @@
 ---
-title: Benchmarks | Guide
+title: Benchmarking | Guide
 ---
 
-# Benchmarks
+# Benchmarking
 
-Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context). Benchmarks are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner — retries, lifecycle hooks, filtering, and assertions.
+Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context). Benchmarks are powered by [Tinybench](https://github.com/tinylibs/tinybench) and are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner: retries, lifecycle hooks, filtering, and assertions.
 
 ## Defining a Benchmark
 
@@ -21,6 +21,16 @@ test('parsing performance', async ({ bench }) => {
 ```
 
 The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. Vitest will print the benchmark output (ops/sec, mean time, etc.) after the test completes.
+
+If you only need to print a single benchmark's statistics without comparisons or assertions, you can use [`test.bench`](/api/test#test-bench) as a shorthand:
+
+```ts
+import { test } from 'vitest'
+
+test.bench('parsing performance', () => {
+  JSON.parse('{"key":"value"}')
+})
+```
 
 ## Comparing Benchmarks
 
@@ -49,7 +59,7 @@ When comparing benchmarks, Vitest runs them using interleaved iterations to redu
 
 ### Options
 
-You can pass options as the last argument to `bench.compare()`:
+You can pass [options](https://tinylibs.github.io/tinybench/interfaces/BenchOptions.html) as the last argument to `bench.compare()`:
 
 ```ts
 test('compare with options', async ({ bench }) => {
@@ -64,7 +74,7 @@ test('compare with options', async ({ bench }) => {
 })
 ```
 
-You can also pass per-benchmark hooks:
+You can also pass per-benchmark [options](https://tinylibs.github.io/tinybench/interfaces/FnOptions.html):
 
 ```ts
 test('benchmarks with setup', async ({ bench }) => {
@@ -145,7 +155,7 @@ test('performance comparison', { retry: 3 }, async ({ bench }) => {
 
 ## Baselines
 
-Use `bench.withBaseline()` to store benchmark results on disk and compare against them in future runs — similar to how [snapshot testing](/guide/snapshot) works:
+Use `bench.withBaseline()` to store benchmark results on disk and compare against them in future runs, similar to how [snapshot testing](/guide/snapshot) works:
 
 ```ts
 test('no performance regression', async ({ bench }) => {
@@ -155,12 +165,12 @@ test('no performance regression', async ({ bench }) => {
 })
 ```
 
-- **First run**: executes the benchmark and stores the result to a `__benchmarks__/` directory next to the test file.
-- **Subsequent runs**: executes the benchmark and compares against the stored result, reporting any regressions.
+- **First run**: Executes the benchmark and stores the result to a `__benchmarks__/` directory next to the test file.
+- **Subsequent runs**: Executes the benchmark and compares against the stored result, reporting any regressions.
 <!-- TODO -->
-- **Updating baselines**: use the `--update` flag to update stored baselines.
+- **Updating baselines**: Use the `--update` flag to update stored baselines.
 
-Baselines work inside `bench.compare()` too — you can mix regular and baseline benchmarks:
+Baselines work inside `bench.compare()` too. You can mix regular and baseline benchmarks:
 
 ```ts
 test('compare against baseline', async ({ bench }) => {

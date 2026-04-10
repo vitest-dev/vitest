@@ -840,7 +840,7 @@ export function createTaskCollector(
         : () => {}
     const options = typeof optsOrFn === 'object' ? optsOrFn : undefined
     return test(name, async ({ bench }) => {
-      await bench('<placeholder>', implementation).run(options)
+      await bench(name, implementation).run(options)
     })
   }
 
