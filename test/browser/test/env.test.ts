@@ -10,6 +10,20 @@ test('can reassign env locally', () => {
   expect(import.meta.env.VITEST_ENV).toBe('TEST')
 })
 
+test('can reassign import.meta.env directly', () => {
+  const key = 'VITEST_IMPORT_META_ENV_ASSIGNMENT'
+
+  delete import.meta.env[key]
+
+  // @ts-expect-error -- vitest rewrites this assignment at runtime via MetaEnvReplacerPlugin
+  import.meta.env = import.meta.env || {}
+  import.meta.env[key] = 'true'
+
+  expect(import.meta.env[key]).toBe('true')
+
+  delete import.meta.env[key]
+})
+
 test('can reassign env everywhere', () => {
   import.meta.env.AUTH_TOKEN = '123'
   expect(getAuthToken()).toBe('123')
