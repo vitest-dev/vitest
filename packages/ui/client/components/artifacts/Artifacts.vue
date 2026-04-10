@@ -3,12 +3,12 @@ import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
-import TraceView from '../trace/TraceView.vue'
+import { openTrace } from '~/composables/trace-view'
 import VisualRegression from './visual-regression/VisualRegression.vue'
 
 const { test } = defineProps<{ test: RunnerTestCase }>()
 
-interface HandledArtifact { artifact: TestArtifact; component: Component; props: object }
+interface HandledArtifact { artifact: TestArtifact; component?: Component; props: object }
 
 type ComponentProps<T> = T extends new(...args: any) => { $props: infer P } ? NonNullable<P>
   : T extends (props: infer P, ...args: any) => any ? P
@@ -20,11 +20,7 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   for (const artifact of test.artifacts) {
     switch (artifact.type) {
       case 'internal:browserTrace': {
-        handledArtifacts.push({
-          artifact,
-          component: TraceView,
-          props: { trace: artifact, test } satisfies ComponentProps<typeof TraceView>,
-        })
+        handledArtifacts.push({ artifact, props: {} })
         continue
       }
       case 'internal:toMatchScreenshot': {
@@ -81,7 +77,16 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
           </span>
         </div>
       </div>
-      <component :is="component" v-bind="props" />
+      <button
+        v-if="artifact.type === 'internal:browserTrace'"
+        type="button"
+        class="flex items-center gap-2 rounded px-2 py-1 hover:bg-yellow-500/10"
+        @click="openTrace(artifact, test)"
+      >
+        <span class="i-carbon:play-outline block" />
+        Open trace viewer
+      </button>
+      <component :is="component" v-else v-bind="props" />
     </div>
   </template>
 </template>

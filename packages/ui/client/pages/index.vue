@@ -2,6 +2,7 @@
 import { useDebounceFn } from '@vueuse/core'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
+import { computed } from 'vue'
 import BrowserIframe from '~/components/BrowserIframe.vue'
 import ClosedDetailsHeader from '~/components/ClosedDetailsHeader.vue'
 import ConnectionOverlay from '~/components/ConnectionOverlay.vue'
@@ -10,6 +11,7 @@ import Dashboard from '~/components/Dashboard.vue'
 import FileDetails from '~/components/FileDetails.vue'
 import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
+import TraceView from '~/components/trace/TraceView.vue'
 import { browserState } from '~/composables/client'
 import {
   coverageVisible,
@@ -20,8 +22,10 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
+import { activeTrace, activeTraceTest } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
+const showTracePane = computed(() => !!activeTrace.value && !!activeTraceTest.value)
 
 const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
   // don't trigger events in the iframe while resizing
@@ -91,7 +95,7 @@ function allowBrowserEvents() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition v-if="!browserState" key="ui-detail">
+        <transition v-if="!browserState && !activeTrace" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage
             v-else-if="coverageVisible"
@@ -113,7 +117,30 @@ function allowBrowserEvents() {
               @resized="onModuleResized"
             >
               <Pane :size="detailSizes[0]" min-size="10">
-                <BrowserIframe v-once />
+                <!-- TODO: wrapper frame for TraceView (e.g. title, close button, etc.) -->
+                <!-- TODO: trigger detailsPosition = 'bottom' when opening trace -->
+                <!-- TODO: make detailsPosition toggle available when trace view -->
+                <Splitpanes
+                  v-if="browserState && showTracePane"
+                  class="h-full"
+                  :horizontal="detailsPosition === 'right'"
+                >
+                  <Pane size="55" min-size="10">
+                    <BrowserIframe v-once />
+                  </Pane>
+                  <Pane size="45" min-size="10">
+                    <TraceView
+                      :trace="activeTrace!"
+                      :test="activeTraceTest!"
+                    />
+                  </Pane>
+                </Splitpanes>
+                <TraceView
+                  v-else-if="showTracePane"
+                  :trace="activeTrace!"
+                  :test="activeTraceTest!"
+                />
+                <BrowserIframe v-else v-once />
               </Pane>
               <Pane
                 v-if="detailsPanelVisible"

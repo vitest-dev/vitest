@@ -5,6 +5,7 @@ import type { BrowserTraceData } from '../../../../browser/src/client/tester/tra
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
+import { selectedTraceStepIndex } from '~/composables/trace-view'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - remount on selected test change
@@ -17,8 +18,7 @@ const props = defineProps<{
 }>()
 
 const data = computed(() => props.trace.data as BrowserTraceData)
-const selectedIndex = ref(0)
-const selectedStep = computed(() => data.value.entries[selectedIndex.value])
+const selectedStep = computed(() => data.value.entries[selectedTraceStepIndex.value])
 const iframeEl = ref<HTMLIFrameElement>()
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
@@ -70,15 +70,15 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 </script>
 
 <template>
-  <div class="grid gap-4 md:grid-cols-[220px_1fr]" style="height: 500px">
+  <div class="grid h-full min-h-0 gap-4 p-4 md:grid-cols-[220px_1fr]">
     <div flex="~ col gap-1" overflow-auto>
       <button
         v-for="(step, index) of data.entries"
         :key="index"
         type="button"
         class="text-left px-2 py-1 rounded text-sm"
-        :class="selectedIndex === index ? 'bg-blue-500/20' : 'hover:bg-gray/10'"
-        @click="selectedIndex = index"
+        :class="selectedTraceStepIndex === index ? 'bg-blue-500/20' : 'hover:bg-gray/10'"
+        @click="selectedTraceStepIndex = index"
       >
         <div truncate>
           {{ step.name }}
