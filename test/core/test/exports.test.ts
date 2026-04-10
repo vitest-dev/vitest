@@ -68,7 +68,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "SpyModule": "object",
         "Traces": "function",
         "__INTERNAL": "object",
-        "browserFormat": "function",
         "collectTests": "function",
         "format": "function",
         "getOriginalPosition": "function",

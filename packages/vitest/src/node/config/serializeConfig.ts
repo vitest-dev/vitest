@@ -20,6 +20,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     bail: config.bail,
     defines: config.defines,
     chaiConfig: config.chaiConfig,
+    taskTitleValueFormatTruncate: config.taskTitleValueFormatTruncate,
     setupFiles: config.setupFiles,
     allowOnly: config.allowOnly,
     testTimeout: config.testTimeout,
