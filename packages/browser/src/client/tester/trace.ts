@@ -2,7 +2,6 @@ import type { Task } from '@vitest/runner'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 
-// TODO: design trace format
 export interface BrowserTraceData {
   retry: number
   repeats: number
