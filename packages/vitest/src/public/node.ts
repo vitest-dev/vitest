@@ -72,7 +72,6 @@ export type {
 } from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
-
 export type { JUnitOptions } from '../node/reporters/junit'
 
 export type {
@@ -93,6 +92,7 @@ export type {
   TestSuiteState,
 } from '../node/reporters/reported-tasks'
 export { experimental_getRunnerTask } from '../node/reporters/reported-tasks'
+export type { ResultWriter } from '../node/reporters/result-writer'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
 export type {

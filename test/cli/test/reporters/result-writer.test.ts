@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { normalize, resolve } from 'pathe'
 import { assert, expect, onTestFinished, test } from 'vitest'
 import { runVitest } from '../../../test-utils'
 
@@ -11,6 +11,16 @@ test('creates .vitest when initialized', async () => {
   vitest.createResultWriter('example-reporter')
 
   expect(existsSync(directory)).toBe(true)
+})
+
+test('sets base', async () => {
+  const vitest = await run()
+
+  const resultWriter = vitest.createResultWriter('example-reporter')
+
+  expect(normalize(resultWriter.base)).toBe(
+    resolve(vitest.config.root, '.vitest', 'example-reporter'),
+  )
 })
 
 test('write creates file in scoped directory', async () => {

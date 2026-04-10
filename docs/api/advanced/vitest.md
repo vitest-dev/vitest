@@ -687,3 +687,37 @@ Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not
 ::: warning
 At the moment, the [browser](/guide/browser/) modules are not supported.
 :::
+
+## createResultWriter <Version>4.2.0</Version> {#createresultwriter}
+
+```ts
+function createResultWriter(scope: string): ResultWriter
+```
+
+Creates a result writer that is limited to the given scope. `ResultWriter` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters.html#storing-artifacts-on-file-system).
+
+`ResultWriter` provides collection of utilities for writing test results, temporary files and other artifacts on the file system. It's especially intended for third party integrations like custom reporters.
+
+All operations of `ResultWriter` are limited to given `scope`. A single result writer cannot interfere with other result writers. Internally Vitest creates `.vitest` directory where each `scope` creates their own directory. This convention of `.vitest` directory reduces the amount of entries end-users need to specify in their `.gitignore`.
+
+```ts
+import type { ResultWriter } from 'vitest/node'
+
+const scope = 'example-yaml-reporter'
+
+// Automatically creates `<project-root>/.vitest/example-yaml-reporter/`
+// directory if it does not exist already
+const resultWriter: ResultWriter = vitest.createResultWriter(scope)
+
+// Cleans all files inside `<project-root>/.vitest/example-yaml-reporter/`
+await resultWriter.clean()
+
+// Writes `<project-root>/.vitest/example-yaml-reporter/some-results.yaml`
+await resultWriter.write('some-results.yaml', '- key: value')
+
+// Reads `<project-root>/.vitest/example-yaml-reporter/some-results.yaml`
+const results: string = await resultWriter.read('some-results.yaml')
+
+// Deletes `<project-root>/.vitest/example-yaml-reporter/some-results.yaml`
+await resultWriter.delete('some-results.yaml')
+```
