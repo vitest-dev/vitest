@@ -7,8 +7,8 @@ import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import * as find from 'empathic/find'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
-import c from 'tinyrainbow'
 import { configFiles } from '../../constants'
+import c from '../../utils/colors'
 import { generateExampleFiles } from './examples'
 
 // eslint-disable-next-line no-console

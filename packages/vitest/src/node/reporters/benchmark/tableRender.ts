@@ -4,7 +4,7 @@ import type { FormattedBenchmarkResult } from './json-formatter'
 import { stripVTControlCharacters } from 'node:util'
 import { getTests } from '@vitest/runner/utils'
 import { notNullish } from '@vitest/utils/helpers'
-import c from 'tinyrainbow'
+import c from '../../../utils/colors'
 import { F_RIGHT } from '../renderers/figures'
 import { getStateSymbol, truncateString } from '../renderers/utils'
 

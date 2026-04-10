@@ -5,7 +5,7 @@ import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
-import c from 'tinyrainbow'
+import c from '../../utils/colors'
 import { BaseReporter } from './base'
 import { WindowRenderer } from './renderers/windowedRenderer'
 

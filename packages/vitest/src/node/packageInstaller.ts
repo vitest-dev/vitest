@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
-import c from 'tinyrainbow'
+import c from '../utils/colors'
 import { isTTY } from '../utils/env'
 import { withLabel } from './reporters/renderers/utils'
 

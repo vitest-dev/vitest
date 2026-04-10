@@ -2,8 +2,8 @@ import type { Writable } from 'node:stream'
 import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
 import { createDefer } from '@vitest/utils/helpers'
-import c from 'tinyrainbow'
 import { stdout as getStdout } from '../utils/base'
+import c from '../utils/colors'
 
 const MAX_RESULT_COUNT = 10
 const SELECTION_MAX_INDEX = 7
