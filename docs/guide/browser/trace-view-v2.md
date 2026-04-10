@@ -1,5 +1,7 @@
 # Trace View
 
+<!-- TODO: rename, add link, add screenshot -->
+
 Vitest Browser Mode has a built-in trace viewer that captures DOM snapshots as your tests run and shows them directly in the Vitest UI — no external tools required.
 
 ## Quick Start
