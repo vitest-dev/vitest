@@ -15,6 +15,7 @@ test('can reassign import.meta.env directly', () => {
 
   delete import.meta.env[key]
 
+  // @ts-expect-error -- vitest rewrites this assignment at runtime via MetaEnvReplacerPlugin
   import.meta.env = import.meta.env || {}
   import.meta.env[key] = 'true'
 

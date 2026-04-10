@@ -36,7 +36,7 @@ export function MetaEnvReplacerPlugin(): Plugin {
       const assignmentRanges: Array<{ start: number; end: number }> = []
 
       walkAst(ast as any, {
-        MemberExpression(node, ancestors) {
+        MemberExpression(node, _state, ancestors) {
           if (!isImportMetaEnv(node)) {
             return
           }
