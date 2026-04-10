@@ -11,7 +11,7 @@ import Dashboard from '~/components/Dashboard.vue'
 import FileDetails from '~/components/FileDetails.vue'
 import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
-import TraceView from '~/components/trace/TraceView.vue'
+import TraceViewPane from '~/components/trace/TraceViewPane.vue'
 import { browserState } from '~/composables/client'
 import {
   coverageVisible,
@@ -117,7 +117,6 @@ function allowBrowserEvents() {
               @resized="onModuleResized"
             >
               <Pane :size="detailSizes[0]" min-size="10">
-                <!-- TODO: wrapper frame for TraceView (e.g. title, close button, etc.) -->
                 <!-- TODO: trigger detailsPosition = 'bottom' when opening trace -->
                 <!-- TODO: make detailsPosition toggle available when trace view -->
                 <Splitpanes
@@ -129,13 +128,13 @@ function allowBrowserEvents() {
                     <BrowserIframe v-once />
                   </Pane>
                   <Pane size="45" min-size="10">
-                    <TraceView
+                    <TraceViewPane
                       :trace="activeTrace!"
                       :test="activeTraceTest!"
                     />
                   </Pane>
                 </Splitpanes>
-                <TraceView
+                <TraceViewPane
                   v-else-if="showTracePane"
                   :trace="activeTrace!"
                   :test="activeTraceTest!"
