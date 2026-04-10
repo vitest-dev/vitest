@@ -79,6 +79,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 
 <template>
   <div class="grid h-full min-h-0 gap-4 p-4 md:grid-cols-[220px_1fr]">
+    <!-- TODO: split pane between step list and viewer?  -->
     <div flex="~ col gap-1" overflow-auto>
       <button
         v-for="(step, index) of entries"
