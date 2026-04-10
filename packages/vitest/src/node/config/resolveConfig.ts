@@ -747,12 +747,19 @@ export function resolveConfig(
     }
   }
 
+  // TODO: need to adjust options for new trace view experience, but such a mess
+  resolved.browser.traceView ??= false
+
   if (!resolved.reporters.length) {
     resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
 
     // also enable github-actions reporter as a default
     if (process.env.GITHUB_ACTIONS === 'true') {
       resolved.reporters.push(['github-actions', {}])
+    }
+
+    if (resolved.browser.enabled && resolved.browser.traceView && !resolved.watch) {
+      resolved.reporters.push(['html', {}])
     }
   }
 
@@ -814,8 +821,6 @@ export function resolveConfig(
     )
   }
 
-  // TODO: need to adjust options for new trace view experience, but such a mess
-  resolved.browser.traceView ??= false
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI || resolved.browser.traceView
   if (resolved.browser.isolate) {
