@@ -2,21 +2,13 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import oxc from 'unplugin-oxc/rollup'
-import { createDtsUtils } from '../../scripts/build-utils.js'
+import { createDtsUtils, externalDependencies, nodejsBuiltinModules } from '../../scripts/build-utils.js'
 
 const entry = ['src/index.ts']
 
 const external = [
-  'ws',
-  'birpc',
-  'worker_threads',
-  'node:worker_threads',
-  'fs',
-  'node:fs',
-  'vitest',
-  'inspector',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
+  ...nodejsBuiltinModules,
+  ...externalDependencies(import.meta.url),
 ]
 
 const dtsUtils = createDtsUtils()

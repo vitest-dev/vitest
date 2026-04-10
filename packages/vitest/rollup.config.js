@@ -1,6 +1,4 @@
 import fs from 'node:fs'
-import { builtinModules, createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -10,10 +8,7 @@ import license from 'rollup-plugin-license'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import oxc from 'unplugin-oxc/rollup'
-import { createDtsUtils } from '../../scripts/build-utils.js'
-
-const require = createRequire(import.meta.url)
-const pkg = require('./package.json')
+import { createDtsUtils, externalDependencies, nodejsBuiltinModules } from '../../scripts/build-utils.js'
 
 const entries = {
   'path': 'src/paths.ts',
@@ -62,39 +57,13 @@ const dtsEntries = {
 }
 
 const external = [
-  ...builtinModules,
-  ...Object.keys(pkg.dependencies),
-  ...Object.keys(pkg.peerDependencies),
-  'worker_threads',
-  'node:worker_threads',
-  'node:fs',
-  'node:os',
-  'node:stream',
-  'node:vm',
-  'node:http',
-  'node:console',
-  'node:events',
-  'inspector',
-  'vitest/optional-runtime-types.js',
-  'vitest/optional-types.js',
-  'vitest/browser',
-  'vite/module-runner',
-  '@vitest/mocker',
-  /@vitest\/mocker\/\w+/,
-  '@vitest/utils/diff',
-  '@vitest/utils/error',
-  '@vitest/utils/source-map',
-  '@vitest/runner/utils',
-  '@vitest/runner/types',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
-  /@vitest\/utils\/\w+/,
+  ...nodejsBuiltinModules,
+  ...externalDependencies(import.meta.url, { selfImportList: ['vitest/optional-types.js', 'vitest/optional-runtime-types.js', 'vitest/browser'] }),
 
   '#module-evaluator',
-  '@opentelemetry/api',
 ]
 
-const dir = dirname(fileURLToPath(import.meta.url))
+const dir = import.meta.dirname
 
 const dtsUtils = createDtsUtils()
 
@@ -104,6 +73,21 @@ const plugins = [
   }),
   json(),
   commonjs(),
+  oxc({
+    include: [
+      '/node_modules/ws/lib/buffer-util.js$',
+      '/node_modules/ws/lib/validation.js$',
+    ].map(pattern => new RegExp(pattern.replaceAll('/', '[\\\\/]').replaceAll('.', '[.]'))),
+    exclude: [],
+    transform: {
+      target: 'node20',
+      define: {
+        'process.env.WS_NO_BUFFER_UTIL': 'true',
+        'process.env.WS_NO_UTF_8_VALIDATE': 'true',
+      },
+    },
+    sourcemap: true,
+  }),
   oxc({
     transform: {
       target: 'node20',
