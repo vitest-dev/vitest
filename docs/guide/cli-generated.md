@@ -195,12 +195,33 @@ Do not show files with 100% statement, branch, and function coverage (default: `
 
 Shortcut to set all coverage thresholds to 100 (default: `false`)
 
-### coverage.thresholds.perFile
+### coverage.thresholds.perFile.lines
 
-- **CLI:** `--coverage.thresholds.perFile`
-- **Config:** [coverage.thresholds.perFile](/config/coverage#coverage-thresholds-perfile)
+- **CLI:** `--coverage.thresholds.perFile.lines <number>`
+- **Config:** [coverage.thresholds.perFile.lines](/config/coverage#coverage-thresholds-perfile-lines)
 
-Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)
+Per-file threshold for lines. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers
+
+### coverage.thresholds.perFile.functions
+
+- **CLI:** `--coverage.thresholds.perFile.functions <number>`
+- **Config:** [coverage.thresholds.perFile.functions](/config/coverage#coverage-thresholds-perfile-functions)
+
+Per-file threshold for functions. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers
+
+### coverage.thresholds.perFile.branches
+
+- **CLI:** `--coverage.thresholds.perFile.branches <number>`
+- **Config:** [coverage.thresholds.perFile.branches](/config/coverage#coverage-thresholds-perfile-branches)
+
+Per-file threshold for branches. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers
+
+### coverage.thresholds.perFile.statements
+
+- **CLI:** `--coverage.thresholds.perFile.statements <number>`
+- **Config:** [coverage.thresholds.perFile.statements](/config/coverage#coverage-thresholds-perfile-statements)
+
+Per-file threshold for statements. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers
 
 ### coverage.thresholds.autoUpdate
 

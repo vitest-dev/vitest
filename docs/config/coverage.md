@@ -233,12 +233,48 @@ Global threshold for statements.
 
 ### coverage.thresholds.perFile
 
-- **Type:** `boolean`
+- **Type:** `boolean | { lines?: number; functions?: number; branches?: number; statements?: number }`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.perFile`, `--coverage.thresholds.perFile=false`
 
 Check thresholds per file.
+
+When set to `true`, the global threshold values are reused for every file.
+
+When set to an object, the top-level threshold values still apply to the global coverage summary, and the nested `perFile` values apply to each individual file.
+
+### coverage.thresholds.perFile.lines
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.perFile.lines=<number>`
+
+Per-file threshold for lines.
+
+### coverage.thresholds.perFile.functions
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.perFile.functions=<number>`
+
+Per-file threshold for functions.
+
+### coverage.thresholds.perFile.branches
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.perFile.branches=<number>`
+
+Per-file threshold for branches.
+
+### coverage.thresholds.perFile.statements
+
+- **Type:** `number`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.thresholds.perFile.statements=<number>`
+
+Per-file threshold for statements.
 
 ### coverage.thresholds.autoUpdate
 

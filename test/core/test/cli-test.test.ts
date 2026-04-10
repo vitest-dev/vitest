@@ -136,6 +136,16 @@ test('coverage autoUpdate accepts boolean values from CLI', async () => {
   expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
 })
 
+test('coverage perFile object thresholds are parsed from CLI', async () => {
+  expect(getCLIOptions(`
+    --coverage.thresholds.perFile.lines 80
+    --coverage.thresholds.perFile.functions 70
+  `).coverage.thresholds.perFile).toEqual({
+    lines: 80,
+    functions: 70,
+  })
+})
+
 test('bench only options', async () => {
   expect(() =>
     parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),

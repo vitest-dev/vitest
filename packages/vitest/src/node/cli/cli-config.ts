@@ -215,7 +215,30 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           perFile: {
             description:
-              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)',
+              'Check thresholds per file. Use this flag to reuse the global threshold values for every file, or configure `--coverage.thresholds.perFile.<name>` to set separate per-file thresholds (default: `false`)',
+            argument: '',
+            subcommands: {
+              lines: {
+                description:
+                  'Per-file threshold for lines. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers',
+                argument: '<number>',
+              },
+              functions: {
+                description:
+                  'Per-file threshold for functions. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers',
+                argument: '<number>',
+              },
+              branches: {
+                description:
+                  'Per-file threshold for branches. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers',
+                argument: '<number>',
+              },
+              statements: {
+                description:
+                  'Per-file threshold for statements. Visit [istanbuljs](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information. This option is not available for custom providers',
+                argument: '<number>',
+              },
+            },
           },
           autoUpdate: {
             description:
