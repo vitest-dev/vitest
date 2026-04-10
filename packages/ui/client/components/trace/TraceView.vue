@@ -9,6 +9,7 @@ import { getLocationString, openLocation } from '~/composables/location'
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - remount on selected test change
 // - make it unit-testable for better iteration
+// - show selector as label somewhere
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
