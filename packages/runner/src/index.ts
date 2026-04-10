@@ -16,6 +16,7 @@ export {
   describe,
   getCurrentSuite,
   it,
+  mergeTests,
   suite,
   test,
 } from './suite'
