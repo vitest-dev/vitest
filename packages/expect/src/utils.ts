@@ -89,7 +89,8 @@ function handleTestError(test: Test, err: unknown) {
   test.result ||= { state: 'fail' }
   test.result.state = 'fail'
   test.result.errors ||= []
-  test.result.errors.push(processError(err))
+  const diffOptions = (globalThis as any).__vitest_worker__?.diffOptions
+  test.result.errors.push(processError(err, diffOptions))
 }
 
 /** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */

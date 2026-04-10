@@ -1,4 +1,5 @@
 import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
@@ -82,4 +83,5 @@ export interface WorkerGlobalState {
     prepare: number
   }
   onFilterStackTrace?: (trace: string) => string
+  diffOptions?: SerializedDiffOptions
 }
