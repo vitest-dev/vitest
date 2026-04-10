@@ -118,6 +118,8 @@ function allowBrowserEvents() {
             >
               <Pane :size="detailSizes[0]" min-size="10">
                 <!-- TODO: make detailsPosition toggle available when trace view -->
+                <!-- Better long-term: show shared split-layout controls when browserState || activeTrace, -->
+                <!-- ideally from pane headers instead of treating detailsPosition as browser-only UI. -->
                 <Splitpanes
                   v-if="browserState && showTracePane"
                   class="h-full"
