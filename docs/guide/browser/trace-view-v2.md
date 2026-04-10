@@ -11,8 +11,8 @@ Enable trace view with the [`browser.traceView`](/config/browser/traceview) opti
 ::: code-group
 
 ```ts [vitest.config.ts]
-import { defineConfig } from "vitest/config";
-import { playwright } from "@vitest/browser-playwright";
+import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -21,7 +21,7 @@ export default defineConfig({
       traceView: true,
     },
   },
-});
+})
 ```
 
 ```bash [CLI]
@@ -66,37 +66,37 @@ Plain JavaScript assertions like `expect(value).toBe(...)` run in Node, not the 
 You can insert your own named entries with `page.mark()` and `locator.mark()`:
 
 ```ts
-import { page } from "vitest/browser";
+import { page } from 'vitest/browser'
 
-await page.mark("content rendered");
+await page.mark('content rendered')
 
-await page.getByRole("button", { name: "Sign in" }).mark("sign in button");
+await page.getByRole('button', { name: 'Sign in' }).mark('sign in button')
 ```
 
 You can also pass a callback to `page.mark()`, but note that grouping is not currently supported — the mark entry appears only at the end of the callback, after all inner actions have already been recorded individually:
 
 ```ts
-await page.mark("sign in flow", async () => {
-  await page.getByRole("textbox", { name: "Email" }).fill("john@example.com");
-  await page.getByRole("textbox", { name: "Password" }).fill("secret");
-  await page.getByRole("button", { name: "Sign in" }).click();
-});
+await page.mark('sign in flow', async () => {
+  await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
+  await page.getByRole('textbox', { name: 'Password' }).fill('secret')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+})
 ```
 
 Use [`vi.defineHelper()`](/api/vi#vi-defineHelper) to make entries from reusable helpers point to the call site rather than the helper's internals:
 
 ```ts
-import { vi } from "vitest";
-import { page } from "vitest/browser";
+import { vi } from 'vitest'
+import { page } from 'vitest/browser'
 
 const renderContent = vi.defineHelper(async (html: string) => {
-  document.body.innerHTML = html;
-  await page.elementLocator(document.body).mark("render");
-});
+  document.body.innerHTML = html
+  await page.elementLocator(document.body).mark('render')
+})
 
-test("shows button", async () => {
-  await renderContent("<button>Hello</button>"); // trace entry points here
-});
+test('shows button', async () => {
+  await renderContent('<button>Hello</button>') // trace entry points here
+})
 ```
 
 ## Retries and Repeats
