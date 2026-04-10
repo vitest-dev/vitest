@@ -4,7 +4,7 @@ import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 import { openTrace } from '~/composables/trace-view'
 
-const props = defineProps<{
+defineProps<{
   trace: BrowserTraceArtifact
   test: RunnerTestCase
 }>()
