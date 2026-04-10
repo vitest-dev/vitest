@@ -86,11 +86,23 @@ export function createBrowserRunner(
       const shouldTrace = trace !== 'off'
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
+      const shouldTraceView = this.config.browser.traceView
+      if (!shouldTraceView && !shouldTrace) {
+        getBrowserState().activeTraceViewTaskIds.delete(test.id)
+        getBrowserState().activeTraceTaskIds.delete(test.id)
+        return
+      }
+      if (shouldTraceView) {
+        ;(window as any).__vitest_dom_snapshot__ = await import('rrweb-snapshot')
+        getBrowserState().activeTraceViewTaskIds.add(test.id)
+      }
+      else {
+        getBrowserState().activeTraceViewTaskIds.delete(test.id)
+      }
       if (!shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
         return
       }
-      ;(window as any).__vitest_dom_snapshot__ = await import('rrweb-snapshot')
       getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
       if (retry) {
@@ -108,7 +120,19 @@ export function createBrowserRunner(
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
-      if (!getBrowserState().activeTraceTaskIds.has(test.id)) {
+      const hasActiveTraceView = getBrowserState().activeTraceViewTaskIds.has(test.id)
+      if (hasActiveTraceView) {
+        // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
+        const traceData = getBrowserTrace(test.id, repeats, retry)
+        if (traceData) {
+          await this.commands.triggerCommand(
+            '__vitest_recordBrowserTrace',
+            [{ testId: test.id, data: traceData }],
+          )
+        }
+      }
+      const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
+      if (!hasActiveTrace) {
         return
       }
       await this.commands.triggerCommand('__vitest_markTrace', [{
@@ -125,14 +149,6 @@ export function createBrowserRunner(
         [{ name }],
       ) as { tracePath: string }
       traces.push(tracePath)
-      // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
-      const traceData = getBrowserTrace(test.id, repeats, retry)
-      if (traceData) {
-        await this.commands.triggerCommand(
-          '__vitest_recordBrowserTrace',
-          [{ testId: test.id, data: traceData }],
-        )
-      }
     }
 
     onAfterRunTask = async (task: Test) => {

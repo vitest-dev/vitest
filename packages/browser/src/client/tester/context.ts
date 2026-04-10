@@ -362,6 +362,7 @@ export const page: BrowserPage = {
   ): any {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
@@ -379,27 +380,34 @@ export const page: BrowserPage = {
           return await bodyOrOptions()
         }
         finally {
-          if (hasActiveTrace) {
+          if (hasActiveTraceView) {
             // TODO: support nested trace
             recordBrowserTraceEntry(currentTest, {
               name,
               stack: options?.stack ?? error?.stack,
             })
+          }
+          if (hasActiveTrace) {
             await triggerCommand('__vitest_groupTraceEnd', [], error)
           }
         }
       })
     }
 
-    if (!hasActiveTrace) {
+    if (!hasActiveTrace && !hasActiveTraceView) {
       return Promise.resolve()
     }
 
     return ensureAwaited((error) => {
-      recordBrowserTraceEntry(currentTest, {
-        name,
-        stack: bodyOrOptions?.stack ?? error?.stack,
-      })
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
+          name,
+          stack: bodyOrOptions?.stack ?? error?.stack,
+        })
+      }
+      if (!hasActiveTrace) {
+        return Promise.resolve()
+      }
       return triggerCommand(
         '__vitest_markTrace',
         [{

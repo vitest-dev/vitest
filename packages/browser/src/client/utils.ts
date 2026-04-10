@@ -86,6 +86,8 @@ export interface BrowserRunnerState {
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
   activeTraceTaskIds: Set<string>
+  // TODO: silly but fine for now
+  activeTraceViewTaskIds: Set<string>
   traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {

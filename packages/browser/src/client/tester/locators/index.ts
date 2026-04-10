@@ -207,15 +207,22 @@ export abstract class Locator {
 
   public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
-    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+    if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
     return ensureAwaited((error) => {
-      recordBrowserTraceEntry(currentTest, {
-        name,
-        selector: this.selector,
-        stack: options?.stack ?? error?.stack,
-      })
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
+          name,
+          selector: this.selector,
+          stack: options?.stack ?? error?.stack,
+        })
+      }
+      if (!hasActiveTrace) {
+        return Promise.resolve()
+      }
       return getBrowserState().commands.triggerCommand<void>(
         '__vitest_markTrace',
         [{

@@ -234,6 +234,22 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * TODO: review slop (NEVER REMOVE COMMENT)
+   * TODO: thoughts
+   * - should it make browser.headelss by default?
+   * - should it make pure UI by default? (on watch)
+   * - should it generate html reporter by default?
+   * - no, let's just document the intended usage.
+   *
+   * Enable Vitest trace-view artifact collection and related first-class trace experience.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   */
+  traceView?: boolean
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -408,6 +424,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     snapshots?: boolean
     sources?: boolean
   }
+  traceView: boolean
 }
 
 type ToMatchScreenshotResolvePath = (data: {

@@ -58,7 +58,9 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
   // ask `expect.poll` to invoke trace after the assertion
   const currentTest = getWorkerState().current
-  if (currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+  const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+  const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+  if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
     chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: 'pass' | 'fail' }) => {
       const isNot = chai.util.flag(meta.assertion, 'negate')
@@ -68,20 +70,24 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.selector
-      recordBrowserTraceEntry(currentTest, {
-        name: traceName,
-        selector,
-        stack: sourceError.stack,
-      })
-      await getBrowserState().commands.triggerCommand(
-        '__vitest_markTrace',
-        [{
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
           name: traceName,
           selector,
           stack: sourceError.stack,
-        }],
-        sourceError,
-      )
+        })
+      }
+      if (hasActiveTrace) {
+        await getBrowserState().commands.triggerCommand(
+          '__vitest_markTrace',
+          [{
+            name: traceName,
+            selector,
+            stack: sourceError.stack,
+          }],
+          sourceError,
+        )
+      }
     })
   }
 

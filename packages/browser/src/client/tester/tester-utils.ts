@@ -135,9 +135,12 @@ export class CommandsManager {
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command) ? command : undefined
     const currentTest = getWorkerState().current
-    const shouldMarkTrace = actionTraceGroupName
+    const hasActiveTrace = !!actionTraceGroupName
       && !!currentTest
       && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!actionTraceGroupName
+      && !!currentTest
+      && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
 
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
@@ -151,7 +154,7 @@ export class CommandsManager {
         },
       },
       async () => {
-        if (shouldMarkTrace) {
+        if (hasActiveTrace) {
           await rpc.triggerCommand<void>(
             sessionId,
             '__vitest_groupTraceStart',
@@ -173,13 +176,15 @@ export class CommandsManager {
           throw clientError
         }
         finally {
-          if (shouldMarkTrace) {
+          if (hasActiveTraceView) {
             // TODO: action duration?
             recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
               selector: typeof args[0] === 'string' ? args[0] : undefined,
               stack: clientError.stack,
             })
+          }
+          if (hasActiveTrace) {
             await rpc.triggerCommand<void>(
               sessionId,
               '__vitest_groupTraceEnd',
