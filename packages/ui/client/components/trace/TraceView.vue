@@ -10,7 +10,6 @@ import { selectedTraceStepIndex } from '~/composables/trace-view'
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - remount on selected test change
 // - make it unit-testable for better iteration
-// - show selector as label somewhere
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
@@ -91,6 +90,12 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       >
         <div truncate>
           {{ step.name }}
+        </div>
+        <div
+          v-if="step.selector"
+          class="font-mono text-xs opacity-70 truncate"
+        >
+          {{ step.selector }}
         </div>
         <!-- TODO: clicking link should also update current step -->
         <div
