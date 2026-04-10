@@ -255,7 +255,7 @@ export class BaseCoverageProvider {
     this.pendingPromises = []
   }
 
-  private normalizeCoverageFileError(error: unknown): Error {
+  private normalizeCoverageFileError(error: unknown): unknown {
     if (
       error instanceof Error
       && 'code' in error
