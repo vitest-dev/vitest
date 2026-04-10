@@ -159,6 +159,7 @@ export type {
   CoverageReporter,
   CoverageV8Options,
   CustomProviderOptions,
+  InstrumenterOptions,
   ReportContext,
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
