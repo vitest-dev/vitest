@@ -662,46 +662,6 @@ test.concurrent.for([
 })
 ```
 
-## test.bench <Version>5.0.0</Version> {#test-bench}
-
-Runs a single benchmark and prints its statistics (ops/sec, mean time, etc.). The benchmark is not compared against any other benchmarks. To compare multiple benchmarks, use the [`bench`](/guide/test-context#bench) fixture from the test context.
-
-```ts
-import { test } from 'vitest'
-
-test.bench('parsing performance', () => {
-  JSON.parse('{"key":"value"}')
-})
-```
-
-::: info
-This is shorthand for calling `bench` inside a regular test:
-
-```ts
-import { test } from 'vitest'
-
-test('parsing performance', async ({ bench }) => {
-  await bench('parse', () => {
-    JSON.parse('{"key":"value"}')
-  }).run()
-})
-```
-:::
-
-::: tip
-`test.bench` also accepts `bench` [options](https://tinylibs.github.io/tinybench/interfaces/BenchOptions.html) as the second argument:
-
-```ts
-import { test } from 'vitest'
-
-test.bench('parsing performance', { iterations: 20 }, () => {
-  JSON.parse('{"key":"value"}')
-})
-```
-:::
-
-See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
-
 ## test.describe <Version>4.1.0</Version> {#test-describe}
 
 Scoped `describe`. See [describe](/api/describe) for more information.

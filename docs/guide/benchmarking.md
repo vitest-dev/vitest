@@ -22,16 +22,6 @@ test('parsing performance', async ({ bench }) => {
 
 The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. Vitest will print the benchmark output (ops/sec, mean time, etc.) after the test completes.
 
-If you only need to print a single benchmark's statistics without comparisons or assertions, you can use [`test.bench`](/api/test#test-bench) as a shorthand:
-
-```ts
-import { test } from 'vitest'
-
-test.bench('parsing performance', () => {
-  JSON.parse('{"key":"value"}')
-})
-```
-
 ## Comparing Benchmarks
 
 Use `bench.compare()` to compare multiple benchmarks against each other:
