@@ -4,6 +4,8 @@ import type { Task } from '@vitest/runner'
 
 // TODO: design trace format
 export interface BrowserTraceData {
+  retry: number
+  repeats: number
   entries: BrowserTraceEntry[]
 }
 
@@ -28,22 +30,34 @@ declare let __vitest_dom_snapshot__: typeof import('rrweb-snapshot')
 declare let __vitest_selector_engine__: import('ivya').Ivya
 
 // TODO: why global
-const browserTraceEntries: Map<string, BrowserTraceEntry[]>
+const browserTraceEntries: Map<string, Map<string, BrowserTraceData>>
   = ((globalThis as any).__vitest_browser_trace__ ??= new Map())
+
+function getAttemptInfo(task: Task) {
+  return {
+    retry: task.result?.retryCount ?? 0,
+    repeats: task.result?.repeatCount ?? 0,
+  }
+}
+
+function getAttemptKey(repeats: number, retry: number) {
+  return `${repeats}:${retry}`
+}
 
 // TODO: should we avoid accumulating? send snapshot and clear to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot'>,
 ): void {
-  // TODO: split entries by
-  // task.repeats
-  // task.retry
   const snapshot = takeSnapshot(options.selector)
   const entry: BrowserTraceEntry = { ...options, snapshot }
-  const entries = browserTraceEntries.get(task.id) || []
-  entries.push(entry)
-  browserTraceEntries.set(task.id, entries)
+  const { retry, repeats } = getAttemptInfo(task)
+  const attempts = browserTraceEntries.get(task.id) || new Map()
+  const attemptKey = getAttemptKey(repeats, retry)
+  const attempt = attempts.get(attemptKey) || { retry, repeats, entries: [] }
+  attempt.entries.push(entry)
+  attempts.set(attemptKey, attempt)
+  browserTraceEntries.set(task.id, attempts)
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror
@@ -76,11 +90,19 @@ function takeSnapshot(selector?: string): TraceSnapshot {
   return { serialized }
 }
 
-export function getBrowserTrace(testId: string): BrowserTraceData | undefined {
-  const entries = browserTraceEntries.get(testId)
-  browserTraceEntries.delete(testId)
-  if (!entries?.length) {
+export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
+  const attempts = browserTraceEntries.get(testId)
+  if (!attempts?.size) {
     return
   }
-  return { entries }
+  const attemptKey = getAttemptKey(repeats, retry)
+  const attempt = attempts.get(attemptKey)
+  if (!attempt) {
+    return
+  }
+  attempts.delete(attemptKey)
+  if (!attempts.size) {
+    browserTraceEntries.delete(testId)
+  }
+  return attempt
 }

@@ -125,6 +125,14 @@ export function createBrowserRunner(
         [{ name }],
       ) as { tracePath: string }
       traces.push(tracePath)
+      // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
+      const traceData = getBrowserTrace(test.id, repeats, retry)
+      if (traceData) {
+        await this.commands.triggerCommand(
+          '__vitest_recordBrowserTrace',
+          [{ testId: test.id, data: traceData }],
+        )
+      }
     }
 
     onAfterRunTask = async (task: Test) => {
@@ -145,14 +153,6 @@ export function createBrowserRunner(
           )
         }
       }
-      const traceData = getBrowserTrace(task.id)
-      if (traceData) {
-        await this.commands.triggerCommand(
-          '__vitest_recordBrowserTrace',
-          [{ testId: task.id, data: traceData }],
-        )
-      }
-
       if (this.config.bail && task.result?.state === 'fail') {
         const previousFailures = await rpc().getCountOfFailedTests()
         const currentFailures = 1 + previousFailures

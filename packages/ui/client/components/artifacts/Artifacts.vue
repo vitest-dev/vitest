@@ -3,7 +3,7 @@ import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
-import { openTrace } from '~/composables/trace-view'
+import TraceArtifactLauncher from '../trace/TraceArtifactLauncher.vue'
 import VisualRegression from './visual-regression/VisualRegression.vue'
 
 const { test } = defineProps<{ test: RunnerTestCase }>()
@@ -20,7 +20,11 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   for (const artifact of test.artifacts) {
     switch (artifact.type) {
       case 'internal:browserTrace': {
-        handledArtifacts.push({ artifact, props: {} })
+        handledArtifacts.push({
+          artifact,
+          component: TraceArtifactLauncher,
+          props: { trace: artifact, test } satisfies ComponentProps<typeof TraceArtifactLauncher>,
+        })
         continue
       }
       case 'internal:toMatchScreenshot': {
@@ -77,16 +81,7 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
           </span>
         </div>
       </div>
-      <button
-        v-if="artifact.type === 'internal:browserTrace'"
-        type="button"
-        class="flex items-center gap-2 rounded px-2 py-1 hover:bg-yellow-500/10"
-        @click="openTrace(artifact, test)"
-      >
-        <span class="i-carbon:play-outline block" />
-        Open trace viewer
-      </button>
-      <component :is="component" v-else v-bind="props" />
+      <component :is="component" v-bind="props" />
     </div>
   </template>
 </template>
