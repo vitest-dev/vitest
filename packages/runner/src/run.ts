@@ -613,6 +613,10 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const suite = test.suite || test.file
   const $ = runner.trace!
 
+  // Track when test actually starts executing (after acquiring concurrency slot)
+  // to measure accurate duration when tests run concurrently
+  let executionStart = start
+
   const repeats = test.repeats ?? 0
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = getRetryCount(test.retry)
@@ -638,6 +642,10 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
             runner,
             [test.context, suite],
           ))
+
+          // Capture start time right before test execution to measure actual test duration
+          // instead of including time spent waiting for concurrency slots
+          executionStart = now()
 
           if (runner.runTask) {
             await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
@@ -728,7 +736,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           state: 'skip',
           note: test.result?.note,
           pending: true,
-          duration: now() - start,
+          duration: now() - executionStart,
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
@@ -777,7 +785,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   cleanupRunningTest()
   setCurrentTest(undefined)
 
-  test.result.duration = now() - start
+  test.result.duration = now() - executionStart
 
   await runner.onAfterRunTask?.(test)
 
