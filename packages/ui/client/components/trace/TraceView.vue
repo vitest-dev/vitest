@@ -20,13 +20,12 @@ const entries = computed(() => (props.trace.data as BrowserTraceData).entries)
 const selectedStep = computed(() => entries.value[selectedTraceStepIndex.value])
 const iframeEl = ref<HTMLIFrameElement>()
 
-function openStepLocation(index: number) {
-  const step = entries.value[index]
-  if (!step?.location) {
-    return
-  }
+function onSelectStep(index: number) {
   selectedTraceStepIndex.value = index
-  openLocation(props.test, step.location)
+  const step = entries.value[index]
+  if (step?.location) {
+    openLocation(props.test, step.location)
+  }
 }
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
@@ -87,7 +86,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         type="button"
         class="text-left px-2 py-1 rounded text-sm"
         :class="selectedTraceStepIndex === index ? 'bg-blue-500/20' : 'hover:bg-gray/10'"
-        @click="selectedTraceStepIndex = index"
+        @click="onSelectStep(index)"
       >
         <div truncate>
           {{ step.name }}
@@ -100,8 +99,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         </div>
         <div
           v-if="step.location"
-          class="text-xs opacity-50 truncate cursor-pointer hover:opacity-80"
-          @click.stop="openStepLocation(index)"
+          class="text-xs opacity-50 truncate"
         >
           {{ getLocationString(step.location) }}
         </div>
