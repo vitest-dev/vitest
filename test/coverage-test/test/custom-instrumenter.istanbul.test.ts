@@ -9,7 +9,7 @@ test('custom instrumenter receives correct options', async () => {
     coverage: {
       reporter: 'json',
       ignoreClassMethods: ['test-method'],
-      instrumenter: options => {
+      instrumenter: (options) => {
         receivedOptions = options
 
         // Return a passthrough instrumenter — no actual instrumentation,
