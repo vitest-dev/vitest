@@ -1,3 +1,18 @@
+// Concurrency strategy: DFS with bounded parallelism
+//
+// Each concurrent fan-out in the task tree (concurrent suite children, parallel hooks)
+// creates a short-lived local limiter instance scoped to that group's lifetime.
+// Each child holds one slot for its entire subtree duration — released only when the
+// subtree fully completes (all before/after hooks at every level inside it).
+//
+// Guarantee: at any concurrent group, at most `maxConcurrency` subtrees are
+// simultaneously in-flight. This bounds resource ownership at every level of the tree,
+// not just at leaf (test) level.
+//
+// Why per-group instances instead of one global: a global limiter held across entire
+// subtrees would deadlock when nested concurrent groups try to acquire slots from the
+// same exhausted pool. Per-group instances are independent across tree levels.
+
 // A compact (code-wise, probably not memory-wise) singly linked list node.
 type QueueNode<T> = [value: T, next?: QueueNode<T>]
 
