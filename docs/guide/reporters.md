@@ -417,6 +417,20 @@ Example of a JSON report:
 Since Vitest 3, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
 :::
 
+The `meta` field in each assertion result can be filtered via the `filterMeta` reporter option. It receives the key and value of each field and should return a falsy value to exclude the field from the report:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['json', {
+        filterMeta: (key, value) => key !== 'internalField',
+      }]
+    ]
+  },
+})
+```
+
 ### HTML Reporter
 
 Generates an HTML file to view test results through an interactive [GUI](/guide/ui). After the file has been generated, Vitest will keep a local development server running and provide a link to view the report in a browser.

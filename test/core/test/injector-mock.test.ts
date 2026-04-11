@@ -746,12 +746,18 @@ const obj = {
     expect(
       hoistSimpleCodeWithoutMocks(
         `
-import { remove, add } from 'vue'
+import { remove, add, update, del, call } from 'vue'
 
 class A {
   remove = 1
   add = null
+  update = update
+  del = () => del()
+  call = call(4)
 }
+
+remove(2);
+add(4);
 `,
       ),
     ).toMatchInlineSnapshot(`
@@ -761,12 +767,16 @@ class A {
 
 
 
-      const add = __vi_import_0__.add;
-      const remove = __vi_import_0__.remove;
       class A {
         remove = 1
         add = null
-      }"
+        update = __vi_import_0__.update
+        del = () => __vi_import_0__.del()
+        call = __vi_import_0__.call(4)
+      }
+      
+      __vi_import_0__.remove(2);
+      __vi_import_0__.add(4);"
     `)
   })
 
