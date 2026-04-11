@@ -690,8 +690,13 @@ We recommend using this reporter if you are running Vitest on different machines
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
 
-<!-- TODO: slop. should we support VITEST_BLOB_LABEL? -->
-When running the same tests across multiple environments, use the blob reporter `label` option to distinguish each environment's blob. Vitest reads labels at merge time and displays results separately:
+When running the same tests across multiple environments, use the `VITEST_BLOB_LABEL` environment variable to distinguish each environment's blob. Vitest reads labels at merge time and displays results separately:
+
+```bash
+VITEST_BLOB_LABEL=linux vitest run --reporter=blob
+```
+
+You can also provide the label via the blob reporter option:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -699,7 +704,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     reporters: [
-      ['blob', { label: process.env.VITEST_BLOB_LABEL }],
+      ['blob', { label: 'linux' }],
     ],
   },
 })

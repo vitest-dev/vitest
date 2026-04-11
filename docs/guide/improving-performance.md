@@ -132,18 +132,10 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest run --merge-reports
 ```
 
-When running the same shards across multiple environments, configure a blob reporter label so merged reports can display them separately:
+When running the same shards across multiple environments, set the `VITEST_BLOB_LABEL` environment variable so merged reports can display them separately:
 
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    reporters: [
-      ['blob', { label: process.env.VITEST_BLOB_LABEL }],
-    ],
-  },
-})
+```sh
+VITEST_BLOB_LABEL=linux vitest run --reporter=blob --shard=1/3
 ```
 
 ::: details GitHub Actions example
