@@ -289,7 +289,7 @@ export class SummaryReporter implements Reporter {
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
       const typecheck = testFile.meta.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
-      const label = testFile.meta.__vitest_label__ ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} ` : ''
+      const label = this.ctx.state.blobs && testFile.meta.__vitest_label__ ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
