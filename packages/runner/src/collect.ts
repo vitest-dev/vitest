@@ -47,7 +47,14 @@ export async function collectTests(
 
         const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
-        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
+        const file = createFileTask(
+          filepath,
+          config.root,
+          config.name,
+          runner.pool,
+          runner.viteEnvironment,
+          { __vitest_label__: config.mergeReportsLabel },
+        )
         file.tags = fileTags
         file.shuffle = config.sequence.shuffle
 
