@@ -756,6 +756,15 @@ export function resolveConfig(
     }
   }
 
+  for (const reporter of resolved.reporters) {
+    if (Array.isArray(reporter) && reporter[0] === 'blob') {
+      const label = (reporter[1] as any)?.label
+      if (typeof label === 'string') {
+        resolved.mergeReportsLabel = label
+      }
+    }
+  }
+
   if (resolved.changed) {
     resolved.passWithNoTests ??= true
   }

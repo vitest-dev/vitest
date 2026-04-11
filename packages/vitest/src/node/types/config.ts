@@ -968,11 +968,6 @@ export interface InlineConfig {
    */
   strictTags?: boolean
 
-  /**
-   * Label to disambiguate the same test file when merging blob reports from different environments
-   * @experimental
-   */
-  label?: string
 }
 
 export interface TypecheckConfig {
@@ -1152,7 +1147,6 @@ export interface ResolvedConfig
     | 'vmMemoryLimit'
     | 'fileParallelism'
     | 'tagsFilter'
-    | 'label'
   > {
   mode: VitestRunMode
 
@@ -1224,7 +1218,7 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
-  label?: string
+  mergeReportsLabel?: string
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {

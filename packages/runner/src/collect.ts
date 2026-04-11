@@ -53,7 +53,7 @@ export async function collectTests(
           config.name,
           runner.pool,
           runner.viteEnvironment,
-          { __vitest_label__: config.label },
+          { __vitest_label__: config.mergeReportsLabel },
         )
         file.tags = fileTags
         file.shuffle = config.sequence.shuffle

@@ -508,8 +508,7 @@ test("macos only", () => {})
   const result1 = await runVitest({
     root,
     globals: true,
-    label: 'linux',
-    reporters: 'blob',
+    reporters: [['blob', { label: 'linux' }]],
   }, ['first', 'second'])
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree()).toMatchInlineSnapshot(`
@@ -530,8 +529,7 @@ test("macos only", () => {})
   const result2 = await runVitest({
     root,
     globals: true,
-    label: 'macos',
-    reporters: 'blob',
+    reporters: [['blob', { label: 'macos' }]],
   }, ['first', 'third'])
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect(result2.errorTree()).toMatchInlineSnapshot(`
@@ -692,8 +690,7 @@ test("works on browser", () => {
   }
   const result1 = await runVitest({
     ...baseConfig,
-    label: 'linux',
-    reporters: 'blob',
+    reporters: [['blob', { label: 'linux' }]],
   })
   expect(result1.stderr).toMatchInlineSnapshot(`""`)
   expect(result1.errorTree({ project: true })).toMatchInlineSnapshot(`
@@ -720,8 +717,7 @@ test("works on browser", () => {
   `)
   const result2 = await runVitest({
     ...baseConfig,
-    label: 'macos',
-    reporters: 'blob',
+    reporters: [['blob', { label: 'macos' }]],
   })
   expect(result2.stderr).toMatchInlineSnapshot(`""`)
   expect(result2.errorTree({ project: true })).toMatchInlineSnapshot(`

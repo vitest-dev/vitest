@@ -14,6 +14,7 @@ import { getOutputFile } from '../../utils/config-helpers'
 
 export interface BlobOptions {
   outputFile?: string
+  label?: string
 }
 
 export class BlobReporter implements Reporter {
@@ -53,7 +54,7 @@ export class BlobReporter implements Reporter {
       const shard = this.ctx.config.shard
       const filename = [
         'blob',
-        this.ctx.config.label,
+        this.ctx.config.mergeReportsLabel,
         shard && `${shard.index}-${shard.count}`,
       ].filter(Boolean).join('-')
       outputFile = `.vitest-reports/${sanitizeFilePath(filename)}.json`

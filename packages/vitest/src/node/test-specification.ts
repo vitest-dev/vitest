@@ -63,7 +63,7 @@ export class TestSpecification {
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      metaOverride ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.label },
+      metaOverride ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
     )
     this.project = project
     this.moduleId = moduleId
