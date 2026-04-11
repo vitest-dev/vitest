@@ -458,6 +458,7 @@ function trimReporterOutput(report: string) {
   // Trim start and end, capture just rendered tree
   rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
   rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
+  rows.splice(rows.findIndex(row => row.includes('blob report written to')), 1)
 
   return rows.join('\n').trim()
 }
@@ -526,12 +527,53 @@ test("macos only", () => {})
     }
   `)
   process.env.TEST_LABEL_ENV = 'macos'
+  process.env.VITEST_BLOB_LABEL = 'macos' // test VITEST_BLOB_LABEL
   const result2 = await runVitest({
     root,
     globals: true,
-    reporters: [['blob', { label: 'macos' }]],
+    reporters: [
+      'blob',
+      // test the original run's reporter doesn't include label
+      'verbose',
+    ],
   }, ['first', 'third'])
-  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  delete process.env.VITEST_BLOB_LABEL
+  expect(trimReporterOutput(result2.stdout)).toMatchInlineSnapshot(`
+    "✓ first.test.ts > always good <time>
+     × first.test.ts > works on linux <time>
+       → expected false to be true // Object.is equality
+     ✓ first.test.ts > works on macos <time>
+     ✓ third.test.ts > macos only <time>
+
+     Test Files  1 failed | 1 passed (2)
+          Tests  1 failed | 3 passed (4)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)"
+  `)
+  expect(result2.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  first.test.ts > works on linux
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:5:50
+          3|
+          4| test("works on linux", () => {
+          5|   expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+           |                                                  ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
   expect(result2.errorTree()).toMatchInlineSnapshot(`
     {
       "first.test.ts": {
