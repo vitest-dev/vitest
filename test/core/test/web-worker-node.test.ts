@@ -239,7 +239,8 @@ cloneTypes.forEach((clone) => {
       await expect(promise).resolves.toBe('hello world via port')
     })
 
-    it('transfers a MessagePort object in the data argument to worker and the passed port works', async () => {
+    // Skipped for 'ponyfill' because it does not support transferring MessagePort objects.
+    it.skipIf(clone === 'ponyfill')('transfers a MessagePort object in the data argument to worker and the passed port works', async () => {
       expect.assertions(1)
 
       const worker = new MyWorker()
