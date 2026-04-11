@@ -63,7 +63,7 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 | Format                 | [rrweb](https://github.com/rrweb-io/rrweb) DOM snapshots | Playwright `.trace.zip`                        |
 | Requires external tool | No                                                        | Yes (`npx playwright show-trace`)              |
 
-You can enable both at the same time. See [Playwright Trace Files](./trace-view-playwright.md) for the `browser.trace` workflow.
+You can enable both at the same time. See [Playwright Trace Files](./trace-view.md) for the `browser.trace` workflow.
 
 ## Recorded Steps
 
