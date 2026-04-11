@@ -967,7 +967,6 @@ export interface InlineConfig {
    * @default true
    */
   strictTags?: boolean
-
 }
 
 export interface TypecheckConfig {
