@@ -7,10 +7,9 @@ export default defineConfig({
     reporters: [
       'verbose',
       ...(process.env.VITEST_CI_BLOB_LABEL
-        ? [['blob', {}] as any]
+        ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] as any]
         : []),
     ],
-    label: process.env.VITEST_CI_BLOB_LABEL,
     testTimeout: 60_000,
     isolate: false,
     fileParallelism: false,

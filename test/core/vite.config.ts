@@ -130,10 +130,9 @@ export default defineConfig({
         ? [['default'], ['github-actions', { displayAnnotations: false }] as any]
         : [['default', { summary: true }], ['hanging-process']]),
       ...(process.env.VITEST_CI_BLOB_LABEL
-        ? [['blob']]
+        ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]]
         : []),
     ],
-    label: process.env.VITEST_CI_BLOB_LABEL,
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
