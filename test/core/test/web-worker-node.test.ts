@@ -226,7 +226,7 @@ cloneTypes.forEach((clone) => {
       process.env.VITEST_WEB_WORKER_CLONE = undefined
     })
 
-    it('transfers MessagePort objects to worker as event.ports', async () => {
+    it('transfers a MessagePort object in the transfer list to worker as event.ports[0]', async () => {
       expect.assertions(1)
 
       const worker = new MyWorker()
@@ -237,6 +237,19 @@ cloneTypes.forEach((clone) => {
       })
       worker.postMessage('hello', [channel.port2])
       await expect(promise).resolves.toBe('hello world via port')
+    })
+
+    it('transfers a MessagePort object in the data argument to worker and the passed port works', async () => {
+      expect.assertions(1)
+
+      const worker = new MyWorker()
+      const channel = new MessageChannel()
+      const promise = new Promise<string>((resolve, reject) => {
+        channel.port1.onmessage = e => resolve(e.data as string)
+        channel.port1.onmessageerror = reject
+      })
+      worker.postMessage({ port: channel.port2 }, [channel.port2])
+      await expect(promise).resolves.toBe('Reply via port in data')
     })
   })
 })
