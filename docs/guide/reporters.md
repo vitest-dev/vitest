@@ -690,10 +690,19 @@ We recommend using this reporter if you are running Vitest on different machines
 npx vitest --merge-reports=reports --reporter=json --reporter=default
 ```
 
-When running the same tests across multiple environments, use the `--label` option to distinguish each environment's blob. Vitest reads labels at merge time and displays results separately:
+<!-- TODO: slop. should we support VITEST_BLOB_LABEL? -->
+When running the same tests across multiple environments, use the blob reporter `label` option to distinguish each environment's blob. Vitest reads labels at merge time and displays results separately:
 
-```bash
-vitest run --reporter=blob --label=linux
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: [
+      ['blob', { label: process.env.VITEST_BLOB_LABEL }],
+    ],
+  },
+})
 ```
 
 Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).

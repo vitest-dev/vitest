@@ -132,6 +132,20 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest run --merge-reports
 ```
 
+When running the same shards across multiple environments, configure a blob reporter label so merged reports can display them separately:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: [
+      ['blob', { label: process.env.VITEST_BLOB_LABEL }],
+    ],
+  },
+})
+```
+
 ::: details GitHub Actions example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
@@ -163,7 +177,9 @@ jobs:
         run: pnpm i
 
       - name: Run tests
-        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --label=${{ matrix.os }}
+        run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          VITEST_BLOB_LABEL: ${{ matrix.os }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}

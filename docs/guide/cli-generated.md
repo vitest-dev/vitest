@@ -882,13 +882,6 @@ Start Vitest without running tests. Tests will be running only on change. If bro
 
 List all available tags instead of running tests. `--list-tags=json` will output tags in JSON format, unless there are no tags.
 
-### label
-
-- **CLI:** `--label <label>`
-- **Config:** [label](/config/label)
-
-Label to disambiguate the same test file when merging blob reports from different environments (e.g. `--label=linux`).
-
 ### clearCache
 
 - **CLI:** `--clearCache`
