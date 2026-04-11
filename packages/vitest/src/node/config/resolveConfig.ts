@@ -756,19 +756,14 @@ export function resolveConfig(
     }
   }
 
-  let hasBlobReporter = false
-  let blobReporterLabel: string | undefined
+  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
   for (const reporter of resolved.reporters) {
     if (Array.isArray(reporter) && reporter[0] === 'blob') {
-      hasBlobReporter = true
-      const { label } = reporter[1] as { label?: unknown }
-      if (typeof label === 'string') {
-        blobReporterLabel = label
+      const options = reporter[1] as any
+      if (options && typeof options.label === 'string') {
+        resolved.mergeReportsLabel = options.label
       }
     }
-  }
-  if (hasBlobReporter) {
-    resolved.mergeReportsLabel = blobReporterLabel ?? process.env.VITEST_BLOB_LABEL
   }
 
   if (resolved.changed) {
