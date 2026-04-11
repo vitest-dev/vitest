@@ -4,9 +4,9 @@
 
 `browser.traceView` introduces a new debugging model for browser tests. Instead of watching a headed browser window while tests run, the browser runs headless by default and every interaction is captured as a DOM snapshot. The trace viewer — a step-by-step replay of your test — becomes the primary debugging surface, the same whether you're developing locally or inspecting a CI failure.
 
-::: details Compared to current browser UI model
+::: tip Difference from the current "browser UI" model
 
-By default, Vitest opens a [browser UI](/config/browser/ui) where tests run inside a visible iframe as live view. Only the last test's render state stays visible — each new test clears it. Earlier tests in a run are not inspectable.
+The current default operating mode of local Vitest browser mode is to open a [browser UI](/config/browser/ui) where tests run inside a visible iframe as live view. Only the last test's render state stays visible — each new test clears it. Earlier tests in a run are not inspectable.
 
 The HTML reporter, being static, has no iframe view at all. The two surfaces cover different situations but do not share a debugging model.
 
