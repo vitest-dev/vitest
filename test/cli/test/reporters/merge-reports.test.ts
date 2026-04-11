@@ -453,12 +453,12 @@ function trimReporterOutput(report: string) {
   const rows = report
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
+    .replace(/blob report written to (.*)/g, 'blob report written to <path>')
     .split('\n')
 
   // Trim start and end, capture just rendered tree
   rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
   rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
-  rows.splice(rows.findIndex(row => row.includes('blob report written to')), 1)
 
   return rows.join('\n').trim()
 }
@@ -547,7 +547,9 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
-       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)"
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+
+    blob report written to <path>"
   `)
   expect(result2.stderr).toMatchInlineSnapshot(`
     "
