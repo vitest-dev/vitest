@@ -12,7 +12,7 @@ import FileDetails from '~/components/FileDetails.vue'
 import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import TraceViewPane from '~/components/trace/TraceViewPane.vue'
-import { browserState } from '~/composables/client'
+import { browserState, config } from '~/composables/client'
 import {
   coverageVisible,
   detailSizes,
@@ -95,7 +95,7 @@ function allowBrowserEvents() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition v-if="!browserState && !activeTrace" key="ui-detail">
+        <transition v-if="!browserState && !showTracePane" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage
             v-else-if="coverageVisible"
@@ -117,30 +117,29 @@ function allowBrowserEvents() {
               @resized="onModuleResized"
             >
               <Pane :size="detailSizes[0]" min-size="10">
-                <!-- TODO: make detailsPosition toggle available when trace view -->
-                <!-- Better long-term: show shared split-layout controls when browserState || activeTrace, -->
-                <!-- ideally from pane headers instead of treating detailsPosition as browser-only UI. -->
-                <Splitpanes
-                  v-if="browserState && showTracePane"
-                  class="h-full"
-                  :horizontal="detailsPosition === 'right'"
-                >
-                  <Pane size="55" min-size="10">
-                    <BrowserIframe v-once />
-                  </Pane>
-                  <Pane size="45" min-size="10">
-                    <TraceViewPane
-                      :trace="activeTrace!"
-                      :test="activeTraceTest!"
-                    />
-                  </Pane>
-                </Splitpanes>
+                <template v-if="browserState">
+                  <Splitpanes
+                    v-if="config.browser?.traceView"
+                    class="h-full"
+                    :horizontal="detailsPosition === 'right'"
+                  >
+                    <Pane :size="showTracePane ? 55 : 100" min-size="10">
+                      <BrowserIframe v-once />
+                    </Pane>
+                    <Pane v-if="showTracePane" size="45" min-size="10">
+                      <TraceViewPane
+                        :trace="activeTrace!"
+                        :test="activeTraceTest!"
+                      />
+                    </Pane>
+                  </Splitpanes>
+                  <BrowserIframe v-else v-once />
+                </template>
                 <TraceViewPane
                   v-else-if="showTracePane"
                   :trace="activeTrace!"
                   :test="activeTraceTest!"
                 />
-                <BrowserIframe v-else v-once />
               </Pane>
               <Pane
                 v-if="detailsPanelVisible"
