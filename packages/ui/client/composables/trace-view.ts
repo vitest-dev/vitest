@@ -24,6 +24,7 @@ export function closeTrace() {
   selectedTraceStepIndex.value = 0
 }
 
+// TODO: keep last live view iframe alive when selecting trace viewer panel
 function openTraceForTest(testId: string) {
   if (activeTraceTest.value?.id === testId && activeTrace.value) {
     return
