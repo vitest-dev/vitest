@@ -46,6 +46,13 @@ It is recommended that you install a copy of `vitest` in your `package.json`, us
 
 The `npx` tool will execute the specified command. By default, `npx` will first check if the command exists in the local project's binaries. If it is not found there, `npx` will look in the system's `$PATH` and execute it if found. If the command is not found in either location, `npx` will install it in a temporary location prior to execution.
 
+Vitest and third party integrations can use `.vitest` directory to store generated artifacts. It's recommended to add this in your `.gitignore`.
+
+``` sh [.gitignore]
+# Vitest reports and artifacts
+.vitest/
+```
+
 ## Writing Tests
 
 As an example, we will write a simple test that verifies the output of a function that adds two numbers.

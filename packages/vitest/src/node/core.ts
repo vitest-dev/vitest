@@ -46,6 +46,7 @@ import { TestProject } from './project'
 import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
+import { createResultWriter } from './reporters/result-writer'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
@@ -1642,6 +1643,13 @@ export class Vitest {
       const regexp = wildcardPatternToRegExp(project)
       return regexp.test(name)
     })
+  }
+
+  /**
+   * Create a result writer that's scoped to a specific reporter directory.
+   */
+  createResultWriter(scope: string): ReturnType<typeof createResultWriter> {
+    return createResultWriter(this, scope)
   }
 }
 
