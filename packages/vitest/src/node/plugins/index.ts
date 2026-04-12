@@ -296,6 +296,9 @@ export async function VitestPlugin(
 // since it depends on enabling `@vitest/ui` plugin, so we hack here.
 // TODO: actually not? can `@vitest/ui` just exports configureServer function?
 function handleTraceViewConfig(config: UserConfig, vitest: Vitest) {
+  if (1) {
+    return
+  }
   const browser = config.browser
   const traceView = browser?.traceView ?? vitest._cliOptions.browser?.traceView
   const providerName = browser?.provider?.name ?? vitest._cliOptions.browser?.provider?.name

@@ -759,7 +759,7 @@ export function resolveConfig(
     }
 
     if (resolved.browser.enabled && resolved.browser.traceView && !resolved.watch) {
-      resolved.reporters.push(['html', {}])
+      // resolved.reporters.push(['html', {}])
     }
   }
 
@@ -822,7 +822,8 @@ export function resolveConfig(
   }
 
   resolved.browser.enabled ??= false
-  resolved.browser.headless ??= isCI || resolved.browser.traceView
+  // resolved.browser.headless ??= isCI || resolved.browser.traceView
+  resolved.browser.headless ??= isCI
   if (resolved.browser.isolate) {
     logger.console.warn(
       c.yellow('`browser.isolate` is deprecated. Use top-level `isolate` instead.'),
@@ -909,24 +910,25 @@ export function resolveConfig(
 
   if (resolved.browser.enabled && resolved.browser.traceView) {
     resolved.browser.detailsPanelPosition = 'bottom'
-    resolved.browser.ui = false
-    if (resolved.browser.provider?.name === 'preview') {
-      resolved.browser.ui = true
-      resolved.browser.headless = false
-    }
-    // we try to enable `--ui` early in `VitestPlugin.config`,
-    // but we show warning if we somehow reach here
-    if (resolved.watch && !resolved.ui) {
-      logger.console.warn(
-        c.yellow(
-          withLabel(
-            'yellow',
-            'Vitest',
-            '--browser.traceView is enabled without --ui.',
-          ),
-        ),
-      )
-    }
+    // TODO: too optinionated
+    // resolved.browser.ui = false
+    // if (resolved.browser.provider?.name === 'preview') {
+    //   resolved.browser.ui = true
+    //   resolved.browser.headless = false
+    // }
+    // // we try to enable `--ui` early in `VitestPlugin.config`,
+    // // but we show warning if we somehow reach here
+    // if (resolved.watch && !resolved.ui) {
+    //   logger.console.warn(
+    //     c.yellow(
+    //       withLabel(
+    //         'yellow',
+    //         'Vitest',
+    //         '--browser.traceView is enabled without --ui.',
+    //       ),
+    //     ),
+    //   )
+    // }
   }
   if (resolved.browser.trace.tracesDir != null) {
     resolved.browser.trace.tracesDir = resolvePath(
