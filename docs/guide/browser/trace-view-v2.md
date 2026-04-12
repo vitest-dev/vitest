@@ -54,11 +54,23 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 
 `browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them.
 
+<!--
+TODO: The browser UI / Vitest UI / browser driver combinations are not specific to trace view and might be better documented in the Browser Mode guide.  Something like:
+
+  | top-level --ui | browser.ui | browser.headless | Result |
+  | --- | --- | --- | --- |
+  | off | true | false | browser UI/live iframe in headed browser |
+  | on | false | true | pure Vitest UI, tests in headless browser |
+  | on | false | false | pure Vitest UI, tests in separate headed browser window |
+
+-->
+
 | Goal | Configuration | Result |
 | --- | --- | --- |
 | Add trace replay to the normal local browser UI | `vitest --browser.traceView` | Uses the default local headed browser UI and adds trace replay for recorded tests. |
 | Debug locally with a headless browser | `vitest --browser.traceView --browser.headless --ui` | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots. |
-| Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=html` | The terminal keeps the default reporter, and the HTML report includes the trace viewer for recorded tests. |
+| Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window. |
+| Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=html` | The HTML report includes the trace viewer for recorded tests. |
 
 ## Relation to Playwright Traces
 
