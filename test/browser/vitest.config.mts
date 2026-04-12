@@ -40,7 +40,6 @@ export default defineConfig({
     },
     browser: {
       enabled: true,
-      headless: false,
       instances,
       provider,
       // isolate: false,
@@ -76,7 +75,6 @@ export default defineConfig({
     alias: {
       '#src': resolve(dir, './src'),
     },
-    open: false,
     diff: './custom-diff-config.ts',
     outputFile: {
       html: './html/index.html',

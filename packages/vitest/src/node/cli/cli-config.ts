@@ -413,6 +413,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return { mode: value }
         },
       },
+      traceView: {
+        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+      },
       orchestratorScripts: null,
       commands: null,
       viewport: null,

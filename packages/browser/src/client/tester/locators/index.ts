@@ -29,6 +29,7 @@ import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from '../tester-utils'
+import { recordBrowserTraceEntry } from '../trace'
 
 export { ensureAwaited } from '../../utils'
 export { convertElementToCssSelector, getIframeScale, processTimeoutOptions } from '../tester-utils'
@@ -67,6 +68,8 @@ export const selectorEngine: Ivya = Ivya.create({
   })(server.config.browser.name),
   testIdAttribute: server.config.browser.locators.testIdAttribute,
 })
+
+;(globalThis as any).__vitest_selector_engine__ = selectorEngine
 
 const kLocator = Symbol.for('$$vitest:locator')
 
@@ -204,18 +207,32 @@ export abstract class Locator {
 
   public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
-    if (!currentTest || !getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+    const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+    if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
-    return ensureAwaited(error => getBrowserState().commands.triggerCommand<void>(
-      '__vitest_markTrace',
-      [{
-        name,
-        selector: this.selector,
-        stack: options?.stack ?? error?.stack,
-      }],
-      error,
-    ))
+    return ensureAwaited((error) => {
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
+          name,
+          selector: this.selector,
+          stack: options?.stack ?? error?.stack,
+        })
+      }
+      if (!hasActiveTrace) {
+        return Promise.resolve()
+      }
+      return getBrowserState().commands.triggerCommand<void>(
+        '__vitest_markTrace',
+        [{
+          name,
+          selector: this.selector,
+          stack: options?.stack ?? error?.stack,
+        }],
+        error,
+      )
+    })
   }
 
   protected abstract locator(selector: string): Locator

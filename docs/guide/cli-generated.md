@@ -429,6 +429,13 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 
 Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
 
+### browser.traceView
+
+- **CLI:** `--browser.traceView`
+- **Config:** [browser.traceView](/config/browser/traceview)
+
+Enable Vitest trace-view collection for browser tests (default: `false`)
+
 ### browser.locators.exact
 
 - **CLI:** `--browser.locators.exact`

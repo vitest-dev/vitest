@@ -57,6 +57,7 @@ export async function VitestPlugin(
           viteConfig.test ?? {},
           options,
         )
+        handleTraceViewConfig(testConfig, vitest)
         testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
 
         // store defines for globalThis to make them
@@ -221,6 +222,7 @@ export async function VitestPlugin(
 
         // viteConfig.test is final now, merge it for real
         options = deepMerge({}, configDefaults, viteConfigTest, options)
+        handleTraceViewConfig(options, vitest)
         options.api = resolveApiServerConfig(options, defaultPort)
 
         // we replace every "import.meta.env" with "process.env"
@@ -288,4 +290,19 @@ export async function VitestPlugin(
     NormalizeURLPlugin(),
     ModuleRunnerTransform(),
   ].filter(notNullish)
+}
+
+// traceView should auto enable UI but doing this during `resolveConfig` woudl be too late
+// since it depends on enabling `@vitest/ui` plugin, so we hack here.
+// TODO: actually not? can `@vitest/ui` just exports configureServer function?
+function handleTraceViewConfig(config: UserConfig, vitest: Vitest) {
+  if (1) {
+    return
+  }
+  const browser = config.browser
+  const traceView = browser?.traceView ?? vitest._cliOptions.browser?.traceView
+  const providerName = browser?.provider?.name ?? vitest._cliOptions.browser?.provider?.name
+  if (browser?.enabled && traceView && config.watch && providerName !== 'preview') {
+    config.ui = true
+  }
 }

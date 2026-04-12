@@ -20,6 +20,7 @@ import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
+import { recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
@@ -361,6 +362,7 @@ export const page: BrowserPage = {
   ): any {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
@@ -378,6 +380,13 @@ export const page: BrowserPage = {
           return await bodyOrOptions()
         }
         finally {
+          if (hasActiveTraceView) {
+            // TODO: support nested trace
+            recordBrowserTraceEntry(currentTest, {
+              name,
+              stack: options?.stack ?? error?.stack,
+            })
+          }
           if (hasActiveTrace) {
             await triggerCommand('__vitest_groupTraceEnd', [], error)
           }
@@ -385,18 +394,29 @@ export const page: BrowserPage = {
       })
     }
 
-    if (!hasActiveTrace) {
+    if (!hasActiveTrace && !hasActiveTraceView) {
       return Promise.resolve()
     }
 
-    return ensureAwaited(error => triggerCommand(
-      '__vitest_markTrace',
-      [{
-        name,
-        stack: bodyOrOptions?.stack ?? error?.stack,
-      }],
-      error,
-    ))
+    return ensureAwaited((error) => {
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
+          name,
+          stack: bodyOrOptions?.stack ?? error?.stack,
+        })
+      }
+      if (!hasActiveTrace) {
+        return Promise.resolve()
+      }
+      return triggerCommand(
+        '__vitest_markTrace',
+        [{
+          name,
+          stack: bodyOrOptions?.stack ?? error?.stack,
+        }],
+        error,
+      )
+    })
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not supported by the "${provider}" provider.`)

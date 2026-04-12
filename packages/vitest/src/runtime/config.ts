@@ -113,6 +113,7 @@ export interface SerializedConfig {
       actionTimeout?: number
     }
     trace: BrowserTraceViewMode
+    traceView: boolean
     trackUnhandledErrors: boolean
     detailsPanelPosition: 'right' | 'bottom'
   }

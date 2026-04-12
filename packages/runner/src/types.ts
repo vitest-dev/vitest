@@ -14,6 +14,7 @@ export type {
   AroundEachListener,
   BeforeAllListener,
   BeforeEachListener,
+  BrowserTraceArtifact,
   FailureScreenshotArtifact,
   File,
   Fixture,
