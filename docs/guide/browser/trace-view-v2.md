@@ -2,17 +2,17 @@
 
 <!-- TODO: experimental version, rename md, better cross link -->
 
-`browser.traceView` introduces a new debugging model for browser tests. Instead of watching a headed browser window while tests run, the browser runs headless by default and every interaction is captured as a DOM snapshot. The trace viewer — a step-by-step replay of your test — becomes the primary debugging surface, the same whether you're developing locally or inspecting a CI failure.
+`browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
-::: tip Difference from the current "browser UI" model
+Trace view is additive to the current browser testing workflow. Enabling it does not force a single debugging mode. You can use it with the normal local browser UI, with a headless browser and Vitest UI, or with the HTML reporter in CI.
 
-The current default operating mode of local Vitest browser mode is to open a [browser UI](/config/browser/ui) where tests run inside a visible iframe as live view. Only the last test's render state stays visible — each new test clears it. Earlier tests in a run are not inspectable.
+::: tip Trace view, browser UI, and HTML reports
 
-The HTML reporter, being static, has no iframe view at all. The two surfaces cover different situations but do not share a debugging model.
+The normal local browser mode opens the [browser UI](/config/browser/ui), where tests run in a visible iframe. This is useful while developing, but the iframe only shows the current browser state. When another test runs, the previous rendered state is gone.
 
-The headed browser UI also runs tests with a different concurrency model than headless. With the Playwright provider, headless mode can run test files in parallel by default. In headed mode with the browser UI, this parallelism is not available — so local and CI runs can behave differently without any explicit configuration difference.
+`browser.traceView` keeps a replayable record for each test. In local browser UI mode, the trace viewer appears alongside the existing live view so you can keep using the browser UI while also inspecting recorded steps.
 
-`browser.traceView` captures DOM snapshots for every test throughout the run. The same trace viewer appears in the Vitest UI during development and in the HTML report for CI. Since the browser defaults to headless locally as well, local and CI also share the same concurrency model.
+For static output, add the [HTML reporter](/guide/reporters#html-reporter). The same trace viewer can then be opened from the generated report, which is useful for run-mode and CI failures.
 
 :::
 
@@ -40,9 +40,7 @@ vitest --browser.traceView
 
 :::
 
-One flag takes care of everything: the browser runs headless, traces are collected, and the viewer is surfaced automatically — in the Vitest UI when developing, as a static HTML report when running in CI.
-
-Selecting a test that has a trace automatically opens the trace viewer in the top panel. The viewer has two panes:
+When running locally with the default browser UI, selecting a test that has a trace opens the trace viewer next to the live view. The viewer has two panes:
 
 - **Step list** (left) — every recorded interaction and assertion, with name, selector, and source location. Click a step to navigate to it.
 - **DOM snapshot** (right) — a reconstruction of the page at the selected step. The interacted element is highlighted in blue.
@@ -52,6 +50,22 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 <img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
 <img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
 
+## Common Setups
+
+`browser.traceView` controls trace collection and the trace viewer integration. Other options still control where the viewer is shown and how the browser itself runs.
+
+| Goal | Configuration | Result |
+| --- | --- | --- |
+| Add trace replay to the normal local browser UI | `vitest --browser.traceView` | Uses the default local headed browser UI and adds trace replay for recorded tests. |
+| Debug locally with a headless browser | `vitest --ui --browser.traceView --browser.headless` | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots. |
+| Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=default --reporter=html` | The terminal keeps the default reporter, and the HTML report includes the trace viewer for recorded tests. |
+
+If your project config sets `browser.headless: true`, pass `--browser.headless=false` during local debugging to return to the normal visible browser UI.
+
+In run mode, `browser.traceView` does not add the HTML reporter automatically. If you enable trace view without the HTML reporter, Vitest records traces but warns that there is no HTML report surface for opening them after the run.
+
+The [`preview`](/config/browser/preview) provider does not support headless mode, so trace view always runs with a visible browser when using `preview`.
+
 ## Relation to Playwright Traces
 
 `browser.traceView` and [`browser.trace`](/config/browser/trace) are independent features:
@@ -59,7 +73,7 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 |                        | `browser.traceView`                                       | `browser.trace`                                |
 | ---------------------- | --------------------------------------------------------- | ---------------------------------------------- |
 | Provider support       | All providers (playwright, webdriverio, preview)          | Playwright only                                |
-| Viewer                 | Vitest UI (built-in)                                      | Playwright Trace Viewer / trace.playwright.dev |
+| Viewer                 | Browser UI / Vitest UI / HTML reporter                    | Playwright Trace Viewer / trace.playwright.dev |
 | Format                 | [rrweb](https://github.com/rrweb-io/rrweb) DOM snapshots | Playwright `.trace.zip`                        |
 | Requires external tool | No                                                        | Yes (`npx playwright show-trace`)              |
 
@@ -118,7 +132,3 @@ test('shows button', async () => {
 ## Retries and Repeats
 
 Each attempt — retry or repeat — is recorded as a separate trace. When a test has multiple attempts, the viewer opens the most recent one by default. You can switch between attempts in the Report tab.
-
-## Headed Mode
-
-By default, `browser.traceView` runs the browser headless. If you want to see the live browser window alongside the trace viewer, pass `--browser.headless=false` explicitly — the headed browser and the trace viewer work together.

@@ -434,7 +434,7 @@ Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retrie
 - **CLI:** `--browser.traceView`
 - **Config:** [browser.traceView](/config/browser/traceview)
 
-Enable Vitest trace-view artifact collection and related UI workflow (default: `false`)
+Enable Vitest trace-view collection for browser tests (default: `false`)
 
 ### browser.locators.exact
 

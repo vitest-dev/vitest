@@ -414,7 +414,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
       },
       traceView: {
-        description: 'Enable Vitest trace-view artifact collection and related UI workflow (default: `false`)',
+        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
       },
       orchestratorScripts: null,
       commands: null,
