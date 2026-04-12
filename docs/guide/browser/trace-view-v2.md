@@ -57,8 +57,8 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 | Goal | Configuration | Result |
 | --- | --- | --- |
 | Add trace replay to the normal local browser UI | `vitest --browser.traceView` | Uses the default local headed browser UI and adds trace replay for recorded tests. |
-| Debug locally with a headless browser | `vitest --ui --browser.traceView --browser.headless` | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots. |
-| Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=default --reporter=html` | The terminal keeps the default reporter, and the HTML report includes the trace viewer for recorded tests. |
+| Debug locally with a headless browser | `vitest --browser.traceView --browser.headless --ui` | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots. |
+| Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=html` | The terminal keeps the default reporter, and the HTML report includes the trace viewer for recorded tests. |
 
 ## Relation to Playwright Traces
 
