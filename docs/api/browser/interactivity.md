@@ -283,6 +283,16 @@ The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input ha
 
 This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
 
+::: warning
+Vitest supports Testing Library's `keyboard` syntax, but special key behavior still depends on the active browser provider.
+
+- For the best cross-provider compatibility, prefer generic keys such as `{Shift}`, `{Enter}`, `{Escape}`, `{Backspace}`, `{Tab}`, arrow keys, and release syntax like `{/Shift}`.
+- Left/right and location-specific variants such as `{ShiftLeft}`, `{ShiftRight}`, `[Shift]`, or `[ShiftRight]` are not implemented consistently across `playwright`, `webdriverio`, and `preview`.
+- The `preview` provider dispatches DOM events directly, so `KeyboardEvent.code` and `KeyboardEvent.location` can differ from automation providers.
+
+If your test relies on special-key semantics, verify it against the provider you run in CI.
+:::
+
 ```ts
 import { userEvent } from 'vitest/browser'
 
@@ -299,7 +309,7 @@ References:
 
 - [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
-- [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
+- [testing-library `keyboard` API](https://testing-library.com/docs/user-event/keyboard)
 
 ## userEvent.tab
 
@@ -350,6 +360,8 @@ If you don't rely on [special characters](https://testing-library.com/docs/user-
 The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
 
 This function allows you to type characters into an `input`/`textarea`/`contenteditable` element. It supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+
+Special key caveats are the same as [`userEvent.keyboard`](#userevent-keyboard): generic key aliases are the most portable, while left/right-specific variants can differ between providers.
 
 If you just need to press characters without an input, use [`userEvent.keyboard`](#userevent-keyboard) API.
 
