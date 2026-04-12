@@ -40,7 +40,7 @@ vitest --browser.traceView
 
 :::
 
-When running locally with the default browser UI, selecting a test that has a trace opens the trace viewer next to the live view. The viewer has two panes:
+When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). The viewer has two panes:
 
 - **Step list** (left) — every recorded interaction and assertion, with name, selector, and source location. Click a step to navigate to it.
 - **DOM snapshot** (right) — a reconstruction of the page at the selected step. The interacted element is highlighted in blue.
@@ -52,19 +52,13 @@ Clicking on a step's source location jumps to that line in the Editor tab.
 
 ## Common Setups
 
-`browser.traceView` controls trace collection and the trace viewer integration. Other options still control where the viewer is shown and how the browser itself runs.
+`browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them.
 
 | Goal | Configuration | Result |
 | --- | --- | --- |
 | Add trace replay to the normal local browser UI | `vitest --browser.traceView` | Uses the default local headed browser UI and adds trace replay for recorded tests. |
 | Debug locally with a headless browser | `vitest --ui --browser.traceView --browser.headless` | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots. |
 | Generate a static report for CI or run mode | `vitest run --browser.traceView --reporter=default --reporter=html` | The terminal keeps the default reporter, and the HTML report includes the trace viewer for recorded tests. |
-
-If your project config sets `browser.headless: true`, pass `--browser.headless=false` during local debugging to return to the normal visible browser UI.
-
-In run mode, `browser.traceView` does not add the HTML reporter automatically. If you enable trace view without the HTML reporter, Vitest records traces but warns that there is no HTML report surface for opening them after the run.
-
-The [`preview`](/config/browser/preview) provider does not support headless mode, so trace view always runs with a visible browser when using `preview`.
 
 ## Relation to Playwright Traces
 
