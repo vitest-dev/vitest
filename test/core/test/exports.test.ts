@@ -19,6 +19,7 @@ it('exports snapshot', async ({ skip, task }) => {
       ".": {
         "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
+        "Snapshots": "object",
         "TestRunner": "function",
         "afterAll": "function",
         "afterEach": "function",
@@ -86,6 +87,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "takeCoverageInsideWorker": "function",
       },
       "./node": {
+        "AgentReporter": "function",
         "BaseCoverageProvider": "function",
         "BaseSequencer": "function",
         "BenchmarkReporter": "function",
@@ -140,6 +142,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "viteVersion": "string",
       },
       "./reporters": {
+        "AgentReporter": "function",
         "BenchmarkReporter": "function",
         "BenchmarkReportsMap": "object",
         "DefaultReporter": "function",

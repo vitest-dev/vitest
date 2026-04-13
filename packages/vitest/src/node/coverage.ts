@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
-import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
+import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
@@ -74,11 +74,11 @@ export async function getCoverageProvider(
   return null
 }
 
-export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istanbul' | 'v8'>> {
+export class BaseCoverageProvider {
   ctx!: Vitest
   readonly name!: 'v8' | 'istanbul'
   version!: string
-  options!: Options
+  options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
 
@@ -101,7 +101,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       )
     }
 
-    const config = ctx._coverageOptions as Options
+    const config = ctx._coverageOptions
 
     this.options = {
       ...coverageConfigDefaults,
@@ -228,7 +228,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     throw new Error('BaseReporter\'s parseConfigModule was not overwritten')
   }
 
-  resolveOptions(): Options {
+  resolveOptions(): ResolvedCoverageOptions {
     return this.options
   }
 
@@ -255,6 +255,22 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     this.pendingPromises = []
   }
 
+  private normalizeCoverageFileError(error: unknown): unknown {
+    if (
+      error instanceof Error
+      && 'code' in error
+      && error.code === 'ENOENT'
+      && !existsSync(this.coverageFilesDirectory)
+    ) {
+      return new Error(
+        `Something removed the coverage directory "${this.coverageFilesDirectory}" Vitest created earlier. Make sure you are not running multiple Vitests with the same "coverage.reportsDirectory" at the same time.`,
+        { cause: error },
+      )
+    }
+
+    return error
+  }
+
   onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
@@ -278,6 +294,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     entry[environment][testFilenames] = filename
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
+      .catch((error) => {
+        throw this.normalizeCoverageFileError(error)
+      })
     this.pendingPromises.push(promise)
   }
 
@@ -307,6 +326,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
           await Promise.all(chunk.map(async (filename) => {
             const contents = await fs.readFile(filename, 'utf-8')
+              .catch((error) => {
+                throw this.normalizeCoverageFileError(error)
+              })
             const coverage = JSON.parse(contents)
 
             onFileRead(coverage)
@@ -331,11 +353,17 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
   async onTestRunStart(): Promise<void> {
     if (this.options.changed) {
-      const { VitestGit } = await import('./git')
-      const vitestGit = new VitestGit(this.ctx.config.root)
-      const changedFiles = await vitestGit.findChangedFiles({ changedSince: this.options.changed })
+      try {
+        const changedFiles = await this.ctx.vcs.findChangedFiles({
+          root: this.ctx.config.root,
+          changedSince: this.options.changed,
+        })
 
-      this.changedFiles = changedFiles ?? undefined
+        this.changedFiles = changedFiles
+      }
+      catch {
+        this.changedFiles = undefined
+      }
     }
     else if (this.ctx.config.changed) {
       this.changedFiles = this.ctx.config.related
@@ -772,7 +800,7 @@ function resolveGlobThresholds(
 
 function assertConfigurationModule(config: unknown): asserts config is {
   test: {
-    coverage: { thresholds: NonNullable<BaseCoverageOptions['thresholds']> }
+    coverage: { thresholds: NonNullable<CoverageOptions['thresholds']> }
   }
 } {
   try {

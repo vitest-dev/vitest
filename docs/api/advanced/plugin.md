@@ -11,7 +11,7 @@ This is an advanced API. If you just want to [run tests](/guide/), you probably 
 This guide assumes you know how to work with [Vite plugins](https://vite.dev/guide/api-plugin.html).
 :::
 
-Vitest supports a `configureVitest` [plugin](https://vite.dev/guide/api-plugin.html) hook hook since version 3.1.
+Vitest supports a `configureVitest` [plugin](https://vite.dev/guide/api-plugin.html) hook since version 3.1.
 
 ::: code-group
 ```ts [only vitest]

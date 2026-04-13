@@ -256,7 +256,7 @@ export class StateManager {
   }
 
   cancelFiles(files: FileSpecification[], project: TestProject): void {
-    // if we don't filter existing modules, they will be overriden by `collectFiles`
+    // if we don't filter existing modules, they will be overridden by `collectFiles`
     const nonRegisteredFiles = files.filter(({ filepath }) => {
       const relativePath = relative(project.config.root, filepath)
       const id = generateFileHash(relativePath, project.name)

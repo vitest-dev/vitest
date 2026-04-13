@@ -12,7 +12,7 @@ export class BaseSequencer implements TestSequencer {
     this.ctx = ctx
   }
 
-  // async so it can be extended by other sequelizers
+  // async so it can be extended by other sequencers
   public async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
     const { config } = this.ctx
     const { index, count } = config.shard!
@@ -31,7 +31,7 @@ export class BaseSequencer implements TestSequencer {
       .map(({ spec }) => spec)
   }
 
-  // async so it can be extended by other sequelizers
+  // async so it can be extended by other sequencers
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {

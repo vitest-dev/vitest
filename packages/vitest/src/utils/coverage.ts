@@ -50,7 +50,10 @@ export async function resolveCoverageProviderModule(
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule } = await loader.import(builtInModule)
+    const { default: coverageModule }
+      = loader.isBrowser
+        ? await loader.import(builtInModule)
+        : await import(/* @vite-ignore */ builtInModule)
 
     if (!coverageModule) {
       throw new Error(

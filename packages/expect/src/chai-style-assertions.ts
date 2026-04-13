@@ -44,7 +44,7 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
     name: keyof Assertion,
     delegateTo: keyof Assertion,
   ) {
-    utils.addChainableMethod(
+    utils.addMethod(
       chai.Assertion.prototype,
       name,
       function (this: Chai.AssertionStatic & Assertion, ...args: any[]) {
@@ -56,13 +56,13 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
         }
         return jestMethod.call(this, ...args)
       },
-      () => {},
     )
   }
 
+  // API to (somewhat) mirror sinon-chai
+  // https://github.com/chaijs/sinon-chai
   defProperty('called', 'toHaveBeenCalled')
   defProperty('calledOnce', 'toHaveBeenCalledOnce')
-  defProperty('returned', 'toHaveReturned')
   defPropertyWithArgs('calledTwice', 'toHaveBeenCalledTimes', 2)
   defPropertyWithArgs('calledThrice', 'toHaveBeenCalledTimes', 3)
 
@@ -71,10 +71,14 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
   defMethod('calledOnceWith', 'toHaveBeenCalledExactlyOnceWith')
   defMethod('lastCalledWith', 'toHaveBeenLastCalledWith')
   defMethod('nthCalledWith', 'toHaveBeenNthCalledWith')
+  defMethod('returned', 'toHaveReturned')
   defMethod('returnedWith', 'toHaveReturnedWith')
   defMethod('returnedTimes', 'toHaveReturnedTimes')
   defMethod('lastReturnedWith', 'toHaveLastReturnedWith')
   defMethod('nthReturnedWith', 'toHaveNthReturnedWith')
   defMethod('calledBefore', 'toHaveBeenCalledBefore')
   defMethod('calledAfter', 'toHaveBeenCalledAfter')
+
+  // TODO: implement
+  // defMethod('thrown', 'toHaveThrown')
 }

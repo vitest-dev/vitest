@@ -64,12 +64,13 @@ describe('running browser tests', async () => {
       expect(events).toContain(`onBrowserInit ${project.name}`)
     })
 
-    // test files are optimized automatically
+    // test files are optimized automatically (type-check-only files are excluded)
+    const runtimeTestFiles = testFiles.filter(f => !f.endsWith('.test-d.ts'))
     expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
-      .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
+      .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
 
     const testFilesCount = readdirSync('./test')
-      .filter(n => n.includes('.test.'))
+      .filter(n => n.includes('.test.') || n.includes('.test-d.'))
       .length + 1 // 1 is in-source-test
 
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
@@ -208,7 +209,7 @@ error with a stack
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {
-  expect.assertions(29)
+  expect.assertions(30)
   const { stderr } = await runBrowserTests({
     root: './fixtures/failing',
     reporters: [
@@ -240,7 +241,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
   expect(stderr).toContain('Failure screenshot')
   expect(stderr).toContain('__screenshots__/failing')
 
-  expect(stderr).toContain('Access denied to "/inaccesible/path".')
+  expect(stderr).toContain('Access denied to "/inaccessible/path".')
 
   // depending on the browser it references either `.toBe()` or `expect()`
   expect(stderr).toMatch(/failing.test.ts:11:(12|17)/)
@@ -272,6 +273,9 @@ test(`stack trace points to correct file in every browser when failed`, async ()
 
   // index() is called from a bundled file
   expect(stderr).toMatch(/failing.test.ts:39:(2|8)/)
+
+  // "not awaited but with then/catch/finally" test should not produce warnings
+  expect(stderr).not.toMatch(/failing.test.ts:4[3-8]/)
 })
 
 test('user-event', async () => {

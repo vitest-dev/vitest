@@ -16,7 +16,7 @@ import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { inspect } from 'node:util'
+import { inspect, stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
@@ -41,12 +41,13 @@ export interface VitestRunnerCLIOptions {
 export interface RunVitestConfig extends TestUserConfig {
   $viteConfig?: Omit<ViteUserConfig, 'test'>
   $cliOptions?: TestCliOptions
+  $cliFilters?: string[]
 }
 
 const process_ = process
 
 /**
- * The config is assumed to be the config on the fille system, not CLI options
+ * The config is assumed to be the config on the file system, not CLI options
  * (Note that CLI only options like "standalone" are passed as CLI options, not config options)
  * - To pass options as CLI, provide `$cliOptions` in the config object.
  * - To pass other Vite config properties, provide `$viteConfig` in the config object.
@@ -57,7 +58,7 @@ const process_ = process
  */
 export async function runVitest(
   config: RunVitestConfig,
-  cliFilters: string[] = [],
+  cliFilters: string[] = config.$cliFilters || [],
   runnerOptions: VitestRunnerCLIOptions = {},
 ) {
   // Reset possible previous runs
@@ -162,6 +163,7 @@ export async function runVitest(
       outputJson,
       mergeReports,
       clearCache,
+      cache: 'cache' in config ? config.cache : false,
 
       // Test cases are already run with multiple forks/threads
       maxWorkers: maxWorkers ?? 1,
@@ -172,10 +174,11 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,
       },
-      // override cache config with the one that was used to run `vitest` formt the CLI
+      // override cache config with the one that was used to run `vitest` from the CLI
       experimental: {
         fsModuleCache: rest.experimental?.fsModuleCache ?? currentConfig.experimental.fsModuleCache,
         ...cliOptions?.experimental,
@@ -240,16 +243,16 @@ export async function runVitest(
     get results() {
       return ctx?.state.getTestModules() || []
     },
-    errorTree() {
-      const tree = buildErrorTree(ctx?.state.getTestModules() || [])
+    errorTree(options?: { project?: boolean; stackTrace?: boolean; diff?: boolean }) {
+      const modules = ctx?.state.getTestModules() || []
+      const tree = options?.project
+        ? buildErrorProjectTree(modules, options)
+        : buildErrorTree(modules, options)
       const errors = ctx?.state.getUnhandledErrors()
       if (errors && errors.length > 0) {
         tree.__unhandled_errors__ = errors.map((e: any) => e.message)
       }
       return tree
-    },
-    errorProjectTree() {
-      return buildErrorProjectTree(ctx?.state.getTestModules() || [])
     },
     testTree() {
       return buildTestTree(ctx?.state.getTestModules() || [])
@@ -281,7 +284,13 @@ async function runCli(command: 'vitest', _options?: CliOptions | string, ...args
     args.push('--maxWorkers=1')
   }
 
-  const subprocess = x(command, args, options as Options).process!
+  const subprocess = x(command, args, {
+    ...options as Options,
+    nodeOptions: {
+      ...(options as Options)?.nodeOptions,
+      env: { ...process.env, AI_AGENT: '', ...(options as Options)?.nodeOptions?.env },
+    },
+  }).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -509,7 +518,7 @@ export async function runInlineTests(
   const vitest = await runVitest({
     root,
     ...config,
-  }, [], options)
+  }, config?.$cliFilters ?? [], options)
   return {
     fs,
     root,
@@ -563,32 +572,49 @@ export class StableTestFileOrderSorter {
   }
 }
 
-export function buildErrorTree(testModules: TestModule[]) {
+export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
+  const root = testModules[0]?.project.config.root
+
+  function mapError(e: { message: string; diff?: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+    let message = e.message
+    if (options?.diff && e.diff) {
+      message = [message, stripVTControlCharacters(e.diff)].join('\n')
+    }
+    if (options?.stackTrace) {
+      const stacks = (e.stacks || []).map((s) => {
+        const loc = `${relative(root, s.file)}:${s.line}:${s.column}`
+        return s.method ? `    at ${s.method} (${loc})` : `    at ${loc}`
+      })
+      message = [message, ...stacks].join('\n')
+    }
+    return message
+  }
+
   return buildTestTree(
     testModules,
     (testCase) => {
       const result = testCase.result()
       if (result.state === 'failed') {
-        return result.errors.map(e => e.message)
+        return result.errors.map(e => mapError(e))
       }
       return result.state
     },
     (testSuite, suiteChildren) => {
-      const errors = testSuite.errors().map(error => error.message)
+      const errors = testSuite.errors()
       if (errors.length > 0) {
         return {
           ...suiteChildren,
-          __suite_errors__: errors,
+          __suite_errors__: errors.map(e => mapError(e)),
         }
       }
       return suiteChildren
     },
     (testModule, moduleChildren) => {
-      const errors = testModule.errors().map(error => error.message)
+      const errors = testModule.errors()
       if (errors.length > 0) {
         return {
           ...moduleChildren,
-          __module_errors__: errors,
+          __module_errors__: errors.map(e => mapError(e)),
         }
       }
       return moduleChildren
@@ -653,14 +679,14 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
   return projectTree
 }
 
-export function buildErrorProjectTree(testModules: TestModule[]) {
+export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {
     const projectName = testModule.project.name
     projectTree[projectName] = {
       ...projectTree[projectName],
-      ...buildErrorTree([testModule]),
+      ...buildErrorTree([testModule], options),
     }
   }
 

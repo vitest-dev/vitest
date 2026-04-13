@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vite, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
@@ -28,7 +28,7 @@ const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 
-export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
+export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8' as const
   version: string = version
 
@@ -297,7 +297,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.expression.left.object.meta.name === 'import'
           && node.expression.left.object.property.name === 'meta'
           && node.expression.left.property.type === 'Identifier'
-          && node.expression.left.property.name === 'env') {
+          && node.expression.left.property.name === 'env'
+        ) {
           return true
         }
 
@@ -308,7 +309,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.expression.type === 'AssignmentExpression'
           && node.expression.left.type === 'MemberExpression'
           && node.expression.left.object.type === 'Identifier'
-          && node.expression.left.object.name === '__vite_ssr_import_meta__') {
+          && node.expression.left.object.name === '__vite_ssr_import_meta__'
+        ) {
           return true
         }
 
@@ -318,7 +320,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           && node.type === 'ExpressionStatement'
           && node.expression.type === 'CallExpression'
           && node.expression.callee.type === 'Identifier'
-          && node.expression.callee.name === '_ts_decorate') {
+          && node.expression.callee.name === '_ts_decorate'
+        ) {
           return 'ignore-this-and-nested-nodes'
         }
       },

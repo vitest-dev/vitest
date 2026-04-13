@@ -16,6 +16,7 @@ import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
+import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
@@ -142,8 +143,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   return userEvent
 }
 
-function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
-  let userEvent = userEventBase.setup(options)
+function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+  let userEvent = userEventBase.setup({
+    advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+    ...options,
+  })
   let clipboardData: DataTransfer | undefined
 
   function toElement(element: Element | Locator) {
@@ -155,7 +159,10 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
       return createPreviewUserEvent(userEventBase, options)
     },
     async cleanup() {
-      userEvent = userEventBase.setup(options ?? {})
+      userEvent = userEventBase.setup({
+        advanceTimers: delay => vi.advanceTimersByTimeAsync(delay),
+        ...options,
+      })
     },
     async click(element) {
       await userEvent.click(toElement(element))

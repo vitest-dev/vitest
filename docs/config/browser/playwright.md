@@ -1,6 +1,6 @@
 # Configuring Playwright
 
-To run tests using playwright, you need to install the [`@vitest/browser-playwright`](https://www.npmjs.com/package/@vitest/browser-playwright) npm package and specify its `playwright` export in the `test.browser.provider` property of your config:
+To run tests using playwright, you need to install the [`@vitest/browser-playwright`](https://npmx.dev/package/@vitest/browser-playwright) npm package and specify its `playwright` export in the `test.browser.provider` property of your config:
 
 ```ts [vitest.config.js]
 import { playwright } from '@vitest/browser-playwright'
@@ -65,6 +65,31 @@ These options are directly passed down to `playwright[browser].launch` command. 
 Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headless`](/config/browser/headless).
 
 Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/guide/cli#inspect) is enabled.
+:::
+
+::: tip Enabling new Chromium headless mode
+Playwright supports a [new headless mode](https://playwright.dev/docs/browsers#chromium-new-headless-mode) for Chromium that uses the real Chrome browser instead of the dedicated headless shell. This provides more authentic, reliable test execution and removes the need to install a separate headless Chromium build.
+
+To opt in, set `channel` to `'chromium'` in `launchOptions`:
+
+```ts [vitest.config.ts]
+import { playwright } from '@vitest/browser-playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      headless: true,
+      provider: playwright({
+        launchOptions: {
+          channel: 'chromium',
+        },
+      }),
+      instances: [{ browser: 'chromium' }],
+    },
+  },
+})
+```
 :::
 
 ## connectOptions
@@ -164,7 +189,7 @@ await userEvent.click(page.getByRole('button'), {
 When enabled, Vitest uses Playwright's [persistent context](https://playwright.dev/docs/api/class-browsertype#browser-type-launch-persistent-context) instead of a regular browser context. This allows browser state (cookies, localStorage, DevTools settings, etc.) to persist between test runs.
 
 ::: warning
-This option is ignored when running tests in parallel (e.g. when headless with [`fileParallelism`](/config/fileparallelism) enalbed) since persistent context cannot be shared across parallel sessions.
+This option is ignored when running tests in parallel (e.g. when headless with [`fileParallelism`](/config/fileparallelism) enabled) since persistent context cannot be shared across parallel sessions.
 :::
 
 - When set to `true`, the user data is stored in `./node_modules/.cache/vitest-playwright-user-data`

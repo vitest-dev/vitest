@@ -4,7 +4,7 @@
 If you do not already use WebdriverIO in your project, we recommend starting with [Playwright](/config/browser/playwright) as it is easier to configure and has more flexible API.
 :::
 
-To run tests using WebdriverIO, you need to install the [`@vitest/browser-webdriverio`](https://www.npmjs.com/package/@vitest/browser-webdriverio) npm package and specify its `webdriverio` export in the `test.browser.provider` property of your config:
+To run tests using WebdriverIO, you need to install the [`@vitest/browser-webdriverio`](https://npmx.dev/package/@vitest/browser-webdriverio) npm package and specify its `webdriverio` export in the `test.browser.provider` property of your config:
 
 ```ts [vitest.config.js]
 import { webdriverio } from '@vitest/browser-webdriverio'

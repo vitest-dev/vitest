@@ -133,6 +133,10 @@ You can also pass custom coverage reporters. See [Guide - Custom Coverage Report
 
 You can check your coverage report in Vitest UI: check [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.
 
+::: tip AI coding agents
+When Vitest detects it is running inside an AI coding agent, it automatically adds the `text-summary` reporter and sets `skipFull: true` on the `text` reporter to reduce output and minimize token usage.
+:::
+
 ## coverage.reportOnFailure {#coverage-reportonfailure}
 
 - **Type:** `boolean`
@@ -149,7 +153,7 @@ Generate coverage report even when tests fail.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
-Collect coverage of files outside the [project `root`](#root).
+Collect coverage of files outside the [project `root`](/config/root).
 
 ## coverage.excludeAfterRemap
 

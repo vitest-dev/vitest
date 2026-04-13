@@ -5,7 +5,7 @@ import { noop } from '@vitest/utils/helpers'
 
 export function createAssertionMessage(
   util: Chai.ChaiUtils,
-  assertion: Assertion,
+  assertion: Chai.Assertion,
   hasArgs: boolean,
 ) {
   const soft = util.flag(assertion, 'soft') ? '.soft' : ''
@@ -71,9 +71,11 @@ export function recordAsyncExpect(
         return promise.then(onFulfilled, onRejected)
       },
       catch(onRejected) {
+        resolved = true
         return promise.catch(onRejected)
       },
       finally(onFinally) {
+        resolved = true
         return promise.finally(onFinally)
       },
       [Symbol.toStringTag]: 'Promise',
@@ -90,6 +92,7 @@ function handleTestError(test: Test, err: unknown) {
   test.result.errors.push(processError(err))
 }
 
+/** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */
 export function wrapAssertion(
   utils: Chai.ChaiUtils,
   name: string,

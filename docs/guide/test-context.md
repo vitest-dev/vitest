@@ -22,11 +22,11 @@ it('should work', ({ task }) => {
 
 ## Built-in Test Context
 
-#### `task`
+### `task`
 
 A readonly object containing metadata about the test.
 
-#### `expect`
+### `expect`
 
 The `expect` API bound to the current test:
 
@@ -52,7 +52,7 @@ it.concurrent('math is hard', ({ expect }) => {
 })
 ```
 
-#### `skip`
+### `skip`
 
 ```ts
 function skip(note?: string): never
@@ -79,7 +79,7 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
-#### `annotate` <Version>3.2.0</Version> {#annotate}
+### `annotate` <Version>3.2.0</Version> {#annotate}
 
 ```ts
 function annotate(
@@ -102,7 +102,7 @@ test('annotations API', async ({ annotate }) => {
 })
 ```
 
-#### `signal` <Version>3.2.0</Version> {#signal}
+### `signal` <Version>3.2.0</Version> {#signal}
 
 An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
 
@@ -117,11 +117,11 @@ it('stop request when test times out', async ({ signal }) => {
 }, 2000)
 ```
 
-#### `onTestFailed`
+### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
-#### `onTestFinished`
+### `onTestFinished`
 
 The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
 
@@ -502,7 +502,7 @@ test.describe('a nested suite', () => {
 
 Consider overriding it on the top level of the module, or by using [`injected`](#default-fixture-injected) option and providing the value in the project config.
 
-Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overriden.
+Also note that in [non-isolate](/config/isolate) mode overriding a `worker` fixture will affect the fixture value in all test files running after it was overridden.
 :::
 
 #### Test Scope (Default)
@@ -891,7 +891,7 @@ This applies to all suite-level hooks: `beforeAll`, `afterAll`, and `aroundAll`.
 :::
 
 ::: tip
-Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes). Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
+Suite-level hooks can only access [**file-scoped** and **worker-scoped** fixtures](#fixture-scopes), including `auto` fixtures. Test-scoped fixtures are not available in these hooks because they run outside the context of individual tests. If you try to access a test-scoped fixture in a suite-level hook, Vitest will throw an error.
 
 ```ts
 const test = baseTest

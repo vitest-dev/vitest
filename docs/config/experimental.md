@@ -276,6 +276,10 @@ Duration thresholds in milliseconds for coloring and warnings:
 
 ## experimental.viteModuleRunner <Version type="experimental">4.1.0</Version> {#experimental-vitemodulerunner}
 
+::: tip FEEDBACK
+Please leave feedback regarding this feature in a [GitHub Discussion](https://github.com/vitest-dev/vitest/discussions/9501).
+:::
+
 - **Type:** `boolean`
 - **Default:** `true`
 
@@ -332,7 +336,7 @@ Some features will not work due to the nature of `viteModuleRunner`, including:
 - `istanbul` coverage provider doesn't work because there is no transformation phase, use `v8` instead
 
 ::: warning Coverage Support
-At the momemnt Vitest supports coverage via `v8` provider as long as files can be transformed into JavaScript. To transform TypeScript, Vitest uses [`module.stripTypeScriptTypes`](https://nodejs.org/api/module.html#modulestriptypescripttypescode-options) which is available in Node.js since v22.13. If you are using a custom [module loader](https://nodejs.org/api/module.html#customization-hooks), Vitest is not able to reuse it to transform files for analysis.
+At the moment Vitest supports coverage via `v8` provider as long as files can be transformed into JavaScript. To transform TypeScript, Vitest uses [`module.stripTypeScriptTypes`](https://nodejs.org/api/module.html#modulestriptypescripttypescode-options) which is available in Node.js since v22.13. If you are using a custom [module loader](https://nodejs.org/api/module.html#customization-hooks), Vitest is not able to reuse it to transform files for analysis.
 :::
 
 With regards to mocking, it is also important to point out that ES modules do not support property override. This means that code like this won't work anymore:
@@ -368,7 +372,7 @@ vi.mock('node:fs', async (importOriginal) => {
 const fs = require('node:fs') // throws an error
 ```
 
-This limitation exists because factories can be asynchronous. This should not be a problem because Vitest doesn't mock builtin modules inside `node_modules`, which is simillar to how Vitest works by default.
+This limitation exists because factories can be asynchronous. This should not be a problem because Vitest doesn't mock builtin modules inside `node_modules`, which is similar to how Vitest works by default.
 
 ### TypeScript
 
@@ -406,6 +410,67 @@ export default defineConfig({
 If you are running tests in Deno, TypeScript files are processed by the runtime without any additional configurations.
 :::
 
+## experimental.vcsProvider <Version type="experimental">4.1.1</Version> {#experimental-vcsprovider}
+
+- **Type:** `VCSProvider | string`
+
+```ts
+interface VCSProvider {
+  findChangedFiles(options: VCSProviderOptions): Promise<string[]>
+}
+
+interface VCSProviderOptions {
+  root: string
+  changedSince?: string | boolean
+}
+```
+
+- **Default:** `'git'`
+
+Custom provider for detecting changed files. Used with the [`--changed`](/guide/cli#changed) flag to determine which files have been modified.
+
+By default, Vitest uses Git to detect changed files. You can provide a custom implementation of the `VCSProvider` interface to use a different version control system:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      vcsProvider: {
+        async findChangedFiles({ root, changedSince }) {
+          // return paths of changed files
+          return []
+        },
+      },
+    },
+  },
+})
+```
+
+You can also pass a string path to a module with a default export that implements the `VCSProvider` interface:
+
+```js [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      vcsProvider: './my-vcs-provider.js',
+    },
+  },
+})
+```
+
+```js [my-vcs-provider.js]
+export default {
+  async findChangedFiles({ root, changedSince }) {
+    // return paths of changed files
+    return []
+  },
+}
+```
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`
@@ -414,3 +479,36 @@ If you are running tests in Deno, TypeScript files are processed by the runtime 
 If module runner is disabled, Vitest uses a native [Node.js module loader](https://nodejs.org/api/module.html#customization-hooks) to transform files to support `import.meta.vitest`, `vi.mock` and `vi.hoisted`.
 
 If you don't use these features, you can disable this to improve performance.
+
+## experimental.preParse <Version type="experimental">4.1.3</Version> {#experimental-preparse}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Parses test specifications before running them. This applies the [`.only`](/api/test#test-only) modifier, the [`-t`](/config/testnamepattern) test name pattern, [`--tags-filter`](/guide/test-tags#syntax), [test lines](/api/advanced/test-specification#testlines), and [test IDs](/api/advanced/test-specification#testids) across all files without executing them. For example, if only a single test is marked with `.only`, Vitest will skip all other tests in all files.
+
+::: tip
+This option is recommended when using [`.only`](/api/test#test-only), the [`-t`](/config/testnamepattern) flag, or [`--tags-filter`](/guide/test-tags#syntax).
+
+Enabling it unconditionally may slow down your test runs due to the additional parsing step.
+:::
+
+::: warning
+Pre-parsing uses static analysis (AST parsing) instead of executing your test files. This means that test names, tags, and modifiers (`.only`, `.skip`, `.todo`) must be statically analyzable. Dynamic test names (e.g., names stored in variables or returned from function calls) and non-literal tags will not be resolved correctly.
+
+```ts
+// ✅ works — static string literal
+test('adds numbers', () => {})
+
+// ✅ works — static tags
+test('my test', { tags: ['unit'] }, () => {})
+
+// ❌ won't match correctly — dynamic name
+const name = getName()
+test(name, () => {})
+
+// ❌ won't match correctly — dynamic tags
+const tags = getTags()
+test('my test', { tags }, () => {})
+```
+:::

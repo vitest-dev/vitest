@@ -45,7 +45,7 @@ export default defineConfig({
 ```
 
 ::: warning
-If several tags have the same options and are used on the same test, they will be resolved in the order they were specified, or sorted by priority first (the lower the number, the higher the priority). Tags without a defined priority are merged first and will be overriden by higher priority ones:
+If several tags have the same options and are used on the same test, they will be resolved in the order they were specified, or sorted by priority first (the lower the number, the higher the priority). Tags without a defined priority are merged first and will be overridden by higher priority ones:
 
 ```ts
 test('flaky database test', { tags: ['flaky', 'db'] })
@@ -204,7 +204,7 @@ vitest --tags-filter=frontend
 vitest --tags-filter="frontend and backend"
 ```
 
-If you are running Vitest UI, you can start a filter with a `tag:` prefix to filter out tests by tags using the same tags expression sytax:
+If you are running Vitest UI, you can start a filter with a `tag:` prefix to filter out tests by tags using the same tags expression syntax:
 
 <img alt="The tags filter in Vitest UI" img-light src="/ui/light-ui-tags.png">
 <img alt="The tags filter in Vitest UI" img-dark src="/ui/dark-ui-tags.png">
@@ -300,3 +300,20 @@ You can also pass multiple `--tags-filter` flags. They are combined with AND log
 # Run tests that match (unit OR e2e) AND are NOT slow
 vitest --tags-filter="unit || e2e" --tags-filter="!slow"
 ```
+
+### Checking Tags Filter at Runtime
+
+You can use `TestRunner.matchesTags` (since Vitest 4.1.1) to check whether the current tags filter matches a set of tags. This is useful for conditionally running expensive setup logic only when relevant tests are included:
+
+```ts
+import { beforeAll, TestRunner } from 'vitest'
+
+beforeAll(async () => {
+  // Seed database when "vitest --tags-filter db" is used
+  if (TestRunner.matchesTags(['db'])) {
+    await seedDatabase()
+  }
+})
+```
+
+The method accepts an array of tags and returns `true` if the current `--tags-filter` would include a test with those tags. If no tags filter is active, it always returns `true`.

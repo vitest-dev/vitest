@@ -206,7 +206,7 @@ describe('Chai-style assertions', () => {
     it('passes when spy returned successfully', () => {
       const spy = vi.fn(() => 'value')
       spy()
-      expect(spy).to.have.returned
+      expect(spy).to.have.returned('value')
     })
 
     it('fails when spy threw an error', () => {
@@ -218,7 +218,7 @@ describe('Chai-style assertions', () => {
       }
       catch {}
       expect(() => {
-        expect(spy).to.have.returned
+        expect(spy).to.have.returned('value')
       }).toThrow(/expected "testSpy" to be successfully called at least once/)
     })
 

@@ -111,6 +111,9 @@ This will start the Trace Viewer and load the specified trace file.
 
 Alternatively, you can open the Trace Viewer in your browser at https://trace.playwright.dev and upload the trace file there.
 
+<img alt="Trace Viewer showing the trace timeline and rendered component" img-light src="/trace-viewer-light.png">
+<img alt="Trace Viewer showing the trace timeline and rendered component" img-dark src="/trace-viewer-dark.png">
+
 ## Source Location
 
 When you open a trace, you'll notice that Vitest groups browser interactions and links them back to the exact line in your test that triggered them. This happens automatically for:
@@ -123,9 +126,3 @@ Under the hood, Playwright still records its own low-level action events as usua
 Keep in mind that plain assertions like `expect(value).toBe(...)` run in Node, not the browser, so they won't show up in the trace.
 
 For anything not covered automatically, you can use `page.mark()` or `locator.mark()` to add your own trace groups — see [Trace markers](#trace-markers) above.
-
-::: warning
-
-Currently a source view of a trace can be only displayed properly when viewing it on the machine generated a trace with `playwright show-trace` CLI. This is expected to be fixed soon (see https://github.com/microsoft/playwright/pull/39307).
-
-:::

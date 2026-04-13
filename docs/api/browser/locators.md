@@ -7,10 +7,33 @@ outline: [2, 3]
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmx.dev/ivya). However, Vitest provides this API to every [provider](/config/browser/provider), not just playwright.
 
 ::: tip
 This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
+:::
+
+::: tip Difference from `testing-library`
+Vitest's `page.getBy*` methods return a locator object, not a DOM element. This makes locator queries composable and allows Vitest to retry interactions and assertions when needed.
+
+Compared to testing-library queries:
+
+- Use locator chaining (`.getBy*`, `.filter`, `.nth`) instead of `within(...)`.
+- Keep locators around and interact with them later (`await locator.click()`), instead of resolving elements up front.
+- Single-element escape hatches like `.element()` and `.query()` are strict and throw if multiple elements match.
+
+```ts
+import { expect } from 'vitest'
+import { page } from 'vitest/browser'
+
+const deleteButton = page
+  .getByRole('row')
+  .filter({ hasText: 'Vitest' })
+  .getByRole('button', { name: /delete/i })
+
+await deleteButton.click()
+await expect.element(deleteButton).toBeEnabled()
+```
 :::
 
 ## getByRole
@@ -65,7 +88,7 @@ By default, many semantic elements in HTML have a role; for example, `<input typ
 Providing roles via `role` or `aria-*` attributes to built-in elements that already have an implicit role is **highly discouraged** by ARIA guidelines.
 :::
 
-##### Options
+**Options**
 
 - `exact: boolean`
 
@@ -189,7 +212,7 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
   page.getByRole('button', { selected: false }) // ❌
   ```
 
-##### See also
+**See also**
 
 - [List of ARIA roles at MDN](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles)
 - [List of ARIA roles at w3.org](https://www.w3.org/TR/wai-aria-1.2/#role_definitions)
@@ -213,13 +236,13 @@ page.getByAltText(/incredibles.*? poster/i) // ✅
 page.getByAltText('non existing alt text') // ❌
 ```
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByAltText`](https://testing-library.com/docs/queries/byalttext/)
 
@@ -260,13 +283,13 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 <input aria-label="Username" />
 ```
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByLabelText`](https://testing-library.com/docs/queries/bylabeltext/)
 
@@ -292,13 +315,13 @@ page.getByPlaceholder('not found') // ❌
 It is generally better to rely on a label using [`getByLabelText`](#getbylabeltext) than a placeholder.
 :::
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByPlaceholderText`](https://testing-library.com/docs/queries/byplaceholdertext/)
 
@@ -324,13 +347,13 @@ page.getByText('about', { exact: true }) // ❌
 This locator is useful for locating non-interactive elements. If you need to locate an interactive element, like a button or an input, prefer [`getByRole`](#getbyrole).
 :::
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByText`](https://testing-library.com/docs/queries/bytext/)
 
@@ -352,13 +375,13 @@ page.getByTitle('Delete') // ✅
 page.getByTitle('Create') // ❌
 ```
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByTitle`](https://testing-library.com/docs/queries/bytitle/)
 
@@ -381,13 +404,13 @@ page.getByTestId('non-existing-element') // ❌
 It is recommended to use this only after the other locators don't work for your use case. Using `data-testid` attributes does not resemble how your software is used and should be avoided if possible.
 :::
 
-#### Options
+**Options**
 
 - `exact: boolean`
 
   Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
-#### See also
+**See also**
 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
 

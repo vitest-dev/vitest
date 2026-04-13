@@ -542,7 +542,7 @@ test('test.each/for', async () => {
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
 
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot world
-    Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+    Error: toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location
 
     Expected: "[Error: length = 3]"
     Received: "[Error: length = 5]"
@@ -582,7 +582,7 @@ test('test.each/for', async () => {
           "Snapshot \`toThrowErrorMatchingInlineSnapshot hey 1\` mismatched",
         ],
         "toThrowErrorMatchingInlineSnapshot world": Array [
-          "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
+          "toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
     }
@@ -645,7 +645,7 @@ test('test.each/for', async () => {
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
 
      FAIL  each.test.ts > toThrowErrorMatchingInlineSnapshot world
-    Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+    Error: toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location
 
     Expected: "[Error: length = 3]"
     Received: "[Error: length = 5]"
@@ -679,7 +679,7 @@ test('test.each/for', async () => {
         ],
         "toThrowErrorMatchingInlineSnapshot hey": "passed",
         "toThrowErrorMatchingInlineSnapshot world": Array [
-          "toMatchInlineSnapshot with different snapshots cannot be called at the same location",
+          "toThrowErrorMatchingInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
     }

@@ -380,29 +380,47 @@ function printer(
   refs: Refs,
   hasCalledToJSON?: boolean,
 ): string {
+  let result: string
+
   const plugin = findPlugin(config.plugins, val)
   if (plugin !== null) {
-    return printPlugin(plugin, val, config, indentation, depth, refs)
+    result = printPlugin(plugin, val, config, indentation, depth, refs)
+  }
+  else {
+    const basicResult = printBasicValue(
+      val,
+      config.printFunctionName,
+      config.escapeRegex,
+      config.escapeString,
+    )
+    if (basicResult !== null) {
+      result = basicResult
+    }
+    else {
+      result = printComplexValue(
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        hasCalledToJSON,
+      )
+    }
   }
 
-  const basicResult = printBasicValue(
-    val,
-    config.printFunctionName,
-    config.escapeRegex,
-    config.escapeString,
-  )
-  if (basicResult !== null) {
-    return basicResult
+  // Per-depth output budget (inspired by Node's util.inspect).
+  // Each depth level tracks output independently, so nested results
+  // don't inflate a single counter (which would undercount by ~Nx for
+  // N levels of nesting). Nodes at the same depth produce disjoint spans
+  // in the output string, so each bucket accurately reflects output at
+  // that level. Total output is bounded by maxDepth × maxOutputLength.
+  config._outputLengthPerDepth[depth] ??= 0
+  config._outputLengthPerDepth[depth] += result.length
+  if (config._outputLengthPerDepth[depth] > config.maxOutputLength) {
+    config.maxDepth = 0
   }
 
-  return printComplexValue(
-    val,
-    config,
-    indentation,
-    depth,
-    refs,
-    hasCalledToJSON,
-  )
+  return result
 }
 
 const DEFAULT_THEME: Theme = {
@@ -425,6 +443,9 @@ export const DEFAULT_OPTIONS: Options = {
   highlight: false,
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
+  // Practical default hard-limit to avoid too long string being generated
+  // (Node's limit is buffer.constants.MAX_STRING_LENGTH ~ 512MB)
+  maxOutputLength: 1_000_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
   plugins: [],
@@ -509,6 +530,8 @@ function getConfig(options?: OptionsReceived): Config {
     printShadowRoot: options?.printShadowRoot ?? true,
     spacingInner: options?.min ? ' ' : '\n',
     spacingOuter: options?.min ? '' : '\n',
+    maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
+    _outputLengthPerDepth: [],
   }
 }
 

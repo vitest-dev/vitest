@@ -173,8 +173,7 @@ export class ObjectContaining extends AsymmetricMatcher<
         value,
         otherValue,
         customTesters,
-      )
-      ) {
+      )) {
         result = false
         break
       }

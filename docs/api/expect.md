@@ -6,7 +6,7 @@ The following types are used in the type signatures below
 type Awaitable<T> = T | PromiseLike<T>
 ```
 
-`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides [Chai-style assertions](#chai-style-spy-assertions) (e.g., `expect(spy).to.have.been.called()`) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
+`expect` is used to create assertions. In this context `assertions` are functions that can be called to assert a statement. Vitest provides `chai` assertions by default and also `Jest` compatible assertions built on top of `chai`. Since Vitest 4.1, for spy/mock testing, Vitest also provides Chai-style assertions (e.g., [`expect(spy).to.have.been.called()`](#called)) alongside Jest-style assertions (e.g., `expect(spy).toHaveBeenCalled()`). Unlike `Jest`, Vitest supports a message as the second argument - if the assertion fails, the error message will be equal to it.
 
 ```ts
 export interface ExpectStatic extends Chai.ExpectStatic, AsymmetricMatchersContaining {
@@ -860,6 +860,52 @@ test('throws non-Error values', () => {
 ```
 :::
 
+:::warning Unhandled Rejections with Fake Timers
+When using fake timers, an async function that rejects _during_ a `vi.advanceTimersByTimeAsync` call will trigger an [unhandled rejection](https://nodejs.org/api/process.html#event-unhandledrejection) — even if you later assert it with `.rejects.toThrow()`. This happens because the error is thrown before the `expect` chain has a chance to catch it.
+
+```ts
+async function foo() {
+  await new Promise(resolve => setTimeout(resolve, 100))
+  throw new Error('boom')
+}
+
+test('rejects', async () => {
+  const result = foo()
+
+  await vi.advanceTimersByTimeAsync(100)
+
+  // The assertion passes, but the error was already "unhandled" during advanceTimersByTimeAsync
+  await expect(result).rejects.toThrow()
+})
+```
+
+To avoid this, prefer [`vi.setTimerTickMode('nextTimerAsync')`](/api/vi#vi-settimertickmode) so that timers tick automatically as promises settle, without needing a manual advance:
+
+```ts
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setTimerTickMode('nextTimerAsync')
+})
+
+test('rejects', async () => {
+  // No advanceTimersByTimeAsync needed — the error is caught by rejects.toThrow()
+  await expect(foo()).rejects.toThrow('boom')
+})
+```
+
+Alternatively, set up the `.rejects.toThrow()` assertion _before_ advancing timers so the rejection is handled immediately:
+
+```ts
+test('rejects', async () => {
+  const result = foo()
+  const assertion = expect(result).rejects.toThrow('boom')
+
+  await vi.advanceTimersByTimeAsync(100)
+  await assertion
+})
+```
+:::
+
 ## toMatchSnapshot
 
 - **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
@@ -963,6 +1009,43 @@ The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as
 - **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrow`](#tothrow).
+
+## toMatchAriaSnapshot <Version type="experimental">4.1.4</Version> <Experimental /> {#tomatcharisnapshot}
+
+- **Type:** `() => void`
+
+Captures the accessibility tree of a DOM element and generate a snapshot file or compares it against a stored snapshot. See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('navigation accessibility', () => {
+  document.body.innerHTML = `
+    <nav aria-label="Actions">
+      <button>Save</button>
+      <button>Cancel</button>
+    </nav>
+  `
+  expect(document.querySelector('nav')).toMatchAriaSnapshot()
+})
+```
+
+## toMatchAriaInlineSnapshot <Version type="experimental">4.1.4</Version> <Experimental /> {#tomatchariainlinesnapshot}
+
+- **Type:** `(snapshot?: string) => void`
+
+Same as [`toMatchAriaSnapshot`](#tomatcharisnapshot), but stores the snapshot inline in the test file. See the [ARIA Snapshots guide](/guide/browser/aria-snapshots) for more details.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('user profile', () => {
+  expect(document.body).toMatchAriaInlineSnapshot(`
+    - heading "Dashboard" [level=1]
+    - button /User \\d+/: Profile
+  `)
+})
+```
 
 ## toHaveBeenCalled
 
@@ -1079,7 +1162,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWit
+## toHaveBeenCalledExactlyOnceWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1559,23 +1642,19 @@ test('spy nth called with', () => {
 
 ## returned <Version>4.1.0</Version> {#returned}
 
-- **Type:** `Assertion` (property, not a method)
+- **Type:** `(value: any) => void`
 
-Chai-style assertion that checks if a spy returned successfully at least once. This is equivalent to `toHaveReturned()`.
-
-::: tip
-This is a property assertion following sinon-chai conventions. Access it without parentheses: `expect(spy).to.have.returned`
-:::
+Chai-style assertion that checks if a spy returned a specific value at least once. This is equivalent to `toHaveReturnedWith(value)`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
 
 test('spy returned', () => {
-  const spy = vi.fn(() => 'result')
+  const spy = vi.fn(() => 'value')
 
   spy()
 
-  expect(spy).to.have.returned
+  expect(spy).to.have.returned('value')
 })
 ```
 
@@ -2113,7 +2192,7 @@ This method adds custom serializers that are called when creating a snapshot. Th
 If you are adding custom serializers, you should call this method inside [`setupFiles`](/config/setupfiles). This will affect every snapshot.
 
 :::tip
-If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://www.npmjs.com/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
+If you previously used Vue CLI with Jest, you might want to install [jest-serializer-vue](https://npmx.dev/package/jest-serializer-vue). Otherwise, your snapshots will be wrapped in a string, which cases `"` to be escaped.
 :::
 
 ## expect.extend

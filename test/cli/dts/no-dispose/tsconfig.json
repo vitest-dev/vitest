@@ -1,0 +1,17 @@
+{
+  "extends": ["../_shared/tsconfig.patch.json"],
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["DOM", "ES2020"],
+    "module": "node16",
+    "types": [],
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": false
+  },
+  "include": ["src/*.ts"]
+}

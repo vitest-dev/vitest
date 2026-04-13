@@ -22,7 +22,8 @@ import { initializeProject, TestProject } from '../project'
 // vite.config.*
 // vitest.unit.config.*
 // vite.unit.config.*
-const CONFIG_REGEXP = /^vite(?:st)?(?:\.\w+)?\.config\./
+// vitest.unit-test.config.*
+const CONFIG_REGEXP = /^vite(?:st)?(?:\.[\w-]+)?\.config\./
 
 export async function resolveProjects(
   vitest: Vitest,
@@ -292,6 +293,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       locators: locators
         ? {
             testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
+            exact: locators.exact ?? currentConfig.locators.exact,
           }
         : project.config.browser.locators,
       viewport: viewport ?? currentConfig.viewport,

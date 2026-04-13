@@ -5,6 +5,10 @@ outline: false
 
 # Mocking
 
+::: tip
+New to mocking? Start with the [Mock Functions](/guide/learn/mock-functions) tutorial for a hands-on introduction to `vi.fn`, `vi.spyOn`, and `vi.mock`.
+:::
+
 When writing tests it's only a matter of time before you need to create a "fake" version of an internal — or external — service. This is commonly referred to as **mocking**. Vitest provides utility functions to help you out through its `vi` helper. You can import it from `vitest` or access it globally if [`global` configuration](/config/globals) is enabled.
 
 ::: warning
@@ -162,7 +166,7 @@ mocked() // is a spy function
 ```
 
 ::: warning
-Don't forget that this only [mocks _external_ access](#mocking-pitfalls). In this example, if `original` calls `mocked` internally, it will always call the function defined in the module, not in the mock factory.
+Don't forget that this only [mocks _external_ access](/guide/mocking/modules#mocking-modules-pitfalls). In this example, if `original` calls `mocked` internally, it will always call the function defined in the module, not in the mock factory.
 :::
 
 ### Mock the current date

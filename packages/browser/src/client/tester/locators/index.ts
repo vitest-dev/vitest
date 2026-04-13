@@ -52,8 +52,8 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
+  exact: server.config.browser.locators.exact,
   browser: ((name: string) => {
     switch (name) {
       case 'edge':

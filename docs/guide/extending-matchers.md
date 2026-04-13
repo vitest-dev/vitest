@@ -107,31 +107,35 @@ function customMatcher(this: MatcherState, received: unknown, arg1: unknown, arg
 expect.extend({ customMatcher })
 ```
 
+::: tip
+To build custom **snapshot matchers** (wrappers around `toMatchSnapshot()` / `toMatchInlineSnapshot()` / `toMatchFileSnapshot()`), use `Snapshots` exported from `vitest`. See [Custom Snapshot Matchers](/guide/snapshot#custom-snapshot-matchers).
+:::
+
 Matcher function has access to `this` context with the following properties:
 
-### `isNot`
+## `isNot`
 
 Returns true, if matcher was called on `not` (`expect(received).not.toBeFoo()`). You do not need to respect it, Vitest will reverse the value of `pass` automatically.
 
-### `promise`
+## `promise`
 
 If matcher was called on `resolved/rejected`, this value will contain the name of modifier. Otherwise, it will be an empty string.
 
-### `equals`
+## `equals`
 
 This is a utility function that allows you to compare two values. It will return `true` if values are equal, `false` otherwise. This function is used internally for almost every matcher. It supports objects with asymmetric matchers by default.
 
-### `utils`
+## `utils`
 
 This contains a set of utility functions that you can use to display messages.
 
 `this` context also contains information about the current test. You can also get it by calling `expect.getState()`. The most useful properties are:
 
-### `currentTestName`
+## `currentTestName`
 
 Full name of the current test (including describe block).
 
-### `task` <Advanced /> <Version>4.1.0</Version> {#task}
+## `task` <Advanced /> <Version>4.1.0</Version> {#task}
 
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
@@ -139,17 +143,21 @@ Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) whe
 When using the global `expect` with concurrent tests, `this.task` is `undefined`. Use `context.expect` instead to ensure `task` is available in custom matchers.
 :::
 
-### `testPath`
+## `testPath`
 
 File path to the current test.
 
-### `environment`
+## `environment`
 
 The name of the current [`environment`](/config/environment) (for example, `jsdom`).
 
-### `soft`
+## `soft`
 
 Was assertion called as a [`soft`](/api/expect#soft) one. You don't need to respect it, Vitest will always catch the error.
+
+## `assertion` <Advanced /> <Version type="experimental">4.1.4</Version> {#assertion}
+
+The underlying [Chai assertion](https://www.chaijs.com/guide/plugins/) object. This is the same instance that Chai plugins receive, giving you access to Chai's flag system and chainable methods. This can be useful for building custom matchers that need to interact with Chai's internals.
 
 ::: tip
 These are not all of the available properties, only the most useful ones. The other state values are used by Vitest internally.

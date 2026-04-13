@@ -4,7 +4,7 @@ outline: deep
 
 # vitest-browser-svelte
 
-The community [`vitest-browser-svelte`](https://www.npmjs.com/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
+The community [`vitest-browser-svelte`](https://npmx.dev/package/vitest-browser-svelte) package renders [Svelte](https://svelte.dev/) components in [Browser Mode](/guide/browser/).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
@@ -12,7 +12,7 @@ import { expect, test } from 'vitest'
 import Component from './Component.svelte'
 
 test('counter button increments the count', async () => {
-  const screen = render(Component, {
+  const screen = await render(Component, {
     initialCount: 1,
   })
 
@@ -39,15 +39,26 @@ export function render<C extends Component>(
   Component: ComponentImport<C>,
   options?: ComponentOptions<C>,
   renderOptions?: SetupOptions
-): RenderResult<C>
+): RenderResult<C> & PromiseLike<RenderResult<C>>
 ```
+
+The `render` function records a `svelte.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
+
+::: warning
+Synchronous usage of `render` is deprecated and will be removed in the next major version. Please always `await` the result:
+
+```ts
+const screen = render(Component) // [!code --]
+const screen = await render(Component) // [!code ++]
+```
+:::
 
 ### Options
 
 The `render` function supports either options that you can pass down to [`mount`](https://svelte.dev/docs/svelte/imperative-component-api#mount) or props directly:
 
 ```ts
-const screen = render(Component, {
+const screen = await render(Component, {
   props: { // [!code --]
     initialCount: 1, // [!code --]
   }, // [!code --]
@@ -68,7 +79,7 @@ For example, if you are unit testing a `tbody` element, it cannot be a child of 
 ```ts
 const table = document.createElement('table')
 
-const screen = render(TableBody, {
+const screen = await render(TableBody, {
   props,
   // ⚠️ appending the element to `body` manually before rendering
   target: document.body.appendChild(table),
@@ -86,7 +97,7 @@ If the `target` is specified, then this defaults to that, otherwise this default
 In addition to documented return value, the `render` function also returns all available [locators](/api/browser/locators) relative to the [`baseElement`](#baseelement), including [custom ones](/api/browser/locators#custom-locators).
 
 ```ts
-const screen = render(TableBody, props)
+const screen = await render(TableBody, props)
 
 await screen.getByRole('link', { name: 'Expand' }).click()
 ```
@@ -104,7 +115,7 @@ If you find yourself using `container` to query for rendered elements then you s
 The mounted Svelte component instance. You can use this to access component methods and properties if needed.
 
 ```ts
-const { component } = render(Counter, {
+const { component } = await render(Counter, {
   initialCount: 0,
 })
 
@@ -118,7 +129,7 @@ The [locator](/api/browser/locators) of your `container`. It is useful to use qu
 ```ts
 import { render } from 'vitest-browser-svelte'
 
-const { locator } = render(NumberDisplay, {
+const { locator } = await render(NumberDisplay, {
   number: 2,
 })
 
@@ -139,15 +150,15 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 #### rerender
 
 ```ts
-function rerender(props: Partial<ComponentProps<T>>): void
+function rerender(props: Partial<ComponentProps<T>>): Promise<void>
 ```
 
-Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes.
+Updates the component's props and waits for Svelte to apply the changes. Use this to test how your component responds to prop changes. Also records a `svelte.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
 
 ```ts
 import { render } from 'vitest-browser-svelte'
 
-const { rerender } = render(NumberDisplay, {
+const { rerender } = await render(NumberDisplay, {
   number: 1,
 })
 
@@ -158,16 +169,20 @@ await rerender({ number: 2 })
 #### unmount
 
 ```ts
-function unmount(): void
+function unmount(): Promise<void>
 ```
 
-Unmount and destroy the Svelte component. This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+Unmount and destroy the Svelte component. Also records a `svelte.unmount` trace mark in the [Trace View](/guide/browser/trace-view). This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
+
+::: warning
+Synchronous usage of `unmount` is deprecated and will be removed in the next major version. Please always `await` the result.
+:::
 
 ```ts
 import { render } from 'vitest-browser-svelte'
 
-const { container, unmount } = render(Component)
-unmount()
+const { container, unmount } = await render(Component)
+await unmount()
 // your component has been unmounted and now: container.innerHTML === ''
 ```
 
@@ -193,7 +208,7 @@ locators.extend({
   },
 })
 
-const screen = render(Component)
+const screen = await render(Component)
 await expect.element(
   screen.getByArticleTitle('Hello World')
 ).toBeVisible()
@@ -211,7 +226,7 @@ import { expect, test } from 'vitest'
 import SubjectTest from './basic-snippet.test.svelte'
 
 test('basic snippet', async () => {
-  const screen = render(SubjectTest)
+  const screen = await render(SubjectTest)
 
   const heading = screen.getByRole('heading')
   const child = heading.getByTestId('child')
@@ -250,7 +265,7 @@ import { expect, test } from 'vitest'
 import Subject from './complex-snippet.svelte'
 
 test('renders greeting in message snippet', async () => {
-  const screen = render(Subject, {
+  const screen = await render(Subject, {
     name: 'Alice',
     message: createRawSnippet(greeting => ({
       render: () => `<span data-testid="message">${greeting()}</span>`,

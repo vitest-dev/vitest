@@ -1,11 +1,11 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "4.1.0-beta.5",
+  "version": "4.1.4",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/browser#readme",
+  "homepage": "https://vitest.dev/guide/browser/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,6 +14,12 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "browser",
+    "component"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
@@ -81,7 +87,7 @@
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.7.1",
+    "ivya": "^1.8.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "vitest": "workspace:*"

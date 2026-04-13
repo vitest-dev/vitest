@@ -52,7 +52,7 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
       ['link', { rel: 'icon', href: '/logo-without-border.svg', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
-      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinyspy, node' }],
+      ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, node' }],
       ['meta', { property: 'og:title', content: vitestName }],
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
@@ -133,6 +133,12 @@ export default ({ mode }: { mode: string }) => {
         //   facetFilters: ['tags:en'],
         // },
       }, */
+      },
+
+      banner: {
+        id: 'viteplus-alpha',
+        text: 'Announcing Vite+ Alpha: Open source. Unified. Next-gen.',
+        url: 'https://voidzero.dev/posts/announcing-vite-plus-alpha?utm_source=vitest&utm_content=top_banner',
       },
 
       carbonAds: {
@@ -716,6 +722,57 @@ export default ({ mode }: { mode: string }) => {
             ],
           },
           {
+            text: 'Learn',
+            collapsed: false,
+            items: [
+              {
+                text: 'Writing Tests',
+                link: '/guide/learn/writing-tests',
+                docFooterText: 'Writing Tests | Learn',
+              },
+              {
+                text: 'Using Matchers',
+                link: '/guide/learn/matchers',
+                docFooterText: 'Using Matchers | Learn',
+              },
+              {
+                text: 'Testing Async Code',
+                link: '/guide/learn/async',
+                docFooterText: 'Testing Async Code | Learn',
+              },
+              {
+                text: 'Setup and Teardown',
+                link: '/guide/learn/setup-teardown',
+                docFooterText: 'Setup and Teardown | Learn',
+              },
+              {
+                text: 'Mock Functions',
+                link: '/guide/learn/mock-functions',
+                docFooterText: 'Mock Functions | Learn',
+              },
+              {
+                text: 'Snapshot Testing',
+                link: '/guide/learn/snapshots',
+                docFooterText: 'Snapshot Testing | Learn',
+              },
+              {
+                text: 'Testing in Practice',
+                link: '/guide/learn/testing-in-practice',
+                docFooterText: 'Testing in Practice | Learn',
+              },
+              {
+                text: 'Debugging Tests',
+                link: '/guide/learn/debugging-tests',
+                docFooterText: 'Debugging Tests | Learn',
+              },
+              {
+                text: 'Writing Tests with AI',
+                link: '/guide/learn/writing-tests-with-ai',
+                docFooterText: 'Writing Tests with AI | Learn',
+              },
+            ],
+          },
+          {
             text: 'Browser Mode',
             collapsed: false,
             items: [
@@ -748,6 +805,11 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Trace View',
                 link: '/guide/browser/trace-view',
                 docFooterText: 'Trace View | Browser Mode',
+              },
+              {
+                text: 'ARIA Snapshots',
+                link: '/guide/browser/aria-snapshots',
+                docFooterText: 'ARIA Snapshots | Browser Mode',
               },
             ],
           },
@@ -789,35 +851,35 @@ export default ({ mode }: { mode: string }) => {
                 collapsed: true,
                 items: [
                   {
-                    text: 'Mocking Dates',
+                    text: 'Dates',
                     link: '/guide/mocking/dates',
                   },
                   {
-                    text: 'Mocking Functions',
+                    text: 'Functions',
                     link: '/guide/mocking/functions',
                   },
                   {
-                    text: 'Mocking Globals',
+                    text: 'Globals',
                     link: '/guide/mocking/globals',
                   },
                   {
-                    text: 'Mocking Modules',
+                    text: 'Modules',
                     link: '/guide/mocking/modules',
                   },
                   {
-                    text: 'Mocking the File System',
+                    text: 'File System',
                     link: '/guide/mocking/file-system',
                   },
                   {
-                    text: 'Mocking Requests',
+                    text: 'Requests',
                     link: '/guide/mocking/requests',
                   },
                   {
-                    text: 'Mocking Timers',
+                    text: 'Timers',
                     link: '/guide/mocking/timers',
                   },
                   {
-                    text: 'Mocking Classes',
+                    text: 'Classes',
                     link: '/guide/mocking/classes',
                   },
                 ],

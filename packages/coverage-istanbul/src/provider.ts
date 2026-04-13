@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Instrumenter } from 'istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vite, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
@@ -21,7 +21,7 @@ import { COVERAGE_STORE_KEY } from './constants'
 
 const debug = createDebug('vitest:coverage')
 
-export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter

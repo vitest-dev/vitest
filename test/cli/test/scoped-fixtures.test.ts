@@ -5,7 +5,7 @@ import type { TestFsStructure } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { beforeEach, describe, expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { replaceRoot, runInlineTests, stripIndent } from '../../test-utils'
+import { runInlineTests, stripIndent } from '../../test-utils'
 
 // "it" is used inside subtests, we can't "import" it because vitest will inject __vite_ssr_import__
 declare const it: TestAPI
@@ -13,7 +13,7 @@ declare const it: TestAPI
 if (rolldownVersion) {
   beforeEach(({ skip }) => {
     // TODO: remove skip when we only test against rolldown
-    // oxc has a dofferent output of inlined functions in "runInlineTests"
+    // oxc has a different output of inlined functions in "runInlineTests"
     // it keeps comments and formats the output
     skip()
   })
@@ -46,6 +46,48 @@ test('test fixture cannot import from file fixture', async () => {
           3|     local: ({}, use) => use("local"),
           4|     file: [({ local }, use) => use(local), { scope: "file" }]
      ❯ basic.test.ts:8:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
+test('fixture returned without calling use', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        value: string | undefined
+        setup: void
+      }>({
+        value: undefined,
+        setup: [
+          async ({ value }, use) => {
+            if (!value) {
+              return
+            }
+            await use(undefined)
+          },
+          { auto: true },
+        ],
+      })
+
+      extendedTest('should fail with descriptive error', () => {})
+    },
+  }, { globals: true })
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > should fail with descriptive error
+    Error: Fixture "setup" returned without calling "use". Make sure to call "use" in every code path of the fixture function.
+     ❯ basic.test.ts:2:27
+          1| await (() => {
+          2|   const extendedTest = it.extend({
+           |                           ^
+          3|     value: void 0,
+          4|     setup: [
+     ❯ basic.test.ts:16:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -661,7 +703,7 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
 })
 
 test('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
-  const { stderr, fixtures, fs } = await runFixtureTests(({ log }) => {
+  const { stderr, fixtures } = await runFixtureTests(({ log }) => {
     return it
       .extend('fileValue', { scope: 'file' }, () => {
         log('fileValue setup')
@@ -678,12 +720,62 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
     },
   })
 
-  expect(fixtures).toMatchInlineSnapshot(`">> fixture | beforeAll | file: undefined"`)
-  expect(replaceRoot(stderr, fs.root)).toMatchInlineSnapshot(`
-    "stderr | basic.test.ts
-    The beforeAll hook uses fixtures "fileValue", but has no access to context. Did you forget to call it as "test.beforeAll()" instead of "beforeAll()"? This will throw an error in a future major. See https://vitest.dev/guide/test-context#suite-level-hooks
-        at <root>/basic.test.ts:4:3
-        at <root>/basic.test.ts:11:1
+  expect(fixtures).toMatchInlineSnapshot(`""`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    FixtureAccessError: The beforeAll hook uses fixtures "fileValue", but has no access to context. Did you forget to call it as "test.beforeAll()" instead of "beforeAll()"?
+    If you used internal "suite" task as the first argument previously, access it in the second argument instead. See https://vitest.dev/guide/test-context#suite-level-hooks
+     ❯ basic.test.ts:4:3
+          2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
+          3| const results = await (({ extendedTest, beforeAll }) => {
+          4|   beforeAll(({
+           |   ^
+          5|     fileValue
+          6|   }) => {
+     ❯ basic.test.ts:11:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+})
+
+test('global beforeAll/afterAll hooks throw error when accessing any fixture', async () => {
+  const { stderr, fixtures } = await runFixtureTests(({ log }) => {
+    return it
+      .extend('fileValue', { scope: 'file' }, () => {
+        log('fileValue setup')
+        return 'file-scoped'
+      })
+  }, {
+    'basic.test.ts': ({ extendedTest, beforeAll }) => {
+      beforeAll<{ fileValue: string }>((suite) => {
+        console.log('>> fixture | beforeAll | file:', suite.fileValue)
+      })
+      extendedTest('test1', ({}) => {})
+    },
+  })
+
+  expect(fixtures).toMatchInlineSnapshot(`""`)
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts [ basic.test.ts ]
+    FixtureParseError: The 1st argument inside a fixture must use object destructuring pattern, e.g. ({ task } => {}). Instead, received "suite". If you used internal "suite" task as the 1st argument previously, access it in the 2nd argument instead.
+     ❯ basic.test.ts:4:3
+          2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
+          3| const results = await (({ extendedTest, beforeAll }) => {
+          4|   beforeAll((suite) => {
+           |   ^
+          5|     console.log(">> fixture | beforeAll | file:", suite.fileValue);
+          6|   });
+     ❯ basic.test.ts:9:1
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "
   `)
@@ -887,6 +979,56 @@ test('nested fixtures with different scopes work correctly in hooks', async () =
     " ✓ basic.test.ts > root test <time>
      ✓ basic.test.ts > nested > nested test <time>"
   `)
+})
+
+test('auto worker fixture is available in beforeAll', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => {
+    return it.extend('workerValue', { scope: 'worker', auto: true }, ({}, { onCleanup }) => {
+      log('workerValue init')
+      onCleanup(() => log('workerValue teardown'))
+      return 'worker'
+    })
+  }, {
+    'basic.test.ts': ({ extendedTest, log }) => {
+      extendedTest.beforeAll(({ workerValue }) => {
+        log('beforeAll | worker:', workerValue)
+      })
+      extendedTest('test1', ({}) => {})
+    },
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | workerValue init | undefined
+    >> fixture | beforeAll | worker: worker | undefined
+    >> fixture | workerValue teardown | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
+})
+
+test('auto file fixture is available in beforeAll', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => {
+    return it.extend('fileValue', { scope: 'file', auto: true }, ({}, { onCleanup }) => {
+      log('fileValue init')
+      onCleanup(() => log('fileValue teardown'))
+      return 'file'
+    })
+  }, {
+    'basic.test.ts': ({ extendedTest, log }) => {
+      extendedTest.beforeAll(({ fileValue }) => {
+        log('beforeAll | file:', fileValue)
+      })
+      extendedTest('test1', ({}) => {})
+    },
+  })
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | fileValue init | undefined
+    >> fixture | beforeAll | file: file | undefined
+    >> fixture | fileValue teardown | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
 })
 
 test('auto file fixture is initialised always before the first test', async () => {
@@ -1720,22 +1862,6 @@ describe('builder pattern API with automatic type inference', () => {
     expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > non-function values work <time>"`)
   })
 
-  test('object with injected is treated as an object', async () => {
-    const { stderr, tests } = await runFixtureTests(({}) => {
-      return it
-        .extend('object', { injected: true })
-    }, {
-      'basic.test.ts': ({ extendedTest, expect, expectTypeOf }) => {
-        extendedTest('object with injected is treated as an object', ({ object }) => {
-          expectTypeOf(object).toEqualTypeOf<{ injected: boolean }>()
-          expect(object).toEqual({ injected: true })
-        })
-      },
-    })
-    expect(stderr).toBe('')
-    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > object with injected is treated as an object <time>"`)
-  })
-
   test('non-function values with injected option work', async () => {
     const { stderr, tests } = await runFixtureTests(({ expectTypeOf }) => {
       return it
@@ -2261,6 +2387,72 @@ describe('builder pattern API with automatic type inference', () => {
 
       "
     `)
+  })
+
+  test('non-auto test fixture does works with beforeAll worker fixture', async () => {
+    const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => {
+      return it
+        .extend('testValue', async () => {
+          log('testValue setup')
+          return 'test'
+        })
+        .extend('workerValue', { scope: 'worker' }, async () => {
+          log('workerValue setup')
+          return 'worker'
+        })
+    }, {
+      'basic.test.ts': ({ extendedTest, log }) => {
+        extendedTest.beforeAll(({ workerValue }) => {
+          log('beforeAll:', { workerValue })
+        })
+
+        extendedTest('test', ({ workerValue, testValue }) => {
+          log('test:', { workerValue, testValue })
+        })
+      },
+    })
+
+    expect(stderr).toMatchInlineSnapshot(`""`)
+    expect(fixtures).toMatchInlineSnapshot(`
+      ">> fixture | workerValue setup | undefined
+      >> fixture | beforeAll: { workerValue: 'worker' } | undefined
+      >> fixture | testValue setup | test
+      >> fixture | test: { workerValue: 'worker', testValue: 'test' } | test"
+    `)
+    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test <time>"`)
+  })
+
+  test('auto test fixture works with beforeAll worker fixture', async () => {
+    const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => {
+      return it
+        .extend('testValue', { auto: true }, async () => {
+          log('testValue setup')
+          return 'test'
+        })
+        .extend('workerValue', { scope: 'worker' }, async () => {
+          log('workerValue setup')
+          return 'worker'
+        })
+    }, {
+      'basic.test.ts': ({ extendedTest, log }) => {
+        extendedTest.beforeAll(({ workerValue }) => {
+          log('beforeAll:', { workerValue })
+        })
+
+        extendedTest('test', ({ workerValue, testValue }) => {
+          log('test:', { workerValue, testValue })
+        })
+      },
+    })
+
+    expect(stderr).toMatchInlineSnapshot(`""`)
+    expect(fixtures).toMatchInlineSnapshot(`
+      ">> fixture | workerValue setup | undefined
+      >> fixture | beforeAll: { workerValue: 'worker' } | undefined
+      >> fixture | testValue setup | test
+      >> fixture | test: { workerValue: 'worker', testValue: 'test' } | test"
+    `)
+    expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test <time>"`)
   })
 
   test('cleanup error is reported', async () => {
@@ -2806,6 +2998,7 @@ async function runFixtureTests<T>(
     describe: SuiteAPI
     beforeAll: typeof beforeAll
     afterAll: typeof afterAll
+    log: typeof console.log
   }) => unknown) | ViteUserConfig>,
   config?: TestUserConfig,
 ) {
@@ -2817,9 +3010,10 @@ async function runFixtureTests<T>(
 export const describe = globalThis.describe
 export const expect = globalThis.expect
 export const expectTypeOf = globalThis.expectTypeOf
-export const extendedTest = (${stripIndent(extendedTest.toString())})({ log: (...args) => console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName), expectTypeOf })
+export const extendedTest = (${stripIndent(extendedTest.toString())})({ log, expectTypeOf })
 export const beforeAll = globalThis.beforeAll
 export const afterAll = globalThis.afterAll
+export function log(...args) { console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName) }
     `,
     'vitest.config.js': { test: { globals: true } },
     ...Object.entries(fs).reduce((acc, [key, value]) => {
@@ -2827,7 +3021,7 @@ export const afterAll = globalThis.afterAll
         acc[key] = value
       }
       if (typeof value === 'function') {
-        acc[key] = [value, { imports: { './test.js': ['extendedTest', 'expect', 'expectTypeOf', 'describe', 'beforeAll', 'afterAll'] } }]
+        acc[key] = [value, { imports: { './test.js': ['extendedTest', 'expect', 'expectTypeOf', 'describe', 'beforeAll', 'afterAll', 'log'] } }]
       }
       return acc
     }, {} as TestFsStructure),

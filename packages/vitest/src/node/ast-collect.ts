@@ -1,5 +1,4 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
-import type { Property } from 'estree'
 import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
@@ -9,8 +8,6 @@ import {
   calculateSuiteHash,
   createTaskName,
   generateHash,
-  interpretTaskModes,
-  someTasksAreOnly,
   validateTags,
 } from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
@@ -46,6 +43,8 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
+  concurrent: boolean
+  sequential: boolean
   tags: string[]
 }
 
@@ -103,8 +102,8 @@ function astParseFile(filepath: string, code: string) {
       ) {
         return getName(callee.property)
       }
-      // call as `__vite_ssr__.test.skip()`
-      return getName(callee.object?.property)
+      // call as `__vite_ssr__.test.skip()` or `describe.concurrent.each()`
+      return getName(callee.object)
     }
     // unwrap (0, ...)
     if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
@@ -114,6 +113,29 @@ function astParseFile(filepath: string, code: string) {
       }
     }
     return null
+  }
+
+  const getProperties = (callee: any): string[] => {
+    if (!callee) {
+      return []
+    }
+    if (callee.type === 'Identifier') {
+      return []
+    }
+    if (callee.type === 'CallExpression') {
+      return getProperties(callee.callee)
+    }
+    if (callee.type === 'TaggedTemplateExpression') {
+      return getProperties(callee.tag)
+    }
+    if (callee.type === 'MemberExpression') {
+      const props = getProperties(callee.object)
+      if (callee.property?.name) {
+        props.push(callee.property.name)
+      }
+      return props
+    }
+    return []
   }
 
   walkAst(ast as any, {
@@ -127,12 +149,28 @@ function astParseFile(filepath: string, code: string) {
         verbose?.(`Skipping ${name} (unknown call)`)
         return
       }
+      const properties = getProperties(callee)
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
-      // they will be picked up in the next iteration
-      if (['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(mode)) {
+      // intermediate calls like .each(), .for() will be picked up in the next iteration
+      if (property && ['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(property)) {
         return
       }
+      // skip properties on return values of calls - e.g., test('name', fn).skip()
+      if (callee.type === 'MemberExpression' && callee.object?.type === 'CallExpression') {
+        return
+      }
+      // derive mode from the full chain (handles any order like .skip.concurrent or .concurrent.skip)
+      let mode: 'run' | 'skip' | 'only' | 'todo' = 'run'
+      for (const prop of properties) {
+        if (prop === 'skip' || prop === 'only' || prop === 'todo') {
+          mode = prop
+        }
+        else if (prop === 'skipIf' || prop === 'runIf') {
+          mode = 'skip'
+        }
+      }
+      let isConcurrent = properties.includes('concurrent')
+      let isSequential = properties.includes('sequential')
 
       let start: number
       const end = node.end
@@ -179,11 +217,6 @@ function astParseFile(filepath: string, code: string) {
         // Vitest module mocker injects these
         .replace(/__vi_import_\d+__\./g, '')
 
-      // cannot statically analyze, so we always skip it
-      if (mode === 'skipIf' || mode === 'runIf') {
-        mode = 'skip'
-      }
-
       const parentCalleeName = typeof callee?.callee === 'object' && callee?.callee.type === 'MemberExpression' && callee?.callee.property?.name
       let isDynamicEach = parentCalleeName === 'each' || parentCalleeName === 'for'
       if (!isDynamicEach && callee.type === 'TaggedTemplateExpression') {
@@ -191,25 +224,37 @@ function astParseFile(filepath: string, code: string) {
         isDynamicEach = property === 'each' || property === 'for'
       }
 
-      // Extract tags from the second argument if it's an options object
+      // Extract options from the second argument if it's an options object
       const tags: string[] = []
       const secondArg = node.arguments?.[1]
       if (secondArg?.type === 'ObjectExpression') {
-        const tagsProperty = secondArg.properties?.find(
-          (p: any) => p.type === 'Property' && p.key?.type === 'Identifier' && p.key.name === 'tags',
-        ) as Property | undefined
-        if (tagsProperty) {
-          const tagsValue = tagsProperty.value
-          if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
-            // tags: 'single-tag'
-            tags.push(tagsValue.value)
+        for (const prop of (secondArg.properties || []) as any[]) {
+          if (prop.type !== 'Property' || prop.key?.type !== 'Identifier') {
+            continue
           }
-          else if (tagsValue?.type === 'ArrayExpression') {
-            // tags: ['tag1', 'tag2']
-            for (const element of tagsValue.elements || []) {
-              if (element?.type === 'Literal' && typeof element.value === 'string') {
-                tags.push(element.value)
+          const keyName = prop.key.name
+          if (keyName === 'tags') {
+            const tagsValue = prop.value
+            if (tagsValue?.type === 'Literal' && typeof tagsValue.value === 'string') {
+              tags.push(tagsValue.value)
+            }
+            else if (tagsValue?.type === 'ArrayExpression') {
+              for (const element of tagsValue.elements || []) {
+                if (element?.type === 'Literal' && typeof element.value === 'string') {
+                  tags.push(element.value)
+                }
               }
+            }
+          }
+          else if (prop.value?.type === 'Literal' && prop.value.value === true) {
+            if (keyName === 'skip' || keyName === 'only' || keyName === 'todo') {
+              mode = keyName
+            }
+            else if (keyName === 'concurrent') {
+              isConcurrent = true
+            }
+            else if (keyName === 'sequential') {
+              isSequential = true
             }
           }
         }
@@ -224,6 +269,8 @@ function astParseFile(filepath: string, code: string) {
         mode,
         task: null as any,
         dynamic: isDynamicEach,
+        concurrent: isConcurrent,
+        sequential: isSequential,
         tags,
       } satisfies LocalCallDefinition)
     },
@@ -366,6 +413,10 @@ function createFileTask(
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
       const taskTags = unique([...parentTags, ...definition.tags])
+      // resolve concurrent/sequential: sequential cancels inherited concurrent
+      const concurrent = definition.sequential
+        ? undefined
+        : (definition.concurrent || latestSuite.concurrent || undefined)
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
@@ -376,6 +427,7 @@ function createFileTask(
           tasks: [],
           mode,
           each: definition.dynamic,
+          concurrent,
           name: definition.name,
           fullName: createTaskName([latestSuite.fullName, definition.name]),
           fullTestName: createTaskName([latestSuite.fullTestName, definition.name]),
@@ -398,6 +450,7 @@ function createFileTask(
         suite: latestSuite,
         file,
         each: definition.dynamic,
+        concurrent,
         mode,
         context: {} as any, // not used on the server
         name: definition.name,
@@ -417,17 +470,6 @@ function createFileTask(
       latestSuite.tasks.push(task)
     })
   calculateSuiteHash(file)
-  const hasOnly = someTasksAreOnly(file)
-  interpretTaskModes(
-    file,
-    config.testNamePattern,
-    undefined,
-    undefined,
-    undefined,
-    hasOnly,
-    false,
-    config.allowOnly,
-  )
   markDynamicTests(file.tasks)
   if (!file.tasks.length) {
     file.result = {

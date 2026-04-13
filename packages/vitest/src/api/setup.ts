@@ -142,7 +142,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           }
           catch {}
 
-          // TODO: store this in HTML reporter separetly
+          // TODO: store this in HTML reporter separately
           const transformDuration = ctx.state.metadata[projectName]?.duration[moduleNode.url]?.[0]
           if (transformDuration != null) {
             result.transformTime = transformDuration
