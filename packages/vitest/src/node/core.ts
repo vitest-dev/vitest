@@ -1643,6 +1643,27 @@ export class Vitest {
       return regexp.test(name)
     })
   }
+
+  /**
+   * Check if the project with a given name is explicitly excluded by a negated pattern.
+   * This is used to filter out browser instances when their parent project is excluded.
+   */
+  isProjectExcludedByNegatedPattern(name: string): boolean {
+    const projects = this._config?.project || this._cliOptions?.project
+    if (!projects || !projects.length) {
+      return false
+    }
+    return toArray(projects).some((project) => {
+      // Only check negated patterns (starting with !)
+      if (project[0] !== '!') {
+        return false
+      }
+      // Remove the ! prefix and check if the name matches the pattern
+      const pattern = project.slice(1)
+      const regexp = wildcardPatternToRegExp(pattern)
+      return regexp.test(name)
+    })
+  }
 }
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
