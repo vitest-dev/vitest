@@ -1644,10 +1644,7 @@ export class Vitest {
     })
   }
 
-  /**
-   * Check if the project with a given name is explicitly excluded
-   * by a negation pattern (e.g. `--project='!name'`).
-   */
+  /** @internal */
   isExcludedByProjectFilter(name: string): boolean {
     const projects = this._config?.project || this._cliOptions?.project
     if (!projects || !projects.length) {

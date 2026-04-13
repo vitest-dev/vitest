@@ -211,23 +211,20 @@ export async function resolveBrowserProjects(
     if (!project.config.browser.enabled) {
       return
     }
+    const originalName = project.config.name
     const instances = project.config.browser.instances || []
-    if (instances.length === 0) {
+    if (instances.length === 0 || vitest.isExcludedByProjectFilter(originalName)) {
       removeProjects.add(project)
       return
     }
-    const originalName = project.config.name
-    // if original name is explicitly excluded by a negation filter, exclude all instances
     // if original name matches a positive filter, keep all instances
     // otherwise, filter instances individually (user may target a specific instance name)
-    const filteredInstances = vitest.isExcludedByProjectFilter(originalName)
-      ? []
-      : vitest.matchesProjectFilter(originalName)
-        ? instances
-        : instances.filter((instance) => {
-            const newName = instance.name! // name is set in "workspace" plugin
-            return vitest.matchesProjectFilter(newName)
-          })
+    const filteredInstances = vitest.matchesProjectFilter(originalName)
+      ? instances
+      : instances.filter((instance) => {
+          const newName = instance.name! // name is set in "workspace" plugin
+          return vitest.matchesProjectFilter(newName)
+        })
 
     // every project was filtered out
     if (!filteredInstances.length) {
