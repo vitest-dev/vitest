@@ -7,7 +7,7 @@ import type { BrowserCommands, CDPSession } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
-import type { ApiConfig, ProjectConfig } from './config'
+import type { ApiConfig, ProjectConfig, ResolvedConfig } from './config'
 
 export type { CDPSession }
 
@@ -478,6 +478,12 @@ type ToMatchScreenshotResolvePath = (data: {
    * if none is provided, its default value.
    */
   attachmentsDir: string
+  /**
+   * The project's fully resolved {@link https://vitest.dev/config/|configuration}.
+   *
+   * @experimental
+   */
+  config: ResolvedConfig
 }) => string
 
 export interface ToMatchScreenshotOptions {
