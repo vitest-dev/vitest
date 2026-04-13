@@ -8,14 +8,18 @@ import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
-    expectTypeOf(expect.soft(7)).toEqualTypeOf(expect(7))
-    expectTypeOf(expect.soft(5)).toHaveProperty('toBe')
-    expectTypeOf(expect.soft(7)).not.toHaveProperty('toCustom')
+    const soft = expect.soft(7)
+    const regular = expect(7)
+    expectTypeOf(soft).toEqualTypeOf(regular)
+    expectTypeOf(soft).toHaveProperty('toBe')
+    expectTypeOf(soft).not.toHaveProperty('toCustom')
+    soft.toBe(7)
+    regular.toBe(7)
   })
 
   test('return value', () => {
-    expect(expect.soft('test')).toHaveProperty('toBe')
-    expect(expect.soft('test')).toHaveProperty('toEqual')
+    expect.soft('test').toBe('test')
+    expect.soft('test').toEqual('test')
   })
 
   test('with extend', () => {
@@ -29,7 +33,7 @@ describe('expect.soft', () => {
         }
       },
     })
-    expect(expect.soft('test')).toHaveProperty('toBeFoo')
+    ;(expect.soft('foo') as any).toBeFoo()
   })
 
   test('should have multiple error', () => {
