@@ -94,6 +94,19 @@ As a shorthand, you can pass the implementation directly to `vi.fn()`:
 const add = vi.fn((a, b) => a + b)
 ```
 
+Like return values, implementations can be set for a single call with [`mockImplementationOnce`](/api/mock#mockimplementationonce). This is useful when you need a function to behave differently the first time it's called:
+
+```js
+test('fails once then succeeds', () => {
+  const connect = vi.fn()
+    .mockImplementationOnce(() => { throw new Error('Connection refused') })
+    .mockImplementation(() => ({ connected: true }))
+
+  expect(() => connect()).toThrow('Connection refused')
+  expect(connect()).toEqual({ connected: true })
+})
+```
+
 ## Inspecting Calls
 
 One of the most powerful things about mock functions is that they remember every call made to them. You can assert on how many times a function was called, what arguments it received, and what it returned:
@@ -113,6 +126,10 @@ test('inspecting mock calls', () => {
   // Check specific arguments
   expect(greet).toHaveBeenCalledWith('Alice')
   expect(greet).toHaveBeenCalledWith('Bob', 'Charlie')
+
+  // Check the arguments of a specific call by position
+  expect(greet).toHaveBeenNthCalledWith(1, 'Alice')
+  expect(greet).toHaveBeenLastCalledWith('Bob', 'Charlie')
 
   // Access the raw call data
   expect(greet.mock.calls).toEqual([
@@ -267,8 +284,8 @@ test('mock a module', () => {
 [`vi.mock`](/api/vi#vi-mock) calls are hoisted to the top of the file. They run before any imports. This means the mocked version is in place by the time your test code runs.
 :::
 
-::: tip
-Notice that we pass `import('./db.js')` instead of a plain string `'./db.js'`. When you use `import()`, TypeScript can infer the module's types, so the factory function's return value is type-checked and `importOriginal` returns the correctly typed module. As a bonus, if you rename or move the file in your IDE, the import path will be updated automatically. If you use a string, you lose both the type safety and the automatic refactoring.
+::: warning
+Always pass `import('./db.js')` rather than a plain string `'./db.js'`. When you use `import()`, TypeScript can infer the module's types, so the factory function's return value is type-checked and `importOriginal` returns the correctly typed module. As a bonus, if you rename or move the file in your IDE, the import path will be updated automatically. If you use a string, you lose both the type safety and the automatic refactoring.
 :::
 
 Vitest has comprehensive guides for specific mocking scenarios:
