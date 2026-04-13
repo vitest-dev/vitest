@@ -82,22 +82,18 @@ test('starts empty', () => {
 })
 ```
 
-The fix is to reset the state before each test with [`beforeEach`](/api/hooks#beforeeach):
+The fix is to reset the state before each test with [`beforeEach`](/api/hooks#beforeeach), or better yet, use [`test.extend`](/guide/test-context#extend-test-context) to create fresh state for each test automatically:
 
 ```js
-let users
+const test = baseTest.extend('users', () => [])
 
-beforeEach(() => {
-  users = []
-})
-
-test('adds a user', () => {
+test('adds a user', ({ users }) => {
   users.push('Alice')
   expect(users).toEqual(['Alice'])
 })
 
-test('starts empty', () => {
-  // Passes: users is reset to [] before each test
+test('starts empty', ({ users }) => {
+  // Passes: each test gets its own array
   expect(users).toEqual([])
 })
 ```
