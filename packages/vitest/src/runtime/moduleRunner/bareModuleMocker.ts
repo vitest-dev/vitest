@@ -152,6 +152,9 @@ export class BareModuleMocker implements TestModuleMocker {
       return
     }
 
+    const pending = BareModuleMocker.pendingIds
+    BareModuleMocker.pendingIds = []
+
     const resolveMock = async (mock: PendingSuiteMock) => {
       const { id, url, external } = await this.resolveId(
         mock.id,
@@ -175,12 +178,10 @@ export class BareModuleMocker implements TestModuleMocker {
     // group consecutive mocks of the same action type together,
     // resolve in parallel inside each group, but run groups sequentially
     // to preserve mock/unmock ordering
-    const groups = groupByConsecutiveAction(BareModuleMocker.pendingIds)
+    const groups = groupByConsecutiveAction(pending)
     for (const group of groups) {
       await Promise.all(group.map(resolveMock))
     }
-
-    BareModuleMocker.pendingIds = []
   }
 
   // public method to avoid circular dependency
