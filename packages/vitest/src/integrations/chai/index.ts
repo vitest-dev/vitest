@@ -22,7 +22,22 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
     const _test = test || getCurrentTest()
     if (_test) {
       // @ts-expect-error internal
-      return assert.withTest(_test) as Assertion
+      const assertion = assert.withTest(_test) as Assertion
+      const pending = { called: false } as { called: boolean; error: Error }
+      const error = new Error('`expect()` was called without a matcher')
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(error, expect)
+      }
+      pending.error = error
+      chai.util.flag(assertion as any, '_vitest_expect_state', pending)
+      const state = getState(expect)
+      if (!state.pendingExpects) {
+        setState({ pendingExpects: [pending] }, expect)
+      }
+      else {
+        state.pendingExpects.push(pending)
+      }
+      return assertion
     }
     else {
       return assert

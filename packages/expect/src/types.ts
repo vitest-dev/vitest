@@ -82,6 +82,8 @@ export interface MatcherState {
   }
   soft?: boolean
   poll?: boolean
+  /** @internal */
+  pendingExpects?: Array<{ called: boolean; error: Error }>
   /**
    * The same assertion instance that chai plugins receive.
    * @experimental
