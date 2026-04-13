@@ -89,6 +89,10 @@ Now the expected output lives right next to the code that produces it. You can r
 
 Inline snapshots are great for small, focused values. For large outputs (like a full HTML page), external snapshots or file snapshots are a better fit.
 
+::: tip
+Unlike external snapshots, inline snapshots don't create separate `.snap` files. The expected value is stored directly in your test file as the argument to `toMatchInlineSnapshot()`, so there's nothing extra to commit.
+:::
+
 ## Updating Snapshots
 
 When you intentionally change the output of your code, existing snapshots will be outdated and the tests will fail. This is by design; it's the whole point of snapshot testing. But once you've verified that the new output is correct, you need to update the snapshots.

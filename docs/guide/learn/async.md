@@ -68,6 +68,10 @@ test('the data is peanut butter', async () => {
 
 This pattern works for any callback-based API. Pass `resolve` as the success callback, and the test will wait until the callback is invoked.
 
+::: tip
+Most modern Node.js APIs (such as `fs/promises` and `fetch`) support promises natively, so you can use `async`/`await` directly. The callback wrapping pattern above is mainly useful for older libraries that haven't adopted promises yet.
+:::
+
 ## Timeouts
 
 By default, each test has a 5-second timeout. If a test takes longer than that (perhaps because a promise never resolves, or a network request hangs), it will fail with a timeout error. This prevents your test suite from getting stuck indefinitely.
