@@ -130,6 +130,54 @@ test.todo('implement validation later')
 
 These modifiers are great for quick, local changes while developing. For more permanent ways to filter tests (by filename, line number, or tags), see the [Test Filtering](/guide/filtering) guide.
 
+## Parameterized Tests
+
+When you have several test cases that only differ in their inputs and expected outputs, writing a separate `test` for each one gets repetitive. [`test.for`](/api/test#test-for) lets you define the cases as data and run the same test logic for all of them:
+
+```js
+import { expect, test } from 'vitest'
+
+test.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => {
+  expect(a + b).toBe(expected)
+})
+```
+
+The placeholders `%i`, `%s`, and `%f` in the test name are replaced with the corresponding values from each row, so the output shows `add(1, 1) -> 2`, `add(1, 2) -> 3`, and so on.
+
+If your cases have more than two or three values, passing objects is more readable. Use `$property` in the name to interpolate fields:
+
+```js
+test.for([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+```
+
+The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. This is especially useful with [`test.concurrent`](/api/test#concurrent) where you need a scoped `expect` for snapshots:
+
+```js
+test.concurrent.for([
+  [1, 1],
+  [1, 2],
+  [2, 1],
+])('add(%i, %i)', ([a, b], { expect }) => {
+  expect(a + b).toMatchSnapshot()
+})
+```
+
+[`describe.for`](/api/describe#describe-for) works the same way but creates a suite for each set of parameters, which is useful when multiple tests share the same parameterized setup.
+
+::: tip
+Vitest also provides [`test.each`](/api/test#each), which you may recognize from Jest. It works similarly but spreads array arguments instead of passing them as a single value, and doesn't provide access to the Test Context. It exists mainly for Jest compatibility — prefer `test.for` in new code.
+:::
+
 ## Using Global Imports
 
 By default, you import `test`, `expect`, `describe`, and other functions from `vitest` at the top of every test file. If you'd rather use them as globals without importing (similar to how Jest works), you can enable the [`globals`](/config/globals) option in your config:
