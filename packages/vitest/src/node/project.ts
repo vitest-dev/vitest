@@ -443,7 +443,10 @@ export class TestProject {
     if (filters.length) {
       return testFiles.filter((t) => {
         const testFile = relative(dir, t).toLocaleLowerCase()
+        const absoluteTestFile = slash(t).toLocaleLowerCase()
         return filters.some((f) => {
+          const normalizedFilter = slash(f).toLocaleLowerCase()
+
           // if filter is a full file path, we should include it if it's in the same folder
           if (isAbsolute(f) && t.startsWith(f)) {
             return true
@@ -453,8 +456,9 @@ export class TestProject {
             ? join(relative(dir, f), '/')
             : relative(dir, f)
           return (
-            testFile.includes(f.toLocaleLowerCase())
+            testFile.includes(normalizedFilter)
             || testFile.includes(relativePath.toLocaleLowerCase())
+            || absoluteTestFile.includes(normalizedFilter)
           )
         })
       })

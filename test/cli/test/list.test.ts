@@ -145,6 +145,17 @@ test('correctly filters by file', async () => {
   expect(exitCode).toBe(0)
 })
 
+test('correctly filters by file with prefixed project path', async () => {
+  const prefixedPath = `${slash(process.cwd()).split('/').slice(-3).join('/')}/fixtures/list/math.test.ts`
+  const { stdout, exitCode } = await runVitestCli('list', prefixedPath, '-r=./fixtures/list')
+  expect(stdout).toMatchInlineSnapshot(`
+    "math.test.ts > 1 plus 1
+    math.test.ts > failing test
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly filters by file when using --filesOnly', async () => {
   const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--filesOnly')
   expect(stdout).toMatchInlineSnapshot(`
