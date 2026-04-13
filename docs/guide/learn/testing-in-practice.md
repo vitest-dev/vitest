@@ -38,7 +38,7 @@ test('formats USD prices', () => {
 })
 
 test('formats EUR prices', () => {
-  expect(formatPrice(10, 'EUR')).toMatchInlineSnapshot(`"€10.00"`)
+  expect(formatPrice(10, 'EUR')).toBe('€10.00')
 })
 
 test('handles zero', () => {
