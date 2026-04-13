@@ -1,6 +1,5 @@
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
-import { processError } from '@vitest/utils/error'
 import { noop } from '@vitest/utils/helpers'
 
 export function createAssertionMessage(
@@ -86,10 +85,11 @@ export function recordAsyncExpect(
 }
 
 function handleTestError(test: Test, err: unknown) {
-  test.result ||= { state: 'fail' }
-  test.result.state = 'fail'
-  test.result.errors ||= []
-  test.result.errors.push(processError(err))
+  // test.result ||= { state: 'fail' }
+  // test.result.state = 'fail'
+  // test.result.errors ||= []
+  // test.result.errors.push(processError(err))
+  test.context.recordError(err)
 }
 
 /** wrap assertion function to support `expect.soft` and provide assertion name as `_name` */

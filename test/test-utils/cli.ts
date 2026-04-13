@@ -78,6 +78,8 @@ export class Cli {
         return resolve()
       }
 
+      // TODO: can use recordErrorOnTimeout to ensure this error message is surfaced
+      // when test timeout kicked in first.
       const timeout = setTimeout(() => {
         error.message = `Timeout when waiting for error "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
         reject(error)

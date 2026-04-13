@@ -1233,6 +1233,9 @@ export interface TestContext {
     (message: string, type?: string, attachment?: TestAttachment): Promise<TestAnnotation>
     (message: string, attachment?: TestAttachment): Promise<TestAnnotation>
   }
+
+  readonly recordError: (error: unknown) => void
+  readonly recordErrorOnTimeout: (createError: () => unknown) => (() => void) & Disposable
 }
 
 export type OnTestFailedHandler = (context: TestContext) => Awaitable<void>
