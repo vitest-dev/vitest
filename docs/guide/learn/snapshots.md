@@ -140,6 +140,37 @@ On the other hand, snapshots are not always the best tool. If the output changes
 
 The general rule: use snapshots when you want to protect against *any* change in the output, and use targeted assertions when you only care about *specific* properties.
 
+## Handling Dynamic Values
+
+If your output includes values that change every run (like timestamps or IDs), you can use property matchers to pin the structure while ignoring volatile fields. Pass an object with asymmetric matchers as the first argument to `toMatchSnapshot()`:
+
+```js
+test('user snapshot with dynamic fields', () => {
+  const user = createUser('Alice')
+
+  expect(user).toMatchSnapshot({
+    id: expect.any(Number),
+    createdAt: expect.any(Date),
+  })
+})
+```
+
+The `id` and `createdAt` fields are checked against the matchers (any number, any date) instead of being compared to a stored value. All other fields are snapshotted as usual.
+
+## Error Snapshots
+
+A common use of inline snapshots is capturing error messages. [`toThrowErrorMatchingInlineSnapshot`](/api/expect#tothrowerrormatchinginlinesnapshot) combines `toThrow` with `toMatchInlineSnapshot` so you can snapshot the error message without a separate `.snap` file:
+
+```js
+test('throws on invalid input', () => {
+  expect(() => parse('')).toThrowErrorMatchingInlineSnapshot(
+    `[Error: Unexpected end of input at position 0]`
+  )
+})
+```
+
+This is especially handy for verifying that error messages are clear and don't accidentally change. Like other inline snapshots, Vitest fills in the string on the first run and updates it when you press `u`.
+
 ::: tip
 For custom snapshot serializers, snapshot matchers, and advanced configuration, see the [Snapshot](/guide/snapshot) guide.
 :::
