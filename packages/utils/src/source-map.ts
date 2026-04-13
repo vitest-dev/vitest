@@ -232,13 +232,14 @@ export function parseStacktrace(
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
 
-  // remove assertion helper's internal stacks
+  // remove vi.defineHelper's internal stacks
   const helperIndex = stacks.findLastIndex(s =>
-    s.method === '__VITEST_HELPER__'
-    // firefox
-    || s.method === 'async*__VITEST_HELPER__'
-    // webkit
-    || s.method === 'async __VITEST_HELPER__',
+    // this covers cases such as
+    //   "__VITEST_HELPER__"
+    //   "__VITEST_HELPER__ [as <object method name>]"
+    //   "async*__VITEST_HELPER__" (firefox)
+    //   "async __VITEST_HELPER__" (webkit)
+    s.method.includes('__VITEST_HELPER__'),
   )
   if (helperIndex >= 0) {
     stacks = stacks.slice(helperIndex + 1)

@@ -612,8 +612,8 @@ function createVitest(): VitestUtils {
     waitFor,
     waitUntil,
     defineHelper: (fn) => {
-      return function __VITEST_HELPER__(...args: any[]): any {
-        const result = fn(...args)
+      return function __VITEST_HELPER__(this: any, ...args: any[]): any {
+        const result = fn.apply(this, args)
         if (result && typeof result === 'object' && typeof result.then === 'function') {
           return (async function __VITEST_HELPER__() {
             return await result
