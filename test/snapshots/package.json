@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@vitest/browser-playwright": "workspace:*",
-    "jest-image-snapshot": "^6.5.1"
+    "jest-image-snapshot": "^6.5.2"
   }
 }
