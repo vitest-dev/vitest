@@ -86,6 +86,36 @@ src/
 
 If the default patterns don't work for your project, you can customize which files are included with the [`include`](/config/include) and [`exclude`](/config/exclude) config options.
 
+## Testing TypeScript
+
+Because Vitest runs on top of Vite, TypeScript works out of the box. There's no extra compiler to install, no `ts-jest` to configure, and no separate build step for your tests. Just name your test file `.test.ts` instead of `.test.js` and start writing:
+
+```ts
+import { expect, test } from 'vitest'
+
+interface User {
+  name: string
+  age: number
+}
+
+function createUser(name: string, age: number): User {
+  return { name, age }
+}
+
+test('creates a user with the correct fields', () => {
+  const user = createUser('Alice', 30)
+
+  expect(user).toEqual({ name: 'Alice', age: 30 })
+  expect(user.name).toBe('Alice')
+})
+```
+
+You can import your production types, use generics, and write typed test utilities exactly as you would in the rest of your codebase. Vite transforms TypeScript on the fly, so tests start fast even in large projects.
+
+::: tip
+Vitest transforms TypeScript for execution but does **not** type-check your tests during the test run. This is the same trade-off Vite makes for speed: you get fast feedback in the terminal, and run `tsc` or `vitest typecheck` separately when you want full type checking. See the [Testing Types](/guide/testing-types) guide for more details.
+:::
+
 ## Reading Test Output
 
 When you run `vitest` and only a single test file matches, the output is expanded into a tree structure showing `describe` groups and individual tests along with their duration:
@@ -160,7 +190,7 @@ test.for([
 })
 ```
 
-The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. This is especially useful with [`test.concurrent`](/api/test#concurrent) where you need a scoped `expect` for snapshots:
+The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. This is especially useful with [`test.concurrent`](/api/test#concurrent), where concurrent tests run in parallel and the global `expect` can't reliably associate a snapshot with the right test. The context-scoped `expect` solves this:
 
 ```js
 test.concurrent.for([
