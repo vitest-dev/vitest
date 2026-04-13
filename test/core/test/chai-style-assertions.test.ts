@@ -230,7 +230,7 @@ describe('Chai-style assertions', () => {
         spy()
       }
       catch {}
-      expect(spy).to.not.have.returned
+      expect(spy).not.toHaveReturned()
     })
   })
 

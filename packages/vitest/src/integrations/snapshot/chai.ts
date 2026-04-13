@@ -1,7 +1,7 @@
 import type { AsyncExpectationResult, ChaiPlugin, ExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
-import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
+import { chai, createAssertionMessage, equals, iterableEquality, markExpectCalled, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
@@ -101,6 +101,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     function (this: Chai.Assertion, filepath: string, hint?: string) {
       // set name manually since it's not wrapped by wrapAssertion
       utils.flag(this, '_name', 'toMatchFileSnapshot')
+      markExpectCalled(utils, this)
       // validate early synchronously just not to break some existing tests
       validateAssertion(this)
       const resultPromise = toMatchFileSnapshotImpl({

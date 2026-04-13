@@ -23,7 +23,7 @@ import {
   subsetEquality,
   typeEquality,
 } from './jest-utils'
-import { createAssertionMessage, recordAsyncExpect, wrapAssertion } from './utils'
+import { createAssertionMessage, markExpectCalled, recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -1077,12 +1077,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const obj = utils.flag(this, 'object')
 
       if (utils.flag(this, 'poll')) {
+        markExpectCalled(utils, this)
         throw new SyntaxError(
           `expect.poll() is not supported in combination with .resolves`,
         )
       }
 
       if (typeof obj?.then !== 'function') {
+        markExpectCalled(utils, this)
         throw new TypeError(
           `You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`,
         )
@@ -1098,6 +1100,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
+            markExpectCalled(utils, this)
             const promise = Promise.resolve(obj).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -1150,12 +1153,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
       if (utils.flag(this, 'poll')) {
+        markExpectCalled(utils, this)
         throw new SyntaxError(
           `expect.poll() is not supported in combination with .rejects`,
         )
       }
 
       if (typeof wrapper?.then !== 'function') {
+        markExpectCalled(utils, this)
         throw new TypeError(
           `You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`,
         )
@@ -1171,6 +1176,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
+            markExpectCalled(utils, this)
             const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 const _error = new AssertionError(

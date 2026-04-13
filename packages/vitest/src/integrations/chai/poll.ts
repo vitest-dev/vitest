@@ -1,6 +1,6 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
-import { chai } from '@vitest/expect'
+import { chai, markExpectCalled } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
@@ -79,6 +79,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         if (key === 'assert') {
           return assertionFunction
         }
+
+        markExpectCalled(chai.util, assertion)
 
         if (typeof key === 'string' && unsupported.includes(key)) {
           throw new SyntaxError(

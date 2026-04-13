@@ -3,6 +3,16 @@ import type { Assertion } from './types'
 import { processError } from '@vitest/utils/error'
 import { noop } from '@vitest/utils/helpers'
 
+export function markExpectCalled(
+  utils: Chai.ChaiUtils,
+  assertion: object,
+): void {
+  const state = utils.flag(assertion, '_vitest_expect_state') as { called: boolean } | undefined
+  if (state) {
+    state.called = true
+  }
+}
+
 export function createAssertionMessage(
   util: Chai.ChaiUtils,
   assertion: Chai.Assertion,
@@ -102,6 +112,10 @@ export function wrapAssertion(
     // private
     if (name !== 'withTest') {
       utils.flag(this, '_name', name)
+    }
+
+    if (name !== 'withTest' && name !== 'withContext') {
+      markExpectCalled(utils, this)
     }
 
     if (!utils.flag(this, 'soft')) {
