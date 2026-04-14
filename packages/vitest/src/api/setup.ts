@@ -7,7 +7,7 @@ import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
 import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
-import type { ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   ExternalResult,
   TransformResultWithSource,
@@ -99,6 +99,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
         getConfig() {
           return ctx.serializedRootConfig
+        },
+        getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
+          return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
         async getExternalResult(moduleId: string, testFileTaskId: string) {
           const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined

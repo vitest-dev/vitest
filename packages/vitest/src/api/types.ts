@@ -3,7 +3,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
 import type { SerializedRootConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type { ModuleDefinitionDurationsDiagnostic, UntrackedModuleDefinitionDiagnostic } from '../types/module-locations'
 
 interface SourceMap {
@@ -40,6 +40,10 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
   getConfig: () => SerializedRootConfig
+  /**
+   * @deprecated Use `getConfig().projects` instead.
+   */
+  getResolvedProjectLabels: () => { name: string; color?: LabelColor }[]
   getModuleGraph: (
     projectName: string,
     id: string,

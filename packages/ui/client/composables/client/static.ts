@@ -78,7 +78,7 @@ export function createStaticClient(): VitestClient {
     saveTestFile: asyncNoop,
     getProvidedContext: () => ({}),
     getTestFiles: asyncNoop,
-  } as WebSocketHandlers
+  } as Omit<WebSocketHandlers, 'getResolvedProjectLabels'>
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
