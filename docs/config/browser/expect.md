@@ -118,9 +118,9 @@ receives an object with the following properties:
   The value provided to [`attachmentsDir`](/config/attachmentsdir), if none is
   provided, its default value.
 
-- `config: ResolvedConfig` <Version type="experimental">4.1.5</Version> <Experimental />
+- `project: TestProject` <Version type="experimental">4.1.5</Version> <Experimental />
 
-  The project's fully resolved [configuration](/config/).
+  The [`TestProject`](/api/advanced/test-project) the test belongs to.
 
 For example, to group screenshots by browser:
 
