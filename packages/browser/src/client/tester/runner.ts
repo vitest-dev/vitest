@@ -31,7 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { getBrowserTrace } from './trace'
+import { getBrowserTrace, recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -122,6 +122,10 @@ export function createBrowserRunner(
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
       const hasActiveTraceView = getBrowserState().activeTraceViewTaskIds.has(test.id)
       if (hasActiveTraceView) {
+        recordBrowserTraceEntry(test, {
+          name: `vitest:onAfterRetryTask [${test.result?.state}]`,
+          stack: test.result?.errors?.[0].stack,
+        })
         // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
         const traceData = getBrowserTrace(test.id, repeats, retry)
         if (traceData) {
