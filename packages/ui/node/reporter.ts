@@ -1,4 +1,4 @@
-import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
+import type { ModuleGraphData, RunnerTestFile, SerializedRootConfig } from 'vitest'
 import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -29,8 +29,7 @@ function getOutputFile(config: PotentialConfig | undefined) {
 interface HTMLReportData {
   paths: string[]
   files: RunnerTestFile[]
-  config: SerializedConfig
-  projects: string[]
+  config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -69,9 +68,8 @@ export default class HTMLReporter implements Reporter {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
-      config: this.ctx.getRootProject().serializedConfig,
+      config: this.ctx.serializedRootConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      projects: this.ctx.projects.map(p => p.name),
       moduleGraph: {},
       sources: {},
     }
