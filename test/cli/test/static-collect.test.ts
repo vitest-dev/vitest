@@ -427,6 +427,92 @@ test('collects tests imported from another file', async () => {
   `)
 })
 
+test('collects tests imported from another file while a vi.mock line is present', async () => {
+  const testModule = await collectTests(`
+    import { describe } from 'vitest';
+    import { it } from './Utils/test-extend.ts';
+      
+    vi.mock('@/composables/test.js', async (importOriginal) => { });
+      
+    describe('should included', () => {
+      it('is included because of workspace plugin setting', () => {});
+    });
+
+    describe('should included', () => {
+      describe('nested', () => {
+        it('is included because of workspace plugin setting', ({ server }) => {});
+      });
+    });
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "should included": {
+        "is included because of workspace plugin setting": {
+          "errors": [],
+          "fullName": "should included > is included because of workspace plugin setting",
+          "id": "-1732721377_0_0",
+          "location": "8:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "nested": {
+          "is included because of workspace plugin setting": {
+            "errors": [],
+            "fullName": "should included > nested > is included because of workspace plugin setting",
+            "id": "-1732721377_1_0_0",
+            "location": "13:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests imported from another file while a vi.mock line is present and commented', async () => {
+  const testModule = await collectTests(`
+    import { describe } from 'vitest';
+    import { it } from './Utils/test-extend.ts';
+      
+    // vi.mock('@/composables/test.js', async (importOriginal) => { });
+      
+    describe('should included', () => {
+      it('is included because of workspace plugin setting', () => {});
+    });
+
+    describe('should included', () => {
+      describe('nested', () => {
+        it('is included because of workspace plugin setting', ({ server }) => {});
+      });
+    });
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "should included": {
+        "is included because of workspace plugin setting": {
+          "errors": [],
+          "fullName": "should included > is included because of workspace plugin setting",
+          "id": "-1732721377_0_0",
+          "location": "8:6",
+          "mode": "run",
+          "state": "pending",
+        },
+        "nested": {
+          "is included because of workspace plugin setting": {
+            "errors": [],
+            "fullName": "should included > nested > is included because of workspace plugin setting",
+            "id": "-1732721377_1_0_0",
+            "location": "13:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
 test('collects mixed test function names', async () => {
   const testModule = await collectTests(`
     import { it, test, testUnit, integrationTest } from 'vitest'
