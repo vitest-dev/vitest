@@ -1643,6 +1643,21 @@ export class Vitest {
       return regexp.test(name)
     })
   }
+
+  /** @internal */
+  isExcludedByProjectFilter(name: string): boolean {
+    const projects = this._config?.project || this._cliOptions?.project
+    if (!projects || !projects.length) {
+      return false
+    }
+    return toArray(projects).some((project) => {
+      if (!project.startsWith('!')) {
+        return false
+      }
+      const positivePattern = project.slice(1)
+      return wildcardPatternToRegExp(positivePattern).test(name)
+    })
+  }
 }
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
