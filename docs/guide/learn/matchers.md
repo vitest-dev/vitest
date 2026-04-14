@@ -216,7 +216,7 @@ test('object has property', () => {
 
 ## Asymmetric Matchers
 
-Sometimes you don't know the exact value, but you know its type or shape. Asymmetric matchers let you describe what a value should *look like* without pinning down the exact content. They work inside any matcher that does deep comparison, like `toEqual`, `toMatchObject`, or `toHaveBeenCalledWith`:
+Sometimes you don't know the exact value, but you know its type or shape. Asymmetric matchers let you describe what a value should *look like* without pinning down the exact content. They work inside any matcher that does deep comparison, like `toEqual` or `toMatchObject`:
 
 ```js
 test('user has the right shape', () => {
@@ -238,15 +238,6 @@ The most common asymmetric matchers are:
 - [`expect.stringMatching(regex)`](/api/expect#expect-stringmatching) matches a string against a regular expression
 - [`expect.arrayContaining(arr)`](/api/expect#expect-arraycontaining) matches an array that includes all items in the expected array (order doesn't matter, extra items are allowed)
 - [`expect.objectContaining(obj)`](/api/expect#expect-objectcontaining) matches an object that includes at least the specified properties
-
-These are especially useful for asserting on mock function arguments, where you want to verify the important parts of a call without matching every field exactly:
-
-```js
-expect(sendEmail).toHaveBeenCalledWith(
-  expect.objectContaining({ to: 'alice@example.com' }),
-  expect.stringContaining('Welcome'),
-)
-```
 
 ## Exceptions
 

@@ -142,7 +142,7 @@ The general rule: use snapshots when you want to protect against *any* change in
 
 ## Handling Dynamic Values
 
-If your output includes values that change every run (like timestamps or IDs), you can use property matchers to pin the structure while ignoring volatile fields. Pass an object with asymmetric matchers as the first argument to `toMatchSnapshot()`:
+If your output includes values that change every run (like timestamps or IDs), you can use property matchers to pin the structure while ignoring volatile fields. Pass an object with asymmetric matchers as the first argument to `toMatchSnapshot()` or `toMatchInlineSnapshot()`:
 
 ```js
 test('user snapshot with dynamic fields', () => {

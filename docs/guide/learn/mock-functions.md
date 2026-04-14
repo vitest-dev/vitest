@@ -94,19 +94,6 @@ As a shorthand, you can pass the implementation directly to `vi.fn()`:
 const add = vi.fn((a, b) => a + b)
 ```
 
-Like return values, implementations can be set for a single call with [`mockImplementationOnce`](/api/mock#mockimplementationonce). This is useful when you need a function to behave differently the first time it's called:
-
-```js
-test('fails once then succeeds', () => {
-  const connect = vi.fn()
-    .mockImplementationOnce(() => { throw new Error('Connection refused') })
-    .mockImplementation(() => ({ connected: true }))
-
-  expect(() => connect()).toThrow('Connection refused')
-  expect(connect()).toEqual({ connected: true })
-})
-```
-
 ## Inspecting Calls
 
 One of the most powerful things about mock functions is that they remember every call made to them. You can assert on how many times a function was called, what arguments it received, and what it returned:

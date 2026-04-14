@@ -80,6 +80,10 @@ test('both callbacks are called', async () => {
 
 In most cases, `async`/`await` with direct assertions is clear enough and you don't need assertion counting. It's most useful when assertions are inside callbacks, loops, or conditional branches where you want to guarantee they actually executed.
 
+::: tip
+If you want every test in your project to require at least one assertion, enable [`expect.requireAssertions`](/config/expect#expect-requireassertions) in your config instead of adding `expect.hasAssertions()` to each test manually.
+:::
+
 ## Callbacks
 
 Some older APIs use callbacks instead of promises. Since Vitest works with promises, the simplest approach is to wrap the callback in a `Promise`:
