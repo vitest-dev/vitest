@@ -12,7 +12,7 @@ import FileDetails from '~/components/FileDetails.vue'
 import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import TraceViewPane from '~/components/trace/TraceViewPane.vue'
-import { browserState, config } from '~/composables/client'
+import { browserState } from '~/composables/client'
 import {
   coverageVisible,
   detailSizes,
@@ -119,7 +119,7 @@ function allowBrowserEvents() {
               <Pane :size="detailSizes[0]" min-size="10">
                 <template v-if="browserState">
                   <Splitpanes
-                    v-if="config.browser?.traceView"
+                    v-if="browserState.config.browser?.traceView"
                     class="h-full"
                     :horizontal="detailsPosition === 'right'"
                   >
