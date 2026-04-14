@@ -110,7 +110,7 @@ describe('default reporter', async () => {
     // one file
     vitest.write('p')
     await vitest.waitForStdout('Input filename pattern')
-    vitest.write('a')
+    vitest.write('a.te')
     await vitest.waitForStdout('a.test.ts')
     vitest.write('\n')
     await vitest.waitForStdout('Filename pattern: a')
