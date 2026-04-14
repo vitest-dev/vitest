@@ -34,7 +34,6 @@ import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { resolveConfig } from './config/resolveConfig'
-import { serializeRootConfig } from './config/serializeConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -505,14 +504,10 @@ export class Vitest {
   }
 
   public get serializedRootConfig(): SerializedRootConfig {
-    const config = serializeRootConfig(this)
-    if (!this.configOverride) {
-      return config
+    return {
+      ...this.getRootProject().serializedConfig,
+      projects: this.projects.map(project => project.serializedConfig),
     }
-    return deepMerge(
-      config,
-      this.configOverride,
-    )
   }
 
   public getProjectByName(name: string): TestProject {

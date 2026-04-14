@@ -1,5 +1,4 @@
-import type { SerializedConfig, SerializedRootConfig } from '../../runtime/config'
-import type { Vitest } from '../core'
+import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
 import type { ApiConfig } from '../types/config'
 import { configDefaults } from '../../defaults'
@@ -152,14 +151,5 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
     isAgent,
-  }
-}
-
-export function serializeRootConfig(
-  vitest: Vitest,
-): SerializedRootConfig {
-  return {
-    ...serializeConfig(vitest.getRootProject()),
-    projects: vitest.projects.map(project => serializeConfig(project)),
   }
 }
