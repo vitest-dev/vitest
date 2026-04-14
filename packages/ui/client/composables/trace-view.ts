@@ -37,7 +37,10 @@ function openTraceForTest(testId: string) {
 
   const projectName = test.file.projectName || ''
   const project = config.value.projects?.find(project => project.name === projectName)
-  const traceView = browserState?.config.browser?.traceView ?? project?.browser.traceView ?? config.value.browser?.traceView
+  const traceView
+    = browserState?.config.browser?.traceView
+      ?? project?.browser.traceView
+      ?? config.value.browser?.traceView
   if (traceView) {
     const trace = test.artifacts.find((artifact): artifact is BrowserTraceArtifact => artifact.type === 'internal:browserTrace')
     if (trace) {
