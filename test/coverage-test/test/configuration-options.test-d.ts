@@ -231,6 +231,14 @@ test('custom instrumenter', () => {
     lastSourceMap: () => null,
     lastFileCoverage: () => ({}),
   })
+
+  assertType<InstrumenterOptions>({
+    coverageVariable: '__VITEST_COVERAGE__',
+    coverageGlobalScope: 'globalThis',
+    coverageGlobalScopeFunc: false,
+    ignoreClassMethods: ['test-method'],
+  })
+
   assertType<Coverage>({
     provider: 'istanbul',
     instrumenter: factory,

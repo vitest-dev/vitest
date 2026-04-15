@@ -34,6 +34,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     if (this.options.instrumenter) {
       this.instrumenter = this.options.instrumenter({
         coverageVariable: COVERAGE_STORE_KEY,
+        coverageGlobalScope: 'globalThis',
+        coverageGlobalScopeFunc: false,
         ignoreClassMethods: this.options.ignoreClassMethods,
       }) as Instrumenter
     }
