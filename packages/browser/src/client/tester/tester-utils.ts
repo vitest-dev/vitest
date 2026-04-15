@@ -96,6 +96,7 @@ function getParent(el: Element) {
   return parent
 }
 
+// TODO: format as `vitest:click` in trace
 const ACTION_TRACE_COMMANDS = new Set([
   '__vitest_click',
   '__vitest_dblClick',
