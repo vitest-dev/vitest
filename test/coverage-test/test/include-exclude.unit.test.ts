@@ -44,6 +44,21 @@ test('include with partial extension match', async () => {
   expect.soft(isIncluded('package.json')).toBe(false)
 })
 
+test('include without actual glob', async () => {
+  const isIncluded = await init({
+    include: ['src', 'another/nested'],
+  })
+
+  expect.soft(isIncluded('src/component.js')).toBe(true)
+  expect.soft(isIncluded('src/nested/component.ts')).toBe(true)
+
+  expect.soft(isIncluded('another/nested/component.ts')).toBe(true)
+  expect.soft(isIncluded('another/nested/deeply/component.ts')).toBe(true)
+  expect.soft(isIncluded('another/nested-ignored.js')).toBe(false)
+
+  expect.soft(isIncluded('src-file-in-root.js')).toBe(false)
+})
+
 test('no include defaults to match all files', async () => {
   const isIncluded = await init({
     exclude: [],
