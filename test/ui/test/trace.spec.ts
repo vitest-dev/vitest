@@ -7,9 +7,6 @@ import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
-// TODO:
-// - prefer packages/ui unit test for trace viewer details
-
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
@@ -97,4 +94,11 @@ async function testBasic(page: Page) {
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
   await traceView.getByRole('button', { name: 'button rendered - locator' }).click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+
+  // verify snaphsot replay in iframe
+  const traceViewFrame = traceView.frameLocator('iframe')
+  await expect(traceViewFrame.getByRole('button', { name: 'Hello' })).toBeVisible()
+
+  // verify selector highlight
+  await expect(traceViewFrame.getByTestId('trace-view-highlight')).toBeVisible()
 }

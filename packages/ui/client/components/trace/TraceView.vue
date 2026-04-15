@@ -57,6 +57,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       iframe.contentWindow!.requestAnimationFrame(() => {
         const rect = (el as Element).getBoundingClientRect()
         const overlay = doc.createElement('div')
+        overlay.setAttribute('data-testid', 'trace-view-highlight')
         overlay.style.cssText = `
           position: fixed;
           pointer-events: none;
