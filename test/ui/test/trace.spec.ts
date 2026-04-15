@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import assert from 'node:assert'
@@ -6,7 +7,9 @@ import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
-// TODO: reuse same test cases for HTML reporter + preview
+// TODO:
+// - prefer packages/ui unit test for trace viewer details
+
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
@@ -38,7 +41,7 @@ test.describe('ui', () => {
 
   test('basic', async ({ page }) => {
     await page.goto(baseURL)
-    await expect.soft(page.getByTestId('tests-entry')).toContainText('11 Pass 2 Fail 13 Total')
+    await testBasic(page)
   })
 })
 
@@ -77,6 +80,21 @@ test.describe('html reporter', () => {
 
   test('basic', async ({ page }) => {
     await page.goto(baseURL)
-    await expect.soft(page.getByTestId('tests-entry')).toContainText('11 Pass 2 Fail 13 Total')
+    await testBasic(page)
   })
 })
+
+async function testBasic(page: Page) {
+  await expect.soft(page.getByTestId('tests-entry')).toContainText('11 Pass 2 Fail 13 Total')
+
+  // selecting test case opens trace viewer
+  const traceView = page.getByTestId('trace-view')
+  await expect(traceView).toBeHidden()
+  await page.getByText('locator.mark').click()
+  await expect(traceView).toBeVisible()
+
+  // selecting steps should open source code view
+  await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
+  await traceView.getByRole('button', { name: 'button rendered - locator' }).click()
+  await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+}

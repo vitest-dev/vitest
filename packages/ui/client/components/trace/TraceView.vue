@@ -77,7 +77,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 </script>
 
 <template>
-  <div class="grid h-full min-h-0 gap-4 p-4 md:grid-cols-[220px_1fr]">
+  <div class="grid h-full min-h-0 gap-4 p-4 md:grid-cols-[220px_1fr]" data-testid="trace-view">
     <!-- TODO: split pane between step list and viewer?  -->
     <div flex="~ col gap-1" overflow-auto>
       <button
