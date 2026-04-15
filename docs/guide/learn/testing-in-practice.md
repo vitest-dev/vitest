@@ -38,7 +38,7 @@ test('formats USD prices', () => {
 })
 
 test('formats EUR prices', () => {
-  expect(formatPrice(10, 'EUR')).toMatchInlineSnapshot(`"€10.00"`)
+  expect(formatPrice(10, 'EUR')).toBe('€10.00')
 })
 
 test('handles zero', () => {
@@ -429,6 +429,10 @@ Each `describe` block focuses on one method. Each test verifies one specific beh
 
 ::: tip
 Notice that we create a fresh `createTodoList()` in every test. This keeps tests independent, which means they can run in any order without affecting each other. If you find yourself repeating the same setup in every test, that's a good candidate for [`beforeEach`](/api/hooks#beforeeach) or a [`test.extend`](/guide/test-context#extend-test-context) fixture.
+:::
+
+::: details What about `nextId`?
+The `nextId` counter at the top of the module is shared across all calls to `createTodoList()`, including across tests. This means IDs aren't predictable: one test might get IDs 1 and 2, while another gets 3 and 4 depending on execution order. This works fine here because the tests only check *relative* uniqueness (`first.id !== second.id`), not specific ID values. If a test asserted `expect(todo.id).toBe(1)`, it would break depending on which tests ran before it. When you have shared module-level state like this, make sure your tests don't depend on its specific value.
 :::
 
 ---
