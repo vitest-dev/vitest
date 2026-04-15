@@ -76,14 +76,11 @@ export function recordBrowserTraceEntry(
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
 function takeSnapshot(selector?: string): TraceSnapshot {
   const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+  const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
   const serialized = snapshot(document, { mirror })
   if (selector) {
     try {
-      const engine = getBrowserState().selectorEngine
-      if (!engine) {
-        return { serialized }
-      }
       const el = engine.querySelector(
         engine.parseSelector(selector),
         document.documentElement,

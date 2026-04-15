@@ -94,6 +94,7 @@ export interface BrowserRunnerState {
   activeTraceTaskIds: Set<string>
   // TODO: silly but fine for now
   activeTraceViewTaskIds: Set<string>
+  // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
   browserTraceState?: BrowserTraceState
   selectorEngine: Ivya
