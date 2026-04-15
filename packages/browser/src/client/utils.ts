@@ -65,6 +65,10 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
   } satisfies Promise<T>
 }
 
+// This object is the shared runtime bus for browser artifacts loaded into the
+// same page. Some browser code is built and served as independent bundles, so
+// getBrowserState() is the API they use to share runtime state instead of
+// relying on imports resolving to the same module instance.
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
