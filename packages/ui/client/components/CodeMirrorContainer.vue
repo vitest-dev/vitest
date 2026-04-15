@@ -29,8 +29,10 @@ const modeMap: Record<string, any> = {
   ts: { name: 'javascript', typescript: true },
   mts: { name: 'javascript', typescript: true },
   cts: { name: 'javascript', typescript: true },
-  jsx: { name: 'javascript', jsx: true },
-  tsx: { name: 'javascript', typescript: true, jsx: true },
+  // jsx: { name: 'javascript', jsx: true },
+  // tsx: { name: 'javascript', typescript: true, jsx: true },
+  jsx: { name: 'text/jsx' },
+  tsx: { name: 'text/typescript-jsx' },
 }
 
 const el = ref<HTMLTextAreaElement>()
