@@ -8,6 +8,7 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
+// TODO: timestamp, duration
 export interface BrowserTraceEntry {
   name: string
   stack?: string
