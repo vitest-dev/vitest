@@ -1,11 +1,11 @@
-import { describe, expect, test } from "vitest";
-import { runInlineTests } from "../../test-utils";
+import { describe, expect, test } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 
-describe("maxOutputLength", () => {
-  test("default", async () => {
+describe('maxOutputLength', () => {
+  test('default', async () => {
     const result = await runInlineTests(
       {
-        "basic.test.ts": `
+        'basic.test.ts': `
           import { expect, test } from 'vitest'
 
           test('large snapshot', () => {
@@ -14,12 +14,12 @@ describe("maxOutputLength", () => {
         `,
       },
       {
-        update: "all",
+        update: 'all',
       },
-    );
+    )
 
-    expect(result.stderr).toMatchInlineSnapshot(`""`);
-    const snapshot = result.fs.readFile("__snapshots__/basic.test.ts.snap");
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    const snapshot = result.fs.readFile('__snapshots__/basic.test.ts.snap')
     expect(snapshot.slice(-50)).toMatchInlineSnapshot(`
       " "i": 499998,
         },
@@ -29,14 +29,14 @@ describe("maxOutputLength", () => {
       ]
       \`;
       "
-    `);
-    expect(snapshot.length).toMatchInlineSnapshot(`12888992`);
-  });
+    `)
+    expect(snapshot.length).toMatchInlineSnapshot(`12888992`)
+  })
 
-  test("override", async () => {
+  test('override', async () => {
     const result = await runInlineTests(
       {
-        "basic.test.ts": `
+        'basic.test.ts': `
           import { expect, test } from 'vitest'
 
           test('large snapshot', () => {
@@ -45,15 +45,15 @@ describe("maxOutputLength", () => {
         `,
       },
       {
-        update: "all",
+        update: 'all',
         snapshotFormat: {
           maxOutputLength: 50,
         },
       },
-    );
+    )
 
-    expect(result.stderr).toMatchInlineSnapshot(`""`);
-    expect(result.fs.readFile("__snapshots__/basic.test.ts.snap")).toMatchInlineSnapshot(`
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+    expect(result.fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
       "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
       exports[\`large snapshot 1\`] = \`
@@ -75,6 +75,6 @@ describe("maxOutputLength", () => {
       ]
       \`;
       "
-    `);
-  });
-});
+    `)
+  })
+})
