@@ -3,7 +3,7 @@ import { normalizeURL, runVitest, test } from '../utils'
 
 test('custom instrumenter receives correct options', async () => {
   const instrumenter = vi.fn().mockReturnValue({
-    instrumentSync: code => code,
+    instrumentSync: (code: string) => code,
     lastSourceMap: () => ({}),
     lastFileCoverage: () => ({
       path: 'test.ts',
