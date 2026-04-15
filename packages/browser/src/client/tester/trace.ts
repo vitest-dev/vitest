@@ -44,7 +44,7 @@ function getAttemptKey(repeats: number, retry: number) {
   return `${repeats}:${retry}`
 }
 
-// TODO: should we avoid accumulating? send snapshot and clear to save memory?
+// TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot'>,
