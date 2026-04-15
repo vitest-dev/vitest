@@ -90,12 +90,10 @@ You can enable both at the same time. See [Playwright Trace Files](./trace-view.
 Trace entries are recorded automatically for:
 
 - `expect.element(...)` assertions
-- User interaction commands: `click`, `fill`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`
-- Screenshots
+- Interactive actions like `click`, `fill`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`
+- Test runner lifecycle event (e.g. `vitest:onAfterRetryTask` is recorded after each test and retry run)
 
 Each entry captures the DOM state at that point, along with the selector and the source location that triggered it.
-
-Plain JavaScript assertions like `expect(value).toBe(...)` run in Node, not the browser, and do not appear in the trace.
 
 ## Custom Trace Entries
 
