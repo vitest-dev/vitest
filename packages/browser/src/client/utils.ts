@@ -1,8 +1,10 @@
 import type { VitestRunner } from '@vitest/runner'
+import type { Ivya } from 'ivya'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
+import type { BrowserTraceState } from './tester/trace'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -92,6 +94,9 @@ export interface BrowserRunnerState {
   activeTraceTaskIds: Set<string>
   // TODO: silly but fine for now
   activeTraceViewTaskIds: Set<string>
+  browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
+  browserTraceState?: BrowserTraceState
+  selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {

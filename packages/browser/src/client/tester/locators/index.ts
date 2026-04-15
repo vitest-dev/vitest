@@ -69,7 +69,7 @@ export const selectorEngine: Ivya = Ivya.create({
   testIdAttribute: server.config.browser.locators.testIdAttribute,
 })
 
-;(globalThis as any).__vitest_selector_engine__ = selectorEngine
+getBrowserState().selectorEngine = selectorEngine
 
 const kLocator = Symbol.for('$$vitest:locator')
 

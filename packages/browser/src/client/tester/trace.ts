@@ -1,4 +1,5 @@
 import type { Task } from '@vitest/runner'
+import { getBrowserState } from '../utils'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 
@@ -23,15 +24,15 @@ interface TraceSnapshot {
   selectorId?: number
 }
 
-// lazily loaded when trace is enabled on runner.ts
-declare let __vitest_dom_snapshot__: typeof import('rrweb-snapshot')
+export interface BrowserTraceState {
+  entries: Map<string, Map<string, BrowserTraceData>>
+}
 
-// TODO: why global. otherwise build breaks. just for now.
-declare let __vitest_selector_engine__: import('ivya').Ivya
-
-// TODO: why global
-const browserTraceEntries: Map<string, Map<string, BrowserTraceData>>
-  = ((globalThis as any).__vitest_browser_trace__ ??= new Map())
+function getBrowserTraceState(): BrowserTraceState {
+  return getBrowserState().browserTraceState ??= {
+    entries: new Map(),
+  }
+}
 
 function getAttemptInfo(task: Task) {
   return {
@@ -58,12 +59,13 @@ export function recordBrowserTraceEntry(
   const snapshot = takeSnapshot(options.selector)
   const entry: BrowserTraceEntry = { ...options, snapshot }
   const { retry, repeats } = getAttemptInfo(task)
-  const attempts = browserTraceEntries.get(task.id) || new Map()
+  const state = getBrowserTraceState()
+  const attempts = state.entries.get(task.id) || new Map()
   const attemptKey = getAttemptKey(repeats, retry)
   const attempt = attempts.get(attemptKey) || { retry, repeats, entries: [] }
   attempt.entries.push(entry)
   attempts.set(attemptKey, attempt)
-  browserTraceEntries.set(task.id, attempts)
+  state.entries.set(task.id, attempts)
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror
@@ -73,12 +75,15 @@ export function recordBrowserTraceEntry(
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
 function takeSnapshot(selector?: string): TraceSnapshot {
-  const { snapshot, createMirror } = __vitest_dom_snapshot__
+  const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
   const mirror = createMirror()
   const serialized = snapshot(document, { mirror })
   if (selector) {
     try {
-      const engine = __vitest_selector_engine__
+      const engine = getBrowserState().selectorEngine
+      if (!engine) {
+        return { serialized }
+      }
       const el = engine.querySelector(
         engine.parseSelector(selector),
         document.documentElement,
@@ -97,7 +102,8 @@ function takeSnapshot(selector?: string): TraceSnapshot {
 }
 
 export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
-  const attempts = browserTraceEntries.get(testId)
+  const state = getBrowserTraceState()
+  const attempts = state.entries.get(testId)
   if (!attempts?.size) {
     return
   }
@@ -108,7 +114,7 @@ export function getBrowserTrace(testId: string, repeats: number, retry: number):
   }
   attempts.delete(attemptKey)
   if (!attempts.size) {
-    browserTraceEntries.delete(testId)
+    state.entries.delete(testId)
   }
   return attempt
 }

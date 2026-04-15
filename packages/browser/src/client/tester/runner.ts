@@ -93,7 +93,7 @@ export function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        ;(window as any).__vitest_dom_snapshot__ = await import('rrweb-snapshot')
+        getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
         getBrowserState().activeTraceViewTaskIds.add(test.id)
       }
       else {
@@ -122,6 +122,7 @@ export function createBrowserRunner(
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
       const hasActiveTraceView = getBrowserState().activeTraceViewTaskIds.has(test.id)
       if (hasActiveTraceView) {
+        // TODO: add test.location if available when no error.stack?
         recordBrowserTraceEntry(test, {
           name: `vitest:onAfterRetryTask [${test.result?.state}]`,
           stack: test.result?.errors?.[0].stack,
