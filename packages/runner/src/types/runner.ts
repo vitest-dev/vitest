@@ -46,10 +46,14 @@ export interface VitestRunnerConfig {
   hookTimeout: number
   retry: SerializableRetry
   includeTaskLocation: boolean | undefined
-  diffOptions?: DiffOptions
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+
+  /**
+   * @internal
+   */
+  diffOptions?: DiffOptions
 }
 
 /**

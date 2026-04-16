@@ -1,6 +1,6 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
+import type { SequenceHooks, VitestRunnerConfig } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { LabelColor } from '../types/general'
@@ -8,8 +8,7 @@ import type { LabelColor } from '../types/general'
 /**
  * Config that tests have access to.
  */
-export interface SerializedConfig {
-  name: string | undefined
+export interface SerializedConfig extends VitestRunnerConfig {
   color?: LabelColor
   globals: boolean
   base: string | undefined
@@ -20,13 +19,6 @@ export interface SerializedConfig {
   maxWorkers: number
   bail: number | undefined
   environmentOptions?: Record<string, any>
-  root: string
-  setupFiles: string[]
-  passWithNoTests: boolean
-  testNamePattern: RegExp | undefined
-  allowOnly: boolean
-  testTimeout: number
-  hookTimeout: number
   clearMocks: boolean
   mockReset: boolean
   restoreMocks: boolean
@@ -34,7 +26,6 @@ export interface SerializedConfig {
   unstubEnvs: boolean
   // TODO: make optional
   fakeTimers: FakeTimerInstallOpts
-  maxConcurrency: number
   defines: Record<string, any>
   expect: {
     requireAssertions?: boolean
@@ -44,13 +35,6 @@ export interface SerializedConfig {
     }
   }
   printConsoleTrace: boolean | undefined
-  sequence: {
-    shuffle?: boolean
-    concurrent?: boolean
-    seed: number
-    hooks: SequenceHooks
-    setupFiles: SequenceSetupFiles
-  }
   deps: {
     web: {
       transformAssets?: boolean
@@ -82,8 +66,6 @@ export interface SerializedConfig {
     allowWrite: boolean | undefined
   }
   diff: string | SerializedDiffOptions | undefined
-  retry: SerializableRetry
-  includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
   inspector: {
@@ -124,7 +106,7 @@ export interface SerializedConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
-  } | undefined
+  }
   serializedDefines: string
   experimental: {
     fsModuleCache: boolean
@@ -145,9 +127,6 @@ export interface SerializedConfig {
       browserSdkPath?: string
     } | undefined
   }
-  tags: TestTagDefinition[]
-  tagsFilter: string[] | undefined
-  strictTags: boolean
   slowTestThreshold: number | undefined
   isAgent: boolean
 }
