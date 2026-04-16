@@ -78,6 +78,14 @@ export default defineConfig({
 
 `recordCanvas` stores readable canvas pixels in the trace snapshot. This is useful for charts and simple 2D canvas output, but it is not a full canvas drawing timeline and does not provide complete WebGL replay.
 
+### External Resource Limits
+
+Trace view does not currently provide a general resource store. Resources that are not captured into the snapshot remain URL-backed.
+
+This means CSS background images and `@font-face` files referenced from serialized CSS still depend on their original URLs. External images can still render in the viewer when the browser can load the URL, but they are not portable in the HTML reporter unless `inlineImages` can capture their pixels. Cross-origin images need CORS-readable pixels for that capture; otherwise the browser can display them, but rrweb cannot safely draw them into a canvas data URL.
+
+Use `inlineImages` for loaded `<img>` elements that need to be portable in the HTML reporter. CSS subresources, fonts, non-CORS cross-origin images, videos, and other external files remain limitations of the current snapshot-based trace format.
+
 ::: warning Canvas replay sandbox
 
 `recordCanvas` enables a weaker iframe sandbox in the trace viewer. rrweb replays canvas data through an image load handler, so Vitest allows scripts inside the replay iframe for traces recorded with `recordCanvas`. Keep this option enabled only when canvas pixels are useful for debugging.
