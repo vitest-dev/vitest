@@ -16,7 +16,7 @@ export class TestSpecification {
   /**
    * The task id associated with the test module.
    */
-  public taskId: string
+  public readonly taskId: string
   /**
    * The test project that the module belongs to.
    */
