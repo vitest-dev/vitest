@@ -903,7 +903,7 @@ export function resolveConfig(
   const traceView = resolved.browser.traceView
   resolved.browser.traceView = typeof traceView === 'object'
     ? {
-        enabled: traceView.enabled ?? true,
+        enabled: traceView.enabled ?? false,
         recordCanvas: traceView.recordCanvas ?? false,
         inlineImages: traceView.inlineImages ?? false,
       }
