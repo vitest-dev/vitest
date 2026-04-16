@@ -150,6 +150,11 @@ export async function VitestPlugin(
           }
         }
 
+        if (vitest._cliOptions.benchmarkOnly) {
+          config.test!.benchmark ??= {}
+          config.test!.benchmark.enabled = true
+        }
+
         // inherit so it's available in VitestOptimizer
         // I cannot wait to rewrite all of this in Vitest 4
         if (options.cache != null) {

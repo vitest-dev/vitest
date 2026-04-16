@@ -37,7 +37,9 @@ export function WorkspaceVitestPlugin(
       name: 'vitest:project:name',
       enforce: 'post',
       config(viteConfig) {
-        const testConfig = viteConfig.test || {}
+        viteConfig.test ??= {}
+
+        const testConfig = viteConfig.test
 
         let { label: name, color } = typeof testConfig.name === 'string'
           ? { label: testConfig.name }
@@ -60,6 +62,11 @@ export function WorkspaceVitestPlugin(
           else {
             name = options.workspacePath.toString()
           }
+        }
+
+        if (project.vitest._cliOptions.benchmarkOnly) {
+          viteConfig.test.benchmark ??= {}
+          viteConfig.test.benchmark.enabled = true
         }
 
         const isUserBrowserEnabled = viteConfig.test?.browser?.enabled

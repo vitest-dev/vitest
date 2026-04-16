@@ -245,6 +245,10 @@ export async function resolveDefaultProjects(
         // benchmarks should always run in a separate isolated group
         groupOrder: ++lastGroupOrder,
       },
+      typecheck: {
+        ...project.config.typecheck,
+        enabled: false,
+      },
       // TODO: mark if benchmark project?
     })
     // disable benchmark in the original project
