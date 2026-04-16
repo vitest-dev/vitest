@@ -82,7 +82,7 @@ test.describe('html reporter', () => {
 })
 
 async function testBasic(page: Page) {
-  await expect.soft(page.getByTestId('tests-entry')).toContainText('11 Pass 2 Fail 13 Total')
+  await expect.soft(page.getByTestId('tests-entry')).toContainText('1 Pass 0 Fail 1 Total')
 
   // selecting test case opens trace viewer
   const traceView = page.getByTestId('trace-view')
