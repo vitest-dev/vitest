@@ -233,6 +233,8 @@ export interface BrowserConfigOptions {
     snapshots?: boolean
   }
 
+  // TODO: expand to
+  // traceView: boolean | { recordCanvas?: boolean, inlineImages?: boolean }
   /**
    *
    * Enable Vitest trace view artifacts collection.

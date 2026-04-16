@@ -9,6 +9,12 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
+// TODO: record
+// viewport: {
+//   width: window.innerWidth,
+//   height: window.innerHeight,
+//   deviceScaleFactor: window.devicePixelRatio,
+// }
 // TODO: timestamp
 // TODO: duration (expect.element, actions, mark)
 // TODO: semantic color (red for failed expect/actions)
