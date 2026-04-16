@@ -1,7 +1,5 @@
-import type { SerializedConfig, SerializedRootConfig } from '../../runtime/config'
-import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { ApiConfig } from '../types/config'
+import type { ApiConfig, SerializedConfig } from '../types/config'
 import { configDefaults } from '../../defaults'
 import { isAgent } from '../../utils/env'
 
@@ -48,7 +46,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
-    color: config.color,
     globals: config.globals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
@@ -153,14 +150,5 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
     isAgent,
-  }
-}
-
-export function serializeRootConfig(
-  vitest: Vitest,
-): SerializedRootConfig {
-  return {
-    ...serializeConfig(vitest.getRootProject()),
-    projects: vitest.projects.map(project => serializeConfig(project)),
   }
 }

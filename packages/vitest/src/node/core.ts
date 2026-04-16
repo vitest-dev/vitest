@@ -3,7 +3,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
-import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/config'
+import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { CliOptions } from './cli/cli-api'
@@ -34,7 +34,6 @@ import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { resolveConfig } from './config/resolveConfig'
-import { serializeRootConfig } from './config/serializeConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -502,17 +501,6 @@ export class Vitest {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
-  }
-
-  public get serializedRootConfig(): SerializedRootConfig {
-    const config = serializeRootConfig(this)
-    if (!this.configOverride) {
-      return config
-    }
-    return deepMerge(
-      config,
-      this.configOverride,
-    )
   }
 
   public getProjectByName(name: string): TestProject {
