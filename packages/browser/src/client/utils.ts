@@ -94,6 +94,7 @@ export interface BrowserRunnerState {
   activeTraceTaskIds: Set<string>
   // TODO: silly but fine for now
   activeTraceViewTaskIds: Set<string>
+  browserTraceAttempts: Map<string, { retry: number; repeats: number }>
   // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
   browserTraceState?: BrowserTraceState

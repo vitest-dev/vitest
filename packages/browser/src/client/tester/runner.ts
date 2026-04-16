@@ -95,9 +95,11 @@ export function createBrowserRunner(
       if (shouldTraceView) {
         getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
         getBrowserState().activeTraceViewTaskIds.add(test.id)
+        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats })
       }
       else {
         getBrowserState().activeTraceViewTaskIds.delete(test.id)
+        getBrowserState().browserTraceAttempts.delete(test.id)
       }
       if (!shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
@@ -135,6 +137,7 @@ export function createBrowserRunner(
             [{ testId: test.id, data: traceData }],
           )
         }
+        getBrowserState().browserTraceAttempts.delete(test.id)
       }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
       if (!hasActiveTrace) {

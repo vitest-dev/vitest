@@ -34,13 +34,6 @@ function getBrowserTraceState(): BrowserTraceState {
   }
 }
 
-function getAttemptInfo(task: Task) {
-  return {
-    retry: task.result?.retryCount ?? 0,
-    repeats: task.result?.repeatCount ?? 0,
-  }
-}
-
 function getAttemptKey(repeats: number, retry: number) {
   return `${repeats}:${retry}`
 }
@@ -58,7 +51,7 @@ export function recordBrowserTraceEntry(
   }
   const snapshot = takeSnapshot(options.selector)
   const entry: BrowserTraceEntry = { ...options, snapshot }
-  const { retry, repeats } = getAttemptInfo(task)
+  const { retry, repeats } = getBrowserState().browserTraceAttempts.get(task.id)!
   const state = getBrowserTraceState()
   const attempts = state.entries.get(task.id) || new Map()
   const attemptKey = getAttemptKey(repeats, retry)

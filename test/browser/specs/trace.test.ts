@@ -529,6 +529,34 @@ test('trace view artifacts', async () => {
                 ],
                 "retry": 2,
               },
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:30",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "location": "retry.test.ts:32",
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:30",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "location": "retry.test.ts:32",
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+                "repeats": 2,
+              },
             ],
             "repeated test": [
               {
