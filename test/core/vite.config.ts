@@ -159,9 +159,6 @@ export default defineConfig({
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],
     },
-    benchmark: {
-      enabled: true,
-    },
     alias: [
       {
         find: 'test-alias',
