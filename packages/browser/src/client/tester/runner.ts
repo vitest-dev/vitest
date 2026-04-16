@@ -86,7 +86,7 @@ export function createBrowserRunner(
       const shouldTrace = trace !== 'off'
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
-      const shouldTraceView = this.config.browser.traceView
+      const shouldTraceView = this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceViewTaskIds.delete(test.id)
         getBrowserState().activeTraceTaskIds.delete(test.id)

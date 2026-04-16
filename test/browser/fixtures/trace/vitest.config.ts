@@ -11,7 +11,11 @@ export default defineConfig({
       enabled: true,
       provider: provider,
       instances: instances,
-      traceView: true,
+      traceView: {
+        enabled: true,
+        inlineImages: true,
+        recordCanvas: true,
+      },
       screenshotFailures: false,
     },
   },

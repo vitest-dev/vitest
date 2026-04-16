@@ -6,6 +6,7 @@ import { getBrowserState } from '../utils'
 export interface BrowserTraceData {
   retry: number
   repeats: number
+  recordCanvas: boolean
   entries: BrowserTraceEntry[]
 }
 
@@ -62,10 +63,11 @@ export function recordBrowserTraceEntry(
   const snapshot = takeSnapshot(options.selector)
   const entry: BrowserTraceEntry = { ...options, snapshot }
   const { retry, repeats } = getBrowserState().browserTraceAttempts.get(task.id)!
+  const { recordCanvas } = getBrowserState().config.browser.traceView
   const state = getBrowserTraceState()
   const attempts = state.entries.get(task.id) || new Map()
   const attemptKey = getAttemptKey(repeats, retry)
-  const attempt = attempts.get(attemptKey) || { retry, repeats, entries: [] }
+  const attempt = attempts.get(attemptKey) || { retry, repeats, recordCanvas, entries: [] }
   attempt.entries.push(entry)
   attempts.set(attemptKey, attempt)
   state.entries.set(task.id, attempts)
@@ -79,9 +81,14 @@ export function recordBrowserTraceEntry(
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
 function takeSnapshot(selector?: string): TraceSnapshot {
   const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+  const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
-  const serialized = snapshot(document, { mirror })
+  const serialized = snapshot(document, {
+    mirror,
+    inlineImages: traceView.inlineImages,
+    recordCanvas: traceView.recordCanvas,
+  })
   const result: TraceSnapshot = {
     serialized,
     viewport: {

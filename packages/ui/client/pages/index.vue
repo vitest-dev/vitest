@@ -119,7 +119,7 @@ function allowBrowserEvents() {
               <Pane :size="detailSizes[0]" min-size="10">
                 <template v-if="browserState">
                   <Splitpanes
-                    v-if="browserState.config.browser?.traceView"
+                    v-if="browserState.config.browser?.traceView.enabled"
                     class="h-full"
                     :horizontal="detailsPosition === 'right'"
                   >

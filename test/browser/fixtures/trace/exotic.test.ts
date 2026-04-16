@@ -8,8 +8,7 @@ beforeEach(() => {
   document.body.innerHTML = ''
 })
 
-// TODO: enable canvas snapshot capture so replay includes the drawn pixels.
-test('canvas pixels are not captured by default', async () => {
+test('canvas pixels are captured for replay', async () => {
   document.body.innerHTML = '<canvas data-testid="trace-canvas" width="80" height="40"></canvas>'
   const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="trace-canvas"]')!
   const context = canvas.getContext('2d')!

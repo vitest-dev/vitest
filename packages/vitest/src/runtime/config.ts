@@ -115,7 +115,11 @@ export interface SerializedConfig {
       actionTimeout?: number
     }
     trace: BrowserTraceViewMode
-    traceView: boolean
+    traceView: {
+      enabled: boolean
+      recordCanvas: boolean
+      inlineImages: boolean
+    }
     trackUnhandledErrors: boolean
     detailsPanelPosition: 'right' | 'bottom'
   }

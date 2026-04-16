@@ -900,8 +900,19 @@ export function resolveConfig(
     resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
   }
 
-  resolved.browser.traceView ??= false
-  if (resolved.browser.enabled && resolved.browser.traceView) {
+  const traceView = resolved.browser.traceView
+  resolved.browser.traceView = typeof traceView === 'object'
+    ? {
+        enabled: traceView.enabled ?? true,
+        recordCanvas: traceView.recordCanvas ?? false,
+        inlineImages: traceView.inlineImages ?? false,
+      }
+    : {
+        enabled: traceView ?? false,
+        recordCanvas: false,
+        inlineImages: false,
+      }
+  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {
@@ -922,7 +933,7 @@ export function resolveConfig(
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
   }
-  else if (resolved.browser.enabled && resolved.browser.traceView && !resolved.watch) {
+  else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
     logger.console.warn(
       c.yellow(
         withLabel(

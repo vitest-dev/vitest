@@ -53,7 +53,7 @@ test('trace view artifacts', async () => {
       {
         "exotic.test.ts": {
           "adopted stylesheets are not captured by snapshot alone": "passed",
-          "canvas pixels are not captured by default": "passed",
+          "canvas pixels are captured for replay": "passed",
           "custom element dom shape is rebuilt without runtime behavior": "passed",
           "shadow dom is rebuilt and highlightable by mirror id": "passed",
         },
@@ -81,7 +81,7 @@ test('trace view artifacts', async () => {
         },
         "resources.test.ts": {
           "external image remains url dependent": "passed",
-          "same-origin image remains url dependent": "passed",
+          "same-origin image is inlined for offline replay": "passed",
         },
         "retry.test.ts": {
           "repeated retried tests": "passed",
@@ -113,7 +113,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:55",
+                    "location": "exotic.test.ts:54",
                     "name": "button rendered with adopted stylesheet",
                     "selector": " body > button",
                   },
@@ -123,11 +123,11 @@ test('trace view artifacts', async () => {
                 ],
               },
             ],
-            "canvas pixels are not captured by default": [
+            "canvas pixels are captured for replay": [
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:18",
+                    "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
                     "selector": " body > canvas",
                   },
@@ -141,7 +141,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:44",
+                    "location": "exotic.test.ts:43",
                     "name": "custom element rendered",
                     "selector": ">>>html > body > trace-widget > button",
                   },
@@ -155,7 +155,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:27",
+                    "location": "exotic.test.ts:26",
                     "name": "shadow button rendered",
                     "selector": ">>>html > body > section > button",
                   },
@@ -296,7 +296,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "resources.test.ts:17",
+                    "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
                     "selector": " body > img",
                   },
@@ -306,11 +306,11 @@ test('trace view artifacts', async () => {
                 ],
               },
             ],
-            "same-origin image remains url dependent": [
+            "same-origin image is inlined for offline replay": [
               {
                 "entries": [
                   {
-                    "location": "resources.test.ts:11",
+                    "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
                     "selector": " body > img",
                   },
@@ -619,7 +619,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:31",
+                    "location": "viewport.test.ts:33",
                     "name": "document scrolled before mark",
                     "selector": " body > main > button",
                   },
@@ -633,7 +633,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:47",
+                    "location": "viewport.test.ts:49",
                     "name": "overflow container scrolled before mark",
                     "selector": " body > section",
                   },
@@ -647,7 +647,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:21",
+                    "location": "viewport.test.ts:23",
                     "name": "viewport sensitive layout rendered",
                   },
                   {
@@ -668,7 +668,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:55",
+                    "location": "exotic.test.ts:54",
                     "name": "button rendered with adopted stylesheet",
                     "selector": "internal:role=button",
                   },
@@ -678,11 +678,11 @@ test('trace view artifacts', async () => {
                 ],
               },
             ],
-            "canvas pixels are not captured by default": [
+            "canvas pixels are captured for replay": [
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:18",
+                    "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
                     "selector": "internal:testid=[data-testid="trace-canvas"s]",
                   },
@@ -696,7 +696,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:44",
+                    "location": "exotic.test.ts:43",
                     "name": "custom element rendered",
                     "selector": "internal:role=button[name="Custom element button"i]",
                   },
@@ -710,7 +710,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "exotic.test.ts:27",
+                    "location": "exotic.test.ts:26",
                     "name": "shadow button rendered",
                     "selector": "internal:role=button[name="Shadow button"i]",
                   },
@@ -851,7 +851,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "resources.test.ts:17",
+                    "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
                     "selector": "internal:attr=[alt="external trace asset"i]",
                   },
@@ -861,11 +861,11 @@ test('trace view artifacts', async () => {
                 ],
               },
             ],
-            "same-origin image remains url dependent": [
+            "same-origin image is inlined for offline replay": [
               {
                 "entries": [
                   {
-                    "location": "resources.test.ts:11",
+                    "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
                     "selector": "internal:attr=[alt="local trace asset"i]",
                   },

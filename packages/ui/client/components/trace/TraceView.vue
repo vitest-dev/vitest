@@ -16,8 +16,15 @@ const props = defineProps<{
   test: RunnerTestCase
 }>()
 
-const entries = computed(() => (props.trace.data as BrowserTraceData).entries)
+const traceData = computed(() => props.trace.data as BrowserTraceData)
+const entries = computed(() => traceData.value.entries)
 const selectedStep = computed(() => entries.value[selectedTraceStepIndex.value])
+const iframeSandbox = computed(() => {
+  // TODO(docs): document that recordCanvas enables a weaker iframe sandbox.
+  // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
+  // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
+  return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
+})
 const iframeEl = ref<HTMLIFrameElement>()
 
 function onSelectStep(index: number) {
@@ -113,7 +120,8 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       <iframe
         v-if="selectedStep?.snapshot"
         ref="iframeEl"
-        sandbox="allow-same-origin"
+        :key="iframeSandbox"
+        :sandbox="iframeSandbox"
         style="border: none; flex: none"
       />
       <div v-else class="text-sm opacity-50 p-2">
