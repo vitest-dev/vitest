@@ -50,8 +50,29 @@ test('toBe vs toEqual', () => {
 })
 ```
 
+There's also [`toStrictEqual`](/api/expect#tostrictequal), which is stricter than `toEqual` in three ways: it checks `undefined` properties, distinguishes sparse arrays from `undefined` values, and verifies that objects have the same type (not just the same shape):
+
+```js
+test('toEqual vs toStrictEqual', () => {
+  // toEqual ignores undefined properties
+  expect({ a: 1 }).toEqual({ a: 1, b: undefined })
+
+  // toStrictEqual catches them
+  expect({ a: 1 }).not.toStrictEqual({ a: 1, b: undefined })
+
+  // toEqual doesn't check object types
+  class User {
+    constructor(name) {
+      this.name = name
+    }
+  }
+  expect(new User('Alice')).toEqual({ name: 'Alice' })
+  expect(new User('Alice')).not.toStrictEqual({ name: 'Alice' })
+})
+```
+
 ::: tip
-A good rule of thumb: use `toBe` for primitives (numbers, strings, booleans) and `toEqual` for objects and arrays.
+A good rule of thumb: use `toBe` for primitives (numbers, strings, booleans), `toEqual` for comparing structure, and `toStrictEqual` when you also care about types and explicit `undefined` values.
 :::
 
 You can also negate any matcher by inserting `.not` before it. This is useful when you want to verify that something is *not* the case:
@@ -192,6 +213,31 @@ test('object has property', () => {
   expect(user).toHaveProperty('address.zip')
 })
 ```
+
+## Asymmetric Matchers
+
+Sometimes you don't know the exact value, but you know its type or shape. Asymmetric matchers let you describe what a value should *look like* without pinning down the exact content. They work inside any matcher that does deep comparison, like `toEqual` or `toMatchObject`:
+
+```js
+test('user has the right shape', () => {
+  const user = createUser('Alice')
+
+  expect(user).toEqual({
+    id: expect.any(Number),
+    name: 'Alice',
+    email: expect.stringContaining('@'),
+    roles: expect.arrayContaining(['viewer']),
+  })
+})
+```
+
+The most common asymmetric matchers are:
+
+- [`expect.any(Constructor)`](/api/expect#expect-any) matches any value created with the given constructor (e.g., `Number`, `String`, `Array`)
+- [`expect.stringContaining(str)`](/api/expect#expect-stringcontaining) matches a string that includes the given substring
+- [`expect.stringMatching(regex)`](/api/expect#expect-stringmatching) matches a string against a regular expression
+- [`expect.arrayContaining(arr)`](/api/expect#expect-arraycontaining) matches an array that includes all items in the expected array (order doesn't matter, extra items are allowed)
+- [`expect.objectContaining(obj)`](/api/expect#expect-objectcontaining) matches an object that includes at least the specified properties
 
 ## Exceptions
 

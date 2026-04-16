@@ -255,6 +255,22 @@ export class BaseCoverageProvider {
     this.pendingPromises = []
   }
 
+  private normalizeCoverageFileError(error: unknown): unknown {
+    if (
+      error instanceof Error
+      && 'code' in error
+      && error.code === 'ENOENT'
+      && !existsSync(this.coverageFilesDirectory)
+    ) {
+      return new Error(
+        `Something removed the coverage directory "${this.coverageFilesDirectory}" Vitest created earlier. Make sure you are not running multiple Vitests with the same "coverage.reportsDirectory" at the same time.`,
+        { cause: error },
+      )
+    }
+
+    return error
+  }
+
   onAfterSuiteRun({ coverage, environment, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
@@ -278,6 +294,9 @@ export class BaseCoverageProvider {
     entry[environment][testFilenames] = filename
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
+      .catch((error) => {
+        throw this.normalizeCoverageFileError(error)
+      })
     this.pendingPromises.push(promise)
   }
 
@@ -307,6 +326,9 @@ export class BaseCoverageProvider {
 
           await Promise.all(chunk.map(async (filename) => {
             const contents = await fs.readFile(filename, 'utf-8')
+              .catch((error) => {
+                throw this.normalizeCoverageFileError(error)
+              })
             const coverage = JSON.parse(contents)
 
             onFileRead(coverage)

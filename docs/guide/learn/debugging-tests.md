@@ -53,6 +53,12 @@ test.only('sets the default role', () => {
 })
 ```
 
+If you have many failures and want to focus on the first one, use [`--bail`](/config/bail) to stop after a set number of failures:
+
+```bash
+vitest --bail 1
+```
+
 If the test passes when run alone but fails when run with others, you have a test isolation problem (more on that below). If it fails even when run alone, the issue is in the test itself or the code it's testing.
 
 ## Common Causes of Failures
@@ -188,7 +194,13 @@ This shows every test individually (not just the files), which can help spot pat
 
 ### Attaching a Debugger
 
-For more complex issues where you need to step through code line by line, you can attach a debugger. See the [Debugging](/guide/debugging) guide for setup instructions for VS Code, IntelliJ, and Chrome DevTools.
+For more complex issues where you need to step through code line by line, you can run Vitest with the `--inspect-brk` flag and attach a debugger. The `--no-file-parallelism` flag ensures tests run in the main thread so breakpoints work reliably:
+
+```bash
+vitest --inspect-brk --no-file-parallelism
+```
+
+Then attach from VS Code, IntelliJ, or Chrome DevTools (`chrome://inspect`). See the [Debugging](/guide/debugging) guide for detailed setup instructions for each editor.
 
 ## Getting Help
 

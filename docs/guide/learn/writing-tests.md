@@ -86,6 +86,36 @@ src/
 
 If the default patterns don't work for your project, you can customize which files are included with the [`include`](/config/include) and [`exclude`](/config/exclude) config options.
 
+## Testing TypeScript
+
+Because Vitest runs on top of Vite, TypeScript works out of the box. There's no extra compiler to install, no `ts-jest` to configure, and no separate build step for your tests. Just name your test file `.test.ts` instead of `.test.js` and start writing:
+
+```ts
+import { expect, test } from 'vitest'
+
+interface User {
+  name: string
+  age: number
+}
+
+function createUser(name: string, age: number): User {
+  return { name, age }
+}
+
+test('creates a user with the correct fields', () => {
+  const user = createUser('Alice', 30)
+
+  expect(user).toEqual({ name: 'Alice', age: 30 })
+  expect(user.name).toBe('Alice')
+})
+```
+
+You can import your production types, use generics, and write typed test utilities exactly as you would in the rest of your codebase. Vite transforms TypeScript on the fly, so tests start fast even in large projects.
+
+::: tip
+Vitest transforms TypeScript for execution but does **not** type-check your tests during the test run. This is the same trade-off Vite makes for speed: you get fast feedback in the terminal, and run `tsc` or `vitest typecheck` separately when you want full type checking. See the [Testing Types](/guide/testing-types) guide for more details.
+:::
+
 ## Reading Test Output
 
 When you run `vitest` and only a single test file matches, the output is expanded into a tree structure showing `describe` groups and individual tests along with their duration:
@@ -130,6 +160,54 @@ test.todo('implement validation later')
 
 These modifiers are great for quick, local changes while developing. For more permanent ways to filter tests (by filename, line number, or tags), see the [Test Filtering](/guide/filtering) guide.
 
+## Parameterized Tests
+
+When you have several test cases that only differ in their inputs and expected outputs, writing a separate `test` for each one gets repetitive. [`test.for`](/api/test#test-for) lets you define the cases as data and run the same test logic for all of them:
+
+```js
+import { expect, test } from 'vitest'
+
+test.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => {
+  expect(a + b).toBe(expected)
+})
+```
+
+The placeholders `%i`, `%s`, and `%f` in the test name are replaced with the corresponding values from each row, so the output shows `add(1, 1) -> 2`, `add(1, 2) -> 3`, and so on.
+
+If your cases have more than two or three values, passing objects is more readable. Use `$property` in the name to interpolate fields:
+
+```js
+test.for([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+```
+
+The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. This is especially useful with [`test.concurrent`](/api/test#concurrent), where concurrent tests run in parallel and the global `expect` can't reliably associate a snapshot with the right test. The context-scoped `expect` solves this:
+
+```js
+test.concurrent.for([
+  [1, 1],
+  [1, 2],
+  [2, 1],
+])('add(%i, %i)', ([a, b], { expect }) => {
+  expect(a + b).toMatchSnapshot()
+})
+```
+
+[`describe.for`](/api/describe#describe-for) works the same way but creates a suite for each set of parameters, which is useful when multiple tests share the same parameterized setup.
+
+::: tip
+Vitest also provides [`test.each`](/api/test#each), which you may recognize from Jest. It works similarly but spreads array arguments instead of passing them as a single value, and doesn't provide access to the Test Context. It exists mainly for Jest compatibility. Prefer `test.for` in new code.
+:::
+
 ## Using Global Imports
 
 By default, you import `test`, `expect`, `describe`, and other functions from `vitest` at the top of every test file. If you'd rather use them as globals without importing (similar to how Jest works), you can enable the [`globals`](/config/globals) option in your config:
@@ -160,16 +238,4 @@ If you use TypeScript, add `"types": ["vitest/globals"]` to your `tsconfig.json`
 
 Vitest runs all test files **in parallel** by default, using [child processes](/config/pool). Each test file runs in its own isolated context, so your test files don't share state with each other. This prevents tests in different files from accidentally interfering.
 
-Tests **within** a single file run sequentially by default, which is usually what you want since tests in the same file often share setup code. If your tests are truly independent, you can opt into running them concurrently with [`test.concurrent`](/api/test#concurrent) to speed things up:
-
-```js
-test.concurrent('first concurrent test', async () => {
-  // runs in parallel with the next test
-})
-
-test.concurrent('second concurrent test', async () => {
-  // runs in parallel with the previous test
-})
-```
-
-See the [Parallelism](/guide/parallelism) guide for more details on controlling test execution.
+Tests **within** a single file run sequentially by default, which is usually what you want since tests in the same file often share setup code. If your tests are truly independent, you can opt into running them concurrently with [`test.concurrent`](/api/test#concurrent) to speed things up. See the [Parallelism](/guide/parallelism) guide for more details on controlling test execution.
