@@ -51,6 +51,12 @@ test('trace view artifacts', async () => {
   for (const { browser } of instances) {
     expect.soft(projectErrorTree[browser], browser).toMatchInlineSnapshot(`
       {
+        "exotic.test.ts": {
+          "adopted stylesheets are not captured by snapshot alone": "passed",
+          "canvas pixels are not captured by default": "passed",
+          "custom element dom shape is rebuilt without runtime behavior": "passed",
+          "shadow dom is rebuilt and highlightable by mirror id": "passed",
+        },
         "expect.test.ts": {
           "click": "passed",
           "expect.element fail": [
@@ -73,6 +79,10 @@ test('trace view artifacts', async () => {
           "page.mark": "passed",
           "stack": "passed",
         },
+        "resources.test.ts": {
+          "external image remains url dependent": "passed",
+          "same-origin image remains url dependent": "passed",
+        },
         "retry.test.ts": {
           "repeated retried tests": "passed",
           "repeated test": "passed",
@@ -80,7 +90,17 @@ test('trace view artifacts', async () => {
           "retried test": "passed",
         },
         "styles.test.ts": {
+          "css url resources stay as urls": "passed",
+          "external stylesheet remains url dependent": "passed",
+          "font files remain url dependent": "passed",
           "inline styles": "passed",
+          "same-origin link css is inlined": "passed",
+          "style tag css is inlined": "passed",
+        },
+        "viewport.test.ts": {
+          "document scroll is not stored in snapshot payload": "passed",
+          "overflow element scroll is stored in snapshot payload": "passed",
+          "viewport media query depends on replay viewport": "passed",
         },
       }
     `)
@@ -88,6 +108,64 @@ test('trace view artifacts', async () => {
     if (provider.name === 'webdriverio') {
       expect.soft(projectArtifactTree[browser], browser).toMatchInlineSnapshot(`
         {
+          "exotic.test.ts": {
+            "adopted stylesheets are not captured by snapshot alone": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:55",
+                    "name": "button rendered with adopted stylesheet",
+                    "selector": " body > button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "canvas pixels are not captured by default": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:18",
+                    "name": "canvas drawn before mark",
+                    "selector": " body > canvas",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "custom element dom shape is rebuilt without runtime behavior": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:44",
+                    "name": "custom element rendered",
+                    "selector": ">>>html > body > trace-widget > button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "shadow dom is rebuilt and highlightable by mirror id": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:27",
+                    "name": "shadow button rendered",
+                    "selector": ">>>html > body > section > button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
           "expect.test.ts": {
             "click": [
               {
@@ -205,6 +283,36 @@ test('trace view artifacts', async () => {
                     "location": "mark.test.ts:29",
                     "name": "button rendered - stack",
                     "selector": " body > button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
+          "resources.test.ts": {
+            "external image remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "resources.test.ts:17",
+                    "name": "image rendered from external url",
+                    "selector": " body > img",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "same-origin image remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "resources.test.ts:11",
+                    "name": "image rendered from same-origin url",
+                    "selector": " body > img",
                   },
                   {
                     "name": "vitest:onAfterRetryTask [pass]",
@@ -427,12 +535,120 @@ test('trace view artifacts', async () => {
             ],
           },
           "styles.test.ts": {
+            "css url resources stay as urls": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:40",
+                    "name": "element rendered with css url resource",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "external stylesheet remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:51",
+                    "name": "button rendered with external stylesheet",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "font files remain url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:69",
+                    "name": "button rendered with font-face url",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
             "inline styles": [
               {
                 "entries": [
                   {
-                    "location": "styles.test.ts:7",
+                    "location": "styles.test.ts:11",
                     "name": "button rendered with css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "same-origin link css is inlined": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:30",
+                    "name": "button rendered with same-origin linked css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "style tag css is inlined": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:20",
+                    "name": "button rendered with style tag css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
+          "viewport.test.ts": {
+            "document scroll is not stored in snapshot payload": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:33",
+                    "name": "document scrolled before mark",
+                    "selector": " body > main > button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "overflow element scroll is stored in snapshot payload": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:49",
+                    "name": "overflow container scrolled before mark",
+                    "selector": " body > section",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "viewport media query depends on replay viewport": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:22",
+                    "name": "viewport sensitive layout rendered",
                   },
                   {
                     "name": "vitest:onAfterRetryTask [pass]",
@@ -447,6 +663,64 @@ test('trace view artifacts', async () => {
     if (provider.name === 'playwright') {
       expect.soft(projectArtifactTree[browser], browser).toMatchInlineSnapshot(`
         {
+          "exotic.test.ts": {
+            "adopted stylesheets are not captured by snapshot alone": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:55",
+                    "name": "button rendered with adopted stylesheet",
+                    "selector": "internal:role=button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "canvas pixels are not captured by default": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:18",
+                    "name": "canvas drawn before mark",
+                    "selector": "internal:testid=[data-testid="trace-canvas"s]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "custom element dom shape is rebuilt without runtime behavior": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:44",
+                    "name": "custom element rendered",
+                    "selector": "internal:role=button[name="Custom element button"i]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "shadow dom is rebuilt and highlightable by mirror id": [
+              {
+                "entries": [
+                  {
+                    "location": "exotic.test.ts:27",
+                    "name": "shadow button rendered",
+                    "selector": "internal:role=button[name="Shadow button"i]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
           "expect.test.ts": {
             "click": [
               {
@@ -572,6 +846,36 @@ test('trace view artifacts', async () => {
               },
             ],
           },
+          "resources.test.ts": {
+            "external image remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "resources.test.ts:17",
+                    "name": "image rendered from external url",
+                    "selector": "internal:attr=[alt="external trace asset"i]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "same-origin image remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "resources.test.ts:11",
+                    "name": "image rendered from same-origin url",
+                    "selector": "internal:attr=[alt="local trace asset"i]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
           "retry.test.ts": {
             "repeated retried tests": [
               {
@@ -786,12 +1090,120 @@ test('trace view artifacts', async () => {
             ],
           },
           "styles.test.ts": {
+            "css url resources stay as urls": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:40",
+                    "name": "element rendered with css url resource",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "external stylesheet remains url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:51",
+                    "name": "button rendered with external stylesheet",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "font files remain url dependent": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:69",
+                    "name": "button rendered with font-face url",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
             "inline styles": [
               {
                 "entries": [
                   {
-                    "location": "styles.test.ts:7",
+                    "location": "styles.test.ts:11",
                     "name": "button rendered with css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "same-origin link css is inlined": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:30",
+                    "name": "button rendered with same-origin linked css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "style tag css is inlined": [
+              {
+                "entries": [
+                  {
+                    "location": "styles.test.ts:20",
+                    "name": "button rendered with style tag css",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+          },
+          "viewport.test.ts": {
+            "document scroll is not stored in snapshot payload": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:33",
+                    "name": "document scrolled before mark",
+                    "selector": "internal:role=button",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "overflow element scroll is stored in snapshot payload": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:49",
+                    "name": "overflow container scrolled before mark",
+                    "selector": "internal:testid=[data-testid="scroll-box"s]",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+            ],
+            "viewport media query depends on replay viewport": [
+              {
+                "entries": [
+                  {
+                    "location": "viewport.test.ts:22",
+                    "name": "viewport sensitive layout rendered",
                   },
                   {
                     "name": "vitest:onAfterRetryTask [pass]",
