@@ -30,7 +30,7 @@ interface HTMLReportData {
   paths: string[]
   files: RunnerTestFile[]
   config: SerializedConfig
-  projects: string[]
+  projects: { name: string; color?: string }[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -71,7 +71,7 @@ export default class HTMLReporter implements Reporter {
       files: this.ctx.state.getFiles(),
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      projects: this.ctx.projects.map(p => p.name),
+      projects: this.ctx.projects.map(p => ({ name: p.name, color: p.color })),
       moduleGraph: {},
       sources: {},
     }
