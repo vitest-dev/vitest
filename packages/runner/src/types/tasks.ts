@@ -365,6 +365,7 @@ export interface TestBenchmarkTask {
   period: number
   totalTime: number
   rank: number
+  perProject?: boolean
 }
 
 export type Task = Test | Suite | File

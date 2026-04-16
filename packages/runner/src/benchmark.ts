@@ -8,6 +8,7 @@ const now = globalThis.performance
 
 const kRegistration: unique symbol = Symbol('registration')
 const kBaseline: unique symbol = Symbol('baseline')
+const kPerProject: unique symbol = Symbol('perProject')
 
 type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
@@ -38,6 +39,13 @@ export interface BaselineRegistration<Name extends string> extends BenchRegistra
   [kBaseline]: true
 }
 
+export interface PerProjectRegistration<Name extends string> extends BenchRegistration<Name> {
+  /**
+   * @internal
+   */
+  [kPerProject]: true
+}
+
 interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
@@ -47,6 +55,7 @@ export interface Bench {
   <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions): BenchRegistration<Name>
   withBaseline: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => BaselineRegistration<Name>
   compare: BenchCompare
+  perProject: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => PerProjectRegistration<Name>
 }
 
 export function createBench(test: Test, runner: VitestRunner): Bench {
@@ -93,7 +102,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     }
   }
 
-  const serializeBenchmark = (bench: Tinybench): TestBenchmark => {
+  const serializeBenchmark = (bench: Tinybench, perProjectNames?: Set<string>): TestBenchmark => {
     const tasks = bench.tasks.map<TestBenchmarkTask>((t) => {
       const result = t.result
       if (result.state === 'errored') {
@@ -109,6 +118,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         period: result.period,
         totalTime: result.totalTime,
         rank: 0,
+        ...(perProjectNames?.has(t.name) ? { perProject: true } : {}),
       }
     }).sort((a, b) => a.latency.mean - b.latency.mean)
     tasks.forEach((task, idx) => {
@@ -120,10 +130,21 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     }
   }
 
-  const recordBenchmark = async (bench: Tinybench) => {
-    const serializedBenchmark = serializeBenchmark(bench)
+  const recordBenchmark = async (bench: Tinybench, perProjectNames?: Set<string>) => {
+    const serializedBenchmark = serializeBenchmark(bench, perProjectNames)
     test.benchmarks.push(serializedBenchmark)
     await runner.onTestBenchmark?.(test, serializedBenchmark)
+  }
+
+  const runSingle = async (name: string, fn: Fn, fnOpts: FnOptions | undefined, options: BenchOptions | undefined, perProjectNames?: Set<string>): Promise<BenchResult> => {
+    const tinybench = createTinybench(options).add(name, fn, fnOpts)
+    await tinybench.run()
+    const task = tinybench.getTask(name)!
+    if (task.result.state === 'errored') {
+      throw task.result.error
+    }
+    await recordBenchmark(tinybench, perProjectNames)
+    return task.result as BenchResult
   }
 
   const bench: Bench = function bench(
@@ -137,16 +158,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
       name,
       fn,
       fnOpts,
-      async run(options) {
-        const bench = createTinybench(options).add(name, fn, fnOpts)
-        await bench.run()
-        const task = bench.getTask(name)!
-        if (task.result.state === 'errored') {
-          throw task.result.error
-        }
-        await recordBenchmark(bench)
-        return task.result as BenchResult
-      },
+      run: options => runSingle(name, fn, fnOpts, options),
     }
   }
 
@@ -171,8 +183,26 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     }
   }
 
+  bench.perProject = function perProject(name, fn, fnOpts) {
+    validateBenchmarkProject(runner)
+    return {
+      [kRegistration]: true,
+      [kPerProject]: true,
+      name,
+      fn,
+      fnOpts,
+      run: options => runSingle(name, fn, fnOpts, options, new Set([name])),
+    }
+  }
+
   bench.compare = async (...registrations) => {
     validateBenchmarkProject(runner)
+    const perProjectNames = new Set<string>()
+    for (const reg of registrations) {
+      if (typeof reg === 'object' && kPerProject in reg) {
+        perProjectNames.add(reg.name)
+      }
+    }
     const tinybench = createRegisteredTinybench('compare', registrations)
     await tinybench.run()
     const errors = tinybench.tasks
@@ -181,7 +211,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
     if (errors.length > 0) {
       throw new AggregateError(errors, 'Some benchmarks failed')
     }
-    await recordBenchmark(tinybench)
+    await recordBenchmark(tinybench, perProjectNames.size > 0 ? perProjectNames : undefined)
     return createCompareStorage(tinybench)
   }
 

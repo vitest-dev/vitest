@@ -37,7 +37,6 @@ import {
 const BADGE_PADDING = '       '
 
 const BENCH_TABLE_HEAD = [
-  'name',
   'hz',
   'min',
   'max',
@@ -69,6 +68,7 @@ export abstract class BaseReporter implements Reporter {
 
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
+  private _perProjectBenchmarks = new Map<string, Map<string, TestBenchmarkTask>>()
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
@@ -97,6 +97,7 @@ export abstract class BaseReporter implements Reporter {
   onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
     this.start = performance.now()
     this._timeStart = formatTimeString(new Date())
+    this._perProjectBenchmarks.clear()
   }
 
   onTestRunEnd(
@@ -112,6 +113,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
     }
     else {
+      this.printPerProjectBenchmarks()
       this.reportSummary(files, errors)
     }
   }
@@ -119,6 +121,22 @@ export abstract class BaseReporter implements Reporter {
   onTestCaseResult(testCase: TestCase): void {
     if (testCase.result().state === 'failed') {
       this.logFailedTask(testCase.task)
+    }
+  }
+
+  onTestCaseBenchmark(testCase: TestCase, benchmark: TestBenchmark): void {
+    const projectName = testCase.project.name || ''
+    for (const task of benchmark.tasks) {
+      if (!task.perProject) {
+        continue
+      }
+      const benchKey = `${testCase.module.relativeModuleId} > ${testCase.fullName} > ${task.name}`
+      let projectMap = this._perProjectBenchmarks.get(benchKey)
+      if (!projectMap) {
+        projectMap = new Map()
+        this._perProjectBenchmarks.set(benchKey, projectMap)
+      }
+      projectMap.set(projectName, task)
     }
   }
 
@@ -222,6 +240,13 @@ export abstract class BaseReporter implements Reporter {
     const padding = this.getTestIndentation(test.task)
     const suffix = this.getTestCaseSuffix(test)
     const benchmarks = test.benchmarks()
+    const inlineBenchmarks: TestBenchmark[] = []
+    for (const benchmark of benchmarks) {
+      const inlineTasks = benchmark.tasks.filter(t => !t.perProject)
+      if (inlineTasks.length > 0) {
+        inlineBenchmarks.push({ name: benchmark.name, tasks: inlineTasks })
+      }
+    }
 
     if (testResult.state === 'failed') {
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)
@@ -236,12 +261,12 @@ export abstract class BaseReporter implements Reporter {
       // Skipped tests are hidden when --hideSkippedTests
     }
 
-    else if (this.renderSucceed || moduleState === 'failed' || benchmarks.length) {
+    else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
       this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
-    if (benchmarks.length > 0) {
-      this.printBenchmarkTable(benchmarks, padding)
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, padding)
     }
   }
 
@@ -875,7 +900,29 @@ export abstract class BaseReporter implements Reporter {
     return leakWithStacks.size
   }
 
-  protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string): void {
+  protected printPerProjectBenchmarks(): void {
+    if (this._perProjectBenchmarks.size === 0) {
+      return
+    }
+
+    this.log('')
+    this.log(c.bold(' Cross-Project Benchmark Comparison'))
+
+    for (const [benchName, projectMap] of this._perProjectBenchmarks) {
+      const tasks = [...projectMap.entries()]
+        .map(([projectName, task]) => ({ ...task, name: projectName }))
+        .sort((a, b) => a.latency.mean - b.latency.mean)
+        .map((task, idx) => ({ ...task, rank: idx + 1 }))
+
+      this.log('')
+      this.log(`  ${c.dim(benchName)}`)
+      this.printBenchmarkTable([{ name: benchName, tasks }], '', 'project')
+    }
+
+    this.log('')
+  }
+
+  protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string, columnName = 'name'): void {
     let printedCount = 0
     for (const benchmark of benchmarks) {
       const { tasks } = benchmark
@@ -888,10 +935,14 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const rows = tasks.map(t => renderBenchmarkRow(t))
-      const widths = computeBenchColumnWidths(BENCH_TABLE_HEAD, rows)
+      const tableHead = [
+        columnName,
+        ...BENCH_TABLE_HEAD,
+      ]
+      const widths = computeBenchColumnWidths(tableHead, rows)
       const indent = ` ${basePadding}  `
 
-      this.log(`${indent}${padBenchRow(BENCH_TABLE_HEAD, widths).map(c.bold).join('  ')}`)
+      this.log(`${indent}${padBenchRow(tableHead, widths).map(c.bold).join('  ')}`)
       printedCount++
 
       for (const task of tasks) {

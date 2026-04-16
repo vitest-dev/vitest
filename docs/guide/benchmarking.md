@@ -85,6 +85,41 @@ test('benchmarks with setup', async ({ bench }) => {
 })
 ```
 
+## Comparing Across Projects
+
+When your workspace defines multiple projects (e.g., different browsers or runtimes), you can use `bench.perProject()` to compare how the same benchmark performs across all of them. Instead of printing results inline per project, Vitest collects them and prints a single comparison table at the end of the test run.
+
+```ts
+import { test } from 'vitest'
+
+test('simple example', async ({ bench }) => {
+  await bench.perProject('1 + 1', () => {
+    1 + 1
+  }).run()
+})
+```
+
+The same test file runs in each project (chromium, firefox, webkit, etc.), and Vitest groups the results:
+
+<<< ./snippets/benchmark-per-project.ansi
+
+`bench.perProject()` returns a `BenchRegistration` just like `bench()`, so you call `.run()` to execute it. You can also mix it with `bench.compare()`:
+
+```ts
+test('compare implementations across browsers', async ({ bench }) => {
+  await bench.compare(
+    bench.perProject('JSON.parse', () => {
+      JSON.parse('{"key":"value"}')
+    }),
+    bench('custom parser', () => {
+      customParse('{"key":"value"}')
+    }),
+  )
+})
+```
+
+In this case, `custom parser` appears in the normal inline comparison table per project, while `JSON.parse` is additionally collected into the cross-project comparison table at the end.
+
 ## Asserting Performance
 
 Use `toBeFasterThan()` and `toBeSlowerThan()` matchers to assert relative performance between benchmarks:
