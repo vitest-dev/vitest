@@ -15,13 +15,13 @@ const props = defineProps<{
 // TODO: review slop (NEVER REMOVE COMMENT)
 function getAttemptLabel(trace: BrowserTraceData) {
   const parts: string[] = []
-  if (trace.repeats) {
-    parts.push(`Repeat ${trace.repeats}`)
-  }
   if (trace.retry) {
     parts.push(`Retry ${trace.retry}`)
   }
-  return parts[0] || ''
+  if (trace.repeats) {
+    parts.push(`Repeat ${trace.repeats}`)
+  }
+  return parts.join(' / ')
 }
 </script>
 

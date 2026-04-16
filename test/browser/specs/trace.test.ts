@@ -76,6 +76,7 @@ test('trace view artifacts', async () => {
         "retry.test.ts": {
           "repeated retried tests": "passed",
           "repeated test": "passed",
+          "repeated test retried on later repeat": "passed",
           "retried test": "passed",
         },
         "styles.test.ts": {
@@ -491,12 +492,12 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "retry.test.ts:30",
+                    "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
                   },
                   {
-                    "location": "retry.test.ts:32",
+                    "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
                   },
                 ],
@@ -504,12 +505,12 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "retry.test.ts:30",
+                    "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
                   },
                   {
-                    "location": "retry.test.ts:32",
+                    "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
                   },
                 ],
@@ -518,12 +519,12 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "retry.test.ts:30",
+                    "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
                   },
                   {
-                    "location": "retry.test.ts:32",
+                    "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
                   },
                 ],
@@ -532,12 +533,12 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "retry.test.ts:30",
+                    "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
                   },
                   {
-                    "location": "retry.test.ts:32",
+                    "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
                   },
                 ],
@@ -546,12 +547,12 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "retry.test.ts:30",
+                    "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
                   },
                   {
-                    "location": "retry.test.ts:32",
+                    "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
                   },
                 ],
@@ -592,6 +593,63 @@ test('trace view artifacts', async () => {
                     "selector": "internal:role=list",
                   },
                   {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+                "repeats": 2,
+              },
+            ],
+            "repeated test retried on later repeat": [
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:36",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:36",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "location": "retry.test.ts:38",
+                    "name": "vitest:onAfterRetryTask [fail]",
+                  },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:36",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "location": "retry.test.ts:38",
+                    "name": "vitest:onAfterRetryTask [pass]",
+                  },
+                ],
+                "repeats": 1,
+                "retry": 1,
+              },
+              {
+                "entries": [
+                  {
+                    "location": "retry.test.ts:36",
+                    "name": "renderHelper",
+                    "selector": "internal:role=list",
+                  },
+                  {
+                    "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [pass]",
                   },
                 ],

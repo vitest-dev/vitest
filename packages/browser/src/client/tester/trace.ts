@@ -9,7 +9,9 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-// TODO: timestamp, duration
+// TODO: timestamp
+// TODO: duration (expect.element, actions, mark)
+// TODO: semantic color (red for failed expect/actions)
 export interface BrowserTraceEntry {
   name: string
   stack?: string
