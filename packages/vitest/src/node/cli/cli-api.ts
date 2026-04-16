@@ -46,6 +46,13 @@ export interface CliOptions extends UserConfig {
    * @experimental
    */
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
+
+  /**
+   * Only run benchmark projects, filtering out all other projects.
+   * Set automatically by `vitest bench`.
+   * @internal
+   */
+  benchmarkOnly?: boolean
 }
 
 /**

@@ -332,7 +332,15 @@ export class Vitest {
     catch { }
 
     const projects = await this.resolveProjects(this._cliOptions)
-    this.projects = projects
+    // `vitest bench` should only run benchmark projects
+    // TODO: do this earlier (throw error in config)
+    // TODO: enable benchmark if `config.benchmark` is not empty in the user config
+    if (this._cliOptions.benchmarkOnly) {
+      this.projects = projects.filter(p => p.config.benchmark.enabled)
+    }
+    else {
+      this.projects = projects
+    }
 
     await Promise.all(projects.flatMap((project) => {
       const hooks = project.vite.config.getSortedPluginHooks('configureVitest')

@@ -64,11 +64,10 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
 
   const createRegisteredTinybench = <Args extends BenchRegistration<any>[]>(name: 'compare' | 'compareSync', registrations: (BenchOptions | Args[0] | Args[number])[]) => {
     if (registrations.length === 0) {
-      // TODO: links
-      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 0 instead. Define benchmarks by calling \`bench()\`.`)
+      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 0 instead. Define benchmarks by calling \`bench()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
     }
     if (registrations.length < 2) {
-      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 1 instead. Consider calling \`bench().${name === 'compare' ? 'run' : 'runSync'}()\`.`)
+      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 1 instead. Consider calling \`bench().${name === 'compare' ? 'run' : 'runSync'}()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
     }
     const lastArg = registrations.splice(registrations.length - 1, 1)[0]
     const benchOptions = typeof lastArg === 'object' && kRegistration in lastArg ? undefined : lastArg
@@ -101,9 +100,7 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
         throw result.error
       }
       if (result.state !== 'completed') {
-        // TODO: different handling for different results
-        // TODO: have a test for each state
-        throw new Error(`task did not complete: received ${result.state}`)
+        throw new Error(`task "${t.name}" did not complete: received "${result.state}"`)
       }
       return {
         name: t.name,
@@ -142,9 +139,13 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
       fnOpts,
       async run(options) {
         const bench = createTinybench(options).add(name, fn, fnOpts)
-        await bench.run() // TODO: deal with error
+        await bench.run()
+        const task = bench.getTask(name)!
+        if (task.result.state === 'errored') {
+          throw task.result.error
+        }
         await recordBenchmark(bench)
-        return bench.getTask(name)!.result as BenchResult
+        return task.result as BenchResult
       },
     }
   }
@@ -172,10 +173,16 @@ export function createBench(test: Test, runner: VitestRunner): Bench {
 
   bench.compare = async (...registrations) => {
     validateBenchmarkProject(runner)
-    const bench = createRegisteredTinybench('compare', registrations)
-    await bench.run() // TODO: deal with error
-    await recordBenchmark(bench)
-    return createCompareStorage(bench)
+    const tinybench = createRegisteredTinybench('compare', registrations)
+    await tinybench.run()
+    const errors = tinybench.tasks
+      .filter(task => task.result.state === 'errored')
+      .map(task => (task.result as any).error)
+    if (errors.length > 0) {
+      throw new AggregateError(errors, 'Some benchmarks failed')
+    }
+    await recordBenchmark(tinybench)
+    return createCompareStorage(tinybench)
   }
 
   return bench
@@ -185,7 +192,7 @@ function validateBenchmarkProject(runner: VitestRunner) {
   if (!runner.config.benchmark.enabled) {
     throw new Error(
       `Cannot run a benchmark within a regular test run. `
-      + `Benchmarks are inherintly flaky, so Vitest groups them into its own project based on \`benchmark.include\` pattern. `
+      + `Benchmarks are inherently flaky, so Vitest groups them into its own project based on \`benchmark.include\` pattern. `
       + `Are you using the \`bench\` function within a regular test? `
       + `See more at https://vitest.dev/guide/benchmarking#stability`,
     )
