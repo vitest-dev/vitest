@@ -49,6 +49,41 @@ test('rejects with an error', async () => {
 Don't forget the `await` before `expect`. Vitest will detect unawaited assertions and print a warning at the end of the test, but it's best to always include `await` explicitly. Vitest will also wait for all pending promises in `Promise.all` before starting the next test, but relying on this behavior makes tests harder to understand.
 :::
 
+## Assertion Counting
+
+With async code, there's a subtle risk: an assertion inside a callback or `.then()` chain might never execute, and the test would still pass because no assertion failed. [`expect.hasAssertions()`](/api/expect#hasassertions) guards against this by verifying that at least one assertion ran during the test:
+
+```js
+test('callback is invoked', async () => {
+  expect.hasAssertions()
+
+  const data = await fetchData()
+  data.items.forEach((item) => {
+    expect(item.id).toBeDefined()
+  })
+  // if data.items is empty, the test fails instead of silently passing
+})
+```
+
+When you know exactly how many assertions should run, [`expect.assertions(n)`](/api/expect#assertions) is more precise:
+
+```js
+test('both callbacks are called', async () => {
+  expect.assertions(2)
+
+  await Promise.all([
+    fetchUser(1).then(user => expect(user.name).toBe('Alice')),
+    fetchUser(2).then(user => expect(user.name).toBe('Bob')),
+  ])
+})
+```
+
+In most cases, `async`/`await` with direct assertions is clear enough and you don't need assertion counting. It's most useful when assertions are inside callbacks, loops, or conditional branches where you want to guarantee they actually executed.
+
+::: tip
+If you want every test in your project to require at least one assertion, enable [`expect.requireAssertions`](/config/expect#expect-requireassertions) in your config instead of adding `expect.hasAssertions()` to each test manually.
+:::
+
 ## Callbacks
 
 Some older APIs use callbacks instead of promises. Since Vitest works with promises, the simplest approach is to wrap the callback in a `Promise`:
@@ -67,6 +102,10 @@ test('the data is peanut butter', async () => {
 ```
 
 This pattern works for any callback-based API. Pass `resolve` as the success callback, and the test will wait until the callback is invoked.
+
+::: tip
+Most modern Node.js APIs (such as `fs/promises` and `fetch`) support promises natively, so you can use `async`/`await` directly. The callback wrapping pattern above is mainly useful for older libraries that haven't adopted promises yet.
+:::
 
 ## Timeouts
 
@@ -91,24 +130,6 @@ export default defineConfig({
   },
 })
 ```
-
-## Concurrent Tests
-
-By default, tests within a file run one after another. This is usually what you want, especially when tests share setup code. But if you have many independent async tests that each spend most of their time waiting (on network, disk, timers, etc.), running them concurrently with [`test.concurrent`](/api/test#concurrent) can significantly speed things up:
-
-```js
-test.concurrent('first async test', async () => {
-  const result = await fetchUser(1)
-  expect(result.name).toBe('Alice')
-})
-
-test.concurrent('second async test', async () => {
-  const result = await fetchUser(2)
-  expect(result.name).toBe('Bob')
-})
-```
-
-See the [Parallelism](/guide/parallelism) guide for the full picture of how Vitest runs tests in parallel, both across files and within them.
 
 ## Unhandled Rejections
 
