@@ -156,6 +156,7 @@ export interface SerializedCoverageConfig {
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
+  trackProcessAndWorker: boolean
 }
 
 export type RuntimeConfig = Pick<

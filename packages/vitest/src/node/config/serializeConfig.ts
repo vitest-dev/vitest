@@ -1,5 +1,6 @@
 import type { TestProject } from '../project'
 import type { ApiConfig, SerializedConfig } from '../types/config'
+import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
 import { isAgent } from '../../utils/env'
 
@@ -51,13 +52,14 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
       return {
-        reportsDirectory: coverage.reportsDirectory,
+        reportsDirectory: resolve(globalConfig.root, coverage.reportsDirectory),
         provider: coverage.provider,
         enabled: coverage.enabled,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
         htmlDir: coverage.htmlDir,
+        trackProcessAndWorker: coverage.trackProcessAndWorker ?? false,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
