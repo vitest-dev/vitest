@@ -98,7 +98,7 @@ test('trace view artifacts', async () => {
           "style tag css is inlined": "passed",
         },
         "viewport.test.ts": {
-          "document scroll is not stored in snapshot payload": "passed",
+          "document scroll is restored from trace metadata": "passed",
           "overflow element scroll is stored in snapshot payload": "passed",
           "viewport media query depends on replay viewport": "passed",
         },
@@ -615,11 +615,11 @@ test('trace view artifacts', async () => {
             ],
           },
           "viewport.test.ts": {
-            "document scroll is not stored in snapshot payload": [
+            "document scroll is restored from trace metadata": [
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:33",
+                    "location": "viewport.test.ts:31",
                     "name": "document scrolled before mark",
                     "selector": " body > main > button",
                   },
@@ -633,7 +633,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:49",
+                    "location": "viewport.test.ts:47",
                     "name": "overflow container scrolled before mark",
                     "selector": " body > section",
                   },
@@ -647,7 +647,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:22",
+                    "location": "viewport.test.ts:21",
                     "name": "viewport sensitive layout rendered",
                   },
                   {
@@ -1170,7 +1170,7 @@ test('trace view artifacts', async () => {
             ],
           },
           "viewport.test.ts": {
-            "document scroll is not stored in snapshot payload": [
+            "document scroll is restored from trace metadata": [
               {
                 "entries": [
                   {
@@ -1202,7 +1202,7 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "location": "viewport.test.ts:22",
+                    "location": "viewport.test.ts:23",
                     "name": "viewport sensitive layout rendered",
                   },
                   {

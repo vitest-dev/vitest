@@ -7,13 +7,14 @@ beforeEach(() => {
   document.body.innerHTML = ''
 })
 
-// TODO: record the capture viewport and replay with matching dimensions.
+// TODO: e2e for viewport/scroll replay in test/ui
+
 test('viewport media query depends on replay viewport', async () => {
   const style = document.createElement('style')
   style.dataset.traceFixture = ''
   style.textContent = `
 .trace-viewport::before { content: "narrow"; }
-@media (min-width: 800px) {
+@media (min-width: 400px) {
   .trace-viewport::before { content: "wide"; }
 }
 `
@@ -22,8 +23,7 @@ test('viewport media query depends on replay viewport', async () => {
   await page.mark('viewport sensitive layout rendered')
 })
 
-// TODO: record window scroll offset in the snapshot payload and restore it during replay.
-test('document scroll is not stored in snapshot payload', async () => {
+test('document scroll is restored from trace metadata', async () => {
   document.body.innerHTML = `
 <main style="height: 2000px; padding-top: 900px">
   <button>Scrolled document button</button>

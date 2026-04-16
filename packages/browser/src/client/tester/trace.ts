@@ -9,12 +9,6 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-// TODO: record
-// viewport: {
-//   width: window.innerWidth,
-//   height: window.innerHeight,
-//   deviceScaleFactor: window.devicePixelRatio,
-// }
 // TODO: timestamp
 // TODO: duration (expect.element, actions, mark)
 // TODO: semantic color (red for failed expect/actions)
@@ -29,6 +23,14 @@ export interface BrowserTraceEntry {
 
 interface TraceSnapshot {
   serialized: unknown
+  viewport: {
+    width: number
+    height: number
+  }
+  scroll: {
+    x: number
+    y: number
+  }
   selectorId?: number
 }
 
@@ -80,6 +82,17 @@ function takeSnapshot(selector?: string): TraceSnapshot {
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
   const serialized = snapshot(document, { mirror })
+  const result: TraceSnapshot = {
+    serialized,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    scroll: {
+      x: window.scrollX,
+      y: window.scrollY,
+    },
+  }
   if (selector) {
     try {
       const el = engine.querySelector(
@@ -90,13 +103,13 @@ function takeSnapshot(selector?: string): TraceSnapshot {
       if (el) {
         const id = mirror.getId(el)
         if (id !== -1) {
-          return { serialized, selectorId: id }
+          result.selectorId = id
         }
       }
     }
     catch {}
   }
-  return { serialized }
+  return result
 }
 
 export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {

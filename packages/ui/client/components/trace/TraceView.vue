@@ -32,7 +32,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step?.snapshot || !iframe) {
     return
   }
-  const { serialized, selectorId } = step.snapshot
+  const { serialized, selectorId, viewport, scroll } = step.snapshot
+  iframe.style.width = `${viewport.width}px`
+  iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
   // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
   // doc.open/close resets the iframe document to a blank state before rebuild.
@@ -47,6 +49,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
+  iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
   if (selectorId != null) {
     const el = mirror.getNode(selectorId)
     if (el) {
@@ -106,12 +109,12 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         </div>
       </button>
     </div>
-    <div flex="~ col" overflow-hidden>
+    <div flex="~ col" overflow-auto>
       <iframe
         v-if="selectedStep?.snapshot"
         ref="iframeEl"
         sandbox="allow-same-origin"
-        style="width: 100%; height: 100%; border: none"
+        style="border: none; flex: none"
       />
       <div v-else class="text-sm opacity-50 p-2">
         No snapshot for this step.
