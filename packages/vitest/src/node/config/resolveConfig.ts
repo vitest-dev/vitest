@@ -747,19 +747,12 @@ export function resolveConfig(
     }
   }
 
-  // TODO: need to adjust options for new trace view experience, but such a mess
-  resolved.browser.traceView ??= false
-
   if (!resolved.reporters.length) {
     resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
 
     // also enable github-actions reporter as a default
     if (process.env.GITHUB_ACTIONS === 'true') {
       resolved.reporters.push(['github-actions', {}])
-    }
-
-    if (resolved.browser.enabled && resolved.browser.traceView && !resolved.watch) {
-      // resolved.reporters.push(['html', {}])
     }
   }
 
@@ -822,7 +815,6 @@ export function resolveConfig(
   }
 
   resolved.browser.enabled ??= false
-  // resolved.browser.headless ??= isCI || resolved.browser.traceView
   resolved.browser.headless ??= isCI
   if (resolved.browser.isolate) {
     logger.console.warn(
@@ -908,27 +900,9 @@ export function resolveConfig(
     resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
   }
 
+  resolved.browser.traceView ??= false
   if (resolved.browser.enabled && resolved.browser.traceView) {
     resolved.browser.detailsPanelPosition = 'bottom'
-    // TODO: too optinionated
-    // resolved.browser.ui = false
-    // if (resolved.browser.provider?.name === 'preview') {
-    //   resolved.browser.ui = true
-    //   resolved.browser.headless = false
-    // }
-    // // we try to enable `--ui` early in `VitestPlugin.config`,
-    // // but we show warning if we somehow reach here
-    // if (resolved.watch && !resolved.ui) {
-    //   logger.console.warn(
-    //     c.yellow(
-    //       withLabel(
-    //         'yellow',
-    //         'Vitest',
-    //         '--browser.traceView is enabled without --ui.',
-    //       ),
-    //     ),
-    //   )
-    // }
   }
   if (resolved.browser.trace.tracesDir != null) {
     resolved.browser.trace.tracesDir = resolvePath(

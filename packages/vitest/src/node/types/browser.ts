@@ -234,18 +234,13 @@ export interface BrowserConfigOptions {
   }
 
   /**
-   * TODO: review slop (NEVER REMOVE COMMENT)
-   * TODO: thoughts
-   * - should it make browser.headelss by default?
-   * - should it make pure UI by default? (on watch)
-   * - should it generate html reporter by default?
-   * - no, let's just document the intended usage.
    *
-   * Enable Vitest trace-view artifact collection and related first-class trace experience.
+   * Enable Vitest trace view artifacts collection.
    *
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
+   * @experimental
    */
   traceView?: boolean
 
