@@ -140,7 +140,13 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     suite.result!.duration = performance.now() - start
     suite.result!.state = 'pass'
 
-    updateTask('suite-finished', suite)
+    // Don't emit suite-finished for the root file suite here. The general runSuite
+    // wrapper that calls runner.runSuite() will emit suite-finished for the file
+    // after this returns. Emitting it here would cause a duplicate event for files
+    // with top-level bench() calls (i.e. bench() outside any describe()).
+    if (suite.file !== suite) {
+      updateTask('suite-finished', suite)
+    }
     defer.resolve(null)
 
     await defer
