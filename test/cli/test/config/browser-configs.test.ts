@@ -69,6 +69,55 @@ test('filters projects with a wildcard', async () => {
   ])
 })
 
+test('allows browser mode without projects', async () => {
+  await vitest({}, {
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }],
+    },
+  })
+})
+
+test('applies browser CLI options to root config without existing browser config', async () => {
+  const { projects } = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      headless: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+      ],
+    },
+  }, {})
+  expect(projects.map(p => p.name)).toEqual([
+    'chromium',
+    'firefox',
+  ])
+})
+
+test('assigns instance names from CLI options without existing browser config', async () => {
+  const { projects } = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      headless: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox', name: 'my-firefox' },
+      ],
+    },
+  }, {
+    name: 'myproject',
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'myproject (chromium)',
+    'my-firefox',
+  ])
+})
+
 test('assigns names as browsers in a custom project', async () => {
   const { projects } = await vitest({}, {
     projects: [
