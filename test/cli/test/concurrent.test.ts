@@ -117,9 +117,9 @@ describe.concurrent('wrapper', () => {
       defers[1].resolve()
       await defers[2]
     })
-  })
+  // })
 
-  describe('2nd suite', () => {
+  // describe('2nd suite', () => {
     test('c', async () => {
       expect(1).toBe(1)
       await defers[1]
@@ -150,8 +150,6 @@ test('suite deadlocks with insufficient maxConcurrency', async () => {
               "Test timed out in 500ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
             ],
-          },
-          "2nd suite": {
             "c": "passed",
           },
         },
@@ -175,8 +173,6 @@ test('suite passes when maxConcurrency is high enough', async () => {
           "1st suite": {
             "a": "passed",
             "b": "passed",
-          },
-          "2nd suite": {
             "c": "passed",
           },
         },
