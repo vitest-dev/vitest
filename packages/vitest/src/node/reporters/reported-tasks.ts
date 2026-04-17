@@ -216,7 +216,8 @@ export class TestCase extends ReportedTaskImplementation {
       return undefined
     }
     const duration = result.duration || 0
-    const slow = duration > this.project.globalConfig.slowTestThreshold
+    const slowTestThreshold = this.task.slowTestThreshold ?? this.project.globalConfig.slowTestThreshold
+    const slow = duration > slowTestThreshold
     return {
       slow,
       heap: result.heap,
@@ -576,6 +577,11 @@ export interface TaskOptions {
    * Only tests have a `timeout` option.
    */
   readonly timeout: number | undefined
+  /**
+   * Threshold in milliseconds for a test to be considered slow.
+   * Only tests have a `slowTestThreshold` option.
+   */
+  readonly slowTestThreshold: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
@@ -591,6 +597,7 @@ function buildOptions(
     repeats: task.repeats,
     tags: task.tags,
     timeout: task.type === 'test' ? task.timeout : undefined,
+    slowTestThreshold: task.type === 'test' ? task.slowTestThreshold : undefined,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called
     // only for tests and suites

@@ -183,9 +183,10 @@ export class SummaryReporter implements Reporter {
       onFinish: () => {},
     }
 
+    const slowTestThreshold = test.options.slowTestThreshold ?? this.ctx.config.slowTestThreshold
     const timeout = setTimeout(() => {
       slowTest.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    }, slowTestThreshold).unref()
 
     slowTest.onFinish = () => {
       slowTest.hook?.onFinish()

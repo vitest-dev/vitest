@@ -3,7 +3,7 @@ title: slowTestThreshold | Config
 outline: deep
 ---
 
-# slowTestThreshold <CRoot />
+# slowTestThreshold
 
 - **Type**: `number`
 - **Default**: `300`
