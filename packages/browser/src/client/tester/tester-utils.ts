@@ -2,7 +2,7 @@ import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWhe
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { getBrowserState, getWorkerState } from '../utils'
-import { recordBrowserTraceEntry } from './trace'
+import { now, recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -168,6 +168,7 @@ export class CommandsManager {
           )
         }
         let status: BrowserTraceEntryStatus = 'pass'
+        const startTime = now()
         try {
           return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
         }
@@ -181,11 +182,12 @@ export class CommandsManager {
         }
         finally {
           if (hasActiveTraceView) {
-            // TODO: action duration?
             recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
               kind: 'action',
               status,
+              startTime,
+              duration: now() - startTime,
               selector: typeof args[0] === 'string' ? args[0] : undefined,
               stack: clientError.stack,
             })
@@ -203,10 +205,6 @@ export class CommandsManager {
     )
   }
 }
-
-const now = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (

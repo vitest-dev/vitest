@@ -24,6 +24,8 @@ test('trace view artifacts', async () => {
       ...raw,
       location: raw.location ? formatLocation(raw.location) : undefined,
       stack: undefined,
+      startTime: undefined,
+      duration: undefined,
       snapshot: {
         selectorResolution: raw.snapshot.selectorResolution,
         selectorError: raw.snapshot.selectorError,
@@ -138,7 +140,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:54",
+                    "location": "exotic.test.ts:58",
                     "name": "button rendered with adopted stylesheet",
                     "selector": " body > button",
                     "snapshot": {
@@ -180,7 +182,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:43",
+                    "location": "exotic.test.ts:47",
                     "name": "custom element rendered",
                     "selector": ">>>html > body > trace-widget > button",
                     "snapshot": {
@@ -202,7 +204,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:26",
+                    "location": "exotic.test.ts:28",
                     "name": "shadow button rendered",
                     "selector": ">>>html > body > section > button",
                     "snapshot": {
@@ -248,7 +250,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "expect.test.ts:31",
+                    "location": "expect.test.ts:33",
                     "name": "vitest:onAfterRetryTask [fail]",
                     "snapshot": {},
                     "status": "fail",
@@ -963,7 +965,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:54",
+                    "location": "exotic.test.ts:58",
                     "name": "button rendered with adopted stylesheet",
                     "selector": "internal:role=button",
                     "snapshot": {
@@ -1005,7 +1007,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:43",
+                    "location": "exotic.test.ts:47",
                     "name": "custom element rendered",
                     "selector": "internal:role=button[name="Custom element button"i]",
                     "snapshot": {
@@ -1026,7 +1028,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "exotic.test.ts:26",
+                    "location": "exotic.test.ts:28",
                     "name": "shadow button rendered",
                     "selector": "internal:role=button[name="Shadow button"i]",
                     "snapshot": {
@@ -1071,7 +1073,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "action",
-                    "location": "expect.test.ts:31",
+                    "location": "expect.test.ts:33",
                     "name": "__vitest_click",
                     "selector": "internal:role=button[name="Missing"i]",
                     "snapshot": {
@@ -1081,7 +1083,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "expect.test.ts:31",
+                    "location": "expect.test.ts:33",
                     "name": "vitest:onAfterRetryTask [fail]",
                     "snapshot": {},
                     "status": "fail",

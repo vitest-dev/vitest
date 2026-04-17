@@ -31,7 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { getBrowserTrace, recordBrowserTraceEntry } from './trace'
+import { getBrowserTrace, now, recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -95,7 +95,7 @@ export function createBrowserRunner(
       if (shouldTraceView) {
         getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
         getBrowserState().activeTraceViewTaskIds.add(test.id)
-        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats })
+        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       }
       else {
         getBrowserState().activeTraceViewTaskIds.delete(test.id)

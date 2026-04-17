@@ -10,8 +10,6 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-// TODO: timestamp
-// TODO: duration (expect.element, actions, mark)
 export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
 export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
@@ -21,6 +19,8 @@ export interface BrowserTraceEntry {
   // not used yet for UI
   kind: BrowserTraceEntryKind
   status?: BrowserTraceEntryStatus
+  startTime: number
+  duration?: number
   stack?: string
   // resolved server-side from stack in __vitest_recordBrowserTrace command
   location?: { file: string; line: number; column: number }
@@ -48,6 +48,21 @@ export interface BrowserTraceState {
   entries: Map<string, Map<string, BrowserTraceData>>
 }
 
+type BrowserTraceEntryOptions = Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
+  startTime?: number
+}
+
+export interface BrowserTraceAttempt {
+  retry: number
+  repeats: number
+  startTime: number
+}
+
+// TODO: move to utils.ts
+export const now: () => number = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
+
 function getBrowserTraceState(): BrowserTraceState {
   return getBrowserState().browserTraceState ??= {
     entries: new Map(),
@@ -61,7 +76,7 @@ function getAttemptKey(repeats: number, retry: number) {
 // TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
-  options: Omit<BrowserTraceEntry, 'snapshot'>,
+  options: BrowserTraceEntryOptions,
 ): void {
   // TODO: trace-view currently receives selectors after locator/action resolution,
   // so provider-specific lowered selectors can leak into snapshot lookup. Preserve
@@ -73,9 +88,16 @@ export function recordBrowserTraceEntry(
   if (options.selector?.startsWith('html >')) {
     options.selector = options.selector.slice(6)
   }
+  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
+  const { startTime = now(), ...entryOptions } = options
+  const relativeStartTime = startTime - attemptInfo.startTime
   const snapshot = takeSnapshot(options.selector)
-  const entry: BrowserTraceEntry = { ...options, snapshot }
-  const { retry, repeats } = getBrowserState().browserTraceAttempts.get(task.id)!
+  const entry: BrowserTraceEntry = {
+    ...entryOptions,
+    startTime: relativeStartTime,
+    snapshot,
+  }
+  const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
   const state = getBrowserTraceState()
   const attempts = state.entries.get(task.id) || new Map()

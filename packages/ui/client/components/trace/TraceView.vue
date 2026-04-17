@@ -37,6 +37,19 @@ function getStepButtonClass(step: BrowserTraceEntry, index: number) {
   return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
 }
 
+function formatTraceTime(ms: number) {
+  return ms < 1000
+    ? `${Math.round(ms)}ms`
+    : `${(ms / 1000).toFixed(1)}s`
+}
+
+function formatTraceTiming(step: BrowserTraceEntry) {
+  const startTime = `+${formatTraceTime(step.startTime)}`
+  return step.duration == null
+    ? startTime
+    : `${startTime} · ${formatTraceTime(step.duration)}`
+}
+
 function onSelectStep(index: number) {
   selectedTraceStepIndex.value = index
   const step = entries.value[index]
@@ -111,6 +124,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       >
         <div truncate>
           {{ step.name }}
+        </div>
+        <div class="text-xs opacity-60 truncate">
+          {{ formatTraceTiming(step) }}
         </div>
         <div
           v-if="step.selector"
