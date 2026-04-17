@@ -3,6 +3,8 @@ import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
+// @ts-expect-error missing types
+import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
 import { selectedTraceStepIndex } from '~/composables/trace-view'
@@ -109,48 +111,54 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 </script>
 
 <template>
-  <div class="grid h-full min-h-0 gap-4 p-4 md:grid-cols-[220px_1fr]" data-testid="trace-view">
-    <!-- TODO: split pane between step list and viewer?  -->
-    <div flex="~ col gap-1" overflow-auto>
-      <button
-        v-for="(step, index) of entries"
-        :key="index"
-        type="button"
-        class="text-left px-2 py-1 rounded text-sm"
-        :class="getStepButtonClass(step, index)"
-        @click="onSelectStep(index)"
-      >
-        <div truncate>
-          {{ step.name }}
-        </div>
-        <div class="text-xs opacity-60 truncate">
-          {{ formatTraceTiming(step) }}
-        </div>
-        <div
-          v-if="step.selector"
-          class="font-mono text-xs opacity-70 truncate"
+  <Splitpanes
+    class="h-full min-h-0"
+    data-testid="trace-view"
+  >
+    <Pane :size="40" min-size="20">
+      <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>
+        <button
+          v-for="(step, index) of entries"
+          :key="index"
+          type="button"
+          class="text-left px-2 py-1 rounded text-sm"
+          :class="getStepButtonClass(step, index)"
+          @click="onSelectStep(index)"
         >
-          {{ step.selector }}
-        </div>
-        <div
-          v-if="step.location"
-          class="text-xs opacity-50 truncate"
-        >
-          {{ getLocationString(step.location) }}
-        </div>
-      </button>
-    </div>
-    <div flex="~ col" overflow-auto>
-      <iframe
-        v-if="selectedStep?.snapshot"
-        ref="iframeEl"
-        :key="iframeSandbox"
-        :sandbox="iframeSandbox"
-        style="border: none; flex: none"
-      />
-      <div v-else class="text-sm opacity-50 p-2">
-        No snapshot for this step.
+          <div truncate>
+            {{ step.name }}
+          </div>
+          <div class="text-xs opacity-60 truncate">
+            {{ formatTraceTiming(step) }}
+          </div>
+          <div
+            v-if="step.selector"
+            class="font-mono text-xs opacity-70 truncate"
+          >
+            {{ step.selector }}
+          </div>
+          <div
+            v-if="step.location"
+            class="text-xs opacity-50 truncate"
+          >
+            {{ getLocationString(step.location) }}
+          </div>
+        </button>
       </div>
-    </div>
-  </div>
+    </Pane>
+    <Pane :size="60" min-size="20">
+      <div class="h-full min-h-0 p-4" flex="~ col" overflow-auto>
+        <iframe
+          v-if="selectedStep?.snapshot"
+          ref="iframeEl"
+          :key="iframeSandbox"
+          :sandbox="iframeSandbox"
+          style="border: none; flex: none"
+        />
+        <div v-else class="text-sm opacity-50 p-2">
+          No snapshot for this step.
+        </div>
+      </div>
+    </Pane>
+  </Splitpanes>
 </template>
