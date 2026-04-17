@@ -30,6 +30,7 @@ import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
+import { BenchmarkManager } from './benchmark'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
@@ -139,6 +140,7 @@ export class Vitest {
   private _state?: StateManager
   private _cache?: VitestCache
   private _snapshot?: SnapshotManager
+  public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
   private _coverageProvider?: CoverageProvider | null | undefined
 
   /**
@@ -221,6 +223,7 @@ export class Vitest {
     assert(this._snapshot, 'snapshot', 'snapshot manager')
     return this._snapshot
   }
+
 
   /**
    * Test results and test file stats cache. Primarily used by the sequencer to sort tests.
