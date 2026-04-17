@@ -96,8 +96,6 @@ export interface BrowserRunnerState {
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
   activeTraceTaskIds: Set<string>
-  // TODO: silly but fine for now
-  activeTraceViewTaskIds: Set<string>
   browserTraceAttempts: Map<string, BrowserTraceAttempt>
   // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')

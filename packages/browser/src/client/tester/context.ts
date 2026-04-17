@@ -363,7 +363,7 @@ export const page: BrowserPage = {
   ): any {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {

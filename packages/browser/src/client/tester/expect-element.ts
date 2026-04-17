@@ -61,7 +61,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   // ask `expect.poll` to invoke trace after the assertion
   const currentTest = getWorkerState().current
   const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-  const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+  const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
   if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
     const startTime = now()

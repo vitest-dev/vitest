@@ -88,17 +88,15 @@ export function createBrowserRunner(
         && !(trace === 'on-first-retry' && retry !== 1)
       const shouldTraceView = this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
-        getBrowserState().activeTraceViewTaskIds.delete(test.id)
         getBrowserState().activeTraceTaskIds.delete(test.id)
+        getBrowserState().browserTraceAttempts.delete(test.id)
         return
       }
       if (shouldTraceView) {
         getBrowserState().browserTraceDomSnapshot = await import('rrweb-snapshot')
-        getBrowserState().activeTraceViewTaskIds.add(test.id)
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       }
       else {
-        getBrowserState().activeTraceViewTaskIds.delete(test.id)
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       if (!shouldTrace) {
@@ -122,7 +120,7 @@ export function createBrowserRunner(
     }
 
     onAfterRetryTask = async (test: Test, { retry, repeats }: { retry: number; repeats: number }) => {
-      const hasActiveTraceView = getBrowserState().activeTraceViewTaskIds.has(test.id)
+      const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
         const stack = test.result?.errors?.[0].stack

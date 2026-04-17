@@ -143,7 +143,7 @@ export class CommandsManager {
       && getBrowserState().activeTraceTaskIds.has(currentTest.id)
     const hasActiveTraceView = !!actionTraceGroupName
       && !!currentTest
-      && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+      && getBrowserState().browserTraceAttempts.has(currentTest.id)
 
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))

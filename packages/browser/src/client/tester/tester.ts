@@ -109,7 +109,6 @@ const iframeId = url.searchParams.get('iframeId')!
 const commands = new CommandsManager()
 getBrowserState().commands = commands
 getBrowserState().activeTraceTaskIds = new Set()
-getBrowserState().activeTraceViewTaskIds = new Set()
 getBrowserState().browserTraceAttempts = new Map()
 getBrowserState().iframeId = iframeId
 

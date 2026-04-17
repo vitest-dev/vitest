@@ -208,7 +208,7 @@ export abstract class Locator {
   public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
     if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
