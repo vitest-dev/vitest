@@ -4,8 +4,8 @@ import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
+import c from '@vitest/utils/colors'
 import { assertTypes, ordinal } from '@vitest/utils/helpers'
-import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import {
   diff,

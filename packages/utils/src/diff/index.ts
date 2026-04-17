@@ -13,7 +13,7 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-import c from 'tinyrainbow'
+import c from '../colors'
 import { stringify } from '../display'
 import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
 import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'

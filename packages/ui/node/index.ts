@@ -1,9 +1,9 @@
 import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import c from '@vitest/utils/colors'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
-import c from 'tinyrainbow'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 

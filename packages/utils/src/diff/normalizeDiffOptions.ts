@@ -7,7 +7,7 @@
 
 import type { CompareKeys } from '@vitest/pretty-format'
 import type { DiffOptions, DiffOptionsNormalized } from './types'
-import c from 'tinyrainbow'
+import c from '../colors'
 
 export const noColor = (string: string): string => string
 
