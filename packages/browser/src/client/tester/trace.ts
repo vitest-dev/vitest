@@ -16,7 +16,7 @@ export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
 
 export interface BrowserTraceEntry {
   name: string
-  // not used yet for UI
+  // not used yet for UI but tested
   kind: BrowserTraceEntryKind
   status?: BrowserTraceEntryStatus
   startTime: number
@@ -39,7 +39,7 @@ interface TraceSnapshot {
     y: number
   }
   selectorId?: number
-  // not used yet for UI
+  // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
 }
