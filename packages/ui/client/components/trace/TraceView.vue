@@ -8,7 +8,6 @@ import { getLocationString, openLocation } from '~/composables/location'
 import { selectedTraceStepIndex } from '~/composables/trace-view'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
-// - remount on selected test change
 // - make it unit-testable for better iteration
 
 const props = defineProps<{
@@ -20,7 +19,6 @@ const traceData = computed(() => props.trace.data as BrowserTraceData)
 const entries = computed(() => traceData.value.entries)
 const selectedStep = computed(() => entries.value[selectedTraceStepIndex.value])
 const iframeSandbox = computed(() => {
-  // TODO(docs): document that recordCanvas enables a weaker iframe sandbox.
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
   return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
