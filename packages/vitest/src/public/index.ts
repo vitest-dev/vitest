@@ -114,6 +114,7 @@ export {
   suite,
   test,
 } from '@vitest/runner'
+export { mergeTests } from '@vitest/runner'
 export type {
   ImportDuration,
   OnTestFailedHandler,
