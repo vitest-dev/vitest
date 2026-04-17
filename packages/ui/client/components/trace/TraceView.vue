@@ -115,7 +115,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     class="h-full min-h-0"
     data-testid="trace-view"
   >
-    <Pane :size="40" min-size="20">
+    <Pane :size="30" min-size="20">
       <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>
         <button
           v-for="(step, index) of entries"
@@ -146,7 +146,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         </button>
       </div>
     </Pane>
-    <Pane :size="60" min-size="20">
+    <Pane :size="70" min-size="20">
       <div class="h-full min-h-0 p-4" flex="~ col" overflow-auto>
         <iframe
           v-if="selectedStep?.snapshot"
