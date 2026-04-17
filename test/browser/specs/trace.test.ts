@@ -120,6 +120,7 @@ test('trace view artifacts', async () => {
           "font files remain url dependent": "passed",
           "inline styles": "passed",
           "same-origin link css is inlined": "passed",
+          "snapshot-time pseudo-state styles": "passed",
           "style tag css is inlined": "passed",
         },
         "viewport.test.ts": {
@@ -886,6 +887,59 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:32",
+                    "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "snapshot-time pseudo-state styles": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:117",
+                    "name": "vitest:hover",
+                    "selector": " body > button:nth-child(1)",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:118",
+                    "name": "vitest:click",
+                    "selector": " body > button:nth-child(2)",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:119",
+                    "name": "vitest:fill",
+                    "selector": " body > input",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:120",
+                    "name": "vitest:fill",
+                    "selector": " body > label > input",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "styles.test.ts:83",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1745,6 +1799,59 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:32",
+                    "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "snapshot-time pseudo-state styles": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:117",
+                    "name": "vitest:hover",
+                    "selector": "internal:role=button[name="First pseudo state"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:118",
+                    "name": "vitest:click",
+                    "selector": "internal:role=button[name="Second pseudo state"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:119",
+                    "name": "vitest:fill",
+                    "selector": "internal:role=textbox[name="Focused pseudo state"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "action",
+                    "location": "styles.test.ts:120",
+                    "name": "vitest:fill",
+                    "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "styles.test.ts:83",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",

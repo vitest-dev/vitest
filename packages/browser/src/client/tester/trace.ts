@@ -40,9 +40,11 @@ interface TraceSnapshot {
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
-  hoveredIds?: number[]
-  activeElementId?: number
+  pseudoClassIds: Record<PsudoClassName, number[]>
 }
+
+const PSUDO_CLASS_NAMES = [':hover', ':focus', ':focus-within'] as const
+type PsudoClassName = (typeof PSUDO_CLASS_NAMES)[number]
 
 export type BrowserTraceState = Record<string, BrowserTraceData>
 
@@ -119,22 +121,12 @@ function takeSnapshot(selector?: string): TraceSnapshot {
       x: window.scrollX,
       y: window.scrollY,
     },
+    pseudoClassIds: {} as any
   }
-  const hoveredIds = Array.from(document.querySelectorAll(':hover'), el =>
-    mirror.getId(el)).filter(id => id !== -1)
-  if (hoveredIds.length) {
-    result.hoveredIds = hoveredIds
-  }
-  const activeElement = document.activeElement
-  if (
-    activeElement
-    && activeElement !== document.body
-    && activeElement !== document.documentElement
-  ) {
-    const id = mirror.getId(activeElement)
-    if (id !== -1) {
-      result.activeElementId = id
-    }
+  for (const className of PSUDO_CLASS_NAMES) {
+    const elements = document.querySelectorAll(className)
+    const ids = Array.from(elements, el => mirror.getId(el)).filter(id => id !== -1)
+    result.pseudoClassIds[className] = ids
   }
   if (selector) {
     try {

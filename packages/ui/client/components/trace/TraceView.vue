@@ -43,7 +43,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
   }
-  const { serialized, selectorId, viewport, scroll, hoveredIds, activeElementId } = step.snapshot
+  const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -60,17 +60,13 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
-  // `:hover` is supported by rrweb-snapshot; `:focus` is added by our local patch.
-  for (const id of hoveredIds ?? []) {
-    const el = mirror.getNode(id) as Element | null
-    if (el?.classList) {
-      el.classList.add(':hover')
-    }
-  }
-  if (activeElementId != null) {
-    const el = mirror.getNode(activeElementId) as Element | null
-    if (el?.classList) {
-      el.classList.add(':focus')
+  // `:hover` is supported by rrweb-snapshot; `:focus` and `:focus-within` are added by our local patch.
+  for (const [className, ids] of Object.entries(pseudoClassIds)) {
+    for (const id of ids) {
+      const el = mirror.getNode(id) as Element | null
+      if (el?.classList) {
+        el.classList.add(className)
+      }
     }
   }
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
