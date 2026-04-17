@@ -2,7 +2,6 @@
 import { useDebounceFn } from '@vueuse/core'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
-import { computed } from 'vue'
 import BrowserIframe from '~/components/BrowserIframe.vue'
 import ClosedDetailsHeader from '~/components/ClosedDetailsHeader.vue'
 import ConnectionOverlay from '~/components/ConnectionOverlay.vue'
@@ -22,10 +21,9 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
-import { activeTrace, activeTraceTest } from '~/composables/trace-view'
+import { activeTraceView } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
-const showTracePane = computed(() => !!activeTrace.value && !!activeTraceTest.value)
 
 const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
   // don't trigger events in the iframe while resizing
@@ -95,7 +93,7 @@ function allowBrowserEvents() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition v-if="!browserState && !showTracePane" key="ui-detail">
+        <transition v-if="!browserState && !activeTraceView" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage
             v-else-if="coverageVisible"
@@ -123,22 +121,22 @@ function allowBrowserEvents() {
                     class="h-full"
                     :horizontal="detailsPosition === 'right'"
                   >
-                    <Pane :size="showTracePane ? 55 : 100" min-size="10">
+                    <Pane :size="activeTraceView ? 55 : 100" min-size="10">
                       <BrowserIframe v-once />
                     </Pane>
-                    <Pane v-if="showTracePane" size="45" min-size="10">
+                    <Pane v-if="activeTraceView" size="45" min-size="10">
                       <TraceViewPane
-                        :trace="activeTrace!"
-                        :test="activeTraceTest!"
+                        :trace="activeTraceView.trace"
+                        :test="activeTraceView.test"
                       />
                     </Pane>
                   </Splitpanes>
                   <BrowserIframe v-else v-once />
                 </template>
                 <TraceViewPane
-                  v-else-if="showTracePane"
-                  :trace="activeTrace!"
-                  :test="activeTraceTest!"
+                  v-else-if="activeTraceView"
+                  :trace="activeTraceView.trace"
+                  :test="activeTraceView.test"
                 />
               </Pane>
               <Pane

@@ -5,28 +5,28 @@ import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
-// TODO: review slop (NEVER REMOVE COMMENT)
+export interface ActiveTraceView {
+  trace: BrowserTraceArtifact
+  test: RunnerTestCase
+}
 
-export const activeTrace = ref<BrowserTraceArtifact>()
-export const activeTraceTest = ref<RunnerTestCase>()
-export const selectedTraceStepIndex = ref(0)
+export const activeTraceView = ref<ActiveTraceView>()
 
 export function openTrace(trace: BrowserTraceArtifact, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
-  activeTrace.value = trace
-  activeTraceTest.value = test
-  selectedTraceStepIndex.value = 0
+  activeTraceView.value = {
+    trace,
+    test,
+  }
 }
 
 export function closeTrace() {
-  activeTrace.value = undefined
-  activeTraceTest.value = undefined
-  selectedTraceStepIndex.value = 0
+  activeTraceView.value = undefined
 }
 
 function openTraceForTest(testId: string) {
   // skip if already open
-  if (activeTraceTest.value?.id === testId && activeTrace.value) {
+  if (activeTraceView.value?.test.id === testId) {
     return
   }
 
@@ -51,7 +51,7 @@ function openTraceForTest(testId: string) {
 
 // sync with selected test / url navigation
 watch(selectedTest, (testId) => {
-  if (!testId || activeTraceTest.value?.id !== testId) {
+  if (!testId || activeTraceView.value?.test.id !== testId) {
     closeTrace()
   }
   // auto-open trace view

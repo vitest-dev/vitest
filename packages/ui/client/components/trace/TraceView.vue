@@ -7,7 +7,6 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
-import { selectedTraceStepIndex } from '~/composables/trace-view'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 // - make it unit-testable for better iteration
@@ -19,7 +18,8 @@ const props = defineProps<{
 
 const traceData = computed(() => props.trace.data as BrowserTraceData)
 const entries = computed(() => traceData.value.entries)
-const selectedStep = computed(() => entries.value[selectedTraceStepIndex.value])
+const selectedStepIndex = ref(0)
+const selectedStep = computed(() => entries.value[selectedStepIndex.value])
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
@@ -28,7 +28,7 @@ const iframeSandbox = computed(() => {
 const iframeEl = ref<HTMLIFrameElement>()
 
 function getStepButtonClass(step: BrowserTraceEntry, index: number) {
-  const selected = selectedTraceStepIndex.value === index
+  const selected = selectedStepIndex.value === index
   if (step.status === 'fail') {
     return selected
       ? 'bg-red-500/20 text-red-600 dark:text-red-400'
@@ -51,12 +51,16 @@ function formatTraceTiming(step: BrowserTraceEntry) {
 }
 
 function onSelectStep(index: number) {
-  selectedTraceStepIndex.value = index
+  selectedStepIndex.value = index
   const step = entries.value[index]
   if (step?.location) {
     openLocation(props.test, step.location)
   }
 }
+
+watch(() => props.trace, () => {
+  selectedStepIndex.value = 0
+})
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
@@ -113,7 +117,6 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 <template>
   <Splitpanes
     class="h-full min-h-0"
-    data-testid="trace-view"
   >
     <Pane :size="30" min-size="20">
       <div class="h-full min-h-0 p-4" flex="~ col gap-1" overflow-auto>

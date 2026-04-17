@@ -26,7 +26,7 @@ function getAttemptLabel(trace: BrowserTraceData) {
 </script>
 
 <template>
-  <div h-full min-h-0 flex="~ col">
+  <div data-testid="trace-view" h-full min-h-0 flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <div class="i-carbon:data-vis-4" />
       <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Trace Viewer</span>
