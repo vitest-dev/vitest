@@ -906,7 +906,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     this.log('')
-    this.log(c.bold(' Cross-Project Benchmark Comparison'))
+    this.log(divider(c.bold(c.bgBlue(` Cross-Project Benchmark Comparison `)), null, null, c.blue))
 
     for (const [benchName, projectMap] of this._perProjectBenchmarks) {
       const tasks = [...projectMap.entries()]
