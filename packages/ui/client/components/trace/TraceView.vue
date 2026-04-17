@@ -59,7 +59,7 @@ function onSelectStep(index: number) {
 }
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
-  if (!step?.snapshot || !iframe) {
+  if (!step || !iframe) {
     return
   }
   const { serialized, selectorId, viewport, scroll } = step.snapshot
@@ -147,16 +147,16 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
       </div>
     </Pane>
     <Pane :size="70" min-size="20">
-      <div class="h-full min-h-0 p-4" flex="~ col" overflow-auto>
+      <div class="h-full min-h-0" flex="~ col" overflow-auto>
         <iframe
-          v-if="selectedStep?.snapshot"
+          v-if="selectedStep"
           ref="iframeEl"
           :key="iframeSandbox"
           :sandbox="iframeSandbox"
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
-        <div v-else class="text-sm opacity-50 p-2">
-          No snapshot for this step.
+        <div v-else class="text-sm opacity-50 p-4">
+          No trace step selected.
         </div>
       </div>
     </Pane>
