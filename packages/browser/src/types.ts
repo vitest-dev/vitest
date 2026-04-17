@@ -23,7 +23,6 @@ export interface WebSocketBrowserHandlers {
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
   readBenchmarkBaseline: (testFilepath: string, key: string) => Promise<BaselineData | null>
-  saveBenchmarkBaseline: (testFilepath: string, key: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number

@@ -31,7 +31,6 @@ export interface RuntimeRPC {
   resolveSnapshotPath: (testPath: string) => string
 
   readBenchmarkBaseline: (testFilepath: string, key: string) => Promise<BaselineData | null>
-  saveBenchmarkBaseline: (testFilepath: string, key: string, data: BaselineData) => Promise<void>
 
   ensureModuleGraphEntry: (id: string, importer: string) => void
 }

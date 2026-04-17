@@ -187,9 +187,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async readBenchmarkBaseline(testFilepath, key) {
           return vitest.benchmark.readBaseline(testFilepath, key)
         },
-        async saveBenchmarkBaseline(testFilepath, key, data) {
-          return vitest.benchmark.saveBaseline(testFilepath, key, data)
-        },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)

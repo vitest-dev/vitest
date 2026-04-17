@@ -224,7 +224,6 @@ export class Vitest {
     return this._snapshot
   }
 
-
   /**
    * Test results and test file stats cache. Primarily used by the sequencer to sort tests.
    */

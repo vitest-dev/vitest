@@ -60,6 +60,16 @@ export class TestRun {
   async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
     const testCase = this.getTestCaseById(testId, 'Benchmark')
     testCase.task.benchmarks.push(benchmark)
+    const baselineTasks = benchmark.tasks.filter(t => t.baseline)
+    // TODO: parallel
+    if (baselineTasks.length > 0) {
+      await this.vitest.benchmark.saveBaselines(
+        testCase.task.file.filepath,
+        testCase.task.file.projectName,
+        testCase.task.fullTestName,
+        baselineTasks,
+      )
+    }
     await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
   }
 
