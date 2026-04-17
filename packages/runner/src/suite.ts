@@ -1,3 +1,4 @@
+import type { InspectOptions } from '@vitest/utils/display'
 import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
@@ -18,7 +19,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
+import { format, formatRegExp, inspect } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1019,6 +1020,10 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
+  const inspectOptions: InspectOptions = {
+    truncate: runner.config.taskTitleValueFormatTruncate,
+  }
+
   const isObjectItem = isObject(items[0])
   function formatAttribute(s: string) {
     return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
@@ -1028,9 +1033,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      })
+      return inspect(value, inspectOptions)
     })
   }
 
@@ -1042,7 +1045,7 @@ function formatTitle(template: string, items: any[], idx: number) {
     // format "%"
     (match) => {
       if (i < count) {
-        output += format(match[0], items[i++])
+        output += format([match[0], items[i++]], inspectOptions)
       }
       else {
         output += match[0]

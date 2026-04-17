@@ -29,6 +29,4 @@ Influences whether or not the `showDiff` flag should be included in the thrown A
 - **Type:** `number`
 - **Default:** `40`
 
-Sets length threshold for actual and expected values in assertion errors. If this threshold is exceeded, for example for large data structures, the value is replaced with something like `[ Array(3) ]` or `{ Object (prop1, prop2) }`. Set it to `0` if you want to disable truncating altogether.
-
-This config option affects truncating values in `test.each` titles and inside the assertion error message.
+Sets length threshold for actual and expected values in assertion error messages. If this threshold is exceeded, for example for large data structures, the value is replaced with something like `[ Array(3) ]` or `{ Object (prop1, prop2) }`. Set it to `0` if you want to disable truncating altogether.
