@@ -3,7 +3,7 @@ import type { DefaultReporterOptions } from './default'
 import type { TestCase, TestModule, TestModuleState } from './reported-tasks'
 import { DefaultReporter } from './default'
 
-export class AgentReporter extends DefaultReporter {
+export class MinimalReporter extends DefaultReporter {
   renderSucceed = false
 
   constructor(options: DefaultReporterOptions = {}) {
@@ -30,4 +30,4 @@ export class AgentReporter extends DefaultReporter {
   }
 }
 
-export { AgentReporter as MinimalReporter }
+export { MinimalReporter as AgentReporter }
