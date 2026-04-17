@@ -1,11 +1,4 @@
-# Trace View <Badge type="warning" text="Experimental" />
-
-<!-- TODO: move bit later -->
-::: tip Playwright traces moved
-
-This page now documents Vitest's built-in `browser.traceView` feature. The previous `browser.trace` guide for Playwright traces moved to [Playwright Traces](./playwright-traces).
-
-:::
+# Trace View <Badge type="warning" text="Experimental" /> <Version>4.1.5</Version>
 
 `browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
@@ -18,6 +11,12 @@ The normal local browser mode opens the [browser UI](/config/browser/ui), where 
 `browser.traceView` keeps a replayable record for each test. In local browser UI mode, the trace viewer appears alongside the existing live view so you can keep using the browser UI while also inspecting recorded steps.
 
 For static output, add the [HTML reporter](/guide/reporters#html-reporter). The same trace viewer can then be opened from the generated report, which is useful for run-mode and CI failures.
+
+:::
+
+::: details Looking for Playwright traces?
+
+This page now documents Vitest's built-in `browser.traceView` feature. The previous `browser.trace` guide for Playwright traces moved to [Playwright Traces](./playwright-traces).
 
 :::
 
@@ -57,48 +56,6 @@ Selecting a step also opens its source location in the Editor tab when that loca
 
 <small>Example replay uses [Vuetify's](https://github.com/vuetifyjs/vuetify) `VDateInput` component.</small>
 
-<!-- TODO: move last? "Common Setups" should come early -->
-## Snapshot Fidelity
-
-By default, trace view captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Images and canvas pixels are not inlined by default.
-
-Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so normal component styles keep working in the trace viewer and HTML reporter. This captures the parsed CSS rules the browser applied, not the exact original stylesheet bytes: comments, formatting, invalid rules, and CSS resource files such as background images or fonts are not bundled this way.
-
-Enable additional fidelity options with the object form:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    browser: {
-      traceView: {
-        enabled: true,
-        inlineImages: true,
-        recordCanvas: true,
-      },
-    },
-  },
-})
-```
-
-`inlineImages` stores loaded `<img>` pixels in the trace snapshot. This is mostly useful for the HTML reporter, where the report should be portable without depending on external image URLs. This is pixel capture, not original resource capture: SVGs are rasterized, animated images are not preserved as animations, and CSS background images or fonts are not covered. Cross-origin images need CORS-readable pixels to be inlined; otherwise they can still render from the external URL if it remains reachable.
-
-`recordCanvas` stores readable canvas pixels in the trace snapshot. This is useful for charts and simple 2D canvas output, but it is not a full canvas drawing timeline and does not provide complete WebGL replay.
-
-### External Resource Limits
-
-Trace view does not currently provide a general resource store. Resources that are not captured into the snapshot remain URL-backed.
-
-This means CSS background images and `@font-face` files referenced from serialized CSS still depend on their original URLs. External images can still render in the viewer when the browser can load the URL, but they are not portable in the HTML reporter unless `inlineImages` can capture their pixels. Cross-origin images need CORS-readable pixels for that capture; otherwise the browser can display them, but rrweb cannot safely draw them into a canvas data URL.
-
-Use `inlineImages` for loaded `<img>` elements that need to be portable in the HTML reporter. CSS subresources, fonts, non-CORS cross-origin images, videos, and other external files remain limitations of the current snapshot-based trace format.
-
-::: warning Canvas replay sandbox
-
-`recordCanvas` enables a weaker iframe sandbox in the trace viewer. rrweb replays canvas data through an image load handler, so Vitest allows scripts inside the replay iframe for traces recorded with `recordCanvas`. Keep this option enabled only when canvas pixels are useful for debugging.
-
-:::
 
 ## Common Setups
 
@@ -188,3 +145,45 @@ test('shows button', async () => {
 ## Retries and Repeats
 
 Each attempt — retry or repeat — is recorded as a separate trace. When a test has multiple attempts, the viewer opens the most recent one by default. You can switch between attempts in the Report tab.
+
+## Snapshot Fidelity
+
+By default, trace view captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Images and canvas pixels are not inlined by default.
+
+Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so normal component styles keep working in the trace viewer and HTML reporter. This captures the parsed CSS rules the browser applied, not the exact original stylesheet bytes: comments, formatting, invalid rules, and CSS resource files such as background images or fonts are not bundled this way.
+
+Enable additional fidelity options with the object form:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      traceView: {
+        enabled: true,
+        inlineImages: true,
+        recordCanvas: true,
+      },
+    },
+  },
+})
+```
+
+`inlineImages` stores loaded `<img>` pixels in the trace snapshot. This is mostly useful for the HTML reporter, where the report should be portable without depending on external image URLs. This is pixel capture, not original resource capture: SVGs are rasterized, animated images are not preserved as animations, and CSS background images or fonts are not covered. Cross-origin images need CORS-readable pixels to be inlined; otherwise they can still render from the external URL if it remains reachable.
+
+`recordCanvas` stores readable canvas pixels in the trace snapshot. This is useful for charts and simple 2D canvas output, but it is not a full canvas drawing timeline and does not provide complete WebGL replay.
+
+### External Resource Limits
+
+Trace view does not currently provide a general resource store. Resources that are not captured into the snapshot remain URL-backed.
+
+This means CSS background images and `@font-face` files referenced from serialized CSS still depend on their original URLs. External images can still render in the viewer when the browser can load the URL, but they are not portable in the HTML reporter unless `inlineImages` can capture their pixels. Cross-origin images need CORS-readable pixels for that capture; otherwise the browser can display them, but rrweb cannot safely draw them into a canvas data URL.
+
+Use `inlineImages` for loaded `<img>` elements that need to be portable in the HTML reporter. CSS subresources, fonts, non-CORS cross-origin images, videos, and other external files remain limitations of the current snapshot-based trace format.
+
+::: warning Canvas replay sandbox
+
+`recordCanvas` enables a weaker iframe sandbox in the trace viewer. rrweb replays canvas data through an image load handler, so Vitest allows scripts inside the replay iframe for traces recorded with `recordCanvas`. Keep this option enabled only when canvas pixels are useful for debugging.
+
+:::
