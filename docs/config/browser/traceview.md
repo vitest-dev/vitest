@@ -67,4 +67,4 @@ Inlines loaded `<img>` pixels into snapshots for more portable replay, especiall
 
 Captures readable canvas pixels in snapshots. This enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
 
-See [Trace View](/guide/browser/trace-view-v2) for full documentation.
+See [Trace View](/guide/browser/trace-view) for full documentation.

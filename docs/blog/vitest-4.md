@@ -175,7 +175,7 @@ await expect.element(page.getByText('To')).toBeInViewport({ ratio: 0.5 })
 
 ## Playwright Traces Support
 
-Vitest 4 supports generating [Playwright Traces](/guide/browser/trace-view). To enable tracing, you need to set the [`trace`](/config/browser/trace) option in the `test.browser` configuration or pass down `--browser.trace=on` option (`off`, `on-first-retry`, `on-all-retries`, `retain-on-failure` are also available).
+Vitest 4 supports generating [Playwright Traces](/guide/browser/playwright-traces). To enable tracing, you need to set the [`trace`](/config/browser/trace) option in the `test.browser` configuration or pass down `--browser.trace=on` option (`off`, `on-first-retry`, `on-all-retries`, `retain-on-failure` are also available).
 
 ![Playwright Traces interface](/traces.png)
 

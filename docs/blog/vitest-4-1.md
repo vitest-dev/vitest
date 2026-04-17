@@ -174,7 +174,7 @@ You can also switch this directly from the UI via the new layout toggle button.
 
 ## Enhanced Browser Trace View
 
-Vitest 4.1 brings major improvements to the [Playwright Trace Viewer](/guide/browser/trace-view) integration in browser mode. Browser interactions like `click`, `fill`, and `expect.element` are now automatically grouped in the trace timeline and linked back to the exact line in your test file.
+Vitest 4.1 brings major improvements to the [Playwright Trace Viewer](/guide/browser/playwright-traces) integration in browser mode. Browser interactions like `click`, `fill`, and `expect.element` are now automatically grouped in the trace timeline and linked back to the exact line in your test file.
 
 <center>
   <img alt="Trace Viewer showing the trace timeline and rendered component" img-light src="/trace-viewer-light.png">
@@ -205,7 +205,7 @@ await page.mark('sign in flow', async () => {
 })
 ```
 
-Read more in the [Trace View guide](/guide/browser/trace-view).
+Read more in the [Playwright Traces guide](/guide/browser/playwright-traces).
 
 ## Type-Inference in `test.extend` - New Builder Pattern
 
