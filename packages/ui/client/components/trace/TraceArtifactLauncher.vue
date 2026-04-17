@@ -2,23 +2,16 @@
 import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
+import { computed } from 'vue'
 import { openTrace } from '~/composables/trace-view'
+import { getTraceAttemptLabel } from './utils'
 
-defineProps<{
+const props = defineProps<{
   trace: BrowserTraceArtifact
   test: RunnerTestCase
 }>()
 
-function getAttemptLabel(trace: BrowserTraceData) {
-  const parts: string[] = []
-  if (trace.retry) {
-    parts.push(`Retry ${trace.retry}`)
-  }
-  if (trace.repeats) {
-    parts.push(`Repeat ${trace.repeats}`)
-  }
-  return parts.join(' / ')
-}
+const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data as BrowserTraceData))
 </script>
 
 <template>
@@ -29,8 +22,8 @@ function getAttemptLabel(trace: BrowserTraceData) {
   >
     <span class="i-carbon:play-outline block" />
     Open trace viewer
-    <span v-if="getAttemptLabel(trace.data as BrowserTraceData)" class="text-xs opacity-70">
-      {{ getAttemptLabel(trace.data as BrowserTraceData) }}
+    <span v-if="attemptLabel" class="text-xs opacity-70">
+      {{ attemptLabel }}
     </span>
   </button>
 </template>
