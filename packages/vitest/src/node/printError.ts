@@ -284,6 +284,7 @@ const skipErrorProperties = new Set([
   'VITEST_TEST_PATH',
   '__vitest_rollup_error__',
   '__vitest_error_context__',
+  '__vitest_test_syntax_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
