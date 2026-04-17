@@ -151,6 +151,7 @@ export type {
 } from '../node/types/config'
 export type {
   BaseCoverageOptions,
+  CoverageInstrumenter,
   CoverageIstanbulOptions,
   CoverageOptions,
   CoverageProvider,
@@ -158,6 +159,7 @@ export type {
   CoverageReporter,
   CoverageV8Options,
   CustomProviderOptions,
+  InstrumenterOptions,
   ReportContext,
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
