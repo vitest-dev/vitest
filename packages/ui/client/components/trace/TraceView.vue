@@ -43,7 +43,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
     return
   }
-  const { serialized, selectorId, viewport, scroll } = step.snapshot
+  const { serialized, selectorId, viewport, scroll, hoveredIds, activeElementId } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
@@ -60,6 +60,20 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
+  // This works because rrweb rewrites `:hover` css as synthetic `.:hover` class style.
+  // TODO: we should probably do the same for `:focus` but rrweb doesn't do that. let's fork or patch it?
+  for (const id of hoveredIds ?? []) {
+    const el = mirror.getNode(id) as Element | null
+    if (el?.classList) {
+      el.classList.add(':hover')
+    }
+  }
+  if (activeElementId != null) {
+    const el = mirror.getNode(activeElementId) as HTMLElement | null
+    if (el?.focus) {
+      el.focus({ preventScroll: true })
+    }
+  }
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)
   if (selectorId != null) {
     const el = mirror.getNode(selectorId)

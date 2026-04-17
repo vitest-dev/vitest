@@ -79,3 +79,28 @@ test('font files remain url dependent', async () => {
   document.body.innerHTML = '<button class="trace-font">Hello</button>'
   await page.mark('button rendered with font-face url')
 })
+
+test('snapshot-time pseudo-state styles', async () => {
+  const style = document.createElement('style')
+  style.dataset.traceFixture = ''
+  style.textContent = `
+.trace-pseudo-state {
+  color: rgb(220, 38, 38);
+}
+button.trace-pseudo-state:hover {
+  background: rgb(253, 224, 71);
+}
+input.trace-pseudo-state:focus {
+  background: rgb(253, 224, 71);
+}
+`
+  document.head.append(style)
+  document.body.innerHTML = `
+<button class="trace-pseudo-state">First pseudo state</button>
+<button class="trace-pseudo-state">Second pseudo state</button>
+<input class="trace-pseudo-state" aria-label="Focused pseudo state" value="Focused pseudo state">
+`
+  await page.getByRole('button', { name: 'First pseudo state' }).hover()
+  await page.getByRole('button', { name: 'Second pseudo state' }).click()
+  await page.getByRole("textbox", { name: 'Focused pseudo state' }).fill('Test focus')
+})

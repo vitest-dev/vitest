@@ -40,6 +40,8 @@ interface TraceSnapshot {
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
+  hoveredIds?: number[]
+  activeElementId?: number
 }
 
 export type BrowserTraceState = Record<string, BrowserTraceData>
@@ -117,6 +119,22 @@ function takeSnapshot(selector?: string): TraceSnapshot {
       x: window.scrollX,
       y: window.scrollY,
     },
+  }
+  const hoveredIds = Array.from(document.querySelectorAll(':hover'), el =>
+    mirror.getId(el)).filter(id => id !== -1)
+  if (hoveredIds.length) {
+    result.hoveredIds = hoveredIds
+  }
+  const activeElement = document.activeElement
+  if (
+    activeElement
+    && activeElement !== document.body
+    && activeElement !== document.documentElement
+  ) {
+    const id = mirror.getId(activeElement)
+    if (id !== -1) {
+      result.activeElementId = id
+    }
   }
   if (selector) {
     try {
