@@ -898,8 +898,18 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
+                    "location": "styles.test.ts:101",
+                    "name": "expect.element().toHaveStyle",
+                    "selector": " body > button:nth-child(1)",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
                     "kind": "action",
-                    "location": "styles.test.ts:117",
+                    "location": "styles.test.ts:104",
                     "name": "vitest:hover",
                     "selector": " body > button:nth-child(1)",
                     "snapshot": {
@@ -909,7 +919,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:118",
+                    "location": "styles.test.ts:105",
                     "name": "vitest:click",
                     "selector": " body > button:nth-child(2)",
                     "snapshot": {
@@ -919,7 +929,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:119",
+                    "location": "styles.test.ts:106",
                     "name": "vitest:fill",
                     "selector": " body > input",
                     "snapshot": {
@@ -929,7 +939,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:120",
+                    "location": "styles.test.ts:107",
                     "name": "vitest:fill",
                     "selector": " body > label > input",
                     "snapshot": {
@@ -1810,8 +1820,18 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
+                    "location": "styles.test.ts:101",
+                    "name": "expect.element().toHaveStyle",
+                    "selector": "internal:role=button[name="First pseudo state"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
+                  },
+                  {
                     "kind": "action",
-                    "location": "styles.test.ts:117",
+                    "location": "styles.test.ts:104",
                     "name": "vitest:hover",
                     "selector": "internal:role=button[name="First pseudo state"i]",
                     "snapshot": {
@@ -1821,7 +1841,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:118",
+                    "location": "styles.test.ts:105",
                     "name": "vitest:click",
                     "selector": "internal:role=button[name="Second pseudo state"i]",
                     "snapshot": {
@@ -1831,7 +1851,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:119",
+                    "location": "styles.test.ts:106",
                     "name": "vitest:fill",
                     "selector": "internal:role=textbox[name="Focused pseudo state"i]",
                     "snapshot": {
@@ -1841,7 +1861,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "action",
-                    "location": "styles.test.ts:120",
+                    "location": "styles.test.ts:107",
                     "name": "vitest:fill",
                     "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
                     "snapshot": {

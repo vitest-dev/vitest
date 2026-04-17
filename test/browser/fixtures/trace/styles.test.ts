@@ -1,4 +1,4 @@
-import { beforeEach, test } from 'vitest'
+import { beforeEach, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 
 beforeEach(() => {
@@ -81,30 +81,12 @@ test('font files remain url dependent', async () => {
 })
 
 test('snapshot-time pseudo-state styles', async () => {
-  const style = document.createElement('style')
-  style.dataset.traceFixture = ''
-  style.textContent = `
-.trace-pseudo-hover,
-.trace-pseudo-focus,
-.trace-pseudo-within {
-  display: block;
-  margin: 8px;
-  padding: 8px;
-}
-.trace-pseudo-hover:hover {
-  background: rgb(253, 224, 71);
-}
-.trace-pseudo-focus:focus {
-  background: rgb(253, 224, 71);
-}
-.trace-pseudo-within:focus-within {
-  background: rgb(253, 224, 71);
-}
-.trace-pseudo-within input {
-  display: block;
-}
-`
-  document.head.append(style)
+  const link = document.createElement('link')
+  link.dataset.traceFixture = ''
+  link.rel = 'stylesheet'
+  link.href = '/assets/trace-pseudo-style.css'
+  document.head.append(link)
+
   document.body.innerHTML = `
 <button class="trace-pseudo-hover">First pseudo state</button>
 <button class="trace-pseudo-hover">Second pseudo state</button>
@@ -114,6 +96,11 @@ test('snapshot-time pseudo-state styles', async () => {
   <input aria-label="Focus within pseudo state" value="Focus within pseudo state">
 </label>
 `
+
+  // ensure stylesheet is ready so rrweb can reliably snapshot
+  await expect.element(page.getByRole('button', { name: 'First pseudo state' }))
+    .toHaveStyle({ background: 'rgb(255, 200, 200)' })
+
   await page.getByRole('button', { name: 'First pseudo state' }).hover()
   await page.getByRole('button', { name: 'Second pseudo state' }).click()
   await page.getByRole("textbox", { name: 'Focused pseudo state' }).fill('Test focus')
