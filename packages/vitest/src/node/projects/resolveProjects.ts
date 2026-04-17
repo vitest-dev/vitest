@@ -260,7 +260,7 @@ export async function resolveBrowserProjects(
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
       clonedConfig.name = name
-      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      const clone = TestProject._cloneProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
 
