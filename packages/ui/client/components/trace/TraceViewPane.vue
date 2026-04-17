@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { activeTraceView, closeTrace } from '~/composables/trace-view'
+import { activeTraceView, closeTrace, getTraceAttemptLabel } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
-import { getTraceAttemptLabel } from './utils'
 
 const trace = computed(() => activeTraceView.value!.trace)
 const test = computed(() => activeTraceView.value!.test)

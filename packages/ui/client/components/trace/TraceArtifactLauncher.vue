@@ -3,8 +3,7 @@ import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 import { computed } from 'vue'
-import { openTrace } from '~/composables/trace-view'
-import { getTraceAttemptLabel } from './utils'
+import { getTraceAttemptLabel, openTrace } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
