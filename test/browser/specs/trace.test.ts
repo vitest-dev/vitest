@@ -803,13 +803,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:40",
+                    "location": "styles.test.ts:51",
                     "name": "element rendered with css url resource",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:34",
+                    "location": "styles.test.ts:45",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -822,13 +822,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:51",
+                    "location": "styles.test.ts:62",
                     "name": "button rendered with external stylesheet",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:44",
+                    "location": "styles.test.ts:55",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -841,13 +841,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:69",
+                    "location": "styles.test.ts:80",
                     "name": "button rendered with font-face url",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:55",
+                    "location": "styles.test.ts:66",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -879,13 +879,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:30",
+                    "location": "styles.test.ts:41",
                     "name": "button rendered with same-origin linked css",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:23",
+                    "location": "styles.test.ts:32",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -898,7 +898,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:20",
+                    "location": "styles.test.ts:29",
                     "name": "button rendered with style tag css",
                     "snapshot": {},
                   },
@@ -1662,13 +1662,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:40",
+                    "location": "styles.test.ts:51",
                     "name": "element rendered with css url resource",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:34",
+                    "location": "styles.test.ts:45",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1681,13 +1681,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:51",
+                    "location": "styles.test.ts:62",
                     "name": "button rendered with external stylesheet",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:44",
+                    "location": "styles.test.ts:55",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1700,13 +1700,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:69",
+                    "location": "styles.test.ts:80",
                     "name": "button rendered with font-face url",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:55",
+                    "location": "styles.test.ts:66",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1738,13 +1738,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:30",
+                    "location": "styles.test.ts:41",
                     "name": "button rendered with same-origin linked css",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "styles.test.ts:23",
+                    "location": "styles.test.ts:32",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1757,7 +1757,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "styles.test.ts:20",
+                    "location": "styles.test.ts:29",
                     "name": "button rendered with style tag css",
                     "snapshot": {},
                   },

@@ -14,13 +14,24 @@ test('inline styles', async () => {
 test('style tag css is inlined', async () => {
   const style = document.createElement('style')
   style.dataset.traceFixture = ''
-  style.textContent = '.trace-style-tag { color: rgb(220, 38, 38); font-weight: 700; }'
+  style.textContent = `
+.trace-style-tag {
+  color: rgb(220, 38, 38);
+  font-weight: 700;
+}
+.trace-style-tag:hover {
+  background: rgb(253, 224, 71);
+  color: rgb(30, 64, 175);
+}
+`
   document.head.append(style)
   document.body.innerHTML = '<button class="trace-style-tag">Hello</button>'
   await page.mark('button rendered with style tag css')
 })
 
 test('same-origin link css is inlined', async () => {
+  // TODO(test): wait for the stylesheet load event so this actually proves
+  // rrweb inlined loaded CSS instead of racing the snapshot against asset load.
   const link = document.createElement('link')
   link.dataset.traceFixture = ''
   link.rel = 'stylesheet'
