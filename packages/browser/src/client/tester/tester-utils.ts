@@ -1,5 +1,6 @@
 import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
+import type { BrowserTraceEntryStatus } from './trace'
 import { getBrowserState, getWorkerState } from '../utils'
 import { recordBrowserTraceEntry } from './trace'
 
@@ -166,10 +167,12 @@ export class CommandsManager {
             }],
           )
         }
+        let status: BrowserTraceEntryStatus = 'pass'
         try {
           return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
         }
         catch (err: any) {
+          status = 'fail'
           // rethrow an error to keep the stack trace in browser
           clientError.message = err.message
           clientError.name = err.name
@@ -181,6 +184,8 @@ export class CommandsManager {
             // TODO: action duration?
             recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
+              kind: 'action',
+              status,
               selector: typeof args[0] === 'string' ? args[0] : undefined,
               stack: clientError.stack,
             })

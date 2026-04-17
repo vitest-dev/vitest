@@ -1,5 +1,6 @@
 import type { Assertion, ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
 import type { Locator } from 'vitest/browser'
+import type { BrowserTraceEntryStatus } from './trace'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
@@ -63,7 +64,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   const hasActiveTraceView = !!currentTest && getBrowserState().activeTraceViewTaskIds.has(currentTest.id)
   if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
-    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: 'pass' | 'fail' }) => {
+    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
       const isNot = chai.util.flag(meta.assertion, 'negate')
       const name = chai.util.flag(meta.assertion, '_name') || '<unknown>'
       const baseName = `expect.element().${isNot ? 'not.' : ''}${name}`
@@ -74,6 +75,8 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name: traceName,
+          kind: 'expect',
+          status: meta.status,
           selector,
           stack: sourceError.stack,
         })

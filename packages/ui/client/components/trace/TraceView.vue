@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
-import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
+import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { computed, ref, watch } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
@@ -26,6 +26,16 @@ const iframeSandbox = computed(() => {
   return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 const iframeEl = ref<HTMLIFrameElement>()
+
+function getStepButtonClass(step: BrowserTraceEntry, index: number) {
+  const selected = selectedTraceStepIndex.value === index
+  if (step.status === 'fail') {
+    return selected
+      ? 'bg-red-500/20 text-red-600 dark:text-red-400'
+      : 'text-red-600 hover:bg-red-500/10 dark:text-red-400'
+  }
+  return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
+}
 
 function onSelectStep(index: number) {
   selectedTraceStepIndex.value = index
@@ -96,7 +106,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
         :key="index"
         type="button"
         class="text-left px-2 py-1 rounded text-sm"
-        :class="selectedTraceStepIndex === index ? 'bg-blue-500/20' : 'hover:bg-gray/10'"
+        :class="getStepButtonClass(step, index)"
         @click="onSelectStep(index)"
       >
         <div truncate>

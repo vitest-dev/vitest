@@ -23,6 +23,8 @@ test('shadow dom is rebuilt and highlightable by mirror id', async () => {
   const shadow = host.attachShadow({ mode: 'open' })
   shadow.innerHTML = '<button>Shadow button</button>'
   document.body.append(host)
+  // TODO: webdriverio currently records this trace-view selector after it is
+  // lowered to a provider-specific shadow DOM selector.
   await page.getByRole('button', { name: 'Shadow button' }).mark('shadow button rendered')
 })
 
@@ -40,6 +42,8 @@ test('custom element dom shape is rebuilt without runtime behavior', async () =>
   }
 
   document.body.innerHTML = '<trace-widget></trace-widget>'
+  // TODO: webdriverio currently records this trace-view selector after it is
+  // lowered to a provider-specific shadow DOM selector.
   await page.getByRole('button', { name: 'Custom element button' }).mark('custom element rendered')
 })
 

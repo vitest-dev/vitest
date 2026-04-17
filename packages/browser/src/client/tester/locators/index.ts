@@ -216,6 +216,7 @@ export abstract class Locator {
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name,
+          kind: 'mark',
           selector: this.selector,
           stack: options?.stack ?? error?.stack,
         })

@@ -16,6 +16,7 @@ import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators/index'
+import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
@@ -366,6 +367,7 @@ export const page: BrowserPage = {
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
+        let status: BrowserTraceEntryStatus = 'pass'
         if (hasActiveTrace) {
           await triggerCommand(
             '__vitest_groupTraceStart',
@@ -379,11 +381,17 @@ export const page: BrowserPage = {
         try {
           return await bodyOrOptions()
         }
+        catch (err) {
+          status = 'fail'
+          throw err
+        }
         finally {
           if (hasActiveTraceView) {
             // TODO: support nested trace
             recordBrowserTraceEntry(currentTest, {
               name,
+              kind: 'mark',
+              status,
               stack: options?.stack ?? error?.stack,
             })
           }
@@ -402,6 +410,7 @@ export const page: BrowserPage = {
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name,
+          kind: 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,
         })
       }

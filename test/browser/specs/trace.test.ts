@@ -18,11 +18,31 @@ test('trace view artifacts', async () => {
   }
 
   function formatEntry(raw: BrowserTraceEntry) {
-    return {
-      name: raw.name,
-      ...(raw.selector ? { selector: raw.selector } : {}),
-      ...(raw.location ? { location: formatLocation(raw.location!) } : {}),
+    // snapshot only stable data.
+    // other integration features need to be tested separately
+    const result = {
+      ...raw,
+      location: raw.location ? formatLocation(raw.location) : undefined,
+      stack: undefined,
+      snapshot: {
+        selectorResolution: raw.snapshot.selectorResolution,
+        selectorError: raw.snapshot.selectorError,
+      },
     }
+    // remove noisy undefined properties
+    for (const key of Object.keys(result)) {
+      if (result[key] === undefined) {
+        delete result[key]
+      }
+      if (result[key] && typeof result[key] === 'object') {
+        for (const subKey of Object.keys(result[key])) {
+          if (result[key][subKey] === undefined) {
+            delete result[key][subKey]
+          }
+        }
+      }
+    }
+    return result
   }
 
   const projectErrorTree = buildTestProjectTree(result.results, (testCase) => {
@@ -59,6 +79,9 @@ test('trace view artifacts', async () => {
         },
         "expect.test.ts": {
           "click": "passed",
+          "click fail": [
+            "Click failed (normalized)",
+          ],
           "expect.element fail": [
             "expect(element).toHaveTextContent()
 
@@ -104,6 +127,7 @@ test('trace view artifacts', async () => {
         },
       }
     `)
+    // TODO: review entries
     // selector format is different between providers
     if (provider.name === 'webdriverio') {
       expect.soft(projectArtifactTree[browser], browser).toMatchInlineSnapshot(`
@@ -113,12 +137,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:54",
                     "name": "button rendered with adopted stylesheet",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -127,12 +158,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
                     "selector": " body > canvas",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -141,12 +179,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:43",
                     "name": "custom element rendered",
                     "selector": ">>>html > body > trace-widget > button",
+                    "snapshot": {
+                      "selectorError": "Unexpected token "" while parsing selector """,
+                      "selectorResolution": "error",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -155,12 +201,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:26",
                     "name": "shadow button rendered",
                     "selector": ">>>html > body > section > button",
+                    "snapshot": {
+                      "selectorError": "Unexpected token "" while parsing selector """,
+                      "selectorResolution": "error",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -171,12 +225,33 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "__vitest_click",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "click fail": [
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "expect.test.ts:31",
+                    "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -185,13 +260,21 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
                     "location": "expect.test.ts:15",
                     "name": "expect.element().toHaveTextContent [ERROR]",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "fail",
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "expect.test.ts:15",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -200,12 +283,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
                     "location": "expect.test.ts:10",
                     "name": "expect.element().toHaveTextContent",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -214,8 +305,11 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "lifecycle",
                     "location": "expect.test.ts:20",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -226,12 +320,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:24",
                     "name": "render helper",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -240,12 +341,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:10",
                     "name": "button rendered - locator",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -254,11 +362,17 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:34",
                     "name": "render group",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -267,11 +381,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:15",
                     "name": "button rendered - page",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -280,12 +399,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:29",
                     "name": "button rendered - stack",
                     "selector": " body > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -296,12 +422,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
                     "selector": " body > img",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -310,12 +443,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
                     "selector": " body > img",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -326,26 +466,40 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "retry": 1,
@@ -353,13 +507,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "retry": 2,
@@ -367,13 +528,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -381,13 +549,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -397,24 +572,38 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -422,12 +611,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -437,25 +633,39 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "repeats": 1,
@@ -463,13 +673,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -478,13 +695,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -494,26 +718,40 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "retry": 1,
@@ -521,13 +759,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": " body > ul",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "retry": 2,
@@ -539,11 +784,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:40",
                     "name": "element rendered with css url resource",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -552,11 +802,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:51",
                     "name": "button rendered with external stylesheet",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -565,11 +820,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:69",
                     "name": "button rendered with font-face url",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -578,11 +838,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:11",
                     "name": "button rendered with css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -591,11 +856,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:30",
                     "name": "button rendered with same-origin linked css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -604,11 +874,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:20",
                     "name": "button rendered with style tag css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -619,12 +894,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:33",
                     "name": "document scrolled before mark",
                     "selector": " body > main > button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -633,12 +915,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:49",
                     "name": "overflow container scrolled before mark",
                     "selector": " body > section",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -647,11 +936,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:23",
                     "name": "viewport sensitive layout rendered",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -668,12 +962,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:54",
                     "name": "button rendered with adopted stylesheet",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -682,12 +983,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
                     "selector": "internal:testid=[data-testid="trace-canvas"s]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -696,12 +1004,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:43",
                     "name": "custom element rendered",
                     "selector": "internal:role=button[name="Custom element button"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -710,12 +1025,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "exotic.test.ts:26",
                     "name": "shadow button rendered",
                     "selector": "internal:role=button[name="Shadow button"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -726,12 +1048,43 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "__vitest_click",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "click fail": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "location": "expect.test.ts:31",
+                    "name": "__vitest_click",
+                    "selector": "internal:role=button[name="Missing"i]",
+                    "snapshot": {
+                      "selectorResolution": "missing",
+                    },
+                    "status": "fail",
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "expect.test.ts:31",
+                    "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -740,13 +1093,21 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
                     "location": "expect.test.ts:15",
                     "name": "expect.element().toHaveTextContent [ERROR]",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "fail",
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "expect.test.ts:15",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -755,12 +1116,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "expect",
                     "location": "expect.test.ts:10",
                     "name": "expect.element().toHaveTextContent",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -769,8 +1138,11 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "lifecycle",
                     "location": "expect.test.ts:20",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -781,12 +1153,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:24",
                     "name": "render helper",
                     "selector": "internal:role=button[name="Hello"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -795,12 +1174,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:10",
                     "name": "button rendered - locator",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -809,11 +1195,17 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:34",
                     "name": "render group",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -822,11 +1214,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:15",
                     "name": "button rendered - page",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -835,12 +1232,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "mark.test.ts:29",
                     "name": "button rendered - stack",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -851,12 +1255,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
                     "selector": "internal:attr=[alt="external trace asset"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -865,12 +1276,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
                     "selector": "internal:attr=[alt="local trace asset"i]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -881,26 +1299,40 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "retry": 1,
@@ -908,13 +1340,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "retry": 2,
@@ -922,13 +1361,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -936,13 +1382,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:31",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -952,24 +1405,38 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -977,12 +1444,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -992,25 +1466,39 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "repeats": 1,
@@ -1018,13 +1506,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 1,
@@ -1033,13 +1528,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:38",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "repeats": 2,
@@ -1049,26 +1551,40 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [fail]",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
                 "retry": 1,
@@ -1076,13 +1592,20 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
                     "selector": "internal:role=list",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "location": "retry.test.ts:24",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
                 "retry": 2,
@@ -1094,11 +1617,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:40",
                     "name": "element rendered with css url resource",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1107,11 +1635,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:51",
                     "name": "button rendered with external stylesheet",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1120,11 +1653,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:69",
                     "name": "button rendered with font-face url",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1133,11 +1671,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:11",
                     "name": "button rendered with css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1146,11 +1689,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:30",
                     "name": "button rendered with same-origin linked css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1159,11 +1707,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "styles.test.ts:20",
                     "name": "button rendered with style tag css",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1174,12 +1727,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:33",
                     "name": "document scrolled before mark",
                     "selector": "internal:role=button",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1188,12 +1748,19 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:49",
                     "name": "overflow container scrolled before mark",
                     "selector": "internal:testid=[data-testid="scroll-box"s]",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
@@ -1202,11 +1769,16 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "kind": "mark",
                     "location": "viewport.test.ts:23",
                     "name": "viewport sensitive layout rendered",
+                    "snapshot": {},
                   },
                   {
+                    "kind": "lifecycle",
                     "name": "vitest:onAfterRetryTask [pass]",
+                    "snapshot": {},
+                    "status": "pass",
                   },
                 ],
               },
