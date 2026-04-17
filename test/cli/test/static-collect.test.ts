@@ -435,30 +435,32 @@ test('collects tests imported from another file while a vi.mock line is present'
     vi.mock('@/composables/test.js', async (importOriginal) => { });
       
     describe('should included', () => {
-      it('is included because of workspace plugin setting', () => {});
+      it('is included', () => {});
     });
 
-    describe('should included', () => {
-      describe('nested', () => {
-        it('is included because of workspace plugin setting', ({ server }) => {});
+    describe('top level describe', () => {
+      describe('nested describe', () => {
+        it('is included', ({ server }) => {});
       });
     });
 `)
   expect(testModule).toMatchInlineSnapshot(`
     {
       "should included": {
-        "is included because of workspace plugin setting": {
+        "is included": {
           "errors": [],
-          "fullName": "should included > is included because of workspace plugin setting",
+          "fullName": "should included > is included",
           "id": "-1732721377_0_0",
           "location": "8:6",
           "mode": "run",
           "state": "pending",
         },
-        "nested": {
-          "is included because of workspace plugin setting": {
+      },
+      "top level describe": {
+        "nested describe": {
+          "is included": {
             "errors": [],
-            "fullName": "should included > nested > is included because of workspace plugin setting",
+            "fullName": "top level describe > nested describe > is included",
             "id": "-1732721377_1_0_0",
             "location": "13:8",
             "mode": "run",
@@ -478,30 +480,33 @@ test('collects tests imported from another file while a vi.mock line is present 
     // vi.mock('@/composables/test.js', async (importOriginal) => { });
       
     describe('should included', () => {
-      it('is included because of workspace plugin setting', () => {});
+      it('is included', () => {});
     });
 
-    describe('should included', () => {
-      describe('nested', () => {
-        it('is included because of workspace plugin setting', ({ server }) => {});
+    describe('top level describe', () => {
+      describe('nested describe', () => {
+        it('is included', ({ server }) => {});
       });
     });
 `)
+
   expect(testModule).toMatchInlineSnapshot(`
     {
       "should included": {
-        "is included because of workspace plugin setting": {
+        "is included": {
           "errors": [],
-          "fullName": "should included > is included because of workspace plugin setting",
+          "fullName": "should included > is included",
           "id": "-1732721377_0_0",
           "location": "8:6",
           "mode": "run",
           "state": "pending",
         },
-        "nested": {
-          "is included because of workspace plugin setting": {
+      },
+      "top level describe": {
+        "nested describe": {
+          "is included": {
             "errors": [],
-            "fullName": "should included > nested > is included because of workspace plugin setting",
+            "fullName": "top level describe > nested describe > is included",
             "id": "-1732721377_1_0_0",
             "location": "13:8",
             "mode": "run",
