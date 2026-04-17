@@ -7,6 +7,7 @@ import { instances, provider } from '../../settings'
 // pnpm dlx serve test/browser/fixtures/trace/html
 export default defineConfig({
   test: {
+    includeTaskLocation: true,
     browser: {
       enabled: true,
       provider: provider,

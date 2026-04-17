@@ -149,6 +149,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:51",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -170,6 +171,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:11",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -192,6 +194,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:32",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -214,6 +217,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:20",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -238,6 +242,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "expect.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -296,6 +301,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "expect.test.ts:8",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -332,6 +338,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -353,6 +360,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:8",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -372,6 +380,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:33",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -390,6 +399,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:13",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -411,6 +421,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:27",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -434,6 +445,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "resources.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -455,6 +467,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "resources.test.ts:9",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -584,6 +597,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -603,6 +617,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -623,6 +638,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -645,6 +661,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -793,6 +810,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:34",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -811,6 +829,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:44",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -829,6 +848,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:55",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -847,6 +867,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:9",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -865,6 +886,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -883,6 +905,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:14",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -906,6 +929,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:26",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -927,6 +951,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:36",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -945,6 +970,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:12",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -974,6 +1000,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:51",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -995,6 +1022,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:11",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1016,6 +1044,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:32",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1037,6 +1066,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "exotic.test.ts:20",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1061,6 +1091,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "expect.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1129,6 +1160,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "expect.test.ts:8",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1165,6 +1197,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1186,6 +1219,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:8",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1205,6 +1239,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:33",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1223,6 +1258,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:13",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1244,6 +1280,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "mark.test.ts:27",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1267,6 +1304,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "resources.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1288,6 +1326,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "resources.test.ts:9",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1417,6 +1456,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1436,6 +1476,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1456,6 +1497,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:17",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1478,6 +1520,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1626,6 +1669,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:34",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1644,6 +1688,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:44",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1662,6 +1707,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:55",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1680,6 +1726,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:9",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1698,6 +1745,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:23",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1716,6 +1764,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "styles.test.ts:14",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1739,6 +1788,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:26",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1760,6 +1810,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:36",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1778,6 +1829,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
+                    "location": "viewport.test.ts:12",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",

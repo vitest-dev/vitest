@@ -125,12 +125,13 @@ export function createBrowserRunner(
       const hasActiveTraceView = getBrowserState().activeTraceViewTaskIds.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
-        // TODO: add test.location if available when no error.stack?
+        const stack = test.result?.errors?.[0].stack
+        const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
         recordBrowserTraceEntry(test, {
           name: `vitest:onAfterRetryTask [${status}]`,
           kind: 'lifecycle',
           ...(status === 'pass' || status === 'fail' ? { status } : {}),
-          stack: test.result?.errors?.[0].stack,
+          ...(stack ? { stack } : location ? { location } : {}),
         })
         // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
         const traceData = getBrowserTrace(test.id, repeats, retry)
