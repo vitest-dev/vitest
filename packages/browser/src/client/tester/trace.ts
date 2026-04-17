@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import { getBrowserState } from '../utils'
+import { getBrowserState, now } from '../utils'
 
 // TODO: review slop (NEVER REMOVE COMMENT)
 
@@ -57,11 +57,6 @@ export interface BrowserTraceAttempt {
   repeats: number
   startTime: number
 }
-
-// TODO: move to utils.ts
-export const now: () => number = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 function getBrowserTraceState(): BrowserTraceState {
   return getBrowserState().browserTraceState ??= {

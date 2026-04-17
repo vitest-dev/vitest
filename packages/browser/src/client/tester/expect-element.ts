@@ -3,11 +3,11 @@ import type { Locator } from 'vitest/browser'
 import type { BrowserTraceEntryStatus } from './trace'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
-import { getBrowserState, getWorkerState } from '../utils'
+import { getBrowserState, getWorkerState, now } from '../utils'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
-import { now, recordBrowserTraceEntry } from './trace'
+import { recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 

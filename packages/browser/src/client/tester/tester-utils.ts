@@ -1,8 +1,8 @@
 import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
-import { getBrowserState, getWorkerState } from '../utils'
-import { now, recordBrowserTraceEntry } from './trace'
+import { getBrowserState, getWorkerState, now } from '../utils'
+import { recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {

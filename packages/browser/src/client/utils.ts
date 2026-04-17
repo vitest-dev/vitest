@@ -27,6 +27,10 @@ export const moduleRunner = {
   },
 }
 
+export const now: () => number = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
+
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }

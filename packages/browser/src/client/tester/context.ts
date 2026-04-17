@@ -19,9 +19,9 @@ import type { Locator as LocatorAPI } from './locators/index'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState, now } from '../utils'
 import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
-import { now, recordBrowserTraceEntry } from './trace'
+import { recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 

@@ -28,10 +28,10 @@ import {
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { getBrowserState, getWorkerState, moduleRunner } from '../utils'
+import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { getBrowserTrace, now, recordBrowserTraceEntry } from './trace'
+import { getBrowserTrace, recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
