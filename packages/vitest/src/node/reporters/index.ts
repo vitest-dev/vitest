@@ -27,6 +27,7 @@ export {
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  AgentReporter as MinimalReporter,
   TapFlatReporter,
   TapReporter,
   TreeReporter,
@@ -49,6 +50,7 @@ export type {
 export const ReportersMap = {
   'default': DefaultReporter as typeof DefaultReporter,
   'agent': AgentReporter as typeof AgentReporter,
+  'minimal': AgentReporter as typeof AgentReporter,
   'blob': BlobReporter as typeof BlobReporter,
   'verbose': VerboseReporter as typeof VerboseReporter,
   'dot': DotReporter as typeof DotReporter,
@@ -65,6 +67,7 @@ export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
+  'minimal': DefaultReporterOptions
   'agent': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
