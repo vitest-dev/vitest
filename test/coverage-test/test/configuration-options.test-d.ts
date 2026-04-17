@@ -34,7 +34,10 @@ test('provider options, generic', () => {
       '100': true,
       'lines': 1,
       'autoUpdate': true,
-      'perFile': true,
+      'perFile': {
+        lines: 40,
+        functions: 50,
+      },
       'statements': 100,
 
       '**/some-file.ts': {
@@ -58,7 +61,10 @@ test('provider options, generic', () => {
       '100': false,
       'lines': 1,
       'autoUpdate': true,
-      'perFile': true,
+      'perFile': {
+        branches: 60,
+        statements: 70,
+      },
       'statements': 100,
 
       '**/some-file.ts': {
