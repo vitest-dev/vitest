@@ -143,6 +143,7 @@ export function resolveOptions(
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
     browserName: context.project.config.browser.name,
+    project: context.project,
   } satisfies Parameters<GlobalOptions['resolveDiffPath']>[0]
 
   return {
