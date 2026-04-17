@@ -1,8 +1,6 @@
 import type { Task } from '@vitest/runner'
 import { getBrowserState, now } from '../utils'
 
-// TODO: review slop (NEVER REMOVE COMMENT)
-
 export interface BrowserTraceData {
   retry: number
   repeats: number
@@ -44,13 +42,7 @@ interface TraceSnapshot {
   selectorError?: string
 }
 
-export interface BrowserTraceState {
-  entries: Map<string, Map<string, BrowserTraceData>>
-}
-
-type BrowserTraceEntryOptions = Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
-  startTime?: number
-}
+export type BrowserTraceState = Record<string, BrowserTraceData>
 
 export interface BrowserTraceAttempt {
   retry: number
@@ -59,19 +51,19 @@ export interface BrowserTraceAttempt {
 }
 
 function getBrowserTraceState(): BrowserTraceState {
-  return getBrowserState().browserTraceState ??= {
-    entries: new Map(),
-  }
+  return getBrowserState().browserTraceState ??= {}
 }
 
-function getAttemptKey(repeats: number, retry: number) {
-  return `${repeats}:${retry}`
+function getTraceStateKey(testId: string, repeats: number, retry: number) {
+  return `${testId}:${repeats}:${retry}`
 }
 
 // TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
-  options: BrowserTraceEntryOptions,
+  options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
+    startTime?: number
+  },
 ): void {
   // TODO: trace-view currently receives selectors after locator/action resolution,
   // so provider-specific lowered selectors can leak into snapshot lookup. Preserve
@@ -84,23 +76,19 @@ export function recordBrowserTraceEntry(
     options.selector = options.selector.slice(6)
   }
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
-  const { startTime = now(), ...entryOptions } = options
-  const relativeStartTime = startTime - attemptInfo.startTime
+  const relativeStartTime = (options.startTime ?? now()) - attemptInfo.startTime
   const snapshot = takeSnapshot(options.selector)
   const entry: BrowserTraceEntry = {
-    ...entryOptions,
+    ...options,
     startTime: relativeStartTime,
     snapshot,
   }
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
   const state = getBrowserTraceState()
-  const attempts = state.entries.get(task.id) || new Map()
-  const attemptKey = getAttemptKey(repeats, retry)
-  const attempt = attempts.get(attemptKey) || { retry, repeats, recordCanvas, entries: [] }
-  attempt.entries.push(entry)
-  attempts.set(attemptKey, attempt)
-  state.entries.set(task.id, attempts)
+  const traceKey = getTraceStateKey(task.id, repeats, retry)
+  state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
+  state[traceKey].entries.push(entry)
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror
@@ -161,18 +149,10 @@ function takeSnapshot(selector?: string): TraceSnapshot {
 
 export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
   const state = getBrowserTraceState()
-  const attempts = state.entries.get(testId)
-  if (!attempts?.size) {
-    return
+  const traceKey = getTraceStateKey(testId, repeats, retry)
+  const result = state[traceKey]
+  if (result) {
+    delete state[traceKey]
+    return result
   }
-  const attemptKey = getAttemptKey(repeats, retry)
-  const attempt = attempts.get(attemptKey)
-  if (!attempt) {
-    return
-  }
-  attempts.delete(attemptKey)
-  if (!attempts.size) {
-    state.entries.delete(testId)
-  }
-  return attempt
 }
