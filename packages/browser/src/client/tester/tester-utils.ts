@@ -97,7 +97,6 @@ function getParent(el: Element) {
   return parent
 }
 
-// TODO: format as `vitest:click` in trace
 const ACTION_TRACE_COMMANDS = new Set([
   '__vitest_click',
   '__vitest_dblClick',
@@ -135,7 +134,9 @@ export class CommandsManager {
     const filepath = state.filepath || state.current?.file?.filepath
     args = args.filter(arg => arg !== undefined) // remove optional fields
 
-    const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command) ? command : undefined
+    const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
+      ? `vitest:${command.slice('__vitest_'.length)}`
+      : undefined
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!actionTraceGroupName
       && !!currentTest

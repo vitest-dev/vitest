@@ -229,7 +229,7 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "action",
                     "location": "expect.test.ts:25",
-                    "name": "__vitest_click",
+                    "name": "vitest:click",
                     "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
@@ -1052,7 +1052,7 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "action",
                     "location": "expect.test.ts:25",
-                    "name": "__vitest_click",
+                    "name": "vitest:click",
                     "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
@@ -1074,7 +1074,7 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "action",
                     "location": "expect.test.ts:33",
-                    "name": "__vitest_click",
+                    "name": "vitest:click",
                     "selector": "internal:role=button[name="Missing"i]",
                     "snapshot": {
                       "selectorResolution": "missing",
