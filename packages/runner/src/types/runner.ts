@@ -11,7 +11,6 @@ import type {
   Test,
   TestAnnotation,
   TestArtifact,
-  TestBenchmark,
   TestContext,
   TestOptions,
   TestTags,
@@ -27,10 +26,6 @@ export interface VitestRunnerConfig {
   passWithNoTests: boolean
   testNamePattern: RegExp | undefined
   allowOnly: boolean
-  benchmark: {
-    enabled: boolean
-    retainSamples: boolean
-  }
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -197,11 +192,6 @@ export interface VitestRunner {
    * Called when artifacts are recorded on tests via the `recordArtifact` utility.
    */
   onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
-
-  /**
-   * Called when `bench().run()` or `bench.compare()` is finished and has a non-error result.
-   */
-  onTestBenchmark?: (test: Test, benchmark: TestBenchmark) => unknown
 
   /**
    * Called before running all tests in collected paths.

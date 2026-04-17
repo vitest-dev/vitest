@@ -106,6 +106,7 @@ export interface SerializedConfig extends VitestRunnerConfig {
   benchmark: {
     enabled: boolean
     retainSamples: boolean
+    updateBaselines: boolean
   }
   serializedDefines: string
   experimental: {

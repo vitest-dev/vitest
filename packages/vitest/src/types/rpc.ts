@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '@vitest/runner'
+import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
 import type { OTELCarrier } from '../utils/traces'
@@ -29,6 +29,9 @@ export interface RuntimeRPC {
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
+
+  readBenchmarkBaseline: (testFilepath: string, key: string) => Promise<BaselineData | null>
+  saveBenchmarkBaseline: (testFilepath: string, key: string, data: BaselineData) => Promise<void>
 
   ensureModuleGraphEntry: (id: string, importer: string) => void
 }

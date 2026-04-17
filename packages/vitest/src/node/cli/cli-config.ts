@@ -964,11 +964,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
   watchTriggerPatterns: null,
   tags: null,
   benchmarkOnly: null,
+  updateBaselines: null,
 }
 
 export const benchCliOptionsConfig: Pick<
   VitestCLIOptions,
-  'compare' | 'outputJson'
+  'compare' | 'outputJson' | 'updateBaselines'
 > = {
   compare: {
     description: 'Benchmark output file to compare against',
@@ -977,6 +978,9 @@ export const benchCliOptionsConfig: Pick<
   outputJson: {
     description: 'Benchmark output file',
     argument: '<filename>',
+  },
+  updateBaselines: {
+    description: 'Overwrite stored benchmark baselines with fresh results',
   },
 }
 

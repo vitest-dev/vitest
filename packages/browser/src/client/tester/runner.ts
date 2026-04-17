@@ -8,7 +8,6 @@ import type {
   Test,
   TestAnnotation,
   TestArtifact,
-  TestBenchmark,
   TestTryOptions,
   VitestRunner,
 } from '@vitest/runner'
@@ -280,10 +279,6 @@ export function createBrowserRunner(
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
       return rpc().onTaskUpdate(this.method, task, events)
-    }
-
-    onTestBenchmark = (test: Test, benchmark: TestBenchmark) => {
-      return rpc().onTestBenchmark(test.id, benchmark)
     }
 
     importFile = async (filepath: string, mode: 'collect' | 'setup') => {

@@ -192,8 +192,7 @@ test('no performance regression', async ({ bench }) => {
 
 - **First run**: Executes the benchmark and stores the result to a `__benchmarks__/` directory next to the test file.
 - **Subsequent runs**: Executes the benchmark and compares against the stored result, reporting any regressions.
-<!-- TODO -->
-- **Updating baselines**: Use the `--update` flag to update stored baselines.
+- **Updating baselines**: Use the `--update-baselines` flag to overwrite stored baselines with fresh results.
 
 Baselines work inside `bench.compare()` too. You can mix regular and baseline benchmarks:
 

@@ -124,6 +124,12 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     async onTestBenchmark(testId, benchmark) {
       return vitest._testRun.recordBenchmark(testId, benchmark)
     },
+    async readBenchmarkBaseline(testFilepath, key) {
+      return vitest._testRun.readBenchmarkBaseline(testFilepath, key)
+    },
+    async saveBenchmarkBaseline(testFilepath, key, data) {
+      return vitest._testRun.saveBenchmarkBaseline(testFilepath, key, data)
+    },
     async onTaskArtifactRecord(testId, artifact) {
       return vitest._testRun.recordArtifact(testId, artifact)
     },

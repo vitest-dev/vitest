@@ -1,4 +1,5 @@
 import type {
+  BaselineData,
   File as RunnerTestFile,
   TaskEventData,
   TaskEventPack,
@@ -24,7 +25,7 @@ import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
-import { basename, extname, resolve } from 'pathe'
+import { basename, dirname, extname, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -61,6 +62,34 @@ export class TestRun {
     const testCase = this.getTestCaseById(testId, 'Benchmark')
     testCase.task.benchmarks.push(benchmark)
     await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
+  }
+
+  private resolveBenchmarkBaselinePath(testFilepath: string): string {
+    return resolve(dirname(testFilepath), '__benchmarks__', `${basename(testFilepath)}.json`)
+  }
+
+  async readBenchmarkBaseline(testFilepath: string, key: string): Promise<BaselineData | null> {
+    const baselinePath = this.resolveBenchmarkBaselinePath(testFilepath)
+    if (!existsSync(baselinePath)) {
+      return null
+    }
+    const content = JSON.parse(readFileSync(baselinePath, 'utf-8'))
+    return content[key] ?? null
+  }
+
+  async saveBenchmarkBaseline(testFilepath: string, key: string, data: BaselineData): Promise<void> {
+    const updateBaselines = this.vitest.config.benchmark?.updateBaselines || this.vitest.config.updateBaselines
+    const baselinePath = this.resolveBenchmarkBaselinePath(testFilepath)
+    let content: Record<string, BaselineData> = {}
+    if (existsSync(baselinePath)) {
+      content = JSON.parse(readFileSync(baselinePath, 'utf-8'))
+    }
+    // always write on first run (no existing baseline), overwrite all when --update-baselines
+    if (updateBaselines || !(key in content)) {
+      content[key] = data
+      await mkdir(dirname(baselinePath), { recursive: true })
+      await writeFile(baselinePath, `${JSON.stringify(content, null, 2)}\n`, 'utf-8')
+    }
   }
 
   async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {

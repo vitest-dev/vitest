@@ -22,6 +22,7 @@ export const benchmarkConfigDefaults: Required<
   exclude: defaultExclude,
   includeSource: [],
   retainSamples: false,
+  updateBaselines: false,
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.

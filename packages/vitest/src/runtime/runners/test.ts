@@ -14,6 +14,7 @@ import type {
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
+import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import {
@@ -30,6 +31,7 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
+import { createBench } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
@@ -232,6 +234,15 @@ export class TestRunner implements VitestTestRunner {
     Object.defineProperty(context, '_local', {
       get() {
         return _expect != null
+      },
+    })
+    let _bench: Bench | undefined
+    Object.defineProperty(context, 'bench', {
+      get() {
+        if (!_bench) {
+          _bench = createBench(context.task, this.config)
+        }
+        return _bench
       },
     })
     return context

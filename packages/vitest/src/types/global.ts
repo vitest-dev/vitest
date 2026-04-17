@@ -1,7 +1,8 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { BenchResult, Test } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
+import type { Bench, BenchResult } from '../runtime/benchmark'
 import type { UserConsoleLog } from './general'
 
 interface SnapshotMatcher<T> {
@@ -136,6 +137,10 @@ declare module '@vitest/runner' {
      * This API is useful for running snapshot tests concurrently because global expect cannot track them.
      */
     readonly expect: ExpectStatic
+    /**
+     * TODO
+     */
+    readonly bench: Bench
     /** @internal */
     _local: boolean
   }

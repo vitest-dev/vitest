@@ -149,11 +149,5 @@ export async function resolveTestRunner(
     await originalOnAfterRunTask?.call(testRunner, test)
   }
 
-  const originalOnTestBenchmark = testRunner.onTestBenchmark
-  testRunner.onTestBenchmark = async (test, benchmark) => {
-    await rpc().onTestBenchmark(test.id, benchmark)
-    return originalOnTestBenchmark?.call(testRunner, test, benchmark)
-  }
-
   return testRunner
 }

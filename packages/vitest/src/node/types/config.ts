@@ -1095,6 +1095,12 @@ export interface UserConfig extends InlineConfig {
   outputJson?: string
 
   /**
+   * Overwrite stored benchmark baselines with fresh results.
+   * benchmark.updateBaselines option exposed at the top level for cli
+   */
+  updateBaselines?: boolean
+
+  /**
    * Directory of blob reports to merge
    * @default '.vitest-reports'
    */

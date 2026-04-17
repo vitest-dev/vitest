@@ -27,4 +27,10 @@ export interface BenchmarkUserOptions {
    * @default false
    */
   retainSamples?: boolean
+
+  /**
+   * Overwrite stored benchmark baselines with fresh results.
+   * @default false
+   */
+  updateBaselines?: boolean
 }

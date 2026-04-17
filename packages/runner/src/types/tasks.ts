@@ -1,6 +1,5 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { BenchOptions, Fn, Statistics } from 'tinybench'
-import type { Bench } from '../benchmark'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
 import type { ChainableFunction, kChainableContext } from '../utils/chain'
@@ -358,6 +357,13 @@ export interface TestBenchmark {
 
 export type TestBenchmarkStatistics = Omit<Statistics, 'samples'>
 
+export interface BaselineData {
+  latency: TestBenchmarkStatistics
+  throughput: TestBenchmarkStatistics
+  period: number
+  totalTime: number
+}
+
 export interface TestBenchmarkTask {
   name: string
   latency: TestBenchmarkStatistics
@@ -366,6 +372,8 @@ export interface TestBenchmarkTask {
   totalTime: number
   rank: number
   perProject?: boolean
+  baseline?: boolean
+  baselineResult?: BaselineData
 }
 
 export type Task = Test | Suite | File
@@ -1224,9 +1232,6 @@ export interface TestContext {
    * Metadata of the current test
    */
   readonly task: Readonly<Test>
-
-  // TODO: types
-  readonly bench: Bench
 
   /**
    * An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be aborted if the test times out or

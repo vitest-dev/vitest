@@ -1,5 +1,5 @@
 import type { MatchersObject } from '@vitest/expect'
-import type { BenchResult } from '@vitest/runner'
+import type { BenchResult } from '../../runtime/benchmark'
 
 function isBenchResult(value: unknown): value is BenchResult {
   return (
