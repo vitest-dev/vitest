@@ -68,6 +68,7 @@ export interface BrowserTraceViewOptions {
    * Capture canvas pixels in trace view snapshots.
    *
    * This uses rrweb's canvas snapshot support and can increase trace artifact size.
+   * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
    *
    * @default false
    * @experimental

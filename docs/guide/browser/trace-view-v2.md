@@ -40,12 +40,12 @@ vitest --browser.traceView
 
 :::
 
-When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). The viewer has two panes:
+When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). The viewer has two resizable panes:
 
-- **Step list** (left) — every recorded interaction and assertion, with name, selector, and source location. Click a step to navigate to it.
+- **Step list** (left) — every recorded action, assertion, mark, and lifecycle entry, with name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
 - **DOM snapshot** (right) — a reconstruction of the page at the selected step. The interacted element is highlighted in blue.
 
-Clicking on a step's source location jumps to that line in the Editor tab.
+Selecting a step also opens its source location in the Editor tab when that location is available.
 
 <img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
 <img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
@@ -132,10 +132,12 @@ You can enable both at the same time. See [Playwright Trace Files](./trace-view.
 Trace entries are recorded automatically for:
 
 - `expect.element(...)` assertions
-- Interactive actions like `click`, `fill`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`
+- Interactive actions like `click`, `dblClick`, `tripleClick`, `fill`, `clear`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
 - Test runner lifecycle event (e.g. `vitest:onAfterRetryTask` is recorded after each test and retry run)
 
-Each entry captures the DOM state at that point, along with the selector and the source location that triggered it.
+Each entry captures the DOM state at that point, along with timing information, the selector, and the source location that triggered it.
+
+Element highlighting is best-effort. Some provider-specific selectors, shadow DOM selectors, or elements that are not present in the captured snapshot may not be highlighted.
 
 ## Custom Trace Entries
 
