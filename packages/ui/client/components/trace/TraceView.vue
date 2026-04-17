@@ -60,8 +60,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
-  // This works because rrweb rewrites `:hover` css as synthetic `.:hover` class style.
-  // TODO: we should probably do the same for `:focus` but rrweb doesn't do that. let's fork or patch it?
+  // `:hover` is supported by rrweb-snapshot; `:focus` is added by our local patch.
   for (const id of hoveredIds ?? []) {
     const el = mirror.getNode(id) as Element | null
     if (el?.classList) {
@@ -69,9 +68,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     }
   }
   if (activeElementId != null) {
-    const el = mirror.getNode(activeElementId) as HTMLElement | null
-    if (el?.focus) {
-      el.focus({ preventScroll: true })
+    const el = mirror.getNode(activeElementId) as Element | null
+    if (el?.classList) {
+      el.classList.add(':focus')
     }
   }
   iframe.contentWindow!.scrollTo(scroll?.x ?? 0, scroll?.y ?? 0)

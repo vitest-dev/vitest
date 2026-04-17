@@ -1,0 +1,42 @@
+diff --git a/dist/rrweb-snapshot.cjs b/dist/rrweb-snapshot.cjs
+index e97e870a4846f1f84ff667fb12e55a31a3842dfe..d6a1cd7d69f7314fd9aa75f7aed0545731e8fdd9 100644
+--- a/dist/rrweb-snapshot.cjs
++++ b/dist/rrweb-snapshot.cjs
+@@ -1515,6 +1515,9 @@ const pseudoClassPlugin = {
+           if (selector.includes(":hover")) {
+             rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
+           }
++          if (/:focus(?![-\w])/.test(selector)) {
++            rule2.selector += ",\n" + selector.replace(/:focus(?![-\w])/g, ".\\:focus");
++          }
+         });
+       }
+     };
+diff --git a/dist/rrweb-snapshot.js b/dist/rrweb-snapshot.js
+index 3a3b67808308f4b50ad906dccfaaf577b4264742..57c4bdfdda070077c31100c27c4a5c16a2e1336e 100644
+--- a/dist/rrweb-snapshot.js
++++ b/dist/rrweb-snapshot.js
+@@ -1513,6 +1513,9 @@ const pseudoClassPlugin = {
+           if (selector.includes(":hover")) {
+             rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
+           }
++          if (/:focus(?![-\w])/.test(selector)) {
++            rule2.selector += ",\n" + selector.replace(/:focus(?![-\w])/g, ".\\:focus");
++          }
+         });
+       }
+     };
+diff --git a/dist/rrweb-snapshot.umd.cjs b/dist/rrweb-snapshot.umd.cjs
+index 770a4de001fe38754281bfbed79e0d591c3e82e3..4948e1726b72abb502e75e5109a4ff3658899675 100644
+--- a/dist/rrweb-snapshot.umd.cjs
++++ b/dist/rrweb-snapshot.umd.cjs
+@@ -1560,6 +1560,9 @@ const pseudoClassPlugin = {
+           if (selector.includes(":hover")) {
+             rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
+           }
++          if (/:focus(?![-\w])/.test(selector)) {
++            rule2.selector += ",\n" + selector.replace(/:focus(?![-\w])/g, ".\\:focus");
++          }
+         });
+       }
+     };

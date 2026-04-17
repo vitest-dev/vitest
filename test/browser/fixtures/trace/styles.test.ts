@@ -84,23 +84,38 @@ test('snapshot-time pseudo-state styles', async () => {
   const style = document.createElement('style')
   style.dataset.traceFixture = ''
   style.textContent = `
-.trace-pseudo-state {
-  color: rgb(220, 38, 38);
+.trace-pseudo-hover,
+.trace-pseudo-focus,
+.trace-pseudo-within {
+  display: block;
+  margin: 8px;
+  padding: 8px;
 }
-button.trace-pseudo-state:hover {
+.trace-pseudo-hover:hover {
   background: rgb(253, 224, 71);
 }
-input.trace-pseudo-state:focus {
+.trace-pseudo-focus:focus {
   background: rgb(253, 224, 71);
+}
+.trace-pseudo-within:focus-within {
+  background: rgb(253, 224, 71);
+}
+.trace-pseudo-within input {
+  display: block;
 }
 `
   document.head.append(style)
   document.body.innerHTML = `
-<button class="trace-pseudo-state">First pseudo state</button>
-<button class="trace-pseudo-state">Second pseudo state</button>
-<input class="trace-pseudo-state" aria-label="Focused pseudo state" value="Focused pseudo state">
+<button class="trace-pseudo-hover">First pseudo state</button>
+<button class="trace-pseudo-hover">Second pseudo state</button>
+<input class="trace-pseudo-focus" aria-label="Focused pseudo state" value="Focused pseudo state">
+<label class="trace-pseudo-within">
+  Focus within target
+  <input aria-label="Focus within pseudo state" value="Focus within pseudo state">
+</label>
 `
   await page.getByRole('button', { name: 'First pseudo state' }).hover()
   await page.getByRole('button', { name: 'Second pseudo state' }).click()
   await page.getByRole("textbox", { name: 'Focused pseudo state' }).fill('Test focus')
+  await page.getByRole("textbox", { name: 'Focus within pseudo state' }).fill('Test focus within')
 })
