@@ -177,6 +177,7 @@ export class TestRunner implements VitestTestRunner {
         isExpectingAssertionsError: null,
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
+        pendingExpects: [],
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
@@ -191,6 +192,7 @@ export class TestRunner implements VitestTestRunner {
       expectedAssertionsNumberErrorGen,
       isExpectingAssertions,
       isExpectingAssertionsError,
+      pendingExpects,
     }
       = test.context._local
         ? test.context.expect.getState()
@@ -206,6 +208,13 @@ export class TestRunner implements VitestTestRunner {
     }
     if (this.config.expect.requireAssertions && assertionCalls === 0) {
       throw this.assertionsErrors.get(test)
+    }
+    if (pendingExpects) {
+      for (const pending of pendingExpects) {
+        if (!pending.called) {
+          throw pending.error
+        }
+      }
     }
   }
 

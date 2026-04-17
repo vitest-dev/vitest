@@ -428,6 +428,28 @@ describe('jest-expect', () => {
     expect(1).toBe(1)
   })
 
+  it.fails('expect without matcher throws at end of test', () => {
+    expect(1)
+  })
+
+  it('expect with matcher does not throw', () => {
+    expect(1).toBe(1)
+  })
+
+  it('expect with .resolves matcher does not throw', async () => {
+    await expect(Promise.resolve(1)).resolves.toBe(1)
+  })
+
+  it('expect with .rejects matcher does not throw', async () => {
+    await expect(Promise.reject(new Error('err'))).rejects.toThrow('err')
+  })
+
+  it.fails('multiple expect without matcher throws', () => {
+    expect(1)
+    expect(2)
+    expect(3).toBe(3)
+  })
+
   it.fails('toBe with null/undefined values', () => {
     expect(undefined).toBe(true)
     expect(null).toBe(true)

@@ -49,10 +49,10 @@ describe('custom matcher are inherited by local context', () => {
 
   it('basic', ({ expect: localExpect }) => {
     // as assertion
-    expect(expect('test')).toHaveProperty('toEqual_testCustom')
-    expect(expect.soft('test')).toHaveProperty('toEqual_testCustom')
-    expect(localExpect('test')).toHaveProperty('toEqual_testCustom')
-    expect(localExpect.soft('test')).toHaveProperty('toEqual_testCustom')
+    ;(expect('test') as any).toEqual_testCustom('test')
+    ;(expect.soft('test') as any).toEqual_testCustom('test')
+    ;(localExpect('test') as any).toEqual_testCustom('test')
+    ;(localExpect.soft('test') as any).toEqual_testCustom('test')
 
     // as asymmetric matcher
     expect(expect).toHaveProperty('toEqual_testCustom')
