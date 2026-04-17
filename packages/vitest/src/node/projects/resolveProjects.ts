@@ -215,7 +215,11 @@ export async function resolveDefaultProjects(
       return
     }
 
-    // TODO: if --project=bench is called, we shouldn't throw in the plugin
+    if (vitest.isExcludedByProjectFilter(project.config.name)) {
+      benchmark.enabled = false
+      return
+    }
+
     const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
     if (!vitest.matchesProjectFilter(name)) {
       benchmark.enabled = false
@@ -223,7 +227,7 @@ export async function resolveDefaultProjects(
     }
 
     if (names.has(name)) {
-      throw new Error(`Cannot create a benchmark project because the name ${name} is already in use.`)
+      throw new Error(`Cannot create a benchmark project because the name "${name}" is already in use.`)
     }
     names.add(name)
 
@@ -235,8 +239,8 @@ export async function resolveDefaultProjects(
       includeSource: benchmark.includeSource,
       maxWorkers: 1,
       maxConcurrency: 1,
-      testTimeout: 60_000,
-      hookTimeout: 120_000,
+      testTimeout: project.config.testTimeout < 60_000 ? 60_000 : project.config.testTimeout,
+      hookTimeout: project.config.hookTimeout < 120_000 ? 120_000 : project.config.hookTimeout,
       // Spread because we disable it in the original project
       benchmark: { ...benchmark },
       sequence: {
