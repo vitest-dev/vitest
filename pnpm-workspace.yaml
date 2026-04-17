@@ -69,6 +69,7 @@ catalog:
   birpc: ^4.0.0
   cac: ^6.7.14
   chai: ^6.2.2
+  dependency-cruiser: ^17.3.9
   flatted: ^3.4.2
   istanbul-lib-coverage: ^3.2.2
   istanbul-lib-report: ^3.0.1
