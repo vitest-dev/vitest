@@ -1,13 +1,19 @@
 import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
+import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
 import { ref, watch } from 'vue'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
 export interface ActiveTraceView {
-  trace: BrowserTraceArtifact
   test: RunnerTestCase
+  trace: BrowserTraceArtifactWithData
+}
+
+export interface BrowserTraceArtifactWithData extends Omit<BrowserTraceArtifact, 'data'> {
+  // fill up actual data type since runner-level BrowserTraceArtifact has `unknown`
+  data: BrowserTraceData
 }
 
 export const activeTraceView = ref<ActiveTraceView>()
@@ -15,8 +21,8 @@ export const activeTraceView = ref<ActiveTraceView>()
 export function openTrace(trace: BrowserTraceArtifact, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
-    trace,
     test,
+    trace: trace as BrowserTraceArtifactWithData,
   }
 }
 

@@ -1,20 +1,13 @@
 <script setup lang="ts">
-import type { BrowserTraceArtifact } from '@vitest/runner'
-import type { RunnerTestCase } from 'vitest'
-import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { getLocationString, openLocation } from '~/composables/location'
-import { closeTrace } from '~/composables/trace-view'
+import { activeTraceView, closeTrace } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 import { getTraceAttemptLabel } from './utils'
 
-const props = defineProps<{
-  trace: BrowserTraceArtifact
-  test: RunnerTestCase
-}>()
-
-const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data as BrowserTraceData))
+const trace = computed(() => activeTraceView.value!.trace)
+const test = computed(() => activeTraceView.value!.test)
+const attemptLabel = computed(() => getTraceAttemptLabel(trace.value.data))
 </script>
 
 <template>
@@ -28,14 +21,6 @@ const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data as Bro
       >
         {{ attemptLabel }}
       </span>
-      <button
-        v-if="props.trace.location"
-        type="button"
-        class="text-xs opacity-70 truncate hover:opacity-100"
-        @click="openLocation(props.test, props.trace.location)"
-      >
-        {{ getLocationString(props.trace.location) }}
-      </button>
       <IconButton
         v-tooltip.bottom="'Close Trace Viewer'"
         title="Close Trace Viewer"
@@ -44,8 +29,8 @@ const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data as Bro
       />
     </div>
     <TraceView
-      :trace="props.trace"
-      :test="props.test"
+      :trace="trace"
+      :test="test"
     />
   </div>
 </template>

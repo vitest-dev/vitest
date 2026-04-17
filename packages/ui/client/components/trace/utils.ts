@@ -1,5 +1,6 @@
 import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
 
+// TODO: move to composables
 export function getTraceAttemptLabel(trace: BrowserTraceData) {
   const parts: string[] = []
   if (trace.retry) {

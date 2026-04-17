@@ -125,19 +125,12 @@ function allowBrowserEvents() {
                       <BrowserIframe v-once />
                     </Pane>
                     <Pane v-if="activeTraceView" size="45" min-size="10">
-                      <TraceViewPane
-                        :trace="activeTraceView.trace"
-                        :test="activeTraceView.test"
-                      />
+                      <TraceViewPane />
                     </Pane>
                   </Splitpanes>
                   <BrowserIframe v-else v-once />
                 </template>
-                <TraceViewPane
-                  v-else-if="activeTraceView"
-                  :trace="activeTraceView.trace"
-                  :test="activeTraceView.test"
-                />
+                <TraceViewPane v-else-if="activeTraceView" />
               </Pane>
               <Pane
                 v-if="detailsPanelVisible"
