@@ -8,17 +8,15 @@ import type {
   Test,
   TestAnnotation,
   TestArtifact,
+  TestTryOptions,
   VitestRunner,
 } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
-import type {
-  Traces,
-} from 'vitest/internal/browser'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { getTestName } from '@vitest/runner/utils'
-import { BenchmarkRunner, recordArtifact, TestRunner } from 'vitest'
+import { recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
   DecodedMap,
@@ -49,18 +47,16 @@ interface BrowserVitestRunner extends VitestRunner {
 }
 
 export function createBrowserRunner(
-  runnerClass: { new (config: SerializedConfig): VitestRunner },
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
-  coverageModule: CoverageHandler | null,
+  coverageModule: CoverageHandler,
 ): { new (options: BrowserRunnerOptions): BrowserVitestRunner } {
-  return class BrowserTestRunner extends runnerClass implements VitestRunner {
+  return class BrowserTestRunner extends TestRunner implements VitestRunner {
     public config: SerializedConfig
-    hashMap = browserHashMap
+    public hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
-    private _otel!: Traces
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -76,12 +72,11 @@ export function createBrowserRunner(
 
     private traces = new Map<string, string[]>()
 
-    onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
+    async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
-      await super.onBeforeTryTask?.(...args)
+      super.onBeforeTryTask?.(test, options)
       const trace = this.config.browser.trace
-      const test = args[0]
-      const { retry, repeats } = args[1]
+      const { retry, repeats } = options
       const shouldTrace = trace !== 'off'
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
@@ -126,7 +121,7 @@ export function createBrowserRunner(
     }
 
     onAfterRunTask = async (task: Test) => {
-      await super.onAfterRunTask?.(task)
+      super.onAfterRunTask?.(task)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
       if (traces.length) {
@@ -205,10 +200,11 @@ export function createBrowserRunner(
     }
 
     onAfterRunFiles = async (files: File[]) => {
+      super.onAfterRunFiles(files)
+
       const [coverage] = await Promise.all([
-        coverageModule?.takeCoverage?.(),
+        coverageModule.takeCoverage(),
         mocker.invalidate(),
-        super.onAfterRunFiles?.(files),
       ])
 
       if (coverage) {
@@ -332,10 +328,7 @@ export async function initiateRunner(
   if (cachedRunner) {
     return cachedRunner
   }
-  const runnerClass
-    = config.mode === 'test' ? TestRunner : BenchmarkRunner
-
-  const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
+  const BrowserRunner = createBrowserRunner(mocker, state, {
     takeCoverage: () =>
       takeCoverageInsideWorker(config.coverage, moduleRunner),
   })
@@ -352,10 +345,10 @@ export async function initiateRunner(
   })
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, moduleRunner as any),
-    loadSnapshotSerializers(config, moduleRunner as any),
+    loadDiffConfig(config, moduleRunner),
+    loadSnapshotSerializers(config, moduleRunner),
   ])
-  runner.config.diffOptions = diffOptions
+  runner.config._diffOptions = diffOptions
   getWorkerState().onFilterStackTrace = (stack: string) => {
     const stacks = parseStacktrace(stack, {
       getSourceMap(file) {
@@ -375,7 +368,7 @@ async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
   if (!result) {
     return null
   }
-  return new DecodedMap(result as any, file)
+  return new DecodedMap(result, file)
 }
 
 async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {

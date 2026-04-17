@@ -25,7 +25,7 @@ import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
-  vitest: Vitest = new Vitest('test', deepClone(options)),
+  vitest: Vitest = new Vitest(deepClone(options)),
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
@@ -148,6 +148,11 @@ export async function VitestPlugin(
                   legalComments: 'inline',
                 },
           }
+        }
+
+        if (vitest._cliOptions.benchmarkOnly) {
+          config.test!.benchmark ??= {}
+          config.test!.benchmark.enabled = true
         }
 
         // inherit so it's available in VitestOptimizer

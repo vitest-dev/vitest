@@ -17,11 +17,12 @@ export const defaultExclude: string[] = [
 export const benchmarkConfigDefaults: Required<
   Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
 > = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
-  includeSamples: false,
+  retainSamples: false,
+  updateBaselines: false,
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.

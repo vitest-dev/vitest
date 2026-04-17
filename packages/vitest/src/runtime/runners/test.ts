@@ -8,11 +8,13 @@ import type {
   Task,
   Test,
   TestContext,
+  TestTryOptions,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
+import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import {
@@ -29,7 +31,7 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getBenchFn, getBenchOptions } from '../benchmark'
+import { createBench } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
@@ -42,7 +44,10 @@ export class TestRunner implements VitestTestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
-  private _otel!: Traces
+  /**
+   * @internal
+   */
+  public _otel!: Traces
   public viteEnvironment: string
   private viteModuleRunner: boolean
 
@@ -83,7 +88,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.onCleanup(listener)
   }
 
-  onAfterRunFiles(): void {
+  onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
   }
@@ -167,7 +172,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task): void {
+  onBeforeTryTask(test: Task, _options: TestTryOptions): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
@@ -231,6 +236,15 @@ export class TestRunner implements VitestTestRunner {
         return _expect != null
       },
     })
+    let _bench: Bench | undefined
+    Object.defineProperty(context, 'bench', {
+      get() {
+        if (!_bench) {
+          _bench = createBench(context.task, this.config)
+        }
+        return _bench
+      },
+    })
     return context
   }
 
@@ -279,15 +293,6 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
-
-  /**
-   * @deprecated
-   */
-  static getBenchFn: typeof getBenchFn = getBenchFn
-  /**
-   * @deprecated
-   */
-  static getBenchOptions: typeof getBenchOptions = getBenchOptions
 }
 
 function clearModuleMocks(config: SerializedConfig) {

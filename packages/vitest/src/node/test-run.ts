@@ -1,11 +1,13 @@
 import type {
   File as RunnerTestFile,
+  TaskEventData,
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
+  TestArtifact,
   TestAttachment,
+  TestBenchmark,
 } from '@vitest/runner'
-import type { TaskEventData, TestArtifact } from '@vitest/runner/types/tasks'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
@@ -55,33 +57,45 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
-    const task = this.vitest.state.idMap.get(testId)
-    const entity = task && this.vitest.state.getReportedEntity(task)
+  async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
+    const testCase = this.getTestCaseById(testId, 'Benchmark')
+    testCase.task.benchmarks.push(benchmark)
+    const baselineTasks = benchmark.tasks.filter(t => t.baseline)
+    // TODO: parallel
+    if (baselineTasks.length > 0) {
+      await this.vitest.benchmark.saveBaselines(
+        testCase.task.file.filepath,
+        testCase.task.file.projectName,
+        testCase.task.fullTestName,
+        baselineTasks,
+      )
+    }
+    await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
+  }
 
-    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
-    assert(entity.type === 'test', `Artifacts can only be recorded on a test, instead got ${entity.type}`)
+  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
+    const testCase = this.getTestCaseById(testId, 'Artifact')
 
     // annotations won't resolve as artifacts for backwards compatibility until next major
     if (artifact.type === 'internal:annotation') {
-      await this.resolveTestAttachment(entity, artifact.annotation.attachment, artifact.annotation.message)
+      await this.resolveTestAttachment(testCase, artifact.annotation.attachment, artifact.annotation.message)
 
-      entity.task.annotations.push(artifact.annotation)
+      testCase.task.annotations.push(artifact.annotation)
 
-      await this.vitest.report('onTestCaseAnnotate', entity, artifact.annotation)
+      await this.vitest.report('onTestCaseAnnotate', testCase, artifact.annotation)
 
       return artifact
     }
 
     if (Array.isArray(artifact.attachments)) {
       await Promise.all(
-        artifact.attachments.map(attachment => this.resolveTestAttachment(entity, attachment)),
+        artifact.attachments.map(attachment => this.resolveTestAttachment(testCase, attachment)),
       )
     }
 
-    entity.task.artifacts.push(artifact)
+    testCase.task.artifacts.push(artifact)
 
-    await this.vitest.report('onTestCaseArtifactRecord', entity, artifact)
+    await this.vitest.report('onTestCaseArtifactRecord', testCase, artifact)
 
     return artifact
   }
@@ -100,6 +114,15 @@ export class TestRun {
     // "onTaskUpdate" in parallel with others or before all or after all?
     // TODO: error handling - what happens if custom reporter throws an error?
     await this.vitest.report('onTaskUpdate', update, events)
+  }
+
+  private getTestCaseById(testId: string, recordType: string) {
+    const task = this.vitest.state.idMap.get(testId)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
+    assert(entity.type === 'test', `${recordType} can only be recorded on a test, instead got ${entity.type}`)
+    return entity
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {

@@ -1,4 +1,3 @@
-export { getBenchFn, getBenchOptions } from '../runtime/benchmark'
 export {
   createTaskCollector,
   getCurrentSuite,

@@ -1,70 +1,328 @@
-import type { Test } from '@vitest/runner'
-import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
-import { getCurrentSuite } from '@vitest/runner'
-import { createChainable } from '@vitest/runner/utils'
-import { noop } from '@vitest/utils/helpers'
-import { getWorkerState } from './utils'
+import type { BaselineData, Test, TestBenchmark, TestBenchmarkTask } from '@vitest/runner'
+import type {
+  BenchOptions as BenchCompareOptions,
+  Fn,
+  FnOptions,
+  TaskResultCompleted,
+  TaskResultRuntimeInfo,
+  TaskResultTimestampProviderInfo,
+} from 'tinybench'
+import type { SerializedConfig } from './config'
+import { Bench as Tinybench } from 'tinybench'
+import { rpc } from './rpc'
 
-const benchFns = new WeakMap<Test, BenchFunction>()
-const benchOptsMap = new WeakMap()
+const now = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
-export function getBenchOptions(key: Test): BenchOptions {
-  return benchOptsMap.get(key)
+const kRegistration: unique symbol = Symbol('registration')
+const kBaseline: unique symbol = Symbol('baseline')
+const kPerProject: unique symbol = Symbol('perProject')
+
+type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
+  [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
+}[number], never>
+
+// We throw an error if benchmark did not complete, so it will always be TaskResultCompleted
+export type BenchResult = TaskResultCompleted & TaskResultRuntimeInfo & TaskResultTimestampProviderInfo
+
+export interface BenchStorage<T extends string> {
+  get: (name: T) => BenchResult
 }
 
-export function getBenchFn(key: Test): BenchFunction {
-  return benchFns.get(key)!
+export type { BenchOptions as BenchCompareOptions, FnOptions as BenchFnOptions } from 'tinybench'
+
+export interface BenchRegistration<Name extends string> {
+  name: Name
+  fn: Fn
+  fnOpts?: FnOptions
+  run: (options?: BenchCompareOptions) => Promise<BenchResult>
+  /**
+   * @internal
+   */
+  [kRegistration]: true
 }
 
-export const bench: BenchmarkAPI = createBenchmark(function (
-  name,
-  fn: BenchFunction = noop,
-  options: BenchOptions = {},
-) {
-  if (getWorkerState().config.mode !== 'benchmark') {
-    throw new Error('`bench()` is only available in benchmark mode.')
+export interface BaselineRegistration<Name extends string> extends BenchRegistration<Name> {
+  /**
+   * @internal
+   */
+  [kBaseline]: true
+}
+
+export interface PerProjectRegistration<Name extends string> extends BenchRegistration<Name> {
+  /**
+   * @internal
+   */
+  [kPerProject]: true
+}
+
+interface BenchCompare {
+  <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
+  <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
+}
+
+export interface Bench {
+  <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions): BenchRegistration<Name>
+  // TODO: support having both withBaseline and perProject
+  withBaseline: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => BaselineRegistration<Name>
+  compare: BenchCompare
+  perProject: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => PerProjectRegistration<Name>
+}
+
+export function createBench(test: Test, config: SerializedConfig): Bench {
+  let benchIdx = 0
+  const createTinybench = (options?: BenchCompareOptions) => {
+    const currentIndex = ++benchIdx
+    return new Tinybench({
+      signal: test.context.signal,
+      name: `${test.fullTestName} ${currentIndex}`,
+      retainSamples: config.benchmark.retainSamples,
+      ...options,
+      now,
+    })
   }
 
-  const task = getCurrentSuite().task(formatName(name), {
-    ...this,
-    meta: {
-      benchmark: true,
-    },
-  })
-  benchFns.set(task, fn)
-  benchOptsMap.set(task, options)
-  // vitest runner sets mode to `todo` if handler is not passed down
-  // but we store handler separately
-  if (!this.todo && task.mode === 'todo') {
-    task.mode = 'run'
+  const createRegisteredTinybench = <Args extends BenchRegistration<any>[]>(name: 'compare' | 'compareSync', registrations: (BenchCompareOptions | Args[0] | Args[number])[]) => {
+    if (registrations.length === 0) {
+      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 0 instead. Define benchmarks by calling \`bench()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
+    }
+    const lastArg = registrations[registrations.length - 1]
+    const isOptions = typeof lastArg === 'object' && !(kRegistration in lastArg)
+    const benchOptions = isOptions ? registrations.pop() as BenchCompareOptions : undefined
+    if (registrations.length < 2) {
+      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 1 instead. Consider calling \`bench().${name === 'compare' ? 'run' : 'runSync'}()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
+    }
+    const bench = createTinybench(benchOptions)
+    registrations.forEach((registration) => {
+      if (!(kRegistration in registration)) {
+        throw new SyntaxError('`bench.compare` expects every argument to be the return value of `bench`, `bench.perProject` or `bench.withBaseline`.')
+      }
+      bench.add(registration.name, registration.fn, registration.fnOpts)
+    })
+    return bench
   }
-})
 
-function createBenchmark(
-  fn: (
-    this: Record<'skip' | 'only' | 'todo', boolean | undefined>,
-    name: string | Function,
-    fn?: BenchFunction,
-    options?: BenchOptions,
-  ) => void,
-) {
-  const benchmark = createChainable(
-    ['skip', 'only', 'todo'],
+  const createCompareStorage = <T extends string>(bench: Tinybench, storedBaselines?: Map<string, BaselineData>): BenchStorage<T> => {
+    return {
+      get(name: T) {
+        const stored = storedBaselines?.get(name)
+        if (stored) {
+          return stored as BenchResult
+        }
+        const task = bench.getTask(name)
+        if (!task) {
+          throw new Error(`task "${name}" was not defined`)
+        }
+        return task.result as BenchResult
+      },
+    }
+  }
+
+  const baselineKey = (name: string) => {
+    const project = test.file.projectName
+    return project ? `${project} > ${test.fullTestName} > ${name}` : `${test.fullTestName} > ${name}`
+  }
+
+  interface TaskMeta { perProject?: true; baseline?: true }
+
+  const serializeBenchmark = (
+    bench: Tinybench,
+    taskMeta?: Map<string, TaskMeta>,
+    storedBaselines?: Map<string, BaselineData>,
+  ): TestBenchmark => {
+    const tasks: TestBenchmarkTask[] = bench.tasks.map((t) => {
+      const result = t.result
+      if (result.state === 'errored') {
+        throw result.error
+      }
+      if (result.state !== 'completed') {
+        throw new Error(`task "${t.name}" did not complete: received "${result.state}"`)
+      }
+      return {
+        name: t.name,
+        latency: result.latency,
+        throughput: result.throughput,
+        period: result.period,
+        totalTime: result.totalTime,
+        rank: 0,
+        ...taskMeta?.get(t.name),
+      }
+    })
+    // inject stored baselines that were not run (no `baseline` flag — already saved)
+    if (storedBaselines) {
+      for (const [name, data] of storedBaselines) {
+        tasks.push({
+          name,
+          latency: data.latency,
+          throughput: data.throughput,
+          period: data.period,
+          totalTime: data.totalTime,
+          rank: 0,
+        })
+      }
+    }
+    tasks.sort((a, b) => a.latency.mean - b.latency.mean)
+    tasks.forEach((task, idx) => {
+      task.rank = idx + 1
+    })
+    return {
+      name: bench.name || test.fullTestName,
+      tasks,
+    }
+  }
+
+  const recordBenchmark = async (
+    bench: Tinybench,
+    taskMeta?: Map<string, TaskMeta>,
+    storedBaselines?: Map<string, BaselineData>,
+  ) => {
+    const serializedBenchmark = serializeBenchmark(bench, taskMeta, storedBaselines)
+    test.benchmarks.push(serializedBenchmark)
+    await rpc().onTestBenchmark(test.id, serializedBenchmark)
+  }
+
+  const runSingle = async (name: string, fn: Fn, fnOpts: FnOptions | undefined, options: BenchCompareOptions | undefined, meta?: TaskMeta): Promise<BenchResult> => {
+    const tinybench = createTinybench(options).add(name, fn, fnOpts)
+    await tinybench.run()
+    await recordBenchmark(tinybench, meta ? new Map([[name, meta]]) : undefined)
+    const task = tinybench.getTask(name)!
+    return task.result as BenchResult
+  }
+
+  const bench: Bench = function bench(
+    name,
     fn,
-  ) as BenchmarkAPI
+    fnOpts,
+  ) {
+    validateBenchmarkProject(config)
+    return {
+      [kRegistration]: true,
+      name,
+      fn,
+      fnOpts,
+      run: options => runSingle(name, fn, fnOpts, options),
+    }
+  }
 
-  benchmark.skipIf = (condition: any) =>
-    (condition ? benchmark.skip : benchmark) as BenchmarkAPI
-  benchmark.runIf = (condition: any) =>
-    (condition ? benchmark : benchmark.skip) as BenchmarkAPI
+  bench.withBaseline = function withBaseline(
+    name,
+    fn,
+    fnOpts,
+  ) {
+    validateBenchmarkProject(config)
+    return {
+      [kRegistration]: true,
+      [kBaseline]: true,
+      name,
+      fn,
+      fnOpts,
+      async run(options) {
+        const key = baselineKey(name)
+        const existing = await rpc().readBenchmarkBaseline(test.file.filepath, key)
+        // if a stored baseline exists and we're not updating, use it
+        if (existing && !config.benchmark.updateBaselines) {
+          const benchmark: TestBenchmark = {
+            name: options?.name || test.fullTestName,
+            tasks: [{
+              name,
+              latency: existing.latency,
+              throughput: existing.throughput,
+              period: existing.period,
+              totalTime: existing.totalTime,
+              rank: 1,
+            }],
+          }
+          test.benchmarks.push(benchmark)
+          await rpc().onTestBenchmark(test.id, benchmark)
+          return existing as unknown as BenchResult
+        }
+        // no stored baseline or updating — run the benchmark and save
+        const tinybench = createTinybench(options).add(name, fn, fnOpts)
+        await tinybench.run()
+        const task = tinybench.getTask(name)!
+        if (task.result.state === 'errored') {
+          throw task.result.error
+        }
+        const result = task.result as BenchResult
+        await recordBenchmark(tinybench, new Map([[name, { baseline: true }]]))
+        return result
+      },
+    }
+  }
 
-  return benchmark as BenchmarkAPI
+  bench.perProject = function perProject(name, fn, fnOpts) {
+    validateBenchmarkProject(config)
+    return {
+      [kRegistration]: true,
+      [kPerProject]: true,
+      name,
+      fn,
+      fnOpts,
+      run: options => runSingle(name, fn, fnOpts, options, { perProject: true }),
+    }
+  }
+
+  bench.compare = async (...registrations) => {
+    validateBenchmarkProject(config)
+    const taskMeta = new Map<string, TaskMeta>()
+    for (const reg of registrations) {
+      if (typeof reg !== 'object' || !(kRegistration in reg)) {
+        continue
+      }
+      const meta: TaskMeta = {}
+      if (kPerProject in reg) {
+        meta.perProject = true
+      }
+      if (kBaseline in reg) {
+        meta.baseline = true
+      }
+      if (meta.perProject || meta.baseline) {
+        taskMeta.set(reg.name, meta)
+      }
+    }
+
+    // read stored baselines before creating tinybench
+    const storedBaselines = new Map<string, BaselineData>()
+    if (!config.benchmark.updateBaselines) {
+      await Promise.all(
+        [...taskMeta].filter(([, m]) => m.baseline).map(async ([name]) => {
+          const key = baselineKey(name)
+          const existing = await rpc().readBenchmarkBaseline(test.file.filepath, key)
+          if (existing) {
+            storedBaselines.set(name, existing)
+          }
+        }),
+      )
+    }
+
+    // filter out baseline registrations that have stored data — don't run them
+    const filteredRegistrations = registrations.filter((reg) => {
+      return !(typeof reg === 'object' && kBaseline in reg && storedBaselines.has(reg.name))
+    })
+    const tinybench = createRegisteredTinybench('compare', filteredRegistrations)
+    await tinybench.run()
+    const errors = tinybench.tasks
+      .filter(task => task.result.state === 'errored')
+      .map(task => (task.result as any).error)
+    if (errors.length > 0) {
+      throw new AggregateError(errors, 'Some benchmarks failed')
+    }
+
+    await recordBenchmark(tinybench, taskMeta, storedBaselines)
+    return createCompareStorage(tinybench, storedBaselines)
+  }
+
+  return bench
 }
 
-function formatName(name: string | Function) {
-  return typeof name === 'string'
-    ? name
-    : typeof name === 'function'
-      ? name.name || '<anonymous>'
-      : String(name)
+function validateBenchmarkProject(config: SerializedConfig) {
+  if (!config.benchmark.enabled) {
+    throw new Error(
+      `Cannot run a benchmark within a regular test run. `
+      + `Benchmarks are inherently flaky, so Vitest groups them into its own project based on \`benchmark.include\` pattern. `
+      + `Are you using the \`bench\` function within a regular test? `
+      + `See more at https://vitest.dev/guide/benchmarking#stability`,
+    )
+  }
 }
