@@ -153,7 +153,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
           ref="iframeEl"
           :key="iframeSandbox"
           :sandbox="iframeSandbox"
-          style="border: none; flex: none"
+          style="background: white; border: none; color-scheme: normal; flex: none"
         />
         <div v-else class="text-sm opacity-50 p-2">
           No snapshot for this step.
