@@ -47,19 +47,19 @@ export class StateManager {
   collectFiles(files: File[] = []): void {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
-      const otherProject = existing.filter(
-        i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck,
-      )
       const currentFile = existing.find(
-        i => i.projectName === file.projectName,
+        i => i.projectName === file.projectName
+          && i.meta.typecheck === file.meta.typecheck
+          && i.meta.__vitest_label__ === file.meta.__vitest_label__,
       )
       // keep logs for the previous file because it should always be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests
       if (currentFile) {
         file.logs = currentFile.logs
       }
-      otherProject.push(file)
-      this.filesMap.set(file.filepath, otherProject)
+      const otherFiles = existing.filter(i => i !== currentFile)
+      otherFiles.push(file)
+      this.filesMap.set(file.filepath, otherFiles)
       this.updateId(file)
     })
   }
