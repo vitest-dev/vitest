@@ -205,11 +205,11 @@ export async function resolveDefaultProjects(
   names: Set<string>,
   resolvedProjects: TestProject[],
 ): Promise<TestProject[]> {
-  await resolveBrowserProjects(vitest, names, resolvedProjects)
+  const newProjects = await resolveBrowserProjects(vitest, names, resolvedProjects)
 
-  let lastGroupOrder = Math.max(0, ...resolvedProjects.map(p => p.config.sequence.groupOrder))
+  let lastGroupOrder = Math.max(0, ...newProjects.map(p => p.config.sequence.groupOrder))
 
-  resolvedProjects.forEach((project) => {
+  newProjects.forEach((project) => {
     const benchmark = project.config.benchmark
     if (!benchmark.enabled) {
       return
@@ -253,9 +253,9 @@ export async function resolveDefaultProjects(
     })
     // disable benchmark in the original project
     benchmark.enabled = false
-    resolvedProjects.push(benchmarkProject)
+    newProjects.push(benchmarkProject)
   })
-  return resolvedProjects
+  return newProjects
 }
 
 async function resolveBrowserProjects(
