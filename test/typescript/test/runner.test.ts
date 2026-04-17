@@ -153,6 +153,24 @@ it('throws an error if typechecker process exists', async () => {
   }
 })
 
+it('logs experimental typecheck warning once for a run with multiple typecheck projects', async () => {
+  // Each project with typecheck.enabled triggers a separate resolveConfig call.
+  // Without dedup, PROJECT_COUNT warnings would be logged. Assert exactly one.
+  const PROJECT_COUNT = 5
+  const { stderr } = await runVitest({
+    root: resolve(import.meta.dirname, '..'),
+    projects: Array.from({ length: PROJECT_COUNT }, (_, i) => ({
+      test: {
+        name: `typecheck-project-${i + 1}`,
+        dir: resolve(import.meta.dirname, '../test-d'),
+        typecheck: { enabled: true },
+      },
+    })),
+  })
+  const warningCount = (stderr.match(/Testing types with tsc and vue-tsc is an experimental feature/g) ?? []).length
+  expect(warningCount).toBe(1)
+})
+
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
 }
