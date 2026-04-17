@@ -129,7 +129,6 @@ test('trace view artifacts', async () => {
         },
       }
     `)
-    // TODO: review entries
     // selector format is different between providers
     if (provider.name === 'webdriverio') {
       expect.soft(projectArtifactTree[browser], browser).toMatchInlineSnapshot(`
@@ -532,7 +531,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -553,7 +552,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -574,7 +573,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -702,7 +701,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:38",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -724,7 +723,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:38",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -788,7 +787,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:24",
+                    "location": "retry.test.ts:21",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1391,7 +1390,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1412,7 +1411,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1433,7 +1432,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:31",
+                    "location": "retry.test.ts:28",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1561,7 +1560,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:38",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1583,7 +1582,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:38",
+                    "location": "retry.test.ts:35",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1647,7 +1646,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "retry.test.ts:24",
+                    "location": "retry.test.ts:21",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",

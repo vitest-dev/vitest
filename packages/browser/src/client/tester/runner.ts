@@ -123,7 +123,7 @@ export function createBrowserRunner(
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
-        const stack = test.result?.errors?.[0].stack
+        const stack = status === 'fail' ? test.result?.errors?.[0].stack : undefined
         const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
         recordBrowserTraceEntry(test, {
           name: `vitest:onAfterRetryTask [${status}]`,
