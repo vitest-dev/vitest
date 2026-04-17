@@ -89,7 +89,7 @@ export class TestRunner implements VitestTestRunner {
   }
 
   async onAfterRunSuite(suite: Suite): Promise<void> {
-    if (this.config.logHeapUsage && typeof process !== 'undefined') {
+    if (this.config.logHeapUsage && typeof process?.memoryUsage === 'function') {
       suite.result!.heap = process.memoryUsage().heapUsed
     }
 
@@ -122,7 +122,7 @@ export class TestRunner implements VitestTestRunner {
   }
 
   onAfterRunTask(test: Task): void {
-    if (this.config.logHeapUsage && typeof process !== 'undefined') {
+    if (this.config.logHeapUsage && typeof process?.memoryUsage === 'function') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
 
