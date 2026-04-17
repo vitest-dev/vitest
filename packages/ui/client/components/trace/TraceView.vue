@@ -8,8 +8,7 @@ import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
 
-// TODO: review slop (NEVER REMOVE COMMENT)
-// - make it unit-testable for better iteration
+// TODO: component test to demo trace view inside trace view
 
 const props = defineProps<{
   trace: BrowserTraceArtifact
@@ -18,37 +17,19 @@ const props = defineProps<{
 
 const traceData = computed(() => props.trace.data as BrowserTraceData)
 const entries = computed(() => traceData.value.entries)
+
 const selectedStepIndex = ref(0)
 const selectedStep = computed(() => entries.value[selectedStepIndex.value])
+watch(() => props.trace, () => {
+  selectedStepIndex.value = 0
+})
+
+const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
   return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
-const iframeEl = ref<HTMLIFrameElement>()
-
-function getStepButtonClass(step: BrowserTraceEntry, index: number) {
-  const selected = selectedStepIndex.value === index
-  if (step.status === 'fail') {
-    return selected
-      ? 'bg-red-500/20 text-red-600 dark:text-red-400'
-      : 'text-red-600 hover:bg-red-500/10 dark:text-red-400'
-  }
-  return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
-}
-
-function formatTraceTime(ms: number) {
-  return ms < 1000
-    ? `${Math.round(ms)}ms`
-    : `${(ms / 1000).toFixed(1)}s`
-}
-
-function formatTraceTiming(step: BrowserTraceEntry) {
-  const startTime = `+${formatTraceTime(step.startTime)}`
-  return step.duration == null
-    ? startTime
-    : `${startTime} · ${formatTraceTime(step.duration)}`
-}
 
 function onSelectStep(index: number) {
   selectedStepIndex.value = index
@@ -57,10 +38,6 @@ function onSelectStep(index: number) {
     openLocation(props.test, step.location)
   }
 }
-
-watch(() => props.trace, () => {
-  selectedStepIndex.value = 0
-})
 
 watch([selectedStep, iframeEl], ([step, iframe]) => {
   if (!step || !iframe) {
@@ -112,6 +89,29 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     }
   }
 }, { immediate: true })
+
+function getStepButtonClass(step: BrowserTraceEntry, index: number) {
+  const selected = selectedStepIndex.value === index
+  if (step.status === 'fail') {
+    return selected
+      ? 'bg-red-500/20 text-red-600 dark:text-red-400'
+      : 'text-red-600 hover:bg-red-500/10 dark:text-red-400'
+  }
+  return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
+}
+
+function formatTraceTime(ms: number) {
+  return ms < 1000
+    ? `${Math.round(ms)}ms`
+    : `${(ms / 1000).toFixed(1)}s`
+}
+
+function formatTraceTiming(step: BrowserTraceEntry) {
+  const startTime = `+${formatTraceTime(step.startTime)}`
+  return step.duration == null
+    ? startTime
+    : `${startTime} · ${formatTraceTime(step.duration)}`
+}
 </script>
 
 <template>
