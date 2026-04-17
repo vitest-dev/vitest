@@ -121,7 +121,7 @@ function takeSnapshot(selector?: string): TraceSnapshot {
       x: window.scrollX,
       y: window.scrollY,
     },
-    pseudoClassIds: {} as any
+    pseudoClassIds: {} as any,
   }
   for (const className of PSUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
