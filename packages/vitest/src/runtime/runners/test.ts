@@ -7,8 +7,8 @@ import type {
   Suite,
   Task,
   Test,
-  TestBenchmark,
   TestContext,
+  TestTryOptions,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
@@ -42,7 +42,10 @@ export class TestRunner implements VitestTestRunner {
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
   public pool: string = this.workerState.ctx.pool
-  private _otel!: Traces
+  /**
+   * @internal
+   */
+  public _otel!: Traces
   public viteEnvironment: string
   private viteModuleRunner: boolean
 
@@ -83,7 +86,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.onCleanup(listener)
   }
 
-  onAfterRunFiles(): void {
+  onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
   }
@@ -167,7 +170,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task): void {
+  onBeforeTryTask(test: Task, _options: TestTryOptions): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
@@ -259,11 +262,6 @@ export class TestRunner implements VitestTestRunner {
     }
 
     return importDurations
-  }
-
-  async onTestBenchmark(test: Test, benchmark: TestBenchmark): Promise<void> {
-    // TODO: move to overrides
-    await this.workerState.rpc.onTestBenchmark(test.id, benchmark)
   }
 
   trace = <T>(name: string, attributes: Record<string, any> | (() => T), cb?: () => T): T => {

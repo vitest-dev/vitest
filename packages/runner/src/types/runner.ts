@@ -53,7 +53,7 @@ export interface VitestRunnerConfig {
   /**
    * @internal
    */
-  diffOptions?: DiffOptions
+  _diffOptions?: DiffOptions
 }
 
 /**
@@ -100,6 +100,11 @@ export type CancelReason
     | 'test-failure'
     | (string & Record<string, never>)
 
+export interface TestTryOptions {
+  retry: number
+  repeats: number
+}
+
 export interface VitestRunner {
   /**
    * First thing that's getting called before actually collecting and running tests.
@@ -130,7 +135,7 @@ export interface VitestRunner {
    */
   onBeforeTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
@@ -145,7 +150,7 @@ export interface VitestRunner {
    */
   onAfterTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
   /**
    * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
@@ -153,7 +158,7 @@ export interface VitestRunner {
    */
   onAfterRetryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
 
   /**
@@ -192,6 +197,11 @@ export interface VitestRunner {
    * Called when artifacts are recorded on tests via the `recordArtifact` utility.
    */
   onTestArtifactRecord?: <Artifact extends TestArtifact>(test: Test, artifact: Artifact) => Promise<Artifact>
+
+  /**
+   * Called when `bench().run()` or `bench.compare()` is finished and has a non-error result.
+   */
+  onTestBenchmark?: (test: Test, benchmark: TestBenchmark) => unknown
 
   /**
    * Called before running all tests in collected paths.
@@ -239,9 +249,6 @@ export interface VitestRunner {
   trace?<T>(name: string, cb: () => T): T
   // eslint-disable-next-line ts/method-signature-style
   trace?<T>(name: string, attributes: Record<string, any>, cb: () => T): T
-
-  // TODO: docs
-  onTestBenchmark?: (test: Test, benchmark: TestBenchmark) => unknown
 
   /** @internal */
   _currentSpecification?: FileSpecification | undefined

@@ -57,7 +57,7 @@ export async function resolveTestRunner(
     loadDiffConfig(config, moduleRunner),
     loadSnapshotSerializers(config, moduleRunner),
   ])
-  testRunner.config.diffOptions = diffOptions
+  testRunner.config._diffOptions = diffOptions
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
@@ -147,6 +147,12 @@ export async function resolveTestRunner(
       }
     }
     await originalOnAfterRunTask?.call(testRunner, test)
+  }
+
+  const originalOnTestBenchmark = testRunner.onTestBenchmark
+  testRunner.onTestBenchmark = async (test, benchmark) => {
+    await rpc().onTestBenchmark(test.id, benchmark)
+    return originalOnTestBenchmark?.call(testRunner, test, benchmark)
   }
 
   return testRunner

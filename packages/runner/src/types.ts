@@ -9,6 +9,7 @@ export type {
   CancelReason,
   FileSpecification,
   TestTagDefinition,
+  TestTryOptions,
   VitestRunner,
   VitestRunnerConfig,
   VitestRunnerConstructor,

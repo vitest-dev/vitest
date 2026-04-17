@@ -1,4 +1,11 @@
-import type { BenchOptions, Fn, FnOptions, TaskResultCompleted, TaskResultRuntimeInfo, TaskResultTimestampProviderInfo } from 'tinybench'
+import type {
+  BenchOptions,
+  Fn,
+  FnOptions,
+  TaskResultCompleted,
+  TaskResultRuntimeInfo,
+  TaskResultTimestampProviderInfo,
+} from 'tinybench'
 import type { Test, TestBenchmark, TestBenchmarkTask, VitestRunner } from './types'
 import { Bench as Tinybench } from 'tinybench'
 
