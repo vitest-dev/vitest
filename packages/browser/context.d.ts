@@ -270,6 +270,8 @@ export interface UserEvent {
    * Type text on the keyboard. If any input is focused, it will receive the text,
    * otherwise it will be typed on the document. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
+   * For cross-provider compatibility, prefer generic aliases like `{Shift}`, `{Enter}`, `{Escape}`, or `{Tab}`.
+   * Left/right-specific variants such as `{ShiftLeft}` can differ between providers.
    * @example
    * await userEvent.keyboard('foo') // translates to: f, o, o
    * await userEvent.keyboard('{{a[[') // translates to: {, a, [
@@ -282,6 +284,7 @@ export interface UserEvent {
   /**
    * Types text into an element. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
+   * Provider-specific special key caveats are the same as for `userEvent.keyboard`.
    * This method can be significantly slower than `userEvent.fill`, so it should be used only when necessary.
    * @example
    * await userEvent.type(input, 'foo') // translates to: f, o, o
