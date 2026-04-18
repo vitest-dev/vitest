@@ -3,7 +3,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
-import type { SerializedCoverageConfig } from '../runtime/config'
+import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { CliOptions } from './cli/cli-api'
@@ -501,6 +501,13 @@ export class Vitest {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
+  }
+
+  public get serializedRootConfig(): SerializedRootConfig {
+    return {
+      ...this.getRootProject().serializedConfig,
+      projects: this.projects.map(project => project.serializedConfig),
+    }
   }
 
   public getProjectByName(name: string): TestProject {
