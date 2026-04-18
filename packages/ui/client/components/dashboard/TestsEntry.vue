@@ -19,7 +19,7 @@ function toggleFilter(type: 'success' | 'failed' | 'skipped' | 'slow' | 'total')
 </script>
 
 <template>
-  <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative>
+  <div flex="~ wrap" justify-evenly gap-2 p="x-4" relative data-testid="tests-entry">
     <DashboardEntry
       text-green-700 dark:text-green-500
       data-testid="pass-entry"

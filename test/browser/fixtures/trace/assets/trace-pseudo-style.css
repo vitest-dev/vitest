@@ -1,0 +1,20 @@
+.trace-pseudo-hover,
+.trace-pseudo-focus,
+.trace-pseudo-within {
+  background: rgb(255, 200, 200);
+  display: block;
+  margin: 8px;
+  padding: 8px;
+}
+.trace-pseudo-hover:hover {
+  background: rgb(253, 224, 71);
+}
+.trace-pseudo-focus:focus {
+  background: rgb(253, 224, 71);
+}
+.trace-pseudo-within:focus-within {
+  background: rgb(253, 224, 71);
+}
+.trace-pseudo-within input {
+  display: block;
+}

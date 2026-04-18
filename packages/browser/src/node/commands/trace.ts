@@ -1,4 +1,5 @@
 import type { BrowserCommand } from 'vitest/node'
+import type { BrowserTraceData, BrowserTraceEntry } from '../../client/tester/trace'
 
 interface MarkTracePayload {
   name: string
@@ -25,6 +26,10 @@ declare module 'vitest/browser' {
      * @internal
      */
     __vitest_groupTraceEnd: () => Promise<void>
+    /**
+     * @internal
+     */
+    __vitest_recordBrowserTrace: (payload: { testId: string; data: BrowserTraceData }) => Promise<void>
   }
 }
 
@@ -52,4 +57,25 @@ export const _groupTraceEnd: BrowserCommand<[]> = async (
   if (context.provider.name === 'playwright') {
     await context.triggerCommand('__vitest_groupTraceEnd')
   }
+}
+
+export const _recordBrowserTrace: BrowserCommand<[payload: { testId: string; data: BrowserTraceData }]> = async (
+  { project },
+  { testId, data },
+) => {
+  // resolve stack strings → source locations server-side (requires source maps)
+  const entries: BrowserTraceEntry[] = data.entries.map((entry) => {
+    if (!entry.stack || entry.location) {
+      return entry
+    }
+    const stacks = project.browser!.parseStacktrace(entry.stack)
+    if (stacks[0]) {
+      entry.location = stacks[0]
+    }
+    return entry
+  })
+  await project.vitest._testRun.recordArtifact(testId, {
+    type: 'internal:browserTrace',
+    data: { ...data, entries },
+  })
 }

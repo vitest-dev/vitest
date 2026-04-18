@@ -124,6 +124,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
           : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
         trace: browser.trace.mode,
+        traceView: browser.traceView,
       }
     })(config.browser),
     standalone: config.standalone,
