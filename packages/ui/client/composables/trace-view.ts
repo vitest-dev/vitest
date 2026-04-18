@@ -3,6 +3,7 @@ import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
 import { ref, watch } from 'vue'
 import { browserState, client, config } from './client'
+import { finished } from './client/state'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
@@ -31,13 +32,13 @@ export function closeTrace() {
 }
 
 function openTraceForTest(testId: string) {
-  // skip if already open
-  if (activeTraceView.value?.test.id === testId) {
+  const test = client.state.idMap.get(testId)
+  if (test?.type !== 'test') {
     return
   }
 
-  const test = client.state.idMap.get(testId)
-  if (test?.type !== 'test') {
+  // skip if already open
+  if (test === activeTraceView.value?.test) {
     return
   }
 
@@ -60,9 +61,20 @@ watch(selectedTest, (testId) => {
   if (!testId || activeTraceView.value?.test.id !== testId) {
     closeTrace()
   }
-  // auto-open trace view
+  // auto open trace view
   if (testId) {
     openTraceForTest(testId)
+  }
+})
+
+watch(finished, (isFinished) => {
+  // TODO: test in test/ui
+  // auto reload currently active trace view on re-run
+  if (isFinished) {
+    const testId = activeTraceView.value?.test.id
+    if (testId) {
+      openTraceForTest(testId)
+    }
   }
 })
 
