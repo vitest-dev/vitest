@@ -1,13 +1,9 @@
-import { test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { page } from 'vitest/browser'
 
 // tests for full snaphsot/replay integration.
 // partly extracted from artifact metadata tests in
 // test/browser/fixtures/trace/*.test.ts
-
-// TODO
-// - css link stylesheet
-// - image
 
 test('simple', async () => {
   document.body.innerHTML = '<button>Simple</button>'
@@ -92,4 +88,25 @@ test('pseudo-state', async () => {
   await page.getByRole('textbox', { name: 'Focused pseudo state' }).click()
   await page.getByRole('textbox', { name: 'Focused pseudo state' }).fill('Test focus')
   await page.getByRole('textbox', { name: 'Focus within pseudo state' }).fill('Test focus within')
+})
+
+test('css-link', async () => {
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = '/assets/trace-style.css'
+  document.head.append(link)
+  onTestFinished(() => {
+    link.remove()
+  })
+  document.body.innerHTML = '<button class="trace-linked-css">Linked CSS</button>'
+  await expect.element(page.getByRole('button', { name: 'Linked CSS' }))
+    .toHaveStyle({ color: 'rgb(50, 100, 255)' })
+})
+
+test('image', async () => {
+  document.body.innerHTML = '<img src="/assets/trace-pixel.svg" alt="local trace asset" width="24" height="24">'
+  await expect.element(page.getByAltText('local trace asset'))
+    .not
+    .toHaveProperty('naturalWidth', 0)
+  await page.getByAltText('local trace asset').mark('Render image')
 })

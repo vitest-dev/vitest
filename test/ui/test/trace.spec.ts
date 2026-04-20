@@ -52,6 +52,14 @@ test.describe('ui', () => {
   test('pseudo-state', async ({ page }) => {
     await testPseudoState(page)
   })
+
+  test('css-link', async ({ page }) => {
+    await testCssLink(page)
+  })
+
+  test('image', async ({ page }) => {
+    await testImage(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -70,6 +78,12 @@ test.describe('html reporter', () => {
         run: true,
         ui: false,
         reporters: 'html',
+        browser: {
+          traceView: {
+            enabled: true,
+            inlineImages: true,
+          },
+        },
       },
       {},
       { stdout, stderr },
@@ -104,10 +118,19 @@ test.describe('html reporter', () => {
   test('pseudo-state', async ({ page }) => {
     await testPseudoState(page)
   })
+
+  test('css-link', async ({ page }) => {
+    await testCssLink(page)
+  })
+
+  test('image', async ({ page }) => {
+    await testImage(page)
+  })
 })
 
 async function testReady(page: Page) {
-  await expect.soft(page.getByTestId('tests-entry')).toContainText('3 Pass 0 Fail 3 Total')
+  await expect.soft(page.getByTestId('tests-entry'))
+    .toContainText('5 Pass 0 Fail 5 Total')
 }
 
 async function testBasic(page: Page) {
@@ -179,4 +202,22 @@ async function testPseudoState(page: Page) {
   await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(4).click()
   await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOn)
+}
+
+async function testCssLink(page: Page) {
+  await page.getByTestId('explorer-item').getByText('css-link').click()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Linked CSS' })).toHaveCSS('color', 'rgb(50, 100, 255)')
+}
+
+async function testImage(page: Page) {
+  await page.getByTestId('explorer-item').getByText('image').click()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByAltText('local trace asset')).not.toHaveJSProperty('naturalWidth', 0)
 }
