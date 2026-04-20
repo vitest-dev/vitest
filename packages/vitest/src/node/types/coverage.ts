@@ -294,8 +294,7 @@ export interface CoverageOptions {
    *     }
    *   }
    * })
-   * ```
-   */
+   * 
   instrumenter?: (options: InstrumenterOptions) => CoverageInstrumenter
 
   /**

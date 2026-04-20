@@ -418,21 +418,17 @@ interface CoverageInstrumenter {
 <!-- eslint-skip -->
 ```ts
 import { defineConfig } from 'vitest/config'
-import { createOxcInstrumenter } from 'oxc-coverage-instrument/vitest'
+import { createInstrumenter } from '@vitest/some-custom-instrumenter'
 
 export default defineConfig({
   test: {
     coverage: {
       provider: 'istanbul',
-      instrumenter: options => createOxcInstrumenter(options),
+      instrumenter: options => createInstrumenter(options),
     }
   }
 })
-```
 
-Known implementations:
-
-- [`oxc-coverage-instrument`](https://github.com/fallow-rs/oxc-coverage-instrument): Oxc-based instrumenter with a dedicated `oxc-coverage-instrument/vitest` entry point.
 
 ## coverage.customProviderModule
 
