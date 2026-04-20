@@ -8,6 +8,7 @@ export {
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  MinimalReporter,
   ReportersMap,
   TapFlatReporter,
   TapReporter,

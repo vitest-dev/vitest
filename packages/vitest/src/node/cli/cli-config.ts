@@ -140,7 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: `Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
+    description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
