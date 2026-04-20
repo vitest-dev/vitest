@@ -114,6 +114,10 @@ test('inspecting mock calls', () => {
   expect(greet).toHaveBeenCalledWith('Alice')
   expect(greet).toHaveBeenCalledWith('Bob', 'Charlie')
 
+  // Check the arguments of a specific call by position
+  expect(greet).toHaveBeenNthCalledWith(1, 'Alice')
+  expect(greet).toHaveBeenLastCalledWith('Bob', 'Charlie')
+
   // Access the raw call data
   expect(greet.mock.calls).toEqual([
     ['Alice'],
@@ -267,8 +271,8 @@ test('mock a module', () => {
 [`vi.mock`](/api/vi#vi-mock) calls are hoisted to the top of the file. They run before any imports. This means the mocked version is in place by the time your test code runs.
 :::
 
-::: tip
-Notice that we pass `import('./db.js')` instead of a plain string `'./db.js'`. When you use `import()`, TypeScript can infer the module's types, so the factory function's return value is type-checked and `importOriginal` returns the correctly typed module. As a bonus, if you rename or move the file in your IDE, the import path will be updated automatically. If you use a string, you lose both the type safety and the automatic refactoring.
+::: warning
+Always pass `import('./db.js')` rather than a plain string `'./db.js'`. When you use `import()`, TypeScript can infer the module's types, so the factory function's return value is type-checked and `importOriginal` returns the correctly typed module. As a bonus, if you rename or move the file in your IDE, the import path will be updated automatically. If you use a string, you lose both the type safety and the automatic refactoring.
 :::
 
 Vitest has comprehensive guides for specific mocking scenarios:

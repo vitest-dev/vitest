@@ -89,6 +89,10 @@ Now the expected output lives right next to the code that produces it. You can r
 
 Inline snapshots are great for small, focused values. For large outputs (like a full HTML page), external snapshots or file snapshots are a better fit.
 
+::: tip
+Unlike external snapshots, inline snapshots don't create separate `.snap` files. The expected value is stored directly in your test file as the argument to `toMatchInlineSnapshot()`, so there's nothing extra to commit.
+:::
+
 ## Updating Snapshots
 
 When you intentionally change the output of your code, existing snapshots will be outdated and the tests will fail. This is by design; it's the whole point of snapshot testing. But once you've verified that the new output is correct, you need to update the snapshots.
@@ -135,6 +139,37 @@ Snapshots shine when you're working with structured, serializable output that wo
 On the other hand, snapshots are not always the best tool. If the output changes frequently (for instance, it includes timestamps or random IDs), you'll spend more time updating snapshots than they save you. And if you only care about one or two specific fields, a targeted assertion like [`toMatchObject`](/api/expect#tomatchobject) or [`toHaveProperty`](/api/expect#tohaveproperty) expresses your intent more clearly than a snapshot that captures everything.
 
 The general rule: use snapshots when you want to protect against *any* change in the output, and use targeted assertions when you only care about *specific* properties.
+
+## Handling Dynamic Values
+
+If your output includes values that change every run (like timestamps or IDs), you can use property matchers to pin the structure while ignoring volatile fields. Pass an object with asymmetric matchers as the first argument to `toMatchSnapshot()` or `toMatchInlineSnapshot()`:
+
+```js
+test('user snapshot with dynamic fields', () => {
+  const user = createUser('Alice')
+
+  expect(user).toMatchSnapshot({
+    id: expect.any(Number),
+    createdAt: expect.any(Date),
+  })
+})
+```
+
+The `id` and `createdAt` fields are checked against the matchers (any number, any date) instead of being compared to a stored value. All other fields are snapshotted as usual.
+
+## Error Snapshots
+
+A common use of inline snapshots is capturing error messages. [`toThrowErrorMatchingInlineSnapshot`](/api/expect#tothrowerrormatchinginlinesnapshot) combines `toThrow` with `toMatchInlineSnapshot` so you can snapshot the error message without a separate `.snap` file:
+
+```js
+test('throws on invalid input', () => {
+  expect(() => parse('')).toThrowErrorMatchingInlineSnapshot(
+    `[Error: Unexpected end of input at position 0]`
+  )
+})
+```
+
+This is especially handy for verifying that error messages are clear and don't accidentally change. Like other inline snapshots, Vitest fills in the string on the first run and updates it when you press `u`.
 
 ::: tip
 For custom snapshot serializers, snapshot matchers, and advanced configuration, see the [Snapshot](/guide/snapshot) guide.

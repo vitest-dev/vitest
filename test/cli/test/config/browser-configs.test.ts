@@ -317,6 +317,65 @@ test('browser instances with empty include array should get parent include patte
   expect(projects[1].config.include).toEqual(['**/*.test.{js,ts}'])
 })
 
+test('negation filter excludes all browser instances', async () => {
+  const { projects } = await vitest({ project: '!myproject' }, {
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+              { browser: 'webkit' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'other',
+  ])
+})
+
+test('negation wildcard filter excludes all matching browser instances', async () => {
+  const { projects } = await vitest({ project: '!my*' }, {
+    projects: [
+      {
+        test: {
+          name: 'myproject',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+      {
+        test: {
+          name: 'other',
+        },
+      },
+    ],
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'other',
+  ])
+})
+
 test('filter for the global browser project includes all browser instances', async () => {
   const { projects } = await vitest({ project: 'myproject' }, {
     projects: [
