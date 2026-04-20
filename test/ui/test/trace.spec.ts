@@ -36,9 +36,21 @@ test.describe('ui', () => {
     await vitest?.close()
   })
 
-  test('basic', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
+    await testReady(page)
+  })
+
+  test('basic', async ({ page }) => {
     await testBasic(page)
+  })
+
+  test('viewport', async ({ page }) => {
+    await testViewport(page)
+  })
+
+  test('pseudo-state', async ({ page }) => {
+    await testPseudoState(page)
   })
 })
 
@@ -75,30 +87,96 @@ test.describe('html reporter', () => {
     await previewServer.close()
   })
 
+  test.beforeEach(async ({ page }) => {
+    await page.goto(baseURL)
+    await testReady(page)
+  })
+
   test('basic', async ({ page }) => {
     await page.goto(baseURL)
     await testBasic(page)
   })
+
+  test('viewport', async ({ page }) => {
+    await testViewport(page)
+  })
+
+  test('pseudo-state', async ({ page }) => {
+    await testPseudoState(page)
+  })
 })
 
-async function testBasic(page: Page) {
-  await expect.soft(page.getByTestId('tests-entry')).toContainText('1 Pass 0 Fail 1 Total')
+async function testReady(page: Page) {
+  await expect.soft(page.getByTestId('tests-entry')).toContainText('3 Pass 0 Fail 3 Total')
+}
 
+async function testBasic(page: Page) {
   // selecting test case opens trace viewer
   const traceView = page.getByTestId('trace-view')
   await expect(traceView).toBeHidden()
-  await page.getByText('locator.mark').click()
+  await page.getByTestId('explorer-item').getByText('simple').click()
   await expect(traceView).toBeVisible()
 
   // selecting steps should open source code view
+  const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceView.getByRole('button', { name: 'button rendered - locator' }).click()
+  await traceSteps.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
   // verify snaphsot replay in iframe
-  const traceViewFrame = traceView.frameLocator('iframe')
-  await expect(traceViewFrame.getByRole('button', { name: 'Hello' })).toBeVisible()
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // verify selector highlight
-  await expect(traceViewFrame.getByTestId('trace-view-highlight')).toBeVisible()
+  await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+}
+
+async function testViewport(page: Page) {
+  await page.getByTestId('explorer-item').getByText('viewport').click()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step-name')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView).toBeVisible()
+  await traceSteps.getByText('Render viewport').click()
+  await expect(traceFrame.locator('.viewport-pass')).toBeVisible()
+}
+
+async function testPseudoState(page: Page) {
+  await page.getByTestId('explorer-item').getByText('pseudo-state').click()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceSteps = traceView.getByTestId('trace-step-name')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  await expect(traceView).toBeVisible()
+
+  const pseudoOff = ['background-color', 'rgb(255, 200, 200)'] as const
+  const pseudoOn = ['background-color', 'rgb(253, 224, 71)'] as const
+
+  // trace view replays hover state at the time of snapshot
+  await traceSteps.nth(0).click()
+  await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOn)
+  await expect(traceFrame.getByText('Second pseudo state')).toHaveCSS(...pseudoOff)
+  await traceSteps.nth(1).click()
+  await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOff)
+  await expect(traceFrame.getByText('Second pseudo state')).toHaveCSS(...pseudoOn)
+
+  // trace view reacts to interaction during the replay
+  // this is verified manually but seems flaky on playwright
+  // maybe because it clicks inside shadow-dom inside iframe
+  await expect(async () => {
+    await traceFrame.getByText('First pseudo state').click()
+    await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOn)
+  }).toPass()
+
+  // focus
+  await expect(traceFrame.getByLabel('Focused pseudo state')).toHaveCSS(...pseudoOff)
+  await traceSteps.nth(3).click()
+  await expect(traceFrame.getByLabel('Focused pseudo state')).toHaveCSS(...pseudoOn)
+
+  // focus-within
+  await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOff)
+  await traceSteps.nth(4).click()
+  await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOn)
 }

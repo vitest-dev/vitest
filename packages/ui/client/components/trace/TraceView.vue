@@ -137,7 +137,7 @@ function formatTraceTiming(step: BrowserTraceEntry) {
           :class="getStepButtonClass(step, index)"
           @click="onSelectStep(index)"
         >
-          <div truncate>
+          <div truncate data-testid="trace-step-name">
             {{ step.name }}
           </div>
           <div class="text-xs opacity-60 truncate">
