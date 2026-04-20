@@ -4,7 +4,7 @@ import type { SuiteAPI, TestAPI } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { existsSync, readFileSync } from 'node:fs'
 import { unlink } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
 import { playwright } from '@vitest/browser-playwright'
@@ -146,7 +146,7 @@ export function isNativeRunner() {
 }
 
 export function normalizeURL(importMetaURL: string) {
-  return normalize(fileURLToPath(importMetaURL))
+  return normalize(relative(process.cwd(), fileURLToPath(importMetaURL)))
 }
 
 export function captureStdout() {

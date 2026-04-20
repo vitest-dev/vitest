@@ -14,6 +14,7 @@ import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
+import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -512,6 +513,17 @@ export function resolveConfig(
   resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
     resolvePath(file, resolved.root),
   )
+
+  if (resolved.coverage.include) {
+    resolved.coverage.include = resolved.coverage.include.map((pattern) => {
+      if (isDynamicPattern(pattern)) {
+        return pattern
+      }
+
+      // Convert patterns like ["src", "packages/server"] to ["src/**", "packages/server/**"]
+      return pattern.endsWith('/') ? `${pattern}**` : `${pattern}/**`
+    })
+  }
 
   // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
