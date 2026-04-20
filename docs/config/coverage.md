@@ -428,7 +428,7 @@ export default defineConfig({
     }
   }
 })
-
+```
 
 ## coverage.customProviderModule
 
