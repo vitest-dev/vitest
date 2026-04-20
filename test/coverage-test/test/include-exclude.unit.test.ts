@@ -16,11 +16,11 @@ test('include nested, exclude top level', async () => {
 
 test('exclude directory that is also in cwd', async () => {
   const cwd = process.cwd()
-  expect(cwd).toContain(join(sep, 'vitest'))
+  expect(cwd).toContain(join(sep, 'coverage-test'))
 
   const isIncluded = await init({
     include: ['src/**/*.ts'],
-    exclude: ['**/vitest/**', join('**', sep, 'vitest', sep, '**')],
+    exclude: ['**/coverage-test/**', join('**', sep, 'coverage-test', sep, '**')],
   })
 
   expect(isIncluded('src/example.ts')).toBe(true)

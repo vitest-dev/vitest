@@ -114,7 +114,7 @@ test('exclude globs don\'t filter out cwd', async () => {
     coverage: {
       reporter: 'json',
       include: ['fixtures/src/{math,even}.ts'],
-      exclude: ['**/vitest/**'],
+      exclude: ['**/coverage-test/**'],
     },
   })
 
