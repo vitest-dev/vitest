@@ -80,6 +80,9 @@ npm i https://pkg.pr.new/vitest@{commit}
 
 ## Pull Request Guidelines
 
+Benchmark-related changes are currently not accepted.\
+Please open an issue for discussion before working on any benchmark-related PRs.
+
 - Checkout a topic branch from a base branch, e.g. `main`, and merge back against that branch.
 
 - If adding a new feature:
