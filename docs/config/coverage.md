@@ -390,7 +390,7 @@ Watermarks for statements, lines, branches and functions. See [istanbul document
 
 Concurrency limit used when processing the coverage results.
 
-## coverage.instrumenter
+## coverage.instrumenter <Version type="experimental">4.1.5</Version> {#coverage-instrumenter}
 
 - **Type:** `(options: InstrumenterOptions) => CoverageInstrumenter`
 - **Available for providers:** `'istanbul'`
