@@ -121,6 +121,12 @@ function formatTraceTiming(step: BrowserTraceEntry) {
     ? startTime
     : `${startTime} · ${formatTraceTime(step.duration)}`
 }
+
+function formatStepName(step: BrowserTraceEntry) {
+  return step.kind === 'action' && step.name.startsWith('vitest:')
+    ? step.name.slice('vitest:'.length)
+    : step.name
+}
 </script>
 
 <template>
@@ -138,7 +144,7 @@ function formatTraceTiming(step: BrowserTraceEntry) {
           @click="onSelectStep(index)"
         >
           <div truncate data-testid="trace-step-name">
-            {{ step.name }}
+            {{ formatStepName(step) }}
           </div>
           <div class="text-xs opacity-60 truncate">
             {{ formatTraceTiming(step) }}
