@@ -1,4 +1,4 @@
-import type { UserFixtures } from './fixture'
+import type { TestFixtureItem, UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
   File,
@@ -35,6 +35,7 @@ import {
   withCancel,
   withTimeout,
 } from './context'
+import { FixtureDependencyError } from './errors'
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
@@ -221,7 +222,7 @@ function createDefaultSuite(runner: VitestRunner) {
   if (config.concurrent != null) {
     options.concurrent = config.concurrent
   }
-  const collector = suite('', options, () => {})
+  const collector = suite('', options, () => { })
   // no parent suite for top-level tests
   delete collector.suite
   return collector
@@ -303,7 +304,7 @@ function parseArguments<T extends (...args: any[]) => any>(
 // implementations
 function createSuiteCollector(
   name: string,
-  factory: SuiteFactory = () => {},
+  factory: SuiteFactory = () => { },
   mode: RunMode,
   each?: boolean,
   suiteOptions?: SuiteOptions,
@@ -1092,4 +1093,96 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
     res.push(oneCase)
   }
   return res
+}
+
+/**
+ * Composes multiple extended test instances into a single TestAPI.
+ *
+ * Behavior:
+ * - Later fixtures override earlier ones (same semantics as `extend`)
+ * - Original test instances are NOT mutated
+ * - Dependency resolution is delegated entirely to the existing fixture system
+ * - No new validation logic is introduced
+ *
+ * This function intentionally reuses the existing extension pipeline
+ * to preserve fixture graph integrity and scope semantics.
+ *
+ * @example
+ * const test = mergeTests(dbTest, serverTest, uiTest)
+ */
+export function mergeTests<A>(a: TestAPI<A>): TestAPI<A>
+export function mergeTests<A, B>(a: TestAPI<A>, b: TestAPI<B>): TestAPI<Omit<A, keyof B> & B>
+export function mergeTests<A, B, C>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>): TestAPI<Omit<A, keyof B | keyof C> & Omit<B, keyof C> & C>
+export function mergeTests<A, B, C, D>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>): TestAPI<Omit<A, keyof B | keyof C | keyof D> & Omit<B, keyof C | keyof D> & Omit<C, keyof D> & D>
+export function mergeTests<A, B, C, D, E>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>): TestAPI<Omit<A, keyof B | keyof C | keyof D | keyof E> & Omit<B, keyof C | keyof D | keyof E> & Omit<C, keyof D | keyof E> & Omit<D, keyof E> & E>
+export function mergeTests<A, B, C, D, E, F>(a: TestAPI<A>, b: TestAPI<B>, c: TestAPI<C>, d: TestAPI<D>, e: TestAPI<E>, f: TestAPI<F>): TestAPI<Omit<A, keyof B | keyof C | keyof D | keyof E | keyof F> & Omit<B, keyof C | keyof D | keyof E | keyof F> & Omit<C, keyof D | keyof E | keyof F> & Omit<D, keyof E | keyof F> & Omit<E, keyof F> & F>
+export function mergeTests(...tests: TestAPI<any>[]): TestAPI<any> {
+  if (tests.length === 0) {
+    throw new TypeError('mergeTests requires at least one test')
+  }
+
+  const mergedMap = new Map<string, TestFixtureItem>()
+  const builtinNames = ['task', 'signal', 'onTestFailed', 'onTestFinished', 'skip', 'annotate']
+
+  for (const test of tests) {
+    const ctx = getChainableContext(test)
+
+    if (!ctx) {
+      throw new TypeError(
+        'mergeTests requires extended test instances created via test.extend()',
+      )
+    }
+
+    const fixtures = ctx.getFixtures() as TestFixtures
+    const { suite, file } = getCurrentSuite()
+    const targetSuite = suite || file
+    const registrations = fixtures.get(targetSuite)
+
+    for (const [name, item] of registrations) {
+      // Preserve builtins from the first test only
+      if (builtinNames.includes(name)) {
+        if (!mergedMap.has(name)) {
+          mergedMap.set(name, { ...item })
+        }
+        continue
+      }
+
+      const existing = mergedMap.get(name)
+
+      if (existing) {
+        if (existing.scope !== item.scope) {
+          throw new FixtureDependencyError(
+            `Fixture "${name}" defined with conflicting scopes: "${existing.scope}" vs "${item.scope}"`,
+          )
+        }
+
+        if (existing.auto !== item.auto) {
+          throw new FixtureDependencyError(
+            `Fixture "${name}" defined with conflicting auto options: "${existing.auto}" vs "${item.auto}"`,
+          )
+        }
+      }
+
+      // last-writer-wins
+      mergedMap.set(name, { ...item })
+    }
+  }
+
+  // Validate full dependency graph AFTER merge
+  TestFixtures.validateFixtures(mergedMap)
+
+  const newFixtures = new TestFixtures(mergedMap)
+  const baseFn = (tests[0] as any).fn
+
+  const _test = createTest(function (
+    name: string | Function,
+    optionsOrFn?: TestOptions | TestFunction,
+    optionsOrTest?: number | TestFunction,
+  ) {
+    baseFn.call(this, formatName(name), optionsOrFn, optionsOrTest)
+  })
+
+  getChainableContext(_test).mergeContext({ fixtures: newFixtures })
+
+  return _test
 }

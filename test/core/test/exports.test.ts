@@ -37,6 +37,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "expectTypeOf": "function",
         "inject": "function",
         "it": "function",
+        "mergeTests": "function",
         "onTestFailed": "function",
         "onTestFinished": "function",
         "recordArtifact": "function",
