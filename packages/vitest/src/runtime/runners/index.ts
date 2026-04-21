@@ -62,6 +62,11 @@ export async function resolveTestRunner(
   ])
   testRunner.config.diffOptions = diffOptions
 
+  // Store diffOptions in the global worker state so they're accessible
+  // to packages that can't directly import from @vitest/runner (e.g., @vitest/expect)
+  const workerState = getWorkerState()
+  workerState.diffOptions = diffOptions
+
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
   testRunner.onTaskUpdate = async (task, events) => {
