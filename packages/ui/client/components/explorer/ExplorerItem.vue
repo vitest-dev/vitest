@@ -204,7 +204,7 @@ const tagsBgGradient = computed(() => {
     :style="gridStyles"
     :aria-label="name"
     :data-current="current"
-    :data-testid="`explorer-item_${name}`"
+    data-testid="explorer-item"
     @click="toggleOpen()"
   >
     <template v-if="indent > 0">

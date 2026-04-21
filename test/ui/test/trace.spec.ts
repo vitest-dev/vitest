@@ -142,11 +142,15 @@ async function testReady(page: Page) {
     .toContainText(`${count} Pass 0 Fail ${count} Total`)
 }
 
+async function openExplorerItem(page: Page, name: string) {
+  await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
+}
+
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer
   const traceView = page.getByTestId('trace-view')
   await expect(traceView).toBeHidden()
-  await page.getByTestId('explorer-item_simple').click()
+  await openExplorerItem(page, 'simple')
   await expect(traceView).toBeVisible()
 
   // selecting steps should open source code view
@@ -164,7 +168,7 @@ async function testBasic(page: Page) {
 }
 
 async function testViewport(page: Page) {
-  await page.getByTestId('explorer-item_viewport').click()
+  await openExplorerItem(page, 'viewport')
 
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step-name')
@@ -175,7 +179,7 @@ async function testViewport(page: Page) {
 }
 
 async function testPseudoState(page: Page) {
-  await page.getByTestId('explorer-item_pseudo-state').click()
+  await openExplorerItem(page, 'pseudo-state')
 
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step-name')
@@ -214,7 +218,7 @@ async function testPseudoState(page: Page) {
 }
 
 async function testCssLink(page: Page) {
-  await page.getByTestId('explorer-item_css-link').click()
+  await openExplorerItem(page, 'css-link')
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
@@ -223,7 +227,7 @@ async function testCssLink(page: Page) {
 }
 
 async function testImage(page: Page) {
-  await page.getByTestId('explorer-item_image').click()
+  await openExplorerItem(page, 'image')
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
@@ -232,7 +236,7 @@ async function testImage(page: Page) {
 }
 
 async function testScroll(page: Page) {
-  await page.getByTestId('explorer-item_scroll').click()
+  await openExplorerItem(page, 'scroll')
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
