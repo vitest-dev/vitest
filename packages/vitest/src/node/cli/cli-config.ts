@@ -326,7 +326,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Directory of HTML coverage output to be served in UI mode and HTML reporter.',
         argument: '<path>',
       },
-      trackProcessAndWorker: {
+      autoAttachWorkers: {
         description: 'Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)',
       },
     },

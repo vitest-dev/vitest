@@ -53,7 +53,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
     branches: [50, 80],
     lines: [50, 80],
   },
-  trackProcessAndWorker: false,
+  autoAttachWorkers: false,
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {

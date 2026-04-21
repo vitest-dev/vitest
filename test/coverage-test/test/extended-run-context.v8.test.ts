@@ -8,7 +8,7 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
   /* See {@link file://./../fixtures/test/worker-thread.test.ts} */
   const filename = `fixtures/test/${runtime.replace(' ', '-')}.test.ts`
 
-  test('{ trackProcessAndWorker: true } typescript source file', async ({ skip }) => {
+  test('{ autoAttachWorkers: true } typescript source file', async ({ skip }) => {
     skip(isTypeStrippingSupported === false, `Type stripping is not supported in Node ${process.version}`)
 
     await runVitest({
@@ -16,7 +16,7 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
       testNamePattern: `${runtime} typescript`,
       pool: 'forks',
       coverage: {
-        trackProcessAndWorker: true,
+        autoAttachWorkers: true,
         reporter: 'json',
       },
     })
@@ -42,13 +42,13 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     assertMath(coverageMap)
   })
 
-  test('{ trackProcessAndWorker: true } javascript source file', async () => {
+  test('{ autoAttachWorkers: true } javascript source file', async () => {
     await runVitest({
       include: [filename],
       testNamePattern: `${runtime} javascript source file`,
       pool: 'forks',
       coverage: {
-        trackProcessAndWorker: true,
+        autoAttachWorkers: true,
         reporter: 'json',
       },
     })
@@ -76,13 +76,13 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     assertMath(coverageMap, 'math-in-js.js')
   })
 
-  test('{ trackProcessAndWorker: true } pre-transpiled file', async () => {
+  test('{ autoAttachWorkers: true } pre-transpiled file', async () => {
     await runVitest({
       include: [filename],
       testNamePattern: `(${runtime} transpiled javascript with source maps)`,
       pool: 'forks',
       coverage: {
-        trackProcessAndWorker: true,
+        autoAttachWorkers: true,
         reporter: 'json',
       },
     })
@@ -107,13 +107,13 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     expect.soft(lines[17]).toBe(1)
   })
 
-  test(`{ trackProcessAndWorker: true } nested ${runtime}'s`, async () => {
+  test(`{ autoAttachWorkers: true } nested ${runtime}'s`, async () => {
     await runVitest({
       include: [filename],
       testNamePattern: `(${runtime} inside ${runtime})`,
       pool: 'forks',
       coverage: {
-        trackProcessAndWorker: true,
+        autoAttachWorkers: true,
         reporter: 'json',
       },
     })
@@ -131,12 +131,12 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
     assertMath(coverageMap, 'math-in-js.js')
   })
 
-  test('{ trackProcessAndWorker: false }', async () => {
+  test('{ autoAttachWorkers: false }', async () => {
     await runVitest({
       include: [filename],
       pool: 'forks',
       coverage: {
-        trackProcessAndWorker: false,
+        autoAttachWorkers: false,
         reporter: 'json',
       },
     })

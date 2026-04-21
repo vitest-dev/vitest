@@ -20,14 +20,14 @@ const mod: CoverageProviderModule & {
   extendedContextCoverageDir: undefined,
   session: null,
 
-  async startCoverage({ isolate, trackProcessAndWorker, reportsDirectory }) {
+  async startCoverage({ isolate, autoAttachWorkers, reportsDirectory }) {
     if (isolate === false && enabled) {
       return
     }
 
     enabled = true
 
-    if (trackProcessAndWorker) {
+    if (autoAttachWorkers) {
       this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
       process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
     }

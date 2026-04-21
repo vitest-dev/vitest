@@ -100,7 +100,7 @@ test('provider module', () => {
               branches: [80, 95],
               lines: [80, 95],
             },
-            trackProcessAndWorker: false,
+            autoAttachWorkers: false,
           }
         },
         clean(_?: boolean) {},

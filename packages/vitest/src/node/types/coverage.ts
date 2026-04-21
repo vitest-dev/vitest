@@ -111,7 +111,7 @@ export type FieldsWithDefaultValues
     | 'ignoreClassMethods'
     | 'skipFull'
     | 'watermarks'
-    | 'trackProcessAndWorker'
+    | 'autoAttachWorkers'
 
 export type ResolvedCoverageOptions
   = CoverageOptions
@@ -271,7 +271,7 @@ export interface CoverageOptions {
    *
    * @default false
    */
-  trackProcessAndWorker?: boolean
+  autoAttachWorkers?: boolean
 
   /**
    * Set to array of class method names to ignore for coverage

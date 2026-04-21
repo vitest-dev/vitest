@@ -61,7 +61,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
           ? coverage.customProviderModule
           : undefined,
         htmlDir: coverage.htmlDir,
-        trackProcessAndWorker: coverage.trackProcessAndWorker ?? false,
+        autoAttachWorkers: coverage.autoAttachWorkers ?? false,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,

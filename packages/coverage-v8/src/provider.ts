@@ -38,7 +38,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
 
-    if (this.options.trackProcessAndWorker) {
+    if (this.options.autoAttachWorkers) {
       const isAnyThreadsPools = ctx.projects.some(p => p.config.pool === 'threads' || p.config.pool === 'vmThreads')
 
       if (isAnyThreadsPools) {
@@ -61,14 +61,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const coverageMap = this.createCoverageMap()
     let merged: RawCoverage = { result: [] }
 
-    const trackProcessAndWorker = this.options.trackProcessAndWorker
+    const autoAttachWorkers = this.options.autoAttachWorkers
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
         merged = mergeProcessCovs([merged, coverage])
 
-        // mergeProcessCovs sometimes loses trackProcessAndWorker
-        const fromExtendedContext = trackProcessAndWorker ? coverage.result.filter(r => r.isExtendedContext) : []
+        // mergeProcessCovs sometimes loses autoAttachWorkers
+        const fromExtendedContext = autoAttachWorkers ? coverage.result.filter(r => r.isExtendedContext) : []
 
         // mergeProcessCovs sometimes loses startOffset, e.g. in vue
         merged.result.forEach((result) => {
@@ -77,7 +77,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
             result.startOffset = original?.startOffset || 0
           }
 
-          if (trackProcessAndWorker && !result.isExtendedContext) {
+          if (autoAttachWorkers && !result.isExtendedContext) {
             const actual = fromExtendedContext.find(r => r.url === result.url)
             result.isExtendedContext = actual?.isExtendedContext
           }
