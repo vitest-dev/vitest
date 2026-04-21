@@ -123,9 +123,26 @@ function formatTraceTiming(step: BrowserTraceEntry) {
 }
 
 function formatStepName(step: BrowserTraceEntry) {
-  return step.kind === 'action' && step.name.startsWith('vitest:')
-    ? step.name.slice('vitest:'.length)
-    : step.name
+  if (step.kind === 'lifecycle' && step.name === 'vitest:onAfterRetryTask') {
+    return 'test finished'
+  }
+  if (step.kind === 'action' && step.name.startsWith('vitest:')) {
+    return step.name.slice('vitest:'.length)
+  }
+  return step.name
+}
+
+function getStepMarkerClass(step: BrowserTraceEntry) {
+  if (step.kind === 'action') {
+    return 'bg-blue-500/80'
+  }
+  if (step.kind === 'expect') {
+    return 'bg-green-500/80'
+  }
+  if (step.kind === 'mark') {
+    return 'bg-amber-500/80'
+  }
+  return 'bg-gray-400/80 dark:bg-gray-500/80'
 }
 </script>
 
@@ -139,27 +156,35 @@ function formatStepName(step: BrowserTraceEntry) {
           v-for="(step, index) of entries"
           :key="index"
           type="button"
-          class="text-left px-2 py-1 rounded text-sm"
+          class="w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
           @click="onSelectStep(index)"
         >
-          <div truncate data-testid="trace-step-name">
-            {{ formatStepName(step) }}
-          </div>
-          <div class="text-xs opacity-60 truncate">
-            {{ formatTraceTiming(step) }}
-          </div>
-          <div
-            v-if="step.selector"
-            class="font-mono text-xs opacity-70 truncate"
-          >
-            {{ step.selector }}
-          </div>
-          <div
-            v-if="step.location"
-            class="text-xs opacity-50 truncate"
-          >
-            {{ getLocationString(step.location) }}
+          <div class="flex items-start gap-2">
+            <span
+              class="mt-1.5 h-2 w-2 rounded-full flex-shrink-0"
+              :class="getStepMarkerClass(step)"
+            />
+            <div class="min-w-0 flex-1">
+              <div truncate data-testid="trace-step-name">
+                {{ formatStepName(step) }}
+              </div>
+              <div class="text-xs opacity-60 truncate">
+                {{ formatTraceTiming(step) }}
+              </div>
+              <div
+                v-if="step.selector"
+                class="font-mono text-xs opacity-70 truncate"
+              >
+                {{ step.selector }}
+              </div>
+              <div
+                v-if="step.location"
+                class="text-xs opacity-50 truncate"
+              >
+                {{ getLocationString(step.location) }}
+              </div>
+            </div>
           </div>
         </button>
       </div>
