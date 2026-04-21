@@ -7,8 +7,6 @@ beforeEach(() => {
   document.body.innerHTML = ''
 })
 
-// TODO: e2e for viewport/scroll replay in test/ui
-
 test('viewport media query depends on replay viewport', async () => {
   const style = document.createElement('style')
   style.dataset.traceFixture = ''
