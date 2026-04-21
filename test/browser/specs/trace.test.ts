@@ -983,7 +983,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:33",
+                    "location": "viewport.test.ts:31",
                     "name": "document scrolled before mark",
                     "selector": " body > main > button",
                     "snapshot": {
@@ -992,7 +992,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:26",
+                    "location": "viewport.test.ts:24",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1005,7 +1005,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:49",
+                    "location": "viewport.test.ts:47",
                     "name": "overflow container scrolled before mark",
                     "selector": " body > section",
                     "snapshot": {
@@ -1014,7 +1014,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:36",
+                    "location": "viewport.test.ts:34",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1027,13 +1027,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:23",
+                    "location": "viewport.test.ts:21",
                     "name": "viewport sensitive layout rendered",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:12",
+                    "location": "viewport.test.ts:10",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1905,7 +1905,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:33",
+                    "location": "viewport.test.ts:31",
                     "name": "document scrolled before mark",
                     "selector": "internal:role=button",
                     "snapshot": {
@@ -1914,7 +1914,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:26",
+                    "location": "viewport.test.ts:24",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1927,7 +1927,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:49",
+                    "location": "viewport.test.ts:47",
                     "name": "overflow container scrolled before mark",
                     "selector": "internal:testid=[data-testid="scroll-box"s]",
                     "snapshot": {
@@ -1936,7 +1936,7 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:36",
+                    "location": "viewport.test.ts:34",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
@@ -1949,13 +1949,13 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "viewport.test.ts:23",
+                    "location": "viewport.test.ts:21",
                     "name": "viewport sensitive layout rendered",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "viewport.test.ts:12",
+                    "location": "viewport.test.ts:10",
                     "name": "vitest:onAfterRetryTask [pass]",
                     "snapshot": {},
                     "status": "pass",
