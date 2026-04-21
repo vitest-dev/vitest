@@ -246,8 +246,8 @@ import { expect, test, Snapshots } from 'vitest'
 const { toMatchFileSnapshot, toMatchInlineSnapshot, toMatchSnapshot } = Snapshots
 
 expect.extend({
-  toMatchTrimmedSnapshot(received: string, length: number) {
-    return toMatchSnapshot.call(this, received.slice(0, length))
+  toMatchTrimmedSnapshot(received: string) {
+    return toMatchSnapshot.call(this, received.slice(0, 10))
   },
   toMatchTrimmedInlineSnapshot(received: string, inlineSnapshot?: string) {
     return toMatchInlineSnapshot.call(this, received.slice(0, 10), inlineSnapshot)
@@ -258,15 +258,19 @@ expect.extend({
 })
 
 test('file snapshot', () => {
+  // create __snapshots__/demo.test.ts with
+  // > exports[`file snapshot 1`] = `"extra long"`
   expect('extra long string oh my gerd').toMatchTrimmedSnapshot(10)
 })
 
 test('inline snapshot', () => {
-  expect('extra long string oh my gerd').toMatchTrimmedInlineSnapshot()
+  expect('super long string oh my gerd').toMatchTrimmedInlineSnapshot(`"super long"`)
 })
 
 test('raw file snapshot', async () => {
-  await expect('extra long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
+  // create raw-file.txt with:
+  // > crazy long
+  await expect('crazy long string oh my gerd').toMatchTrimmedFileSnapshot('./raw-file.txt')
 })
 ```
 
