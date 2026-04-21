@@ -55,6 +55,70 @@ async function runBrowserTests(
   })
 }
 
+async function runBrowserTestsWithScreenshotDir(
+  structure: TestFsStructure,
+  screenshotDir: string,
+  config: ViteUserConfig['test'] = {},
+) {
+  return runInlineTests({
+    ...structure,
+    'vitest.config.js': `
+      import { playwright } from '@vitest/browser-playwright'
+      export default {
+        test: {
+          browser: {
+            enabled: true,
+            screenshotFailures: false,
+            screenshotDirectory: ${JSON.stringify(screenshotDir)},
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: ${JSON.stringify(browser)} }],
+          },
+          reporters: ['verbose'],
+          ...${JSON.stringify(config)},
+        },
+      }`,
+  }, {
+    $cliOptions: {
+      watch: true,
+    },
+  })
+}
+
+describe.runIf(provider.name === 'playwright')('screenshotDirectory', () => {
+  test(
+    'stores screenshots in the configured directory when screenshotDirectory is explicitly set',
+    async () => {
+      const { fs, stderr, vitest } = await runBrowserTestsWithScreenshotDir(
+        {
+          [testFilename]: testContent,
+          'utils.ts': utilsContent,
+        },
+        'custom-screenshots',
+        {
+          update: 'new',
+        },
+      )
+
+      const [referencePath] = extractToMatchScreenshotPaths(stderr, testName)
+
+      // The reference screenshot should be inside the custom directory, not contain absolute path segments
+      expect(referencePath).toContain('custom-screenshots/')
+      expect(referencePath).not.toContain('custom-screenshots/Users')
+      expect(referencePath).not.toContain('custom-screenshots/home')
+
+      expect(() => fs.statFile(referencePath)).not.toThrow()
+
+      fs.editFile(testFilename, content => `${content}\n`)
+
+      vitest.resetOutput()
+      await vitest.waitForStdout('Test Files  1 passed')
+
+      expect(vitest.stdout).toContain('✓ |chromium| basic.test.ts > screenshot-snapshot')
+    },
+  )
+})
+
 describe.runIf(provider.name === 'playwright')('--watch', () => {
   test(
     'fails when creating a snapshot for the first time and does NOT update it afterwards',
