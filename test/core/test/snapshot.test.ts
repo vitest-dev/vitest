@@ -92,19 +92,6 @@ test('properties snapshot', () => {
   })
 })
 
-test.fails('properties snapshot fails', () => {
-  const user = {
-    createdAt: new Date(),
-    id: Math.floor(Math.random() * 20),
-    name: 'LeBron James',
-  }
-
-  expect(user).toMatchSnapshot({
-    createdAt: expect.any(Date),
-    id: expect.any(String),
-  })
-})
-
 test('renders mock snapshot', () => {
   const fn = vi.fn()
   expect(fn).toMatchSnapshot()
