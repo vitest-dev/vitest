@@ -106,6 +106,12 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         // extracting inline snapshot location to validate and update new snapshots.
         return function __VITEST_POLL_CHAIN__(this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
+          const deregister = test.context.recordErrorOnTimeout(() => {
+            return copyStackTrace(
+              new Error('expect.poll did not succeed in time.'),
+              STACK_TRACE_ERROR,
+            )
+          })
           const promise = async () => {
             chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
@@ -174,6 +180,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }
             }
             finally {
+              deregister()
               clearTimeout(timerId)
             }
           }

@@ -8,6 +8,7 @@ import type {
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
+import { processError } from '@vitest/utils/error'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { PendingError } from './errors'
@@ -240,6 +241,44 @@ export function createTestContext(
     )
   }
 
+  function recordError(error: unknown) {
+    test.result ||= { state: 'fail' }
+    test.result.state = 'fail'
+    test.result.errors ||= []
+    test.result.errors.push(processError(error))
+  }
+  context.recordError = recordError
+
+  function recordErrorOnTimeout(createError: () => unknown) {
+    const addError = () => {
+      // as cause?
+      // const timeoutError = context.signal.reason as Error;
+      // if (!timeoutError.cause) {
+      //   timeoutError.cause = createError()
+      // }
+
+      // or as stack?
+      const timeoutError = context.signal.reason as Error
+      if (timeoutError && timeoutError.stack) {
+        copyStackTrace(timeoutError, createError() as any)
+      }
+
+      // or as dedicated error?
+      // recordError(createError())
+    }
+    context.signal.addEventListener('abort', addError)
+    const deregister = () => {
+      context.signal.removeEventListener('abort', addError)
+    }
+    if (Symbol.dispose) {
+      Object.assign(deregister, {
+        [Symbol.dispose]: deregister,
+      })
+    }
+    return deregister as any
+  }
+  context.recordErrorOnTimeout = recordErrorOnTimeout
+
   return runner.extendTaskContext?.(context) || context
 }
 
@@ -256,4 +295,11 @@ function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Er
     error.stack = stackTraceError.stack.replace(error.message, stackTraceError.message)
   }
   return error
+}
+
+function copyStackTrace(target: Error, source: Error) {
+  if (source.stack !== undefined) {
+    target.stack = source.stack.replace(source.message, target.message)
+  }
+  return target
 }
