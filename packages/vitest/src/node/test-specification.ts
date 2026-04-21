@@ -32,19 +32,19 @@ export class TestSpecification {
   /**
    * Line numbers of the test locations to run.
    */
-  public readonly testLines: number[] | undefined
+  public testLines: number[] | undefined
   /**
    * Regular expression pattern to filter test names.
    */
-  public readonly testNamePattern: RegExp | undefined
+  public testNamePattern: RegExp | undefined
   /**
    * The ids of tasks inside of this specification to run.
    */
-  public readonly testIds: string[] | undefined
+  public testIds: string[] | undefined
   /**
    * The tags of tests to run.
    */
-  public readonly testTagsFilter: string[] | undefined
+  public testTagsFilter: string[] | undefined
 
   /**
    * This class represents a test suite for a test module within a single project.

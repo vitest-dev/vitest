@@ -121,16 +121,20 @@ When you have hooks at multiple levels, it's helpful to understand the order the
 import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest'
 
 beforeAll(() => console.log('1 - beforeAll'))
-afterAll(() => console.log('6 - afterAll'))
+afterAll(() => console.log('8 - afterAll'))
 beforeEach(() => console.log('2 - beforeEach'))
-afterEach(() => console.log('4 - afterEach'))
+afterEach(() => console.log('5 - afterEach'))
 
 describe('suite', () => {
   beforeEach(() => console.log('3 - inner beforeEach'))
-  afterEach(() => console.log('3.5 - inner afterEach'))
+  afterEach(() => console.log('4 - inner afterEach'))
 
-  test('example', () => {
-    console.log('  test')
+  test('first test', () => {
+    console.log('  first test')
+  })
+
+  test('second test', () => {
+    console.log('  second test')
   })
 })
 ```
@@ -141,13 +145,18 @@ This produces the following output:
 1 - beforeAll
 2 - beforeEach
 3 - inner beforeEach
-  test
-3.5 - inner afterEach
-4 - afterEach
-6 - afterAll
+  first test
+4 - inner afterEach
+5 - afterEach
+2 - beforeEach
+3 - inner beforeEach
+  second test
+4 - inner afterEach
+5 - afterEach
+8 - afterAll
 ```
 
-Notice the pattern: outer `beforeEach` runs first (setting up the broadest context), then inner `beforeEach` runs (narrowing the context). After the test, the order reverses: inner `afterEach` cleans up the narrow context first, then outer `afterEach` handles the broader cleanup.
+Notice the pattern: `beforeAll` and `afterAll` run once for the entire suite, while `beforeEach` and `afterEach` repeat for every test. Within each test, outer `beforeEach` runs first (setting up the broadest context), then inner `beforeEach` runs (narrowing the context). After the test, the order reverses: inner `afterEach` cleans up the narrow context first, then outer `afterEach` handles the broader cleanup.
 
 ## Cleanup with `onTestFinished`
 

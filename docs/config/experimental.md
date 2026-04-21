@@ -334,6 +334,7 @@ Some features will not work due to the nature of `viteModuleRunner`, including:
 - no `plugins`: plugins are not applied because there is no transformation phase, use [customization hooks](https://nodejs.org/api/module.html#customization-hooks) via [`execArgv`](/config/execargv) instead
 - no `alias`: aliases are not applied because there is no transformation phase
 - `istanbul` coverage provider doesn't work because there is no transformation phase, use `v8` instead
+- `vi.resetModules()`: there is no API to invalidate ES modules from the module cache
 
 ::: warning Coverage Support
 At the moment Vitest supports coverage via `v8` provider as long as files can be transformed into JavaScript. To transform TypeScript, Vitest uses [`module.stripTypeScriptTypes`](https://nodejs.org/api/module.html#modulestriptypescripttypescode-options) which is available in Node.js since v22.13. If you are using a custom [module loader](https://nodejs.org/api/module.html#customization-hooks), Vitest is not able to reuse it to transform files for analysis.

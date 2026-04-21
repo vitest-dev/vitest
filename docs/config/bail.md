@@ -7,7 +7,7 @@ outline: deep
 
 - **Type:** `number`
 - **Default:** `0`
-- **CLI**: `--bail=<value>`
+- **CLI:** `--bail=<value>`
 
 Stop test execution when given number of tests have failed.
 
