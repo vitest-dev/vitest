@@ -60,6 +60,10 @@ test.describe('ui', () => {
   test('image', async ({ page }) => {
     await testImage(page)
   })
+
+  test('scroll', async ({ page }) => {
+    await testScroll(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -126,18 +130,23 @@ test.describe('html reporter', () => {
   test('image', async ({ page }) => {
     await testImage(page)
   })
+
+  test('scroll', async ({ page }) => {
+    await testScroll(page)
+  })
 })
 
 async function testReady(page: Page) {
+  const count = 6
   await expect.soft(page.getByTestId('tests-entry'))
-    .toContainText('5 Pass 0 Fail 5 Total')
+    .toContainText(`${count} Pass 0 Fail ${count} Total`)
 }
 
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer
   const traceView = page.getByTestId('trace-view')
   await expect(traceView).toBeHidden()
-  await page.getByTestId('explorer-item').getByText('simple').click()
+  await page.getByTestId('explorer-item_simple').click()
   await expect(traceView).toBeVisible()
 
   // selecting steps should open source code view
@@ -155,7 +164,7 @@ async function testBasic(page: Page) {
 }
 
 async function testViewport(page: Page) {
-  await page.getByTestId('explorer-item').getByText('viewport').click()
+  await page.getByTestId('explorer-item_viewport').click()
 
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step-name')
@@ -166,7 +175,7 @@ async function testViewport(page: Page) {
 }
 
 async function testPseudoState(page: Page) {
-  await page.getByTestId('explorer-item').getByText('pseudo-state').click()
+  await page.getByTestId('explorer-item_pseudo-state').click()
 
   const traceView = page.getByTestId('trace-view')
   const traceSteps = traceView.getByTestId('trace-step-name')
@@ -205,7 +214,7 @@ async function testPseudoState(page: Page) {
 }
 
 async function testCssLink(page: Page) {
-  await page.getByTestId('explorer-item').getByText('css-link').click()
+  await page.getByTestId('explorer-item_css-link').click()
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
@@ -214,10 +223,20 @@ async function testCssLink(page: Page) {
 }
 
 async function testImage(page: Page) {
-  await page.getByTestId('explorer-item').getByText('image').click()
+  await page.getByTestId('explorer-item_image').click()
 
   const traceView = page.getByTestId('trace-view')
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceView).toBeVisible()
   await expect(traceFrame.getByAltText('local trace asset')).not.toHaveJSProperty('naturalWidth', 0)
+}
+
+async function testScroll(page: Page) {
+  await page.getByTestId('explorer-item_scroll').click()
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByText('(0, 0)')).not.toBeInViewport()
+  await expect(traceFrame.getByText('(300, 300)')).toBeInViewport()
 }
