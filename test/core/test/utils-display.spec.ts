@@ -1,5 +1,5 @@
 import util from 'node:util'
-import { format } from '@vitest/utils'
+import { format } from '@vitest/utils/display'
 import { describe, expect, test } from 'vitest'
 
 describe('format', () => {
@@ -18,33 +18,48 @@ describe('format', () => {
     ['%s', -0],
     ['%s', null],
     ['%s', null, 'next'],
+    [
+      '%s',
+      new (class {
+        constructor(public value: string) {}
+        toString() {
+          return this.value
+        }
+      })('string value'),
+    ],
+    ['%s', Symbol('test')],
     ['%d', 100],
     ['%d', 100n],
     ['%d', null],
     ['%d', {}],
     ['%d', {}, 'next'],
+    ['%d', Symbol('test')],
     ['%i', 100],
     ['%i', 100n],
     ['%i', null],
     ['%i', {}],
     ['%i', {}, 'next'],
+    ['%i', Symbol('test')],
     ['%f', 100],
     ['%f', 100n],
     ['%f', null],
     ['%f', {}],
     ['%f', {}, 'next'],
+    ['%f', Symbol('test')],
     ['%o', 'string'],
     ['%o', 100],
     ['%o', 100n],
     ['%o', null],
     ['%o', {}],
     ['%o', {}, 'next'],
+    ['%o', Symbol('test')],
     ['%O', 'string'],
     ['%O', 100],
     ['%O', 100n],
     ['%O', null],
     ['%O', {}],
     ['%O', {}, 'next'],
+    ['%O', Symbol('test')],
     ['%c', 'css value'],
     ['%c', 'css value', 'some other value'],
     ['%c %f', 'css value', '100.00'],
@@ -55,7 +70,9 @@ describe('format', () => {
     ['%j', {}, 'next'],
     ['%j', { obj }],
     ['%j', { fn: () => {} }],
+    ['%j', Symbol('test')],
     ['%%', 'string'],
+    ['prefix', Symbol('test')],
   ])('format(%s)', (formatString, ...args) => {
     expect(format(formatString, ...args), `failed ${formatString}`).toBe(util.format(formatString, ...args))
   })

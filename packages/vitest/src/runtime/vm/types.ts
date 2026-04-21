@@ -11,15 +11,15 @@ interface ModuleEvaluateOptions {
 type ModuleLinker = (
   specifier: string,
   referencingModule: VMModule,
-  extra: { assert: object }
+  extra: { assert: object },
 ) => VMModule | Promise<VMModule>
-type ModuleStatus =
-  | 'unlinked'
-  | 'linking'
-  | 'linked'
-  | 'evaluating'
-  | 'evaluated'
-  | 'errored'
+type ModuleStatus
+  = | 'unlinked'
+    | 'linking'
+    | 'linked'
+    | 'evaluating'
+    | 'evaluated'
+    | 'errored'
 export declare class VMModule {
   dependencySpecifiers: readonly string[]
   error: any

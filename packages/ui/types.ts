@@ -18,5 +18,6 @@ export interface BrowserRunnerState {
   files: string[]
   config: SerializedConfig
   type: 'orchestrator'
+  provider: string
   wrapModule: <T>(module: () => T) => T
 }

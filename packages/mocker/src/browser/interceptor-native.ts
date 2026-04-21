@@ -11,7 +11,7 @@ export class ModuleMockerServerInterceptor implements ModuleMockerInterceptor {
     await rpc('vitest:interceptor:delete', id)
   }
 
-  invalidate(): void {
-    rpc('vitest:interceptor:invalidate')
+  async invalidate(): Promise<void> {
+    await rpc('vitest:interceptor:invalidate')
   }
 }

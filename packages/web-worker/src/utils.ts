@@ -1,13 +1,10 @@
+import type { Debugger } from 'obug'
 import type { WorkerGlobalState } from 'vitest'
 import type { CloneOption } from './types'
-import { readFileSync as _readFileSync } from 'node:fs'
 import ponyfillStructuredClone from '@ungap/structured-clone'
-import createDebug from 'debug'
+import { createDebug } from 'obug'
 
-// keep the reference in case it was mocked
-const readFileSync = _readFileSync
-
-export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
+export const debug: Debugger = createDebug('vitest:web-worker')
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -33,12 +30,33 @@ function createClonedMessageEvent(
 
   debug('clone worker message %o', data)
   const origin = typeof location === 'undefined' ? undefined : location.origin
+  const ports = transfer?.filter((t): t is MessagePort => t instanceof MessagePort)
 
   if (typeof structuredClone === 'function' && clone === 'native') {
     debug('create message event, using native structured clone')
+    // A real Worker serializes `data` across realms and exposes the
+    // MessagePorts from `transfer` as `event.ports` on the receiving side.
+    // @vitest/web-worker runs both sides in a single realm, so we use
+    // `structuredClone` to emulate that transfer boundary.
+    //
+    // `MessageEvent.ports` must be the *cloned* ports returned by
+    // `structuredClone`, not the originals from `transfer`: once transferred,
+    // the originals are detached and can no longer communicate — e.g.
+    // `port1.postMessage(...)` on the caller side would not trigger
+    // `port2.onmessage` on a detached `port2`.
+    //
+    // `data` and `ports` must also be cloned in the *same* `structuredClone`
+    // call. A transferred object is detached immediately, so we cannot clone
+    // `data` first and then clone `ports` (or vice versa) — the second call
+    // would see already-detached ports. Passing them together as a single
+    // input also makes `structuredClone` deduplicate by identity, so a port
+    // referenced from inside `data` and from `transfer` resolves to the same
+    // transferred instance in the cloned graph.
+    const { data: clonedData, ports: clonedPorts } = structuredClone({ data, ports }, { transfer })
     return new MessageEvent('message', {
-      data: structuredClone(data, { transfer }),
+      data: clonedData,
       origin,
+      ports: clonedPorts,
     })
   }
   if (clone !== 'none') {
@@ -54,12 +72,14 @@ function createClonedMessageEvent(
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
+      ports,
     })
   }
   debug('create message event without cloning an object')
   return new MessageEvent('message', {
     data,
     origin,
+    ports,
   })
 }
 
@@ -76,32 +96,6 @@ export function createMessageEvent(
     return new MessageEvent('messageerror', {
       data: error,
     })
-  }
-}
-
-export function getRunnerOptions(): any {
-  const state = getWorkerState()
-  const { config, rpc, moduleCache, moduleExecutionInfo } = state
-
-  return {
-    async fetchModule(id: string) {
-      const result = await rpc.fetch(id, 'web')
-      if (result.id && !result.externalize) {
-        const code = readFileSync(result.id, 'utf-8')
-        return { code }
-      }
-      return result
-    },
-    resolveId(id: string, importer?: string) {
-      return rpc.resolveId(id, importer, 'web')
-    },
-    moduleCache,
-    moduleExecutionInfo,
-    interopDefault: config.deps.interopDefault ?? true,
-    moduleDirectories: config.deps.moduleDirectories,
-    root: config.root,
-    base: config.base,
-    state,
   }
 }
 

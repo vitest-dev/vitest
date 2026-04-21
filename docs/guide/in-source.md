@@ -55,8 +55,10 @@ $ npx vitest
 
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
+```ts [vite.config.ts]
+/// <reference types="vitest/config" />
+
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   test: {
@@ -70,23 +72,24 @@ export default defineConfig({
 
 ### Other Bundlers
 
-::: details unbuild
-```ts [build.config.ts]
-import { defineBuildConfig } from 'unbuild'
+::: details Rolldown
+```js [rolldown.config.js]
+import { defineConfig } from 'rolldown/config'
 
-export default defineBuildConfig({
-  replace: { // [!code ++]
-    'import.meta.vitest': 'undefined', // [!code ++]
-  }, // [!code ++]
-  // other options
+export default defineConfig({
+  transform: {
+    define: { // [!code ++]
+      'import.meta.vitest': 'undefined', // [!code ++]
+    }, // [!code ++]
+  },
 })
 ```
 
-Learn more: [unbuild](https://github.com/unjs/unbuild)
+Learn more: [Rolldown](https://rolldown.rs/)
 :::
 
 ::: details Rollup
-```ts [rollup.config.js]
+```js [rollup.config.js]
 import replace from '@rollup/plugin-replace' // [!code ++]
 
 export default {
@@ -100,6 +103,37 @@ export default {
 ```
 
 Learn more: [Rollup](https://rollupjs.org/)
+:::
+
+::: details unbuild
+```js [build.config.js]
+import { defineBuildConfig } from 'unbuild'
+
+export default defineBuildConfig({
+  replace: { // [!code ++]
+    'import.meta.vitest': 'undefined', // [!code ++]
+  }, // [!code ++]
+  // other options
+})
+```
+
+Learn more: [unbuild](https://github.com/unjs/unbuild)
+:::
+
+::: details webpack
+```js [webpack.config.js]
+const webpack = require('webpack')
+
+module.exports = {
+  plugins: [
+    new webpack.DefinePlugin({ // [!code ++]
+      'import.meta.vitest': 'undefined', // [!code ++]
+    })// [!code ++]
+  ],
+}
+```
+
+Learn more: [webpack](https://webpack.js.org/plugins/define-plugin/)
 :::
 
 ## TypeScript

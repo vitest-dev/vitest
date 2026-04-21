@@ -1,7 +1,7 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import { stripVTControlCharacters } from 'node:util'
-import { processError } from '@vitest/runner'
 import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { processError } from '@vitest/utils/error'
 import { expect, test } from 'vitest'
 
 function wrapDiff(diff?: string) {
@@ -142,7 +142,7 @@ test('asymmetric matcher in object', () => {
       {
     -   "x": 1,
     +   "x": 0,
-        "y": Anything,
+        "y": "foo",
       }"
   `)
 })
@@ -159,7 +159,7 @@ test('asymmetric matcher in object with truncated diff', () => {
     + Received
 
       {
-        "w": Anything,
+        "w": "foo",
     -   "x": 1,
     +   "x": 0,
     ... Diff result is truncated"
@@ -174,7 +174,7 @@ test('asymmetric matcher in array', () => {
       [
     -   1,
     +   0,
-        Anything,
+        "foo",
       ]"
   `)
 })
@@ -211,12 +211,12 @@ test('asymmetric matcher in nested', () => {
         {
     -     "x": 1,
     +     "x": 0,
-          "y": Anything,
+          "y": "foo",
         },
         [
     -     1,
     +     0,
-          Anything,
+          "bar",
         ],
       ]"
   `)
@@ -237,8 +237,8 @@ test('asymmetric matcher in nested with truncated diff', () => {
         {
     -     "x": 1,
     +     "x": 0,
-          "y": Anything,
-          "z": Anything,
+          "y": "foo",
+          "z": "bar",
     ... Diff result is truncated"
   `)
 })
@@ -322,6 +322,25 @@ test('truncate large diff', () => {
   const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
   expect(diff.length).lessThan(200_000)
   expect(diff.trim()).toMatch(/\.\.\.$/)
+}, 60_000)
+
+test('diff default maxDepth', () => {
+  function generateCycle(n: number) {
+    const nodes = Array.from({ length: n }, (_, i) => ({ i, next: null as any }))
+    nodes.forEach((node, i) => {
+      node.next = nodes[(i + 1) % n]
+    })
+    return nodes
+  }
+
+  // diff only appears in a deeper depth than maxDepth
+  const xs = generateCycle(20)
+  const ys = generateCycle(20)
+  ys[10].i = -1
+  const diff = getErrorDiff(xs[0], ys[0], { maxDepth: 5 })
+  expect(stripVTControlCharacters(diff)).toMatchInlineSnapshot(
+    `"Compared values have no visual difference."`,
+  )
 })
 
 function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
@@ -330,7 +349,140 @@ function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions)
   }
   catch (e) {
     const error = processError(e, options)
-    return error.diff
+    return error.diff!
   }
   return expect.unreachable()
 }
+
+test('asymmetric matcher with objectContaining - simple case', () => {
+  const actual = {
+    user: {
+      name: 'John',
+      age: 25,
+      email: 'john@example.com',
+    },
+  }
+
+  const expected = {
+    user: expect.objectContaining({
+      name: expect.stringContaining('Jane'),
+      age: expect.any(Number),
+      email: expect.stringContaining('example.com'),
+    }),
+  }
+
+  expect(stripVTControlCharacters(getErrorDiff(actual, expected))).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+        "user": {
+          "age": 25,
+          "email": "john@example.com",
+    -     "name": StringContaining "Jane",
+    +     "name": "John",
+        },
+      }"
+  `)
+})
+
+test('asymmetric matcher with nested objectContaining and arrayContaining', () => {
+  const actual = {
+    model: 'veo-3.1-generate-preview',
+    instances: [
+      {
+        prompt: 'walk',
+        referenceImages: [
+          {
+            image: {
+              gcsUri: 'gs://example/person1.jpg',
+              mimeType: 'image/png',
+            },
+            referenceType: 'asset',
+          },
+          {
+            image: {
+              gcsUri: 'gs://example/person.jpg',
+              mimeType: 'image/png',
+            },
+            referenceType: 'asset',
+          },
+        ],
+      },
+    ],
+    parameters: {
+      durationSeconds: '8',
+      aspectRatio: '16:9',
+      generateAudio: true,
+    },
+  }
+
+  const expected = {
+    model: expect.stringMatching(/^veo-3\.1-(fast-)?generate-preview$/),
+    instances: expect.arrayContaining([
+      expect.objectContaining({
+        prompt: expect.stringMatching(/^(?=.*walking)(?=.*together)(?=.*park).*/i),
+        referenceImages: expect.arrayContaining([
+          expect.objectContaining({
+            image: expect.objectContaining({
+              gcsUri: expect.stringContaining('person1.jpg'),
+              mimeType: 'image/jpeg',
+            }),
+            referenceType: expect.stringMatching(/^(asset|style)$/),
+          }),
+          expect.objectContaining({
+            image: expect.objectContaining({
+              gcsUri: expect.stringContaining('person2.png'),
+              mimeType: 'image/png',
+            }),
+            referenceType: expect.stringMatching(/^(asset|style)$/),
+          }),
+        ]),
+      }),
+    ]),
+    parameters: expect.objectContaining({
+      durationSeconds: expect.any(Number),
+      aspectRatio: '16:9',
+      generateAudio: expect.any(Boolean),
+    }),
+  }
+
+  expect(stripVTControlCharacters(getErrorDiff(actual, expected))).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+        "instances": [
+          {
+    -       "prompt": StringMatching /^(?=.*walking)(?=.*together)(?=.*park).*/i,
+    +       "prompt": "walk",
+            "referenceImages": [
+              {
+                "image": {
+                  "gcsUri": "gs://example/person1.jpg",
+    -             "mimeType": "image/jpeg",
+    +             "mimeType": "image/png",
+                },
+                "referenceType": "asset",
+              },
+              {
+                "image": {
+    -             "gcsUri": StringContaining "person2.png",
+    +             "gcsUri": "gs://example/person.jpg",
+                  "mimeType": "image/png",
+                },
+                "referenceType": "asset",
+              },
+            ],
+          },
+        ],
+        "model": "veo-3.1-generate-preview",
+        "parameters": {
+          "aspectRatio": "16:9",
+    -     "durationSeconds": Any<Number>,
+    +     "durationSeconds": "8",
+          "generateAudio": true,
+        },
+      }"
+  `)
+})

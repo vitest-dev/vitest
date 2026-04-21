@@ -1,3 +1,4 @@
+import type { Test } from '@vitest/runner'
 import type {
   ChaiPlugin,
   ExpectStatic,
@@ -14,9 +15,7 @@ import {
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
-
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-
 import { getState } from './state'
 import { wrapAssertion } from './utils'
 
@@ -27,6 +26,7 @@ function getMatcherState(
   const obj = assertion._obj
   const isNot = util.flag(assertion, 'negate') as boolean
   const promise = util.flag(assertion, 'promise') || ''
+  const customMessage = util.flag(assertion, 'message') as string | undefined
   const jestUtils = {
     ...getMatcherUtils(),
     diff,
@@ -34,9 +34,16 @@ function getMatcherState(
     iterableEquality,
     subsetEquality,
   }
+  let task: Test | undefined = util.flag(assertion, 'vitest-test')
+  const currentTestName = task?.fullTestName ?? ''
+
+  if (task?.type !== 'test') {
+    task = undefined
+  }
 
   const matcherState: MatcherState = {
     ...getState(expect),
+    currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
     utils: jestUtils,
@@ -46,17 +53,31 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
+    assertion: assertion as any,
   }
+  Object.assign(matcherState, { task })
 
   return {
     state: matcherState,
     isNot,
     obj,
+    customMessage,
   }
 }
 
+interface VitestErrorContext {
+  assertionName: string
+  meta?: object
+}
+
 class JestExtendError extends Error {
-  constructor(message: string, public actual?: any, public expected?: any) {
+  constructor(
+    message: string,
+    public actual?: any,
+    public expected?: any,
+    /** @internal */
+    public __vitest_error_context__?: VitestErrorContext,
+  ) {
     super(message)
   }
 }
@@ -69,34 +90,47 @@ function JestExtendPlugin(
   return (_, utils) => {
     Object.entries(matchers).forEach(
       ([expectAssertionName, expectAssertion]) => {
-        function expectWrapper(
+        function __VITEST_EXTEND_ASSERTION__(
           this: Chai.AssertionStatic & Chai.Assertion,
           ...args: any[]
         ) {
-          const { state, isNot, obj } = getMatcherState(this, expect)
+          const { state, isNot, obj, customMessage } = getMatcherState(this, expect)
 
           const result = expectAssertion.call(state, obj, ...args)
 
           if (
             result
             && typeof result === 'object'
-            && result instanceof Promise
+            && typeof (result as any).then === 'function'
           ) {
-            return result.then(({ pass, message, actual, expected }) => {
+            const thenable = result as PromiseLike<SyncExpectationResult>
+            return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                throw new JestExtendError(message(), actual, expected)
+                const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
+                throw new JestExtendError(
+                  errorMessage,
+                  actual,
+                  expected,
+                  { assertionName: expectAssertionName, meta },
+                )
               }
             })
           }
 
-          const { pass, message, actual, expected } = result
+          const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            throw new JestExtendError(message(), actual, expected)
+            const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
+            throw new JestExtendError(
+              errorMessage,
+              actual,
+              expected,
+              { assertionName: expectAssertionName, meta },
+            )
           }
         }
 
-        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, __VITEST_EXTEND_ASSERTION__)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,
@@ -107,6 +141,16 @@ function JestExtendPlugin(
           expectAssertionName,
           softWrapper,
         )
+
+        // `expect.poll()` inspects the installed Chai assertion method,
+        // so copy the internal marker from the original matcher function.
+        // this is only for domain snapshot matchers for now.
+        if ((expectAssertion as any).__vitest_poll_takeover__) {
+          const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
+          Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
+            value: true,
+          })
+        }
 
         class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
           constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {

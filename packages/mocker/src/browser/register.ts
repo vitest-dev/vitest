@@ -1,6 +1,6 @@
 import type { ModuleMockerCompilerHints } from './hints'
 import type { ModuleMockerInterceptor } from './index'
-import { spyOn } from '@vitest/spy'
+import { createMockInstance } from '@vitest/spy'
 import { createCompilerHints } from './hints'
 import { ModuleMocker } from './index'
 import { hot, rpc } from './utils'
@@ -24,7 +24,7 @@ export function registerModuleMocker(
         return rpc('vitest:mocks:invalidate', { ids })
       },
     },
-    spyOn,
+    createMockInstance,
     {
       root: __VITEST_MOCKER_ROOT__,
     },

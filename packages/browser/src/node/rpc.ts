@@ -1,23 +1,26 @@
+import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname } from 'pathe'
-import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
+import { dirname, join } from 'pathe'
+import { createDebugger, isFileLoadingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
+export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -55,15 +58,17 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
       )
     }
 
-    const method = searchParams.get('method') as 'run' | 'collect'
-    if (method !== 'run' && method !== 'collect') {
+    const sessions = vitest._browserSessions
+
+    if (!sessions.sessionIds.has(sessionId)) {
+      const ids = [...sessions.sessionIds].join(', ')
       return error(
-        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
       )
     }
 
     if (type === 'orchestrator') {
-      const session = vitest._browserSessions.getSession(sessionId)
+      const session = sessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
       session?.connected()
     }
@@ -79,7 +84,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws, method)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -88,8 +93,16 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
 
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
+        if (type === 'orchestrator') {
+          sessions.destroySession(sessionId)
+        }
+        // this will reject any hanging methods if there are any
+        rpc.$close(
+          new Error(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+        )
       })
     })
   })
@@ -101,28 +114,38 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileLoadingAllowed(vite.config, path)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
+  function canWrite(project: TestProject) {
+    return (
+      project.config.browser.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+      && project.config.api.allowWrite
+      && project.vitest.config.api.allowWrite
+    )
+  }
+
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
-      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+      moduleDirectories: project.config?.deps?.moduleDirectories,
     })
+    const mocker = project.browser?.provider.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
-            const _error = error as ErrorWithDiff
+            const _error = error as TestError
             _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)
         },
-        async onQueued(file) {
+        async onQueued(method, file) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, [file])
           }
@@ -130,7 +153,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.enqueued(project, file)
           }
         },
-        async onCollected(files) {
+        async onCollected(method, files) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, files)
           }
@@ -138,7 +161,27 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.collected(project, files)
           }
         },
-        async onTaskUpdate(packs, events) {
+        async onTaskArtifactRecord(id, artifact) {
+          if (!canWrite(project)) {
+            if (artifact.type === 'internal:annotation' && artifact.annotation.attachment) {
+              artifact.annotation.attachment = undefined
+              vitest.logger.error(
+                `[vitest] Cannot record annotation attachment because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+              )
+            }
+            // remove attachments if cannot write
+            if (artifact.attachments?.length) {
+              const attachments = artifact.attachments.map(n => n.path).filter(r => !!r).join('", "')
+              artifact.attachments = []
+              vitest.logger.error(
+                `[vitest] Cannot record attachments ("${attachments}") because file writing is disabled, removing attachments from artifact "${artifact.type}". See https://vitest.dev/config/browser/api.`,
+              )
+            }
+          }
+
+          return vitest._testRun.recordArtifact(id, artifact)
+        },
+        async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)
           }
@@ -149,7 +192,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        async sendLog(log) {
+        async sendLog(method, log) {
           if (method === 'collect') {
             vitest.state.updateUserLog(log)
           }
@@ -177,21 +220,40 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
-          return fs.writeFile(id, content, 'utf-8')
+          await fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
           }
-          return fs.unlink(id)
+          await fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
-          return mod?.transformResult?.map
+          const result = mod?.transformResult
+          // handle non-inline source map such as pre-bundled deps in node_modules/.vite
+          if (result && !result.map) {
+            const filePath = id.split('?')[0]
+            const extracted = extractSourcemapFromFile(result.code, filePath)
+            return extracted?.map
+          }
+          return result?.map
         },
-        onCancel(reason) {
+        cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
@@ -203,17 +265,27 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         getCountOfFailedTests() {
           return vitest.state.getCountOfFailedTests()
         },
+        async wdioSwitchContext(direction) {
+          const provider = project.browser!.provider
+          if (!provider) {
+            throw new Error('Commands are only available for browser tests.')
+          }
+          if (provider.name !== 'webdriverio') {
+            throw new Error('Switch context is only available for WebDriverIO provider.')
+          }
+          if (direction === 'iframe') {
+            await (provider as any).switchToTestFrame()
+          }
+          else {
+            await (provider as any).switchToMainFrame()
+          }
+        },
         async triggerCommand(sessionId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', sessionId, command)
           const provider = project.browser!.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const commands = globalServer.commands
-          if (!commands || !commands[command]) {
-            throw new Error(`Unknown command "${command}".`)
-          }
-          await provider.beforeCommand?.(command, payload)
           const context = Object.assign(
             {
               testPath,
@@ -221,27 +293,86 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
               provider,
               contextId: sessionId,
               sessionId,
+              triggerCommand: (name: string, ...args: any[]) => {
+                return project.browser!.triggerCommand(
+                  name as any,
+                  context,
+                  ...args,
+                )
+              },
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          let result
-          try {
-            result = await commands[command](context, ...payload)
-          }
-          finally {
-            await provider.afterCommand?.(command, payload)
-          }
-          return result
-        },
-        finishBrowserTests(sessionId: string) {
-          debug?.('[%s] Finishing browser tests for session', sessionId)
-          return vitest._browserSessions.getSession(sessionId)?.resolve()
+          return await project.browser!.triggerCommand(
+            command as any,
+            context,
+            ...payload,
+          )
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
           return mockResolver.invalidate(ids)
+        },
+
+        async registerMock(sessionId, module) {
+          if (!mocker) {
+            // make sure modules are not processed yet in case they were imported before
+            // and were not mocked
+            mockResolver.invalidate([module.id])
+
+            if (module.type === 'manual') {
+              const mock = ManualMockedModule.fromJSON(module, async () => {
+                try {
+                  const { keys } = await rpc.resolveManualMock(module.url)
+                  return Object.fromEntries(keys.map(key => [key, null]))
+                }
+                catch (err) {
+                  vitest.state.catchError(err, 'Manual Mock Resolver Error')
+                  return {}
+                }
+              })
+              defaultMockerRegistry.add(mock)
+            }
+            else {
+              if (module.type === 'redirect') {
+                const redirectUrl = new URL(module.redirect)
+                module.redirect = join(vite.config.root, redirectUrl.pathname)
+              }
+              defaultMockerRegistry.register(module)
+            }
+            return
+          }
+
+          if (module.type === 'manual') {
+            const manualModule = ManualMockedModule.fromJSON(module, async () => {
+              const { keys } = await rpc.resolveManualMock(module.url)
+              return Object.fromEntries(keys.map(key => [key, null]))
+            })
+            await mocker.register(sessionId, manualModule)
+          }
+          else if (module.type === 'redirect') {
+            await mocker.register(sessionId, RedirectedModule.fromJSON(module))
+          }
+          else if (module.type === 'automock') {
+            await mocker.register(sessionId, AutomockedModule.fromJSON(module))
+          }
+          else if (module.type === 'autospy') {
+            await mocker.register(sessionId, AutospiedModule.fromJSON(module))
+          }
+        },
+        clearMocks(sessionId) {
+          if (!mocker) {
+            return defaultMockerRegistry.clear()
+          }
+          return mocker.clear(sessionId)
+        },
+        unregisterMock(sessionId, id) {
+          if (!mocker) {
+            return defaultMockerRegistry.delete(id)
+          }
+          return mocker.delete(sessionId, id)
         },
 
         // CDP
@@ -260,15 +391,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: parse,
-        onTimeoutError(functionName) {
-          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
-        },
+        timeout: -1, // createTesters can take a long time
       },
     )
 
-    vitest.onCancel(reason => rpc.onCancel(reason))
+    const offCancel = vitest.onCancel(reason => rpc.onCancel(reason))
 
-    return rpc
+    return { rpc, offCancel }
   }
 }
 

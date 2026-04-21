@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { expect } from 'vitest'
-import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 test('tests with multiple suites are covered (#3514)', async () => {
   const { stdout } = await runVitest({
@@ -12,7 +12,6 @@ test('tests with multiple suites are covered (#3514)', async () => {
       'fixtures/src/another-setup.ts',
     ],
     coverage: {
-      include: ['fixtures/**'],
       reporter: 'json',
     },
   })
@@ -30,24 +29,12 @@ test('tests with multiple suites are covered (#3514)', async () => {
   // Some valid coverage should be reported
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
 
-  if (isV8Provider()) {
-    expect(fileCoverage).toMatchInlineSnapshot(`
-      {
-        "branches": "1/1 (100%)",
-        "functions": "1/4 (25%)",
-        "lines": "6/12 (50%)",
-        "statements": "6/12 (50%)",
-      }
-    `)
-  }
-  else {
-    expect(fileCoverage).toMatchInlineSnapshot(`
-      {
-        "branches": "0/0 (100%)",
-        "functions": "1/4 (25%)",
-        "lines": "1/4 (25%)",
-        "statements": "1/4 (25%)",
-      }
-    `)
-  }
+  expect(fileCoverage).toMatchInlineSnapshot(`
+    {
+      "branches": "0/0 (100%)",
+      "functions": "1/4 (25%)",
+      "lines": "1/4 (25%)",
+      "statements": "1/4 (25%)",
+    }
+  `)
 })

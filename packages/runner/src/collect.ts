@@ -1,7 +1,7 @@
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
-import { toArray } from '@vitest/utils'
-import { processError } from '@vitest/utils/error'
+import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { toArray } from '@vitest/utils/helpers'
 import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
 import { runSetupFiles } from './setup'
@@ -16,6 +16,7 @@ import {
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
+import { createTagsFilter, validateTags } from './utils/tags'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
@@ -26,92 +27,121 @@ export async function collectTests(
   const files: File[] = []
 
   const config = runner.config
+  const $ = runner.trace!
+  let defaultTagsFilter: ((testTags: string[]) => boolean) | undefined
 
   for (const spec of specs) {
     const filepath = typeof spec === 'string' ? spec : spec.filepath
-    const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+    await $(
+      'collect_spec',
+      { 'code.file.path': filepath },
+      async () => {
+        runner._currentSpecification = typeof spec === 'string' ? { filepath: spec } : spec
 
-    const file = createFileTask(filepath, config.root, config.name, runner.pool)
-    file.shuffle = config.sequence.shuffle
+        const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+        const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
+        const testIds = typeof spec === 'string' ? undefined : spec.testIds
+        const testTagsFilter = typeof spec === 'object' && spec.testTagsFilter
+          ? createTagsFilter(spec.testTagsFilter, config.tags)
+          : undefined
 
-    runner.onCollectStart?.(file)
+        const fileTags: string[] = typeof spec === 'string' ? [] : (spec.fileTags || [])
 
-    clearCollectorContext(filepath, runner)
+        const file = createFileTask(filepath, config.root, config.name, runner.pool, runner.viteEnvironment)
+        file.tags = fileTags
+        file.shuffle = config.sequence.shuffle
 
-    try {
-      const setupFiles = toArray(config.setupFiles)
-      if (setupFiles.length) {
-        const setupStart = now()
-        await runSetupFiles(config, setupFiles, runner)
-        const setupEnd = now()
-        file.setupDuration = setupEnd - setupStart
-      }
-      else {
-        file.setupDuration = 0
-      }
+        try {
+          validateTags(runner.config, fileTags)
 
-      const collectStart = now()
+          runner.onCollectStart?.(file)
 
-      await runner.importFile(filepath, 'collect')
+          clearCollectorContext(file, runner)
 
-      const defaultTasks = await getDefaultSuite().collect(file)
+          const setupFiles = toArray(config.setupFiles)
+          if (setupFiles.length) {
+            const setupStart = now()
+            await runSetupFiles(config, setupFiles, runner)
+            const setupEnd = now()
+            file.setupDuration = setupEnd - setupStart
+          }
+          else {
+            file.setupDuration = 0
+          }
 
-      const fileHooks = createSuiteHooks()
-      mergeHooks(fileHooks, getHooks(defaultTasks))
+          const collectStart = now()
 
-      for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'suite') {
-          file.tasks.push(c)
+          await runner.importFile(filepath, 'collect')
+
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
+          }
+
+          const defaultTasks = await getDefaultSuite().collect(file)
+
+          const fileHooks = createSuiteHooks()
+          mergeHooks(fileHooks, getHooks(defaultTasks))
+
+          for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
+            if (c.type === 'test' || c.type === 'suite') {
+              file.tasks.push(c)
+            }
+            else if (c.type === 'collector') {
+              const suite = await c.collect(file)
+              if (suite.name || suite.tasks.length) {
+                mergeHooks(fileHooks, getHooks(suite))
+                file.tasks.push(suite)
+              }
+            }
+            else {
+              // check that types are exhausted
+              c satisfies never
+            }
+          }
+
+          setHooks(file, fileHooks)
+          file.collectDuration = now() - collectStart
         }
-        else if (c.type === 'collector') {
-          const suite = await c.collect(file)
-          if (suite.name || suite.tasks.length) {
-            mergeHooks(fileHooks, getHooks(suite))
-            file.tasks.push(suite)
+        catch (e) {
+          const errors = e instanceof AggregateError
+            ? e.errors.map(e => processError(e, runner.config.diffOptions))
+            : [processError(e, runner.config.diffOptions)]
+          file.result = {
+            state: 'fail',
+            errors,
+          }
+
+          const durations = runner.getImportDurations?.()
+          if (durations) {
+            file.importDurations = durations
           }
         }
-        else {
-          // check that types are exhausted
-          c satisfies never
+
+        calculateSuiteHash(file)
+
+        const hasOnlyTasks = someTasksAreOnly(file)
+        if (!testTagsFilter && !defaultTagsFilter && config.tagsFilter) {
+          defaultTagsFilter = createTagsFilter(config.tagsFilter, config.tags)
         }
-      }
+        interpretTaskModes(
+          file,
+          testNamePattern ?? config.testNamePattern,
+          testLocations,
+          testIds,
+          testTagsFilter ?? defaultTagsFilter,
+          hasOnlyTasks,
+          false,
+          config.allowOnly,
+        )
 
-      setHooks(file, fileHooks)
-      file.collectDuration = now() - collectStart
-    }
-    catch (e) {
-      const error = processError(e)
-      file.result = {
-        state: 'fail',
-        errors: [error],
-      }
-    }
+        if (file.mode === 'queued') {
+          file.mode = 'run'
+        }
 
-    calculateSuiteHash(file)
-
-    file.tasks.forEach((task) => {
-      // task.suite refers to the internal default suite object
-      // it should not be reported
-      if (task.suite?.id === '') {
-        delete task.suite
-      }
-    })
-
-    const hasOnlyTasks = someTasksAreOnly(file)
-    interpretTaskModes(
-      file,
-      config.testNamePattern,
-      testLocations,
-      hasOnlyTasks,
-      false,
-      config.allowOnly,
+        files.push(file)
+      },
     )
-
-    if (file.mode === 'queued') {
-      file.mode = 'run'
-    }
-
-    files.push(file)
   }
 
   return files

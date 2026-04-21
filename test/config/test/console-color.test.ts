@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest'
-import { isWindows } from '../../../packages/vite-node/src/utils'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 test('with color', async () => {
   const { stdout } = await runVitest({
@@ -11,7 +10,7 @@ test('with color', async () => {
       NO_COLOR: undefined,
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('\x1B[33mtrue\x1B[39m\n')
 })
@@ -25,13 +24,27 @@ test('without color', async () => {
       NO_COLOR: '1',
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('true\n')
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
 })
 
-test.skipIf(isWindows)('without color, forks pool in non-TTY parent', async () => {
+test('agent', async () => {
+  // Agent check is done on module import, so new process is needed
+  const { stdout } = await runVitestCli({
+    preserveAnsi: true,
+    nodeOptions: { env: { AI_AGENT: 'copilot' } },
+  }, '--root', 'fixtures/console-color', '--reporter', 'default')
+
+  expect.soft(stdout).toContain('true\n')
+  expect.soft(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
+
+  expect.soft(stdout).toContain(' RUN')
+  expect.soft(stdout).not.toContain('\x1B[46m RUN')
+})
+
+test.skipIf(process.platform === 'win32')('without color, forks pool in non-TTY parent', async () => {
   const { stdout } = await runVitest({
     root: 'fixtures/console-color',
     env: {
@@ -41,9 +54,11 @@ test.skipIf(isWindows)('without color, forks pool in non-TTY parent', async () =
       GITHUB_ACTIONS: undefined,
 
       // Overrides current process's value, since we are running Vitest in Vitest here
-      FORCE_TTY: undefined,
+      // By default, tinyrainbow doesn't check isatty since version 3, but
+      // FORCE_TTY=false will make the check `false`
+      FORCE_TTY: 'false',
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('true\n')
   expect(stdout).not.toContain('\x1B[33mtrue\x1B[39m\n')
@@ -58,7 +73,7 @@ test('with color, forks pool in TTY parent', async () => {
       NO_COLOR: undefined,
       GITHUB_ACTIONS: undefined,
     },
-  }, undefined, undefined, undefined, { preserveAnsi: true })
+  }, [], { preserveAnsi: true })
 
   expect(stdout).toContain('\x1B[33mtrue\x1B[39m\n')
 })

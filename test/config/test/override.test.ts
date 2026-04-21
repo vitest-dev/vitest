@@ -1,242 +1,21 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest/node'
-import { describe, expect, it } from 'vitest'
-import { extraInlineDeps } from 'vitest/config'
+import type { TestUserConfig } from 'vitest/node'
+import { resolve } from 'pathe'
+import { describe, expect, it, onTestFinished } from 'vitest'
 import { createVitest, parseCLI } from 'vitest/node'
 
 type VitestOptions = Parameters<typeof createVitest>[3]
 
-async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  onTestFinished(() => vitest.close())
   return vitest
 }
 
-async function config(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
+async function config(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const v = await vitest(cliOptions, configValue, viteConfig, vitestOptions)
   return v.config
 }
-
-describe('correctly defines isolated flags', async () => {
-  it('does not merge user-defined poolOptions with itself', async () => {
-    const c = await config({}, {
-      poolOptions: {
-        array: [1, 2, 3],
-      },
-    })
-    // Ensure poolOptions.array has not been merged with itself
-    // Previously, this would have been [1,2,3,1,2,3]
-    expect(c.poolOptions?.array).toMatchInlineSnapshot(`
-      [
-        1,
-        2,
-        3,
-      ]
-    `)
-  })
-  it('prefers CLI poolOptions flags over config', async () => {
-    const c = await config({
-      isolate: true,
-      poolOptions: {
-        threads: {
-          isolate: false,
-        },
-        forks: {
-          isolate: false,
-        },
-      },
-    })
-    expect(c.poolOptions?.threads?.isolate).toBe(false)
-    expect(c.poolOptions?.forks?.isolate).toBe(false)
-    expect(c.isolate).toBe(true)
-  })
-
-  it('override CLI poolOptions flags over isolate', async () => {
-    const c = await config({
-      isolate: false,
-      poolOptions: {
-        threads: {
-          isolate: true,
-        },
-        forks: {
-          isolate: true,
-        },
-      },
-    }, {
-      poolOptions: {
-        threads: {
-          isolate: false,
-        },
-        forks: {
-          isolate: false,
-        },
-      },
-    })
-    expect(c.poolOptions?.threads?.isolate).toBe(true)
-    expect(c.poolOptions?.forks?.isolate).toBe(true)
-    expect(c.isolate).toBe(false)
-  })
-
-  it('override CLI isolate flag if poolOptions is not set via CLI', async () => {
-    const c = await config({
-      isolate: true,
-    }, {
-      poolOptions: {
-        threads: {
-          isolate: false,
-        },
-        forks: {
-          isolate: false,
-        },
-      },
-    })
-    expect(c.poolOptions?.threads?.isolate).toBe(true)
-    expect(c.poolOptions?.forks?.isolate).toBe(true)
-    expect(c.isolate).toBe(true)
-  })
-
-  it('keeps user configured poolOptions if no CLI flag is provided', async () => {
-    const c = await config({}, {
-      poolOptions: {
-        threads: {
-          isolate: false,
-        },
-        forks: {
-          isolate: false,
-        },
-      },
-    })
-    expect(c.poolOptions?.threads?.isolate).toBe(false)
-    expect(c.poolOptions?.forks?.isolate).toBe(false)
-    expect(c.isolate).toBe(true)
-  })
-
-  it('isolate config value overrides poolOptions defaults', async () => {
-    const c = await config({}, {
-      isolate: false,
-    })
-    expect(c.poolOptions?.threads?.isolate).toBe(false)
-    expect(c.poolOptions?.forks?.isolate).toBe(false)
-    expect(c.isolate).toBe(false)
-  })
-
-  it('if no isolation is defined in the config, fallback ot undefined', async () => {
-    const c = await config({}, {})
-    expect(c.poolOptions?.threads?.isolate).toBe(undefined)
-    expect(c.poolOptions?.forks?.isolate).toBe(undefined)
-    // set in configDefaults, so it's always defined
-    expect(c.isolate).toBe(true)
-  })
-})
-
-describe('correctly defines inline and noExternal flags', async () => {
-  it('both are true if inline is true', async () => {
-    const v = await vitest({}, {
-      server: {
-        deps: {
-          inline: true,
-        },
-      },
-    })
-    expect(v.vitenode.options.deps?.inline).toBe(true)
-    expect(v.vitenode.server.config.ssr.noExternal).toBe(true)
-  })
-
-  it('both are true if noExternal is true', async () => {
-    const v = await vitest({}, {}, {
-      ssr: {
-        noExternal: true,
-      },
-    })
-    expect(v.vitenode.options.deps?.inline).toBe(true)
-    expect(v.vitenode.server.config.ssr.noExternal).toBe(true)
-  })
-
-  it('inline are added to noExternal', async () => {
-    const regexp1 = /dep1/
-    const regexp2 = /dep2/
-
-    const v = await vitest({}, {
-      server: {
-        deps: {
-          inline: ['dep1', 'dep2', regexp1, regexp2],
-        },
-      },
-    })
-
-    expect(v.vitenode.options.deps?.inline).toEqual([
-      'dep1',
-      'dep2',
-      regexp1,
-      regexp2,
-      ...extraInlineDeps,
-    ])
-    expect(v.server.config.ssr.noExternal).toEqual([
-      'dep1',
-      'dep2',
-      regexp1,
-      regexp2,
-      ...extraInlineDeps,
-    ])
-  })
-
-  it('noExternal are added to inline', async () => {
-    const regexp1 = /dep1/
-    const regexp2 = /dep2/
-
-    const v = await vitest({}, {}, {
-      ssr: {
-        noExternal: ['dep1', 'dep2', regexp1, regexp2],
-      },
-    })
-
-    expect(v.vitenode.options.deps?.inline).toEqual([
-      ...extraInlineDeps,
-      'dep1',
-      'dep2',
-      regexp1,
-      regexp2,
-    ])
-    expect(v.server.config.ssr.noExternal).toEqual([
-      'dep1',
-      'dep2',
-      regexp1,
-      regexp2,
-    ])
-  })
-
-  it('noExternal and inline don\'t have duplicates', async () => {
-    const regexp1 = /dep1/
-    const regexp2 = /dep2/
-
-    const v = await vitest({}, {
-      server: {
-        deps: {
-          inline: ['dep2', regexp1, 'dep3'],
-        },
-      },
-    }, {
-      ssr: {
-        noExternal: ['dep1', 'dep2', regexp1, regexp2],
-      },
-    })
-
-    expect(v.vitenode.options.deps?.inline).toEqual([
-      'dep2',
-      regexp1,
-      'dep3',
-      ...extraInlineDeps,
-      'dep1',
-      regexp2,
-    ])
-    expect(v.server.config.ssr.noExternal).toEqual([
-      'dep1',
-      'dep2',
-      regexp1,
-      regexp2,
-      'dep3',
-    ])
-  })
-})
 
 describe('correctly defines api flag', () => {
   it('CLI overrides disabling api', async () => {
@@ -246,8 +25,10 @@ describe('correctly defines api flag', () => {
       },
       watch: true,
     })
-    expect(c.server.config.server.middlewareMode).toBe(true)
+    expect(c.vite.config.server.middlewareMode).toBe(true)
     expect(c.config.api).toEqual({
+      allowExec: true,
+      allowWrite: true,
       middlewareMode: true,
       token: expect.any(String),
     })
@@ -260,11 +41,74 @@ describe('correctly defines api flag', () => {
       },
       watch: true,
     })
-    expect(c.server.config.server.port).toBe(4321)
+    expect(c.vite.config.server.port).toBe(4321)
     expect(c.config.api).toEqual({
       port: 4321,
+      allowWrite: true,
+      allowExec: true,
       token: expect.any(String),
     })
+  })
+
+  it('browser.isolate is inherited', async () => {
+    const c = await vitest({ isolate: false }, {})
+    expect(c.config.isolate).toBe(false)
+    expect(c.config.browser.isolate).toBe(false)
+  })
+
+  it('allowWrite and allowExec default to true when not exposed to network', async () => {
+    const c = await config({ api: { port: 5555 } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to true for localhost', async () => {
+    const c = await config({ api: { port: 5555, host: 'localhost' } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to true for 127.0.0.1', async () => {
+    const c = await config({ api: { port: 5555, host: '127.0.0.1' } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec default to false when exposed to network', async () => {
+    const c = await config({ api: { port: 5555, host: '0.0.0.0' } }, {})
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
+  })
+
+  it('allowWrite and allowExec can be explicitly overridden when exposed to network', async () => {
+    const c = await config({ api: { port: 5555, host: '0.0.0.0', allowWrite: true, allowExec: true } }, {})
+    expect(c.api.allowWrite).toBe(true)
+    expect(c.api.allowExec).toBe(true)
+  })
+
+  it('allowWrite and allowExec can be explicitly disabled', async () => {
+    const c = await config({ api: { port: 5555, allowWrite: false, allowExec: false } }, {})
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
+  })
+
+  it('browser.api inherits allowWrite and allowExec from api', async () => {
+    const c = await config({ api: { port: 5555, allowWrite: false, allowExec: false } }, {})
+    expect(c.browser.api.allowWrite).toBe(false)
+    expect(c.browser.api.allowExec).toBe(false)
+  })
+
+  it('browser.api can override inherited allowWrite and allowExec', async () => {
+    const c = await config({
+      api: { port: 5555, allowWrite: false, allowExec: false },
+      browser: { api: { allowWrite: true, allowExec: true } },
+    }, {
+      browser: {},
+    })
+    expect(c.api.allowWrite).toBe(false)
+    expect(c.api.allowExec).toBe(false)
+    expect(c.browser.api.allowWrite).toBe(true)
+    expect(c.browser.api.allowExec).toBe(true)
   })
 })
 
@@ -302,6 +146,52 @@ describe.each([
     ])
     await expect(async () => {
       await config(rawConfig.options)
-    }).rejects.toThrowError(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
+    }).rejects.toThrow(`Inspector host cannot be a URL. Use "host:port" instead of "${url}"`)
   })
+})
+
+it('experimental fsModuleCache is inherited in a project', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(true)
+
+  expect(v.config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.projects[0].config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+})
+
+it('project overrides experimental fsModuleCache', async () => {
+  const v = await vitest({}, {
+    experimental: {
+      fsModuleCache: true,
+      fsModuleCachePath: './node_modules/custom-cache-path',
+    },
+    projects: [
+      {
+        test: {
+          name: 'project',
+          experimental: {
+            fsModuleCache: false,
+            fsModuleCachePath: './node_modules/project-cache-path',
+          },
+        },
+      },
+    ],
+  })
+  expect(v.config.experimental.fsModuleCache).toBe(true)
+  expect(v.projects[0].config.experimental.fsModuleCache).toBe(false)
+
+  expect(v.config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/custom-cache-path'))
+  expect(v.projects[0].config.experimental.fsModuleCachePath).toBe(resolve('./node_modules/project-cache-path'))
 })

@@ -1,7 +1,8 @@
 import type { Formatter } from 'tinyrainbow'
 import type { MatcherHintOptions, Tester } from './types'
-import { getType, stringify } from '@vitest/utils'
 import { diff, printDiffOrStringify } from '@vitest/utils/diff'
+import { stringify } from '@vitest/utils/display'
+import { getType } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
@@ -107,6 +108,7 @@ export function getMatcherUtils(): {
   printReceived: typeof printReceived
   printExpected: typeof printExpected
   printDiffOrStringify: typeof printDiffOrStringify
+  printWithType: typeof printWithType
 } {
   return {
     EXPECTED_COLOR,
@@ -120,7 +122,22 @@ export function getMatcherUtils(): {
     printReceived,
     printExpected,
     printDiffOrStringify,
+    printWithType,
   }
+}
+
+export function printWithType<T>(
+  name: string,
+  value: T,
+  print: (value: T) => string,
+): string {
+  const type = getType(value)
+  const hasType
+    = type !== 'null' && type !== 'undefined'
+      ? `${name} has type:  ${type}\n`
+      : ''
+  const hasValue = `${name} has value: ${print(value)}`
+  return hasType + hasValue
 }
 
 export function addCustomEqualityTesters(newTesters: Array<Tester>): void {

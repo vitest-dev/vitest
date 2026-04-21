@@ -23,6 +23,16 @@ export function printProps(
   return keys
     .map((key) => {
       const value = props[key]
+      // hidden injected value that should not be printed
+      if (
+        typeof value === 'string'
+        && value[0] === '_'
+        && value.startsWith('__vitest_')
+        && value.match(/__vitest_\d+__/)
+      ) {
+        return ''
+      }
+
       let printed = printer(value, config, indentationNext, depth, refs)
 
       if (typeof value !== 'string') {
@@ -60,6 +70,23 @@ export function printChildren(children: Array<unknown>, config: Config, indentat
           : printer(child, config, indentation, depth, refs)),
     )
     .join('')
+}
+
+export function printShadowRoot(children: Array<unknown>, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
+  if (config.printShadowRoot === false) {
+    return ''
+  }
+  return [
+    `${config.spacingOuter + indentation}#shadow-root`,
+    printChildren(
+      children,
+      config,
+      indentation + config.indent,
+      depth,
+      refs,
+      printer,
+    ),
+  ].join('')
 }
 
 export function printText(text: string, config: Config): string {

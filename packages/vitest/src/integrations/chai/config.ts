@@ -1,4 +1,4 @@
-import * as chai from 'chai'
+import { chai } from '@vitest/expect'
 
 export function setupChaiConfig(config: ChaiConfig): void {
   Object.assign(chai.config, config)
@@ -6,5 +6,5 @@ export function setupChaiConfig(config: ChaiConfig): void {
 
 export type ChaiConfig = Omit<
   Partial<typeof chai.config>,
-  'useProxy' | 'proxyExcludedKeys'
+  'useProxy' | 'proxyExcludedKeys' | 'deepEqual'
 >

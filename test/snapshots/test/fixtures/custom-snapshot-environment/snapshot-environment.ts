@@ -1,5 +1,5 @@
 import { relative as _relative } from 'pathe'
-import { VitestSnapshotEnvironment } from 'vitest/snapshot'
+import { VitestSnapshotEnvironment } from 'vitest/runtime'
 
 function relative(file: string) {
   return _relative(process.cwd(), file)

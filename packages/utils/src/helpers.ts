@@ -1,4 +1,5 @@
 import type { Arrayable, Nullable } from './types'
+import { NULL_BYTE_PLACEHOLDER, VALID_ID_PREFIX } from './constants'
 
 interface CloneOptions {
   forceWritable?: boolean
@@ -8,6 +9,9 @@ interface ErrorOptions {
   message?: string
   stackTraceLimit?: number
 }
+
+export { nanoid } from './nanoid'
+export { shuffle } from './random'
 
 /**
  * Get original stacktrace without source map support the most performant way.
@@ -56,25 +60,83 @@ export function slash(path: string): string {
   return path.replace(/\\/g, '/')
 }
 
-// convert RegExp.toString to RegExp
-export function parseRegexp(input: string): RegExp {
-  // Parse input
-  // eslint-disable-next-line regexp/no-misleading-capturing-group
-  const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
+const postfixRE = /[?#].*$/
+export function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
+}
 
-  // match nothing
-  if (!m) {
-    return /$^/
+export function splitFileAndPostfix(path: string): {
+  file: string
+  postfix: string
+} {
+  const file = cleanUrl(path)
+  return { file, postfix: path.slice(file.length) }
+}
+
+const externalRE = /^(?:[a-z]+:)?\/\//
+export const isExternalUrl = (url: string): boolean => externalRE.test(url)
+
+/**
+ * Prepend `/@id/` and replace null byte so the id is URL-safe.
+ * This is prepended to resolved ids that are not valid browser
+ * import specifiers by the importAnalysis plugin.
+ */
+export function wrapId(id: string): string {
+  return id.startsWith(VALID_ID_PREFIX)
+    ? id
+    : VALID_ID_PREFIX + id.replace('\0', NULL_BYTE_PLACEHOLDER)
+}
+
+/**
+ * Undo {@link wrapId}'s `/@id/` and null byte replacements.
+ */
+export function unwrapId(id: string): string {
+  return id.startsWith(VALID_ID_PREFIX)
+    ? id.slice(VALID_ID_PREFIX.length).replace(NULL_BYTE_PLACEHOLDER, '\0')
+    : id
+}
+
+export function withTrailingSlash(path: string): string {
+  if (path.at(-1) !== '/') {
+    return `${path}/`
   }
+  return path
+}
 
-  // Invalid flags
-  // eslint-disable-next-line regexp/optimal-quantifier-concatenation
-  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
-    return new RegExp(input)
+export function filterOutComments(s: string): string {
+  const result: string[] = []
+  let commentState: 'none' | 'singleline' | 'multiline' = 'none'
+  for (let i = 0; i < s.length; ++i) {
+    if (commentState === 'singleline') {
+      if (s[i] === '\n') {
+        commentState = 'none'
+      }
+    }
+    else if (commentState === 'multiline') {
+      if (s[i - 1] === '*' && s[i] === '/') {
+        commentState = 'none'
+      }
+    }
+    else if (commentState === 'none') {
+      if (s[i] === '/' && s[i + 1] === '/') {
+        commentState = 'singleline'
+      }
+      else if (s[i] === '/' && s[i + 1] === '*') {
+        commentState = 'multiline'
+        i += 2
+      }
+      else {
+        result.push(s[i])
+      }
+    }
   }
+  return result.join('')
+}
 
-  // Create the regular expression
-  return new RegExp(m[2], m[3])
+const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
+
+export function isBareImport(id: string): boolean {
+  return bareImportRE.test(id)
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
@@ -306,6 +368,25 @@ function isMergeableObject(item: any): item is object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 
+export function ordinal(i: number): string {
+  const j = i % 10
+  const k = i % 100
+
+  if (j === 1 && k !== 11) {
+    return `${i}st`
+  }
+
+  if (j === 2 && k !== 12) {
+    return `${i}nd`
+  }
+
+  if (j === 3 && k !== 13) {
+    return `${i}rd`
+  }
+
+  return `${i}th`
+}
+
 /**
  * Deep merge :P
  *
@@ -343,4 +424,8 @@ export function deepMerge<T extends object = object>(
   }
 
   return deepMerge(target, ...sources)
+}
+
+export function unique<T>(array: T[]): T[] {
+  return Array.from(new Set(array))
 }

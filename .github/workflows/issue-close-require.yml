@@ -3,15 +3,63 @@ name: Issue Close Require
 on:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   close-issues:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # for actions-cool/issues-helper to update issues
     steps:
       - name: needs reproduction
-        uses: actions-cool/issues-helper@v3
+        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
         with:
           actions: close-issues
           token: ${{ secrets.GITHUB_TOKEN }}
           labels: needs reproduction
           inactive-day: 3
+      - name: maybe automated
+        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        with:
+          actions: close-issues
+          token: ${{ secrets.GITHUB_TOKEN }}
+          labels: maybe automated
+          inactive-day: 3
+
+  close-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read # to query PRs by label via the issues API
+      pull-requests: write # to close pull requests
+    steps:
+      - name: maybe automated PRs
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'maybe automated',
+              per_page: 100,
+            })
+
+            const prs = issues.filter(issue =>
+              issue.pull_request && new Date(issue.updated_at) <= cutoff
+            )
+
+            for (const pr of prs) {
+              console.log(`Closing PR #${pr.number}, last updated at ${pr.updated_at}`)
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed',
+              })
+            }
+
+            if (prs.length === 0) {
+              console.log('No inactive maybe automated PRs found')
+            }

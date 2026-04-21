@@ -5,6 +5,7 @@ import type {
   Identifier,
   ImportExpression,
   Literal,
+  MetaProperty,
   Pattern,
   Property,
   VariableDeclaration,
@@ -41,9 +42,9 @@ interface Visitors {
   onIdentifier?: (
     node: Positioned<Identifier>,
     info: IdentifierInfo,
-    parentStack: Node[]
+    parentStack: Node[],
   ) => void
-  onImportMeta?: (node: Node) => void
+  onImportMeta?: (node: Positioned<MetaProperty>) => void
   onDynamicImport?: (node: Positioned<ImportExpression>) => void
   onCallExpression?: (node: Positioned<CallExpression>) => void
 }
@@ -61,7 +62,7 @@ export function isNodeInPattern(node: _Node): node is Property {
  * Except this is using acorn AST
  */
 export function esmWalker(
-  root: Rollup.ProgramNode,
+  root: ReturnType<Rollup.PluginContext['parse']>,
   { onIdentifier, onImportMeta, onDynamicImport, onCallExpression }: Visitors,
 ): void {
   const parentStack: Node[] = []
@@ -142,7 +143,7 @@ export function esmWalker(
       }
 
       if (node.type === 'MetaProperty' && node.meta.name === 'import') {
-        onImportMeta?.(node as Node)
+        onImportMeta?.(node as Positioned<MetaProperty>)
       }
       else if (node.type === 'ImportExpression') {
         onDynamicImport?.(node as Positioned<ImportExpression>)
@@ -156,6 +157,17 @@ export function esmWalker(
           // record the identifier, for DFS -> BFS
           identifiers.push([node, parentStack.slice(0)])
         }
+      }
+      else if (node.type === 'ClassDeclaration' && node.id) {
+        // A class declaration name could shadow an import, so add its name to the parent scope
+        const parentScope = findParentScope(parentStack)
+        if (parentScope) {
+          setScope(parentScope, node.id.name)
+        }
+      }
+      else if (node.type === 'ClassExpression' && node.id) {
+        // A class expression name could shadow an import, so add its name to the scope
+        setScope(node, node.id.name)
       }
       else if (isFunctionNode(node)) {
         // If it is a function declaration, it could be shadowing an import
@@ -243,17 +255,13 @@ export function esmWalker(
   identifiers.forEach(([node, stack]) => {
     if (!isInScope(node.name, stack)) {
       const parent = stack[0]
-      const grandparent = stack[1]
       const hasBindingShortcut
         = isStaticProperty(parent)
           && parent.shorthand
           && (!isNodeInPattern(parent)
             || isInDestructuringAssignment(parent, parentStack))
 
-      const classDeclaration
-        = (parent.type === 'PropertyDefinition'
-          && grandparent?.type === 'ClassBody')
-        || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+      const classDeclaration = (parent.type === 'ClassDeclaration' && node === parent.superClass)
 
       const classExpression
         = parent.type === 'ClassExpression' && node === parent.id
@@ -297,6 +305,12 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   // class method name
   if (parent.type === 'MethodDefinition' && !parent.computed) {
     return false
+  }
+
+  // class property
+  if (parent.type === 'PropertyDefinition' && !parent.computed) {
+    // Default values can still reference identifiers
+    return id === parent.value
   }
 
   // property key

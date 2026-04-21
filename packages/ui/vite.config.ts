@@ -1,10 +1,7 @@
-import type { UserConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vite'
 import Pages from 'vite-plugin-pages'
 
@@ -13,14 +10,14 @@ import Pages from 'vite-plugin-pages'
 // and ui using the link to load the report json data
 // const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
-export const config: UserConfig = {
-  root: __dirname,
+export default defineConfig({
+  root: import.meta.dirname,
   base: './',
   resolve: {
     dedupe: ['vue'],
     alias: {
-      '~/': `${resolve(__dirname, 'client')}/`,
-      '@vitest/ws-client': `${resolve(__dirname, '../ws-client/src/index.ts')}`,
+      '~/': `${resolve(import.meta.dirname, 'client')}/`,
+      '@vitest/ws-client': `${resolve(import.meta.dirname, '../ws-client/src/index.ts')}`,
     },
   },
   define: {
@@ -36,7 +33,7 @@ export const config: UserConfig = {
       },
     }),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()],
+      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -51,33 +48,30 @@ export const config: UserConfig = {
         'tab-button-active': 'op100 bg-gray-500:10',
       },
       transformers: [
-        transformerDirectives(),
+        transformerDirectives() as any,
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
-    }),
-    Components({
-      dirs: ['client/components'],
-      dts: resolve(__dirname, './client/components.d.ts'),
     }),
     Pages({
       dirs: ['client/pages'],
     }),
-    AutoImport({
-      dts: resolve(__dirname, './client/auto-imports.d.ts'),
-      dirs: ['./client/composables'],
-      imports: ['vue', 'vue-router', '@vueuse/core'],
-      injectAtEnd: true,
-      exclude: [
-        /node_modules/,
-        /dist/,
-        /\.git/,
-      ],
-    }),
+    // uncomment to see the HTML reporter preview
     // {
     //   name: 'debug-html-report',
     //   apply: 'serve',
     //   transformIndexHtml(html) {
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
+    //   },
+    // },
+
+    // uncomment to see the browser tab
+    // {
+    //   name: 'browser-dev-preview',
+    //   apply: 'serve',
+    //   transformIndexHtml() {
+    //     return [
+    //       { tag: 'script', attrs: { src: './browser.dev.js' } },
+    //     ]
     //   },
     // },
     {
@@ -95,12 +89,4 @@ export const config: UserConfig = {
   build: {
     outDir: './dist/client',
   },
-  test: {
-    browser: {
-      name: 'chromium',
-      provider: 'playwright',
-    },
-  },
-}
-
-export default defineConfig(config)
+})

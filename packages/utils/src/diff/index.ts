@@ -53,13 +53,14 @@ const PLUGINS = [
   prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
+  maxDepth: 20,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
   maxDepth: 8,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)
@@ -109,8 +110,8 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     }
     aDisplay = truncate(aDisplay)
     bDisplay = truncate(bDisplay)
-    const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
-    const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
+    const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)}\n${aDisplay}`
+    const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)}\n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
   }
 
@@ -191,12 +192,13 @@ function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
 ): PrettyFormatOptions {
-  const { compareKeys, printBasicPrototype } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype, maxDepth } = normalizeDiffOptions(options)
 
   return {
     ...formatOptions,
     compareKeys,
     printBasicPrototype,
+    maxDepth: maxDepth ?? formatOptions.maxDepth,
   }
 }
 
@@ -306,9 +308,9 @@ export function replaceAsymmetricMatcher(
   actualReplaced: WeakSet<WeakKey> = new WeakSet(),
   expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
 ): {
-    replacedActual: any
-    replacedExpected: any
-  } {
+  replacedActual: any
+  replacedExpected: any
+} {
   // handle asymmetric Error.cause diff
   if (
     actual instanceof Error
@@ -335,12 +337,36 @@ export function replaceAsymmetricMatcher(
     const actualValue = actual[key]
     if (isAsymmetricMatcher(expectedValue)) {
       if (expectedValue.asymmetricMatch(actualValue)) {
-        actual[key] = expectedValue
+        // When matcher matches, replace expected with actual value
+        // so they appear the same in the diff
+        expected[key] = actualValue
+      }
+      else if ('sample' in expectedValue && expectedValue.sample !== undefined && isReplaceable(actualValue, expectedValue.sample)) {
+        // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
+        // Matcher doesn't match: unwrap but keep structure to show mismatch
+        const replaced = replaceAsymmetricMatcher(
+          actualValue,
+          expectedValue.sample,
+          actualReplaced,
+          expectedReplaced,
+        )
+        actual[key] = replaced.replacedActual
+        expected[key] = replaced.replacedExpected
       }
     }
     else if (isAsymmetricMatcher(actualValue)) {
       if (actualValue.asymmetricMatch(expectedValue)) {
-        expected[key] = actualValue
+        actual[key] = expectedValue
+      }
+      else if ('sample' in actualValue && actualValue.sample !== undefined && isReplaceable(actualValue.sample, expectedValue)) {
+        const replaced = replaceAsymmetricMatcher(
+          actualValue.sample,
+          expectedValue,
+          actualReplaced,
+          expectedReplaced,
+        )
+        actual[key] = replaced.replacedActual
+        expected[key] = replaced.replacedExpected
       }
     }
     else if (isReplaceable(actualValue, expectedValue)) {

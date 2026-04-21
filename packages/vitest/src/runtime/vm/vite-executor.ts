@@ -4,9 +4,8 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { EsmExecutor } from './esm-executor'
 import type { VMModule } from './types'
 import { pathToFileURL } from 'node:url'
-import { normalize } from 'pathe'
-import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
-import { toArray } from 'vite-node/utils'
+import { CSS_LANGS_RE, KNOWN_ASSET_RE } from '@vitest/utils/constants'
+import { toArray } from '@vitest/utils/helpers'
 import { SyntheticModule } from './utils'
 
 interface ViteExecutorOptions {
@@ -26,15 +25,9 @@ export class ViteExecutor {
     this.esm = options.esmExecutor
   }
 
-  public resolve = (identifier: string, parent: string): string | undefined => {
+  public resolve = (identifier: string): string | undefined => {
     if (identifier === CLIENT_ID) {
-      if (this.workerState.environment.transformMode === 'web') {
-        return identifier
-      }
-      const packageName = this.getPackageName(parent)
-      throw new Error(
-        `[vitest] Vitest cannot handle ${CLIENT_ID} imported in ${parent} when running in SSR environment. Add "${packageName}" to "ssr.noExternal" if you are using Vite SSR, or to "server.deps.inline" if you are using Vite Node.`,
-      )
+      return identifier
     }
   }
 
@@ -42,20 +35,8 @@ export class ViteExecutor {
     return this.options.context.__vitest_worker__
   }
 
-  private getPackageName(modulePath: string) {
-    const path = normalize(modulePath)
-    let name = path.split('/node_modules/').pop() || ''
-    if (name?.startsWith('@')) {
-      name = name.split('/').slice(0, 2).join('/')
-    }
-    else {
-      name = name.split('/')[0]
-    }
-    return name
-  }
-
   public async createViteModule(fileUrl: string): Promise<VMModule> {
-    if (fileUrl === CLIENT_FILE) {
+    if (fileUrl === CLIENT_FILE || fileUrl === CLIENT_ID) {
       return this.createViteClientModule()
     }
     const cached = this.esm.resolveCachedModule(fileUrl)
@@ -63,13 +44,30 @@ export class ViteExecutor {
       return cached
     }
     return this.esm.createEsModule(fileUrl, async () => {
-      const result = await this.options.transform(fileUrl, 'web')
-      if (!result.code) {
-        throw new Error(
-          `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
-        )
+      try {
+        const result = await this.options.transform(fileUrl)
+        if (result.code) {
+          return result.code
+        }
       }
-      return result.code
+      catch (cause: any) {
+        // rethrow vite error if it cannot load the module because it's not resolved
+        if (
+          (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+          || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+        ) {
+          const error = new Error(
+            `Cannot find module '${fileUrl}'`,
+            { cause },
+          ) as Error & { code: string }
+          error.code = 'ERR_MODULE_NOT_FOUND'
+          throw error
+        }
+      }
+
+      throw new Error(
+        `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
+      )
     })
   }
 
@@ -83,9 +81,9 @@ export class ViteExecutor {
     const moduleKeys = Object.keys(stub)
     const module = new SyntheticModule(
       moduleKeys,
-      () => {
+      function () {
         moduleKeys.forEach((key) => {
-          module.setExport(key, stub[key])
+          this.setExport(key, stub[key])
         })
       },
       { context: this.options.context, identifier },
@@ -95,10 +93,6 @@ export class ViteExecutor {
   }
 
   public canResolve = (fileUrl: string): boolean => {
-    const transformMode = this.workerState.environment.transformMode
-    if (transformMode !== 'web') {
-      return false
-    }
     if (fileUrl === CLIENT_FILE) {
       return true
     }

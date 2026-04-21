@@ -5,39 +5,17 @@ export default defineConfig({
     watch: false,
     globalSetup: './global-setup.ts',
 
-    // Switch between forks|threads
-    pool: 'forks',
+    // Generate a single profile
+    fileParallelism: false,
 
-    poolOptions: {
-      threads: {
-        execArgv: [
-          // https://nodejs.org/api/cli.html#--cpu-prof
-          '--cpu-prof',
-          '--cpu-prof-dir=threads-profile',
+    execArgv: [
+      // https://nodejs.org/api/cli.html#--cpu-prof
+      '--cpu-prof',
+      '--cpu-prof-dir=vitest-profile',
 
-          // https://nodejs.org/api/cli.html#--heap-prof
-          '--heap-prof',
-          '--heap-prof-dir=threads-profile',
-        ],
-
-        // Generate a single profile
-        singleThread: true,
-      },
-
-      forks: {
-        execArgv: [
-          // https://nodejs.org/api/cli.html#--cpu-prof
-          '--cpu-prof',
-          '--cpu-prof-dir=forks-profile',
-
-          // https://nodejs.org/api/cli.html#--heap-prof
-          '--heap-prof',
-          '--heap-prof-dir=forks-profile',
-        ],
-
-        // Generate a single profile
-        singleFork: true,
-      },
-    },
+      // https://nodejs.org/api/cli.html#--heap-prof
+      '--heap-prof',
+      '--heap-prof-dir=vitest-profile',
+    ],
   },
 })

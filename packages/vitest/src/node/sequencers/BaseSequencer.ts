@@ -1,8 +1,8 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { TestSequencer } from './types'
+import { slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
-import { slash } from 'vite-node/utils'
 import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
@@ -12,13 +12,11 @@ export class BaseSequencer implements TestSequencer {
     this.ctx = ctx
   }
 
-  // async so it can be extended by other sequelizers
+  // async so it can be extended by other sequencers
   public async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
     const { config } = this.ctx
     const { index, count } = config.shard!
-    const shardSize = Math.ceil(files.length / count)
-    const shardStart = shardSize * (index - 1)
-    const shardEnd = shardSize * index
+    const [shardStart, shardEnd] = this.calculateShardRange(files.length, index, count)
     return [...files]
       .map((spec) => {
         const fullPath = resolve(slash(config.root), slash(spec.moduleId))
@@ -33,10 +31,29 @@ export class BaseSequencer implements TestSequencer {
       .map(({ spec }) => spec)
   }
 
-  // async so it can be extended by other sequelizers
+  // async so it can be extended by other sequencers
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
+      // "sequence.groupOrder" is higher priority
+      const groupOrderDiff = a.project.config.sequence.groupOrder - b.project.config.sequence.groupOrder
+      if (groupOrderDiff !== 0) {
+        return groupOrderDiff
+      }
+
+      // Projects run sequential
+      if (a.project.name !== b.project.name) {
+        return a.project.name < b.project.name ? -1 : 1
+      }
+
+      // Isolated run first
+      if (a.project.config.isolate && !b.project.config.isolate) {
+        return -1
+      }
+      if (!a.project.config.isolate && b.project.config.isolate) {
+        return 1
+      }
+
       const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`
       const keyB = `${b.project.name}:${relative(this.ctx.config.root, b.moduleId)}`
 
@@ -67,5 +84,21 @@ export class BaseSequencer implements TestSequencer {
       // run longer first
       return bState.duration - aState.duration
     })
+  }
+
+  // Calculate distributed shard range [start, end] distributed equally
+  private calculateShardRange(filesCount: number, index: number, count: number): [number, number] {
+    const baseShardSize = Math.floor(filesCount / count)
+    const remainderTestFilesCount = filesCount % count
+    if (remainderTestFilesCount >= index) {
+      const shardSize = baseShardSize + 1
+      const shardStart = shardSize * (index - 1)
+      const shardEnd = shardSize * index
+      return [shardStart, shardEnd]
+    }
+
+    const shardStart = remainderTestFilesCount * (baseShardSize + 1) + (index - remainderTestFilesCount - 1) * baseShardSize
+    const shardEnd = shardStart + baseShardSize
+    return [shardStart, shardEnd]
   }
 }

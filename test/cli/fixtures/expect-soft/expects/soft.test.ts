@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 
 interface CustomMatchers<R = unknown> {
+  toBeAsync: (expected: unknown) => Promise<R>;
   toBeDividedBy(divisor: number): R
 }
 
@@ -9,6 +10,12 @@ declare module 'vitest' {
 }
 
 expect.extend({
+  toBeAsync: async function (received, expected) {
+    return {
+      pass: received === expected,
+      message: () => `expected ${received} to be ${expected} (asynchronously)`,
+    };
+  },
   toBeDividedBy(received, divisor) {
     const pass = received % divisor === 0
     if (pass) {
@@ -60,6 +67,35 @@ test('with expect.extend', () => {
   expect.soft(1).toEqual(2)
   expect.soft(3).toBeDividedBy(4)
   expect(5).toEqual(6)
+})
+
+test('promise with expect.extend', async () => {
+  await expect.soft(1 + 1).toBeAsync(3);
+  await expect.soft(1 + 2).toBeAsync(3);
+  await expect.soft(2 + 2).toBeAsync(3);
+});
+
+test('promise rejection', async () => {
+  await expect
+    .soft(
+      Promise.resolve().then(() => {
+        throw new Error('boom 1st')
+      }),
+    )
+    .resolves.toBe('1st')
+
+  await expect
+    .soft(
+      Promise.resolve().then(() => {
+        throw new Error('boom 2nd')
+      }),
+    )
+    .resolves.toBe('2nd')
+})
+
+test('promise resolved instead of rejecting', async () => {
+  await expect.soft(Promise.resolve('value 1')).rejects.toBe('1st')
+  await expect.soft(Promise.resolve('value 2')).rejects.toBe('2nd')
 })
 
 test('passed', () => {

@@ -1,5 +1,6 @@
+import type { Logger } from '../logger'
 import type { SuiteResultCache } from './results'
-import { slash } from '@vitest/utils'
+import { slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import { hash } from '../hash'
 import { FilesStatsCache } from './files'
@@ -9,8 +10,8 @@ export class VitestCache {
   results: ResultsCache
   stats: FilesStatsCache = new FilesStatsCache()
 
-  constructor(version: string) {
-    this.results = new ResultsCache(version)
+  constructor(logger: Logger) {
+    this.results = new ResultsCache(logger)
   }
 
   getFileTestResults(key: string): SuiteResultCache | undefined {
@@ -24,13 +25,12 @@ export class VitestCache {
   }
 
   static resolveCacheDir(root: string, dir?: string, projectName?: string): string {
-    const baseDir = slash(dir || 'node_modules/.vite/vitest')
-    return projectName
-      ? resolve(
-          root,
-          baseDir,
-          hash('md5', projectName, 'hex'),
-        )
-      : resolve(root, baseDir)
+    const baseDir = slash(dir || 'node_modules/.vite')
+    return resolve(
+      root,
+      baseDir,
+      'vitest',
+      hash('sha1', projectName || '', 'hex'),
+    )
   }
 }

@@ -1,3 +1,4 @@
+import type { DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
@@ -48,6 +49,26 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
+  assertionName?: string
+}
+
+interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
+  received: unknown
+  adapter: DomainSnapshotAdapter<any, any>
+}
+
+interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
+  poll: () => Promise<unknown> | unknown
+  timeout?: number
+  interval?: number
+}
+
+/** Same shape as expect.extend custom matcher result (SyncExpectationResult from @vitest/expect) */
+export interface MatchResult {
+  pass: boolean
+  message: () => string
+  actual?: unknown
+  expected?: unknown
 }
 
 export interface SnapshotClientOptions {
@@ -99,7 +120,7 @@ export class SnapshotClient {
     return state
   }
 
-  assert(options: AssertOptions): void {
+  match(options: AssertOptions): MatchResult {
     const {
       filepath,
       name,
@@ -111,6 +132,7 @@ export class SnapshotClient {
       error,
       errorMessage,
       rawSnapshot,
+      assertionName,
     } = options
     let { received } = options
 
@@ -119,36 +141,43 @@ export class SnapshotClient {
     }
 
     const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
+
+    // Probe first so we can mark as checked even on early return
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+      testName,
+      testId,
+      isInline,
+      inlineSnapshot,
+    })
 
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
+        expectedSnapshot.markAsChecked()
         throw new Error(
           'Received value must be an object when the matcher has properties',
         )
       }
 
+      let propertiesPass: boolean
       try {
-        const pass = this.options.isEqual?.(received, properties) ?? false
-        // const pass = equals(received, properties, [iterableEquality, subsetEquality])
-        if (!pass) {
-          throw createMismatchError(
-            'Snapshot properties mismatched',
-            snapshotState.expand,
-            received,
-            properties,
-          )
-        }
-        else {
-          received = deepMergeSnapshot(received, properties)
-        }
+        propertiesPass = this.options.isEqual?.(received, properties) ?? false
       }
-      catch (err: any) {
-        err.message = errorMessage || 'Snapshot mismatched'
+      catch (err) {
+        expectedSnapshot.markAsChecked()
         throw err
       }
+      if (!propertiesPass) {
+        expectedSnapshot.markAsChecked()
+        return {
+          pass: false,
+          message: () => errorMessage || 'Snapshot properties mismatched',
+          actual: received,
+          expected: properties,
+        }
+      }
+      received = deepMergeSnapshot(received, properties)
     }
-
-    const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     const { actual, expected, key, pass } = snapshotState.match({
       testId,
@@ -158,15 +187,161 @@ export class SnapshotClient {
       error,
       inlineSnapshot,
       rawSnapshot,
+      assertionName,
     })
 
-    if (!pass) {
+    return {
+      pass,
+      message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
+      actual: rawSnapshot ? actual : actual?.trim(),
+      expected: rawSnapshot ? expected : expected?.trim(),
+    }
+  }
+
+  assert(options: AssertOptions): void {
+    const result = this.match(options)
+    if (!result.pass) {
+      const snapshotState = this.getSnapshotState(options.filepath)
       throw createMismatchError(
-        `Snapshot \`${key || 'unknown'}\` mismatched`,
+        result.message(),
         snapshotState.expand,
-        rawSnapshot ? actual : actual?.trim(),
-        rawSnapshot ? expected : expected?.trim(),
+        result.actual,
+        result.expected,
       )
+    }
+  }
+
+  matchDomain(options: AssertDomainOptions): MatchResult {
+    const {
+      received,
+      filepath,
+      name,
+      testId = name,
+      message,
+      adapter,
+      isInline = false,
+      inlineSnapshot,
+      error,
+    } = options
+
+    if (!filepath) {
+      throw new Error('Snapshot cannot be used outside of test')
+    }
+
+    const captured = adapter.capture(received)
+    const rendered = adapter.render(captured)
+
+    const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
+
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+      testName,
+      testId,
+      isInline,
+      inlineSnapshot,
+    })
+    expectedSnapshot.markAsChecked()
+    const matchResult = expectedSnapshot.data
+      ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
+      : undefined
+    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+      testId,
+      received: rendered,
+      expectedSnapshot,
+      matchResult,
+      isInline,
+      error,
+      assertionName: options.assertionName,
+    })
+
+    return {
+      pass,
+      message: () => `Snapshot \`${key}\` mismatched`,
+      actual: actual?.trim(),
+      expected: expected?.trim(),
+    }
+  }
+
+  async pollMatchDomain(options: AssertDomainPollOptions): Promise<MatchResult> {
+    const {
+      poll,
+      filepath,
+      name,
+      testId = name,
+      message,
+      adapter,
+      isInline = false,
+      inlineSnapshot,
+      error,
+      timeout = 1000,
+      interval = 50,
+    } = options
+
+    if (!filepath) {
+      throw new Error('Snapshot cannot be used outside of test')
+    }
+
+    const snapshotState = this.getSnapshotState(filepath)
+    const testName = [name, ...(message ? [message] : [])].join(' > ')
+
+    const expectedSnapshot = snapshotState.probeExpectedSnapshot({
+      testName,
+      testId,
+      isInline,
+      inlineSnapshot,
+    })
+
+    const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
+      ? adapter.parseExpected(expectedSnapshot.data)
+      : undefined
+    const timedOut = timeout > 0
+      ? new Promise<void>(r => setTimeout(r, timeout))
+      : undefined
+    const stableResult = await getStableSnapshot({
+      adapter,
+      poll,
+      interval,
+      timedOut,
+      match: reference
+        ? captured => adapter.match(captured, reference).pass
+        : undefined,
+    })
+
+    expectedSnapshot.markAsChecked()
+
+    if (!stableResult?.rendered) {
+      // the original caller `expect.poll` later manipulates error via `throwWithCause`,
+      // so here we can directly throw `lastPollError` if exists.
+      if (stableResult?.lastPollError) {
+        throw stableResult.lastPollError
+      }
+      return {
+        pass: false,
+        message: () => `poll() did not produce a stable snapshot within the timeout`,
+      }
+    }
+
+    // TODO: should `all` mode ignore parse error?
+    // Sielently hiding the error and creating snaphsot full scratch isn't good either.
+    // Users can fix or purge the broken snapshot manually and that decision affects how domain snapshot gets updated.
+    const matchResult = expectedSnapshot.data
+      ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
+      : undefined
+    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+      testId,
+      received: stableResult.rendered,
+      expectedSnapshot,
+      matchResult,
+      isInline,
+      error,
+      assertionName: options.assertionName,
+    })
+
+    return {
+      pass,
+      message: () => `Snapshot \`${key}\` mismatched`,
+      actual: actual?.trim(),
+      expected: expected?.trim(),
     }
   }
 
@@ -202,4 +377,79 @@ export class SnapshotClient {
   clear(): void {
     this.snapshotStateMap.clear()
   }
+}
+
+/**
+ * Polls repeatedly until the value reaches a stable state.
+ *
+ * Compares consecutive rendered outputs from the current session —
+ * when two consecutive polls produce the same rendered string,
+ * the value is considered stable.
+ *
+ * Every `await` (poll call, interval delay) races against `timedOut`
+ * so that hanging polls and delays are interrupted.
+ */
+async function getStableSnapshot(
+  { adapter, poll, interval, timedOut, match }: {
+    adapter: DomainSnapshotAdapter<any, any>
+    poll: () => Promise<unknown> | unknown
+    interval: number
+    timedOut?: Promise<void>
+    match?: (captured: unknown) => boolean
+  },
+) {
+  let lastRendered: string | undefined
+  let lastPollError: unknown
+  let lastStable: { captured: unknown; rendered: string } | undefined
+
+  while (true) {
+    try {
+      const pollResult = await raceWith(Promise.resolve(poll()), timedOut)
+      if (!pollResult.ok) {
+        break
+      }
+      const captured = adapter.capture(pollResult.value)
+      const rendered = adapter.render(captured)
+      if (lastRendered !== undefined && rendered === lastRendered) {
+        lastStable = { captured, rendered }
+        if (!match || match(captured)) {
+          break
+        }
+      }
+      else {
+        lastRendered = rendered
+        lastStable = undefined
+      }
+    }
+    catch (pollError) {
+      // poll() threw — reset stability baseline and retry
+      lastRendered = undefined
+      lastStable = undefined
+      lastPollError = pollError
+    }
+    const delayed = await raceWith(
+      new Promise<void>(r => setTimeout(r, interval)),
+      timedOut,
+    )
+    if (!delayed.ok) {
+      break
+    }
+  }
+
+  return { ...lastStable, lastPollError }
+}
+
+/** Type-safe `Promise.race` — tells you which promise won. */
+function raceWith<A, B>(
+  promise: Promise<A>,
+  other?: Promise<B>,
+): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
+  const left = promise.then(value => ({ ok: true as const, value }))
+  if (!other) {
+    return left
+  }
+  return Promise.race([
+    left,
+    other.then(value => ({ ok: false as const, value })),
+  ])
 }

@@ -1,15 +1,14 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
-import { toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './error'
-import { divider, formatProjectName, withLabel } from './reporters/renderers/utils'
+import { printError } from './printError'
+import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
@@ -110,6 +109,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  deprecate(message: string): void {
+    this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
+  }
+
   clearHighlightCache(filename?: string): void {
     if (filename) {
       this._highlights.delete(filename)
@@ -126,6 +129,37 @@ export class Logger {
     const code = highlightCode(filename, source)
     this._highlights.set(filename, code)
     return code
+  }
+
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
+  printTags(): void {
+    const vitest = this.ctx
+    const rootProject = vitest.getRootProject()
+    const projects = [
+      rootProject,
+      ...vitest.projects.filter(p => p !== rootProject),
+    ]
+
+    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+
+    if (!hasTags) {
+      process.exitCode = 1
+      return this.printNoTestTagsFound()
+    }
+
+    for (const project of projects) {
+      const name = project.name
+      if (name) {
+        this.log(formatProjectName(project, ''))
+      }
+      project.config.tags.forEach((tag) => {
+        const tagLog = `${tag.name}${tag.description ? `: ${tag.description}` : ''}`
+        this.log(`  ${tagLog}`)
+      })
+    }
   }
 
   printNoTestFound(filters?: string[]): void {
@@ -164,7 +198,7 @@ export class Logger {
       const config = project.config
       const printConfig = !project.isRootProject() && project.name
       if (printConfig) {
-        this.console.error(`\n${formatProjectName(project.name)}\n`)
+        this.console.error(`\n${formatProjectName(project)}\n`)
       }
       if (config.include) {
         this.console.error(
@@ -198,19 +232,20 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    if (this.ctx.config.sequence.sequencer === RandomSequencer) {
+    // Log seed if either files (RandomSequencer) or tests are shuffled
+    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
-      const port = this.ctx.server.config.server.port
+      const port = this.ctx.vite.config.server.port
       const base = this.ctx.config.uiBase
 
       this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
     }
     else if (this.ctx.config.api?.port) {
-      const resolvedUrls = this.ctx.server.resolvedUrls
+      const resolvedUrls = this.ctx.vite.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
       const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
@@ -223,7 +258,7 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
     }
     else {
       this.log()
@@ -243,17 +278,17 @@ export class Logger {
 
     const output = project.isRootProject()
       ? ''
-      : formatProjectName(project.name)
-    const provider = project.browser.provider.name
+      : formatProjectName(project)
+    const provider = project.browser.provider?.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
       ),
     )
   }
 
-  printUnhandledErrors(errors: unknown[]): void {
+  printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
@@ -262,12 +297,12 @@ export class Logger {
         + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
-    this.error(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
+    this.error(errorBanner('Unhandled Errors'))
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
+        type: (err as any).type || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))
@@ -281,7 +316,7 @@ export class Logger {
         } not related to your test files.`,
       ),
     )
-    this.log(c.red(divider(c.bold(c.inverse(' Source Errors ')))))
+    this.log(errorBanner('Source Errors'))
     this.log(errorMessage)
     errors.forEach((err) => {
       this.printError(err, { fullStack: true })
@@ -315,7 +350,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

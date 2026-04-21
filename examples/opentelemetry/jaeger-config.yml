@@ -1,0 +1,40 @@
+# https://www.jaegertracing.io/docs/2.12/deployment/configuration/
+extensions:
+  jaeger_storage:
+    backends:
+      main_storage:
+        badger:
+          directories:
+            keys: /tmp/badger/keys
+            values: /tmp/badger/data
+          ephemeral: false
+          consistency: true
+          maintenance_interval: 5m
+  jaeger_query:
+    storage:
+      traces: main_storage
+
+# https://opentelemetry.io/docs/languages/js/exporters/#configure-cors-headers
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - http://localhost:*
+
+processors:
+  batch:
+
+exporters:
+  jaeger_storage_exporter:
+    trace_storage: main_storage
+
+service:
+  extensions: [jaeger_storage, jaeger_query]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]

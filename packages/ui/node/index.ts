@@ -1,15 +1,13 @@
-import type { Plugin } from 'vite'
-import type { Vitest } from 'vitest/node'
+import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { toArray } from '@vitest/utils'
-import { basename, resolve } from 'pathe'
+import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
-import { coverageConfigDefaults } from 'vitest/config'
+import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
 
-export default (ctx: Vitest): Plugin => {
+export default (ctx: Vitest): Vite.Plugin => {
   if (ctx.version !== version) {
     ctx.logger.warn(
       c.yellow(
@@ -20,7 +18,7 @@ export default (ctx: Vitest): Plugin => {
     )
   }
 
-  return <Plugin>{
+  return <Vite.Plugin>{
     name: 'vitest:ui',
     apply: 'serve',
     configureServer: {
@@ -28,18 +26,13 @@ export default (ctx: Vitest): Plugin => {
       handler(server) {
         const uiOptions = ctx.config
         const base = uiOptions.uiBase
-        const coverageFolder = resolveCoverageFolder(ctx)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
-          )
-        }
 
-        if (coverageFolder) {
+        // Serve coverage HTML at ./coverage if configured
+        const coverageHtmlDir = ctx.config.coverage?.htmlDir
+        if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
+            join(base, 'coverage'),
+            sirv(coverageHtmlDir, {
               single: true,
               dev: true,
               setHeaders: (res) => {
@@ -54,6 +47,45 @@ export default (ctx: Vitest): Plugin => {
 
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
         const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestAttachment(req, res, next) {
+          if (!req.url) {
+            return next()
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+          if (url.pathname === '/__vitest_attachment__') {
+            const path = url.searchParams.get('path')
+            const contentType = url.searchParams.get('contentType')
+
+            // ignore invalid requests
+            if (!isValidApiRequest(ctx.config, req) || !contentType || !path) {
+              return next()
+            }
+
+            const fsPath = decodeURIComponent(path)
+
+            if (!isFileServingAllowed(ctx.vite.config, fsPath)) {
+              return next()
+            }
+
+            try {
+              res.writeHead(200, {
+                'content-type': contentType,
+              })
+              fs.createReadStream(fsPath)
+                .pipe(res)
+                .on('close', () => res.end())
+            }
+            catch (err) {
+              next(err)
+            }
+          }
+          else {
+            next()
+          }
+        })
 
         // serve index.html with api token
         // eslint-disable-next-line prefer-arrow-callback
@@ -85,41 +117,4 @@ export default (ctx: Vitest): Plugin => {
       },
     },
   }
-}
-
-function resolveCoverageFolder(ctx: Vitest) {
-  const options = ctx.config
-  const htmlReporter
-    = options.api?.port && options.coverage?.enabled
-      ? toArray(options.coverage.reporter).find((reporter) => {
-          if (typeof reporter === 'string') {
-            return reporter === 'html'
-          }
-
-          return reporter[0] === 'html'
-        })
-      : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    ctx.config?.root || options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }

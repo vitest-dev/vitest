@@ -1,8 +1,9 @@
-import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { Suite, TaskMeta, TaskState } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
 import { getSuites, getTests } from '@vitest/runner/utils'
 import { dirname, resolve } from 'pathe'
@@ -38,6 +39,7 @@ export interface JsonAssertionResult {
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
+  tags: string[]
 }
 
 export interface JsonTestResult {
@@ -72,12 +74,15 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /** @experimental */
+  filterMeta?: (key: string, value: unknown) => unknown
 }
 
 export class JsonReporter implements Reporter {
   start = 0
   ctx!: Vitest
   options: JsonOptions
+  coverageMap?: CoverageMap
 
   constructor(options: JsonOptions) {
     this.options = options
@@ -86,9 +91,16 @@ export class JsonReporter implements Reporter {
   onInit(ctx: Vitest): void {
     this.ctx = ctx
     this.start = Date.now()
+    this.coverageMap = undefined
   }
 
-  protected async logTasks(files: File[], coverageMap?: CoverageMap | null): Promise<void> {
+  onCoverage(coverageMap: unknown): void {
+    this.coverageMap = coverageMap as CoverageMap
+  }
+
+  async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
+    const files = testModules.map(testModule => testModule.task)
+
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -111,6 +123,7 @@ export class JsonReporter implements Reporter {
     const testResults: Array<JsonTestResult> = []
 
     const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
+    const { filterMeta } = this.options
 
     for (const file of files) {
       const tests = getTests([file])
@@ -151,7 +164,19 @@ export class JsonReporter implements Reporter {
           failureMessages:
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
-          meta: t.meta,
+          meta: filterMeta
+            ? (() => {
+                const filtered: Record<string, unknown> = {}
+                for (const key in t.meta) {
+                  const value = t.meta[key as keyof TaskMeta]
+                  if (filterMeta(key, value)) {
+                    filtered[key] = value
+                  }
+                }
+                return filtered
+              })()
+            : t.meta,
+          tags: t.tags || [],
         } satisfies JsonAssertionResult
       })
 
@@ -190,14 +215,10 @@ export class JsonReporter implements Reporter {
       startTime: this.start,
       success,
       testResults,
-      coverageMap,
+      coverageMap: this.coverageMap,
     }
 
     await this.writeReport(JSON.stringify(result))
-  }
-
-  async onFinished(files: File[] = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown): Promise<void> {
-    await this.logTasks(files, coverageMap as CoverageMap)
   }
 
   /**

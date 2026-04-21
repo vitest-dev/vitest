@@ -1,5 +1,9 @@
-import type { File, Task, Test } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
+import type { Writable } from 'node:stream'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
+import type { TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { BaseReporter } from './base'
@@ -30,10 +34,13 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  printTask(task: Task): void {
-    if (!this.isTTY) {
-      super.printTask(task)
-    }
+  // Ignore default logging of base reporter
+  printTestModule(): void {}
+
+  onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
+    super.onTestRunStart(_specifications)
+
+    this.renderer?.start()
   }
 
   onWatcherRerun(files: string[], trigger?: string): void {
@@ -42,16 +49,23 @@ export class DotReporter extends BaseReporter {
     super.onWatcherRerun(files, trigger)
   }
 
-  onFinished(files?: File[], errors?: unknown[]): void {
+  onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+    reason: TestRunEndReason,
+  ): void {
     if (this.isTTY) {
       const finalLog = formatTests(Array.from(this.tests.values()))
       this.ctx.logger.log(finalLog)
+    }
+    else {
+      this.ctx.logger.log()
     }
 
     this.tests.clear()
     this.renderer?.finish()
 
-    super.onFinished(files, errors)
+    super.onTestRunEnd(testModules, unhandledErrors, reason)
   }
 
   onTestModuleCollected(module: TestModule): void {
@@ -70,12 +84,23 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    const result = test.result().state
+
+    // On non-TTY the finished tests are printed immediately
+    if (!this.isTTY && result !== 'pending') {
+      (this.ctx.logger.outputStream as Writable).write(formatTests([result]))
+    }
+
+    super.onTestCaseResult(test)
+
     this.finishedTests.add(test.id)
-    this.tests.set(test.id, test.result().state || 'skipped')
+    this.tests.set(test.id, result || 'skipped')
     this.renderer?.schedule()
   }
 
-  onTestModuleEnd(): void {
+  onTestModuleEnd(testModule: TestModule): void {
+    super.onTestModuleEnd(testModule)
+
     if (!this.isTTY) {
       return
     }

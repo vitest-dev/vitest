@@ -1,21 +1,18 @@
 import type {
   BenchmarkUserOptions,
-  CoverageV8Options,
-  ResolvedCoverageOptions,
+  CoverageOptions,
   UserConfig,
 } from './node/types/config'
+import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
-import { isCI } from './utils/env'
+import { isAgent, isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
 export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
 export const defaultExclude: string[] = [
   '**/node_modules/**',
-  '**/dist/**',
-  '**/cypress/**',
-  '**/.{idea,git,cache,output,temp}/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+  '**/.git/**',
 ]
 export const benchmarkConfigDefaults: Required<
   Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
@@ -27,62 +24,35 @@ export const benchmarkConfigDefaults: Required<
   includeSamples: false,
 }
 
-const defaultCoverageExcludes = [
-  'coverage/**',
-  'dist/**',
-  '**/node_modules/**',
-  '**/[.]**',
-  'packages/*/test?(s)/**',
-  '**/*.d.ts',
-  '**/virtual:*',
-  '**/__x00__*',
-  '**/\x00*',
-  'cypress/**',
-  'test?(s)/**',
-  'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
-  '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
-  '**/vitest.{workspace,projects}.[jt]s?(on)',
-  '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
-]
-
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: ResolvedCoverageOptions = {
+export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDefaultValues>> = {
   provider: 'v8',
   enabled: false,
-  all: true,
   clean: true,
   cleanOnRerun: true,
   reportsDirectory: './coverage',
-  exclude: defaultCoverageExcludes,
+  exclude: [],
   reportOnFailure: false,
   reporter: [
-    ['text', {}],
-    ['html', {}],
-    ['clover', {}],
-    ['json', {}],
-  ],
-  extension: [
-    '.js',
-    '.cjs',
-    '.mjs',
-    '.ts',
-    '.mts',
-    '.tsx',
-    '.jsx',
-    '.vue',
-    '.svelte',
-    '.marko',
-    '.astro',
+    'text',
+    'html',
+    'clover',
+    'json',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
-  ignoreEmptyLines: true,
   processingConcurrency: Math.min(
     20,
     os.availableParallelism?.() ?? os.cpus().length,
   ),
+  ignoreClassMethods: [],
+  skipFull: false,
+  watermarks: {
+    statements: [50, 80],
+    functions: [50, 80],
+    branches: [50, 80],
+    lines: [50, 80],
+  },
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
@@ -96,7 +66,6 @@ export const configDefaults: Readonly<{
   watch: boolean
   globals: boolean
   environment: 'node'
-  pool: 'forks'
   clearMocks: boolean
   restoreMocks: boolean
   mockReset: boolean
@@ -117,7 +86,7 @@ export const configDefaults: Readonly<{
   css: {
     include: never[]
   }
-  coverage: CoverageV8Options
+  coverage: CoverageOptions
   fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
@@ -128,13 +97,13 @@ export const configDefaults: Readonly<{
   }
   slowTestThreshold: number
   disableConsoleIntercept: boolean
+  detectAsyncLeaks: boolean
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI,
+  watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
-  environment: 'node' as const,
-  pool: 'forks' as const,
+  environment: 'node',
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -155,7 +124,7 @@ export const configDefaults: Readonly<{
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults as CoverageV8Options,
+  coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
@@ -166,4 +135,5 @@ export const configDefaults: Readonly<{
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
+  detectAsyncLeaks: false,
 })

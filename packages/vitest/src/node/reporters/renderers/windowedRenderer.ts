@@ -30,6 +30,7 @@ export class WindowRenderer {
   private renderScheduled = false
 
   private windowHeight = 0
+  private started = false
   private finished = false
   private cleanups: (() => void)[] = []
 
@@ -54,11 +55,10 @@ export class WindowRenderer {
       this.flushBuffer()
       this.stop()
     })
-
-    this.start()
   }
 
   start(): void {
+    this.started = true
     this.finished = false
     this.renderInterval = setInterval(() => this.schedule(), this.options.interval).unref()
   }
@@ -171,7 +171,7 @@ export class WindowRenderer {
     // @ts-expect-error -- not sure how 2 overloads should be typed
     stream.write = (chunk, _, callback) => {
       if (chunk) {
-        if (this.finished) {
+        if (this.finished || !this.started) {
           this.write(chunk.toString(), type)
         }
         else {

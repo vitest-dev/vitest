@@ -1,9 +1,10 @@
+import type { CDPSession } from '@vitest/browser-playwright'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
-import { cdp } from '@vitest/browser/context'
+import { cdp } from 'vitest/browser'
 import { loadProvider } from './load-provider'
 
-const session = cdp()
+const session = cdp() as CDPSession
 let enabled = false
 
 type ScriptCoverage = Awaited<ReturnType<typeof session.send<'Profiler.takePreciseCoverage'>>>
@@ -71,7 +72,11 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
     return false
   }
 
-  if (coverage.url.includes('?browserv=') || coverage.url.includes('&browserv=')) {
+  if (coverage.url.includes('/@id/@vitest/')) {
+    return false
+  }
+
+  if (coverage.url.includes('/@vite/client')) {
     return false
   }
 

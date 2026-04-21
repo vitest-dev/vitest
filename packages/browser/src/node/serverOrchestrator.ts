@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
+import { stringify } from 'flatted'
 import { replacer } from './utils'
 
 export async function resolveOrchestrator(
@@ -12,17 +13,21 @@ export async function resolveOrchestrator(
   // it's possible to open the page without a context
   if (!sessionId) {
     const contexts = [...globalServer.children].flatMap(p => [...p.state.orchestrators.keys()])
-    sessionId = contexts[contexts.length - 1] ?? 'none'
+    sessionId = contexts.at(-1) ?? 'none'
   }
 
   // it's ok to not have a session here, especially in the preview provider
   // because the user could refresh the page which would remove the session id from the url
 
   const session = globalServer.vitest._browserSessions.getSession(sessionId!)
-  const files = session?.files ?? []
   const browserProject = (session?.project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
 
   if (!browserProject) {
+    return
+  }
+
+  // ignore unknown pages
+  if (sessionId && sessionId !== 'none' && !globalServer.vitest._browserSessions.sessionIds.has(sessionId)) {
     return
   }
 
@@ -31,17 +36,17 @@ export async function resolveOrchestrator(
     : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider || 'preview'),
+    __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider?.name || 'preview'),
     __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,
     }),
-    __VITEST_METHOD__: JSON.stringify(session?.method || 'run'),
-    __VITEST_FILES__: JSON.stringify(files),
+    __VITEST_METHOD__: JSON.stringify('orchestrate'),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
-    __VITEST_PROVIDED_CONTEXT__: '{}',
+    __VITEST_OTEL_CARRIER__: url.searchParams.get('otelCarrier') ?? 'null',
+    __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(browserProject.project.getProvidedContext())),
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
@@ -73,6 +78,8 @@ export async function resolveOrchestrator(
     const jsEntry = manifestContent['orchestrator.html'].file
     const base = browserProject.parent.vite.config.base || '/'
     baseHtml = baseHtml
+      .replace('href="./favicon.ico"', `href="${base}__vitest__/favicon.ico"`)
+      .replace('href="./favicon.svg"', `href="${base}__vitest__/favicon.svg"`)
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(
         '<!-- !LOAD_METADATA! -->',

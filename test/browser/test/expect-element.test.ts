@@ -1,5 +1,5 @@
-import { page } from '@vitest/browser/context'
 import { expect, test, vi } from 'vitest'
+import { page } from 'vitest/browser'
 
 // element selector uses prettyDOM under the hood, which is an expensive call
 // that should not be called on each failed locator attempt to avoid memory leak:

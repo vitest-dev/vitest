@@ -1,6 +1,9 @@
+export { recordArtifact } from './artifact'
 export {
   afterAll,
   afterEach,
+  aroundAll,
+  aroundEach,
   beforeAll,
   beforeEach,
   onTestFailed,
@@ -18,5 +21,3 @@ export {
 } from './suite'
 export { getCurrentTest } from './test-state'
 export type * from './types'
-
-export { processError } from '@vitest/utils/error'

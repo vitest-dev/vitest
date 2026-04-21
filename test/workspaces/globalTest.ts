@@ -1,4 +1,4 @@
-import type { GlobalSetupContext } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
@@ -14,7 +14,7 @@ declare module 'vitest' {
   }
 }
 
-export function setup({ provide }: GlobalSetupContext) {
+export function setup({ provide }: TestProject) {
   provide('globalSetup', true)
   provide('globalSetupOverridden', false)
   try {
@@ -36,9 +36,9 @@ export async function teardown() {
 
   try {
     assert.ok(results.success)
-    assert.equal(results.numTotalTestSuites, 28)
-    assert.equal(results.numTotalTests, 33)
-    assert.equal(results.numPassedTests, 33)
+    assert.equal(results.numTotalTestSuites, 20)
+    assert.equal(results.numTotalTests, 25)
+    assert.equal(results.numPassedTests, 25)
     assert.ok(results.coverageMap)
 
     const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))

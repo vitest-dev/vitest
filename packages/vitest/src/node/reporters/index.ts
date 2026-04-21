@@ -2,35 +2,41 @@ import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
+import type { GithubActionsReporterOptions } from './github-actions'
 import type { HTMLOptions } from './html'
-import { BasicReporter } from './basic'
+import type { JsonOptions } from './json'
+import type { JUnitOptions } from './junit'
 import { BlobReporter } from './blob'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
 import { GithubActionsReporter } from './github-actions'
 import { HangingProcessReporter } from './hanging-process'
-import { type JsonOptions, JsonReporter } from './json'
-import { type JUnitOptions, JUnitReporter } from './junit'
+import { JsonReporter } from './json'
+import { JUnitReporter } from './junit'
+import { AgentReporter } from './minimal'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
+import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
-  BasicReporter,
+  AgentReporter,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  AgentReporter as MinimalReporter,
   TapFlatReporter,
   TapReporter,
+  TreeReporter,
   VerboseReporter,
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
 
+export type { BenchmarkBuiltinReporters } from './benchmark'
 export {
-  BenchmarkBuiltinReporters,
   BenchmarkReporter,
   BenchmarkReportsMap,
   VerboseBenchmarkReporter,
@@ -43,7 +49,8 @@ export type {
 
 export const ReportersMap = {
   'default': DefaultReporter as typeof DefaultReporter,
-  'basic': BasicReporter as typeof BasicReporter,
+  'agent': AgentReporter as typeof AgentReporter,
+  'minimal': AgentReporter as typeof AgentReporter,
   'blob': BlobReporter as typeof BlobReporter,
   'verbose': VerboseReporter as typeof VerboseReporter,
   'dot': DotReporter as typeof DotReporter,
@@ -51,6 +58,7 @@ export const ReportersMap = {
   'tap': TapReporter as typeof TapReporter,
   'tap-flat': TapFlatReporter as typeof TapFlatReporter,
   'junit': JUnitReporter as typeof JUnitReporter,
+  'tree': TreeReporter as typeof TreeReporter,
   'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
   'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
@@ -59,9 +67,11 @@ export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
-  'basic': BaseOptions
+  'minimal': DefaultReporterOptions
+  'agent': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
+  'tree': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions
   'tap': never
@@ -69,6 +79,7 @@ export interface BuiltinReporterOptions {
   'junit': JUnitOptions
   'hanging-process': never
   'html': HTMLOptions
+  'github-actions': GithubActionsReporterOptions
 }
 
 export type { ReportedHookContext } from './reported-tasks'

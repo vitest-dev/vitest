@@ -1,12 +1,31 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
+
 defineProps<{
   href: string
 }>()
 </script>
 
 <template>
-  <a :href="href" target="_blank" bg-green:10 px4 py3 rounded block mt2 flex items-center gap2>
-    <div i-carbon:play-filled flex-none text-lg />
+  <a :href="href" target="_blank" class="course-link">
+    <Icon icon="carbon:play-filled" class="course-icon" />
     <slot />
   </a>
 </template>
+
+<style scoped>
+.course-link {
+  background-color: rgb(34 197 94 / 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.course-icon {
+  flex: none;
+  font-size: 1.125rem;
+}
+</style>

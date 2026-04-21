@@ -12,8 +12,5 @@ test('tests run in presence of config.base', async () => {
   )
 
   expect(stderr).toBe('')
-
-  instances.forEach(({ browser }) => {
-    expect(stdout).toContain(`✓ |${browser}| test/basic.test.ts`)
-  })
+  expect(stdout).toReportPassedTest('test/basic.test.ts', instances)
 })

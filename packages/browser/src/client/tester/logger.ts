@@ -1,6 +1,7 @@
-import { format, stringify } from 'vitest/utils'
+import { browserFormat } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
+import { getBrowserRunner } from './runner'
 
 const { Date, console, performance } = globalThis
 
@@ -29,7 +30,7 @@ export function setupConsoleLogSpy(): void {
 
   console.dir = (item, options) => {
     dir(item, options)
-    sendLog('stdout', formatInput(item))
+    sendLog('stdout', browserFormat(item))
   }
 
   console.dirxml = (...args) => {
@@ -95,6 +96,13 @@ export function setupConsoleLogSpy(): void {
 function stdout(base: (...args: unknown[]) => void) {
   return (...args: unknown[]) => {
     base(...args)
+    // ignore shadow root logs from wdio
+    // https://github.com/webdriverio/webdriverio/discussions/14221
+    if (args[0] === '[WDIO]') {
+      if (args[1] === 'newShadowRoot' || args[1] === 'removeShadowRoot') {
+        return
+      }
+    }
     sendLog('stdout', processLog(args))
   }
 }
@@ -105,18 +113,8 @@ function stderr(base: (...args: unknown[]) => void) {
   }
 }
 
-function formatInput(input: unknown) {
-  if (typeof input === 'object') {
-    return stringify(input, undefined, {
-      printBasicPrototype: false,
-      escapeString: false,
-    })
-  }
-  return format(input)
-}
-
 function processLog(args: unknown[]) {
-  return args.map(formatInput).join(' ')
+  return browserFormat(...args)
 }
 
 function sendLog(
@@ -134,7 +132,8 @@ function sendLog(
     = getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
       : undefined
-  rpc().sendLog({
+  const runner = getBrowserRunner()
+  rpc().sendLog(runner?.method || 'run', {
     origin,
     content,
     browser: true,

@@ -41,7 +41,7 @@ const mod: CoverageProviderModule = {
     const providerPath = './provider.js'
     const { IstanbulCoverageProvider } = (await import(
       /* @vite-ignore */
-      providerPath
+      providerPath,
     )) as typeof import('./provider')
 
     return new IstanbulCoverageProvider()

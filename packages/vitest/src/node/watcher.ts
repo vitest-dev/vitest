@@ -1,8 +1,9 @@
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
-import { noop, slash } from '@vitest/utils'
-import mm from 'micromatch'
+import { noop, slash } from '@vitest/utils/helpers'
+import { resolve } from 'pathe'
+import pm from 'picomatch'
 
 export class VitestWatcher {
   /**
@@ -29,6 +30,10 @@ export class VitestWatcher {
     return this
   }
 
+  public close(): void {
+    this.vitest.vite.watcher.close()
+  }
+
   public unregisterWatcher: () => void = noop
   public registerWatcher(): this {
     const watcher = this.vitest.vite.watcher
@@ -37,14 +42,14 @@ export class VitestWatcher {
       watcher.add(this.vitest.config.forceRerunTriggers)
     }
 
-    watcher.on('change', this.onChange)
-    watcher.on('unlink', this.onUnlink)
-    watcher.on('add', this.onAdd)
+    watcher.on('change', this.onFileChange)
+    watcher.on('unlink', this.onFileDelete)
+    watcher.on('add', this.onFileCreate)
 
     this.unregisterWatcher = () => {
-      watcher.off('change', this.onChange)
-      watcher.off('unlink', this.onUnlink)
-      watcher.off('add', this.onAdd)
+      watcher.off('change', this.onFileChange)
+      watcher.off('unlink', this.onFileDelete)
+      watcher.off('add', this.onFileCreate)
       this.unregisterWatcher = noop
     }
     return this
@@ -54,17 +59,45 @@ export class VitestWatcher {
     this._onRerun.forEach(cb => cb(file))
   }
 
-  private onChange = (id: string): void => {
+  private getTestFilesFromWatcherTrigger(id: string): boolean {
+    if (!this.vitest.config.watchTriggerPatterns) {
+      return false
+    }
+    let triggered = false
+    this.vitest.config.watchTriggerPatterns.forEach((definition) => {
+      const exec = definition.pattern.exec(id)
+      if (exec) {
+        const files = definition.testsToRun(id, exec)
+        if (Array.isArray(files)) {
+          triggered = true
+          files.forEach(file => this.changedTests.add(resolve(this.vitest.config.root, file)))
+        }
+        else if (typeof files === 'string') {
+          triggered = true
+          this.changedTests.add(resolve(this.vitest.config.root, files))
+        }
+      }
+    })
+    return triggered
+  }
+
+  public onFileChange = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.vitest.invalidateFile(id)
-    const needsRerun = this.handleFileChanged(id)
-    if (needsRerun) {
+    const testFiles = this.getTestFilesFromWatcherTrigger(id)
+    if (testFiles) {
       this.scheduleRerun(id)
+    }
+    else {
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun) {
+        this.scheduleRerun(id)
+      }
     }
   }
 
-  private onUnlink = (id: string): void => {
+  public onFileDelete = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.invalidates.add(id)
@@ -79,9 +112,16 @@ export class VitestWatcher {
     }
   }
 
-  private onAdd = (id: string): void => {
+  public onFileCreate = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
+
+    const testFiles = this.getTestFilesFromWatcherTrigger(id)
+    if (testFiles) {
+      this.scheduleRerun(id)
+      return
+    }
+
     let fileContent: string | undefined
 
     const matchingProjects: TestProject[] = []
@@ -104,6 +144,27 @@ export class VitestWatcher {
     }
   }
 
+  private handleSetupFile(filepath: string) {
+    let isSetupFile: boolean = false
+
+    this.vitest.projects.forEach((project) => {
+      if (!project.config.setupFiles.includes(filepath)) {
+        return
+      }
+
+      this.vitest.state.filesMap.forEach((files) => {
+        files.forEach((file) => {
+          if (file.projectName === project.name) {
+            isSetupFile = true
+            this.changedTests.add(file.filepath)
+          }
+        })
+      })
+    })
+
+    return isSetupFile
+  }
+
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
@@ -112,14 +173,19 @@ export class VitestWatcher {
       return false
     }
 
-    if (mm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }
 
+    if (this.handleSetupFile(filepath)) {
+      return true
+    }
+
     const projects = this.vitest.projects.filter((project) => {
-      const moduleGraph = project.browser?.vite.moduleGraph || project.vite.moduleGraph
-      return moduleGraph.getModulesByFile(filepath)?.size
+      return project._getViteEnvironments().some(({ moduleGraph }) => {
+        return moduleGraph.getModulesByFile(filepath)?.size
+      })
     })
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
@@ -134,9 +200,8 @@ export class VitestWatcher {
     const files: string[] = []
 
     for (const project of projects) {
-      const mods = project.browser?.vite.moduleGraph.getModulesByFile(filepath)
-        || project.vite.moduleGraph.getModulesByFile(filepath)
-      if (!mods || !mods.size) {
+      const environmentMods = project._getViteEnvironments().map(({ moduleGraph }) => moduleGraph.getModulesByFile(filepath))
+      if (!environmentMods.length) {
         continue
       }
 
@@ -150,17 +215,19 @@ export class VitestWatcher {
       }
 
       let rerun = false
-      for (const mod of mods) {
-        mod.importers.forEach((i) => {
-          if (!i.file) {
-            return
-          }
+      for (const mods of environmentMods) {
+        for (const mod of mods || []) {
+          mod.importers.forEach((i) => {
+            if (!i.file) {
+              return
+            }
 
-          const needsRerun = this.handleFileChanged(i.file)
-          if (needsRerun) {
-            rerun = true
-          }
-        })
+            const needsRerun = this.handleFileChanged(i.file)
+            if (needsRerun) {
+              rerun = true
+            }
+          })
+        }
       }
 
       if (rerun) {
@@ -170,4 +237,12 @@ export class VitestWatcher {
 
     return !!files.length
   }
+}
+
+export interface WatcherTriggerPattern {
+  pattern: RegExp
+  testsToRun: (
+    file: string,
+    match: RegExpMatchArray,
+  ) => string[] | string | null | undefined | void
 }

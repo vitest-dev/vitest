@@ -5,16 +5,24 @@ outline: deep
 
 # Features
 
+<script setup>
+import FeaturesList from '../.vitepress/components/FeaturesList.vue'
+</script>
+
 <FeaturesList class="!gap-1 text-lg" />
 
 <div h-2 />
 <CourseLink href="https://vueschool.io/lessons/your-first-test?friend=vueuse">Learn how to write your first test by Video</CourseLink>
 
+::: tip
+This page is a high-level overview of Vitest's capabilities. If you're new to Vitest, we recommend reading the [Learn](/guide/learn/writing-tests) tutorial first for a hands-on introduction.
+:::
+
 ## Shared Config between Test, Dev and Build
 
 Vite's config, transformers, resolvers, and plugins. Use the same setup from your app to run the tests.
 
-Learn more at [Configuring Vitest](/guide/#configuring-vitest).
+Learn more at [Configuring Vitest](/config/).
 
 ## Watch Mode
 
@@ -34,9 +42,8 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-By default Vitest runs test files in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
-
-To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions).
+By default Vitest runs test files in [multiple processes](/guide/parallelism) using [`node:child_process`](https://nodejs.org/api/child_process.html), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
+To run tests in a single thread or process, see [`fileParallelism`](/config/fileparallelism).
 
 Vitest also isolates each file's environment so env mutations in one file don't affect others. Isolation can be disabled by passing `--no-isolate` to the CLI (trading correctness for run performance).
 
@@ -74,7 +81,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/#test-concurrent).
+You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/test#test-concurrent).
 
 ::: warning
 When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
@@ -99,11 +106,11 @@ Learn more at [Snapshot](/guide/snapshot).
 
 [Chai](https://www.chaijs.com/) is built-in for assertions with [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
 
-Notice that if you are using third-party libraries that add matchers, setting [`test.globals`](/config/#globals) to `true` will provide better compatibility.
+Notice that if you are using third-party libraries that add matchers, setting [`test.globals`](/config/globals) to `true` will provide better compatibility.
 
 ## Mocking
 
-[Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
+Vitest provides `jest`-compatible APIs on `vi` object.
 
 ```ts
 import { expect, vi } from 'vitest'
@@ -189,7 +196,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 ## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
 
-You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
+You can run benchmark tests with [`bench`](/api/test#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
 ```ts [sort.bench.ts]
 import { bench, describe } from 'vitest'
@@ -224,7 +231,7 @@ import { mount } from './mount.js'
 
 test('my types work properly', () => {
   expectTypeOf(mount).toBeFunction()
-  expectTypeOf(mount).parameter(0).toMatchTypeOf<{ name: string }>()
+  expectTypeOf(mount).parameter(0).toExtend<{ name: string }>()
 
   // @ts-expect-error name is a string
   assertType(mount({ name: 42 }))
@@ -258,4 +265,51 @@ export default defineConfig(({ mode }) => ({
     env: loadEnv(mode, process.cwd(), ''),
   },
 }))
+```
+
+## Unhandled Errors
+
+By default, Vitest catches and reports all [unhandled rejections](https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event), [uncaught exceptions](https://nodejs.org/api/process.html#event-uncaughtexception) (in Node.js) and [error](https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event) events (in the [browser](/guide/browser/)).
+
+You can disable this behaviour by catching them manually. Vitest assumes the callback is handled by you and won't report the error.
+
+::: code-group
+```ts [setup.node.js]
+// in Node.js
+process.on('unhandledRejection', () => {
+  // your own handler
+})
+
+process.on('uncaughtException', () => {
+  // your own handler
+})
+```
+```ts [setup.browser.js]
+// in the browser
+window.addEventListener('error', () => {
+  // your own handler
+})
+
+window.addEventListener('unhandledrejection', () => {
+  // your own handler
+})
+```
+:::
+
+Alternatively, you can also ignore reported errors with a [`dangerouslyIgnoreUnhandledErrors`](/config/dangerouslyignoreunhandlederrors) option. Vitest will still report them, but they won't affect the test result (exit code won't be changed).
+
+If you need to test that error was not caught, you can create a test that looks like this:
+
+```ts
+test('my function throws uncaught error', async ({ onTestFinished }) => {
+  const unhandledRejectionListener = vi.fn()
+  process.on('unhandledRejection', unhandledRejectionListener)
+  onTestFinished(() => {
+    process.off('unhandledRejection', unhandledRejectionListener)
+  })
+
+  callMyFunctionThatRejectsError()
+
+  await expect.poll(unhandledRejectionListener).toHaveBeenCalled()
+})
 ```

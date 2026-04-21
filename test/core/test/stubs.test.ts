@@ -3,9 +3,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __defined__: unknown
-  // eslint-disable-next-line no-var
+
   var __setter__: unknown
 }
 
@@ -50,7 +50,7 @@ describe('stubbing globals', () => {
     expect(globalThis.__defined__).toBe('false')
     vi.unstubAllGlobals()
     expect('__defined__' in globalThis).toBe(false)
-    expect(() => __defined__).toThrowError(ReferenceError)
+    expect(() => __defined__).toThrow(ReferenceError)
     expect(globalThis.__defined__).toBeUndefined()
   })
 

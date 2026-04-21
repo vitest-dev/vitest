@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
+import BrowserIframe from '~/components/BrowserIframe.vue'
+import ClosedDetailsHeader from '~/components/ClosedDetailsHeader.vue'
+import ConnectionOverlay from '~/components/ConnectionOverlay.vue'
+import Coverage from '~/components/Coverage.vue'
+import Dashboard from '~/components/Dashboard.vue'
+import FileDetails from '~/components/FileDetails.vue'
+import Navigation from '~/components/Navigation.vue'
+import ProgressBar from '~/components/ProgressBar.vue'
 import { browserState } from '~/composables/client'
 import {
-  coverageUrl,
   coverageVisible,
   detailSizes,
+  detailsPanelVisible,
+  detailsPosition,
   initializeNavigation,
   mainSizes,
   panels,
@@ -13,51 +23,45 @@ import {
 
 const dashboardVisible = initializeNavigation()
 
-const onBrowserPanelResizing = useDebounceFn((event: { size: number }[]) => {
+const onBrowserPanelResizing = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
   // don't trigger events in the iframe while resizing
   preventBrowserEvents()
-  recordDetailsResize(event)
+  recordDetailsResize(panes)
 }, 0)
 
-const onMainResized = useDebounceFn((event: { size: number }[]) => {
-  event.forEach((e, i) => {
+const onMainResized = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  panes.forEach((e, i) => {
     mainSizes.value[i] = e.size
   })
-  recordMainResize(event)
-}, 0)
-
-const onModuleResized = useDebounceFn((event: { size: number }[]) => {
-  event.forEach((e, i) => {
-    detailSizes.value[i] = e.size
-  })
-  recordDetailsResize(event)
+  recordMainResize(panes)
   allowBrowserEvents()
 }, 0)
 
-const resizingMain = useDebounceFn((event: { size: number }[]) => {
-  recordMainResize(event)
+const onModuleResized = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  panes.forEach((e, i) => {
+    detailSizes.value[i] = e.size
+  })
+  recordDetailsResize(panes)
+  allowBrowserEvents()
+}, 0)
+
+const resizingMain = useDebounceFn(({ panes }: { panes: { size: number }[] }) => {
+  recordMainResize(panes)
   preventBrowserEvents()
 }, 0)
 
-function resizeMain() {
-  const width = window.innerWidth
-  const panelWidth = Math.min(width / 3, 300)
-  mainSizes.value[0] = (100 * panelWidth) / width
-  mainSizes.value[1] = 100 - mainSizes.value[0]
-  recordMainResize([
-    { size: mainSizes.value[0] },
-    { size: mainSizes.value[1] },
-  ])
+function recordMainResize(panes: { size: number }[]) {
+  panels.navigation = panes[0].size
+  if (panes[1]) {
+    panels.details.size = panes[1].size
+  }
 }
 
-function recordMainResize(event: { size: number }[]) {
-  panels.navigation = event[0].size
-  panels.details.size = event[1].size
-}
-
-function recordDetailsResize(event: { size: number }[]) {
-  panels.details.browser = event[0].size
-  panels.details.main = event[1].size
+function recordDetailsResize(panes: { size: number }[]) {
+  panels.details.browser = panes[0].size
+  if (panes[1]) {
+    panels.details.main = panes[1].size
+  }
 }
 
 function preventBrowserEvents() {
@@ -82,7 +86,6 @@ function allowBrowserEvents() {
       class="pt-4px"
       @resized="onMainResized"
       @resize="resizingMain"
-      @ready="resizeMain"
     >
       <Pane :size="mainSizes[0]">
         <Navigation />
@@ -93,30 +96,45 @@ function allowBrowserEvents() {
           <Coverage
             v-else-if="coverageVisible"
             key="coverage"
-            :src="coverageUrl!"
           />
           <FileDetails v-else key="details" />
         </transition>
-        <Splitpanes
-          v-else
-          id="details-splitpanes"
-          key="browser-detail"
-          @resize="onBrowserPanelResizing"
-          @resized="onModuleResized"
-        >
-          <Pane :size="detailSizes[0]" min-size="10">
-            <BrowserIframe v-once />
-          </Pane>
-          <Pane :size="detailSizes[1]">
-            <Dashboard v-if="dashboardVisible" key="summary" />
-            <Coverage
-              v-else-if="coverageVisible"
-              key="coverage"
-              :src="coverageUrl!"
+        <template v-else>
+          <div
+            flex="~ col"
+            h-full
+          >
+            <Splitpanes
+              id="details-splitpanes"
+              key="browser-detail"
+              :horizontal="detailsPosition === 'bottom'"
+              :class="detailsPosition === 'bottom' && !detailsPanelVisible ? 'flex-1 min-h-0 overflow-hidden' : 'h-full'"
+              @resize="onBrowserPanelResizing"
+              @resized="onModuleResized"
+            >
+              <Pane :size="detailSizes[0]" min-size="10">
+                <BrowserIframe v-once />
+              </Pane>
+              <Pane
+                v-if="detailsPanelVisible"
+                :size="detailSizes[1]"
+                min-size="10"
+              >
+                <div h-full overflow-hidden>
+                  <Dashboard v-if="dashboardVisible" key="summary" />
+                  <Coverage
+                    v-else-if="coverageVisible"
+                    key="coverage"
+                  />
+                  <FileDetails v-else key="details" />
+                </div>
+              </Pane>
+            </Splitpanes>
+            <ClosedDetailsHeader
+              v-if="detailsPosition === 'bottom' && !detailsPanelVisible"
             />
-            <FileDetails v-else key="details" />
-          </Pane>
-        </Splitpanes>
+          </div>
+        </template>
       </Pane>
     </Splitpanes>
   </div>

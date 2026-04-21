@@ -4,7 +4,9 @@ import { instances, runBrowserTests } from './utils'
 test('locators work correctly', async () => {
   const { stderr, stdout } = await runBrowserTests({
     root: './fixtures/locators',
-    reporters: [['verbose', { isTTY: false }]],
+    reporters: [
+      ['verbose', { isTTY: false }],
+    ],
   })
 
   expect(stderr).toReportNoErrors()
@@ -14,6 +16,47 @@ test('locators work correctly', async () => {
     expect(stdout).toReportPassedTest('query.test.ts', browser)
   })
 
-  expect(stdout).toReportSummaryTestFiles({ passed: instances.length * 2 })
-  expect(stdout).toReportSummaryTests({ passed: instances.length * 3 })
+  const COUNT_TEST_FILES = 2
+  const COUNT_TESTS_OVERALL = 14
+
+  expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
+  expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
+})
+
+test('locators.exact option works', async () => {
+  const { stderr, stdout } = await runBrowserTests({
+    root: './fixtures/locators-exact',
+    reporters: [['verbose', { isTTY: false }]],
+  })
+
+  expect(stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('basic.test.ts', browser)
+  })
+
+  const COUNT_TEST_FILES = 1
+  const COUNT_TESTS_OVERALL = 5
+
+  expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
+  expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
+})
+
+test('custom locators work', async () => {
+  const { stderr, stdout } = await runBrowserTests({
+    root: './fixtures/locators-custom',
+    reporters: [['verbose', { isTTY: false }]],
+  })
+
+  expect(stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('basic.test.tsx', browser)
+  })
+
+  const COUNT_TEST_FILES = 1
+  const COUNT_TESTS_OVERALL = 5
+
+  expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
+  expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
 })

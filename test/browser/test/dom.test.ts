@@ -1,11 +1,14 @@
 import { createNode } from '#src/createNode'
-import { page } from '@vitest/browser/context'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
+import { page, server } from 'vitest/browser'
 import '../src/button.css'
+
+afterAll(() => {
+  document.body.removeAttribute('style')
+})
 
 describe('dom related activity', () => {
   beforeEach(() => {
-    document.body.style.background = '#f3f3f3'
     document.body.replaceChildren()
   })
 
@@ -62,6 +65,20 @@ describe('dom related activity', () => {
     expect(base64).toBeTypeOf('string')
   })
 
+  test('doesn\'t save base64', async () => {
+    const wrapper = createWrapper()
+    const div = createNode()
+    wrapper.appendChild(div)
+
+    const base64 = await page.screenshot({
+      element: wrapper,
+      save: false,
+    })
+    expect(base64).toBeTypeOf('string')
+    expect(base64).not.toContain('__screenshots__')
+    expect(base64).not.toContain('dom.test.ts')
+  })
+
   test('shadow dom screenshot', async () => {
     const wrapper = createWrapper()
     const div = createNode()
@@ -98,10 +115,28 @@ describe('dom related activity', () => {
       /__screenshots__\/dom.test.ts\/dom-related-activity-svg-screenshot-1.png/,
     )
   })
+
+  test.runIf(server.provider === 'webdriverio')('shadow dom works with multiple elements', async () => {
+    const wrapper = createWrapper()
+    const div = createNode()
+    wrapper.appendChild(div)
+
+    const shadow = div.attachShadow({ mode: 'open' })
+    const shadowDiv1 = createNode()
+    shadowDiv1.role = 'tab'
+    const shadowDiv2 = createNode()
+    shadowDiv2.role = 'tab'
+    shadow.appendChild(shadowDiv1)
+    shadow.appendChild(shadowDiv2)
+
+    expect(
+      page.getByRole('tab').selector,
+      'there is only a single >>> in the selector',
+    ).toBe('>>>html > body > div > div > div, html > body > div > div > div')
+  })
 })
 
 function createWrapper() {
-  document.body.style.background = '#f3f3f3'
   const wrapper = document.createElement('div')
   wrapper.className = 'wrapper'
   document.body.appendChild(wrapper)

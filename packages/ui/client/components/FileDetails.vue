@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
-import { hasFailedSnapshot } from '@vitest/ws-client'
+import { debouncedWatch } from '@vueuse/core'
 import { toJSON } from 'flatted'
+import { computed, nextTick, ref } from 'vue'
+import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
   client,
@@ -10,9 +13,19 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
+import { tagsDefinitions } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
+import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
-import { viewMode } from '~/composables/params'
-import { getProjectNameColor } from '~/utils/task'
+import { selectedTest, viewMode } from '~/composables/params'
+import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
+import IconButton from './IconButton.vue'
+import StatusIcon from './StatusIcon.vue'
+import ViewConsoleOutput from './views/ViewConsoleOutput.vue'
+import ViewEditor from './views/ViewEditor.vue'
+import ViewModuleGraph from './views/ViewModuleGraph.vue'
+import ViewReport from './views/ViewReport.vue'
+import ViewTestReport from './views/ViewTestReport.vue'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
@@ -20,6 +33,12 @@ const hasGraphBeenDisplayed = ref(false)
 const loadingModuleGraph = ref(false)
 const currentFilepath = ref<string | undefined>(undefined)
 const hideNodeModules = ref(true)
+
+const test = computed(() => {
+  return selectedTest.value
+    ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
+    : undefined
+})
 
 const graphData = computed(() => {
   const c = current.value
@@ -137,18 +156,39 @@ debouncedWatch(
 )
 
 const projectNameColor = computed(() => {
-  return getProjectNameColor(current.value?.file.projectName)
+  const projectName = current.value?.file.projectName || ''
+  return explorerTree.colors.get(projectName) || getBadgeNameColor(current.value?.file.projectName)
 })
 
-const projectNameTextColor = computed(() => {
-  switch (projectNameColor.value) {
-    case 'blue':
-    case 'green':
-    case 'magenta':
-      return 'white'
-    default:
-      return 'black'
+const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
+
+const testTitle = computed(() => {
+  const testId = selectedTest.value
+  if (!testId) {
+    return current.value?.name
   }
+  const names: string[] = []
+  let node: RunnerTask | undefined = client.state.idMap.get(testId)
+  while (node) {
+    names.push(node.name)
+    node = node.suite
+  }
+  return names.reverse().join(' > ')
+})
+
+const tags = computed(() => {
+  const testId = selectedTest.value
+  if (!testId) {
+    return []
+  }
+  const node = client.state.idMap.get(testId)
+  return (node?.tags || []).map(tag => ({
+    name: tag,
+    description: tagsDefinitions.value[tag]?.description,
+    bg: getBadgeNameColor(tag, true),
+    border: getBadgeNameColor(tag),
+    text: 'white',
+  }))
 })
 </script>
 
@@ -168,13 +208,30 @@ const projectNameTextColor = computed(() => {
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
         <span
           v-if="current?.file.projectName"
-          class="rounded-full py-0.5 px-1 text-xs font-light"
+          class="rounded-full py-0.5 px-2 text-xs font-light"
           :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
+          cursor-default
         >
           {{ current.file.projectName }}
         </span>
-        <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
-          {{ current?.name }}
+        <div flex-1 font-light overflow-hidden text-sm flex>
+          <span op-50 truncate>
+            {{ testTitle }}
+          </span>
+
+          <span
+            v-for="tag of tags"
+            :key="tag.name"
+            v-tooltip.bottom="tag.description"
+            class="rounded-full ml-2 px-2 text-xs font-light"
+            :style="{ backgroundColor: tag.bg, color: tag.text, border: `1px solid ${tag.border}` }"
+            :title="tag.description"
+            cursor-default
+            flex
+            items-center
+          >
+            {{ tag.name }}
+          </span>
         </div>
         <div class="flex text-lg">
           <IconButton
@@ -185,6 +242,7 @@ const projectNameTextColor = computed(() => {
             :disabled="!current?.filepath"
             @click="open"
           />
+          <DetailsHeaderButtons v-if="browserState" />
         </div>
       </div>
       <div flex="~" items-center bg-header border="b-2 base" text-sm h-41px>
@@ -263,7 +321,8 @@ const projectNameTextColor = computed(() => {
         :file="current"
         data-testid="console"
       />
-      <ViewReport v-else-if="!viewMode" :file="current" data-testid="report" />
+      <ViewReport v-else-if="!viewMode && !test && current" :file="current" data-testid="report" />
+      <ViewTestReport v-else-if="!viewMode && test" :test="test" data-testid="report" />
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 export {
-  BasicReporter,
+  AgentReporter,
   BenchmarkReporter,
   BenchmarkReportsMap,
   DefaultReporter,
@@ -8,6 +8,7 @@ export {
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  MinimalReporter,
   ReportersMap,
   TapFlatReporter,
   TapReporter,
@@ -26,3 +27,5 @@ export type {
   Reporter,
   TestRunEndReason,
 } from '../node/reporters'
+
+console.warn('Importing from "vitest/reporters" is deprecated since Vitest 4.1. Please use "vitest/node" instead.')

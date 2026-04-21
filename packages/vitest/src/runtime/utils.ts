@@ -1,9 +1,12 @@
-import type { ModuleCacheMap } from 'vite-node/client'
-
+import type { EvaluatedModules } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../types/worker'
-import { getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils/timers'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
+
+export class EnvironmentTeardownError extends Error {
+  name = 'EnvironmentTeardownError'
+}
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
@@ -14,10 +17,16 @@ export function getWorkerState(): WorkerGlobalState {
         + '\n\nOne of the following is possible:'
         + '\n- "vitest" is imported directly without running "vitest" command'
         + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+        + '\n- "vitest" is imported inside Vite / Vitest config file'
         + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
     throw new Error(errorMsg)
   }
   return workerState
+}
+
+export function getSafeWorkerState(): WorkerGlobalState | undefined {
+  // @ts-expect-error untyped global
+  return globalThis[NAME_WORKER_STATE]
 }
 
 export function provideWorkerState(context: any, state: WorkerGlobalState): WorkerGlobalState {
@@ -40,18 +49,10 @@ export function isChildProcess(): boolean {
   return typeof process !== 'undefined' && !!process.send
 }
 
-export function setProcessTitle(title: string): void {
-  try {
-    process.title = `node (${title})`
-  }
-  catch {}
-}
-
-export function resetModules(modules: ModuleCacheMap, resetMocks = false): void {
+export function resetModules(modules: EvaluatedModules, resetMocks = false): void {
   const skipPaths = [
     // Vitest
     /\/vitest\/dist\//,
-    /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
     // cnpm
@@ -59,11 +60,15 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false): void 
     // don't clear mocks
     ...(!resetMocks ? [/^mock:/] : []),
   ]
-  modules.forEach((mod, path) => {
+  modules.idToModuleMap.forEach((node, path) => {
     if (skipPaths.some(re => re.test(path))) {
       return
     }
-    modules.invalidateModule(mod)
+
+    node.promise = undefined
+    node.exports = undefined
+    node.evaluated = false
+    node.importers.clear()
   })
 }
 
@@ -76,13 +81,10 @@ export async function waitForImportsToResolve(): Promise<void> {
   await waitNextTick()
   const state = getWorkerState()
   const promises: Promise<unknown>[] = []
-  let resolvingCount = 0
-  for (const mod of state.moduleCache.values()) {
+  const resolvingCount = state.resolvingModules.size
+  for (const [_, mod] of state.evaluatedModules.idToModuleMap) {
     if (mod.promise && !mod.evaluated) {
       promises.push(mod.promise)
-    }
-    if (mod.resolving) {
-      resolvingCount++
     }
   }
   if (!promises.length && !resolvingCount) {

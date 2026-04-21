@@ -1,8 +1,9 @@
-import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
-import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { objDisplay } from '@vitest/utils/display'
+import { assertTypes, deepClone, deepMerge, isNegativeNaN, objectAttr, toArray } from '@vitest/utils/helpers'
+import { parseSingleFFOrSafariStack } from '@vitest/utils/source-map'
+import { EvaluatedModules } from 'vite/module-runner'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
-import { ModuleCacheMap } from '../../../packages/vite-node/src/client'
 import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
 describe('assertTypes', () => {
@@ -206,9 +207,7 @@ describe('deepClone', () => {
 })
 
 describe('resetModules doesn\'t resets only user modules', () => {
-  const mod = () => ({ evaluated: true, promise: Promise.resolve({}), resolving: false, exports: {}, map: {} as EncodedSourceMap })
-
-  const moduleCache = new ModuleCacheMap()
+  const moduleCache = new EvaluatedModules()
   const modules = [
     ['/some-module.ts', true],
     ['/@fs/some-path.ts', true],
@@ -222,23 +221,31 @@ describe('resetModules doesn\'t resets only user modules', () => {
 
   beforeAll(() => {
     modules.forEach(([path]) => {
-      moduleCache.set(path, mod())
+      const exports = {}
+      moduleCache.idToModuleMap.set(path, {
+        id: path,
+        url: path,
+        file: path,
+        importers: new Set(),
+        imports: new Set(),
+        evaluated: true,
+        meta: undefined,
+        exports,
+        promise: Promise.resolve(exports),
+        map: undefined,
+      })
     })
     resetModules(moduleCache)
   })
 
   test.each(modules)('Cache for %s is reset (%s)', (path, reset) => {
-    const cached = moduleCache.get(path)
+    const cached = moduleCache.idToModuleMap.get(path)
 
     if (reset) {
-      expect(cached).not.toHaveProperty('evaluated')
-      expect(cached).not.toHaveProperty('resolving')
-      expect(cached).not.toHaveProperty('exports')
-      expect(cached).not.toHaveProperty('promise')
+      expect(cached).toHaveProperty('exports', undefined)
+      expect(cached).toHaveProperty('promise', undefined)
     }
     else {
-      expect(cached).toHaveProperty('evaluated')
-      expect(cached).toHaveProperty('resolving')
       expect(cached).toHaveProperty('exports')
       expect(cached).toHaveProperty('promise')
     }
@@ -299,5 +306,90 @@ describe('isNegativeNaN', () => {
   ${Number.NEGATIVE_INFINITY} | ${false}
   `('isNegativeNaN($value) -> $expected', ({ value, expected }) => {
     expect(isNegativeNaN(value)).toBe(expected)
+  })
+})
+
+describe('parseSingleFFOrSafariStack', () => {
+  test('should parse valid Firefox/Safari stack traces with file protocol', () => {
+    const validStackLine = 'functionName@file:///path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(validStackLine)
+
+    expect(result).toEqual({
+      file: 'file:///path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should parse valid Firefox/Safari stack traces with https protocol', () => {
+    const validStackLine = 'functionName@https://example.com/path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(validStackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should handle stack lines without function names', () => {
+    const stackLineWithoutFunction = '@file:///path/to/file.js:123:45'
+
+    const result = parseSingleFFOrSafariStack(stackLineWithoutFunction)
+
+    expect(result).toEqual({
+      file: 'file:///path/to/file.js',
+      method: '',
+      line: 123,
+      column: 45,
+    })
+  })
+
+  test('should parse https URLs with @fs prefix without function name', () => {
+    const stackLine = '@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: '',
+      line: 123,
+      column: 4,
+    })
+  })
+
+  test('should parse https URLs with @fs prefix with function name', () => {
+    const stackLine = 'functionName@https://@fs/path/to/file.js:123:4'
+
+    const result = parseSingleFFOrSafariStack(stackLine)
+
+    expect(result).toEqual({
+      file: '/path/to/file.js',
+      method: 'functionName',
+      line: 123,
+      column: 4,
+    })
+  })
+
+  test('should not hang when `Error.stackTraceLimit = 0` (#6039)', { timeout: 5_000 }, async () => {
+    // 40 takes ~30s on M2 CPU when fix is reverted
+    const size = 40
+
+    const obj = Object.fromEntries(
+      [...Array.from({ length: size }).keys()].map(i => [`prop${i}`, i]),
+    )
+
+    class PrettyError extends globalThis.Error {
+      constructor(e: unknown) {
+        Error.stackTraceLimit = 0
+        super(JSON.stringify(e))
+      }
+    }
+
+    parseSingleFFOrSafariStack(new PrettyError(obj).stack!)
   })
 })

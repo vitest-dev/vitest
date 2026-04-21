@@ -5,7 +5,6 @@ function run(testNamePattern: string) {
   return runVitest({
     include: ['fixtures/retry/retry.test.ts'],
     config: 'fixtures/retry/vitest.config.ts',
-    reporters: ['basic'],
     testNamePattern,
   })
 }

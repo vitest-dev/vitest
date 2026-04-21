@@ -1,9 +1,17 @@
-import { channel, client } from '@vitest/browser/client'
+import { client } from '@vitest/browser/client'
 
 function serializeError(unhandledError) {
+  const state = globalThis.__vitest_worker__
+  const VITEST_TEST_NAME = state && state.current && state.current.type === 'test'
+    ? state.current.name
+    : undefined
+  const VITEST_TEST_PATH = state && state.filepath ? state.filepath : undefined
+
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
       message: String(unhandledError),
+      VITEST_TEST_NAME,
+      VITEST_TEST_PATH,
     }
   }
 
@@ -11,6 +19,8 @@ function serializeError(unhandledError) {
     name: unhandledError.name,
     message: unhandledError.message,
     stack: String(unhandledError.stack),
+    VITEST_TEST_NAME,
+    VITEST_TEST_PATH,
   }
 }
 
@@ -21,7 +31,11 @@ function catchWindowErrors(errorEvent, prop, cb) {
       cb(e)
     }
     else {
-      console.error(e[prop])
+      // `ErrorEvent` doesn't necessary have `ErrorEvent.error` defined
+      // but some has `ErrorEvent.message` defined, e.g. ResizeObserver error.
+      // https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent/error
+      // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors
+      console.error(e.message ? new Error(e.message) : e)
     }
   }
   const addEventListener = window.addEventListener.bind(window)
@@ -45,10 +59,14 @@ function catchWindowErrors(errorEvent, prop, cb) {
 }
 
 function registerUnexpectedErrors() {
-  catchWindowErrors('error', 'error', event =>
+  const offError = catchWindowErrors('error', 'error', event =>
     reportUnexpectedError('Error', event.error))
-  catchWindowErrors('unhandledrejection', 'reason', event =>
+  const offRejection = catchWindowErrors('unhandledrejection', 'reason', event =>
     reportUnexpectedError('Unhandled Rejection', event.reason))
+  return () => {
+    offError()
+    offRejection()
+  }
 }
 
 async function reportUnexpectedError(
@@ -59,19 +77,6 @@ async function reportUnexpectedError(
   await client.waitForConnection().then(() => {
     return client.rpc.onUnhandledError(processedError, type)
   }).catch(console.error)
-  const state = __vitest_browser_runner__
-
-  if (state.type === 'orchestrator') {
-    return
-  }
-
-  if (!state.runTests || !__vitest_worker__.current) {
-    channel.postMessage({
-      type: 'done',
-      filenames: state.files,
-      id: state.iframeId,
-    })
-  }
 }
 
-registerUnexpectedErrors()
+globalThis.__vitest_browser_runner__.disposeExceptionTracker = registerUnexpectedErrors()

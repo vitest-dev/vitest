@@ -1,17 +1,16 @@
 import type { Task } from '@vitest/runner'
-import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
-import { client, findById } from '~/composables/client'
+import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, SearchMatcher, UITaskTreeNode } from '~/composables/explorer/types'
+import { client, config, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
-import { filteredFiles, uiEntries } from '~/composables/explorer/state'
+import { currentProjectName, filteredFiles, projectSort, uiEntries } from '~/composables/explorer/state'
 import {
+  getSortedRootTasks,
   isFileNode,
   isParentNode,
   isTestNode,
-  sortedRootTasks,
 } from '~/composables/explorer/utils'
-import { caseInsensitiveMatch } from '~/utils/task'
 
-export function testMatcher(task: Task, search: string, filter: Filter) {
+export function testMatcher(task: Task, search: SearchMatcher, filter: Filter) {
   return task ? matchTask(task, search, filter) : false
 }
 /**
@@ -21,7 +20,7 @@ export function testMatcher(task: Task, search: string, filter: Filter) {
  * @param filter The filter applied.
  */
 export function runFilter(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   const entries = [...filterAll(
@@ -33,17 +32,23 @@ export function runFilter(
 }
 
 export function* filterAll(
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
-  for (const node of sortedRootTasks()) {
-    yield * filterNode(node, search, filter)
+  const project = currentProjectName.value
+  const tasks = getSortedRootTasks(projectSort.value)
+
+  for (const node of tasks) {
+    if (project && node.projectName !== project) {
+      continue
+    }
+    yield* filterNode(node, search, filter)
   }
 }
 
 export function* filterNode(
   node: UITaskTreeNode,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
   const treeNodes = new Set<string>()
@@ -107,13 +112,22 @@ export function* filterNode(
   // we still need to show the suite, but the test must be removed from the list to render.
 
   const map = explorerTree.nodes
+
+  // When searching, expand parent nodes of matching tests so they are visible
+  for (const id of treeNodes) {
+    const treeNode = map.get(id)
+    if (treeNode && 'expanded' in treeNode) {
+      treeNode.expanded = true
+    }
+  }
+
   // collect files and all suites whose parent is expanded
   const parents = new Set(
     entries.filter(e => isFileNode(e) || (isParentNode(e) && map.get(e.parentId)?.expanded)).map(e => e.id),
   )
 
   // collect files, and suites and tests whose parent is expanded
-  yield * entries.filter((node) => {
+  yield* entries.filter((node) => {
     // all file nodes or children of expanded parents
     return isFileNode(node) || (parents.has(node.parentId) && map.get(node.parentId)?.expanded)
   })
@@ -206,6 +220,15 @@ function* filterParents(
 }
 
 function matchState(task: Task, filter: Filter) {
+  if (filter.slow) {
+    if (task.type === 'test') {
+      const threshold = config.value.slowTestThreshold
+      if (typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold) {
+        return true
+      }
+    }
+  }
+
   if (filter.success || filter.failed) {
     if ('result' in task) {
       if (filter.success && task.result?.state === 'pass') {
@@ -226,14 +249,13 @@ function matchState(task: Task, filter: Filter) {
 
 function matchTask(
   task: Task,
-  search: string,
+  search: SearchMatcher,
   filter: Filter,
 ) {
-  const match = search.length === 0 || caseInsensitiveMatch(task.name, search)
-
   // search and filter will apply together
-  if (match) {
-    if (filter.success || filter.failed || filter.skipped) {
+  if (search(task)) {
+    const hasStatusFilter = filter.success || filter.failed || filter.skipped || filter.slow
+    if (hasStatusFilter) {
       if (matchState(task, filter)) {
         return true
       }
@@ -277,12 +299,12 @@ function* visitNode(
   yield [match, node]
   if (isParentNode(node)) {
     for (let i = 0; i < node.tasks.length; i++) {
-      yield * visitNode(node.tasks[i], treeNodes, matcher)
+      yield* visitNode(node.tasks[i], treeNodes, matcher)
     }
   }
 }
 
-function matcher(node: UITaskTreeNode, search: string, filter: Filter) {
+function matcher(node: UITaskTreeNode, search: SearchMatcher, filter: Filter) {
   const task = client.state.idMap.get(node.id)
   return task ? matchTask(task, search, filter) : false
 }

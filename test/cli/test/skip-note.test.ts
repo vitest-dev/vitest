@@ -17,7 +17,7 @@ test.for([
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('my skipped test [custom message]')
+  expect(stdout).toMatch(/my skipped test (?:\d+ms )?\[custom message\]/)
 
   expect(ctx).toBeDefined()
   const testTask = ctx!.state.getFiles()[0].tasks[0]

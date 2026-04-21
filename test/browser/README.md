@@ -1,0 +1,30 @@
+# Browser Tests
+
+```sh
+# run full test with all providers and all browsers
+pnpm run test
+
+# run only playwright provider + all browsers
+pnpm run test:playwright
+
+# run only playwright provider + chromium
+BROWSER=chromium pnpm run test:playwright
+
+# run specific fixture (default is playwright provider + all browsers)
+pnpm run test-fixtures --root ./fixtures/locators
+
+# run specific fixture with selected provider and browser
+PROVIDER=webdriverio BROWSER=firefox pnpm run test-fixtures --root ./fixtures/locators
+```
+
+## Using docker playwright
+
+Some test suites don't support running it remotely (`fixtures/inspect` and `fixtures/insecure-context`).
+
+```sh
+# Start playwright browser server
+pnpm docker up -d
+
+# Run tests with BROWSER_WS_ENDPOINT
+BROWSER_WS_ENDPOINT=true pnpm run test:playwright
+```

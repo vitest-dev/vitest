@@ -1,18 +1,15 @@
-import type { TestCase } from 'vitest/node'
-import { resolve } from 'pathe'
+import { playwright } from '@vitest/browser-playwright'
 
+import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '../../test-utils'
 
-const root = resolve(__dirname, '../fixtures/fails')
-const files = await glob(['**/*.test.ts'], { cwd: root, dot: true, expandDirectories: false })
+const root = resolve(import.meta.dirname, '../fixtures/fails')
+const files = await glob(['**/*.test.{ts,js}'], { cwd: root, dot: true, expandDirectories: false })
 
 it.each(files)('should fail %s', async (file) => {
-  const { stderr } = await runVitest({
-    root,
-    update: file === 'inline-snapshop-inside-loop.test.ts' ? true : undefined,
-  }, [file])
+  const { stderr } = await runVitest({ root }, [file])
 
   expect(stderr).toBeTruthy()
   const msg = String(stderr)
@@ -53,7 +50,7 @@ it('should not report coverage when "coverage.reportOnFailure" has default value
 })
 
 it('prints a warning if the assertion is not awaited', async () => {
-  const { stderr, results, root } = await runInlineTests({
+  const { stderr, root, errorTree } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -71,21 +68,30 @@ it('prints a warning if the assertion is not awaited', async () => {
       expect(1).toBe(2)
     })
 
-    test('toMatchSnapshot not awaited', () => {
+    test('toMatchFileSnapshot not awaited', () => {
       expect(1).toMatchFileSnapshot('./snapshot.txt')
     })
+
+    test('soft + toMatchFileSnapshot not awaited', () => {
+      expect.soft(1).toMatchFileSnapshot('./snapshot-soft.txt')
+    })
     `,
+  }, {
+    update: true,
   })
-  expect(results[0].children.size).toEqual(4)
-  const failedTest = results[0].children.at(2) as TestCase
-  expect(failedTest.result()).toEqual({
-    state: 'failed',
-    errors: [
-      expect.objectContaining({
-        message: expect.stringContaining('expected 1 to be 2'),
-      }),
-    ],
-  })
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "base.test.js": {
+        "not awaited and failed": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+        "several not awaited": "passed",
+        "single not awaited": "passed",
+        "soft + toMatchFileSnapshot not awaited": "passed",
+        "toMatchFileSnapshot not awaited": "passed",
+      },
+    }
+  `)
   const warnings: string[] = []
   const lines = stderr.split('\n')
   lines.forEach((line, index) => {
@@ -95,32 +101,137 @@ it('prints a warning if the assertion is not awaited', async () => {
   })
   expect(warnings).toMatchInlineSnapshot(`
     [
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:5:33",
-      "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:10:32",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:9:33",
-      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:14:33",
-      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
+      "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
         at <rootDir>/base.test.js:19:17",
+      "Promise returned by \`expect.soft(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+        at <rootDir>/base.test.js:23:22",
     ]
+  `)
+})
+
+it('no async tracking after then/catch/finally', async () => {
+  // resolve + then/catch/finally
+  // rejects + then/catch/finally
+  // expect.poll + then/catch/finally
+  const { stderr, errorTree } = await runInlineTests({
+    'await.test.js': ts`
+      import { expect, test } from 'vitest';
+
+      test('resolves + then', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).then()
+      })
+
+      test('resolves + catch', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).catch()
+      })
+
+      test('resolves + finally', async () => {
+        await expect(Promise.resolve(1)).resolves.toBe(1).finally()
+      })
+
+      test('rejects + then', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).then()
+      })
+
+      test('rejects + catch', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).catch()
+      })
+
+      test('rejects + finally', async () => {
+        await expect(Promise.reject(1)).rejects.toBe(1).finally()
+      })
+
+      test('expect.poll + then', async () => {
+        await expect.poll(() => 2).toBe(2).then()
+      })
+
+      test('expect.poll + catch', async () => {
+        await expect.poll(() => 2).toBe(2).catch()
+      })
+
+      test('expect.poll + finally', async () => {
+        await expect.poll(() => 2).toBe(2).finally()
+      })
+    `,
+    'hang.test.js': ts`
+      import { expect, test } from 'vitest';
+
+      test('resolves + then', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).then()
+      })
+
+      test('resolves + catch', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).catch()
+      })
+
+      test('resolves + finally', async () => {
+        expect(Promise.resolve(1)).resolves.toBe(1).finally()
+      })
+
+      test('rejects + then', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).then()
+      })
+
+      test('rejects + catch', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).catch()
+      })
+
+      test('rejects + finally', async () => {
+        expect(Promise.reject(1)).rejects.toBe(1).finally()
+      })
+
+      test('expect.poll + then', async () => {
+        expect.poll(() => 2).toBe(2).then()
+      })
+
+      test('expect.poll + catch', async () => {
+        expect.poll(() => 2).toBe(2).catch()
+      })
+
+      test('expect.poll + finally', async () => {
+        expect.poll(() => 2).toBe(2).finally()
+      })
+    `,
+  })
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "await.test.js": {
+        "expect.poll + catch": "passed",
+        "expect.poll + finally": "passed",
+        "expect.poll + then": "passed",
+        "rejects + catch": "passed",
+        "rejects + finally": "passed",
+        "rejects + then": "passed",
+        "resolves + catch": "passed",
+        "resolves + finally": "passed",
+        "resolves + then": "passed",
+      },
+      "hang.test.js": {
+        "expect.poll + catch": "passed",
+        "expect.poll + finally": "passed",
+        "expect.poll + then": "passed",
+        "rejects + catch": "passed",
+        "rejects + finally": "passed",
+        "rejects + then": "passed",
+        "resolves + catch": "passed",
+        "resolves + finally": "passed",
+        "resolves + then": "passed",
+      },
+    }
   `)
 })
 
 it('prints a warning if the assertion is not awaited in the browser mode', async () => {
   const { stderr } = await runInlineTests({
-    './vitest.config.js': {
-      test: {
-        browser: {
-          enabled: true,
-          instances: [{ browser: 'chromium' }],
-          provider: 'playwright',
-          headless: true,
-        },
-      },
-    },
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -128,7 +239,56 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       expect(Promise.resolve(1)).resolves.toBe(1)
     })
     `,
+  }, {
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      headless: true,
+    },
   })
   expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
   expect(stderr).toContain('base.test.js:5:33')
+})
+
+it('reports test file if it failed to load', async () => {
+  const hooks: string[] = []
+  await runInlineTests({
+    'basic.test.js': `throw new Error('fail')`,
+  }, {
+    reporters: [
+      'default',
+      {
+        onTestModuleQueued(testModule) {
+          hooks.push(`onTestModuleQueued:${testModule.relativeModuleId}`)
+        },
+        onTestModuleStart(testModule) {
+          hooks.push(`onTestModuleStart:${testModule.relativeModuleId}`)
+        },
+        onTestModuleCollected(testModule) {
+          hooks.push(`onTestModuleCollected:${testModule.relativeModuleId}`)
+        },
+        onTestModuleEnd(testModule) {
+          hooks.push(`onTestModuleEnd:${testModule.relativeModuleId}`)
+        },
+      },
+    ],
+  })
+
+  expect(hooks).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued:basic.test.js",
+      "onTestModuleCollected:basic.test.js",
+      "onTestModuleStart:basic.test.js",
+      "onTestModuleEnd:basic.test.js",
+    ]
+  `)
+})
+
+it('should warn if retry.condition is a function in config', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/retry-config',
+  })
+
+  expect(stderr).toContain('Warning: retry.condition function cannot be used inside a config file.')
 })

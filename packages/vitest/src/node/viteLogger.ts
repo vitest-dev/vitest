@@ -1,5 +1,4 @@
-import type { RollupError } from 'rollup'
-import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType } from 'vite'
+import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType, Rollup } from 'vite'
 import type { Logger as VitestLogger } from './logger'
 import colors from 'tinyrainbow'
 
@@ -41,7 +40,7 @@ export function createViteLogger(
   level: LogLevel = 'info',
   options: LoggerOptions = {},
 ): Logger {
-  const loggedErrors = new WeakSet<Error | RollupError>()
+  const loggedErrors = new WeakSet<Error | Rollup.RollupError>()
   const { prefix = '[vite]', allowClearScreen = true } = options
   const thresh = LogLevels[level]
   const canClearScreen

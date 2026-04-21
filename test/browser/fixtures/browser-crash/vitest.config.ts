@@ -4,16 +4,29 @@ import { instances, provider } from '../../settings'
 import { BrowserCommand } from 'vitest/node'
 
 const forceCrash: BrowserCommand<[]> = async (context) => {
-  const browser = context.context.browser().browserType().name()
-  if (browser === 'chromium') {
-    await context.page.goto('chrome://crash')
-  }
+  if (context.provider.name === 'playwright') {
+    const browser = context.context.browser().browserType().name()
+    if (browser === 'chromium') {
+      await context.page.goto('chrome://crash')
+    }
 
-  if (browser === 'firefox') {
-    await context.page.goto('about:crashcontent')
-  }
+    if (browser === 'firefox') {
+      await context.page.goto('about:crashcontent')
+    }
 
-  throw new Error(`Browser crash not supported for ${browser}`)
+    throw new Error(`Browser crash not supported for ${browser}`)
+  }
+  if (context.provider.name === 'webdriverio') {
+    const browser = context.browser
+    const name = context.project.config.browser.name
+    if (name === 'chrome') {
+      await browser.url('chrome://crash')
+    }
+    if (name === 'firefox') {
+      await browser.url('about:crashcontent')
+    }
+    throw new Error(`Browser crash not supported for ${name}`)
+  }
 }
 
 export default defineConfig({
@@ -23,7 +36,7 @@ export default defineConfig({
       commands: { forceCrash },
       enabled: true,
       provider,
-      instances: instances.map(instance => ({
+      instances: instances.filter(i => i.browser !== 'webkit').map(instance => ({
         ...instance,
         context: {
           actionTimeout: 500,

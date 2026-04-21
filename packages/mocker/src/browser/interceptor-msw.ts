@@ -3,7 +3,7 @@ import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { ManualMockedModule, MockedModule } from '../registry'
 import type { ModuleMockerInterceptor } from './interceptor'
 import { MockerRegistry } from '../registry'
-import { cleanUrl } from '../utils'
+import { cleanUrl, createManualModuleSource } from '../utils'
 
 export interface ModuleMockerMSWInterceptorOptions {
   /**
@@ -55,22 +55,13 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     this.mocks.delete(url)
   }
 
-  invalidate(): void {
+  async invalidate(): Promise<void> {
     this.mocks.clear()
   }
 
   private async resolveManualMock(mock: ManualMockedModule) {
     const exports = Object.keys(await mock.resolve())
-    const module = `const module = globalThis[${this.options.globalThisAccessor!}].getFactoryModule("${mock.url}");`
-    const keys = exports
-      .map((name) => {
-        if (name === 'default') {
-          return `export default module["default"];`
-        }
-        return `export const ${name} = module["${name}"];`
-      })
-      .join('\n')
-    const text = `${module}\n${keys}`
+    const text = createManualModuleSource(mock.url, exports, this.options.globalThisAccessor)
     return new Response(text, {
       headers: {
         'Content-Type': 'application/javascript',

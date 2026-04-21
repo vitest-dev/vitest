@@ -2,13 +2,7 @@ import { promises as fs } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-const [major] = process.version.slice(1).split('.').map(num => Number(num))
-
 test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
-  if (major >= 22 && pool === 'vmThreads') {
-    return
-  }
-
   const { stdout, stderr } = await runVitest({
     root: 'fixtures/setup-files',
     include: ['empty.test.ts'],
@@ -46,4 +40,46 @@ describe('setup files with forceRerunTrigger', () => {
     const { stdout } = await run()
     expect(stdout).toContain('1 passed')
   })
+})
+
+it('setup files resolution in nested folder', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+})
+
+it('setup files resolution in nested folder without extension', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested-no-ext',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
+})
+
+it('setup files resolution in nested folder with bare name', async () => {
+  const result = await runVitest({
+    root: 'fixtures/setup-files-resolve/nested-bare',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
+    }
+  `)
 })

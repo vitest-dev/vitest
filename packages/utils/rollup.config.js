@@ -3,8 +3,8 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -15,7 +15,14 @@ const entries = {
   'diff': 'src/diff/index.ts',
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
+  'source-map/node': 'src/source-map/node.ts',
   'types': 'src/types.ts',
+  'constants': 'src/constants.ts',
+  'offset': 'src/offset.ts',
+  'timers': 'src/timers.ts',
+  'display': 'src/display.ts',
+  'resolver': 'src/resolver.ts',
+  'serialize': 'src/serialize.ts',
 }
 
 const external = [
@@ -24,13 +31,16 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
 ]
 
+const dtsUtils = createDtsUtils()
+
 const plugins = [
+  ...dtsUtils.isolatedDecl(),
   resolve({
     preferBuiltins: true,
   }),
   json(),
-  esbuild({
-    target: 'node14',
+  oxc({
+    transform: { target: 'node20' },
   }),
   commonjs(),
 ]
@@ -38,6 +48,14 @@ const plugins = [
 export default defineConfig([
   {
     input: entries,
+    treeshake: {
+      moduleSideEffects: [
+        {
+          external: true,
+          sideEffects: false,
+        },
+      ],
+    },
     output: {
       dir: 'dist',
       format: 'esm',
@@ -49,14 +67,15 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: entries,
+    input: dtsUtils.dtsInput(entries),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
+    watch: false,
     external,
-    plugins: [dts({ respectExternal: true })],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

@@ -3,7 +3,7 @@ import type { BenchmarkResult } from '../../../runtime/types/benchmark'
 import type { FormattedBenchmarkResult } from './json-formatter'
 import { stripVTControlCharacters } from 'node:util'
 import { getTests } from '@vitest/runner/utils'
-import { notNullish } from '@vitest/utils'
+import { notNullish } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { F_RIGHT } from '../renderers/figures'
 import { getStateSymbol, truncateString } from '../renderers/utils'
@@ -93,7 +93,7 @@ export function renderTable(
 ): string {
   const output: string[] = []
 
-  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult } > = {}
+  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
 
   for (const task of options.tasks) {
     if (task.meta.benchmark && task.result?.benchmark) {
@@ -137,8 +137,10 @@ export function renderTable(
       suffix += c.dim(c.gray(' [skipped]'))
     }
 
-    if (duration != null && duration > options.slowTestThreshold) {
-      suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
+    if (duration != null) {
+      const color = duration > options.slowTestThreshold ? c.yellow : c.green
+
+      suffix += color(` ${Math.round(duration)}${c.dim('ms')}`)
     }
 
     if (options.showHeap && task.result?.heap != null) {

@@ -74,7 +74,7 @@ describe('fixture initialization', () => {
       expectTypeOf(b).toEqualTypeOf<string>()
 
       expect(fnA).toBeCalledTimes(1)
-      expect(fnB).toBeCalledTimes(1)
+      expect(fnB).toBeCalledTimes(0)
       expect(fnB2).toBeCalledTimes(1)
 
       expect(fnC).not.toBeCalled()
@@ -95,7 +95,7 @@ describe('fixture initialization', () => {
       expect(b).toBe('2')
 
       expect(fnA).toBeCalledTimes(1)
-      expect(fnB).toBeCalledTimes(1)
+      expect(fnB).toBeCalledTimes(0)
       expect(fnB2).toBeCalledTimes(1)
 
       expect(fnC).not.toBeCalled()
@@ -106,7 +106,7 @@ describe('fixture initialization', () => {
       expect(c).toBe(3)
 
       expect(fnA).toBeCalledTimes(1)
-      expect(fnB).toBeCalledTimes(1)
+      expect(fnB).toBeCalledTimes(0)
       expect(fnB2).toBeCalledTimes(1)
       expect(fnC).toBeCalledTimes(1)
 
@@ -117,7 +117,7 @@ describe('fixture initialization', () => {
       expect(d).toBe(6)
 
       expect(fnA).toBeCalledTimes(1)
-      expect(fnB).toBeCalledTimes(1)
+      expect(fnB).toBeCalledTimes(0)
       expect(fnB2).toBeCalledTimes(1)
       expect(fnC).toBeCalledTimes(1)
       expect(fnD).toBeCalledTimes(1)
@@ -130,7 +130,7 @@ describe('fixture initialization', () => {
       expect(d).toBe(6)
 
       expect(fnA).toBeCalledTimes(1)
-      expect(fnB).toBeCalledTimes(1)
+      expect(fnB).toBeCalledTimes(0)
       expect(fnB2).toBeCalledTimes(1)
       expect(fnC).toBeCalledTimes(1)
       expect(fnD).toBeCalledTimes(1)
@@ -199,4 +199,20 @@ describe('fixture initialization', () => {
       expect(task).toBeTruthy()
     })
   })
+})
+
+const myTest3 = test.extend<{ value: string }>({
+  value: [async ({}, use) => { await use('first-value') }, { scope: 'file' }],
+})
+
+const myTest4 = test.extend<{ value: string }>({
+  value: [async ({}, use) => { await use('second-value') }, { scope: 'file' }],
+})
+
+myTest3('test1', ({ value }) => {
+  expect(value).toBe('first-value')
+})
+
+myTest4('test2', ({ value }) => {
+  expect(value).toBe('second-value')
 })

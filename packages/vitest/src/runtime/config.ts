@@ -1,21 +1,23 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { SnapshotUpdateState } from '@vitest/snapshot'
-import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
+import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { LabelColor } from '../types/general'
 
 /**
  * Config that tests have access to.
  */
 export interface SerializedConfig {
   name: string | undefined
+  color?: LabelColor
   globals: boolean
   base: string | undefined
   snapshotEnvironment?: string
   disableConsoleIntercept: boolean | undefined
   runner: string | undefined
   isolate: boolean
+  maxWorkers: number
   mode: 'test' | 'benchmark'
   bail: number | undefined
   environmentOptions?: Record<string, any>
@@ -50,36 +52,13 @@ export interface SerializedConfig {
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
-  poolOptions: {
-    forks: {
-      singleFork: boolean
-      isolate: boolean
-    }
-    threads: {
-      singleThread: boolean
-      isolate: boolean
-    }
-    vmThreads: {
-      singleThread: boolean
-    }
-    vmForks: {
-      singleFork: boolean
-    }
-  }
   deps: {
     web: {
       transformAssets?: boolean
       transformCss?: boolean
       transformGlobPattern?: RegExp | RegExp[]
     }
-    optimizer: {
-      web: {
-        enabled: boolean
-      }
-      ssr: {
-        enabled: boolean
-      }
-    }
+    optimizer: Record<string, { enabled: boolean }>
     interopDefault: boolean | undefined
     moduleDirectories: string[] | undefined
   }
@@ -99,8 +78,12 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
-  retry: number
+  retry: SerializableRetry
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
   inspectBrk: boolean | string | undefined
@@ -124,25 +107,61 @@ export interface SerializedConfig {
     }
     locators: {
       testIdAttribute: string
+      exact: boolean
     }
     screenshotFailures: boolean
+    providerOptions: {
+      // for playwright
+      actionTimeout?: number
+    }
+    trace: BrowserTraceViewMode
+    trackUnhandledErrors: boolean
+    detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
   logHeapUsage: boolean | undefined
+  detectAsyncLeaks: boolean
   coverage: SerializedCoverageConfig
-  benchmark?: {
+  benchmark: {
     includeSamples: boolean
+  } | undefined
+  serializedDefines: string
+  experimental: {
+    fsModuleCache: boolean
+    importDurations: {
+      print: boolean | 'on-warn'
+      limit: number
+      failOnDanger: boolean
+      thresholds: {
+        warn: number
+        danger: number
+      }
+    }
+    viteModuleRunner: boolean
+    nodeLoader: boolean
+    openTelemetry: {
+      enabled: boolean
+      sdkPath?: string
+      browserSdkPath?: string
+    } | undefined
   }
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
+  slowTestThreshold: number | undefined
+  isAgent: boolean
 }
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
   reportsDirectory: string
-  htmlReporter: {
-    subdir: string | undefined
-  } | undefined
+  htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
+}
+
+export interface SerializedRootConfig extends SerializedConfig {
+  projects: SerializedConfig[]
 }
 
 export type RuntimeConfig = Pick<
@@ -164,3 +183,4 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewMode = 'on' | 'off' | 'on-first-retry' | 'on-all-retries' | 'retain-on-failure'

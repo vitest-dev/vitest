@@ -1,5 +1,5 @@
-import { userEvent as _uE, server } from '@vitest/browser/context'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { userEvent as _uE, page, server } from 'vitest/browser'
 import '../src/button.css'
 
 beforeEach(() => {
@@ -23,12 +23,23 @@ describe('userEvent.click', () => {
     document.body.appendChild(button)
     const onClick = vi.fn()
     const dblClick = vi.fn()
+    // Make sure a contextmenu doesn't actually appear, as it may make some
+    // tests fail later.
+    const onContextmenu = vi.fn(e => e.preventDefault())
     button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', onClick)
+    button.addEventListener('contextmenu', onContextmenu)
 
     await userEvent.click(button)
 
     expect(onClick).toHaveBeenCalled()
     expect(dblClick).not.toHaveBeenCalled()
+    expect(onContextmenu).not.toHaveBeenCalled()
+
+    onClick.mockClear()
+    await userEvent.click(button, { button: 'right' })
+    expect(onClick).not.toHaveBeenCalled()
+    expect(onContextmenu).toHaveBeenCalled()
   })
 
   test('correctly doesn\'t click on a disabled button', async () => {
@@ -140,10 +151,23 @@ describe('userEvent.click', () => {
       },
     })
 
+    // not exact due to scaling and rounding
     expect(spy).toHaveBeenCalledWith({
-      x: 200,
-      y: 150,
+      x: expect.closeTo(200, -1),
+      y: expect.closeTo(150, -1),
     })
+  })
+
+  test('click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').click()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
   })
 })
 
@@ -180,6 +204,18 @@ describe('userEvent.dblClick', () => {
 
     expect(onClick).not.toHaveBeenCalled()
     expect(dblClick).not.toHaveBeenCalled()
+  })
+
+  test('double click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').dblClick()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
   })
 })
 
@@ -227,6 +263,18 @@ describe('userEvent.tripleClick', () => {
     expect(dblClick).not.toHaveBeenCalled()
     expect(tripleClick).not.toHaveBeenCalled()
   })
+
+  test('triple click throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').tripleClick()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
+  })
 })
 
 describe('userEvent.hover, userEvent.unhover', () => {
@@ -262,6 +310,18 @@ describe('userEvent.hover, userEvent.unhover', () => {
 
     expect(pointerEntered).toBe(false)
     expect(mouseEntered).toBe(false)
+  })
+
+  test('hover throws an error with multiple elements', async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').hover()).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
   })
 
   test.runIf(server.provider === 'playwright')('hover, unhover correctly pass options', async () => {
@@ -396,6 +456,30 @@ const inputLike = [
     return contentEditable
   },
 ]
+
+test('type throws an error with multiple elements', async () => {
+  const button1 = document.createElement('button')
+  const button2 = document.createElement('button')
+  document.body.append(button1, button2)
+
+  await expect(() => userEvent.type(page.getByRole('button'), 'Hello World')).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
+})
+
+test('fill throws an error with multiple elements', async () => {
+  const button1 = document.createElement('button')
+  const button2 = document.createElement('button')
+  document.body.append(button1, button2)
+
+  await expect(() => page.getByRole('button').fill('Hello World')).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
+})
 
 describe.each(inputLike)('userEvent.type', (getElement) => {
   test('types into an input', async () => {
@@ -614,7 +698,7 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     expect(value()).toBe('Another Value')
   })
 
-  test('fill input in shadow root', async () => {
+  test.skipIf(server.provider === 'preview')('fill input in shadow root', async () => {
     const input = getInput()
     const shadowRoot = createShadowRoot()
     shadowRoot.appendChild(input)
@@ -626,6 +710,11 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
     }
 
     await userEvent.fill(input, 'Hello')
+    if (input.tagName === 'DIV' && server.provider === 'playwright' && server.browser === 'webkit') {
+      // broken since playwright 1.59.0 https://github.com/microsoft/playwright/issues/39983
+      expect(value()).toBe('')
+      return
+    }
     expect(value()).toBe('Hello')
   })
 })
@@ -802,7 +891,19 @@ describe.each([
   //     return { select, options: [option1, option2] }
   //   },
   // ],
-])('selectOptions in "%s" works correctly', (_, createSelect) => {
+])('selectOptions in "%s" works correctly', (name, createSelect) => {
+  test(`${name} throws an error with multiple elements`, async () => {
+    const button1 = document.createElement('button')
+    const button2 = document.createElement('button')
+    document.body.append(button1, button2)
+
+    await expect(() => page.getByRole('button').selectOptions('Hello World')).rejects.toThrow(
+      `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+      + `    1) <button></button> aka getByRole('button').first()\n`
+      + `    2) <button></button> aka getByRole('button').nth(1)`,
+    )
+  })
+
   test('can select a single primitive value', async () => {
     const { select } = createSelect()
 
@@ -874,6 +975,7 @@ describe('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, file)
@@ -882,12 +984,14 @@ describe('uploading files', async () => {
     const uploadedFile = input.files[0]
     expect(uploadedFile.name).toBe('hello.png')
     expect(uploadedFile.type).toBe('image/png')
+    expect(await uploadedFile.text()).toBe('hello')
   })
 
   test.skipIf(server.provider === 'webdriverio')('can upload several instances of File', async () => {
     const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
     const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
@@ -907,9 +1011,10 @@ describe('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload a file by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
-    await userEvent.upload(input, '../src/button.css')
+    await userEvent.upload(input, './src/button.css')
     await expect.poll(() => input.files.length).toBe(1)
 
     const uploadedFile = input.files[0]
@@ -921,10 +1026,11 @@ describe('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload several files by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
-    await userEvent.upload(input, ['../src/button.css', '../package.json'])
+    await userEvent.upload(input, ['./src/button.css', './package.json'])
     await expect.poll(() => input.files.length).toBe(2)
 
     const uploadedFile1 = input.files[0]

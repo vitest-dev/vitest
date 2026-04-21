@@ -1,11 +1,11 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.0.6",
+  "version": "4.1.5",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/browser#readme",
+  "homepage": "https://vitest.dev/guide/browser/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,15 +14,17 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "browser",
+    "component"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./providers": {
-      "types": "./providers.d.ts",
-      "default": "./dist/providers.js"
     },
     "./context": {
       "types": "./context.d.ts",
@@ -35,23 +37,14 @@
       "types": "./matchers.d.ts",
       "default": "./dummy.js"
     },
-    "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts",
-      "default": "./dummy.js"
-    },
-    "./providers/playwright": {
-      "types": "./providers/playwright.d.ts",
-      "default": "./dummy.js"
-    },
-    "./locator": {
-      "types": "./dist/locators/index.d.ts",
-      "default": "./dist/locators/index.js"
+    "./locators": {
+      "types": "./dist/locators.d.ts",
+      "default": "./dist/locators.js"
     },
     "./utils": {
-      "types": "./utils.d.ts",
-      "default": "./dist/utils.js"
+      "default": "./dummy.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -60,60 +53,43 @@
     "*.d.ts",
     "context.js",
     "dist",
+    "dummy.js",
     "providers"
   ],
   "scripts": {
-    "build": "rimraf dist && pnpm build:node && pnpm build:client",
+    "typecheck": "tsc -p ./src/client/tsconfig.json --noEmit",
+    "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",
+    "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
-    "dev:client": "vite build src/client --watch",
+    "dev:client": "node --watch-preserve-output --watch-path src/client scripts/build-client.js",
     "dev:node": "rollup -c --watch --watch.include 'src/**'",
-    "dev": "rimraf dist && pnpm run --stream '/^dev:/'"
+    "dev": "premove dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
-    "playwright": "*",
-    "vitest": "workspace:*",
-    "webdriverio": "*"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    }
+    "vitest": "workspace:*"
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.6.1",
+    "@blazediff/core": "1.9.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.17",
-    "msw": "^2.7.0",
-    "sirv": "^3.0.1",
-    "tinyrainbow": "^2.0.0",
-    "ws": "^8.18.0"
+    "magic-string": "catalog:",
+    "pngjs": "^7.0.0",
+    "sirv": "catalog:",
+    "tinyrainbow": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
-    "@types/ws": "^8.5.14",
+    "@opentelemetry/api": "^1.9.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/pngjs": "^6.0.5",
+    "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
-    "@vitest/ui": "workspace:*",
-    "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.40.3",
-    "birpc": "0.2.19",
-    "flatted": "^3.3.2",
-    "ivya": "^1.1.1",
-    "mime": "^4.0.6",
-    "pathe": "^2.0.3",
-    "periscopic": "^4.0.2",
-    "playwright": "^1.50.1",
-    "playwright-core": "^1.50.1",
-    "safaridriver": "^1.0.0",
-    "vitest": "workspace:*",
-    "webdriverio": "^8.42.0"
+    "birpc": "catalog:",
+    "flatted": "catalog:",
+    "ivya": "^1.8.0",
+    "mime": "^4.1.0",
+    "pathe": "catalog:",
+    "vitest": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
-import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
 import type { defineConfig } from 'vitest/config'
+import type { CoverageInstrumenter, CoverageProviderModule, InstrumenterOptions, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
@@ -72,40 +72,6 @@ test('provider options, generic', () => {
   })
 })
 
-test('provider specific options, v8', () => {
-  assertType<Coverage>({
-    provider: 'v8',
-    // @ts-expect-error -- Istanbul-only option is not allowed
-    ignoreClassMethods: ['string'],
-  })
-})
-
-test('provider specific options, istanbul', () => {
-  assertType<Coverage>({
-    provider: 'istanbul',
-    ignoreClassMethods: ['string'],
-  })
-})
-
-test('provider specific options, custom', () => {
-  assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'custom-provider-module.ts',
-    enabled: true,
-  })
-
-  // @ts-expect-error --  customProviderModule is required
-  assertType<Coverage>({ provider: 'custom' })
-
-  assertType<Coverage>({
-    provider: 'custom',
-    customProviderModule: 'some-module',
-
-    // @ts-expect-error --  typings of BaseCoverageOptions still apply
-    enabled: 'not boolean',
-  })
-})
-
 test('provider module', () => {
   assertType<CoverageProviderModule>({
     getProvider() {
@@ -115,16 +81,26 @@ test('provider module', () => {
         generateCoverage() {},
         resolveOptions(): ResolvedCoverageOptions {
           return {
+            provider: 'v8',
             clean: true,
             cleanOnRerun: true,
             enabled: true,
             exclude: ['string'],
-            extension: ['string'],
             reporter: [['html', {}], ['json', { file: 'string' }]],
             reportsDirectory: 'string',
             reportOnFailure: true,
             allowExternal: true,
             processingConcurrency: 1,
+            excludeAfterRemap: false,
+            ignoreClassMethods: [],
+            skipFull: true,
+            watermarks: {
+              statements: [80, 95],
+              functions: [80, 95],
+              branches: [80, 95],
+              lines: [80, 95],
+            },
+
           }
         },
         clean(_?: boolean) {},
@@ -230,5 +206,41 @@ test('reporters, mixed variations', () => {
       ['html', { verbose: true, subdir: 'string' }],
       ['custom-reporter-4', { some: 'option', width: 123 }],
     ],
+  })
+})
+
+test('custom instrumenter', () => {
+  // Custom instrumenter factory function
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: _options => ({
+      instrumentSync: (code, _filename, _sourceMap?) => code,
+      lastSourceMap: () => ({}),
+      lastFileCoverage: () => ({}),
+    }),
+  })
+
+  // Without instrumenter (default behavior)
+  assertType<Coverage>({
+    provider: 'istanbul',
+  })
+
+  // Verify CoverageInstrumenter type can be used as return type
+  const factory: (opts: InstrumenterOptions) => CoverageInstrumenter = _opts => ({
+    instrumentSync: code => code,
+    lastSourceMap: () => null,
+    lastFileCoverage: () => ({}),
+  })
+
+  assertType<InstrumenterOptions>({
+    coverageVariable: '__VITEST_COVERAGE__',
+    coverageGlobalScope: 'globalThis',
+    coverageGlobalScopeFunc: false,
+    ignoreClassMethods: ['test-method'],
+  })
+
+  assertType<Coverage>({
+    provider: 'istanbul',
+    instrumenter: factory,
   })
 })

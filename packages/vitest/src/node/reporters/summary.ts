@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -21,6 +21,7 @@ interface Counter {
   failed: number
   skipped: number
   todo: number
+  expectedFail: number
 }
 
 interface SlowTask {
@@ -34,6 +35,7 @@ interface SlowTask {
 interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   filename: TestModule['task']['name']
   projectName: TestModule['project']['name']
+  projectColor: TestModule['project']['color']
   hook?: Omit<SlowTask, 'hook'>
   tests: Map<TestCase['id'], SlowTask>
   typecheck: boolean
@@ -207,13 +209,24 @@ export class SummaryReporter implements Reporter {
     const result = test.result()
 
     if (result?.state === 'passed') {
-      this.tests.passed++
+      // Check if this is an expected failure (test.fails && passed)
+      if (test.options.fails) {
+        this.tests.expectedFail++
+      }
+      else {
+        this.tests.passed++
+      }
     }
     else if (result?.state === 'failed') {
       this.tests.failed++
     }
     else if (!result?.state || result?.state === 'skipped') {
-      this.tests.skipped++
+      if (test.options.mode === 'todo') {
+        this.tests.todo++
+      }
+      else {
+        this.tests.skipped++
+      }
     }
 
     this.renderer.schedule()
@@ -248,7 +261,7 @@ export class SummaryReporter implements Reporter {
     }
     else {
       // Run is about to end as there are less tests left than whole run had parallel at max.
-      // Remove finished test immediatelly.
+      // Remove finished test immediately.
       this.removeTestModule(module.id)
     }
 
@@ -278,7 +291,7 @@ export class SummaryReporter implements Reporter {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
-        + formatProjectName(testFile.projectName)
+        + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
@@ -288,7 +301,7 @@ export class SummaryReporter implements Reporter {
 
       const slowTasks = [
         testFile.hook,
-        ...Array.from(testFile.tests.values()),
+        ...testFile.tests.values(),
       ].filter((t): t is SlowTask => t != null && t.visible)
 
       for (const [index, task] of slowTasks.entries()) {
@@ -348,7 +361,7 @@ export class SummaryReporter implements Reporter {
 }
 
 function emptyCounters(): Counter {
-  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, total: 0 }
+  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, expectedFail: 0, total: 0 }
 }
 
 function getStateString(entry: Counter) {
@@ -356,6 +369,7 @@ function getStateString(entry: Counter) {
     [
       entry.failed ? c.bold(c.red(`${entry.failed} failed`)) : null,
       c.bold(c.green(`${entry.passed} passed`)),
+      entry.expectedFail ? c.cyan(`${entry.expectedFail} expected fail`) : null,
       entry.skipped ? c.yellow(`${entry.skipped} skipped`) : null,
       entry.todo ? c.gray(`${entry.todo} todo`) : null,
     ]
@@ -382,6 +396,7 @@ function initializeStats(module: TestModule): RunningModule {
     completed: 0,
     filename: module.task.name,
     projectName: module.project.name,
+    projectColor: module.project.color,
     tests: new Map(),
     typecheck: !!module.task.meta.typecheck,
   }

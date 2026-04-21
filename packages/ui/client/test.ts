@@ -1,12 +1,12 @@
+import type { ComponentRenderOptions } from 'vitest-browser-vue'
+import { vTooltip } from 'floating-vue'
 import {
   render as _render,
-  cleanup,
-  type RenderOptions,
-} from '@testing-library/vue'
-import { vTooltip } from 'floating-vue'
-import { afterEach } from 'vitest'
+} from 'vitest-browser-vue'
 
-export function render<C>(component: C, options?: RenderOptions<C>) {
+export { page } from 'vitest/browser'
+
+export function render<C>(component: C, options?: ComponentRenderOptions<C, any>) {
   return _render(component, {
     ...options,
     global: {
@@ -16,9 +16,3 @@ export function render<C>(component: C, options?: RenderOptions<C>) {
     },
   })
 }
-
-afterEach(() => {
-  cleanup()
-})
-
-export { screen, within } from '@testing-library/vue'

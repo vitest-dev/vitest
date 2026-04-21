@@ -1,10 +1,11 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
-import type { SnapshotEnvironment } from 'vitest/snapshot'
-import { originalPositionFor, type ParsedStack, TraceMap } from 'vitest/utils'
+import type { ParsedStack } from 'vitest/internal/browser'
+import type { SnapshotEnvironment } from 'vitest/runtime'
+import { DecodedMap, getOriginalPosition } from 'vitest/internal/browser'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   private sourceMaps = new Map<string, any>()
-  private traceMaps = new Map<string, TraceMap>()
+  private traceMaps = new Map<string, DecodedMap>()
 
   public addSourceMap(filepath: string, map: any): void {
     this.sourceMaps.set(filepath, map)
@@ -45,12 +46,12 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
     }
     let traceMap = this.traceMaps.get(stack.file)
     if (!traceMap) {
-      traceMap = new TraceMap(map)
+      traceMap = new DecodedMap(map, stack.file)
       this.traceMaps.set(stack.file, traceMap)
     }
-    const { line, column } = originalPositionFor(traceMap, stack)
-    if (line != null && column != null) {
-      return { ...stack, line, column }
+    const position = getOriginalPosition(traceMap, stack)
+    if (position) {
+      return { ...stack, line: position.line, column: position.column }
     }
     return stack
   }

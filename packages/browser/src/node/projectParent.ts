@@ -1,5 +1,6 @@
+import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { HtmlTagDescriptor } from 'vite'
-import type { ErrorWithDiff, ParsedStack } from 'vitest'
+import type { ParsedStack, TestError } from 'vitest'
 import type {
   BrowserCommand,
   BrowserScript,
@@ -11,7 +12,8 @@ import type {
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
-import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
@@ -21,9 +23,9 @@ import { slash } from './utils'
 
 export class ParentBrowserProject {
   public orchestratorScripts: string | undefined
-  public testerScripts: HtmlTagDescriptor[] | undefined
 
   public faviconUrl: string
+  public prefixOrchestratorUrl: string
   public prefixTesterUrl: string
   public manifest: Promise<Vite.Manifest> | Vite.Manifest
 
@@ -33,13 +35,19 @@ export class ParentBrowserProject {
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
   public locatorsUrl: string | undefined
+  public matchersUrl: string
   public stateJs: Promise<string> | string
+
+  public initScripts: string[] = []
 
   public commands: Record<string, BrowserCommand<any>> = {}
   public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
 
   public config: ResolvedConfig
+
+  // cache for non-vite source maps
+  private sourceMapCache = new Map<string, any>()
 
   constructor(
     public project: TestProject,
@@ -50,17 +58,38 @@ export class ParentBrowserProject {
     this.stackTraceOptions = {
       frameFilter: project.config.onStackTrace,
       getSourceMap: (id) => {
+        if (this.sourceMapCache.has(id)) {
+          return this.sourceMapCache.get(id)
+        }
+
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
+        // handle non-inline source map such as pre-bundled deps in node_modules/.vite
+        if (result && !result.map) {
+          const filePath = id.split('?')[0]
+          const extracted = extractSourcemapFromFile(result.code, filePath)
+          this.sourceMapCache.set(id, extracted?.map)
+          return extracted?.map
+        }
+
+        this.sourceMapCache.set(id, result?.map)
         return result?.map
       },
-      getFileName: (id) => {
-        const mod = this.vite.moduleGraph.getModuleById(id)
-        if (mod?.file) {
-          return mod.file
+      getUrlId: (id) => {
+        const moduleGraph = this.vite.environments.client.moduleGraph
+        const mod = moduleGraph.getModuleById(id)
+        if (mod) {
+          return id
         }
-        const modUrl = this.vite.moduleGraph.urlToModuleMap.get(id)
-        if (modUrl?.file) {
-          return modUrl.file
+        const resolvedPath = resolve(this.vite.config.root, id.slice(1))
+        const modUrl = moduleGraph.getModuleById(resolvedPath)
+        if (modUrl) {
+          return resolvedPath
+        }
+        // some browsers (looking at you, safari) don't report queries in stack traces
+        // the next best thing is to try the first id that this file resolves to
+        const files = moduleGraph.getModulesByFile(resolvedPath)
+        if (files && files.size) {
+          return files.values().next().value!.id!
         }
         return id
       },
@@ -80,7 +109,8 @@ export class ParentBrowserProject {
       this.commands[command] = project.config.browser.commands[command]
     }
 
-    this.prefixTesterUrl = `${base}__vitest_test__/__test__/`
+    this.prefixTesterUrl = `${base || '/'}`
+    this.prefixOrchestratorUrl = `${base}__vitest_test__/`
     this.faviconUrl = `${base}__vitest__/favicon.svg`
 
     this.manifest = (async () => {
@@ -99,11 +129,7 @@ export class ParentBrowserProject {
     ).then(js => (this.injectorJs = js))
     this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
 
-    const builtinProviders = ['playwright', 'webdriverio', 'preview']
-    const providerName = project.config.browser.provider || 'preview'
-    if (builtinProviders.includes(providerName)) {
-      this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
-    }
+    this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
@@ -119,16 +145,16 @@ export class ParentBrowserProject {
       throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
     const clone = new ProjectBrowser(
+      this,
       project,
       '/',
     )
-    clone.parent = this
     this.children.add(clone)
     return clone
   }
 
   public parseErrorStacktrace(
-    e: ErrorWithDiff,
+    e: TestError,
     options: StackTraceParserOptions = {},
   ): ParsedStack[] {
     return parseErrorStacktrace(e, {
@@ -169,7 +195,7 @@ export class ParentBrowserProject {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
+    const session = await this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
       const promise = provider.getCDPSession!(sessionId).finally(() => {
         this.cdpSessionsPromises.delete(rpcId)
       })
@@ -177,7 +203,6 @@ export class ParentBrowserProject {
       return promise
     })()
 
-    const session = await promise
     const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
       throw new Error(`Tester RPC "${rpcId}" was not established.`)
@@ -206,9 +231,9 @@ export class ParentBrowserProject {
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
         const contentProcessed
-            = content && type === 'module'
-              ? (await server.pluginContainer.transform(content, transformId)).code
-              : content
+          = content && type === 'module'
+            ? (await server.pluginContainer.transform(content, transformId)).code
+            : content
         return {
           tag: 'script',
           attrs: {
