@@ -244,7 +244,7 @@ This method is called automatically by [`startVitest`](/guide/advanced/tests) if
 function standalone(): Promise<void>
 ```
 
-- **Alias**: `init` <Deprecated />
+- **Alias:** `init` <Deprecated />
 
 Initialize reporters and the coverage provider. This method doesn't run any tests. If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
 

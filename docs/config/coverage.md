@@ -65,7 +65,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.clean`, `--coverage.clean=false`
 
-Clean coverage results before running tests
+Clean coverage results before running tests.
 
 ## coverage.cleanOnRerun
 
