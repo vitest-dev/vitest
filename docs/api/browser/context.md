@@ -275,7 +275,11 @@ export const utils: {
    * @experimental
    */
   aria: {
-    // TODO
+    generateAriaTree(rootElement: Element): AriaNode
+    renderAriaTree(root: AriaNode): string
+    renderAriaTemplate(template: AriaTemplateNode): string
+    parseAriaTemplate(text: string): AriaTemplateNode
+    matchAriaTree(root: AriaNode, template: AriaTemplateNode): { pass: boolean; resolved: string }
   }
 }
 ```
