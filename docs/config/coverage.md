@@ -459,7 +459,7 @@ Note that setting this option does not change where coverage HTML report is gene
 
 Collect coverage only for files changed since a specified commit or branch. When set to `true`, it uses staged and unstaged changes.
 
-## coverage.autoAttachWorkers <Version type="experimental">4.1.5</Version> {#coverage-autoattachworkers}
+## coverage.autoAttachWorkers <Version>5.0.0</Version> {#coverage-autoattachworkers}
 
 - **Type:** `boolean`
 - **Default:** `false`
