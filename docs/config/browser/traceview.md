@@ -3,7 +3,7 @@ title: browser.traceView | Config
 outline: deep
 ---
 
-# browser.traceView
+# browser.traceView <Badge type="warning" text="Experimental" /> <Version>5.0.0</Version>
 
 - **Type:** `boolean | { enabled?: boolean; recordCanvas?: boolean; inlineImages?: boolean }`
 - **CLI:** `--browser.traceView`
@@ -40,8 +40,8 @@ export default defineConfig({
 | Option | Default | Description |
 | --- | --- | --- |
 | `enabled` | `false` | Enables Vitest trace-view artifact collection. |
-| `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, especially in the HTML reporter. |
-| `recordCanvas` | `false` | Captures readable canvas pixels in snapshots. This enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data. |
+| `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
+| `recordCanvas` | `false` | Captures canvas pixels in snapshots. |
 
 ## browser.traceView.enabled {#traceview-enabled}
 
@@ -57,7 +57,7 @@ Enables Vitest trace-view artifact collection.
 - **Default:** `false`
 - **CLI:** `--browser.traceView.inlineImages`
 
-Inlines loaded `<img>` pixels into snapshots for more portable replay, especially in the HTML reporter.
+Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter.
 
 ## browser.traceView.recordCanvas {#traceview-recordcanvas}
 
@@ -65,6 +65,6 @@ Inlines loaded `<img>` pixels into snapshots for more portable replay, especiall
 - **Default:** `false`
 - **CLI:** `--browser.traceView.recordCanvas`
 
-Captures readable canvas pixels in snapshots. This enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
+Captures canvas pixels in snapshots. This enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
 
 See [Trace View](/guide/browser/trace-view) for full documentation.

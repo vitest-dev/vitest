@@ -806,7 +806,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/trace-view',
                 docFooterText: 'Trace View | Browser Mode',
               },
-              // TODO: remove?
               {
                 text: 'Playwright Traces',
                 link: '/guide/browser/playwright-traces',

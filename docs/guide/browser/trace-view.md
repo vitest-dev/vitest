@@ -1,4 +1,4 @@
-# Trace View <Badge type="warning" text="Experimental" /> <Version>4.1.5</Version>
+# Trace View <Badge type="warning" text="Experimental" /> <Version>5.0.0</Version>
 
 `browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
