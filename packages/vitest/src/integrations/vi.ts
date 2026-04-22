@@ -16,6 +16,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
+import { when } from './mock/when'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
@@ -146,6 +147,8 @@ export interface VitestUtils {
    * ```
    */
   fn: typeof fn
+
+  when: typeof when
 
   /**
    * Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
@@ -610,6 +613,7 @@ function createVitest(): VitestUtils {
 
     spyOn,
     fn,
+    when,
     waitFor,
     waitUntil,
     defineHelper: (fn) => {
