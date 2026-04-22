@@ -4,14 +4,19 @@ import type {
   AriaNode,
   AriaTemplateNode,
 } from 'ivya/aria'
-import {
+import * as aria from 'ivya/aria'
+import { Snapshots } from 'vitest'
+import { __INTERNAL } from 'vitest/internal/browser'
+
+const {
   generateAriaTree,
   matchAriaTree,
   parseAriaTemplate,
   renderAriaTemplate,
   renderAriaTree,
-} from 'ivya/aria'
-import { Snapshots } from 'vitest'
+} = aria
+
+__INTERNAL._aria = aria
 
 const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',

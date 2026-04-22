@@ -934,6 +934,9 @@ export const utils: {
    * Creates "Cannot find element" error. Useful for custom locators.
    */
   getElementError(selector: string, container?: Element): Error
+
+  // TODO: bundle import("ivya/aria")
+  aria: unknown
 }
 
 export const locators: BrowserLocators

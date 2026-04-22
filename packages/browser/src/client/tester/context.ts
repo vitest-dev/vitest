@@ -556,4 +556,7 @@ export const utils = {
   debug,
   getElementLocatorSelectors,
   configurePrettyDOM,
+  get aria() {
+    return __INTERNAL._aria
+  },
 }
