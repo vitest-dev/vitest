@@ -6,7 +6,9 @@ import type {
 } from 'ivya/aria'
 import * as aria from 'ivya/aria'
 import { Snapshots } from 'vitest'
-import { __INTERNAL } from 'vitest/internal/browser'
+import { getBrowserState } from '../utils'
+
+getBrowserState().aria = aria
 
 const {
   generateAriaTree,
@@ -15,8 +17,6 @@ const {
   renderAriaTemplate,
   renderAriaTree,
 } = aria
-
-__INTERNAL._aria = aria
 
 const ariaSnapshotAdapter: DomainSnapshotAdapter<AriaNode, AriaTemplateNode> = {
   name: 'aria',

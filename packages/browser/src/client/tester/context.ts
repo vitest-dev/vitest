@@ -557,6 +557,6 @@ export const utils = {
   getElementLocatorSelectors,
   configurePrettyDOM,
   get aria() {
-    return __INTERNAL._aria
+    return getBrowserState().aria
   },
 }

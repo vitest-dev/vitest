@@ -55,7 +55,6 @@ export const __INTERNAL: {
   _asLocator: (lang: 'javascript', selector: string) => string
   _createLocator: (selector: string) => any
   _extendedMethods: Set<string>
-  _aria?: unknown
 } = {
   _extendedMethods: new Set(),
 } as any
