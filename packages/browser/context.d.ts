@@ -937,7 +937,12 @@ export const utils: {
   getElementError(selector: string, container?: Element): Error
 
   /**
-   * TODO
+   * Utilities for generating and working with ARIA trees and templates.
+   *
+   * This surface is currently based on Vitest's internal `ivya/aria`
+   * integration and is exposed primarily for advanced browser utilities
+   * and custom tooling.
+   *
    * @experimental
    */
   aria: typeof __vendorIvyaAriaTypes
