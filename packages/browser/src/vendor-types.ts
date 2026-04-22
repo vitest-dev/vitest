@@ -1,1 +1,1 @@
-export type * as __vendorIvyaAriaTypes from 'ivya/aria'
+export type * as __ivyaAriaTypes from 'ivya/aria'

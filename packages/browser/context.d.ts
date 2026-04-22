@@ -2,7 +2,7 @@ import { SerializedConfig } from 'vitest'
 import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
-import { __vendorIvyaAriaTypes } from '@vitest/browser/internal/vendor-types'
+import { __ivyaAriaTypes } from '@vitest/browser/internal/vendor-types'
 
 export type BufferEncoding =
   | 'ascii'
@@ -942,15 +942,15 @@ export const utils: {
    */
   aria: {
     /** Captures the ARIA tree for a DOM subtree. */
-    generateAriaTree: typeof __vendorIvyaAriaTypes.generateAriaTree
+    generateAriaTree: typeof __ivyaAriaTypes.generateAriaTree
     /** Renders a captured ARIA tree to the textual snapshot format. */
-    renderAriaTree: typeof __vendorIvyaAriaTypes.renderAriaTree
+    renderAriaTree: typeof __ivyaAriaTypes.renderAriaTree
     /** Renders an ARIA template back to text. */
-    renderAriaTemplate: typeof __vendorIvyaAriaTypes.renderAriaTemplate
+    renderAriaTemplate: typeof __ivyaAriaTypes.renderAriaTemplate
     /** Parses textual ARIA snapshot syntax into a template tree. */
-    parseAriaTemplate: typeof __vendorIvyaAriaTypes.parseAriaTemplate
+    parseAriaTemplate: typeof __ivyaAriaTypes.parseAriaTemplate
     /** Matches a captured ARIA tree against a parsed template. */
-    matchAriaTree: typeof __vendorIvyaAriaTypes.matchAriaTree
+    matchAriaTree: typeof __ivyaAriaTypes.matchAriaTree
   }
 }
 
