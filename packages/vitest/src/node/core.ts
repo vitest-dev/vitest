@@ -1670,7 +1670,6 @@ export class Vitest {
 
   /**
    * Create a report that's scoped to a specific reporter directory.
-   * @experimental
    */
   createReport(scope: string): Report {
     return createReport(this, scope)

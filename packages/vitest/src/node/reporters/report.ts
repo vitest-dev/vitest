@@ -3,7 +3,6 @@ import * as fsSync from 'node:fs'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-/** @experimental */
 export interface Report {
   /**
    * The root directory for this scope.

@@ -688,7 +688,7 @@ Returns module's diagnostic. If [`testModule`](/api/advanced/test-module) is not
 At the moment, the [browser](/guide/browser/) modules are not supported.
 :::
 
-## createReport <Version type="experimental">4.1.5</Version> {#createreport}
+## createReport <Version>5.0.0</Version> {#createreport}
 
 ```ts
 function createReport(scope: string): Report
