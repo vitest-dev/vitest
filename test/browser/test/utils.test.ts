@@ -11,7 +11,7 @@ beforeEach(() => {
   utils.configurePrettyDOM({})
 })
 
-it('utils package correctly uses loupe', async () => {
+it('utils package correctly uses inspect', async () => {
   expect(inspect({ test: 1 })).toBe('{ test: 1 }')
 })
 

@@ -78,6 +78,7 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  taskTitleValueFormatTruncate: number | undefined
   api: {
     allowExec: boolean | undefined
     allowWrite: boolean | undefined

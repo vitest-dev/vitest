@@ -963,6 +963,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  taskTitleValueFormatTruncate: null,
 }
 
 export const benchCliOptionsConfig: Pick<

@@ -96,7 +96,6 @@
     "@jridgewell/trace-mapping": "catalog:",
     "@types/convert-source-map": "^2.0.3",
     "@types/estree": "catalog:",
-    "diff-sequences": "^29.6.3",
-    "loupe": "^3.2.1"
+    "diff-sequences": "^29.6.3"
   }
 }
