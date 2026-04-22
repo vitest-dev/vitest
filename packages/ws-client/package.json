@@ -37,12 +37,19 @@
     "dev": "rollup -c --watch --watch.include 'src/**'",
     "typecheck": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "birpc": "catalog:",
-    "flatted": "catalog:",
-    "ws": "catalog:"
+    "birpc": "catalog:"
   },
   "devDependencies": {
-    "@vitest/runner": "workspace:*"
+    "@vitest/runner": "workspace:*",
+    "flatted": "catalog:"
   }
 }
