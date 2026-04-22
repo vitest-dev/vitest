@@ -274,7 +274,7 @@ function serializeEnvironmentModuleGraph(
 
     const importedIds: number[] = []
     for (const importedNode of mod.importedModules) {
-      if (importedNode.id) {
+      if (importedNode.id && importedNode.file) {
         importedIds.push(getIdIndex(importedNode.id))
       }
     }
@@ -320,7 +320,10 @@ function deserializeEnvironmentModuleGraph(
     const moduleNode = nodesById.get(moduleId)!
     importedIds.forEach((importedIdIndex) => {
       const importedId = serialized.idTable[importedIdIndex]
-      const importedNode = nodesById.get(importedId)!
+      const importedNode = nodesById.get(importedId)
+      if (!importedNode) {
+        return
+      }
       moduleNode.importedModules.add(importedNode)
       importedNode.importers.add(moduleNode)
     })
