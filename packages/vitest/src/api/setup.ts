@@ -98,7 +98,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           await ctx.rerunTask(id)
         },
         getConfig() {
-          return ctx.getRootProject().serializedConfig
+          return ctx.serializedRootConfig
         },
         getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
           return ctx.projects.map(p => ({ name: p.name, color: p.color }))

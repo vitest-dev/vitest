@@ -63,8 +63,10 @@ export async function takeScreenshot(
   const buffer = await element.saveScreenshot(
     platformNormalize(savePathWithExtension),
   )
+
   if (!options.save) {
     await rm(savePathWithExtension, { force: true })
   }
+
   return { buffer, path }
 }

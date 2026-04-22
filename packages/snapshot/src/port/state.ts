@@ -112,6 +112,10 @@ export default class SnapshotState {
     this._snapshotFormat = {
       printBasicPrototype: false,
       escapeString: false,
+      // more generous safety cap 128MB (same as Node's util.inspect)
+      // instead of tighter pretty-format default 1MB
+      // since users can purposely save large snapshot to a dedicated file.
+      maxOutputLength: 2 ** 27,
       ...options.snapshotFormat,
     }
     this._environment = options.snapshotEnvironment

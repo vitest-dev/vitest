@@ -170,3 +170,57 @@ test('add', () => {
     }
   `)
 })
+
+it('projects', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': /* ts */`
+import { test } from "vitest";
+test('basic', () => {});
+`,
+  }, {
+    reporters: ['default', 'html'],
+    projects: [
+      {
+        test: {
+          name: {
+            label: 'project1',
+            color: 'black',
+          },
+        },
+      },
+      {
+        test: {
+          name: {
+            label: 'project2',
+            color: 'white',
+          },
+        },
+      },
+    ],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "project1": {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      },
+      "project2": {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      },
+    }
+  `)
+  expect(result.ctx?.serializedRootConfig.projects).toMatchObject([
+    {
+      name: 'project1',
+      color: 'black',
+    },
+    {
+      name: 'project2',
+      color: 'white',
+    },
+  ])
+})

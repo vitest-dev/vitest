@@ -427,6 +427,97 @@ test('collects tests imported from another file', async () => {
   `)
 })
 
+test('collects tests imported from another file while a vi.mock line is present', async () => {
+  const testModule = await collectTests(`
+    import { describe } from 'vitest';
+    import { it } from './Utils/test-extend.ts';
+      
+    vi.mock('@/composables/test.js', async (importOriginal) => { });
+      
+    describe('should included', () => {
+      it('is included', () => {});
+    });
+
+    describe('top level describe', () => {
+      describe('nested describe', () => {
+        it('is included', ({ server }) => {});
+      });
+    });
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "should included": {
+        "is included": {
+          "errors": [],
+          "fullName": "should included > is included",
+          "id": "-1732721377_0_0",
+          "location": "8:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "top level describe": {
+        "nested describe": {
+          "is included": {
+            "errors": [],
+            "fullName": "top level describe > nested describe > is included",
+            "id": "-1732721377_1_0_0",
+            "location": "13:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
+test('collects tests imported from another file while a vi.mock line is present and commented', async () => {
+  const testModule = await collectTests(`
+    import { describe } from 'vitest';
+    import { it } from './Utils/test-extend.ts';
+      
+    // vi.mock('@/composables/test.js', async (importOriginal) => { });
+      
+    describe('should included', () => {
+      it('is included', () => {});
+    });
+
+    describe('top level describe', () => {
+      describe('nested describe', () => {
+        it('is included', ({ server }) => {});
+      });
+    });
+`)
+
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "should included": {
+        "is included": {
+          "errors": [],
+          "fullName": "should included > is included",
+          "id": "-1732721377_0_0",
+          "location": "8:6",
+          "mode": "run",
+          "state": "pending",
+        },
+      },
+      "top level describe": {
+        "nested describe": {
+          "is included": {
+            "errors": [],
+            "fullName": "top level describe > nested describe > is included",
+            "id": "-1732721377_1_0_0",
+            "location": "13:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+      },
+    }
+  `)
+})
+
 test('collects mixed test function names', async () => {
   const testModule = await collectTests(`
     import { it, test, testUnit, integrationTest } from 'vitest'

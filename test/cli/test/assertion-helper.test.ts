@@ -13,7 +13,7 @@ it('assertion helper', async () => {
      ❯ basic.test.ts:105:3
 
 
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > sync
     AssertionError: expected 'sync' to deeply equal 'x'
@@ -29,7 +29,7 @@ it('assertion helper', async () => {
          23| });
          24|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
 
      FAIL  basic.test.ts > async
     AssertionError: expected 'async' to deeply equal 'x'
@@ -45,7 +45,7 @@ it('assertion helper', async () => {
          27| });
          28|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
 
      FAIL  basic.test.ts > soft
     AssertionError: expected 'soft' to deeply equal 'x'
@@ -61,7 +61,7 @@ it('assertion helper', async () => {
          31| });
          32|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
 
      FAIL  basic.test.ts > soft async
     AssertionError: expected 'soft async' to deeply equal 'x'
@@ -77,7 +77,7 @@ it('assertion helper', async () => {
          35| });
          36|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
 
      FAIL  basic.test.ts > nested
     AssertionError: expected 'nested' to deeply equal 'x'
@@ -93,7 +93,7 @@ it('assertion helper', async () => {
          47| });
          48|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
 
      FAIL  basic.test.ts > multiple soft
     AssertionError: expected 'first' to deeply equal 'x'
@@ -109,7 +109,7 @@ it('assertion helper', async () => {
          78|   myEqualSoft("second", "y");
          79| });
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
 
      FAIL  basic.test.ts > multiple soft
     AssertionError: expected 'second' to deeply equal 'y'
@@ -125,7 +125,7 @@ it('assertion helper', async () => {
          79| });
          80|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
 
      FAIL  basic.test.ts > custom error
     Error: custom error from helper
@@ -137,7 +137,7 @@ it('assertion helper', async () => {
          88| });
          89|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
 
      FAIL  basic.test.ts > non-helper wrapper
     AssertionError: expected 'wrapper' to deeply equal 'x'
@@ -154,7 +154,45 @@ it('assertion helper', async () => {
          94|
      ❯ basic.test.ts:96:3
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+     FAIL  basic.test.ts > helper with context fail
+    AssertionError: expected 4321 to deeply equal 1234
+
+    - Expected
+    + Received
+
+    - 1234
+    + 4321
+
+     ❯ basic.test.ts:124:16
+        122|
+        123| test("helper with context fail", () => {
+        124|   helperObject.assertEqualProp(4321);
+           |                ^
+        125| });
+        126|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+     FAIL  basic.test.ts > async helper with context fail
+    AssertionError: expected 4321 to deeply equal 1234
+
+    - Expected
+    + Received
+
+    - 1234
+    + 4321
+
+     ❯ basic.test.ts:132:3
+        130|
+        131| test("async helper with context fail", async () => {
+        132|   await helperObject.assertEqualPropAsync(4321);
+           |   ^
+        133| });
+        134|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
 
     "
   `)
@@ -164,9 +202,17 @@ it('assertion helper', async () => {
         "async": [
           "expected 'async' to deeply equal 'x'",
         ],
+        "async helper with context fail": [
+          "expected 4321 to deeply equal 1234",
+        ],
+        "async helper with context pass": "passed",
         "custom error": [
           "custom error from helper",
         ],
+        "helper with context fail": [
+          "expected 4321 to deeply equal 1234",
+        ],
+        "helper with context pass": "passed",
         "helper with logs": "passed",
         "multiple soft": [
           "expected 'first' to deeply equal 'x'",

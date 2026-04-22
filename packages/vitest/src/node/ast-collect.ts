@@ -95,6 +95,9 @@ function astParseFile(filepath: string, code: string) {
       if (
         // direct call as `__vite_ssr_exports_0__.test()`
         callee.object?.name?.startsWith('__vite_ssr_')
+        // Vitest's module mocker uses `__vi_import_N__` for mocked/dynamic imports
+        // e.g. `__vi_import_0__.it()` when vi.mock is present in the file
+        || callee.object?.name?.startsWith('__vi_import_')
         // call as `__vite_ssr_exports_0__.Vitest.test`,
         // this is a special case for using Vitest namespaces popular in Effect
         || (callee.object?.object?.name?.startsWith('__vite_ssr_') && callee.object?.property?.name === 'Vitest')

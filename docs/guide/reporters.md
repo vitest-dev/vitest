@@ -99,7 +99,7 @@ This example will write separate JSON and XML reports as well as printing a verb
 By default (i.e. if no reporter is specified), Vitest will display summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
 
 ::: tip
-When Vitest detects it is running inside an AI coding agent, the [`agent`](#agent-reporter) reporter is used instead to reduce output and minimize token usage. You can override this by explicitly configuring the [`reporters`](/config/reporters) option.
+When Vitest detects it is running inside an AI coding agent, the [`minimal`](#minimal-reporter) reporter is used instead to reduce output and minimize token usage. You can override this by explicitly configuring the [`reporters`](/config/reporters) option.
 :::
 
 You can disable the summary by configuring the reporter:
@@ -655,21 +655,24 @@ export default defineConfig({
 })
 ```
 
-### Agent Reporter
+### Minimal Reporter
 
-Outputs a minimal report optimized for AI coding assistants and LLM-based workflows. Only failed tests and their error messages are displayed. Console logs from passing tests and the summary section are suppressed to reduce token usage.
+- **Alias:** `agent`
 
-This reporter is automatically enabled when no `reporters` option is configured and Vitest detects it is running inside an AI coding agent. If you configure custom reporters, you can explicitly add `agent`:
+Outputs a minimal report containing only failed tests and their error messages. Console logs from passing tests and the summary section are also suppressed.
+
+::: tip Agent Reporter
+This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is automatically enabled when no `reporters` option is configured and Vitest detects it is running inside an AI coding agent. If you configure custom reporters, you can explicitly add `minimal` or `agent`:
 
 :::code-group
 ```bash [CLI]
-npx vitest --reporter=agent
+npx vitest --reporter=minimal
 ```
 
 ```ts [vitest.config.ts]
 export default defineConfig({
   test: {
-    reporters: ['agent']
+    reporters: ['minimal']
   },
 })
 ```

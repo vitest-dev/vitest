@@ -40,6 +40,7 @@ export type {
   RuntimeConfig,
   SerializedConfig,
   SerializedCoverageConfig,
+  SerializedRootConfig,
 } from '../runtime/config'
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
