@@ -936,6 +936,7 @@ export const utils: {
    */
   getElementError(selector: string, container?: Element): Error
 
+  // TODO: add jsdoc in ivya side exports
   /**
    * Utilities for generating and working with ARIA trees and templates.
    *
