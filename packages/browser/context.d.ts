@@ -940,7 +940,18 @@ export const utils: {
    * Utilities for generating and working with ARIA trees and templates.
    * @experimental
    */
-  aria: typeof __vendorIvyaAriaTypes
+  aria: {
+    /** Captures the ARIA tree for a DOM subtree. */
+    generateAriaTree: typeof __vendorIvyaAriaTypes.generateAriaTree
+    /** Renders a captured ARIA tree to the textual snapshot format. */
+    renderAriaTree: typeof __vendorIvyaAriaTypes.renderAriaTree
+    /** Renders an ARIA template back to text. */
+    renderAriaTemplate: typeof __vendorIvyaAriaTypes.renderAriaTemplate
+    /** Parses textual ARIA snapshot syntax into a template tree. */
+    parseAriaTemplate: typeof __vendorIvyaAriaTypes.parseAriaTemplate
+    /** Matches a captured ARIA tree against a parsed template. */
+    matchAriaTree: typeof __vendorIvyaAriaTypes.matchAriaTree
+  }
 }
 
 export const locators: BrowserLocators
