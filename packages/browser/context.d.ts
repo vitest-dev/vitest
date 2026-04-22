@@ -2,6 +2,7 @@ import { SerializedConfig } from 'vitest'
 import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
+import { __vendorIvyaAriaTypes } from '@vitest/browser/internal/vendor-types'
 
 export type BufferEncoding =
   | 'ascii'
@@ -935,8 +936,11 @@ export const utils: {
    */
   getElementError(selector: string, container?: Element): Error
 
-  // TODO: bundle import("ivya/aria")
-  aria: unknown
+  /**
+   * TODO
+   * @experimental
+   */
+  aria: typeof __vendorIvyaAriaTypes
 }
 
 export const locators: BrowserLocators
