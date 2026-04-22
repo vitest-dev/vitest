@@ -140,7 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: `Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
+    description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -919,6 +919,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         description: 'Custom provider for detecting changed files. (default: `git`)',
         subcommands: null,
+      },
+      preParse: {
+        description: 'Parse test specifications before running them. This will apply `.only` flag and test name pattern across all files without running them. (default: `false`)',
       },
     },
   },

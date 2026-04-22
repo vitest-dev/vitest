@@ -74,6 +74,8 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /** @experimental */
+  filterMeta?: (key: string, value: unknown) => unknown
 }
 
 export class JsonReporter implements Reporter {
@@ -121,6 +123,7 @@ export class JsonReporter implements Reporter {
     const testResults: Array<JsonTestResult> = []
 
     const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
+    const { filterMeta } = this.options
 
     for (const file of files) {
       const tests = getTests([file])
@@ -161,7 +164,18 @@ export class JsonReporter implements Reporter {
           failureMessages:
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
-          meta: t.meta,
+          meta: filterMeta
+            ? (() => {
+                const filtered: Record<string, unknown> = {}
+                for (const key in t.meta) {
+                  const value = t.meta[key as keyof TaskMeta]
+                  if (filterMeta(key, value)) {
+                    filtered[key] = value
+                  }
+                }
+                return filtered
+              })()
+            : t.meta,
           tags: t.tags || [],
         } satisfies JsonAssertionResult
       })

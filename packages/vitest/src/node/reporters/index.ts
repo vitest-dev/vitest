@@ -6,7 +6,6 @@ import type { GithubActionsReporterOptions } from './github-actions'
 import type { HTMLOptions } from './html'
 import type { JsonOptions } from './json'
 import type { JUnitOptions } from './junit'
-import { AgentReporter } from './agent'
 import { BlobReporter } from './blob'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
@@ -14,6 +13,7 @@ import { GithubActionsReporter } from './github-actions'
 import { HangingProcessReporter } from './hanging-process'
 import { JsonReporter } from './json'
 import { JUnitReporter } from './junit'
+import { AgentReporter } from './minimal'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
 import { TreeReporter } from './tree'
@@ -27,6 +27,7 @@ export {
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  AgentReporter as MinimalReporter,
   TapFlatReporter,
   TapReporter,
   TreeReporter,
@@ -49,6 +50,7 @@ export type {
 export const ReportersMap = {
   'default': DefaultReporter as typeof DefaultReporter,
   'agent': AgentReporter as typeof AgentReporter,
+  'minimal': AgentReporter as typeof AgentReporter,
   'blob': BlobReporter as typeof BlobReporter,
   'verbose': VerboseReporter as typeof VerboseReporter,
   'dot': DotReporter as typeof DotReporter,
@@ -65,6 +67,7 @@ export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
+  'minimal': DefaultReporterOptions
   'agent': DefaultReporterOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions

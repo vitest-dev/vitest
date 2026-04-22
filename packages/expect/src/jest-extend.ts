@@ -53,7 +53,7 @@ function getMatcherState(
     suppressedErrors: [],
     soft: util.flag(assertion, 'soft') as boolean | undefined,
     poll: util.flag(assertion, 'poll') as boolean | undefined,
-    __vitest_assertion__: assertion as any,
+    assertion: assertion as any,
   }
   Object.assign(matcherState, { task })
 
@@ -106,9 +106,7 @@ function JestExtendPlugin(
             const thenable = result as PromiseLike<SyncExpectationResult>
             return thenable.then(({ pass, message, actual, expected, meta }) => {
               if ((pass && isNot) || (!pass && !isNot)) {
-                const errorMessage = customMessage != null
-                  ? customMessage
-                  : message()
+                const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
                 throw new JestExtendError(
                   errorMessage,
                   actual,
@@ -122,9 +120,7 @@ function JestExtendPlugin(
           const { pass, message, actual, expected, meta } = result as SyncExpectationResult
 
           if ((pass && isNot) || (!pass && !isNot)) {
-            const errorMessage = customMessage != null
-              ? customMessage
-              : message()
+            const errorMessage = (customMessage ? `${customMessage}: ` : '') + message()
             throw new JestExtendError(
               errorMessage,
               actual,
@@ -145,6 +141,16 @@ function JestExtendPlugin(
           expectAssertionName,
           softWrapper,
         )
+
+        // `expect.poll()` inspects the installed Chai assertion method,
+        // so copy the internal marker from the original matcher function.
+        // this is only for domain snapshot matchers for now.
+        if ((expectAssertion as any).__vitest_poll_takeover__) {
+          const addedMethod = (c.Assertion.prototype as any)[expectAssertionName]
+          Object.defineProperty(addedMethod, '__vitest_poll_takeover__', {
+            value: true,
+          })
+        }
 
         class CustomMatcher extends AsymmetricMatcher<[unknown, ...unknown[]]> {
           constructor(inverse = false, ...sample: [unknown, ...unknown[]]) {

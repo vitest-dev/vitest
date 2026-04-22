@@ -14,6 +14,7 @@ import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
+import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -25,6 +26,7 @@ import {
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
+import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 
@@ -157,12 +159,10 @@ export function resolveConfig(
       && viteConfig.test!.environment !== 'happy-dom'
     ) {
       logger.console.warn(
-        c.yellow(
-          `${c.inverse(c.yellow(' Vitest '))} Your config.test.environment ("${
-            viteConfig.test.environment
-          }") conflicts with --dom flag ("happy-dom"), ignoring "${
-            viteConfig.test.environment
-          }"`,
+        withLabel(
+          'yellow',
+          'Vitest',
+          `Your config.test.environment ("${viteConfig.test.environment}") conflicts with --dom flag ("happy-dom"), ignoring "${viteConfig.test.environment}"`,
         ),
       )
     }
@@ -428,6 +428,17 @@ export function resolveConfig(
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
+  if (isAgent) {
+    // default to `skipFull` and add `text-summary` reporter when `text` reporter is used on agents
+    const text = resolved.coverage.reporter.find(([name]) => name === 'text')
+    const textSummary = resolved.coverage.reporter.find(([name]) => name === 'text-summary')
+    if (text) {
+      (text as any)[1] = { skipFull: true, ...text[1] as any }
+      if (!textSummary) {
+        resolved.coverage.reporter.push(['text-summary', {}])
+      }
+    }
+  }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
   }
@@ -502,6 +513,17 @@ export function resolveConfig(
   resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
     resolvePath(file, resolved.root),
   )
+
+  if (resolved.coverage.include) {
+    resolved.coverage.include = resolved.coverage.include.map((pattern) => {
+      if (isDynamicPattern(pattern)) {
+        return pattern
+      }
+
+      // Convert patterns like ["src", "packages/server"] to ["src/**", "packages/server/**"]
+      return pattern.endsWith('/') ? `${pattern}**` : `${pattern}/**`
+    })
+  }
 
   // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.

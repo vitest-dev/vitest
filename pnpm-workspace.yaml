@@ -1,4 +1,6 @@
 catalogMode: prefer
+
+cleanupUnusedCatalogs: true
 ignoreWorkspaceRootCheck: true
 shellEmulator: true
 trustPolicy: no-downgrade

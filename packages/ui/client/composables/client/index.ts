@@ -4,7 +4,7 @@ import type {
   RunnerTaskEventPack,
   RunnerTaskResultPack,
   RunnerTestFile,
-  SerializedConfig,
+  SerializedRootConfig,
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
@@ -67,7 +67,7 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<Partial<SerializedConfig>>({} as any)
+export const config = shallowRef<Partial<SerializedRootConfig>>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 export const availableProjects = shallowRef<string[]>([])
 
@@ -171,12 +171,15 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      let [files, _config, errors, projects] = await Promise.all([
+      let [files, _config, errors] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
-        client.rpc.getResolvedProjectLabels(),
       ])
+      const projects = _config.projects.map(project => ({
+        name: project.name || '',
+        color: project.color,
+      }))
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
         files = filenames.map(([{ name, root }, filepath]) => {

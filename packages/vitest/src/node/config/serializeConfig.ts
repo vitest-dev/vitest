@@ -1,5 +1,6 @@
+import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
-import type { ApiConfig, SerializedConfig } from '../types/config'
+import type { ApiConfig } from '../types/config'
 import { configDefaults } from '../../defaults'
 import { isAgent } from '../../utils/env'
 
@@ -47,6 +48,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
+    color: config.color,
     globals: config.globals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,

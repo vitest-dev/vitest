@@ -956,6 +956,12 @@ export interface InlineConfig {
      * implementation of the `VCSProvider` interface to use a different version control system.
      */
     vcsProvider?: VCSProvider | string
+
+    /**
+     * Parse test specifications before running them.
+     * This will apply `.only` flag and test name pattern across all files without running them.
+     */
+    preParse?: boolean
   }
 
   /**
