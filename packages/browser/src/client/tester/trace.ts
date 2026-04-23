@@ -40,26 +40,26 @@ interface TraceSnapshot {
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
-  pseudoClassIds: Record<PsudoClassName, number[]>
+  pseudoClassIds: Record<PseudoClassName, number[]>
 }
 
-// During rebuild, rrweb-snapshot transforms inlined styles to replay hover styles at the time of snapshot.
-// For example,
+// rrweb-snapshot rewrites pseudo-class selectors in serialized styles so replay can
+// reproduce snapshot-time states. For example:
 //   some-selector:hover { ... }
-// into
-//   some-selector:hover, some-selector.:hover { ... }
-// the second selector means that the element with `class=":hover"` will get the same styles as if it were hovered.
-// Adding `:hover` classes is done on Vitest level rebuild side integration in TraceView.vue.
-// rrweb-snapshot does this only for `:hover`, but we have local patches to do the same for other pseudo classes.
+// becomes:
+//   some-selector:hover, some-selector.\:hover { ... }
+// Vitest side integration then adds matching pseudo-state classes in the replay DOM.
+// rrweb-snapshot only handles `:hover` upstream, so we patch it locally for the
+// other user-action pseudo-classes as well.
 // https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Pseudo-classes#user_action_pseudo-classes
-const PSUDO_CLASS_NAMES = [
+const PSEUDO_CLASS_NAMES = [
   ':hover',
   ':active',
   ':focus',
   ':focus-visible',
   ':focus-within',
 ] as const
-type PsudoClassName = (typeof PSUDO_CLASS_NAMES)[number]
+type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
 export type BrowserTraceState = Record<string, BrowserTraceData>
 
@@ -138,7 +138,7 @@ function takeSnapshot(selector?: string): TraceSnapshot {
     },
     pseudoClassIds: {} as any,
   }
-  for (const className of PSUDO_CLASS_NAMES) {
+  for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
     const ids = Array.from(elements, el => mirror.getId(el)).filter(id => id !== -1)
     result.pseudoClassIds[className] = ids
