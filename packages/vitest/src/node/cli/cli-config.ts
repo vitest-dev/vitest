@@ -140,7 +140,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: `Specify reporters (default, agent, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
+    description: `Specify reporters (default, agent, minimal, blob, verbose, dot, json, tap, tap-flat, junit, tree, hanging-process, github-actions)`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,
@@ -411,6 +411,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: null, // don't support subcommands
         transform(value) {
           return { mode: value }
+        },
+      },
+      traceView: {
+        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+        argument: '',
+        transform: transformNestedBoolean,
+        subcommands: {
+          enabled: {
+            description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+          },
+          recordCanvas: {
+            description: 'Capture canvas pixels in trace-view snapshots (default: `false`)',
+          },
+          inlineImages: {
+            description: 'Inline loaded image pixels in trace-view snapshots (default: `false`)',
+          },
         },
       },
       orchestratorScripts: null,
@@ -965,6 +981,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   tags: null,
   benchmarkOnly: null,
   updateBaselines: null,
+  taskTitleValueFormatTruncate: null,
 }
 
 export const benchCliOptionsConfig: Pick<

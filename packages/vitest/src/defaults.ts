@@ -97,6 +97,7 @@ export const configDefaults: Readonly<{
     exclude: string[]
   }
   slowTestThreshold: number
+  taskTitleValueFormatTruncate: number
   disableConsoleIntercept: boolean
   detectAsyncLeaks: boolean
 }> = Object.freeze({
@@ -135,6 +136,7 @@ export const configDefaults: Readonly<{
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
+  taskTitleValueFormatTruncate: 40,
   disableConsoleIntercept: false,
   detectAsyncLeaks: false,
 })

@@ -53,6 +53,40 @@ export interface BrowserProvider {
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 export interface _BrowserNames {}
 
+export interface BrowserTraceViewOptions {
+  /**
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  enabled?: boolean
+
+  /**
+   * Capture canvas pixels in trace view snapshots.
+   *
+   * This uses rrweb's canvas snapshot support and can increase trace artifact size.
+   * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
+   *
+   * @default false
+   * @experimental
+   */
+  recordCanvas?: boolean
+
+  /**
+   * Inline loaded `<img>` element pixels in trace view snapshots.
+   *
+   * This uses rrweb's image inlining support. It improves offline replay for still images,
+   * but can increase trace artifact size and does not preserve original image resource bytes.
+   *
+   * @default false
+   * @experimental
+   */
+  inlineImages?: boolean
+}
+
 type UnsupportedProperties
   = | 'browser'
     | 'typecheck'
@@ -234,6 +268,17 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   *
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  traceView?: boolean | BrowserTraceViewOptions
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -408,6 +453,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     snapshots?: boolean
     sources?: boolean
   }
+  traceView: Required<BrowserTraceViewOptions>
 }
 
 type ToMatchScreenshotResolvePath = (data: {

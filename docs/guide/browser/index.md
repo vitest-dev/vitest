@@ -330,6 +330,8 @@ Since Vitest 3.2, if you don't have the `browser` option in your config but spec
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/browser/viewport).
 
+For an alternative debugging model that captures DOM snapshots for every test instead of showing a live iframe, see [Trace View](/guide/browser/trace-view).
+
 ## Headless
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.

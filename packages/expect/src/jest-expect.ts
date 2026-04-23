@@ -4,6 +4,7 @@ import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
+import { inspect } from '@vitest/utils/display'
 import { assertTypes, ordinal } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
@@ -483,7 +484,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           && (args.length === 1 || jestEquals(expected, value, customTesters))
 
       const valueString
-        = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
+        = args.length === 1 ? '' : ` with value ${inspect(expected, { truncate: 40 })}`
 
       return this.assert(
         pass,
@@ -748,8 +749,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         || typeof expected === 'undefined'
         || expected instanceof RegExp
       ) {
-        // Fixes the issue related to `chai` <https://github.com/vitest-dev/vitest/issues/6618>
-        return this.throws(expected === '' ? /^$/ : expected)
+        return this.throws(expected)
       }
 
       const obj = this._obj

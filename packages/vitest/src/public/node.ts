@@ -50,6 +50,7 @@ export {
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
+  MinimalReporter,
   ReportersMap,
   TapFlatReporter,
   TapReporter,
@@ -68,9 +69,9 @@ export type {
 } from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
-
 export type { JUnitOptions } from '../node/reporters/junit'
 
+export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
@@ -147,6 +148,7 @@ export type {
 } from '../node/types/config'
 export type {
   BaseCoverageOptions,
+  CoverageInstrumenter,
   CoverageIstanbulOptions,
   CoverageOptions,
   CoverageProvider,
@@ -154,6 +156,7 @@ export type {
   CoverageReporter,
   CoverageV8Options,
   CustomProviderOptions,
+  InstrumenterOptions,
   ReportContext,
   ResolvedCoverageOptions,
 } from '../node/types/coverage'

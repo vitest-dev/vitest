@@ -240,30 +240,124 @@ describe('default reporter', async () => {
 
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ fixtures/reporters/test-for-title.test.ts (24 tests) [...]ms
-         ✓ test.for object : 0 = 'a', 2 = { te: 'st' } [...]ms
-         ✓ test.for object : 0 = 'b', 2 = [ 'test' ] [...]ms
-         ✓ test.each object : 0 = 'a', 2 = { te: 'st' }  [...]ms
-         ✓ test.each object : 0 = 'b', 2 = [ 'test' ]  [...]ms
-         ✓ test.for array : 0 = 'a', 2 = { te: 'st' } [...]ms
-         ✓ test.for array : 0 = 'b', 2 = [ 'test' ] [...]ms
-         ✓ test.each array : 0 = 'a', 2 = { te: 'st' } [...]ms
-         ✓ test.each array : 0 = 'b', 2 = [ 'test' ] [...]ms
+         ✓ test.for object : 0 = a, 2 = { te: 'st' } [...]ms
+         ✓ test.for object : 0 = b, 2 = [ 'test' ] [...]ms
+         ✓ test.each object : 0 = a, 2 = { te: 'st' }  [...]ms
+         ✓ test.each object : 0 = b, 2 = [ 'test' ]  [...]ms
+         ✓ test.for array : 0 = a, 2 = { te: 'st' } [...]ms
+         ✓ test.for array : 0 = b, 2 = [ 'test' ] [...]ms
+         ✓ test.each array : 0 = a, 2 = { te: 'st' } [...]ms
+         ✓ test.each array : 0 = b, 2 = [ 'test' ] [...]ms
          ✓ object : add(1, 1) -> 2 [...]ms
          ✓ object : add(1, 2) -> 3 [...]ms
          ✓ object : add(2, 1) -> 3 [...]ms
          ✓ array : add(1, 1) -> 2 [...]ms
          ✓ array : add(1, 2) -> 3 [...]ms
          ✓ array : add(2, 1) -> 3 [...]ms
-         ✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined [...]ms
-         ✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k [...]ms
-         ✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1' [...]ms
-         ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms
+         ✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = v1, k2 = undefined [...]ms
+         ✓ first array element is not object: 0 = foo, 1 = bar, k = $k [...]ms
+         ✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = v1 [...]ms
+         ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = v2 [...]ms
          ✓ handles whole numbers: 343434 as $343,434.00 [...]ms
          ✓ { a: '$b', b: 'yay' } [...]ms
-         ✓ '%o' [...]ms
+         ✓ %o [...]ms
          ✓ { a: '%o' } [...]ms
-         ✓ '%o' { a: '%o' } [...]ms
-         ✓ { a: '%o' } '%o' [...]ms"
+         ✓ %o { a: '%o' } [...]ms
+         ✓ { a: '%o' } %o [...]ms"
+    `)
+  })
+
+  test('test.each/for title truncate', async () => {
+    // default (40)
+    let result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "$ (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "$ (array: 5) [ 'one', 'two', 'three', 'four', …(1) ]": "passed",
+          "$ (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "$ (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "$ (object: 5) { one: 1, two: 2, three: 3, …(2) }": "passed",
+          "$ (string: 30) 012345678901234567890123456789": "passed",
+          "$ (string: 40) 0123456789012345678901234567890123456789": "passed",
+          "$ (string: 50) 012345678901234567890123456789012345678…": "passed",
+          "% (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "% (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "% (array: 5) [ 'one', 'two', 'three', 'four', …(1) ]": "passed",
+          "% (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "% (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "% (object: 5) { one: 1, two: 2, three: 3, …(2) }": "passed",
+          "% (string: 30) '012345678901234567890123456789'": "passed",
+          "% (string: 40) '01234567890123456789012345678901234567…'": "passed",
+          "% (string: 50) '01234567890123456789012345678901234567…'": "passed",
+        },
+      }
+    `)
+
+    // 20
+    result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+      taskTitleValueFormatTruncate: 20,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ 'one', …(2) ]": "passed",
+          "$ (array: 4) [ 'one', …(3) ]": "passed",
+          "$ (array: 5) [ 'one', …(4) ]": "passed",
+          "$ (object: 3) { one: 1, …(2) }": "passed",
+          "$ (object: 4) { one: 1, …(3) }": "passed",
+          "$ (object: 5) { one: 1, …(4) }": "passed",
+          "$ (string: 30) 0123456789012345678…": "passed",
+          "$ (string: 40) 0123456789012345678…": "passed",
+          "$ (string: 50) 0123456789012345678…": "passed",
+          "% (array: 3) [ 'one', …(2) ]": "passed",
+          "% (array: 4) [ 'one', …(3) ]": "passed",
+          "% (array: 5) [ 'one', …(4) ]": "passed",
+          "% (object: 3) { one: 1, …(2) }": "passed",
+          "% (object: 4) { one: 1, …(3) }": "passed",
+          "% (object: 5) { one: 1, …(4) }": "passed",
+          "% (string: 30) '012345678901234567…'": "passed",
+          "% (string: 40) '012345678901234567…'": "passed",
+          "% (string: 50) '012345678901234567…'": "passed",
+        },
+      }
+    `)
+
+    // no truncate
+    result = await runVitest({
+      include: ['fixtures/reporters/test-for-title-truncate.test.ts'],
+      config: false,
+      taskTitleValueFormatTruncate: 0,
+    })
+    expect(result.errorTree()).toMatchInlineSnapshot(`
+      {
+        "fixtures/reporters/test-for-title-truncate.test.ts": {
+          "$ (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "$ (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "$ (array: 5) [ 'one', 'two', 'three', 'four', 'five' ]": "passed",
+          "$ (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "$ (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "$ (object: 5) { one: 1, two: 2, three: 3, four: 4, five: 5 }": "passed",
+          "$ (string: 30) 01234567890123456789012345678…": "passed",
+          "$ (string: 40) 012345678901234567890123456789012345678…": "passed",
+          "$ (string: 50) 0123456789012345678901234567890123456789012345678…": "passed",
+          "% (array: 3) [ 'one', 'two', 'three' ]": "passed",
+          "% (array: 4) [ 'one', 'two', 'three', 'four' ]": "passed",
+          "% (array: 5) [ 'one', 'two', 'three', 'four', 'five' ]": "passed",
+          "% (object: 3) { one: 1, two: 2, three: 3 }": "passed",
+          "% (object: 4) { one: 1, two: 2, three: 3, four: 4 }": "passed",
+          "% (object: 5) { one: 1, two: 2, three: 3, four: 4, five: 5 }": "passed",
+          "% (string: 30) '012345678901234567890123456789'": "passed",
+          "% (string: 40) '0123456789012345678901234567890123456789'": "passed",
+          "% (string: 50) '01234567890123456789012345678901234567890123456789'": "passed",
+        },
+      }
     `)
   })
 

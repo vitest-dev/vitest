@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "4.1.4",
+  "version": "5.0.0-beta.1",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -42,6 +42,10 @@
       "default": "./dist/locators.js"
     },
     "./utils": {
+      "default": "./dummy.js"
+    },
+    "./internal/vendor-types": {
+      "types": "./dist/vendor-types.d.ts",
       "default": "./dummy.js"
     },
     "./package.json": "./package.json"
@@ -90,6 +94,7 @@
     "ivya": "^1.8.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",
+    "rrweb-snapshot": "2.0.0-alpha.20",
     "vitest": "workspace:*"
   }
 }

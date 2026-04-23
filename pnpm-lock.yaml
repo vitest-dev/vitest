@@ -93,6 +93,9 @@ catalogs:
     istanbul-reports:
       specifier: ^3.2.0
       version: 3.2.0
+    loupe:
+      specifier: ^3.2.1
+      version: 3.2.1
     magic-string:
       specifier: ^0.30.21
       version: 0.30.21
@@ -192,6 +195,9 @@ patchedDependencies:
   istanbul-lib-source-maps:
     hash: be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e
     path: patches/istanbul-lib-source-maps.patch
+  rrweb-snapshot:
+    hash: d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044
+    path: patches/rrweb-snapshot.patch
 
 importers:
 
@@ -578,6 +584,9 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
+      rrweb-snapshot:
+        specifier: 2.0.0-alpha.20
+        version: 2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044)
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -920,6 +929,12 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
+      '@vitest/browser-preview':
+        specifier: workspace:*
+        version: link:../browser-preview
+      '@vitest/browser-webdriverio':
+        specifier: workspace:*
+        version: link:../browser-webdriverio
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -956,6 +971,9 @@ importers:
       rollup:
         specifier: ^4.59.0
         version: 4.59.0
+      rrweb-snapshot:
+        specifier: 2.0.0-alpha.20
+        version: 2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044)
       splitpanes:
         specifier: ^4.0.4
         version: 4.0.4(vue@3.5.29(typescript@5.9.3))
@@ -1011,9 +1029,6 @@ importers:
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
-      loupe:
-        specifier: ^3.2.1
-        version: 3.2.1
 
   packages/vitest:
     dependencies:
@@ -1521,6 +1536,9 @@ importers:
       immutable:
         specifier: 5.1.5
         version: 5.1.5
+      loupe:
+        specifier: 'catalog:'
+        version: 3.2.1
       memfs:
         specifier: ^4.56.11
         version: 4.56.11(tslib@2.8.1)
@@ -9251,6 +9269,9 @@ packages:
     resolution: {integrity: sha512-2oMpl67a3zCH9H79LeMcbDhXW/UmWG/y2zuqnF2jQq5uq9TbM9TVyXvA4+t+ne2IIkBdrLpAaRQAvo7YI/Yyeg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
+
+  rrweb-snapshot@2.0.0-alpha.20:
+    resolution: {integrity: sha512-YTNf9YVeaGRo/jxY3FKBge2c/Ojd/KTHmuWloUSB+oyPXuY73ZeeG873qMMmhIpqEn7hn7aBF1eWEQmP7wjf8A==}
 
   run-applescript@7.0.0:
     resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
@@ -18583,6 +18604,10 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.59.0
       '@rollup/rollup-win32-x64-msvc': 4.59.0
       fsevents: 2.3.3
+
+  rrweb-snapshot@2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044):
+    dependencies:
+      postcss: 8.5.6
 
   run-applescript@7.0.0: {}
 

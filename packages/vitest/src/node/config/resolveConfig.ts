@@ -13,6 +13,7 @@ import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
+import { isDynamicPattern } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { mergeConfig } from 'vite'
 import {
@@ -514,6 +515,17 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
+  if (resolved.coverage.include) {
+    resolved.coverage.include = resolved.coverage.include.map((pattern) => {
+      if (isDynamicPattern(pattern)) {
+        return pattern
+      }
+
+      // Convert patterns like ["src", "packages/server"] to ["src/**", "packages/server/**"]
+      return pattern.endsWith('/') ? `${pattern}**` : `${pattern}/**`
+    })
+  }
+
   // Add hard-coded default coverage exclusions. These cannot be overridden by user config.
   // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
@@ -860,6 +872,22 @@ export function resolveConfig(
   if (typeof resolved.browser.trace === 'string' || !resolved.browser.trace) {
     resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
   }
+
+  const traceView = resolved.browser.traceView
+  resolved.browser.traceView = typeof traceView === 'object'
+    ? {
+        enabled: traceView.enabled ?? false,
+        recordCanvas: traceView.recordCanvas ?? false,
+        inlineImages: traceView.inlineImages ?? false,
+      }
+    : {
+        enabled: traceView ?? false,
+        recordCanvas: false,
+        inlineImages: false,
+      }
+  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+    resolved.browser.detailsPanelPosition = 'bottom'
+  }
   if (resolved.browser.trace.tracesDir != null) {
     resolved.browser.trace.tracesDir = resolvePath(
       resolved.browser.trace.tracesDir,
@@ -877,6 +905,17 @@ export function resolveConfig(
 
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
+  }
+  else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
+    logger.console.warn(
+      c.yellow(
+        withLabel(
+          'yellow',
+          'Vitest',
+          '--browser.traceView is enabled without the HTML reporter.',
+        ),
+      ),
+    )
   }
 
   resolved.server ??= {}

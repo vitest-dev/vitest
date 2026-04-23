@@ -16,6 +16,7 @@ export type {
   BaselineData,
   BeforeAllListener,
   BeforeEachListener,
+  BrowserTraceArtifact,
   FailureScreenshotArtifact,
   File,
   Fixture,

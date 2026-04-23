@@ -104,3 +104,30 @@ const myHelperWithLogs = vi.defineHelper(() => {
 test("helper with logs", () => {
   myHelperWithLogs();
 });
+
+const helperObject = {
+  prop: 1234,
+  assertEqualProp: vi.defineHelper(function (this: any, actual: any) {
+    expect(actual).toEqual(this.prop);
+  }),
+  assertEqualPropAsync: vi.defineHelper(async function (this: any, actual: any) {
+    await new Promise((r) => setTimeout(r, 1));
+    expect(actual).toEqual(this.prop);
+  }),
+}
+
+test("helper with context pass", () => {
+  helperObject.assertEqualProp(1234);
+});
+
+test("helper with context fail", () => {
+  helperObject.assertEqualProp(4321);
+});
+
+test("async helper with context pass", async () => {
+  await helperObject.assertEqualPropAsync(1234);
+});
+
+test("async helper with context fail", async () => {
+  await helperObject.assertEqualPropAsync(4321);
+});
