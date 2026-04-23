@@ -240,13 +240,9 @@ export abstract class BaseReporter implements Reporter {
     const padding = this.getTestIndentation(test.task)
     const suffix = this.getTestCaseSuffix(test)
     const benchmarks = test.benchmarks()
-    const inlineBenchmarks: TestBenchmark[] = []
-    for (const benchmark of benchmarks) {
-      const inlineTasks = benchmark.tasks.filter(t => !t.perProject)
-      if (inlineTasks.length > 0) {
-        inlineBenchmarks.push({ name: benchmark.name, tasks: inlineTasks })
-      }
-    }
+    // perProject tasks still appear in the inline table — they're additionally
+    // aggregated in the cross-project section at the end of the run
+    const inlineBenchmarks: TestBenchmark[] = benchmarks.filter(b => b.tasks.length > 0)
 
     if (testResult.state === 'failed') {
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)

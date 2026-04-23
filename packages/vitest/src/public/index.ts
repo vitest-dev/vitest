@@ -35,6 +35,7 @@ export { Snapshots } from '../integrations/snapshot/chai'
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
 export type {
+  BaselinePerProjectRegistration,
   BaselineRegistration,
   Bench,
   BenchCompareOptions,

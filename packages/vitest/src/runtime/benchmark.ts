@@ -59,6 +59,8 @@ export interface PerProjectRegistration<Name extends string> extends BenchRegist
   [kPerProject]: true
 }
 
+export interface BaselinePerProjectRegistration<Name extends string> extends BaselineRegistration<Name>, PerProjectRegistration<Name> {}
+
 interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
@@ -70,10 +72,13 @@ interface BenchFactory<Registration> {
 }
 
 export interface Bench extends BenchFactory<BenchRegistration<string>> {
-  // TODO: support having both withBaseline and perProject
-  withBaseline: BenchFactory<BaselineRegistration<string>>
+  withBaseline: BenchFactory<BaselineRegistration<string>> & {
+    perProject: BenchFactory<BaselinePerProjectRegistration<string>>
+  }
+  perProject: BenchFactory<PerProjectRegistration<string>> & {
+    withBaseline: BenchFactory<BaselinePerProjectRegistration<string>>
+  }
   compare: BenchCompare
-  perProject: BenchFactory<PerProjectRegistration<string>>
 }
 
 export function createBench(test: Test, config: SerializedConfig): Bench {
@@ -136,9 +141,12 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
         ...taskMeta?.get(t.name),
       }
     })
-    // inject stored baselines that were not run (no `baseline` flag — already saved)
+    // inject stored baselines that were not run. `baseline: true` is
+    // intentionally omitted on the task so the reporter does not re-save
+    // the result — but any other meta (e.g. `perProject`) is preserved
     if (storedBaselines) {
       for (const [name, data] of storedBaselines) {
+        const meta = taskMeta?.get(name)
         tasks.push({
           name,
           latency: data.latency,
@@ -146,6 +154,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
           period: data.period,
           totalTime: data.totalTime,
           rank: 0,
+          ...(meta?.perProject ? { perProject: true as const } : {}),
         })
       }
     }
@@ -178,73 +187,78 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     return task.result as BenchResult
   }
 
-  const bench: Bench = function bench(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
-    validateBenchmarkProject(config)
-    const { fn, fnOpts } = normalizeBenchArgs(a, b)
-    return {
-      [kRegistration]: true,
-      name,
-      fn,
-      fnOpts,
-      run: options => runSingle(name, fn, fnOpts, options),
+  const runWithBaseline = async (name: string, fn: Fn, fnOpts: FnOptions | undefined, options: BenchCompareOptions | undefined, meta: TaskMeta): Promise<BenchResult> => {
+    const key = baselineKey(name)
+    const existing = await rpc().readBenchmarkBaseline(test.file.filepath, key)
+    // if a stored baseline exists and we're not updating, use it
+    if (existing && !config.benchmark.updateBaselines) {
+      const benchmark: TestBenchmark = {
+        name: options?.name || test.fullTestName,
+        tasks: [{
+          name,
+          latency: existing.latency,
+          throughput: existing.throughput,
+          period: existing.period,
+          totalTime: existing.totalTime,
+          rank: 1,
+          // propagate non-baseline meta only — `baseline: true` on the task
+          // would trigger an unnecessary save-baseline round-trip
+          ...(meta.perProject ? { perProject: true as const } : {}),
+        }],
+      }
+      test.benchmarks.push(benchmark)
+      await rpc().onTestBenchmark(test.id, benchmark)
+      return existing as unknown as BenchResult
     }
-  } as Bench
+    // no stored baseline or updating — run the benchmark and save
+    const tinybench = createTinybench(options).add(name, fn, fnOpts)
+    const tasks = await TestRunner.runBenchmarks(tinybench)
+    const task = tinybench.getTask(name)!
+    if (task.result.state === 'errored') {
+      throw task.result.error
+    }
+    await recordBenchmark(tasks, tinybench.name, new Map([[name, meta]]))
+    return task.result as BenchResult
+  }
 
-  bench.withBaseline = function withBaseline(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
-    validateBenchmarkProject(config)
-    const { fn, fnOpts } = normalizeBenchArgs(a, b)
-    return {
-      [kRegistration]: true,
-      [kBaseline]: true,
-      name,
-      fn,
-      fnOpts,
-      async run(options) {
-        const key = baselineKey(name)
-        const existing = await rpc().readBenchmarkBaseline(test.file.filepath, key)
-        // if a stored baseline exists and we're not updating, use it
-        if (existing && !config.benchmark.updateBaselines) {
-          const benchmark: TestBenchmark = {
-            name: options?.name || test.fullTestName,
-            tasks: [{
-              name,
-              latency: existing.latency,
-              throughput: existing.throughput,
-              period: existing.period,
-              totalTime: existing.totalTime,
-              rank: 1,
-            }],
-          }
-          test.benchmarks.push(benchmark)
-          await rpc().onTestBenchmark(test.id, benchmark)
-          return existing as unknown as BenchResult
-        }
-        // no stored baseline or updating — run the benchmark and save
-        const tinybench = createTinybench(options).add(name, fn, fnOpts)
-        const tasks = await TestRunner.runBenchmarks(tinybench)
-        const task = tinybench.getTask(name)!
-        if (task.result.state === 'errored') {
-          throw task.result.error
-        }
-        const result = task.result as BenchResult
-        await recordBenchmark(tasks, tinybench.name, new Map([[name, { baseline: true }]]))
-        return result
-      },
-    }
-  } as Bench['withBaseline']
+  const makeFactory = <R>(flags: { baseline: boolean; perProject: boolean }): BenchFactory<R> =>
+    ((name: string, a: Fn | FnOptions, b?: Fn | FnOptions) => {
+      validateBenchmarkProject(config)
+      const { fn, fnOpts } = normalizeBenchArgs(a, b)
+      const meta: TaskMeta = {}
+      if (flags.baseline) {
+        meta.baseline = true
+      }
+      if (flags.perProject) {
+        meta.perProject = true
+      }
+      const registration: any = {
+        [kRegistration]: true,
+        name,
+        fn,
+        fnOpts,
+        run: flags.baseline
+          ? (options: BenchCompareOptions | undefined) => runWithBaseline(name, fn, fnOpts, options, meta)
+          : (options: BenchCompareOptions | undefined) => runSingle(name, fn, fnOpts, options, flags.perProject ? meta : undefined),
+      }
+      if (flags.baseline) {
+        registration[kBaseline] = true
+      }
+      if (flags.perProject) {
+        registration[kPerProject] = true
+      }
+      return registration as R
+    }) as BenchFactory<R>
 
-  bench.perProject = function perProject(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
-    validateBenchmarkProject(config)
-    const { fn, fnOpts } = normalizeBenchArgs(a, b)
-    return {
-      [kRegistration]: true,
-      [kPerProject]: true,
-      name,
-      fn,
-      fnOpts,
-      run: options => runSingle(name, fn, fnOpts, options, { perProject: true }),
-    }
-  } as Bench['perProject']
+  const bench = makeFactory<BenchRegistration<string>>({ baseline: false, perProject: false }) as Bench
+  bench.withBaseline = Object.assign(
+    makeFactory<BaselineRegistration<string>>({ baseline: true, perProject: false }),
+    { perProject: makeFactory<BaselinePerProjectRegistration<string>>({ baseline: true, perProject: true }) },
+  )
+  bench.perProject = Object.assign(
+    makeFactory<PerProjectRegistration<string>>({ baseline: false, perProject: true }),
+    { withBaseline: makeFactory<BaselinePerProjectRegistration<string>>({ baseline: true, perProject: true }) },
+  )
 
   bench.compare = async (...args) => {
     validateBenchmarkProject(config)

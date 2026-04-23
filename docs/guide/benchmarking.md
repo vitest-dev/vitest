@@ -206,6 +206,16 @@ test('compare against baseline', async ({ bench }) => {
 
 Baseline files should be committed to version control so the team shares the same reference points.
 
+To combine baselining with cross-project aggregation, access the factories as properties: `bench.withBaseline.perProject(...)` (or `bench.perProject.withBaseline(...)` — both compose to the same behaviour).
+
+```ts
+test('cross-project baseline', async ({ bench }) => {
+  await bench.withBaseline.perProject('parse', () => {
+    parse(largeInput)
+  }).run()
+})
+```
+
 ## Stability
 
 Benchmarks are inherently flaky — CPU load, thermal throttling, GC pressure, and background processes all affect results. Vitest takes several steps to minimize this noise:
