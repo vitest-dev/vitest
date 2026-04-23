@@ -1,5 +1,5 @@
 import { expect, onTestFinished, test } from 'vitest'
-import { page } from 'vitest/browser'
+import { commands, page } from 'vitest/browser'
 
 // tests for full snaphsot/replay integration.
 // partly extracted from artifact metadata tests in
@@ -39,12 +39,22 @@ test('pseudo-state', async () => {
   Test focus-within
   <input placeholder="focus-within-placeholder">
 </label>
+<hr />
+<button class="test-target test-active">Test active</button>
+<hr />
+<label style="display: block; padding: 8px;">
+  Test focus-visible
+  <input class="test-target test-focus-visible" placeholder="focus-visible-placeholder">
+</label>
 `
   await page.getByRole('button', { name: 'Test hover 1' }).hover()
   await page.getByRole('button', { name: 'Test hover 2' }).click()
   await page.getByPlaceholder('focus-placeholder').click()
   await page.getByPlaceholder('focus-placeholder').fill('focus-done')
   await page.getByPlaceholder('focus-within-placeholder').fill('focus-within-done')
+  await (commands as any).mousedown('.test-active')
+  await page.getByRole('button', { name: 'Test active' }).mark('Test active')
+  await page.getByPlaceholder('focus-visible-placeholder').fill('focus-visible-done')
 })
 
 test('css-link', async () => {

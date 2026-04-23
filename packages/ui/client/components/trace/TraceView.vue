@@ -60,7 +60,6 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
     cache: createCache(),
     mirror,
   })
-  // `:hover` is supported by rrweb-snapshot; `:focus` and `:focus-within` are added by our local patch.
   for (const [className, ids] of Object.entries(pseudoClassIds)) {
     for (const id of ids) {
       const el = mirror.getNode(id) as Element | null

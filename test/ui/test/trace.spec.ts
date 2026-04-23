@@ -215,6 +215,16 @@ async function testPseudoState(page: Page) {
   await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(4).click()
   await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOn)
+
+  // active
+  await expect(traceFrame.locator('.test-active')).toHaveCSS(...pseudoOff)
+  await traceSteps.nth(5).click()
+  await expect(traceFrame.locator('.test-active')).toHaveCSS(...pseudoOn)
+
+  // focus-visible
+  await expect(traceFrame.locator('.test-focus-visible')).toHaveCSS(...pseudoOff)
+  await traceSteps.nth(7).click()
+  await expect(traceFrame.locator('.test-focus-visible')).toHaveCSS(...pseudoOn)
 }
 
 async function testCssLink(page: Page) {

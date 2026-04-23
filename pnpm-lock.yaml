@@ -190,7 +190,7 @@ patchedDependencies:
     hash: be977704c4b9838da456619fe2421b5e24df2103a25967bd383b2246c88ddf6e
     path: patches/istanbul-lib-source-maps.patch
   rrweb-snapshot:
-    hash: 3949f2d89b4dcff3ac628e487e4afeb98a08f3612fb8010ef806e70eecb56afa
+    hash: d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044
     path: patches/rrweb-snapshot.patch
 
 importers:
@@ -580,7 +580,7 @@ importers:
         version: 2.0.3
       rrweb-snapshot:
         specifier: 2.0.0-alpha.20
-        version: 2.0.0-alpha.20(patch_hash=3949f2d89b4dcff3ac628e487e4afeb98a08f3612fb8010ef806e70eecb56afa)
+        version: 2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044)
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -964,7 +964,7 @@ importers:
         version: 4.59.0
       rrweb-snapshot:
         specifier: 2.0.0-alpha.20
-        version: 2.0.0-alpha.20(patch_hash=3949f2d89b4dcff3ac628e487e4afeb98a08f3612fb8010ef806e70eecb56afa)
+        version: 2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044)
       splitpanes:
         specifier: ^4.0.4
         version: 4.0.4(vue@3.5.29(typescript@5.9.3))
@@ -18595,7 +18595,7 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.59.0
       fsevents: 2.3.3
 
-  rrweb-snapshot@2.0.0-alpha.20(patch_hash=3949f2d89b4dcff3ac628e487e4afeb98a08f3612fb8010ef806e70eecb56afa):
+  rrweb-snapshot@2.0.0-alpha.20(patch_hash=d11ec9bd9b66247ba493ab5fd117fbf0b4cb6e5d0a6a7c600d1d844bfa3d3044):
     dependencies:
       postcss: 8.5.6
 

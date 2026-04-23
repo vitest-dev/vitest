@@ -43,7 +43,22 @@ interface TraceSnapshot {
   pseudoClassIds: Record<PsudoClassName, number[]>
 }
 
-const PSUDO_CLASS_NAMES = [':hover', ':focus', ':focus-within'] as const
+// During rebuild, rrweb-snapshot transforms inlined styles to replay hover styles at the time of snapshot.
+// For example,
+//   some-selector:hover { ... }
+// into
+//   some-selector:hover, some-selector.:hover { ... }
+// the second selector means that the element with `class=":hover"` will get the same styles as if it were hovered.
+// Adding `:hover` classes is done on Vitest level rebuild side integration in TraceView.vue.
+// rrweb-snapshot does this only for `:hover`, but we have local patches to do the same for other pseudo classes.
+// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Pseudo-classes#user_action_pseudo-classes
+const PSUDO_CLASS_NAMES = [
+  ':hover',
+  ':active',
+  ':focus',
+  ':focus-visible',
+  ':focus-within',
+] as const
 type PsudoClassName = (typeof PSUDO_CLASS_NAMES)[number]
 
 export type BrowserTraceState = Record<string, BrowserTraceData>
