@@ -1,4 +1,3 @@
-import type { TestBenchmark } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
@@ -129,15 +128,6 @@ export class SummaryReporter implements Reporter {
 
     this.maxParallelTests = Math.max(this.maxParallelTests, this.runningModules.size)
     this.renderer.schedule()
-  }
-  // TODO: test
-
-  onTestCaseBenchmark(testCase: TestCase, benchmark: TestBenchmark): void {
-    const stats = this.getStepStats(testCase)
-
-    if (stats) {
-      this.startStep(stats, `# ${benchmark.name}`)
-    }
   }
 
   private startStep(stats: RunningModule | SlowTask, name: string) {

@@ -242,6 +242,12 @@ export function resolveConfig(
     ...benchmarkConfigDefaults,
     ...resolved.benchmark,
   }
+  // `--update-baselines` CLI flag lands on the top-level `updateBaselines`
+  // option; mirror it into `benchmark.updateBaselines` so every consumer sees
+  // the same answer regardless of which property they read.
+  if (resolved.updateBaselines) {
+    resolved.benchmark.updateBaselines = true
+  }
 
   const inspector = resolved.inspect || resolved.inspectBrk
 

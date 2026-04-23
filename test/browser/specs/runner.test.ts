@@ -1,4 +1,4 @@
-import type { JsonTestResults, Vitest } from 'vitest/node'
+import type { JsonTestResult, JsonTestResults, Vitest } from 'vitest/node'
 import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
@@ -47,9 +47,9 @@ describe('running browser tests', async () => {
     }))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
-    browserResultJson = JSON.parse(browserResult)
-    const getPassed = results => results.filter(result => result.status === 'passed' && !result.message)
-    const getFailed = results => results.filter(result => result.status === 'failed')
+    browserResultJson = JSON.parse(browserResult) as JsonTestResults
+    const getPassed = (results: JsonTestResult[]) => results.filter(result => result.status === 'passed' && !result.message)
+    const getFailed = (results: JsonTestResult[]) => results.filter(result => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
   })
@@ -220,7 +220,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
             return
           }
           if (testCase.project.name === 'chromium' || testCase.project.name === 'chrome') {
-            expect(testCase.result().errors[0].stacks).toEqual([
+            expect(testCase.result().errors?.[0].stacks).toEqual([
               {
                 line: 11,
                 column: 12,
@@ -369,7 +369,7 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
   })
 
   const lines = stderr.split('\n')
-  const timeoutErrorsIndexes = []
+  const timeoutErrorsIndexes: number[] = []
   lines.forEach((line, index) => {
     if (line.includes('TimeoutError:')) {
       timeoutErrorsIndexes.push(index)

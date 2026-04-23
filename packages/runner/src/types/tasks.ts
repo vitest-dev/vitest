@@ -355,7 +355,7 @@ export interface TestBenchmark {
   tasks: TestBenchmarkTask[]
 }
 
-export type TestBenchmarkStatistics = Omit<Statistics, 'samples'>
+export type TestBenchmarkStatistics = Statistics
 
 export interface BaselineData {
   latency: TestBenchmarkStatistics
