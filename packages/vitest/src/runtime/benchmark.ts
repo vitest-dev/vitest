@@ -6,10 +6,12 @@ import type {
   TaskResultCompleted,
   TaskResultRuntimeInfo,
   TaskResultTimestampProviderInfo,
+  Task as TinybenchTask,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
 import { Bench as Tinybench } from 'tinybench'
 import { rpc } from './rpc'
+import { TestRunner } from './runners/test'
 
 const now = globalThis.performance
   ? globalThis.performance.now.bind(globalThis.performance)
@@ -83,26 +85,6 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     })
   }
 
-  const createRegisteredTinybench = <Args extends BenchRegistration<any>[]>(name: 'compare' | 'compareSync', registrations: (BenchCompareOptions | Args[0] | Args[number])[]) => {
-    if (registrations.length === 0) {
-      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 0 instead. Define benchmarks by calling \`bench()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
-    }
-    const lastArg = registrations[registrations.length - 1]
-    const isOptions = typeof lastArg === 'object' && !(kRegistration in lastArg)
-    const benchOptions = isOptions ? registrations.pop() as BenchCompareOptions : undefined
-    if (registrations.length < 2) {
-      throw new SyntaxError(`\`bench.${name}\` requires at least 2 benchmarks, received 1 instead. Consider calling \`bench().${name === 'compare' ? 'run' : 'runSync'}()\`. See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
-    }
-    const bench = createTinybench(benchOptions)
-    registrations.forEach((registration) => {
-      if (!(kRegistration in registration)) {
-        throw new SyntaxError('`bench.compare` expects every argument to be the return value of `bench`, `bench.perProject` or `bench.withBaseline`.')
-      }
-      bench.add(registration.name, registration.fn, registration.fnOpts)
-    })
-    return bench
-  }
-
   const createCompareStorage = <T extends string>(bench: Tinybench, storedBaselines?: Map<string, BaselineData>): BenchStorage<T> => {
     return {
       get(name: T) {
@@ -127,11 +109,12 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   interface TaskMeta { perProject?: true; baseline?: true }
 
   const serializeBenchmark = (
-    bench: Tinybench,
+    tinybenchTasks: TinybenchTask[],
+    name: string | undefined,
     taskMeta?: Map<string, TaskMeta>,
     storedBaselines?: Map<string, BaselineData>,
   ): TestBenchmark => {
-    const tasks: TestBenchmarkTask[] = bench.tasks.map((t) => {
+    const tasks: TestBenchmarkTask[] = tinybenchTasks.map((t) => {
       const result = t.result
       if (result.state === 'errored') {
         throw result.error
@@ -167,25 +150,26 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       task.rank = idx + 1
     })
     return {
-      name: bench.name || test.fullTestName,
+      name: name || test.fullTestName,
       tasks,
     }
   }
 
   const recordBenchmark = async (
-    bench: Tinybench,
+    tinybenchTasks: TinybenchTask[],
+    name: string | undefined,
     taskMeta?: Map<string, TaskMeta>,
     storedBaselines?: Map<string, BaselineData>,
   ) => {
-    const serializedBenchmark = serializeBenchmark(bench, taskMeta, storedBaselines)
+    const serializedBenchmark = serializeBenchmark(tinybenchTasks, name, taskMeta, storedBaselines)
     test.benchmarks.push(serializedBenchmark)
     await rpc().onTestBenchmark(test.id, serializedBenchmark)
   }
 
   const runSingle = async (name: string, fn: Fn, fnOpts: FnOptions | undefined, options: BenchCompareOptions | undefined, meta?: TaskMeta): Promise<BenchResult> => {
     const tinybench = createTinybench(options).add(name, fn, fnOpts)
-    await tinybench.run()
-    await recordBenchmark(tinybench, meta ? new Map([[name, meta]]) : undefined)
+    const tasks = await TestRunner.runBenchmarks(tinybench)
+    await recordBenchmark(tasks, tinybench.name, meta ? new Map([[name, meta]]) : undefined)
     const task = tinybench.getTask(name)!
     return task.result as BenchResult
   }
@@ -239,13 +223,13 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
         }
         // no stored baseline or updating — run the benchmark and save
         const tinybench = createTinybench(options).add(name, fn, fnOpts)
-        await tinybench.run()
+        const tasks = await TestRunner.runBenchmarks(tinybench)
         const task = tinybench.getTask(name)!
         if (task.result.state === 'errored') {
           throw task.result.error
         }
         const result = task.result as BenchResult
-        await recordBenchmark(tinybench, new Map([[name, { baseline: true }]]))
+        await recordBenchmark(tasks, tinybench.name, new Map([[name, { baseline: true }]]))
         return result
       },
     }
@@ -263,13 +247,29 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     }
   }
 
-  bench.compare = async (...registrations) => {
+  bench.compare = async (...args) => {
     validateBenchmarkProject(config)
+
+    // extract optional trailing BenchCompareOptions argument
+    const lastArg = args[args.length - 1]
+    const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
+    const benchOptions = isOptions ? args.pop() as BenchCompareOptions : undefined
+    const registrations = args as BenchRegistration<any>[]
+
+    // validate against the ORIGINAL registrations — stored-baseline filtering
+    // below may shrink the list, but a caller who passed enough benchmarks
+    // shouldn't be told they passed too few
+    if (registrations.length < 2) {
+      throw new SyntaxError(`\`bench.compare()\` requires at least 2 benchmarks, received ${registrations.length} instead. ${registrations.length === 1 ? 'Consider calling `bench().run()`. ' : 'Define benchmarks by calling `bench()`. '}See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
+    }
+    for (const reg of registrations) {
+      if (reg == null || typeof reg !== 'object' || !(kRegistration in reg)) {
+        throw new SyntaxError('`bench.compare()` expects every argument to be the return value of `bench`, `bench.perProject` or `bench.withBaseline`.')
+      }
+    }
+
     const taskMeta = new Map<string, TaskMeta>()
     for (const reg of registrations) {
-      if (typeof reg !== 'object' || !(kRegistration in reg)) {
-        continue
-      }
       const meta: TaskMeta = {}
       if (kPerProject in reg) {
         meta.perProject = true
@@ -297,19 +297,28 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     }
 
     // filter out baseline registrations that have stored data — don't run them
-    const filteredRegistrations = registrations.filter((reg) => {
-      return !(typeof reg === 'object' && kBaseline in reg && storedBaselines.has(reg.name))
+    const filteredRegistrations = registrations.filter(reg => !(kBaseline in reg && storedBaselines.has(reg.name)))
+
+    const tinybench = createTinybench(benchOptions)
+    filteredRegistrations.forEach((reg) => {
+      tinybench.add(reg.name, reg.fn, reg.fnOpts)
     })
-    const tinybench = createRegisteredTinybench('compare', filteredRegistrations)
-    await tinybench.run()
-    const errors = tinybench.tasks
-      .filter(task => task.result.state === 'errored')
-      .map(task => (task.result as any).error)
-    if (errors.length > 0) {
-      throw new AggregateError(errors, 'Some benchmarks failed')
+
+    let tasks: TinybenchTask[] = []
+
+    // skip the tinybench run when every registration is already served from
+    // a stored baseline — serializing + the storage fall back to baselines
+    if (filteredRegistrations.length > 0) {
+      tasks = await TestRunner.runBenchmarks(tinybench)
+      const errors = tinybench.tasks
+        .filter(task => task.result.state === 'errored')
+        .map(task => (task.result as any).error)
+      if (errors.length > 0) {
+        throw new AggregateError(errors, 'Some benchmarks failed')
+      }
     }
 
-    await recordBenchmark(tinybench, taskMeta, storedBaselines)
+    await recordBenchmark(tasks, tinybench.name, taskMeta, storedBaselines)
     return createCompareStorage(tinybench, storedBaselines)
   }
 

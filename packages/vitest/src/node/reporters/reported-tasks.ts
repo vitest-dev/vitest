@@ -208,7 +208,8 @@ export class TestCase extends ReportedTaskImplementation {
 
   /**
    * @exorimental
-   * // TODO: description
+   *
+   * A list of benchmarks performed during the test.
    */
   public benchmarks(): ReadonlyArray<TestBenchmark> {
     return [...this.task.benchmarks]

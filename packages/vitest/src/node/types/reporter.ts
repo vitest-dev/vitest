@@ -99,7 +99,7 @@ export interface Reporter {
 
   /**
    * @experimental
-   * // TODO: description
+   * Called after the benchmark is finished.
    */
   onTestCaseBenchmark?: (testCase: TestCase, benchmark: TestBenchmark) => Awaitable<void>
 }

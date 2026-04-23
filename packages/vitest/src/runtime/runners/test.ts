@@ -12,6 +12,7 @@ import type {
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
 } from '@vitest/runner'
+import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Traces } from '../../utils/traces'
 import type { Bench } from '../benchmark'
@@ -237,10 +238,11 @@ export class TestRunner implements VitestTestRunner {
       },
     })
     let _bench: Bench | undefined
+    const runnerConfig = this.config
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, this.config)
+          _bench = createBench(context.task, runnerConfig)
         }
         return _bench
       },
@@ -293,6 +295,15 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
+
+  /**
+   * @experimental
+   * A function that runs tinybench tasks.
+   * Can be overriden to run tasks in a special environment.
+   */
+  static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
+    return await tinybench.run()
+  }
 }
 
 function clearModuleMocks(config: SerializedConfig) {
