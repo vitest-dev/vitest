@@ -13,8 +13,8 @@ describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
   let browserResultJson: JsonTestResults
-  let passedTests: any[]
-  let failedTests: any[]
+  let passedTests: JsonTestResult[]
+  let failedTests: JsonTestResult[]
   let vitest: Vitest
   const events: string[] = []
   const emittedBenchmarks: Array<{ projectName: string; testName: string; benchmark: TestBenchmark }> = []
@@ -165,7 +165,7 @@ describe('running browser tests', async () => {
   test('runs in-source tests', () => {
     expect(stdout).toContain('src/actions.ts')
     const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
-    expect(actionsTest).toBeDefined()
+    expect.assert(actionsTest)
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
 
