@@ -1,6 +1,8 @@
 import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
-import { getBrowserState, getWorkerState } from '../utils'
+import type { BrowserTraceEntryStatus } from './trace'
+import { getBrowserState, getWorkerState, now } from '../utils'
+import { recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -132,11 +134,16 @@ export class CommandsManager {
     const filepath = state.filepath || state.current?.file?.filepath
     args = args.filter(arg => arg !== undefined) // remove optional fields
 
-    const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command) ? command : undefined
+    const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
+      ? `vitest:${command.slice('__vitest_'.length)}`
+      : undefined
     const currentTest = getWorkerState().current
-    const shouldMarkTrace = actionTraceGroupName
+    const hasActiveTrace = !!actionTraceGroupName
       && !!currentTest
       && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+    const hasActiveTraceView = !!actionTraceGroupName
+      && !!currentTest
+      && getBrowserState().browserTraceAttempts.has(currentTest.id)
 
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
@@ -150,7 +157,7 @@ export class CommandsManager {
         },
       },
       async () => {
-        if (shouldMarkTrace) {
+        if (hasActiveTrace) {
           await rpc.triggerCommand<void>(
             sessionId,
             '__vitest_groupTraceStart',
@@ -161,10 +168,13 @@ export class CommandsManager {
             }],
           )
         }
+        let status: BrowserTraceEntryStatus = 'pass'
+        const startTime = now()
         try {
           return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
         }
         catch (err: any) {
+          status = 'fail'
           // rethrow an error to keep the stack trace in browser
           clientError.message = err.message
           clientError.name = err.name
@@ -172,7 +182,18 @@ export class CommandsManager {
           throw clientError
         }
         finally {
-          if (shouldMarkTrace) {
+          if (hasActiveTraceView) {
+            recordBrowserTraceEntry(currentTest, {
+              name: actionTraceGroupName,
+              kind: 'action',
+              status,
+              startTime,
+              duration: now() - startTime,
+              selector: typeof args[0] === 'string' ? args[0] : undefined,
+              stack: clientError.stack,
+            })
+          }
+          if (hasActiveTrace) {
             await rpc.triggerCommand<void>(
               sessionId,
               '__vitest_groupTraceEnd',
@@ -185,10 +206,6 @@ export class CommandsManager {
     )
   }
 }
-
-const now = globalThis.performance
-  ? globalThis.performance.now.bind(globalThis.performance)
-  : Date.now
 
 export function processTimeoutOptions<T extends { timeout?: number }>(options_: T | undefined): T | undefined {
   if (

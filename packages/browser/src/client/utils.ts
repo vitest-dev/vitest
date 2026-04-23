@@ -1,8 +1,10 @@
 import type { VitestRunner } from '@vitest/runner'
+import type { Ivya } from 'ivya'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
+import type { BrowserTraceAttempt, BrowserTraceState } from './tester/trace'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -24,6 +26,10 @@ export const moduleRunner = {
     return importId(id)
   },
 }
+
+export const now: () => number = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
 
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
@@ -65,6 +71,10 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
   } satisfies Promise<T>
 }
 
+// This object is the shared runtime bus for browser artifacts loaded into the
+// same page. Some browser code is built and served as independent bundles, so
+// getBrowserState() is the API they use to share runtime state instead of
+// relying on imports resolving to the same module instance.
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
@@ -86,6 +96,11 @@ export interface BrowserRunnerState {
   orchestrator?: IframeOrchestrator
   commands: CommandsManager
   activeTraceTaskIds: Set<string>
+  browserTraceAttempts: Map<string, BrowserTraceAttempt>
+  // lazily loaded only when traceView is enabled
+  browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
+  browserTraceState?: BrowserTraceState
+  selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>
   cdp?: {

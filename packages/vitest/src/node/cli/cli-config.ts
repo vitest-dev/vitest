@@ -413,6 +413,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return { mode: value }
         },
       },
+      traceView: {
+        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+        argument: '',
+        transform: transformNestedBoolean,
+        subcommands: {
+          enabled: {
+            description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+          },
+          recordCanvas: {
+            description: 'Capture canvas pixels in trace-view snapshots (default: `false`)',
+          },
+          inlineImages: {
+            description: 'Inline loaded image pixels in trace-view snapshots (default: `false`)',
+          },
+        },
+      },
       orchestratorScripts: null,
       commands: null,
       viewport: null,

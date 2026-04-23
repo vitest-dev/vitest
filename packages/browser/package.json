@@ -94,6 +94,7 @@
     "ivya": "^1.8.0",
     "mime": "^4.1.0",
     "pathe": "catalog:",
+    "rrweb-snapshot": "2.0.0-alpha.20",
     "vitest": "workspace:*"
   }
 }

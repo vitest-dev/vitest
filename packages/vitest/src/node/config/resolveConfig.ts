@@ -911,6 +911,22 @@ export function resolveConfig(
   if (typeof resolved.browser.trace === 'string' || !resolved.browser.trace) {
     resolved.browser.trace = { mode: resolved.browser.trace || 'off' }
   }
+
+  const traceView = resolved.browser.traceView
+  resolved.browser.traceView = typeof traceView === 'object'
+    ? {
+        enabled: traceView.enabled ?? false,
+        recordCanvas: traceView.recordCanvas ?? false,
+        inlineImages: traceView.inlineImages ?? false,
+      }
+    : {
+        enabled: traceView ?? false,
+        recordCanvas: false,
+        inlineImages: false,
+      }
+  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+    resolved.browser.detailsPanelPosition = 'bottom'
+  }
   if (resolved.browser.trace.tracesDir != null) {
     resolved.browser.trace.tracesDir = resolvePath(
       resolved.browser.trace.tracesDir,
@@ -928,6 +944,17 @@ export function resolveConfig(
 
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
+  }
+  else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
+    logger.console.warn(
+      c.yellow(
+        withLabel(
+          'yellow',
+          'Vitest',
+          '--browser.traceView is enabled without the HTML reporter.',
+        ),
+      ),
+    )
   }
 
   resolved.server ??= {}

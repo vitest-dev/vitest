@@ -3,8 +3,8 @@ catalogMode: prefer
 cleanupUnusedCatalogs: true
 ignoreWorkspaceRootCheck: true
 shellEmulator: true
-trustPolicy: no-downgrade
 strictPeerDependencies: false
+trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@6.3.1
   - chokidar@4.0.3
@@ -44,6 +44,7 @@ patchedDependencies:
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
   istanbul-lib-source-maps: patches/istanbul-lib-source-maps.patch
+  rrweb-snapshot: patches/rrweb-snapshot.patch
 catalog:
   '@babel/core': ^7.29.0
   '@babel/plugin-proposal-decorators': ^7.29.0

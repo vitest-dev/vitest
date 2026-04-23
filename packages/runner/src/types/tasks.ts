@@ -1358,6 +1358,15 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   attachments: VisualRegressionArtifactAttachment[]
 }
 
+/**
+ * @experimental
+ */
+export interface BrowserTraceArtifact extends TestArtifactBase {
+  type: 'internal:browserTrace'
+  // TODO: should save a dedicated file/binary as attachments?
+  data: unknown
+}
+
 interface FailureScreenshotArtifactAttachment extends TestAttachment {
   path: string
   /** Original file system path to the screenshot, before attachment resolution */
@@ -1457,7 +1466,8 @@ export interface TestArtifactRegistry {}
  * This type automatically includes all artifacts registered via {@link TestArtifactRegistry}.
  */
 export type TestArtifact
-  = | FailureScreenshotArtifact
+  = | BrowserTraceArtifact
+    | FailureScreenshotArtifact
     | TestAnnotationArtifact
     | VisualRegressionArtifact
     | TestArtifactRegistry[keyof TestArtifactRegistry]

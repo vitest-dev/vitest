@@ -429,6 +429,27 @@ Control if Vitest catches uncaught exceptions so they can be reported (default: 
 
 Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".
 
+### browser.traceView.enabled
+
+- **CLI:** `--browser.traceView.enabled`
+- **Config:** [browser.traceView.enabled](/config/browser/traceview#traceview-enabled)
+
+Enable Vitest trace-view collection for browser tests (default: `false`)
+
+### browser.traceView.recordCanvas
+
+- **CLI:** `--browser.traceView.recordCanvas`
+- **Config:** [browser.traceView.recordCanvas](/config/browser/traceview#traceview-recordcanvas)
+
+Capture canvas pixels in trace-view snapshots (default: `false`)
+
+### browser.traceView.inlineImages
+
+- **CLI:** `--browser.traceView.inlineImages`
+- **Config:** [browser.traceView.inlineImages](/config/browser/traceview#traceview-inlineimages)
+
+Inline loaded image pixels in trace-view snapshots (default: `false`)
+
 ### browser.locators.exact
 
 - **CLI:** `--browser.locators.exact`
