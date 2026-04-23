@@ -1094,16 +1094,6 @@ export interface UserConfig extends InlineConfig {
   clearScreen?: boolean
 
   /**
-   * benchmark.compare option exposed at the top level for cli
-   */
-  compare?: string
-
-  /**
-   * benchmark.outputJson option exposed at the top level for cli
-   */
-  outputJson?: string
-
-  /**
    * Overwrite stored benchmark baselines with fresh results.
    * benchmark.updateBaselines option exposed at the top level for cli
    */

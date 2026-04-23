@@ -304,7 +304,7 @@ Directory of HTML coverage output to be served in UI mode and HTML reporter.
 - **CLI:** `--mode <name>`
 - **Config:** [mode](/config/mode)
 
-Override Vite mode (default: `test` or `benchmark`)
+Override Vite mode (default: `test`)
 
 ### isolate
 

@@ -7,6 +7,38 @@ outline: deep
 
 [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
 
+## Migrating to Vitest 5.0 {#vitest-5}
+
+### Benchmarking API Rewrite
+
+The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
+
+Removed, with replacements where applicable:
+
+- **`bench(name, fn)` at module scope** — destructure `bench` from the test context instead.
+
+```ts
+// v4
+import { bench } from 'vitest' // [!code --]
+
+bench('sort', () => { // [!code --]
+  [3, 1, 2].sort() // [!code --]
+}) // [!code --]
+
+// v5
+import { test } from 'vitest' // [!code ++]
+
+test('sort', async ({ bench }) => { // [!code ++]
+  await bench('sort', () => { [3, 1, 2].sort() }).run() // [!code ++]
+}) // [!code ++]
+```
+
+- **`bench.skip`, `bench.only`, `bench.todo`** — removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
+- **`benchmark.reporters` / `benchmark.outputFile`** — removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
+- **`benchmark.compare` config and the `--compare` CLI flag** — removed. Use [`bench.withBaseline()`](/guide/benchmarking#baselines) to persist a baseline to `__benchmarks__/<file>.json` and compare on subsequent runs. Pass [`--update-baselines`](/config/benchmark#benchmark-updatebaselines) to regenerate a baseline.
+- **`benchmark.outputJson` config and the `--outputJson` CLI flag** — removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
+- **`Vitest` instance `mode` property** — always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites

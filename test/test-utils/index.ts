@@ -130,8 +130,6 @@ export async function runVitest(
     project,
     cliExclude,
     clearScreen,
-    compare,
-    outputJson,
     mergeReports,
     clearCache,
     // #endregion
@@ -159,8 +157,6 @@ export async function runVitest(
       project,
       cliExclude,
       clearScreen,
-      compare,
-      outputJson,
       mergeReports,
       clearCache,
       cache: 'cache' in config ? config.cache : false,

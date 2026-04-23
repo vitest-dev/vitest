@@ -328,10 +328,10 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
 function validateBenchmarkProject(config: SerializedConfig) {
   if (!config.benchmark.enabled) {
     throw new Error(
-      `Cannot run a benchmark within a regular test run. `
-      + `Benchmarks are inherently flaky, so Vitest groups them into its own project based on \`benchmark.include\` pattern. `
-      + `Are you using the \`bench\` function within a regular test? `
-      + `See more at https://vitest.dev/guide/benchmarking#stability`,
+      `Cannot use the \`bench\` test-context fixture within a regular test run. `
+      + `Benchmarks are inherently flaky, so Vitest runs them in a dedicated project based on the \`benchmark.include\` pattern (default \`**/*.{bench,benchmark}.?(c|m)[jt]s?(x)\`). `
+      + `Move this code to a file matched by \`benchmark.include\`, and make sure \`bench\` is destructured from the test context (\`test('...', async ({ bench }) => { ... })\`) — it is not a top-level export of \`vitest\`. `
+      + `See https://vitest.dev/guide/benchmarking#stability`,
     )
   }
 }

@@ -14,9 +14,7 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<
-  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-> = {
+export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
   enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,

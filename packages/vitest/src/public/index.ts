@@ -42,6 +42,7 @@ export type {
   BenchRegistration,
   BenchResult,
   BenchStorage,
+  PerProjectRegistration,
 } from '../runtime/benchmark'
 
 export type {

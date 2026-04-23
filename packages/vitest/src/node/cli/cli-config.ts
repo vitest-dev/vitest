@@ -969,8 +969,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   snapshotEnvironment: null,
-  compare: null,
-  outputJson: null,
   json: null,
   provide: null,
   filesOnly: null,
@@ -986,16 +984,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
 
 export const benchCliOptionsConfig: Pick<
   VitestCLIOptions,
-  'compare' | 'outputJson' | 'updateBaselines'
+  'updateBaselines'
 > = {
-  compare: {
-    description: 'Benchmark output file to compare against',
-    argument: '<filename>',
-  },
-  outputJson: {
-    description: 'Benchmark output file',
-    argument: '<filename>',
-  },
   updateBaselines: {
     description: 'Overwrite stored benchmark baselines with fresh results',
   },
