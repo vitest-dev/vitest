@@ -29,9 +29,6 @@
     "*.mjs",
     "dist"
   ],
-  "engines": {
-    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
-  },
   "scripts": {
     "build": "premove dist && rollup -c",
     "dev": "rollup -c --watch --watch.include 'src/**'",
