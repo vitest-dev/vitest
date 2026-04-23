@@ -1,3 +1,4 @@
+import type { TestBenchmark } from 'vitest'
 import type { JsonTestResult, JsonTestResults, Vitest } from 'vitest/node'
 import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
@@ -16,6 +17,7 @@ describe('running browser tests', async () => {
   let failedTests: any[]
   let vitest: Vitest
   const events: string[] = []
+  const emittedBenchmarks: Array<{ projectName: string; testName: string; benchmark: TestBenchmark }> = []
 
   beforeAll(async () => {
     ({
@@ -28,6 +30,13 @@ describe('running browser tests', async () => {
         {
           onBrowserInit(project) {
             events.push(`onBrowserInit ${project.name}`)
+          },
+          onTestCaseBenchmark(testCase, benchmark) {
+            emittedBenchmarks.push({
+              projectName: testCase.project.name || '',
+              testName: testCase.fullName,
+              benchmark,
+            })
           },
         },
         'json',
@@ -70,12 +79,58 @@ describe('running browser tests', async () => {
       .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
 
     const testFilesCount = readdirSync('./test')
-      .filter(n => n.includes('.test.') || n.includes('.test-d.'))
+      .filter(n => n.includes('.test.') || n.includes('.test-d.') || n.includes('.bench.'))
       .length + 1 // 1 is in-source-test
 
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
     expect(passedTests).toHaveLength(browserResultJson.testResults.length)
     expect(failedTests).toHaveLength(0)
+  })
+
+  test('benchmarks run in a dedicated `(bench)` project per browser instance', () => {
+    const benchProjects = vitest.projects.filter(p => p.name.endsWith('(bench)'))
+    expect(benchProjects.map(p => p.name).sort()).toEqual(
+      instances.map(({ browser }) => `${browser} (bench)`).sort(),
+    )
+  })
+
+  test('bench.perProject emits tasks with the perProject flag in every browser', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'perProject registrations flow through the browser RPC (onTestBenchmark)',
+    )
+    // the test calls `.run()` twice, so each browser produces 2 benchmark records
+    expect(records.length, `perProject emitted: ${records.length}`).toBe(2 * instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
+      const [task] = record.benchmark.tasks
+      expect(task.perProject, `missing perProject flag on ${record.projectName}/${task.name}`).toBe(true)
+      expect(task.baseline).toBeUndefined()
+    }
+  })
+
+  test('bench.compare emits one benchmark with both registrations ranked', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'bench.compare resolves a BenchStorage in the browser',
+    )
+    expect(records.length).toBe(instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks.map(t => t.name).sort(), `unexpected tasks for ${record.projectName}`).toEqual(['a', 'b'])
+      expect(record.benchmark.tasks.map(t => t.rank).sort()).toEqual([1, 2])
+    }
+  })
+
+  test('bench.withBaseline flows through the baseline RPC in every browser', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'bench.withBaseline exercises the readBenchmarkBaseline RPC round-trip',
+    )
+    expect(records.length).toBe(instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
+      const [task] = record.benchmark.tasks
+      expect(task.name).toBe('with-baseline')
+      // either `baseline: true` (fresh run) or undefined (served from disk);
+      // in both cases the RPC round-trip is exercised, which is what we verify
+    }
   })
 
   test('tags are collected', () => {
