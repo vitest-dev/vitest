@@ -50,6 +50,41 @@ test('bench.compare records benchmark results for each registration', async () =
   expect(tasks.map(t => t.rank).sort()).toEqual([1, 2])
 })
 
+test('bench accepts options as second argument and rejects them as third', async () => {
+  const { stderr, results } = await runInlineTests(
+    {
+      'sig.bench.ts': /* ts */`
+        import { test, expect } from 'vitest'
+
+        test('bench signatures', ({ bench }) => {
+          const fn = () => 1
+          const opts = { async: false }
+
+          // options as the 2nd argument (preferred form, matches test())
+          const withOpts = bench('with-opts', opts, fn)
+          expect(withOpts.name).toBe('with-opts')
+          expect(withOpts.fn).toBe(fn)
+          expect(withOpts.fnOpts).toBe(opts)
+
+          // simplest form — no options
+          const noOpts = bench('no-opts', fn)
+          expect(noOpts.fn).toBe(fn)
+          expect(noOpts.fnOpts).toBeUndefined()
+
+          // legacy (fn, options) form must throw
+          expect(() => bench('legacy', fn, opts)).toThrow(/third argument/)
+        })
+`,
+    },
+    { benchmark: { enabled: true } },
+  )
+
+  expect(stderr).toBe('')
+  const testCases = [...(results[0]?.children.allTests() ?? [])]
+  expect(testCases).toHaveLength(1)
+  expect(testCases[0].result()?.state).toBe('passed')
+})
+
 declare module 'vitest' {
   interface ProvidedContext {
     options: typeof fastBenchOptions

@@ -64,12 +64,16 @@ interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
 }
 
-export interface Bench {
-  <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions): BenchRegistration<Name>
+interface BenchFactory<Registration> {
+  <Name extends string>(name: Name, fn: Fn): Registration
+  <Name extends string>(name: Name, options: FnOptions, fn: Fn): Registration
+}
+
+export interface Bench extends BenchFactory<BenchRegistration<string>> {
   // TODO: support having both withBaseline and perProject
-  withBaseline: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => BaselineRegistration<Name>
+  withBaseline: BenchFactory<BaselineRegistration<string>>
   compare: BenchCompare
-  perProject: <Name extends string>(name: Name, fn: Fn, fnOpts?: FnOptions) => PerProjectRegistration<Name>
+  perProject: BenchFactory<PerProjectRegistration<string>>
 }
 
 export function createBench(test: Test, config: SerializedConfig): Bench {
@@ -174,12 +178,9 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     return task.result as BenchResult
   }
 
-  const bench: Bench = function bench(
-    name,
-    fn,
-    fnOpts,
-  ) {
+  const bench: Bench = function bench(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
     validateBenchmarkProject(config)
+    const { fn, fnOpts } = normalizeBenchArgs(a, b)
     return {
       [kRegistration]: true,
       name,
@@ -187,14 +188,11 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       fnOpts,
       run: options => runSingle(name, fn, fnOpts, options),
     }
-  }
+  } as Bench
 
-  bench.withBaseline = function withBaseline(
-    name,
-    fn,
-    fnOpts,
-  ) {
+  bench.withBaseline = function withBaseline(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
     validateBenchmarkProject(config)
+    const { fn, fnOpts } = normalizeBenchArgs(a, b)
     return {
       [kRegistration]: true,
       [kBaseline]: true,
@@ -233,10 +231,11 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
         return result
       },
     }
-  }
+  } as Bench['withBaseline']
 
-  bench.perProject = function perProject(name, fn, fnOpts) {
+  bench.perProject = function perProject(name: string, a: Fn | FnOptions, b?: Fn | FnOptions) {
     validateBenchmarkProject(config)
+    const { fn, fnOpts } = normalizeBenchArgs(a, b)
     return {
       [kRegistration]: true,
       [kPerProject]: true,
@@ -245,7 +244,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       fnOpts,
       run: options => runSingle(name, fn, fnOpts, options, { perProject: true }),
     }
-  }
+  } as Bench['perProject']
 
   bench.compare = async (...args) => {
     validateBenchmarkProject(config)
@@ -323,6 +322,22 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   }
 
   return bench
+}
+
+function normalizeBenchArgs(
+  a: Fn | FnOptions,
+  b: Fn | FnOptions | undefined,
+): { fn: Fn; fnOpts: FnOptions | undefined } {
+  if (typeof a === 'function') {
+    if (b !== undefined) {
+      throw new TypeError('`bench()` does not accept options as the third argument. Pass options as the second argument instead: `bench(name, options, fn)`.')
+    }
+    return { fn: a, fnOpts: undefined }
+  }
+  if (typeof b !== 'function') {
+    throw new TypeError('`bench()` expects a benchmark function. Call `bench(name, fn)` or `bench(name, options, fn)`.')
+  }
+  return { fn: b, fnOpts: a }
 }
 
 function validateBenchmarkProject(config: SerializedConfig) {

@@ -64,7 +64,7 @@ test('compare with options', async ({ bench }) => {
 })
 ```
 
-You can also pass per-benchmark [options](https://tinylibs.github.io/tinybench/interfaces/FnOptions.html):
+You can also pass per-benchmark [options](https://tinylibs.github.io/tinybench/interfaces/FnOptions.html) as the second argument, matching how `test()` accepts options:
 
 ```ts
 test('benchmarks with setup', async ({ bench }) => {
@@ -74,12 +74,8 @@ test('benchmarks with setup', async ({ bench }) => {
     }),
     bench(
       'without-cache',
+      { beforeEach: () => clearCache() },
       () => { readFromDisk() },
-      {
-        beforeEach() {
-          clearCache()
-        },
-      },
     ),
   )
 })
