@@ -14,26 +14,26 @@ const renderContext = vi.defineHelper(async (context: TestContext) => {
   await page.getByRole('list').mark(`renderHelper`)
 })
 
-test('repeated test', { repeats: 2 }, ({ task }) => {
-  renderContext(task.context)
+test('repeated test', { repeats: 2 }, async ({ task }) => {
+  await renderContext(task.context)
 })
 
-test('retried test', { retry: 2 }, ({ task }) => {
-  renderContext(task.context)
+test('retried test', { retry: 2 }, async ({ task }) => {
+  await renderContext(task.context)
   if (task.result?.retryCount !== 2) {
     throw new Error(`failed test at retry count ${task.result?.retryCount}`)
   }
 })
 
-test('repeated retried tests', { repeats: 2, retry: 2 }, ({ task }) => {
-  renderContext(task.context)
+test('repeated retried tests', { repeats: 2, retry: 2 }, async ({ task }) => {
+  await renderContext(task.context)
   if (task.result?.retryCount !== 2) {
     throw new Error(`failed test at retry count ${task.result?.retryCount}`)
   }
 })
 
-test('repeated test retried on later repeat', { repeats: 2, retry: 2 }, ({ task }) => {
-  renderContext(task.context)
+test('repeated test retried on later repeat', { repeats: 2, retry: 2 }, async ({ task }) => {
+  await renderContext(task.context)
   if (task.result?.repeatCount === 1 && task.result.retryCount !== 1) {
     throw new Error(`failed test at retry count ${task.result?.retryCount}`)
   }

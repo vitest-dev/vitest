@@ -159,7 +159,7 @@ async function testBasic(page: Page) {
   await traceSteps.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
-  // verify snaphsot replay in iframe
+  // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 

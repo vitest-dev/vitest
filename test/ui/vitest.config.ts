@@ -1,10 +1,10 @@
 import { resolve } from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
-import { defineConfig } from 'vitest/config'
+import { defaultExclude, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    exclude: ['**/fixtures-trace/**'],
+    exclude: ['**/fixtures-trace/**', ...defaultExclude],
     coverage: {
       reportOnFailure: true,
     },

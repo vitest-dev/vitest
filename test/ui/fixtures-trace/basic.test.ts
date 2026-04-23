@@ -1,7 +1,7 @@
 import { expect, onTestFinished, test } from 'vitest'
 import { commands, page } from 'vitest/browser'
 
-// tests for full snaphsot/replay integration.
+// tests for full snapshot/replay integration.
 // partly extracted from artifact metadata tests in
 // test/browser/fixtures/trace/*.test.ts
 
