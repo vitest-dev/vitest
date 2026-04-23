@@ -138,7 +138,8 @@ declare module '@vitest/runner' {
      */
     readonly expect: ExpectStatic
     /**
-     * TODO
+     * Create a benchmark to run. It will be reported after the test is finished.
+     * @see {@link https://vitest.dev/guide/benchmarking}
      */
     readonly bench: Bench
     /** @internal */

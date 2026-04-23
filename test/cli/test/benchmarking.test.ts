@@ -343,6 +343,50 @@ test('`bench.perProject.withBaseline()` behaves identically to `bench.withBaseli
   `)
 })
 
+test('junit reporter embeds the benchmark table inside <system-out>', async () => {
+  const { stdout } = await runInlineTests(
+    {
+      'junit.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+
+        test('junit benches', async ({ bench }) => {
+          await bench.compare(
+            bench('a', () => {}),
+            bench('b', () => {}),
+            inject('options'),
+          )
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: 'junit',
+      provide: { options: fastBenchOptions },
+    },
+  )
+
+  // extract the <system-out> block from the rendered XML
+  // eslint-disable-next-line regexp/no-super-linear-backtracking
+  const systemOut = stdout.match(/<system-out>\s*\n([\s\S]*?)<\/system-out>/)?.[1]
+  expect(systemOut, stdout).toBeDefined()
+
+  // a header + 2 data rows — reformat through the shared helper so digits
+  // collapse to `d+` and widths become measurement-independent
+  const tableLines = systemOut!.split('\n').filter(l => l.trim())
+  expect(tableLines).toHaveLength(3)
+  const [header, ...rows] = tableLines
+  const formatted = formatBenchTable([
+    header,
+    ...rows.map(r => r.replace(/\s+(?:fastest|slowest)\s*$/, '')).sort(),
+  ])
+
+  expect(formatted).toMatchInlineSnapshot(`
+    "name  hz  min  max  mean  p75  p99  p995  p999   rme  samples
+    a     d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+
+    b     d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
+  `)
+})
+
 declare module 'vitest' {
   interface ProvidedContext {
     options: typeof fastBenchOptions
