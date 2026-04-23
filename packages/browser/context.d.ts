@@ -2,6 +2,7 @@ import { SerializedConfig } from 'vitest'
 import { StringifyOptions, CDPSession, BrowserCommands } from 'vitest/internal/browser'
 import { ARIARole } from './aria-role.js'
 import {} from './matchers.js'
+import { __ivyaAriaTypes } from '@vitest/browser/internal/vendor-types'
 
 export type BufferEncoding =
   | 'ascii'
@@ -934,6 +935,23 @@ export const utils: {
    * Creates "Cannot find element" error. Useful for custom locators.
    */
   getElementError(selector: string, container?: Element): Error
+
+  /**
+   * Utilities for generating and working with ARIA trees and templates.
+   * @experimental
+   */
+  aria: {
+    /** Captures the ARIA tree for a DOM subtree. */
+    generateAriaTree: typeof __ivyaAriaTypes.generateAriaTree
+    /** Renders a captured ARIA tree to the textual snapshot format. */
+    renderAriaTree: typeof __ivyaAriaTypes.renderAriaTree
+    /** Renders an ARIA template back to text. */
+    renderAriaTemplate: typeof __ivyaAriaTypes.renderAriaTemplate
+    /** Parses textual ARIA snapshot syntax into a template tree. */
+    parseAriaTemplate: typeof __ivyaAriaTypes.parseAriaTemplate
+    /** Matches a captured ARIA tree against a parsed template. */
+    matchAriaTree: typeof __ivyaAriaTypes.matchAriaTree
+  }
 }
 
 export const locators: BrowserLocators

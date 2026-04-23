@@ -44,6 +44,10 @@
     "./utils": {
       "default": "./dummy.js"
     },
+    "./internal/vendor-types": {
+      "types": "./dist/vendor-types.d.ts",
+      "default": "./dummy.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

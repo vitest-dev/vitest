@@ -95,6 +95,7 @@ export interface BrowserRunnerState {
     send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
     emit: (event: string, payload: unknown) => void
   }
+  aria: typeof import('ivya/aria')
 }
 
 /* @__NO_SIDE_EFFECTS__ */

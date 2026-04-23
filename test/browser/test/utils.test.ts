@@ -206,3 +206,17 @@ test('filterNode with wildcard selector filters nested content', async () => {
     </div>"
   `)
 })
+
+test('aria tree utils', () => {
+  document.body.innerHTML = `
+    <h1>Hello, World!</h1>
+    <button aria-hidden="true">Hidden</button>
+    <button>Visible</button>
+  `
+  const { generateAriaTree, renderAriaTree } = utils.aria
+  expect(`\n${renderAriaTree(generateAriaTree(document.body))}`).toMatchInlineSnapshot(`
+    "
+    - heading "Hello, World!" [level=1]
+    - button "Visible""
+  `)
+})
