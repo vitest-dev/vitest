@@ -50,18 +50,14 @@ interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
 }
 
-interface BenchFactory<Registration> {
-  <Name extends string>(name: Name, fn: Fn): Registration
-  <Name extends string>(name: Name, options: FnOptions, fn: Fn): Registration
+interface BenchFactory {
+  <Name extends string>(name: Name, fn: Fn): BenchRegistration<Name>
+  <Name extends string>(name: Name, options: FnOptions, fn: Fn): BenchRegistration<Name>
 }
 
-export interface Bench extends BenchFactory<BenchRegistration<string>> {
-  withBaseline: BenchFactory<BenchRegistration<string>> & {
-    perProject: BenchFactory<BenchRegistration<string>>
-  }
-  perProject: BenchFactory<BenchRegistration<string>> & {
-    withBaseline: BenchFactory<BenchRegistration<string>>
-  }
+export interface Bench extends BenchFactory {
+  withBaseline: BenchFactory & { perProject: BenchFactory }
+  perProject: BenchFactory & { withBaseline: BenchFactory }
   compare: BenchCompare
 }
 
@@ -205,7 +201,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     return task.result as BenchResult
   }
 
-  const makeFactory = <R>(flags: { baseline: boolean; perProject: boolean }): BenchFactory<R> =>
+  const makeFactory = (flags: { baseline: boolean; perProject: boolean }): BenchFactory =>
     ((name: string, a: Fn | FnOptions, b?: Fn | FnOptions) => {
       validateBenchmarkProject(config)
       const { fn, fnOpts } = normalizeBenchArgs(a, b)
@@ -231,17 +227,17 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       if (flags.perProject) {
         (registration as any)[kPerProject] = true
       }
-      return registration as R
-    }) as BenchFactory<R>
+      return registration
+    }) as BenchFactory
 
-  const bench = makeFactory<BenchRegistration<string>>({ baseline: false, perProject: false }) as Bench
+  const bench = makeFactory({ baseline: false, perProject: false }) as Bench
   bench.withBaseline = Object.assign(
-    makeFactory<BenchRegistration<string>>({ baseline: true, perProject: false }),
-    { perProject: makeFactory<BenchRegistration<string>>({ baseline: true, perProject: true }) },
+    makeFactory({ baseline: true, perProject: false }),
+    { perProject: makeFactory({ baseline: true, perProject: true }) },
   )
   bench.perProject = Object.assign(
-    makeFactory<BenchRegistration<string>>({ baseline: false, perProject: true }),
-    { withBaseline: makeFactory<BenchRegistration<string>>({ baseline: true, perProject: true }) },
+    makeFactory({ baseline: false, perProject: true }),
+    { withBaseline: makeFactory({ baseline: true, perProject: true }) },
   )
 
   bench.compare = async (...args) => {

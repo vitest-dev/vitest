@@ -18,7 +18,10 @@ export default defineConfig({
     },
     typecheck: {
       enabled: true,
-      include: ['./test/reporters/configuration-options.test-d.ts'],
+      include: [
+        './test/reporters/configuration-options.test-d.ts',
+        './test/benchmarking.test-d.ts',
+      ],
     },
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {

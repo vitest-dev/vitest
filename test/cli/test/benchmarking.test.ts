@@ -1,6 +1,48 @@
-import type { TestBenchmark, TestBenchmarkTask } from 'vitest'
+import type { BaselineData, BenchResult, TestBenchmark, TestBenchmarkTask } from 'vitest'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
+
+// Synthetic stats — just enough to satisfy BenchResult shape for the matchers
+// and BaselineData shape for on-disk round-trip tests. All fields beyond
+// `mean` are filled with deterministic numbers so snapshots stay stable.
+function fakeStats(mean: number) {
+  return {
+    aad: 0,
+    critical: 0,
+    df: 0,
+    mad: 0,
+    max: mean,
+    mean,
+    min: mean,
+    moe: 0,
+    p50: mean,
+    p75: mean,
+    p99: mean,
+    p995: mean,
+    p999: mean,
+    rme: 0,
+    samplesCount: 2,
+    sd: 0,
+    sem: 0,
+    variance: 0,
+  } as const
+}
+
+function fakeBaseline(mean: number): BaselineData {
+  return {
+    latency: fakeStats(mean),
+    throughput: fakeStats(mean > 0 ? 1 / mean : 0),
+    period: mean,
+    totalTime: mean * 10,
+  }
+}
+
+function fakeResult(mean: number): BenchResult {
+  return {
+    ...fakeBaseline(mean),
+    name: 'fake',
+  } as unknown as BenchResult
+}
 
 // keep runs tiny — this suite asserts wiring, not measurement accuracy
 const fastBenchOptions = {
@@ -385,6 +427,590 @@ test('junit reporter embeds the benchmark table inside <system-out>', async () =
     a     d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+
     b     d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
   `)
+})
+
+// Runs the given inner-test source as a virtual bench file and asserts the
+// inner test case finished in `passed` state (i.e. every `expect` inside the
+// bench passed). Lets each outer test push its assertions INTO the inner
+// test file and just verify the aggregate outcome.
+async function runPassingBench(
+  filename: string,
+  source: string,
+  config: Parameters<typeof runInlineTests>[1] = {},
+) {
+  const { stderr, results } = await runInlineTests(
+    { [filename]: source },
+    { benchmark: { enabled: true }, provide: { options: fastBenchOptions }, ...config },
+  )
+  expect(stderr, `stderr should be empty:\n${stderr}`).toBe('')
+  const testCases = [...(results[0]?.children.allTests() ?? [])]
+  expect(testCases).toHaveLength(1)
+  expect(
+    testCases[0].result()?.state,
+    JSON.stringify(testCases[0].result()?.errors?.map(e => e.message), null, 2),
+  ).toBe('passed')
+}
+
+// ============================================================
+// Bucket A — runtime validation errors
+// ============================================================
+
+test('`bench()` inside a non-benchmark project throws a helpful error', async () => {
+  const { stderr, results } = await runInlineTests(
+    {
+      'regular.test.ts': /* ts */`
+        import { test, expect } from 'vitest'
+        test('misuse', async ({ bench }) => {
+          expect(() => bench('x', () => {})).toThrow(
+            /Cannot use the \`bench\` test-context fixture within a regular test run/,
+          )
+        })
+`,
+    },
+    { /* benchmark.enabled defaults to false */ },
+  )
+  expect(stderr).toBe('')
+  const testCases = [...(results[0]?.children.allTests() ?? [])]
+  expect(testCases).toHaveLength(1)
+  expect(testCases[0].result()?.state).toBe('passed')
+})
+
+test('`bench.compare()` with zero registrations throws "requires at least 2"', async () => {
+  await runPassingBench('zero.bench.ts', /* ts */`
+    import { test, expect } from 'vitest'
+    test('zero', async ({ bench }) => {
+      await expect(bench.compare()).rejects.toThrow(
+        /requires at least 2 benchmarks, received 0/,
+      )
+    })
+  `)
+})
+
+test('`bench.compare(regA)` with one registration throws and suggests `.run()`', async () => {
+  await runPassingBench('one.bench.ts', /* ts */`
+    import { test, expect } from 'vitest'
+    test('one', async ({ bench }) => {
+      await expect(bench.compare(bench('a', () => {}))).rejects.toThrow(
+        /received 1.+Consider calling .+bench\\(\\)\\.run\\(\\)/s,
+      )
+    })
+  `)
+})
+
+test('`bench.compare(reg, non-reg, reg)` throws the shape error', async () => {
+  await runPassingBench('shape.bench.ts', /* ts */`
+    import { test, expect } from 'vitest'
+    test('shape', async ({ bench }) => {
+      await expect(bench.compare(
+        bench('a', () => {}),
+        { name: 'fake', fn: () => {} },
+        bench('b', () => {}),
+      )).rejects.toThrow(
+        /expects every argument to be the return value of/,
+      )
+    })
+  `)
+})
+
+test('`bench.compare` handles all-stored-baselines without running tinybench', async () => {
+  // seed the baseline file so compare skips tinybench for BOTH registrations —
+  // the bench functions throw to prove they're never called.
+  // Key format is `<projectName> > <fullTestName> > <benchName>`; the auto-
+  // cloned benchmark project is named "bench" for an unnamed root project.
+  const seed = {
+    'bench > all cached > a': fakeBaseline(0.5),
+    'bench > all cached > b': fakeBaseline(1),
+  }
+  const { stderr, results } = await runInlineTests(
+    {
+      'cached.bench.ts': /* ts */`
+        import { test, expect } from 'vitest'
+        test('all cached', async ({ bench }) => {
+          const storage = await bench.compare(
+            bench.withBaseline('a', () => { throw new Error('should not run') }),
+            bench.withBaseline('b', () => { throw new Error('should not run') }),
+          )
+          expect(storage.get('a').latency.mean).toBe(0.5)
+          expect(storage.get('b').latency.mean).toBe(1)
+        })
+      `,
+      '__benchmarks__/cached.bench.ts.json': JSON.stringify(seed),
+    },
+    { benchmark: { enabled: true } },
+  )
+  expect(stderr).toBe('')
+  const testCase = [...(results[0]?.children.allTests() ?? [])][0]
+  expect(testCase?.result()?.state).toBe('passed')
+})
+
+// ============================================================
+// Bucket B — baseline file round-trip (__benchmarks__/<file>.json)
+// Baseline key format is `<projectName> > <fullTestName> > <benchName>`.
+// The auto-cloned benchmark project for an unnamed root project is named
+// `"bench"`, so keys below use the `bench > ` prefix.
+// ============================================================
+
+test('first `bench.withBaseline` run creates __benchmarks__/<file>.json', async () => {
+  const { stderr, fs } = await runInlineTests(
+    {
+      'foo.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('baseline', async ({ bench }) => {
+          await bench.withBaseline('x', () => {}).run(inject('options'))
+        })
+`,
+    },
+    { benchmark: { enabled: true }, provide: { options: fastBenchOptions } },
+  )
+  expect(stderr).toBe('')
+  const content = JSON.parse(fs.readFile('__benchmarks__/foo.bench.ts.json'))
+  expect(Object.keys(content)).toEqual(['bench > baseline > x'])
+  const entry = content['bench > baseline > x']
+  expect(typeof entry.latency.mean).toBe('number')
+  expect(typeof entry.throughput.mean).toBe('number')
+  expect(typeof entry.period).toBe('number')
+  expect(typeof entry.totalTime).toBe('number')
+})
+
+test('second `bench.withBaseline` run returns the stored result without calling fn', async () => {
+  const seed = { 'bench > t > x': fakeBaseline(0.5) }
+  await runInlineTests(
+    {
+      't.bench.ts': /* ts */`
+        import { test, expect } from 'vitest'
+        test('t', async ({ bench }) => {
+          const r = await bench.withBaseline(
+            'x',
+            () => { throw new Error('should not run') },
+          ).run()
+          expect(r.latency.mean).toBe(0.5)
+        })
+`,
+      '__benchmarks__/t.bench.ts.json': JSON.stringify(seed),
+    },
+    { benchmark: { enabled: true } },
+  ).then(({ stderr, results }) => {
+    expect(stderr).toBe('')
+    expect([...(results[0]?.children.allTests() ?? [])][0]?.result()?.state).toBe('passed')
+  })
+})
+
+test('`benchmark.updateBaselines: true` overwrites a stored baseline', async () => {
+  const sentinel = 99999
+  const seed = { 'bench > upd > x': fakeBaseline(sentinel) }
+  const { stderr, fs } = await runInlineTests(
+    {
+      'upd.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('upd', async ({ bench }) => {
+          await bench.withBaseline('x', () => {}).run(inject('options'))
+        })
+`,
+      '__benchmarks__/upd.bench.ts.json': JSON.stringify(seed),
+    },
+    { benchmark: { enabled: true, updateBaselines: true }, provide: { options: fastBenchOptions } },
+  )
+  expect(stderr).toBe('')
+  const after = JSON.parse(fs.readFile('__benchmarks__/upd.bench.ts.json'))
+  // the sentinel mean is gone — it was overwritten with fresh measurements
+  expect(after['bench > upd > x'].latency.mean).not.toBe(sentinel)
+})
+
+test('baseline key format includes the project name for multi-project workspaces', async () => {
+  const { stderr, fs } = await runInlineTests(
+    {
+      'shared.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('t', async ({ bench }) => {
+          await bench.withBaseline('x', () => {}).run(inject('options'))
+        })
+`,
+    },
+    {
+      projects: [
+        { test: { name: 'one', benchmark: { enabled: true } } },
+        { test: { name: 'two', benchmark: { enabled: true } } },
+      ],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  const content = JSON.parse(fs.readFile('__benchmarks__/shared.bench.ts.json'))
+  expect(Object.keys(content).sort()).toEqual([
+    'one (bench) > t > x',
+    'two (bench) > t > x',
+  ])
+})
+
+test('stored-baseline tasks are emitted WITHOUT the `baseline: true` flag', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const seed = { 'bench > t > x': fakeBaseline(0.5) }
+  const { stderr } = await runInlineTests(
+    {
+      't.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('t', async ({ bench }) => {
+          await bench.withBaseline(
+            'x',
+            () => { throw new Error('should not run') },
+          ).run()
+        })
+`,
+      '__benchmarks__/t.bench.ts.json': JSON.stringify(seed),
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks).toHaveLength(1)
+  expect(tasks[0].name).toBe('x')
+  // omitting `baseline: true` avoids triggering a redundant save round-trip
+  expect(tasks[0].baseline).toBeUndefined()
+})
+
+// ============================================================
+// Bucket H — configuration (include/exclude/includeSource/retainSamples/enabled)
+// ============================================================
+
+test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'a.perf.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('custom include', async ({ bench }) => {
+          await bench('x', () => {}).run(inject('options'))
+        })
+`,
+      // this .bench.ts would run under the default pattern — but we override
+      'b.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('should not run', async ({ bench }) => {
+          await bench('never', () => { throw new Error('not discovered') }).run()
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true, include: ['**/*.perf.ts'] },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks.map(t => t.name)).toEqual(['x'])
+})
+
+test('`benchmark.exclude` filters matching files out of the bench project', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'wanted.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('wanted', async ({ bench }) => {
+          await bench('x', () => {}).run(inject('options'))
+        })
+`,
+      'skipped.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('should not run', async ({ bench }) => {
+          await bench('never', () => { throw new Error('excluded') }).run()
+        })
+`,
+    },
+    {
+      benchmark: {
+        enabled: true,
+        exclude: ['**/skipped.bench.ts', '**/node_modules/**'],
+      },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks.map(t => t.name)).toEqual(['x'])
+})
+
+test('`benchmark.includeSource` runs in-source benchmarks via `import.meta.vitest`', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'lib.ts': /* ts */`
+        export function add(a: number, b: number) { return a + b }
+        if (import.meta.vitest) {
+          const { test } = import.meta.vitest
+          test('in-source', async ({ bench }) => {
+            await bench('add', () => add(1, 2)).run({
+              time: 0, iterations: 2, warmupTime: 0, warmupIterations: 0,
+            })
+          })
+        }
+`,
+    },
+    {
+      benchmark: { enabled: true, includeSource: ['**/*.ts'] },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks.map(t => t.name)).toEqual(['add'])
+})
+
+test('`benchmark.retainSamples: true` preserves the raw samples array', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'samples.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('samples', async ({ bench }) => {
+          await bench('x', () => {}).run(inject('options'))
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true, retainSamples: true },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks).toHaveLength(1)
+  const samples = (tasks[0].latency as { samples?: number[] }).samples
+  expect(Array.isArray(samples)).toBe(true)
+  expect(samples!.length).toBeGreaterThanOrEqual(1)
+})
+
+test('`benchmark.retainSamples: false` (the default) omits the samples array', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'nosamples.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('nosamples', async ({ bench }) => {
+          await bench('x', () => {}).run(inject('options'))
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks).toHaveLength(1)
+  expect((tasks[0].latency as { samples?: number[] }).samples).toBeUndefined()
+})
+
+test('`benchmark.enabled: false` skips .bench.ts files entirely', async () => {
+  const names: string[] = []
+  const { stderr } = await runInlineTests(
+    {
+      'ignored.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('should-never-run', () => {
+          throw new Error('bench project should not have been created')
+        })
+`,
+      'regular.test.ts': /* ts */`
+        import { test } from 'vitest'
+        test('runs', () => {})
+`,
+    },
+    {
+      // benchmark.enabled defaults to false → no bench project cloned
+      reporters: [{
+        onTestCaseReady(testCase) {
+          names.push(testCase.name)
+        },
+      }],
+    },
+  )
+  expect(stderr).toBe('')
+  expect(names).toEqual(['runs'])
+})
+
+// ============================================================
+// Bucket D — composition semantics with stored baselines
+// ============================================================
+
+test('stored `withBaseline.perProject` tasks keep `perProject: true` when re-emitted', async () => {
+  const tasks: TestBenchmarkTask[] = []
+  const seed = { 'bench > combined > x': fakeBaseline(0.5) }
+  const { stderr } = await runInlineTests(
+    {
+      'combined.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('combined', async ({ bench }) => {
+          await bench.withBaseline.perProject(
+            'x',
+            () => { throw new Error('should not run') },
+          ).run()
+        })
+`,
+      '__benchmarks__/combined.bench.ts.json': JSON.stringify(seed),
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: [{
+        onTestCaseBenchmark(_tc, benchmark) {
+          tasks.push(...benchmark.tasks)
+        },
+      }],
+    },
+  )
+  expect(stderr).toBe('')
+  expect(tasks).toHaveLength(1)
+  expect(tasks[0]).toMatchObject({ name: 'x', perProject: true })
+  // baseline flag is intentionally stripped on re-emitted stored baselines
+  expect(tasks[0].baseline).toBeUndefined()
+})
+
+// ============================================================
+// Bucket E — `bench.compare` edge cases
+// ============================================================
+
+test('`bench.compare` wraps multiple failed benchmarks in an AggregateError', async () => {
+  await runPassingBench('aggregate.bench.ts', /* ts */`
+    import { test, expect, inject } from 'vitest'
+    test('aggregate errors', async ({ bench }) => {
+      const err = await bench.compare(
+        bench('a', () => { throw new Error('A failed') }),
+        bench('b', () => { throw new Error('B failed') }),
+        inject('options'),
+      ).catch(e => e)
+      expect(err).toBeInstanceOf(AggregateError)
+      expect(err.message).toBe('Some benchmarks failed')
+      const messages = err.errors.map((e: any) => e.message).sort()
+      expect(messages).toEqual(['A failed', 'B failed'])
+    })
+  `)
+})
+
+test('`BenchStorage.get` returns a valid BenchResult shape for every registration', async () => {
+  await runPassingBench('storage.bench.ts', /* ts */`
+    import { test, expect, inject } from 'vitest'
+    test('storage shape', async ({ bench }) => {
+      const storage = await bench.compare(
+        bench('a', () => {}),
+        bench('b', () => {}),
+        inject('options'),
+      )
+      for (const name of ['a', 'b'] as const) {
+        const result = storage.get(name)
+        expect(typeof result.latency.mean).toBe('number')
+        expect(typeof result.throughput.mean).toBe('number')
+        expect(typeof result.period).toBe('number')
+        expect(typeof result.totalTime).toBe('number')
+      }
+    })
+  `)
+})
+
+test('`BenchStorage.get("missing")` throws a descriptive error', async () => {
+  await runPassingBench('missing.bench.ts', /* ts */`
+    import { test, expect, inject } from 'vitest'
+    test('missing', async ({ bench }) => {
+      const storage = await bench.compare(
+        bench('a', () => {}),
+        bench('b', () => {}),
+        inject('options'),
+      )
+      expect(() => storage.get('missing')).toThrow(
+        /task "missing" was not defined/,
+      )
+    })
+  `)
+})
+
+// ============================================================
+// Bucket F — `toBeFasterThan` / `toBeSlowerThan` matchers
+// Unit tests over synthetic BenchResult shapes — no runInlineTests.
+// ============================================================
+
+test('`toBeFasterThan` passes when actual.latency.mean is strictly smaller', () => {
+  expect(fakeResult(0.5)).toBeFasterThan(fakeResult(1.0))
+})
+
+test('`toBeFasterThan` fails with a percent-slower message when actual is slower', () => {
+  expect(() => expect(fakeResult(1.0)).toBeFasterThan(fakeResult(0.5)))
+    .toThrowErrorMatchingInlineSnapshot(`
+      [Error: [2mexpect([22m[31mreceived[39m[2m).toBeFasterThan([22m[32mexpected[39m[2m)[22m
+
+      Expected to be faster, but was 100.00% slower.
+
+      Received: [31m1.00[39m ops/sec
+      Expected: [32m2.00[39m ops/sec
+      ]
+    `)
+})
+
+test('`toBeFasterThan` honours the `delta` threshold', () => {
+  const fast = fakeResult(0.8) // 20% faster than 1.0
+  const slow = fakeResult(1.0)
+  // 20% faster is not enough when delta demands 30%
+  expect(() => expect(fast).toBeFasterThan(slow, { delta: 0.3 }))
+    .toThrow(/faster by at least 30%/)
+  // passes when the demanded margin is only 10%
+  expect(fast).toBeFasterThan(slow, { delta: 0.1 })
+})
+
+test('`toBeSlowerThan` passes when actual.latency.mean is strictly larger', () => {
+  expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5))
+})
+
+test('`toBeSlowerThan` fails with a percent-faster message when actual is faster', () => {
+  expect(() => expect(fakeResult(0.5)).toBeSlowerThan(fakeResult(1.0)))
+    .toThrowErrorMatchingInlineSnapshot(`
+      [Error: [2mexpect([22m[31mreceived[39m[2m).toBeSlowerThan([22m[32mexpected[39m[2m)[22m
+
+      Expected to be slower, but was 50% faster.
+
+      Received: [31m2.00[39m ops/sec
+      Expected: [32m1.00[39m ops/sec
+      ]
+    `)
+})
+
+test('`toBeSlowerThan` honours the `delta` threshold', () => {
+  // slow = 2x fast → 100% slower. delta 0.5 → threshold 150% → passes at 100%
+  expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5), { delta: 0.5 })
+  expect(() => expect(fakeResult(1.0)).toBeSlowerThan(fakeResult(0.5), { delta: 1.5 }))
+    .toThrow(/slower by at least 150%/)
+})
+
+test('bench matchers reject non-benchmark-result values with a TypeError', () => {
+  expect(() => expect({ foo: 'bar' }).toBeFasterThan(fakeResult(1.0)))
+    .toThrow(TypeError)
+  expect(() => expect(fakeResult(1.0)).toBeFasterThan({ foo: 'bar' } as any))
+    .toThrow(TypeError)
+  expect(() => expect({ foo: 'bar' }).toBeSlowerThan(fakeResult(1.0)))
+    .toThrow(TypeError)
 })
 
 declare module 'vitest' {

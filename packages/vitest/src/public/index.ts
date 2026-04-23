@@ -111,6 +111,7 @@ export {
   test,
 } from '@vitest/runner'
 export type {
+  BaselineData,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
