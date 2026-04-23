@@ -19,7 +19,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, inspect } from '@vitest/utils/display'
+import { format, formatRegExp, inspect, truncateString } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -1020,9 +1020,9 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
-  const inspectOptions: InspectOptions = {
+  const inspectOptions = {
     truncate: runner.config.taskTitleValueFormatTruncate,
-  }
+  } satisfies InspectOptions
 
   const isObjectItem = isObject(items[0])
   function formatAttribute(s: string) {
@@ -1033,6 +1033,10 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
+      // print string without quotes
+      if (typeof value === 'string') {
+        return truncateString(value, inspectOptions.truncate)
+      }
       return inspect(value, inspectOptions)
     })
   }
