@@ -13,40 +13,38 @@ test('simple', async () => {
 test('pseudo-state', async () => {
   document.body.innerHTML = `
 <style>
-.trace-pseudo-hover,
-.trace-pseudo-focus,
-.trace-pseudo-within {
+.test-target {
   background: rgb(255, 200, 200);
-  display: block;
-  margin: 8px;
-  padding: 8px;
 }
-.trace-pseudo-hover:hover {
+.test-hover:hover,
+.test-focus:focus,
+.test-focus-within:focus-within,
+.test-active:active,
+.test-focus-visible:focus-visible,
+.test-none
+{
   background: rgb(253, 224, 71);
-}
-.trace-pseudo-focus:focus {
-  background: rgb(253, 224, 71);
-}
-.trace-pseudo-within:focus-within {
-  background: rgb(253, 224, 71);
-}
-.trace-pseudo-within input {
-  display: block;
 }
 </style>
-<button class="trace-pseudo-hover">First pseudo state</button>
-<button class="trace-pseudo-hover">Second pseudo state</button>
-<input class="trace-pseudo-focus" aria-label="Focused pseudo state" value="Focused pseudo state">
-<label class="trace-pseudo-within">
-  Focus within target
-  <input aria-label="Focus within pseudo state" value="Focus within pseudo state">
+<button class="test-target test-hover">Test hover 1</button>
+<hr />
+<button class="test-target test-hover">Test hover 2</button>
+<hr />
+<label style="display: block; padding: 8px;">
+  Test focus
+  <input class="test-target test-focus" placeholder="focus-placeholder">
+</label>
+<hr />
+<label class="test-target test-focus-within" style="display: block; padding: 8px;">
+  Test focus-within
+  <input placeholder="focus-within-placeholder">
 </label>
 `
-  await page.getByRole('button', { name: 'First pseudo state' }).hover()
-  await page.getByRole('button', { name: 'Second pseudo state' }).click()
-  await page.getByRole('textbox', { name: 'Focused pseudo state' }).click()
-  await page.getByRole('textbox', { name: 'Focused pseudo state' }).fill('Test focus')
-  await page.getByRole('textbox', { name: 'Focus within pseudo state' }).fill('Test focus within')
+  await page.getByRole('button', { name: 'Test hover 1' }).hover()
+  await page.getByRole('button', { name: 'Test hover 2' }).click()
+  await page.getByPlaceholder('focus-placeholder').click()
+  await page.getByPlaceholder('focus-placeholder').fill('focus-done')
+  await page.getByPlaceholder('focus-within-placeholder').fill('focus-within-done')
 })
 
 test('css-link', async () => {

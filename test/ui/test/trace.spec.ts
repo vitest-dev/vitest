@@ -192,29 +192,29 @@ async function testPseudoState(page: Page) {
 
   // trace view replays hover state at the time of snapshot
   await traceSteps.nth(0).click()
-  await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOn)
-  await expect(traceFrame.getByText('Second pseudo state')).toHaveCSS(...pseudoOff)
+  await expect(traceFrame.getByText('Test hover 1')).toHaveCSS(...pseudoOn)
+  await expect(traceFrame.getByText('Test hover 2')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(1).click()
-  await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOff)
-  await expect(traceFrame.getByText('Second pseudo state')).toHaveCSS(...pseudoOn)
+  await expect(traceFrame.getByText('Test hover 1')).toHaveCSS(...pseudoOff)
+  await expect(traceFrame.getByText('Test hover 2')).toHaveCSS(...pseudoOn)
 
   // trace view reacts to interaction during the replay
   // this is verified manually but seems flaky on playwright
   // maybe because it clicks inside shadow-dom inside iframe
   await expect(async () => {
-    await traceFrame.getByText('First pseudo state').click()
-    await expect(traceFrame.getByText('First pseudo state')).toHaveCSS(...pseudoOn)
+    await traceFrame.getByText('Test hover 1').click()
+    await expect(traceFrame.getByText('Test hover 1')).toHaveCSS(...pseudoOn)
   }).toPass()
 
   // focus
-  await expect(traceFrame.getByLabel('Focused pseudo state')).toHaveCSS(...pseudoOff)
+  await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(3).click()
-  await expect(traceFrame.getByLabel('Focused pseudo state')).toHaveCSS(...pseudoOn)
+  await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOn)
 
   // focus-within
-  await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOff)
+  await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(4).click()
-  await expect(traceFrame.locator('.trace-pseudo-within')).toHaveCSS(...pseudoOn)
+  await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOn)
 }
 
 async function testCssLink(page: Page) {
