@@ -37,7 +37,7 @@ export function createDtsUtils({
      */
     dts() {
       return [
-        dts({ respectExternal: true }),
+        dts({ respectExternal: true, tsConfigPath: path.join(process.cwd(), 'tsconfig.build.json') }),
         {
           name: 'isolated-decl-dts-extra',
           buildEnd(error) {
