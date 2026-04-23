@@ -45,22 +45,6 @@ export interface BenchRegistration<Name extends string> {
   [kRegistration]: true
 }
 
-export interface BaselineRegistration<Name extends string> extends BenchRegistration<Name> {
-  /**
-   * @internal
-   */
-  [kBaseline]: true
-}
-
-export interface PerProjectRegistration<Name extends string> extends BenchRegistration<Name> {
-  /**
-   * @internal
-   */
-  [kPerProject]: true
-}
-
-export interface BaselinePerProjectRegistration<Name extends string> extends BaselineRegistration<Name>, PerProjectRegistration<Name> {}
-
 interface BenchCompare {
   <Args extends BenchRegistration<any>[]>(...args: Args): Promise<BenchStorage<ExtractBenchNames<Args>>>
   <Args extends BenchRegistration<any>[]>(...args: [...Args, BenchCompareOptions]): Promise<BenchStorage<ExtractBenchNames<Args>>>
@@ -72,11 +56,11 @@ interface BenchFactory<Registration> {
 }
 
 export interface Bench extends BenchFactory<BenchRegistration<string>> {
-  withBaseline: BenchFactory<BaselineRegistration<string>> & {
-    perProject: BenchFactory<BaselinePerProjectRegistration<string>>
+  withBaseline: BenchFactory<BenchRegistration<string>> & {
+    perProject: BenchFactory<BenchRegistration<string>>
   }
-  perProject: BenchFactory<PerProjectRegistration<string>> & {
-    withBaseline: BenchFactory<BaselinePerProjectRegistration<string>>
+  perProject: BenchFactory<BenchRegistration<string>> & {
+    withBaseline: BenchFactory<BenchRegistration<string>>
   }
   compare: BenchCompare
 }
@@ -232,7 +216,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       if (flags.perProject) {
         meta.perProject = true
       }
-      const registration: any = {
+      const registration: BenchRegistration<string> = {
         [kRegistration]: true,
         name,
         fn,
@@ -242,22 +226,22 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
           : (options: BenchCompareOptions | undefined) => runSingle(name, fn, fnOpts, options, flags.perProject ? meta : undefined),
       }
       if (flags.baseline) {
-        registration[kBaseline] = true
+        (registration as any)[kBaseline] = true
       }
       if (flags.perProject) {
-        registration[kPerProject] = true
+        (registration as any)[kPerProject] = true
       }
       return registration as R
     }) as BenchFactory<R>
 
   const bench = makeFactory<BenchRegistration<string>>({ baseline: false, perProject: false }) as Bench
   bench.withBaseline = Object.assign(
-    makeFactory<BaselineRegistration<string>>({ baseline: true, perProject: false }),
-    { perProject: makeFactory<BaselinePerProjectRegistration<string>>({ baseline: true, perProject: true }) },
+    makeFactory<BenchRegistration<string>>({ baseline: true, perProject: false }),
+    { perProject: makeFactory<BenchRegistration<string>>({ baseline: true, perProject: true }) },
   )
   bench.perProject = Object.assign(
-    makeFactory<PerProjectRegistration<string>>({ baseline: false, perProject: true }),
-    { withBaseline: makeFactory<BaselinePerProjectRegistration<string>>({ baseline: true, perProject: true }) },
+    makeFactory<BenchRegistration<string>>({ baseline: false, perProject: true }),
+    { withBaseline: makeFactory<BenchRegistration<string>>({ baseline: true, perProject: true }) },
   )
 
   bench.compare = async (...args) => {
