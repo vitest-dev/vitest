@@ -1204,6 +1204,7 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
 
     test("test", async ({ task }) => {
       console.log("!> test", task.suite.suite.name,task.suite.name, task.name)
+      await sleep(10)
     })
   })
 })
@@ -1222,10 +1223,10 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     !> test a0 b0 test
     !> test a0 b1 test
     !> test a1 b0 test
+    !> test a1 b1 test
     !> afterEach a0 b0 test
     !> afterEach a0 b1 test
     !> afterEach a1 b0 test
-    !> test a1 b1 test
     !> afterEach a1 b1 test
     "
   `)
@@ -1272,6 +1273,7 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
 
     test("test", async ({ task }) => {
       console.log("!> test", task.suite.suite.name, task.suite.name, task.name)
+      await sleep(10)
     })
   })
 })
@@ -1290,10 +1292,10 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     !> test a0 b0 test
     !> test a0 b1 test
     !> test a1 b0 test
+    !> test a1 b1 test
     !> afterAll a0 b0
     !> afterAll a0 b1
     !> afterAll a1 b0
-    !> test a1 b1 test
     !> afterAll a1 b1
     "
   `)
