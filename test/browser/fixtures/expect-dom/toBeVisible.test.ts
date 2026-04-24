@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { render } from './utils'
+import { page } from 'vitest/browser'
 
 describe('.toBeVisible', () => {
   it('returns the visibility of an element', () => {
@@ -40,6 +41,17 @@ describe('.toBeVisible', () => {
     const subject = document.createElement('div')
     expect(subject).not.toBeVisible()
     expect(() => expect(subject).toBeVisible()).toThrow()
+  })
+
+  it('locator which does not locate any element is not visible', async () => {
+    const locator = page.getByTestId('not-existing');
+    expect(locator).not.toBeVisible()
+    expect(() => expect(locator).toBeVisible()).toThrowError()
+  })
+
+  it('locator which does not locate any element is not visible when using expect.element', async () => {
+    const locator = page.getByTestId('not-existing');
+    await expect.element(locator).not.toBeVisible()
   })
 
   describe('with a <details /> element', () => {
