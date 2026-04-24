@@ -1195,7 +1195,9 @@ describe.for(["a", "b"])("%s", { concurrent: true }, () => {
 })
 
 // we could enforce this by adding yet another limit globally at `runTest`
-// but there's no way to achieve the same for deep suite-level hooks (see next test)
+// (like we originally had before https://github.com/vitest-dev/vitest/pull/9653)
+// but there's no way to achieve the same for deep suite-level hooks anyways,
+// so we don't do that (yet).
 test('non-sibling test sequential lifecycle non-guarantee', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
