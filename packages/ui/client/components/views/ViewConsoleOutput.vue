@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getNames } from '@vitest/ws-client'
+import { getNames } from '@vitest/runner/utils'
 import { computed } from 'vue'
 import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'

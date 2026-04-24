@@ -5,7 +5,6 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
       "@vitest/pretty-format": ["./packages/pretty-format/src/index.ts"],
       "@vitest/utils": ["./packages/utils/src/index.ts"],

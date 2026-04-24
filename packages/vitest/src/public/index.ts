@@ -146,6 +146,7 @@ export type {
   TestFunction,
   TestOptions,
   VitestRunnerConfig as TestRunnerConfig,
+  TestTagDefinition,
 
   TestTags,
   VitestRunner as VitestTestRunner,
