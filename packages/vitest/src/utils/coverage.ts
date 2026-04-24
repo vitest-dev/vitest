@@ -18,7 +18,7 @@ export interface RuntimeCoverageProviderModule {
   startCoverage?: (runtimeOptions: {
     isolate: boolean
     /** @internal */
-    autoAttachWorkers: boolean
+    autoAttachSubprocess: boolean
     /** @internal */
     reportsDirectory: string
   }) => unknown | Promise<unknown>

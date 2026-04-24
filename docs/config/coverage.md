@@ -459,12 +459,12 @@ Note that setting this option does not change where coverage HTML report is gene
 
 Collect coverage only for files changed since a specified commit or branch. When set to `true`, it uses staged and unstaged changes.
 
-## coverage.autoAttachWorkers <Version>5.0.0</Version> {#coverage-autoattachworkers}
+## coverage.autoAttachSubprocess <Version>5.0.0</Version> {#coverage-autoattachsubprocess}
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **Available for providers:** `'v8'`
-- **CLI:** `--coverage.autoAttachWorkers`
+- **CLI:** `--coverage.autoAttachSubprocess`
 
 Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run.
 

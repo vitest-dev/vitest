@@ -299,10 +299,10 @@ Apply exclusions again after coverage has been remapped to original sources. (de
 
 Directory of HTML coverage output to be served in UI mode and HTML reporter.
 
-### coverage.autoAttachWorkers
+### coverage.autoAttachSubprocess
 
-- **CLI:** `--coverage.autoAttachWorkers`
-- **Config:** [coverage.autoAttachWorkers](/config/coverage#coverage-autoattachworkers)
+- **CLI:** `--coverage.autoAttachSubprocess`
+- **Config:** [coverage.autoAttachSubprocess](/config/coverage#coverage-autoattachsubprocess)
 
 Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)
 

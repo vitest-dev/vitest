@@ -12,7 +12,7 @@ export async function startCoverageInsideWorker(
   if (coverageModule) {
     return coverageModule.startCoverage?.({
       ...runtimeOptions,
-      autoAttachWorkers: options.autoAttachWorkers,
+      autoAttachSubprocess: options.autoAttachSubprocess,
       reportsDirectory: options.reportsDirectory,
     })
   }

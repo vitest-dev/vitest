@@ -158,7 +158,7 @@ export interface SerializedCoverageConfig {
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
-  autoAttachWorkers: boolean
+  autoAttachSubprocess: boolean
 }
 
 export interface SerializedRootConfig extends SerializedConfig {
