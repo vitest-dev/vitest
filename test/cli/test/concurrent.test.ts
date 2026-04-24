@@ -1074,3 +1074,250 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
     }
   `)
 })
+
+function extractLogs(log: string) {
+  const result = log.split('\n').filter(line => line.startsWith('!>')).join('\n')
+  return `\n${result.trim()}\n`
+}
+
+test('sibling task sequential lifecycle guarantee', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+beforeEach(async ({ task }) => {
+  console.log("!> beforeEach", task.name)
+  await sleep(10)
+})
+
+afterEach(async ({ task }) => {
+  console.log("!> afterEach", task.name)
+})
+
+test.concurrent.for(["a", "b", "c"])("%s", async (_, { task }) => {
+  console.log("!> test", task.name)
+  await sleep(10)
+})
+`,
+  }, {
+    maxConcurrency: 1,
+    globals: true,
+  })
+
+  expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
+    "
+    !> beforeEach a
+    !> test a
+    !> afterEach a
+    !> beforeEach b
+    !> test b
+    !> afterEach b
+    !> beforeEach c
+    !> test c
+    !> afterEach c
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+        "c": "passed",
+      },
+    }
+  `)
+})
+
+test('sibling suite sequential lifecycle guarantee', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+describe.for(["a", "b", "c"])("%s", { concurrent: true }, () => {
+  beforeAll(async ({}, suite) => {
+    console.log("!> beforeAll", suite.name)
+    await sleep(10)
+  })
+
+  afterAll(async ({}, suite) => {
+    console.log("!> afterAll", suite.name)
+  })
+
+  test.concurrent("test", async ({ task }) => {
+    console.log("!> test", task.suite.name)
+    await sleep(10)
+  })
+})
+`,
+  }, {
+    maxConcurrency: 1,
+    globals: true,
+  })
+
+  expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
+    "
+    !> beforeAll a
+    !> test a
+    !> afterAll a
+    !> beforeAll b
+    !> test b
+    !> afterAll b
+    !> beforeAll c
+    !> test c
+    !> afterAll c
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": {
+          "test": "passed",
+        },
+        "b": {
+          "test": "passed",
+        },
+        "c": {
+          "test": "passed",
+        },
+      },
+    }
+  `)
+})
+
+// we could enforce this by adding yet another limit globally at `runTest`
+// but there's no way to achieve the same for deep suite-level hooks (see next test)
+test('non-sibling test sequential lifecycle non-guarantee', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
+  describe.for(["b0", "b1"])("%s", { concurrent: true }, () => {
+    beforeEach(async ({ task }) => {
+      console.log("!> beforeEach", task.suite.suite.name, task.suite.name, task.name)
+      await sleep(10)
+    })
+
+    afterEach(async ({ task }) => {
+      console.log("!> afterEach", task.suite.suite.name, task.suite.name, task.name)
+    })
+
+    test("test", async ({ task }) => {
+      console.log("!> test", task.suite.suite.name,task.suite.name, task.name)
+    })
+  })
+})
+`,
+  }, {
+    maxConcurrency: 2,
+    globals: true,
+  })
+
+  expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
+    "
+    !> beforeEach a0 b0 test
+    !> beforeEach a0 b1 test
+    !> beforeEach a1 b0 test
+    !> beforeEach a1 b1 test
+    !> test a0 b0 test
+    !> test a0 b1 test
+    !> test a1 b0 test
+    !> afterEach a0 b0 test
+    !> afterEach a0 b1 test
+    !> afterEach a1 b0 test
+    !> test a1 b1 test
+    !> afterEach a1 b1 test
+    "
+  `)
+
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a0": {
+          "b0": {
+            "test": "passed",
+          },
+          "b1": {
+            "test": "passed",
+          },
+        },
+        "a1": {
+          "b0": {
+            "test": "passed",
+          },
+          "b1": {
+            "test": "passed",
+          },
+        },
+      },
+    }
+  `)
+})
+
+test('non-sibling suite sequential lifecycle non-guarantee', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
+  describe.for(["b0", "b1"])("%s", { concurrent: true }, () => {
+    beforeAll(async ({}, suite) => {
+      console.log("!> beforeAll", suite.suite.name, suite.name)
+      await sleep(10)
+    })
+
+    afterAll(async ({}, suite) => {
+      console.log("!> afterAll", suite.suite.name, suite.name)
+    })
+
+    test("test", async ({ task }) => {
+      console.log("!> test", task.suite.suite.name, task.suite.name, task.name)
+    })
+  })
+})
+`,
+  }, {
+    maxConcurrency: 2,
+    globals: true,
+  })
+
+  expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
+    "
+    !> beforeAll a0 b0
+    !> beforeAll a0 b1
+    !> beforeAll a1 b0
+    !> beforeAll a1 b1
+    !> test a0 b0 test
+    !> test a0 b1 test
+    !> test a1 b0 test
+    !> afterAll a0 b0
+    !> afterAll a0 b1
+    !> afterAll a1 b0
+    !> test a1 b1 test
+    !> afterAll a1 b1
+    "
+  `)
+
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a0": {
+          "b0": {
+            "test": "passed",
+          },
+          "b1": {
+            "test": "passed",
+          },
+        },
+        "a1": {
+          "b0": {
+            "test": "passed",
+          },
+          "b1": {
+            "test": "passed",
+          },
+        },
+      },
+    }
+  `)
+})
