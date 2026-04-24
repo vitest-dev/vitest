@@ -22,16 +22,16 @@ const mod: CoverageProviderModule & {
   session: null,
 
   async startCoverage({ isolate, autoAttachWorkers, reportsDirectory }) {
+    if (autoAttachWorkers) {
+      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
+      process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
+    }
+
     if (isolate === false && enabled) {
       return
     }
 
     enabled = true
-
-    if (autoAttachWorkers) {
-      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
-      process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
-    }
 
     this.session ||= new inspector.Session()
     const session = this.session as inspector.Session
