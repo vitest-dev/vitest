@@ -3,12 +3,13 @@ import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
-import type { SerializedCoverageConfig } from '../runtime/config'
+import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { CliOptions } from './cli/cli-api'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { ProcessPool } from './pool'
+import type { Report } from './reporters/report'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
@@ -46,6 +47,7 @@ import { TestProject } from './project'
 import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
+import { createReport } from './reporters/report'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
@@ -501,6 +503,13 @@ export class Vitest {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
     return this.coreWorkspaceProject
+  }
+
+  public get serializedRootConfig(): SerializedRootConfig {
+    return {
+      ...this.getRootProject().serializedConfig,
+      projects: this.projects.map(project => project.serializedConfig),
+    }
   }
 
   public getProjectByName(name: string): TestProject {
@@ -1642,6 +1651,28 @@ export class Vitest {
       const regexp = wildcardPatternToRegExp(project)
       return regexp.test(name)
     })
+  }
+
+  /** @internal */
+  isExcludedByProjectFilter(name: string): boolean {
+    const projects = this._config?.project || this._cliOptions?.project
+    if (!projects || !projects.length) {
+      return false
+    }
+    return toArray(projects).some((project) => {
+      if (!project.startsWith('!')) {
+        return false
+      }
+      const positivePattern = project.slice(1)
+      return wildcardPatternToRegExp(positivePattern).test(name)
+    })
+  }
+
+  /**
+   * Create a report that's scoped to a specific reporter directory.
+   */
+  createReport(scope: string): Report {
+    return createReport(this, scope)
   }
 }
 

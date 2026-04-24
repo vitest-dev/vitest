@@ -51,11 +51,16 @@ Object {
 | `printBasicPrototype` | `boolean`        | `true`      | Print `Object` and `Array` prefixes for plain objects and arrays     |
 | `printFunctionName`   | `boolean`        | `true`      | Include or omit the function name                                    |
 | `printShadowRoot`     | `boolean`        | `true`      | Include shadow-root contents when formatting DOM nodes               |
+| `quoteKeys`           | `boolean`        | `true`      | Always quote object property keys                                    |
+| `singleQuote`         | `boolean`        | `false`     | Print strings using single quotes instead of double quotes           |
+| `spacingInner`        | `string`         | `\n`        | Whitespace after commas between items or entries                     |
+| `spacingOuter`        | `string`         | `\n`        | Whitespace just inside `[]` / `{}` delimiters                        |
 
 Important:
 
 - `plugins: []` means the package does not auto-enable its built-in plugins by default
 - Vitest features opt into their own plugin stacks and option presets
+- `min: true` also changes the defaults of other options to `spacingInner: ' '`, `spacingOuter: ''`, and `printBasicPrototype: false`
 
 ## Built-in Plugins
 
@@ -117,6 +122,9 @@ Snapshots use `@vitest/pretty-format` with snapshot-specific defaults such as:
 - `escapeString: false`
 - `escapeRegex: true`
 - `printFunctionName: false`
+- `maxOutputLength: 2 ** 27`
+
+Snapshots use a more generous safety cap than the package default. The default `maxOutputLength` is tuned for general-purpose formatting such as logs and error messages, while snapshot users may intentionally persist large serialized values to dedicated files. Users can still opt into a smaller cap through `test.snapshotFormat.maxOutputLength`.
 
 Default snapshot plugin stack:
 

@@ -746,14 +746,14 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
-  // if test is marked to be failed, flip the result
+  // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
   if (test.fails) {
     if (test.result.state === 'pass') {
       const error = processError(new Error('Expect test to fail'))
       test.result.state = 'fail'
       test.result.errors = [error]
     }
-    else {
+    else if (!test.result.errors?.some(e => e.__vitest_test_syntax_error__)) {
       test.result.state = 'pass'
       test.result.errors = undefined
     }

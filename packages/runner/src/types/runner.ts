@@ -36,6 +36,7 @@ export interface VitestRunnerConfig {
   chaiConfig: {
     truncateThreshold?: number
   } | undefined
+  taskTitleValueFormatTruncate: number
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number

@@ -806,6 +806,16 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser/trace-view',
                 docFooterText: 'Trace View | Browser Mode',
               },
+              {
+                text: 'Playwright Traces',
+                link: '/guide/browser/playwright-traces',
+                docFooterText: 'Playwright Traces | Browser Mode',
+              },
+              {
+                text: 'ARIA Snapshots',
+                link: '/guide/browser/aria-snapshots',
+                docFooterText: 'ARIA Snapshots | Browser Mode',
+              },
             ],
           },
           {

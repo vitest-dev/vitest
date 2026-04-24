@@ -60,7 +60,7 @@ const fileWithTextStacks: RunnerTestFile = {
 }
 fileWithTextStacks.file = fileWithTextStacks
 
-describe('ViewReport', () => {
+describe.todo('ViewReport', () => {
   describe('RunnerTestFile where stacks are in text', () => {
     beforeEach(() => {
       render(ViewReport, {

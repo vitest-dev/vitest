@@ -10,6 +10,7 @@ import Dashboard from '~/components/Dashboard.vue'
 import FileDetails from '~/components/FileDetails.vue'
 import Navigation from '~/components/Navigation.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
+import TraceViewPane from '~/components/trace/TraceViewPane.vue'
 import { browserState } from '~/composables/client'
 import {
   coverageVisible,
@@ -20,6 +21,7 @@ import {
   mainSizes,
   panels,
 } from '~/composables/navigation'
+import { activeTraceView } from '~/composables/trace-view'
 
 const dashboardVisible = initializeNavigation()
 
@@ -91,7 +93,7 @@ function allowBrowserEvents() {
         <Navigation />
       </Pane>
       <Pane :size="mainSizes[1]">
-        <transition v-if="!browserState" key="ui-detail">
+        <transition v-if="!browserState && !activeTraceView" key="ui-detail">
           <Dashboard v-if="dashboardVisible" key="summary" />
           <Coverage
             v-else-if="coverageVisible"
@@ -113,7 +115,22 @@ function allowBrowserEvents() {
               @resized="onModuleResized"
             >
               <Pane :size="detailSizes[0]" min-size="10">
-                <BrowserIframe v-once />
+                <template v-if="browserState">
+                  <Splitpanes
+                    v-if="browserState.config.browser?.traceView.enabled"
+                    class="h-full"
+                    :horizontal="detailsPosition === 'right'"
+                  >
+                    <Pane :size="activeTraceView ? 55 : 100" min-size="10">
+                      <BrowserIframe v-once />
+                    </Pane>
+                    <Pane v-if="activeTraceView" size="45" min-size="10">
+                      <TraceViewPane />
+                    </Pane>
+                  </Splitpanes>
+                  <BrowserIframe v-else v-once />
+                </template>
+                <TraceViewPane v-else-if="activeTraceView" />
               </Pane>
               <Pane
                 v-if="detailsPanelVisible"

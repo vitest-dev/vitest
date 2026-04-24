@@ -157,4 +157,36 @@ export default () =>
       external,
       plugins: dtsUtilsClient.dts(),
     },
+    {
+      input: {
+        'vendor-types': './src/vendor-types.ts',
+      },
+      output: {
+        dir: 'dist',
+        entryFileNames: '[name].ts',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        ...dtsUtils.isolatedDecl(),
+        ...plugins,
+      ],
+    },
+    {
+      input: {
+        'vendor-types': './dist/.types/vendor-types.d.ts',
+      },
+      output: {
+        dir: 'dist',
+        entryFileNames: '[name].d.ts',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        resolve({
+          preferBuiltins: true,
+        }),
+        dtsUtils.dts(),
+      ],
+    },
   ])

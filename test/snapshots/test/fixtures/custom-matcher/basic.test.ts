@@ -1,4 +1,4 @@
-import { expect, test, Snapshots } from 'vitest'
+import { expect, test, Snapshots, chai } from 'vitest'
 
 const {
   toMatchFileSnapshot,
@@ -11,6 +11,7 @@ interface CustomMatchers<R = unknown> {
   toMatchCustomSnapshot: (properties?: object) => R
   toMatchCustomInlineSnapshot: (snapshot?: string) => R
   toMatchCustomFileSnapshot: (filepath: string) => Promise<R>
+  toMatchCustomAsyncInlineSnapshot: (snapshot?: string) => Promise<R>
 }
 
 declare module 'vitest' {
@@ -44,6 +45,21 @@ expect.extend({
     const result = await toMatchFileSnapshot.call(this, actualCustom, filepath)
     return { ...result, message: () => `[custom error] ${result.message()}` }
   },
+  async toMatchCustomAsyncInlineSnapshot(
+    actual: string,
+    inlineSnapshot?: string,
+  ) {
+    chai.util.flag(this.assertion, 'error', new Error())
+    await Promise.resolve()
+    const inner = async () => {
+      await Promise.resolve()
+      const actualCustom = formatCustom(actual)
+      const result = toMatchInlineSnapshot.call(this, actualCustom, inlineSnapshot)
+      return { ...result, message: () => `[custom error] ${result.message()}` }
+    }
+    const result = await inner();
+    return result;
+  }
 })
 
 test('file', () => {
@@ -67,6 +83,15 @@ test('inline', () => {
     Object {
       "length": 6,
       "reversed": "eheheh",
+    }
+  `)
+})
+
+test('async inline', async () => {
+  await expect(`huhuhu`).toMatchCustomAsyncInlineSnapshot(`
+    Object {
+      "length": 6,
+      "reversed": "uhuhuh",
     }
   `)
 })

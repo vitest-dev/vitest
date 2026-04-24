@@ -207,7 +207,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               // vitest command group (with source)
               expect.objectContaining({
                 method: 'tracingGroup',
-                title: '__vitest_click',
+                title: 'vitest:click',
               }),
               // playwright action (without source)
               expect.objectContaining({
@@ -218,7 +218,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find(e => e.title === '__vitest_click')
+          const markerEvent = events.find(e => e.title === 'vitest:click')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
             if (rolldownVersion) {

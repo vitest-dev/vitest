@@ -3,12 +3,14 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { LabelColor } from '../types/general'
 
 /**
  * Config that tests have access to.
  */
 export interface SerializedConfig {
   name: string | undefined
+  color?: LabelColor
   globals: boolean
   base: string | undefined
   snapshotEnvironment?: string
@@ -76,6 +78,7 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  taskTitleValueFormatTruncate: number
   api: {
     allowExec: boolean | undefined
     allowWrite: boolean | undefined
@@ -113,6 +116,11 @@ export interface SerializedConfig {
       actionTimeout?: number
     }
     trace: BrowserTraceViewMode
+    traceView: {
+      enabled: boolean
+      recordCanvas: boolean
+      inlineImages: boolean
+    }
     trackUnhandledErrors: boolean
     detailsPanelPosition: 'right' | 'bottom'
   }
@@ -156,6 +164,10 @@ export interface SerializedCoverageConfig {
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
+}
+
+export interface SerializedRootConfig extends SerializedConfig {
+  projects: SerializedConfig[]
 }
 
 export type RuntimeConfig = Pick<
