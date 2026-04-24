@@ -325,13 +325,13 @@ export class JUnitReporter implements Reporter {
       .replace(/\{displayName\}/g, vars.displayName)
   }
 
-  async writeTasks(tasks: TaskWithMeta[], filename: string): Promise<void> {
+  async writeTasks(tasks: TaskWithMeta[], filename: string, fileAbsPath: string): Promise<void> {
     for (const task of tasks) {
-      const fileBasename = task.file ? basename(task.file.filepath) : basename(filename)
+      const fileBasename = task.file ? basename(task.file.filepath) : basename(fileAbsPath)
 
       const templateVars: ClassnameTemplateVariables = {
         filename: task.file?.name ?? filename,
-        filepath: task.file?.filepath ?? filename,
+        filepath: task.file?.filepath ?? fileAbsPath,
         basename: fileBasename,
         classname: task._classname ?? '',
         title: task._leafName ?? task.name,
@@ -398,7 +398,7 @@ export class JUnitReporter implements Reporter {
                   const result = capturePrintError(
                     error,
                     this.ctx,
-                    { project: this.ctx.getProjectByName(task.file?.projectName || ''), task },
+                    { project: this.ctx.getProjectByName(task.file?.projectName ?? ''), task },
                   )
                   await this.baseLog(
                     escapeXML(stripVTControlCharacters(result.output.trim())),
@@ -543,7 +543,7 @@ export class JUnitReporter implements Reporter {
             time: getDuration(file),
           },
           async () => {
-            await this.writeTasks(file.tasks, filename)
+            await this.writeTasks(file.tasks, filename, file.filepath)
           },
         )
       }
