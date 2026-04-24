@@ -349,17 +349,70 @@ AssertionError: expected 5 to be 4 // Object.is equality
 </testsuites>
 ```
 
-The outputted XML contains nested `testsuites` and `testcase` tags. These can also be customized via reporter options `suiteName` and `classnameTemplate`. `classnameTemplate` can either be a template string or a function.
+The outputted XML contains nested `testsuites` and `testcase` tags. You can customize the reporter's behaviour with the following options:
 
-The supported placeholders for the `classnameTemplate` option are:
-- filename
-- filepath
+| Option | Description | Default |
+|---|---|---|
+| `suiteName` | `name` attribute of `<testsuites>` | `"vitest tests"` |
+| `suiteNameTemplate` | Template for the `name` attribute of `<testsuite>`. Accepts a string with placeholders or a function. | Relative file path |
+| `classnameTemplate` | Template for the `classname` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Relative file path |
+| `titleTemplate` | Template for the `name` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Full test title with ancestor hierarchy |
+| `ancestorSeparator` | Separator used when joining ancestor describe block names in the `{classname}` placeholder and in the default test title. | `" > "` |
+| `addFileAttribute` | Add a `file` attribute to each `<testcase>`. | `false` |
+| `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output. | `true` |
+| `noStackTrace` | Omit stack traces from `<failure>` elements. | `false` |
+
+The following placeholders are available for `suiteNameTemplate`:
+- `{title}` – name of the first top-level `describe` block; falls back to the file basename when there is no top-level `describe`
+- `{filename}` – relative file path from the root (e.g. `src/foo.test.ts`)
+- `{filepath}` – absolute file path
+- `{basename}` – file name without directory (e.g. `foo.test.ts`)
+- `{displayName}` – Vitest project name
+
+The following placeholders are available for `classnameTemplate` and `titleTemplate`:
+- `{classname}` – ancestor `describe` block names joined by `ancestorSeparator` (e.g. `outer > inner`)
+- `{title}` – leaf test title (the string passed to `it`/`test`)
+- `{suitename}` – top-level `describe` block name, empty string when the test has no enclosing `describe`
+- `{filename}` – relative file path from the root
+- `{filepath}` – absolute file path
+- `{basename}` – file name without directory
+- `{displayName}` – Vitest project name
+
+::: tip
+`{filename}` follows Vitest's convention and resolves to the **relative path** from the project root (e.g. `src/foo.test.ts`). This differs from jest-junit where `{filename}` is the bare file name. Use `{basename}` to get only the file name.
+:::
 
 ```ts
 export default defineConfig({
   test: {
     reporters: [
-      ['junit', { suiteName: 'custom suite name', classnameTemplate: 'filename:{filename} - filepath:{filepath}' }]
+      ['junit', {
+        suiteName: 'My Test Suite',
+        // Use the first top-level describe block name as the testsuite name
+        suiteNameTemplate: '{title}',
+        // classname = ancestor describe chain
+        classnameTemplate: '{classname}',
+        // name = leaf test title only (jest-junit-compatible)
+        titleTemplate: '{title}',
+        ancestorSeparator: ' > ',
+      }]
+    ]
+  },
+})
+```
+
+Function-based templates receive all available variables and can return any string:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['junit', {
+        classnameTemplate: ({ classname, filename }) =>
+          classname ? `${filename}::${classname}` : filename,
+        titleTemplate: ({ suitename, title }) =>
+          suitename ? `[${suitename}] ${title}` : title,
+      }]
     ]
   },
 })
