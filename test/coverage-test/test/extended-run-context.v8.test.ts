@@ -149,6 +149,25 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
       ]
     `)
   })
+
+  test('{ autoAttachWorkers: true } when no child contexts are spawned', async () => {
+    await runVitest({
+      include: ['fixtures/test/math.test.ts'],
+      pool: 'forks',
+      coverage: {
+        autoAttachWorkers: true,
+        reporter: 'json',
+      },
+    })
+    const coverageMap = await readCoverageMap()
+    const files = coverageMap.files()
+
+    expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+      ]
+    `)
+  })
 })
 
 function assertMath(coverageMap: Awaited<ReturnType<typeof readCoverageMap>>, filename: 'math.ts' | 'math-in-js.js' = 'math.ts') {

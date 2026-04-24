@@ -2,6 +2,7 @@ import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
 import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import inspector from 'node:inspector/promises'
 import { resolve } from 'node:path'
@@ -63,7 +64,7 @@ const mod: CoverageProviderModule & {
       }
     }
 
-    if (this.extendedContextCoverageDir) {
+    if (this.extendedContextCoverageDir && existsSync(this.extendedContextCoverageDir)) {
       const filenames = await readdir(this.extendedContextCoverageDir)
       const contents = await Promise.all(
         filenames
