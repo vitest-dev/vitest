@@ -316,13 +316,13 @@ export class JUnitReporter implements Reporter {
       return template(vars)
     }
     return template
-      .replace(/\{filename\}/g, vars.filename)
-      .replace(/\{filepath\}/g, vars.filepath)
-      .replace(/\{basename\}/g, vars.basename)
-      .replace(/\{classname\}/g, vars.classname)
-      .replace(/\{title\}/g, vars.title)
-      .replace(/\{suitename\}/g, vars.suitename)
-      .replace(/\{displayName\}/g, vars.displayName)
+      .replace(/\{filename\}/g, () => vars.filename)
+      .replace(/\{filepath\}/g, () => vars.filepath)
+      .replace(/\{basename\}/g, () => vars.basename)
+      .replace(/\{classname\}/g, () => vars.classname)
+      .replace(/\{title\}/g, () => vars.title)
+      .replace(/\{suitename\}/g, () => vars.suitename)
+      .replace(/\{displayName\}/g, () => vars.displayName)
   }
 
   async writeTasks(tasks: TaskWithMeta[], filename: string, fileAbsPath: string): Promise<void> {
@@ -435,11 +435,11 @@ export class JUnitReporter implements Reporter {
       return this.options.suiteNameTemplate(vars)
     }
     return this.options.suiteNameTemplate
-      .replace(/\{filepath\}/g, vars.filepath)
-      .replace(/\{filename\}/g, vars.filename)
-      .replace(/\{basename\}/g, vars.basename)
-      .replace(/\{displayName\}/g, vars.displayName)
-      .replace(/\{title\}/g, vars.title)
+      .replace(/\{filepath\}/g, () => vars.filepath)
+      .replace(/\{filename\}/g, () => vars.filename)
+      .replace(/\{basename\}/g, () => vars.basename)
+      .replace(/\{displayName\}/g, () => vars.displayName)
+      .replace(/\{title\}/g, () => vars.title)
   }
 
   async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
