@@ -183,6 +183,156 @@ test('CLI reporter option preserves config file options', async () => {
   expect(xml).toContain('file="')
 })
 
+test('suiteNameTemplate string uses {title} (first top-level describe)', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { suiteNameTemplate: '{title}' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
+        <testsuite name="MyModule" timestamp="..." hostname="..." tests="4" failures="0" errors="0" skipped="0" time="...">
+            <testcase classname="sample.test.ts" name="MyModule &gt; feature A &gt; works correctly" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="MyModule &gt; feature A &gt; handles edge case" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="MyModule &gt; top-level in describe" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="top-level test" time="...">
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
+})
+
+test('suiteNameTemplate string uses {basename}', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { suiteNameTemplate: '{basename}' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toContain('<testsuite name="sample.test.ts"')
+})
+
+test('suiteNameTemplate function', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { suiteNameTemplate: (vars: any) => `custom:${vars.title}` }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  // {title} resolves to the first top-level describe block name
+  expect(xml).toContain('<testsuite name="custom:MyModule"')
+})
+
+test('titleTemplate {title} gives leaf test name only', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { titleTemplate: '{title}' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
+        <testsuite name="sample.test.ts" timestamp="..." hostname="..." tests="4" failures="0" errors="0" skipped="0" time="...">
+            <testcase classname="sample.test.ts" name="works correctly" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="handles edge case" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="top-level in describe" time="...">
+            </testcase>
+            <testcase classname="sample.test.ts" name="top-level test" time="...">
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
+})
+
+test('titleTemplate {classname} {title} with ancestorSeparator', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { titleTemplate: '{classname} > {title}', ancestorSeparator: ' > ' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  // classname = ancestor path, title = leaf name – combined they match the default
+  // Note: > in attribute values is XML-escaped to &gt;
+  expect(xml).toContain('name="MyModule &gt; feature A &gt; works correctly"')
+  expect(xml).toContain('name="MyModule &gt; top-level in describe"')
+  // top-level test has empty classname, so template starts with " > title"
+  expect(xml).toContain('name=" &gt; top-level test"')
+})
+
+test('titleTemplate function', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { titleTemplate: (vars: any) => `[${vars.suitename}] ${vars.title}` }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toContain('name="[MyModule] works correctly"')
+  expect(xml).toContain('name="[MyModule] handles edge case"')
+  expect(xml).toContain('name="[MyModule] top-level in describe"')
+  expect(xml).toContain('name="[] top-level test"')
+})
+
+test('classnameTemplate {classname} gives ancestor describe path', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { classnameTemplate: '{classname}' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  // Note: > in attribute values is XML-escaped to &gt;
+  expect(xml).toContain('classname="MyModule &gt; feature A"')
+  expect(xml).toContain('classname="MyModule"')
+  expect(xml).toContain('classname=""')
+})
+
+test('classnameTemplate {basename} gives file basename', async () => {
+  const root = resolve(import.meta.dirname, '../../fixtures/reporters/better-testsuite-name')
+  const { stdout } = await runVitest({
+    reporters: [['junit', { classnameTemplate: '{basename}' }]],
+    root,
+  })
+  const xml = stabilizeReport(stdout)
+  // Relative path would be "space-1/test/base.test.ts" but basename is just "base.test.ts"
+  expect(xml).not.toContain('classname="space-1/test/base.test.ts"')
+  expect(xml).toContain('classname="base.test.ts"')
+})
+
+test('classnameTemplate {suitename} gives top-level describe name', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { classnameTemplate: '{suitename}' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toContain('classname="MyModule"')
+  // top-level test has no suitename
+  expect(xml).toContain('classname=""')
+})
+
+test('ancestorSeparator changes separator in default testcase name', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { ancestorSeparator: ' \u203A ' }]],
+    root: './fixtures/reporters/junit-options',
+  })
+  const xml = stabilizeReport(stdout)
+  expect(xml).toContain('name="MyModule \u203A feature A \u203A works correctly"')
+  expect(xml).not.toContain('name="MyModule &gt; feature A &gt; works correctly"')
+})
+
+test('noStackTrace omits stack trace content from failure', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { noStackTrace: true }]],
+    root,
+    include: ['error.test.ts'],
+  })
+  const xml = stabilizeReport(stdout)
+  // failure elements are present but their text content (stack trace) is absent
+  expect(xml).toContain('<failure')
+  expect(xml).not.toContain('❯ error.test.ts')
+})
+
 function executionTime(durationMS: number) {
   return (durationMS / 1000).toLocaleString('en-US', {
     useGrouping: false,
