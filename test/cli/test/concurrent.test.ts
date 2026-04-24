@@ -1076,7 +1076,7 @@ test('aroundAll enforces teardown timeout when inner error is caught', async () 
 })
 
 function extractLogs(log: string) {
-  const result = log.split('\n').filter(line => line.startsWith('!>')).join('\n')
+  const result = log.split('\n').filter(line => line.match(/^![<>]/)).join('\n')
   return `\n${result.trim()}\n`
 }
 
@@ -1088,15 +1088,19 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 beforeEach(async ({ task }) => {
   console.log("!> beforeEach", task.name)
   await sleep(10)
+  console.log("!< beforeEach", task.name)
 })
 
 afterEach(async ({ task }) => {
   console.log("!> afterEach", task.name)
+  await sleep(10)
+  console.log("!< afterEach", task.name)
 })
 
-test.concurrent.for(["a", "b", "c"])("%s", async (_, { task }) => {
+test.concurrent.for(["a", "b"])("%s", async (_, { task }) => {
   console.log("!> test", task.name)
   await sleep(10)
+  console.log("!< test", task.name)
 })
 `,
   }, {
@@ -1107,14 +1111,17 @@ test.concurrent.for(["a", "b", "c"])("%s", async (_, { task }) => {
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
     !> beforeEach a
+    !< beforeEach a
     !> test a
+    !< test a
     !> afterEach a
+    !< afterEach a
     !> beforeEach b
+    !< beforeEach b
     !> test b
+    !< test b
     !> afterEach b
-    !> beforeEach c
-    !> test c
-    !> afterEach c
+    !< afterEach b
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -1122,7 +1129,6 @@ test.concurrent.for(["a", "b", "c"])("%s", async (_, { task }) => {
       "basic.test.ts": {
         "a": "passed",
         "b": "passed",
-        "c": "passed",
       },
     }
   `)
@@ -1133,19 +1139,23 @@ test('sibling suite sequential lifecycle guarantee', async () => {
     'basic.test.ts': `
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-describe.for(["a", "b", "c"])("%s", { concurrent: true }, () => {
+describe.for(["a", "b"])("%s", { concurrent: true }, () => {
   beforeAll(async ({}, suite) => {
     console.log("!> beforeAll", suite.name)
     await sleep(10)
+    console.log("!< beforeAll", suite.name)
   })
 
   afterAll(async ({}, suite) => {
     console.log("!> afterAll", suite.name)
+    await sleep(10)
+    console.log("!< afterAll", suite.name)
   })
 
   test.concurrent("test", async ({ task }) => {
     console.log("!> test", task.suite.name)
     await sleep(10)
+    console.log("!< test", task.suite.name)
   })
 })
 `,
@@ -1157,14 +1167,17 @@ describe.for(["a", "b", "c"])("%s", { concurrent: true }, () => {
   expect(extractLogs(result.stdout)).toMatchInlineSnapshot(`
     "
     !> beforeAll a
+    !< beforeAll a
     !> test a
+    !< test a
     !> afterAll a
+    !< afterAll a
     !> beforeAll b
+    !< beforeAll b
     !> test b
+    !< test b
     !> afterAll b
-    !> beforeAll c
-    !> test c
-    !> afterAll c
+    !< afterAll b
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
@@ -1174,9 +1187,6 @@ describe.for(["a", "b", "c"])("%s", { concurrent: true }, () => {
           "test": "passed",
         },
         "b": {
-          "test": "passed",
-        },
-        "c": {
           "test": "passed",
         },
       },
@@ -1196,15 +1206,19 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     beforeEach(async ({ task }) => {
       console.log("!> beforeEach", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
+      console.log("!< beforeEach", task.suite.suite.name, task.suite.name, task.name)
     })
 
     afterEach(async ({ task }) => {
       console.log("!> afterEach", task.suite.suite.name, task.suite.name, task.name)
+      await sleep(10)
+      console.log("!< afterEach", task.suite.suite.name, task.suite.name, task.name)
     })
 
     test("test", async ({ task }) => {
       console.log("!> test", task.suite.suite.name,task.suite.name, task.name)
       await sleep(10)
+      console.log("!< test", task.suite.suite.name,task.suite.name, task.name)
     })
   })
 })
@@ -1218,16 +1232,28 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     "
     !> beforeEach a0 b0 test
     !> beforeEach a0 b1 test
+    !< beforeEach a0 b0 test
     !> beforeEach a1 b0 test
+    !< beforeEach a0 b1 test
     !> beforeEach a1 b1 test
+    !< beforeEach a1 b0 test
     !> test a0 b0 test
+    !< beforeEach a1 b1 test
     !> test a0 b1 test
+    !< test a0 b0 test
     !> test a1 b0 test
+    !< test a0 b1 test
     !> test a1 b1 test
+    !< test a1 b0 test
     !> afterEach a0 b0 test
+    !< test a1 b1 test
     !> afterEach a0 b1 test
+    !< afterEach a0 b0 test
     !> afterEach a1 b0 test
+    !< afterEach a0 b1 test
     !> afterEach a1 b1 test
+    !< afterEach a1 b0 test
+    !< afterEach a1 b1 test
     "
   `)
 
@@ -1265,15 +1291,19 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     beforeAll(async ({}, suite) => {
       console.log("!> beforeAll", suite.suite.name, suite.name)
       await sleep(10)
+      console.log("!< beforeAll", suite.suite.name, suite.name)
     })
 
     afterAll(async ({}, suite) => {
       console.log("!> afterAll", suite.suite.name, suite.name)
+      await sleep(10)
+      console.log("!< afterAll", suite.suite.name, suite.name)
     })
 
     test("test", async ({ task }) => {
       console.log("!> test", task.suite.suite.name, task.suite.name, task.name)
       await sleep(10)
+      console.log("!< test", task.suite.suite.name, task.suite.name, task.name)
     })
   })
 })
@@ -1287,16 +1317,28 @@ describe.for(["a0", "a1"])("%s", { concurrent: true }, () => {
     "
     !> beforeAll a0 b0
     !> beforeAll a0 b1
+    !< beforeAll a0 b0
     !> beforeAll a1 b0
+    !< beforeAll a0 b1
     !> beforeAll a1 b1
+    !< beforeAll a1 b0
     !> test a0 b0 test
+    !< beforeAll a1 b1
     !> test a0 b1 test
+    !< test a0 b0 test
     !> test a1 b0 test
+    !< test a0 b1 test
     !> test a1 b1 test
+    !< test a1 b0 test
     !> afterAll a0 b0
+    !< test a1 b1 test
     !> afterAll a0 b1
+    !< afterAll a0 b0
     !> afterAll a1 b0
+    !< afterAll a0 b1
     !> afterAll a1 b1
+    !< afterAll a1 b0
+    !< afterAll a1 b1
     "
   `)
 
