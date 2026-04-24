@@ -24,8 +24,6 @@ import { createWsClient } from './ws'
 
 export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
 
-export * from '@vitest/runner/utils'
-
 export const client: VitestClient = (function createVitestClient() {
   if (isReport) {
     return createStaticClient()
