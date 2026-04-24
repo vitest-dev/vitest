@@ -330,7 +330,7 @@ export class JUnitReporter implements Reporter {
       const fileBasename = task.file ? basename(task.file.filepath) : basename(fileAbsPath)
 
       const templateVars: ClassnameTemplateVariables = {
-        filename,
+        filename: task.file?.name ?? filename,
         filepath: task.file?.filepath ?? fileAbsPath,
         basename: fileBasename,
         classname: task._classname ?? '',

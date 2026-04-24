@@ -349,7 +349,7 @@ AssertionError: expected 5 to be 4 // Object.is equality
 </testsuites>
 ```
 
-The outputted XML contains nested `testsuites` → `testsuite` → `testcase` tags. You can customize the reporter's behaviour with the following options:
+The output XML contains nested `testsuites` → `testsuite` → `testcase` tags. You can customize the reporter's behaviour with the following options:
 
 | Option | Description | Default |
 |---|---|---|
