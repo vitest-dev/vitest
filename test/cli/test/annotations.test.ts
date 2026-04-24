@@ -108,8 +108,8 @@ describe('API', () => {
         "[ready] simple",
         "[annotate] simple 1 notice path=undefined contentType=undefined body=undefined",
         "[annotate] simple 2 warning path=undefined contentType=undefined body=undefined",
-        "[annotate] simple 3 notice path=<root>/.vitest-attachments/3-<hash>.js contentType=text/javascript body=undefined",
-        "[annotate] simple 4 warning path=<root>/.vitest-attachments/4-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple 3 notice path=<root>/.vitest/attachments/3-<hash>.js contentType=text/javascript body=undefined",
+        "[annotate] simple 4 warning path=<root>/.vitest/attachments/4-<hash>.js contentType=text/javascript body=undefined",
         "[annotate] simple external notice path=undefined contentType=undefined body=undefined",
         "[annotate] simple with base64 body notice path=undefined contentType=undefined body=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "[annotate] simple with Uint8Array body notice path=undefined contentType=undefined body=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
@@ -177,7 +177,7 @@ describe('API', () => {
           {
             "attachment": {
               "contentType": "text/javascript",
-              "path": "<root>/.vitest-attachments/3-<hash>.js",
+              "path": "<root>/.vitest/attachments/3-<hash>.js",
             },
             "location": {
               "column": 9,
@@ -190,7 +190,7 @@ describe('API', () => {
           {
             "attachment": {
               "contentType": "text/javascript",
-              "path": "<root>/.vitest-attachments/4-<hash>.js",
+              "path": "<root>/.vitest/attachments/4-<hash>.js",
             },
             "location": {
               "column": 9,
