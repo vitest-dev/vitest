@@ -230,9 +230,13 @@ describe.concurrent('suite', () => {
 })
 ```
 
-## describe.sequential
+## describe.sequential <Deprecated /> {#describe-sequential}
 
 - **Alias:** `suite.sequential`
+
+::: warning DEPRECATED
+Use [`concurrent: false`](/api/test#concurrent) instead when you need to override inherited or configured concurrency.
+:::
 
 `describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 

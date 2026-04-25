@@ -223,6 +223,10 @@ Whether this test run concurrently with other concurrent tests in the suite.
 - **Default:** `true`
 - **Alias:** [`test.sequential`](#test-sequential)
 
+::: warning DEPRECATED
+Use [`concurrent: false`](#concurrent) instead when you need to override inherited or configured concurrency.
+:::
+
 Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
 
 ### skip
@@ -453,9 +457,13 @@ test.concurrent('test 2', async ({ expect }) => {
 
 Note that if tests are synchronous, Vitest will still run them sequentially.
 
-## test.sequential
+## test.sequential <Deprecated /> {#test-sequential}
 
 - **Alias:** `it.sequential`
+
+::: warning DEPRECATED
+Use [`concurrent: false`](#concurrent) instead when you need to override inherited or configured concurrency.
+:::
 
 `test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
