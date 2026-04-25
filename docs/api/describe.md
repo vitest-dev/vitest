@@ -230,7 +230,7 @@ describe.concurrent('suite', () => {
 })
 ```
 
-## describe.sequential <Deprecated />
+## describe.sequential <Deprecated /> {#describe-sequential}
 
 - **Alias:** `suite.sequential`
 
