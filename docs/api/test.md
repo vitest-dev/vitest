@@ -223,6 +223,8 @@ Whether this test run concurrently with other concurrent tests in the suite.
 - **Default:** `true`
 - **Alias:** [`test.sequential`](#test-sequential)
 
+TODO: deprecated
+
 Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
 
 ### skip
@@ -456,6 +458,8 @@ Note that if tests are synchronous, Vitest will still run them sequentially.
 ## test.sequential
 
 - **Alias:** `it.sequential`
+
+TODO: deprecated
 
 `test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
 
