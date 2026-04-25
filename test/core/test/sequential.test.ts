@@ -52,6 +52,17 @@ function assertConcurrent() {
     expect(task.concurrent).toBeFalsy()
     expect(++count).toBe(4)
   })
+
+  test('fifth test completes fifth', { concurrent: false }, async ({ task }) => {
+    await delay(50)
+    expect(task.concurrent).toBeFalsy()
+    expect(++count).toBe(5)
+  })
+
+  test('sixth test completes sixth', { concurrent: false }, ({ task }) => {
+    expect(task.concurrent).toBeFalsy()
+    expect(++count).toBe(6)
+  })
 }
 
 assertSequential()
@@ -62,6 +73,14 @@ describe.concurrent('describe.concurrent', () => {
   describe('describe', assertConcurrent)
 
   describe.sequential('describe.sequential', () => {
+    assertSequential()
+
+    describe('describe', assertSequential)
+
+    describe.concurrent('describe.concurrent', assertConcurrent)
+  })
+
+  describe('describe concurrent false', { concurrent: false }, () => {
     assertSequential()
 
     describe('describe', assertSequential)
