@@ -17,11 +17,15 @@ test('should run suites and tests concurrently unless sequential specified when 
   expect(stdout).toContain('✓ sequence-concurrent-true-sequential.test.ts > sequential suite > second test completes second')
   expect(stdout).toContain('✓ sequence-concurrent-true-sequential.test.ts > third test completes third')
   expect(stdout).toContain('✓ sequence-concurrent-true-sequential.test.ts > last test completes last')
+  expect(stdout).toContain('✓ sequence-concurrent-true-concurrent-false.test.ts > sequential suite > first test completes first')
+  expect(stdout).toContain('✓ sequence-concurrent-true-concurrent-false.test.ts > sequential suite > second test completes second')
+  expect(stdout).toContain('✓ sequence-concurrent-true-concurrent-false.test.ts > third test completes third')
+  expect(stdout).toContain('✓ sequence-concurrent-true-concurrent-false.test.ts > last test completes last')
   expect(stdout).toContain('✓ sequence-concurrent-true-concurrent.test.ts > concurrent suite > first test completes last')
   expect(stdout).toContain('✓ sequence-concurrent-true-concurrent.test.ts > concurrent suite > second test completes third')
   expect(stdout).toContain('✓ sequence-concurrent-true-concurrent.test.ts > third test completes second')
   expect(stdout).toContain('✓ sequence-concurrent-true-concurrent.test.ts > last test completes first')
-  expect(stdout).toContain('Test Files  2 passed (2)')
+  expect(stdout).toContain('Test Files  3 passed (3)')
 })
 
 test('should run suites and tests sequentially unless concurrent specified when sequence.concurrent is false', async () => {
