@@ -10,6 +10,17 @@ export type ChainableFunction<
   fn: (this: Record<T, any>, ...args: Parameters<F>) => ReturnType<F>
 } & C
 
+// this uses mapped type technique to preserve T's jsdoc for chained property function
+export type TypedChainableFunction<
+  T,
+  F extends (...args: any) => any,
+  C = object,
+> = F & {
+  [x in keyof T]: TypedChainableFunction<T, F, C>;
+} & {
+  fn: (this: Record<keyof T, any>, ...args: Parameters<F>) => ReturnType<F>
+} & C
+
 export const kChainableContext: unique symbol = Symbol('kChainableContext')
 
 export function getChainableContext(chainable: SuiteAPI): InternalChainableContext
