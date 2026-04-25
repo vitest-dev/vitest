@@ -1,7 +1,7 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { TestFixtures } from '../fixture'
 import type { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from '../hooks'
-import type { ChainableFunction, kChainableContext } from '../utils/chain'
+import type { kChainableContext, TypedChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -464,8 +464,14 @@ export interface InternalChainableContext<API = TestAPI> {
   /** @internal */
   getFixtures: () => TestFixtures
 }
-type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
-  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
+
+type ChainableTestContextMap = Pick<
+  Required<TestOptions>,
+  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails'
+>
+
+type ChainableTestAPI<ExtraContext = object> = TypedChainableFunction<
+  ChainableTestContextMap,
   TestCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
@@ -554,6 +560,8 @@ export interface TestOptions {
   /**
    * Whether tests run sequentially.
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
+   *
+   * @deprecated Use `concurrent: false` instead.
    */
   sequential?: boolean
   /**
@@ -799,10 +807,13 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     suite: SuiteAPI<ExtraContext>
   }
 
-export interface InternalTestContext extends Record<
-  'concurrent' | 'sequential' | 'skip' | 'only' | 'todo' | 'fails' | 'each',
-  boolean | undefined
-> {
+// use mapped type to preserve TestOptions references
+type InternalTestChainableContext = {
+  [K in keyof ChainableTestContextMap]: boolean | undefined
+}
+
+export interface InternalTestContext extends InternalTestChainableContext {
+  each: boolean | undefined
   fixtures: TestFixtures
 }
 
@@ -1061,8 +1072,13 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   ): SuiteCollector<OverrideExtraContext>
 }
 
-type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
-  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
+type ChainableSuiteContextMap = Pick<
+  Required<SuiteOptions>,
+  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle'
+>
+
+type ChainableSuiteAPI<ExtraContext = object> = TypedChainableFunction<
+  ChainableSuiteContextMap,
   SuiteCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction

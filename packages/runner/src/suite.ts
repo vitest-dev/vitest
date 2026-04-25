@@ -392,7 +392,7 @@ function createSuiteCollector(
     }
     if (
       options.concurrent
-      || (!options.sequential && runner.config.sequence.concurrent)
+      ?? (!options.sequential && runner.config.sequence.concurrent)
     ) {
       task.concurrent = true
     }
