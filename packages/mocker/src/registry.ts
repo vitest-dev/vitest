@@ -174,8 +174,8 @@ export class AutomockedModule {
     public url: string,
   ) {}
 
-  static fromJSON(data: AutomockedModuleSerialized): AutospiedModule {
-    return new AutospiedModule(data.raw, data.id, data.url)
+  static fromJSON(data: AutomockedModuleSerialized): AutomockedModule {
+    return new AutomockedModule(data.raw, data.id, data.url)
   }
 
   toJSON(): AutomockedModuleSerialized {
