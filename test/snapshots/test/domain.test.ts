@@ -18,6 +18,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -28,6 +29,10 @@ test('domain snapshot', async () => {
     exports[\`all literal 1\`] = \`
     name=alice
     age=30
+    \`;
+
+    exports[\`empty snapshot 1\`] = \`
+
     \`;
 
     exports[\`with regex 1\`] = \`
@@ -52,6 +57,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -62,6 +68,10 @@ test('domain snapshot', async () => {
     exports[\`all literal 1\`] = \`
     name=alice
     age=30
+    \`;
+
+    exports[\`empty snapshot 1\`] = \`
+
     \`;
 
     exports[\`with regex 1\`] = \`
@@ -111,6 +121,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": Array [
           "Snapshot \`with regex 1\` mismatched",
         ],
@@ -126,6 +137,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -139,6 +151,10 @@ test('domain snapshot', async () => {
     exports[\`all literal 1\`] = \`
     name=alice
     age=30
+    \`;
+
+    exports[\`empty snapshot 1\`] = \`
+
     \`;
 
     exports[\`with regex 1\`] = \`
