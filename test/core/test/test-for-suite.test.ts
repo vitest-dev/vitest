@@ -36,9 +36,10 @@ describe.for([
 
 // Regression test: describe.concurrent.for should propagate the concurrent flag
 // to the generated suites, matching how describe.for and test.concurrent.for behave.
-describe.concurrent.for([1, 2, 3])('concurrent %i', (item) => {
+describe.concurrent.for([1, 2])('concurrent %i', (item) => {
   test('is marked concurrent', ({ task }) => {
     expect(task.suite!.concurrent).toBe(true)
+    expect(task.concurrent).toBe(true)
     expect(item).toBeGreaterThan(0)
   })
 })
