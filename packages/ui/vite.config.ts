@@ -17,7 +17,6 @@ export default defineConfig({
     dedupe: ['vue'],
     alias: {
       '~/': `${resolve(import.meta.dirname, 'client')}/`,
-      '@vitest/ws-client': `${resolve(import.meta.dirname, '../ws-client/src/index.ts')}`,
     },
   },
   define: {

@@ -1,12 +1,8 @@
 import type { BirpcOptions, BirpcReturn } from 'birpc'
-// eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
-
 import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
-
-export * from '@vitest/runner/utils'
 
 export interface VitestClientOptions {
   handlers?: Partial<WebSocketEvents>
@@ -27,7 +23,7 @@ export interface VitestClient {
   reconnect: () => Promise<void>
 }
 
-export function createClient(url: string, options: VitestClientOptions = {}): VitestClient {
+export function createWsClient(url: string, options: VitestClientOptions = {}): VitestClient {
   const {
     handlers = {},
     autoReconnect = true,
@@ -128,7 +124,7 @@ export function createClient(url: string, options: VitestClientOptions = {}): Vi
             `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
           ),
         )
-      }, connectTimeout)?.unref?.()
+      }, connectTimeout)
       if (ctx.ws.OPEN === ctx.ws.readyState) {
         resolve()
       }
