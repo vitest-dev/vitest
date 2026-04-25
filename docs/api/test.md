@@ -457,7 +457,7 @@ test.concurrent('test 2', async ({ expect }) => {
 
 Note that if tests are synchronous, Vitest will still run them sequentially.
 
-## test.sequential <Deprecated />
+## test.sequential <Deprecated /> {#test-sequential}
 
 - **Alias:** `it.sequential`
 
