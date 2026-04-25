@@ -28,6 +28,9 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   },
 
   parseExpected(input: string): KVExpected {
+    if (!input.trim()) {
+      return {}
+    }
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
       if (eq === -1) {

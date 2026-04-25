@@ -159,28 +159,28 @@ test('domain parseExpected error', async () => {
 
      FAIL  basic.test.ts > file
     Error: Invalid KV Format: 'file-broken'
-     ❯ ../domain/basic.ts:34:15
-         32|       const eq = line.indexOf('=')
-         33|       if (eq === -1) {
-         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:37:15
+         35|       const eq = line.indexOf('=')
+         36|       if (eq === -1) {
+         37|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         35|       }
-         36|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:31:46
+         38|       }
+         39|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:34:46
      ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:16:44
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > inline
     Error: Invalid KV Format: 'inine-broken'
-     ❯ ../domain/basic.ts:34:15
-         32|       const eq = line.indexOf('=')
-         33|       if (eq === -1) {
-         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:37:15
+         35|       const eq = line.indexOf('=')
+         36|       if (eq === -1) {
+         37|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         35|       }
-         36|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:31:46
+         38|       }
+         39|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:34:46
      ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:22:50
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
