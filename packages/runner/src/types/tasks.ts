@@ -554,7 +554,6 @@ export interface TestOptions {
   /**
    * Whether tests run sequentially.
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
-   * @deprecated Use `concurrent: false` instead.
    */
   sequential?: boolean
   /**
@@ -1062,7 +1061,6 @@ interface SuiteCollectorCallable<ExtraContext = object> {
   ): SuiteCollector<OverrideExtraContext>
 }
 
-// TODO: use mapped type trick so each method can live as references?
 type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
   SuiteCollectorCallable<ExtraContext>,
