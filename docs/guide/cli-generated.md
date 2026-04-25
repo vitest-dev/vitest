@@ -200,7 +200,7 @@ Shortcut to set all coverage thresholds to 100 (default: `false`)
 - **CLI:** `--coverage.thresholds.perFile`
 - **Config:** [coverage.thresholds.perFile](/config/coverage#coverage-thresholds-perfile)
 
-Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)
+Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.
 
 ### coverage.thresholds.autoUpdate
 

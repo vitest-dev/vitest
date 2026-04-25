@@ -233,12 +233,48 @@ Global threshold for statements.
 
 ### coverage.thresholds.perFile
 
-- **Type:** `boolean`
+- **Type:** `boolean | { 100?: boolean, lines?: number, functions?: number, branches?: number, statements?: number }`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.perFile`, `--coverage.thresholds.perFile=false`
 
-Check thresholds per file.
+When `true`, each file is checked against the top-level thresholds instead of the project-wide aggregate. When set to an object, both are checked: the aggregate against the top-level thresholds, and every file against these per-file minimums.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    }
+  }
+}
+```
+
+`{ 100: true }` is also accepted inside the object as a shortcut for setting all four metrics to `100`:
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    }
+  }
+}
+```
 
 ### coverage.thresholds.autoUpdate
 
