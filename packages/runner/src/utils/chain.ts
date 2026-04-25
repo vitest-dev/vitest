@@ -31,15 +31,15 @@ export function createChainable<T extends string, Args extends any[], R = any>(
     Object.assign(chain, fn)
     Object.defineProperty(chain, kChainableContext, {
       value: {
-        withContext: () => chain.bind(context),
+        withContext: () => chain.bind(context) as any,
         getFixtures: () => (context as any).fixtures,
-        setContext: (key: T, value: any) => {
-          context[key] = value
+        setContext: (key, value) => {
+          context[key as T] = value
         },
-        mergeContext: (ctx: Record<T, any>) => {
+        mergeContext: (ctx) => {
           Object.assign(context, ctx)
         },
-      },
+      } satisfies InternalChainableContext,
       enumerable: false,
     })
     for (const key of keys) {
