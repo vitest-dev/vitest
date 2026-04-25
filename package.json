@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.31.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
-    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:ci",
