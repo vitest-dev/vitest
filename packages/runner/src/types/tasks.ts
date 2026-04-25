@@ -807,10 +807,13 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext>
     suite: SuiteAPI<ExtraContext>
   }
 
-export interface InternalTestContext extends Record<
-  'concurrent' | 'sequential' | 'skip' | 'only' | 'todo' | 'fails' | 'each',
-  boolean | undefined
-> {
+// use mapped type to preserve TestOptions references
+type InternalTestChainableContext = {
+  [K in keyof ChainableTestContextMap]: boolean | undefined
+}
+
+export interface InternalTestContext extends InternalTestChainableContext {
+  each: boolean | undefined
   fixtures: TestFixtures
 }
 
