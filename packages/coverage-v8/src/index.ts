@@ -3,7 +3,7 @@ import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { readdir, readFile } from 'node:fs/promises'
+import { readdir, readFile, rm } from 'node:fs/promises'
 import inspector from 'node:inspector/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -22,16 +22,16 @@ const mod: CoverageProviderModule & {
   session: null,
 
   async startCoverage({ isolate, autoAttachSubprocess, reportsDirectory }) {
-    if (autoAttachSubprocess) {
-      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
-      process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
-    }
-
     if (isolate === false && enabled) {
       return
     }
 
     enabled = true
+
+    if (autoAttachSubprocess) {
+      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
+      process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
+    }
 
     this.session ||= new inspector.Session()
     const session = this.session as inspector.Session
@@ -69,7 +69,14 @@ const mod: CoverageProviderModule & {
       const contents = await Promise.all(
         filenames
           .filter(filename => filename.endsWith('.json'))
-          .map(filename => readFile(`${this.extendedContextCoverageDir}/${filename}`, 'utf8')),
+          .map(async (filename) => {
+            const path = `${this.extendedContextCoverageDir}/${filename}`
+
+            const content = await readFile(path, 'utf8')
+            await rm(path)
+
+            return content
+          }),
       )
 
       for (const content of contents) {
