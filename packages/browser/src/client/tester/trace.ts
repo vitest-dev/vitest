@@ -1,5 +1,15 @@
 import type { Task } from '@vitest/runner'
+import type {
+  BrowserTraceEntry,
+  BrowserTraceEntryKind,
+  BrowserTraceEntryStatus,
+  BrowserTraceSelectorResolution,
+  PseudoClassName,
+} from '../../types'
 import { getBrowserState, now } from '../utils'
+import { rpc } from './rpc'
+
+export type { BrowserTraceEntry, BrowserTraceEntryKind, BrowserTraceEntryStatus, BrowserTraceSelectorResolution }
 
 export interface BrowserTraceData {
   retry: number
@@ -8,50 +18,12 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
-export type BrowserTraceEntryStatus = 'pass' | 'fail'
-export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
-
-export interface BrowserTraceEntry {
-  name: string
-  // not used yet for UI but tested
-  kind: BrowserTraceEntryKind
-  status?: BrowserTraceEntryStatus
+export interface BrowserTraceAttempt {
+  retry: number
+  repeats: number
   startTime: number
-  duration?: number
-  stack?: string
-  // resolved server-side from stack in __vitest_recordBrowserTrace command
-  location?: { file: string; line: number; column: number }
-  selector?: string
-  snapshot: TraceSnapshot
 }
 
-interface TraceSnapshot {
-  serialized: unknown
-  viewport: {
-    width: number
-    height: number
-  }
-  scroll: {
-    x: number
-    y: number
-  }
-  selectorId?: number
-  // not used yet for UI but tested
-  selectorResolution?: BrowserTraceSelectorResolution
-  selectorError?: string
-  pseudoClassIds: Record<PseudoClassName, number[]>
-}
-
-// rrweb-snapshot rewrites pseudo-class selectors in serialized styles so replay can
-// reproduce snapshot-time states. For example:
-//   some-selector:hover { ... }
-// becomes:
-//   some-selector:hover, some-selector.\:hover { ... }
-// Vitest side integration then adds matching pseudo-state classes in the replay DOM.
-// rrweb-snapshot only handles `:hover` upstream, so we patch it locally for the
-// other user-action pseudo-classes as well.
-// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Pseudo-classes#user_action_pseudo-classes
 const PSEUDO_CLASS_NAMES = [
   ':hover',
   ':active',
@@ -59,25 +31,7 @@ const PSEUDO_CLASS_NAMES = [
   ':focus-visible',
   ':focus-within',
 ] as const
-type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
-export type BrowserTraceState = Record<string, BrowserTraceData>
-
-export interface BrowserTraceAttempt {
-  retry: number
-  repeats: number
-  startTime: number
-}
-
-function getBrowserTraceState(): BrowserTraceState {
-  return getBrowserState().browserTraceState ??= {}
-}
-
-function getTraceStateKey(testId: string, repeats: number, retry: number) {
-  return `${testId}:${repeats}:${retry}`
-}
-
-// TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
 export function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
@@ -104,10 +58,7 @@ export function recordBrowserTraceEntry(
   }
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(task.id, repeats, retry)
-  state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
-  state[traceKey].entries.push(entry)
+  rpc().streamBrowserTraceEntry(task.id, retry, repeats, recordCanvas, entry)
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror
@@ -116,7 +67,7 @@ export function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(selector?: string): TraceSnapshot {
+function takeSnapshot(selector?: string): BrowserTraceEntry['snapshot'] {
   const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
@@ -126,7 +77,7 @@ function takeSnapshot(selector?: string): TraceSnapshot {
     inlineImages: traceView.inlineImages,
     recordCanvas: traceView.recordCanvas,
   })
-  const result: TraceSnapshot = {
+  const result: BrowserTraceEntry['snapshot'] = {
     serialized,
     viewport: {
       width: window.innerWidth,
@@ -139,9 +90,9 @@ function takeSnapshot(selector?: string): TraceSnapshot {
     pseudoClassIds: {} as any,
   }
   for (const className of PSEUDO_CLASS_NAMES) {
-    const elements = document.querySelectorAll(className)
+    const elements = document.querySelectorAll(className as PseudoClassName)
     const ids = Array.from(elements, el => mirror.getId(el)).filter(id => id !== -1)
-    result.pseudoClassIds[className] = ids
+    result.pseudoClassIds[className as PseudoClassName] = ids
   }
   if (selector) {
     try {
@@ -170,14 +121,4 @@ function takeSnapshot(selector?: string): TraceSnapshot {
     }
   }
   return result
-}
-
-export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(testId, repeats, retry)
-  const result = state[traceKey]
-  if (result) {
-    delete state[traceKey]
-    return result
-  }
 }

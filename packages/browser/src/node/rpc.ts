@@ -3,7 +3,7 @@ import type { Duplex } from 'node:stream'
 import type { TestError } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
+import type { BrowserTraceEntry, WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
@@ -373,6 +373,15 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             return defaultMockerRegistry.delete(id)
           }
           return mocker.delete(sessionId, id)
+        },
+
+        streamBrowserTraceEntry(testId: string, retry: number, repeats: number, recordCanvas: boolean, entry: BrowserTraceEntry) {
+          const state = project.browser!.state as BrowserServerState
+          const key = `${testId}:${repeats}:${retry}`
+          if (!state.streamedTraceEntries.has(key)) {
+            state.streamedTraceEntries.set(key, { retry, repeats, recordCanvas, entries: [] })
+          }
+          state.streamedTraceEntries.get(key)!.entries.push(entry)
         },
 
         // CDP
