@@ -7,6 +7,77 @@ outline: deep
 
 [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
 
+## Migrating to Vitest 5.0 {#vitest-5}
+
+::: warning Work in progress
+Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
+:::
+
+### String Values in `$` Test Titles Are No Longer Quoted
+
+When interpolating string values in `test.each`, `test.for`, `describe.each`, or `describe.for` titles with the `$` syntax, Vitest no longer wraps those string values in quotes.
+
+This affects generated task names in reporter output, snapshots, and any tooling that matches tests by their generated title.
+
+```ts
+test.each([
+  { name: 'basic' },
+])('$name', () => {})
+
+// Vitest 4:
+// ✓ 'basic'
+
+// Vitest 5:
+// ✓ basic
+```
+
+The same applies to array indexes:
+
+```ts
+test.for([
+  ['basic'],
+])('$0', () => {})
+
+// Vitest 4:
+// ✓ 'basic'
+
+// Vitest 5:
+// ✓ basic
+```
+
+If you need quotes in the generated title, add them to the title template:
+
+```ts
+test.each([
+  { name: 'basic' },
+])('case "$name"', () => {})
+
+// ✓ case "basic"
+```
+
+### `chaiConfig.truncateThreshold` No Longer Controls Test Title Value Truncation
+
+Vitest now formats interpolated task title values with its display formatter based on `@vitest/pretty-format`, instead of Chai/loupe formatting.
+
+Most output should stay similar, but generated titles or assertion output involving formatted values may have small formatting differences.
+
+If you used `chaiConfig.truncateThreshold` to control truncation in `test.each`, `test.for`, `describe.each`, or `describe.for` titles, use `taskTitleValueFormatTruncate` instead:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    chaiConfig: {
+      truncateThreshold: 120, // [!code --]
+    }, // [!code --]
+    taskTitleValueFormatTruncate: 120, // [!code ++]
+  },
+})
+```
+
+`chaiConfig.truncateThreshold` still controls truncation in assertion error messages.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
