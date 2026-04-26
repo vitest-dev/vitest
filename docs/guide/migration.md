@@ -20,39 +20,21 @@ When interpolating string values in `test.each`, `test.for`, `describe.each`, or
 This affects generated task names in reporter output, snapshots, and any tooling that matches tests by their generated title.
 
 ```ts
-test.each([
-  { name: 'basic' },
-])('$name', () => {})
+test.for([{ name: 'Alice' }])('I am $name', () => {})
 
 // Vitest 4:
-// ✓ 'basic'
+// ✓ I am 'Alice'
 
 // Vitest 5:
-// ✓ basic
-```
-
-The same applies to array indexes:
-
-```ts
-test.for([
-  ['basic'],
-])('$0', () => {})
-
-// Vitest 4:
-// ✓ 'basic'
-
-// Vitest 5:
-// ✓ basic
+// ✓ I am Alice
 ```
 
 If you need quotes in the generated title, add them to the title template:
 
 ```ts
-test.each([
-  { name: 'basic' },
-])('case "$name"', () => {})
+test.for([{ name: 'Alice' }])('I am "$name"', () => {})
 
-// ✓ case "basic"
+// ✓ I am "Alice"
 ```
 
 ### `chaiConfig.truncateThreshold` No Longer Controls Test Title Value Truncation
