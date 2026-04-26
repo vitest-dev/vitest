@@ -395,4 +395,13 @@ describe('default reporter', async () => {
     })
     expect(stderr).toMatchSnapshot()
   })
+
+  test('slowTestThreshold: Infinity does not trigger TimeoutOverflowWarning', async () => {
+    const { stderr } = await runVitest({
+      root: 'fixtures/reporters/duration',
+      reporters: [['default', { isTTY: true, summary: true }]],
+      slowTestThreshold: Infinity,
+    })
+    expect(stderr).not.toContain('TimeoutOverflowWarning')
+  })
 }, 120000)
