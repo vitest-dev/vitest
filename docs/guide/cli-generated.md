@@ -865,7 +865,7 @@ Collect test and suite locations in the `location` property
 - **CLI:** `--attachmentsDir <dir>`
 - **Config:** [attachmentsDir](/config/attachmentsdir)
 
-The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)
+The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)
 
 ### run
 
