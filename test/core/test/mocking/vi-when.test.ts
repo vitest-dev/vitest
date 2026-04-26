@@ -232,3 +232,47 @@ test('vi.when() works with vi.spyOn()', () => {
   expect(console.error({ message })).toBe(value)
   expect(console.error({ message: message.slice(0, 14) })).toBe(undefined)
 })
+
+test('vi.when() works without having to re-declare arguments in a chain', () => {
+  const spy = vi.fn<Fn>()
+
+  const args: FnData['args'] = ['a', 0]
+  const values: FnData['value'][] = [
+    97,
+    98,
+  ]
+
+  vi.when(spy)
+    .calledWith(...args)
+    .thenReturn(values[0])
+    .thenReturnOnce(values[1])
+
+  expect(spy(...args)).toBe(values[1])
+
+  expect(spy).toHaveBeenLastCalledWith(...args)
+  expect(spy).toHaveLastReturnedWith(values[1])
+
+  expect(spy(...args)).toBe(values[0])
+
+  expect(spy).toHaveBeenLastCalledWith(...args)
+  expect(spy).toHaveLastReturnedWith(values[0])
+
+  expect(spy).toHaveBeenCalledTimes(2)
+})
+
+test.runIf(Symbol.dispose)('vi.when() disposes of its mock', () => {
+  const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
+
+  const args: FnData['args'] = ['a', 0]
+  const value: FnData['value'] = 97
+
+  {
+    using _ = vi.when(spy)
+      .calledWith(...args)
+      .thenReturn(value)
+
+    expect(spy(...args)).toBe(value)
+  }
+
+  expect(spy(...args)).toBe(0)
+})

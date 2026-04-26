@@ -1,4 +1,5 @@
 import type { Mock, Procedure } from '@vitest/spy'
+import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
@@ -13,138 +14,42 @@ interface Behavior<Arguments extends unknown[], Value> {
   }[]
 }
 
-export function when<T extends Procedure>(spy: T | Mock<T>): When<T> {
-  return new When(spy)
+type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & Record<
+  | 'thenReturn'
+  | 'thenReturnOnce'
+  | 'thenResolve'
+  | 'thenResolveOnce',
+  (value: ReturnType) => CalledWithInstance<ReturnType, Fn>
+> & Record<
+  | 'thenThrow'
+  | 'thenThrowOnce'
+  | 'thenReject'
+  | 'thenRejectOnce',
+  (value: unknown) => CalledWithInstance<ReturnType, Fn>
+>
+
+interface When<Fn extends Procedure> extends Disposable {
+  calledWith: (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
 }
 
-class When<Fn extends Procedure> {
-  #behaviors: Behavior<Parameters<Fn>, ReturnType<Fn>>[]
-
-  constructor(spy: Fn | Mock<Fn>) {
-    this.#behaviors = []
-
-    if (!('_isMockFunction' in spy && spy._isMockFunction)) {
-      throw new TypeError('`when` should be called with a spy') // @todo improve the error message
-    }
-
-    const originalImplementation = spy.getMockImplementation()
-
-    spy.mockImplementation(
-      // @ts-expect-error cannot resolve generic args
-      (...args: Parameters<Fn>) => {
-        const action = this.#findAction(args)
-
-        if (action === null) {
-          return originalImplementation?.(...args)
-        }
-
-        action.called = true
-
-        switch (action.type) {
-          case 'return': {
-            return action.value
-          }
-
-          case 'throw': {
-            throw action.value
-          }
-
-          case 'resolve': {
-            return Promise.resolve(action.value)
-          }
-
-          case 'reject': {
-            return Promise.reject(action.value)
-          }
-        }
-      },
-    )
+export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
+  if (!('_isMockFunction' in spy && spy._isMockFunction)) {
+    throw new TypeError('`when` should be called with a spy') // @todo improve the error message
   }
 
-  // @todo strictlyCalledWith for strict equality?
-  calledWith(...args: Parameters<Fn>) {
-    const behavior = this.#getOrCreateBehavior(args)
+  type ScopedParameters = Parameters<Fn>
+  type ScopedReturn = ReturnType<Fn>
 
-    return {
-      thenThrow: (value: unknown): this => {
-        this.#appendAction(behavior, 'throw', value, false)
+  const behaviors: Behavior<ScopedParameters, ScopedReturn>[] = []
+  const originalImplementation = spy.getMockImplementation()
 
-        return this
-      },
-      thenThrowOnce: (value: unknown): this => {
-        this.#appendAction(behavior, 'throw', value, true)
-
-        return this
-      },
-      thenReturn: (value: ReturnType<Fn>): this => {
-        this.#appendAction(behavior, 'return', value, false)
-
-        return this
-      },
-      thenReturnOnce: (value: ReturnType<Fn>): this => {
-        this.#appendAction(behavior, 'return', value, true)
-
-        return this
-      },
-      thenResolve: (value: ReturnType<Fn>): this => {
-        this.#appendAction(behavior, 'resolve', value, false)
-
-        return this
-      },
-      thenResolveOnce: (value: ReturnType<Fn>): this => {
-        this.#appendAction(behavior, 'resolve', value, true)
-
-        return this
-      },
-      thenReject: (value: unknown): this => {
-        this.#appendAction(behavior, 'reject', value, false)
-
-        return this
-      },
-      thenRejectOnce: (value: unknown): this => {
-        this.#appendAction(behavior, 'reject', value, true)
-
-        return this
-      },
-    }
-  }
-
-  #getOrCreateBehavior(args: Parameters<Fn>) {
+  function findAction(args: ScopedParameters) {
     const testers = [
       ...getCustomEqualityTesters(),
       iterableEquality,
     ]
 
-    let behavior = this.#behaviors.find(behavior => equals(args, behavior.arguments, testers))
-
-    if (behavior === undefined) {
-      behavior = {
-        arguments: args,
-        actions: [],
-      }
-
-      this.#behaviors.push(behavior)
-    }
-
-    return behavior
-  }
-
-  #appendAction(behavior: Behavior<Parameters<Fn>, ReturnType<Fn>>, type: BehaviorType, value: unknown, once: boolean) {
-    behavior.actions.push({
-      type,
-      value,
-      once,
-      called: false,
-    })
-  }
-
-  #findAction(args: Parameters<Fn>) {
-    const testers = [
-      ...getCustomEqualityTesters(),
-      iterableEquality,
-    ]
-
-    for (const behavior of this.#behaviors) {
+    for (const behavior of behaviors) {
       if (equals(args, behavior.arguments, testers)) {
         return behavior.actions.findLast(action => !(action.once && action.called)) ?? null
       }
@@ -152,4 +57,128 @@ class When<Fn extends Procedure> {
 
     return null
   }
+
+  spy.mockImplementation(
+    // @ts-expect-error cannot resolve generic args
+    (...args: ScopedParameters) => {
+      const action = findAction(args)
+
+      if (action === null) {
+        return originalImplementation?.(...args)
+      }
+
+      action.called = true
+
+      switch (action.type) {
+        case 'return': {
+          return action.value
+        }
+
+        case 'throw': {
+          throw action.value
+        }
+
+        case 'resolve': {
+          return Promise.resolve(action.value)
+        }
+
+        case 'reject': {
+          return Promise.reject(action.value)
+        }
+      }
+    },
+  )
+
+  function getOrCreateBehavior(args: ScopedParameters) {
+    const testers = [
+      ...getCustomEqualityTesters(),
+      iterableEquality,
+    ]
+
+    let behavior = behaviors.find(behavior => equals(args, behavior.arguments, testers))
+
+    if (behavior === undefined) {
+      behavior = {
+        arguments: args,
+        actions: [],
+      }
+
+      behaviors.push(behavior)
+    }
+
+    return behavior
+  }
+
+  // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node 24
+  const output: When<Fn> = {
+    // @todo strictlyCalledWith for strict equality?
+    calledWith: (...args: ScopedParameters) => {
+      const behavior = getOrCreateBehavior(args)
+
+      function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, once: boolean) {
+        behavior.actions.push({
+          type,
+          value,
+          once,
+          called: false,
+        })
+      }
+
+      const calledWithInstance: CalledWithInstance<ScopedReturn, Fn> = ({
+        ...output,
+        thenThrow: (value) => {
+          appendAction(behavior, 'throw', value, false)
+
+          return calledWithInstance
+        },
+        thenThrowOnce: (value) => {
+          appendAction(behavior, 'throw', value, true)
+
+          return calledWithInstance
+        },
+        thenReturn: (value) => {
+          appendAction(behavior, 'return', value, false)
+
+          return calledWithInstance
+        },
+        thenReturnOnce: (value) => {
+          appendAction(behavior, 'return', value, true)
+
+          return calledWithInstance
+        },
+        thenResolve: (value) => {
+          appendAction(behavior, 'resolve', value, false)
+
+          return calledWithInstance
+        },
+        thenResolveOnce: (value) => {
+          appendAction(behavior, 'resolve', value, true)
+
+          return calledWithInstance
+        },
+        thenReject: (value) => {
+          appendAction(behavior, 'reject', value, false)
+
+          return calledWithInstance
+        },
+        thenRejectOnce: (value) => {
+          appendAction(behavior, 'reject', value, true)
+
+          return calledWithInstance
+        },
+      })
+
+      return calledWithInstance
+    },
+  }
+
+  if (Symbol.dispose) {
+    output[Symbol.dispose] = () => {
+      if (originalImplementation) {
+        spy.mockImplementation(originalImplementation)
+      }
+    }
+  }
+
+  return output
 }
