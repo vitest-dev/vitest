@@ -314,7 +314,7 @@ function createSuiteCollector(
   let suite!: Suite
   initSuite(true)
 
-  const task = function (name = '', options: TaskCustomOptions = {}) {
+  const task = function (name = '', options: TaskCustomOptions = {}, inheritedSuiteOptions?: SuiteOptions) {
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const parentTags = parentTask?.tags || []
@@ -341,6 +341,7 @@ function createSuiteCollector(
 
     const testOwnMeta = options.meta
     options = {
+      ...(inheritedSuiteOptions || {}),
       ...tagsOptions,
       ...options,
     }
@@ -443,29 +444,39 @@ function createSuiteCollector(
     optionsOrFn?: TestOptions | TestFunction,
     timeoutOrTest?: number | TestFunction,
   ) {
-    let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
+    let { options: testOwnOptions, handler } = parseArguments(optionsOrFn, timeoutOrTest)
 
-    // inherit repeats, retry, timeout from suite
-    if (typeof suiteOptions === 'object') {
-      options = Object.assign({}, suiteOptions, options)
-    }
+    // Resolve concurrent/sequential: chainable and explicit test options should
+    // have higher priority than tags, which in turn beat inherited suite options.
+    // We only inject the resolved value into testOwnOptions when the result was
+    // determined by the chainable or by the test itself — not when it is purely
+    // inherited from the suite (so that tag options can still override it).
+    const suiteObj = typeof suiteOptions === 'object' ? suiteOptions : undefined
+    const effectiveConcurrent = testOwnOptions.concurrent ?? suiteObj?.concurrent
+    const concurrent = this.concurrent ?? (!this.sequential && effectiveConcurrent)
+    const effectiveSequential = testOwnOptions.sequential ?? suiteObj?.sequential
+    const sequential = this.sequential ?? (!this.concurrent && effectiveSequential)
 
-    // inherit concurrent / sequential from suite
-    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
-    if (options.concurrent != null && concurrent != null) {
-      options.concurrent = concurrent
-    }
+    const hasExplicitConcurrency
+      = this.concurrent != null
+      || this.sequential != null
+      || testOwnOptions.concurrent != null
+      || testOwnOptions.sequential != null
 
-    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
-    if (options.sequential != null && sequential != null) {
-      options.sequential = sequential
+    if (hasExplicitConcurrency) {
+      if (concurrent != null) {
+        testOwnOptions = { ...testOwnOptions, concurrent }
+      }
+      if (sequential != null) {
+        testOwnOptions = { ...testOwnOptions, sequential }
+      }
     }
 
     const test = task(formatName(name), {
       ...this,
-      ...options,
+      ...testOwnOptions,
       handler,
-    }) as unknown as Test
+    }, suiteObj) as unknown as Test
 
     test.type = 'test'
   })

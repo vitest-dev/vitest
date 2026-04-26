@@ -1753,6 +1753,61 @@ test('multiple tags with meta are merged with priority order', async () => {
   `)
 })
 
+test('tag options override inherited suite options', async () => {
+  const { stderr, buildTree } = await runInlineTests({
+    'basic.test.js': `
+      describe('with suite options', { timeout: 1000, repeats: 1, concurrent: true }, () => {
+        test('tag wins', { tags: ['my-tag'] }, () => {})
+        test('explicit test wins', { tags: ['my-tag'], timeout: 9999 }, () => {})
+      })
+      describe('without suite options', () => {
+        test('tag applies', { tags: ['my-tag'] }, () => {})
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        tags: [{ name: 'my-tag', timeout: 5000, repeats: 2, concurrent: false }],
+      },
+    },
+  })
+  expect(stderr).toBe('')
+  expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "with suite options": {
+          "explicit test wins": {
+            "mode": "run",
+            "repeats": 2,
+            "tags": [
+              "my-tag",
+            ],
+            "timeout": 9999,
+          },
+          "tag wins": {
+            "mode": "run",
+            "repeats": 2,
+            "tags": [
+              "my-tag",
+            ],
+            "timeout": 5000,
+          },
+        },
+        "without suite options": {
+          "tag applies": {
+            "mode": "run",
+            "repeats": 2,
+            "tags": [
+              "my-tag",
+            ],
+            "timeout": 5000,
+          },
+        },
+      },
+    }
+  `)
+})
+
 function getTestTree(builder: (fn: (test: TestCase) => any) => any) {
   return builder(test => test.options.tags)
 }
