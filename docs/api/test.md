@@ -217,18 +217,6 @@ Prefer using non-nested meta, if possible.
 
 Whether this test run concurrently with other concurrent tests in the suite.
 
-### sequential
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **Alias:** [`test.sequential`](#test-sequential)
-
-::: warning DEPRECATED
-Use [`concurrent: false`](#concurrent) instead when you need to override inherited or configured concurrency.
-:::
-
-Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
-
 ### skip
 
 - **Type:** `boolean`
@@ -456,36 +444,6 @@ test.concurrent('test 2', async ({ expect }) => {
 ```
 
 Note that if tests are synchronous, Vitest will still run them sequentially.
-
-## test.sequential <Deprecated /> {#test-sequential}
-
-- **Alias:** `it.sequential`
-
-::: warning DEPRECATED
-Use [`concurrent: false`](#concurrent) instead when you need to override inherited or configured concurrency.
-:::
-
-`test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
-
-```ts
-import { describe, test } from 'vitest'
-
-// with config option { sequence: { concurrent: true } }
-test('concurrent test 1', async () => { /* ... */ })
-test('concurrent test 2', async () => { /* ... */ })
-
-test.sequential('sequential test 1', async () => { /* ... */ })
-test.sequential('sequential test 2', async () => { /* ... */ })
-
-// within concurrent suite
-describe.concurrent('suite', () => {
-  test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
-
-  test.sequential('sequential test 1', async () => { /* ... */ })
-  test.sequential('sequential test 2', async () => { /* ... */ })
-})
-```
 
 ## test.todo
 
