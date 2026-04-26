@@ -459,9 +459,9 @@ function createSuiteCollector(
 
     const hasExplicitConcurrency
       = this.concurrent != null
-      || this.sequential != null
-      || testOwnOptions.concurrent != null
-      || testOwnOptions.sequential != null
+        || this.sequential != null
+        || testOwnOptions.concurrent != null
+        || testOwnOptions.sequential != null
 
     if (hasExplicitConcurrency) {
       if (concurrent != null) {
