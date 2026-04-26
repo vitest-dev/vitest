@@ -217,6 +217,14 @@ Prefer using non-nested meta, if possible.
 
 Whether this test run concurrently with other concurrent tests in the suite.
 
+Set `concurrent` to `false` to opt out of concurrency inherited from [`describe.concurrent`](/api/describe#describe-concurrent) or [`sequence.concurrent`](/config/sequence#sequence-concurrent):
+
+```ts
+test('runs sequentially', { concurrent: false }, async () => {
+  // ...
+})
+```
+
 ### skip
 
 - **Type:** `boolean`

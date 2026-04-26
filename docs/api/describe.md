@@ -208,6 +208,19 @@ describe.concurrent('suite', () => {
 })
 ```
 
+Set `concurrent` to `false` to opt out of concurrency inherited from a parent suite or [`sequence.concurrent`](/config/sequence#sequence-concurrent):
+
+```ts
+describe.concurrent('suite', () => {
+  test('concurrent test', async () => { /* ... */ })
+
+  describe('sequential suite', { concurrent: false }, () => {
+    test('sequential test 1', async () => { /* ... */ })
+    test('sequential test 2', async () => { /* ... */ })
+  })
+})
+```
+
 `.skip`, `.only`, and `.todo` works with concurrent suites. All the following combinations are valid:
 
 ```ts
