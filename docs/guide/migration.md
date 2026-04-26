@@ -21,20 +21,15 @@ This affects generated task names in reporter output, snapshots, and any tooling
 
 ```ts
 test.for([{ name: 'Alice' }])('I am $name', () => {})
-
-// Vitest 4:
-// ✓ I am 'Alice'
-
-// Vitest 5:
-// ✓ I am Alice
+// Vitest 4 → I am 'Alice'
+// Vitest 5 → I am Alice
 ```
 
 If you need quotes in the generated title, add them to the title template:
 
 ```ts
 test.for([{ name: 'Alice' }])('I am "$name"', () => {})
-
-// ✓ I am "Alice"
+// → I am "Alice"
 ```
 
 ### `chaiConfig.truncateThreshold` No Longer Controls Test Title Value Truncation
@@ -50,7 +45,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    chaiConfig: {
+    chaiConfig: { // [!code --]
       truncateThreshold: 120, // [!code --]
     }, // [!code --]
     taskTitleValueFormatTruncate: 120, // [!code ++]
