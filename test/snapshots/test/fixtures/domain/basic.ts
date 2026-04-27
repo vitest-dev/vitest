@@ -1,4 +1,4 @@
-import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from 'vitest'
 
 // Key-value domain adapter: each snapshot is multiple lines of `key=value`.
 // Values can be literal strings or `/regex/` patterns in the stored snapshot.
@@ -10,7 +10,8 @@ type KVCaptured = Record<string, string>
 type KVExpected = Record<string, string | RegExp>
 
 function renderKV(obj: Record<string, unknown>) {
-  return `\n${Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n')}\n`
+  const result = Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n');
+  return result ? `\n${result}\n` : ''
 }
 
 export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
@@ -28,6 +29,9 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   },
 
   parseExpected(input: string): KVExpected {
+    if (!input.trim()) {
+      return {}
+    }
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
       if (eq === -1) {
@@ -47,12 +51,13 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
     const resolvedLines: string[] = []
     let pass = true
 
-    for (const [key, actualValue] of Object.entries(captured)) {
-      const expectedValue = expected[key]
-
-      // non asserted keys are skipped (works as subset match)
-      if (typeof expectedValue === 'undefined') {
-        continue;
+    // iterate on `expected` side so extra key on `actual` side
+    // is ignored and works as subset match
+    for (const [key, expectedValue] of Object.entries(expected)) {
+      const actualValue = captured[key]
+      if (actualValue === undefined) {
+        pass = false
+        continue
       }
 
       // preserve matched pattern for normalized error diff and partial update

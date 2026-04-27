@@ -2,17 +2,15 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["esnext"],
+    "customConditions": ["__vitest_source__"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
       "@vitest/pretty-format": ["./packages/pretty-format/src/index.ts"],
       "@vitest/utils": ["./packages/utils/src/index.ts"],
       "@vitest/utils/*": ["./packages/utils/src/*"],
       "@vitest/spy": ["./packages/spy/src/index.ts"],
-      "@vitest/snapshot": ["./packages/snapshot/src/index.ts"],
-      "@vitest/snapshot/*": ["./packages/snapshot/src/*"],
       "@vitest/expect": ["./packages/expect/src/index.ts"],
       "@vitest/mocker": ["./packages/mocker/src/index.ts"],
       "@vitest/mocker/node": ["./packages/mocker/src/node/index.ts"],

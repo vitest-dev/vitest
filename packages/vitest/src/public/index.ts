@@ -146,6 +146,7 @@ export type {
   TestFunction,
   TestOptions,
   VitestRunnerConfig as TestRunnerConfig,
+  TestTagDefinition,
 
   TestTags,
   VitestRunner as VitestTestRunner,
@@ -154,6 +155,8 @@ export type {
 export type { CancelReason } from '@vitest/runner'
 
 export type {
+  DomainMatchResult,
+  DomainSnapshotAdapter,
   SnapshotData,
   SnapshotMatchOptions,
   SnapshotResult,

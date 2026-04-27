@@ -11,7 +11,7 @@ import { playwright } from '@vitest/browser-playwright'
 import { toArray } from '@vitest/utils/helpers'
 import libCoverage from 'istanbul-lib-coverage'
 import { normalize } from 'pathe'
-import { onTestFailed, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { onTestFailed, onTestFinished, TestRunner, vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils/index'
 
 export const test: TestAPI = process.env.COVERAGE_TEST !== 'true'
@@ -77,6 +77,12 @@ export async function runVitest(config: TestUserConfig, options = { throwOnError
     onTestFailed(() => {
       console.error('stderr:', result.stderr)
       console.error('stdout:', result.stdout)
+    })
+
+    onTestFinished(() => {
+      if (process.env.NODE_V8_COVERAGE) {
+        delete process.env.NODE_V8_COVERAGE
+      }
     })
   }
 

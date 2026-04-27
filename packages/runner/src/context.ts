@@ -50,7 +50,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
-  // this function name is used to filter error in test/cli/test/fails.test.ts
+  // this function name is used to filter error in test/e2e/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     const startTime = now()
     const runner = getRunner()

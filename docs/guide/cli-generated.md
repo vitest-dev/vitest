@@ -299,6 +299,13 @@ Apply exclusions again after coverage has been remapped to original sources. (de
 
 Directory of HTML coverage output to be served in UI mode and HTML reporter.
 
+### coverage.autoAttachSubprocess
+
+- **CLI:** `--coverage.autoAttachSubprocess`
+- **Config:** [coverage.autoAttachSubprocess](/config/coverage#coverage-autoattachsubprocess)
+
+Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)
+
 ### mode
 
 - **CLI:** `--mode <name>`
@@ -865,7 +872,7 @@ Collect test and suite locations in the `location` property
 - **CLI:** `--attachmentsDir <dir>`
 - **Config:** [attachmentsDir](/config/attachmentsdir)
 
-The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)
+The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)
 
 ### run
 

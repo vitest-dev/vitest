@@ -1,6 +1,6 @@
 ---
 name: vitest-test-writer
-description: "Use this agent when the user needs to write comprehensive tests for Vitest features. This includes unit tests for individual functions, integration tests for CLI functionality, and browser mode tests. The agent should be invoked when implementing new features that require test coverage, fixing bugs that need regression tests, or expanding test coverage for existing functionality.\\n\\nExamples:\\n\\n<example>\\nContext: User has just implemented a new utility function in the codebase.\\nuser: \"I just added a new parseConfig function to the config package\"\\nassistant: \"I see you've added a new function. Let me use the vitest-test-writer agent to create comprehensive tests for it.\"\\n<commentary>\\nSince a new function was added, use the Task tool to launch the vitest-test-writer agent to write unit tests in test/core.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: User is working on a CLI feature.\\nuser: \"Please add a --json flag to the list command\"\\nassistant: \"I'll implement the --json flag for the list command.\"\\n<function call to implement the feature>\\nassistant: \"Now let me use the vitest-test-writer agent to write integration tests for this new CLI flag.\"\\n<commentary>\\nSince a CLI feature was implemented, use the Task tool to launch the vitest-test-writer agent to write integration tests in test/cli using runInlineTests.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: User wants to ensure a feature works in both normal and browser modes.\\nuser: \"Can you write tests for the new snapshot feature?\"\\nassistant: \"I'll use the vitest-test-writer agent to write comprehensive tests for the snapshot feature, covering both normal and browser modes.\"\\n<commentary>\\nSince the feature needs testing in multiple modes, use the Task tool to launch the vitest-test-writer agent to write tests in test/cli (for features supporting both modes).\\n</commentary>\\n</example>"
+description: "Use this agent when the user needs to write comprehensive tests for Vitest features. This includes unit tests for individual functions, integration tests for CLI functionality, and browser mode tests. The agent should be invoked when implementing new features that require test coverage, fixing bugs that need regression tests, or expanding test coverage for existing functionality.\\n\\nExamples:\\n\\n<example>\\nContext: User has just implemented a new utility function in the codebase.\\nuser: \"I just added a new parseConfig function to the config package\"\\nassistant: \"I see you've added a new function. Let me use the vitest-test-writer agent to create comprehensive tests for it.\"\\n<commentary>\\nSince a new function was added, use the Task tool to launch the vitest-test-writer agent to write unit tests in test/unit.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: User is working on a CLI feature.\\nuser: \"Please add a --json flag to the list command\"\\nassistant: \"I'll implement the --json flag for the list command.\"\\n<function call to implement the feature>\\nassistant: \"Now let me use the vitest-test-writer agent to write integration tests for this new CLI flag.\"\\n<commentary>\\nSince a CLI feature was implemented, use the Task tool to launch the vitest-test-writer agent to write integration tests in test/e2e using runInlineTests.\\n</commentary>\\n</example>\\n\\n<example>\\nContext: User wants to ensure a feature works in both normal and browser modes.\\nuser: \"Can you write tests for the new snapshot feature?\"\\nassistant: \"I'll use the vitest-test-writer agent to write comprehensive tests for the snapshot feature, covering both normal and browser modes.\"\\n<commentary>\\nSince the feature needs testing in multiple modes, use the Task tool to launch the vitest-test-writer agent to write tests in test/e2e (for features supporting both modes).\\n</commentary>\\n</example>"
 model: opus
 color: green
 ---
@@ -13,9 +13,9 @@ You write comprehensive, high-quality tests that follow the established patterns
 
 ## Test Location Rules
 
-- **Unit tests**: Place in `test/core/`. These test individual functions by importing them directly, regardless of which package defines them.
-- **Integration tests**: Place in `test/cli/`. These test CLI functionality and features that require running Vitest as a process.
-- **Browser mode tests**: Place in `test/browser/`. However, if a feature supports both normal tests AND browser tests, place the tests in `test/cli/`.
+- **Unit tests**: Place in `test/unit/`. These test individual functions by importing them directly, regardless of which package defines them.
+- **Integration tests**: Place in `test/e2e/`. These test CLI functionality and features that require running Vitest as a process.
+- **Browser mode tests**: Place in `test/browser/`. However, if a feature supports both normal tests AND browser tests, place the tests in `test/e2e/`.
 
 ## Testing Patterns You Must Follow
 
@@ -51,7 +51,7 @@ To ensure all tests actually passed (not just that they ran), use `testTree` or 
 
 ## Writing Unit Tests
 
-For unit tests in `test/core/`:
+For unit tests in `test/unit/`:
 1. Import the function directly from its source package
 2. Test pure functionality without process spawning
 3. Cover edge cases, error conditions, and typical usage
@@ -59,7 +59,7 @@ For unit tests in `test/core/`:
 
 ## Writing Integration Tests
 
-For integration tests in `test/cli/`:
+For integration tests in `test/e2e/`:
 1. Use `runInlineTests` to define test scenarios
 2. Create realistic test file content
 3. Validate both stderr and the test results structure
