@@ -74,6 +74,7 @@ test('domain snapshot', async () => {
 
   // edit test
   editFile(testFile, s => s
+    .replace(`name: 'alice',`, ``)
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
@@ -82,7 +83,26 @@ test('domain snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > all literal
+    Error: Snapshot \`all literal 1\` mismatched
+
+    - Expected
+    + Received
+
+    - name=alice
+      age=30
+
+     ❯ basic.test.ts:5:26
+          3|
+          4| test('all literal', () => {
+          5|   expect({  age: '30' }).toMatchKvSnapshot()
+           |                          ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > with regex
     Error: Snapshot \`with regex 1\` mismatched
@@ -103,14 +123,16 @@ test('domain snapshot', async () => {
          10| })
          11|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "all literal": "passed",
+        "all literal": Array [
+          "Snapshot \`all literal 1\` mismatched",
+        ],
         "with regex": Array [
           "Snapshot \`with regex 1\` mismatched",
         ],
@@ -137,7 +159,6 @@ test('domain snapshot', async () => {
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`all literal 1\`] = \`
-    name=alice
     age=30
     \`;
 
