@@ -821,7 +821,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Collect test and suite locations in the `location` property',
   },
   attachmentsDir: {
-    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)',
     argument: '<dir>',
   },
 

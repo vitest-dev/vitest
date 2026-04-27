@@ -392,7 +392,7 @@ function createSuiteCollector(
     }
     if (
       options.concurrent
-      || (!options.sequential && runner.config.sequence.concurrent)
+      ?? (!options.sequential && runner.config.sequence.concurrent)
     ) {
       task.concurrent = true
     }
@@ -707,13 +707,13 @@ function createSuite() {
   }
 
   suiteFn.for = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: SuiteAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
+    const context = getChainableContext(this)
+    const suite = context.withContext()
+
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
     }
