@@ -593,7 +593,6 @@ function createSuite() {
       optionsOrFactory,
     ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
-
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
