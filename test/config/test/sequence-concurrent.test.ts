@@ -5,10 +5,7 @@ import { runVitest } from '../../test-utils'
 test('should run suites and tests concurrently unless concurrent false is specified when sequence.concurrent is true', async () => {
   const { stderr, errorTree } = await runVitest({
     root: './fixtures/sequence-concurrent',
-    include: [
-      'sequence-concurrent-true-concurrent.test.ts',
-      'sequence-concurrent-true-concurrent-false.test.ts',
-    ],
+    include: ['sequence-concurrent-true-*.test.ts'],
     sequence: {
       concurrent: true,
     },
