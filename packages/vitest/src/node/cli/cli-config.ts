@@ -213,10 +213,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: null,
         argument: '', // no displayed
         subcommands: {
+          // `Thresholds.perFile` is `boolean | object`. The object form is
+          // config-file only; on the CLI it is a plain boolean toggle. Cast
+          // to the boolean shape so the generated CLI docs do not show an
+          // empty argument placeholder.
           perFile: {
             description:
-              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`)',
-          },
+              'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.',
+          } as CLIOption<boolean> as never,
           autoUpdate: {
             description:
               'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)',

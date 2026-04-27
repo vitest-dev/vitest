@@ -70,6 +70,52 @@ test('provider options, generic', () => {
       },
     },
   })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'istanbul',
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- per-file threshold values must be numbers
+        lines: '50',
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      perFile: {
+        // @ts-expect-error -- `autoUpdate` is not a per-file option
+        autoUpdate: true,
+      },
+    },
+  })
 })
 
 test('provider module', () => {
