@@ -34,6 +34,28 @@ test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
 test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 ```
 
+### Locators in Commands are Serialized as Objects
+
+Locators forwarded to [browser commands](/guide/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:
+
+- `selector`: the provider-specific selector string (the same value commands previously received).
+- `locator`: a human-readable representation of the locator (e.g. `getByRole('button')`), used for error messages and tracing.
+
+Update any custom commands that accept a locator to destructure `selector` from the new object:
+
+```ts
+import type { SerializedLocator } from '@vitest/browser'
+import type { BrowserCommandContext } from 'vitest/node'
+
+export async function customClick(
+  context: BrowserCommandContext,
+  selector: string, // [!code --]
+  { selector }: SerializedLocator, // [!code ++]
+) {
+  await context.page.locator(selector).click()
+}
+```
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
