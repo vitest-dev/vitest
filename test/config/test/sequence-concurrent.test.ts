@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
-test('should run suites and tests concurrently unless sequential specified when sequence.concurrent is true', async () => {
+test('should run suites and tests concurrently unless concurrent false is specified when sequence.concurrent is true', async () => {
   const { stderr, errorTree } = await runVitest({
     root: './fixtures/sequence-concurrent',
     include: ['sequence-concurrent-true-*.test.ts'],
@@ -29,14 +29,6 @@ test('should run suites and tests concurrently unless sequential specified when 
         },
         "last test completes first": "passed",
         "third test completes second": "passed",
-      },
-      "sequence-concurrent-true-sequential.test.ts": {
-        "last test completes last": "passed",
-        "sequential suite": {
-          "first test completes first": "passed",
-          "second test completes second": "passed",
-        },
-        "third test completes third": "passed",
       },
     }
   `)

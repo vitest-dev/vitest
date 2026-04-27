@@ -40,6 +40,7 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -50,6 +51,8 @@ test('domain snapshot with poll', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`multiple poll snapshots 1\`] = \`
     x=1
@@ -131,6 +134,7 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": Array [
@@ -149,6 +153,7 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -159,6 +164,8 @@ test('domain snapshot with poll', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`multiple poll snapshots 1\`] = \`
     x=1
@@ -206,6 +213,7 @@ test('domain snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -216,6 +224,8 @@ test('domain snapshot with poll', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`multiple poll snapshots 1\`] = \`
     x=1
