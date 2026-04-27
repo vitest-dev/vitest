@@ -222,7 +222,7 @@ function* filterParents(
 function matchState(task: Task, filter: Filter) {
   if (filter.slow) {
     if (task.type === 'test') {
-      const threshold = config.value.slowTestThreshold
+      const threshold = task.slowTestThreshold ?? config.value.slowTestThreshold
       if (typeof threshold === 'number' && typeof task.result?.duration === 'number' && task.result.duration > threshold) {
         return true
       }
