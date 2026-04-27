@@ -10,23 +10,33 @@ interface Behavior<Arguments extends unknown[], Value> {
   actions: {
     type: BehaviorType
     value: Value | unknown
-    once: boolean
+    times: number
     called: boolean
   }[]
 }
 
+interface BehaviorOptions {
+  times?: number | undefined
+}
+
+type OnceBehaviorOptions = Omit<BehaviorOptions, 'times'>
+
 type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & Record<
   | 'thenReturn'
+  | 'thenResolve',
+  (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+> & Record<
   | 'thenReturnOnce'
-  | 'thenResolve'
   | 'thenResolveOnce',
-  (value: ReturnType) => CalledWithInstance<ReturnType, Fn>
+  (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
 > & Record<
   | 'thenThrow'
+  | 'thenReject',
+  (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+> & Record<
   | 'thenThrowOnce'
-  | 'thenReject'
   | 'thenRejectOnce',
-  (value: unknown) => CalledWithInstance<ReturnType, Fn>
+  (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
 >
 
 interface When<Fn extends Procedure> extends Disposable {
@@ -52,7 +62,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
 
     for (const behavior of behaviors) {
       if (equals(args, behavior.arguments, testers)) {
-        return behavior.actions.findLast(action => !(action.once && action.called)) ?? null
+        return behavior.actions.findLast(action => !(action.times === 0 && action.called)) ?? null
       }
     }
 
@@ -68,6 +78,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
         return originalImplementation?.(...args)
       }
 
+      action.times -= 1
       action.called = true
 
       switch (action.type) {
@@ -116,54 +127,54 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
     calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
-      function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, once: boolean) {
+      function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, times: number) {
         behavior.actions.push({
           type,
           value,
-          once,
+          times,
           called: false,
         })
       }
 
       const calledWithInstance: CalledWithInstance<ScopedReturn, Fn> = ({
         ...output,
-        thenThrow: (value) => {
-          appendAction(behavior, 'throw', value, false)
+        thenThrow: (value, options) => {
+          appendAction(behavior, 'throw', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
         },
         thenThrowOnce: (value) => {
-          appendAction(behavior, 'throw', value, true)
+          appendAction(behavior, 'throw', value, 1)
 
           return calledWithInstance
         },
-        thenReturn: (value) => {
-          appendAction(behavior, 'return', value, false)
+        thenReturn: (value, options) => {
+          appendAction(behavior, 'return', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
         },
         thenReturnOnce: (value) => {
-          appendAction(behavior, 'return', value, true)
+          appendAction(behavior, 'return', value, 1)
 
           return calledWithInstance
         },
-        thenResolve: (value) => {
-          appendAction(behavior, 'resolve', value, false)
+        thenResolve: (value, options) => {
+          appendAction(behavior, 'resolve', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
         },
         thenResolveOnce: (value) => {
-          appendAction(behavior, 'resolve', value, true)
+          appendAction(behavior, 'resolve', value, 1)
 
           return calledWithInstance
         },
-        thenReject: (value) => {
-          appendAction(behavior, 'reject', value, false)
+        thenReject: (value, options) => {
+          appendAction(behavior, 'reject', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
         },
         thenRejectOnce: (value) => {
-          appendAction(behavior, 'reject', value, true)
+          appendAction(behavior, 'reject', value, 1)
 
           return calledWithInstance
         },
