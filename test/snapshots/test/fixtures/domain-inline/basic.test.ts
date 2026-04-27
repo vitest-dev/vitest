@@ -15,3 +15,7 @@ test('with regex', () => {
     status=active
   `)
 })
+
+test('empty snapshot', () => {
+  expect({}).toMatchKvInlineSnapshot(``)
+})
