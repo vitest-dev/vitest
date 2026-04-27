@@ -217,13 +217,13 @@ Prefer using non-nested meta, if possible.
 
 Whether this test run concurrently with other concurrent tests in the suite.
 
-### sequential
+Set `concurrent` to `false` to opt out of concurrency inherited from [`describe.concurrent`](/api/describe#describe-concurrent) or [`sequence.concurrent`](/config/sequence#sequence-concurrent):
 
-- **Type:** `boolean`
-- **Default:** `true`
-- **Alias:** [`test.sequential`](#test-sequential)
-
-Whether tests run sequentially. When both `concurrent` and `sequential` are specified, `concurrent` takes precedence.
+```ts
+test('runs sequentially', { concurrent: false }, async () => {
+  // ...
+})
+```
 
 ### skip
 
@@ -453,32 +453,6 @@ test.concurrent('test 2', async ({ expect }) => {
 
 Note that if tests are synchronous, Vitest will still run them sequentially.
 
-## test.sequential
-
-- **Alias:** `it.sequential`
-
-`test.sequential` marks a test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
-
-```ts
-import { describe, test } from 'vitest'
-
-// with config option { sequence: { concurrent: true } }
-test('concurrent test 1', async () => { /* ... */ })
-test('concurrent test 2', async () => { /* ... */ })
-
-test.sequential('sequential test 1', async () => { /* ... */ })
-test.sequential('sequential test 2', async () => { /* ... */ })
-
-// within concurrent suite
-describe.concurrent('suite', () => {
-  test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
-
-  test.sequential('sequential test 1', async () => { /* ... */ })
-  test.sequential('sequential test 2', async () => { /* ... */ })
-})
-```
-
 ## test.todo
 
 - **Alias:** `it.todo`
@@ -618,7 +592,7 @@ test.each`
 ```
 
 ::: tip
-Vitest processes `$values` with Chai `format` method. If the value is too truncated, you can increase [chaiConfig.truncateThreshold](/config/chaiconfig#chaiconfig-truncatethreshold) in your config file.
+Vitest formats interpolated title values with its display formatter. If the value is too truncated, you can increase [taskTitleValueFormatTruncate](/config/tasktitlevalueformattruncate) in your config file.
 :::
 
 ## test.for

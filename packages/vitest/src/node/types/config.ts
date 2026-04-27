@@ -801,6 +801,15 @@ export interface InlineConfig {
   chaiConfig?: ChaiConfig
 
   /**
+   * Sets length limit for formatted values interpolated into generated task titles.
+   *
+   * This affects values inserted by APIs like `test.each` and `test.for`.
+   *
+   * @default 40
+   */
+  taskTitleValueFormatTruncate?: number
+
+  /**
    * Stop test execution when given number of tests have failed.
    */
   bail?: number
@@ -851,7 +860,7 @@ export interface InlineConfig {
   /**
    * Directory path for storing attachments created by `context.annotate`
    *
-   * @default '.vitest-attachments'
+   * @default '.vitest/attachments'
    */
   attachmentsDir?: string
 

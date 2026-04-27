@@ -36,14 +36,17 @@ const webdriverioInstances: BrowserInstanceOption[] = [
   { browser: 'firefox' },
 ]
 
-export const instances: BrowserInstanceOption[] = process.env.BROWSER
+// use TEST_BROWSER to avoid BROWSER being selected for UI --open
+const testBrowser = process.env.TEST_BROWSER ?? process.env.BROWSER
+
+export const instances: BrowserInstanceOption[] = testBrowser
   ? [
       {
-        browser: process.env.BROWSER as any,
+        browser: testBrowser as any,
         headless:
           wsEndpoint
             ? true
-            : process.env.BROWSER === 'safari' ? false : undefined,
+            : testBrowser === 'safari' ? false : undefined,
       },
     ]
   : provider.name === 'playwright'

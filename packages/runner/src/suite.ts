@@ -1,3 +1,4 @@
+import type { InspectOptions } from '@vitest/utils/display'
 import type { UserFixtures } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
@@ -18,7 +19,7 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import { format, formatRegExp, objDisplay } from '@vitest/utils/display'
+import { format, formatRegExp, inspect, truncateString } from '@vitest/utils/display'
 import {
   isNegativeNaN,
   isObject,
@@ -389,10 +390,7 @@ function createSuiteCollector(
     if (task.mode === 'run' && !handler) {
       task.mode = 'todo'
     }
-    if (
-      options.concurrent
-      || (!options.sequential && runner.config.sequence.concurrent)
-    ) {
+    if (options.concurrent ?? runner.config.sequence.concurrent) {
       task.concurrent = true
     }
     task.shuffle = suiteOptions?.shuffle
@@ -449,15 +447,9 @@ function createSuiteCollector(
       options = Object.assign({}, suiteOptions, options)
     }
 
-    // inherit concurrent / sequential from suite
-    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
-    if (options.concurrent != null && concurrent != null) {
+    const concurrent = this.concurrent ?? options?.concurrent
+    if (concurrent != null) {
       options.concurrent = concurrent
-    }
-
-    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
-    if (options.sequential != null && sequential != null) {
-      options.sequential = sequential
     }
 
     const test = task(formatName(name), {
@@ -601,9 +593,6 @@ function createSuite() {
       optionsOrFactory,
     ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
-    const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
-    const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
-
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
@@ -629,14 +618,9 @@ function createSuite() {
       mode = 'todo'
     }
 
-    // inherit concurrent / sequential from suite
-    const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
-    const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
-    if (isConcurrent != null) {
-      options.concurrent = isConcurrent && !isSequential
-    }
-    if (isSequential != null) {
-      options.sequential = isSequential && !isConcurrent
+    const concurrent = this.concurrent ?? options.concurrent
+    if (concurrent != null) {
+      options.concurrent = concurrent
     }
 
     if (parentMeta) {
@@ -706,13 +690,13 @@ function createSuite() {
   }
 
   suiteFn.for = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: SuiteAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
+    const context = getChainableContext(this)
+    const suite = context.withContext()
+
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
     }
@@ -736,7 +720,7 @@ function createSuite() {
     (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
-    ['concurrent', 'sequential', 'shuffle', 'skip', 'only', 'todo'],
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
     suiteFn,
   ) as unknown as SuiteAPI
 }
@@ -967,7 +951,7 @@ export function createTaskCollector(
   taskFn.aroundAll = aroundAll
 
   const _test = createChainable(
-    ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
     taskFn,
     { fixtures: new TestFixtures() },
   ) as TestAPI
@@ -1019,6 +1003,10 @@ function formatTitle(template: string, items: any[], idx: number) {
     })
   }
 
+  const inspectOptions = {
+    truncate: runner.config.taskTitleValueFormatTruncate,
+  } satisfies InspectOptions
+
   const isObjectItem = isObject(items[0])
   function formatAttribute(s: string) {
     return s.replace(/\$([$\w.]+)/g, (_, key: string) => {
@@ -1028,9 +1016,11 @@ function formatTitle(template: string, items: any[], idx: number) {
       }
       const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
       const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
-      return objDisplay(value, {
-        truncate: runner?.config?.chaiConfig?.truncateThreshold,
-      })
+      // print string without quotes
+      if (typeof value === 'string') {
+        return truncateString(value, inspectOptions.truncate)
+      }
+      return inspect(value, inspectOptions)
     })
   }
 
@@ -1042,7 +1032,7 @@ function formatTitle(template: string, items: any[], idx: number) {
     // format "%"
     (match) => {
       if (i < count) {
-        output += format(match[0], items[i++])
+        output += format([match[0], items[i++]], inspectOptions)
       }
       else {
         output += match[0]

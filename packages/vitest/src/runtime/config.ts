@@ -78,6 +78,7 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  taskTitleValueFormatTruncate: number
   api: {
     allowExec: boolean | undefined
     allowWrite: boolean | undefined
@@ -115,6 +116,11 @@ export interface SerializedConfig {
       actionTimeout?: number
     }
     trace: BrowserTraceViewMode
+    traceView: {
+      enabled: boolean
+      recordCanvas: boolean
+      inlineImages: boolean
+    }
     trackUnhandledErrors: boolean
     detailsPanelPosition: 'right' | 'bottom'
   }

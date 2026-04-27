@@ -5,7 +5,6 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
       "@vitest/pretty-format": ["./packages/pretty-format/src/index.ts"],
       "@vitest/utils": ["./packages/utils/src/index.ts"],
@@ -23,6 +22,7 @@
       "@vitest/browser-playwright": ["./packages/browser-playwright/src/index.ts"],
       "@vitest/browser": ["./packages/browser/src/node/index.ts"],
       "@vitest/browser/client": ["./packages/browser/src/client/client.ts"],
+      "@vitest/browser/internal/vendor-types": ["./packages/browser/src/vendor-types.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/public/index.ts"],
       "vitest/internal/browser": ["./packages/vitest/src/public/browser.ts"],

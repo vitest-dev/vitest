@@ -431,9 +431,9 @@ test('collects tests imported from another file while a vi.mock line is present'
   const testModule = await collectTests(`
     import { describe } from 'vitest';
     import { it } from './Utils/test-extend.ts';
-      
+
     vi.mock('@/composables/test.js', async (importOriginal) => { });
-      
+
     describe('should included', () => {
       it('is included', () => {});
     });
@@ -450,7 +450,7 @@ test('collects tests imported from another file while a vi.mock line is present'
         "is included": {
           "errors": [],
           "fullName": "should included > is included",
-          "id": "-1732721377_0_0",
+          "id": "1709388417_0_0",
           "location": "8:6",
           "mode": "run",
           "state": "pending",
@@ -461,7 +461,7 @@ test('collects tests imported from another file while a vi.mock line is present'
           "is included": {
             "errors": [],
             "fullName": "top level describe > nested describe > is included",
-            "id": "-1732721377_1_0_0",
+            "id": "1709388417_1_0_0",
             "location": "13:8",
             "mode": "run",
             "state": "pending",
@@ -476,9 +476,9 @@ test('collects tests imported from another file while a vi.mock line is present 
   const testModule = await collectTests(`
     import { describe } from 'vitest';
     import { it } from './Utils/test-extend.ts';
-      
+
     // vi.mock('@/composables/test.js', async (importOriginal) => { });
-      
+
     describe('should included', () => {
       it('is included', () => {});
     });
@@ -496,7 +496,7 @@ test('collects tests imported from another file while a vi.mock line is present 
         "is included": {
           "errors": [],
           "fullName": "should included > is included",
-          "id": "-1732721377_0_0",
+          "id": "1709388417_0_0",
           "location": "8:6",
           "mode": "run",
           "state": "pending",
@@ -507,7 +507,7 @@ test('collects tests imported from another file while a vi.mock line is present 
           "is included": {
             "errors": [],
             "fullName": "top level describe > nested describe > is included",
-            "id": "-1732721377_1_0_0",
+            "id": "1709388417_1_0_0",
             "location": "13:8",
             "mode": "run",
             "state": "pending",
@@ -1137,14 +1137,15 @@ test('collects tags with other options', async () => {
   `)
 })
 
-test('sequential cancels inherited concurrent', async () => {
+test('concurrent false cancels inherited concurrent', async () => {
   const testModule = await collectTests(`
     import { test, describe } from 'vitest'
 
     describe.concurrent('concurrent suite', () => {
       test('inherits concurrent', () => {})
+      test('not concurrent via options', { concurrent: false }, () => {})
 
-      describe.sequential('sequential nested', () => {
+      describe('non-concurrent nested', { concurrent: false }, () => {
         test('not concurrent', () => {})
       })
 
@@ -1165,61 +1166,35 @@ test('sequential cancels inherited concurrent', async () => {
           "mode": "run",
           "state": "pending",
         },
+        "non-concurrent nested": {
+          "not concurrent": {
+            "errors": [],
+            "fullName": "concurrent suite > non-concurrent nested > not concurrent",
+            "id": "1709388417_0_2_0",
+            "location": "9:8",
+            "mode": "run",
+            "state": "pending",
+          },
+        },
+        "not concurrent via options": {
+          "errors": [],
+          "fullName": "concurrent suite > not concurrent via options",
+          "id": "1709388417_0_1",
+          "location": "6:6",
+          "mode": "run",
+          "state": "pending",
+        },
         "regular nested": {
           "still concurrent": {
             "concurrent": true,
             "errors": [],
             "fullName": "concurrent suite > regular nested > still concurrent",
-            "id": "1709388417_0_2_0",
-            "location": "12:8",
+            "id": "1709388417_0_3_0",
+            "location": "13:8",
             "mode": "run",
             "state": "pending",
           },
         },
-        "sequential nested": {
-          "not concurrent": {
-            "errors": [],
-            "fullName": "concurrent suite > sequential nested > not concurrent",
-            "id": "1709388417_0_1_0",
-            "location": "8:8",
-            "mode": "run",
-            "state": "pending",
-          },
-        },
-      },
-    }
-  `)
-})
-
-test('collects tests with sequential modifier', async () => {
-  const testModule = await collectTests(`
-    import { test, describe } from 'vitest'
-
-    describe.sequential('sequential suite', () => {
-      test('test in sequential suite', () => {})
-    })
-
-    test.sequential('sequential test', () => {})
-`)
-  expect(testModule).toMatchInlineSnapshot(`
-    {
-      "sequential suite": {
-        "test in sequential suite": {
-          "errors": [],
-          "fullName": "sequential suite > test in sequential suite",
-          "id": "1709388417_0_0",
-          "location": "5:6",
-          "mode": "run",
-          "state": "pending",
-        },
-      },
-      "sequential test": {
-        "errors": [],
-        "fullName": "sequential test",
-        "id": "1709388417_1",
-        "location": "8:4",
-        "mode": "run",
-        "state": "pending",
       },
     }
   `)
@@ -1269,6 +1244,7 @@ test('collects tests with options object modifiers', async () => {
       test('only via options', { only: true }, () => {})
       test('todo via options', { todo: true }, () => {})
       test('concurrent via options', { concurrent: true }, () => {})
+      test('not concurrent via options', { concurrent: false }, () => {})
       test('skip and concurrent via options', { skip: true, concurrent: true }, () => {})
     })
 `)
@@ -1284,6 +1260,14 @@ test('collects tests with options object modifiers', async () => {
           "mode": "skip",
           "state": "skipped",
         },
+        "not concurrent via options": {
+          "errors": [],
+          "fullName": "options tests > not concurrent via options",
+          "id": "1709388417_0_4",
+          "location": "9:6",
+          "mode": "skip",
+          "state": "skipped",
+        },
         "only via options": {
           "errors": [],
           "fullName": "options tests > only via options",
@@ -1296,8 +1280,8 @@ test('collects tests with options object modifiers', async () => {
           "concurrent": true,
           "errors": [],
           "fullName": "options tests > skip and concurrent via options",
-          "id": "1709388417_0_4",
-          "location": "9:6",
+          "id": "1709388417_0_5",
+          "location": "10:6",
           "mode": "skip",
           "state": "skipped",
         },

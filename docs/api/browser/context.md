@@ -270,6 +270,17 @@ export const utils: {
    * Creates "Cannot find element" error. Useful for custom locators.
    */
   getElementError(selector: string, container?: Element): Error
+  /**
+   * Utilities for generating and working with ARIA trees and templates.
+   * @experimental
+   */
+  aria: {
+    generateAriaTree(rootElement: Element): AriaNode
+    renderAriaTree(root: AriaNode): string
+    renderAriaTemplate(template: AriaTemplateNode): string
+    parseAriaTemplate(text: string): AriaTemplateNode
+    matchAriaTree(root: AriaNode, template: AriaTemplateNode): { pass: boolean; resolved: string }
+  }
 }
 ```
 
@@ -340,3 +351,22 @@ utils.configurePrettyDOM({
 ::: tip
 This feature is inspired by Testing Library's [`defaultIgnore`](https://testing-library.com/docs/dom-testing-library/api-configuration/#defaultignore) configuration.
 :::
+
+### aria <Version type="experimental">5.0.0</Version> {#aria}
+
+The `aria` namespace exposes low-level utilities used by Vitest's ARIA snapshot matchers.
+
+```ts
+import { utils } from 'vitest/browser'
+
+document.body.innerHTML = `
+  <h1>Hello, World!</h1>
+  <button aria-hidden="true">Hidden</button>
+  <button>Visible</button>
+`
+const tree = utils.aria.generateAriaTree(document.body)
+const yaml = utils.aria.renderAriaNode(tree)
+console.log(yaml)
+// - heading "Hello, World!" [level=1]
+// - button "Visible""
+```

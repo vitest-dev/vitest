@@ -413,6 +413,22 @@ export const cliOptionsConfig: VitestCLIOptions = {
           return { mode: value }
         },
       },
+      traceView: {
+        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+        argument: '',
+        transform: transformNestedBoolean,
+        subcommands: {
+          enabled: {
+            description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+          },
+          recordCanvas: {
+            description: 'Capture canvas pixels in trace-view snapshots (default: `false`)',
+          },
+          inlineImages: {
+            description: 'Inline loaded image pixels in trace-view snapshots (default: `false`)',
+          },
+        },
+      },
       orchestratorScripts: null,
       commands: null,
       viewport: null,
@@ -805,7 +821,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Collect test and suite locations in the `location` property',
   },
   attachmentsDir: {
-    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)',
     argument: '<dir>',
   },
 
@@ -963,6 +979,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  taskTitleValueFormatTruncate: null,
 }
 
 export const benchCliOptionsConfig: Pick<

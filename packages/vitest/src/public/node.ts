@@ -73,9 +73,9 @@ export type {
 } from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
-
 export type { JUnitOptions } from '../node/reporters/junit'
 
+export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,

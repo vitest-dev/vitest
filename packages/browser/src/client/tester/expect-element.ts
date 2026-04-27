@@ -1,11 +1,13 @@
 import type { Assertion, ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
 import type { Locator } from 'vitest/browser'
+import type { BrowserTraceEntryStatus } from './trace'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
-import { getBrowserState, getWorkerState } from '../utils'
+import { getBrowserState, getWorkerState, now } from '../utils'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
+import { recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
@@ -58,9 +60,12 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
   // ask `expect.poll` to invoke trace after the assertion
   const currentTest = getWorkerState().current
-  if (currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)) {
+  const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
+  const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+  if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
-    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: 'pass' | 'fail' }) => {
+    const startTime = now()
+    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
       const isNot = chai.util.flag(meta.assertion, 'negate')
       const name = chai.util.flag(meta.assertion, '_name') || '<unknown>'
       const baseName = `expect.element().${isNot ? 'not.' : ''}${name}`
@@ -68,15 +73,28 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.selector
-      await getBrowserState().commands.triggerCommand(
-        '__vitest_markTrace',
-        [{
+      if (hasActiveTraceView) {
+        recordBrowserTraceEntry(currentTest, {
           name: traceName,
+          kind: 'expect',
+          status: meta.status,
+          startTime,
+          duration: now() - startTime,
           selector,
           stack: sourceError.stack,
-        }],
-        sourceError,
-      )
+        })
+      }
+      if (hasActiveTrace) {
+        await getBrowserState().commands.triggerCommand(
+          '__vitest_markTrace',
+          [{
+            name: traceName,
+            selector,
+            stack: sourceError.stack,
+          }],
+          sourceError,
+        )
+      }
     })
   }
 

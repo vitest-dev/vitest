@@ -3,6 +3,7 @@ import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
 import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
+import { truncateString as utilsTruncateString } from '@vitest/utils/display'
 import { slash } from '@vitest/utils/helpers'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -278,13 +279,7 @@ export function padSummaryTitle(str: string): string {
 }
 
 export function truncateString(text: string, maxLength: number): string {
-  const plainText = stripVTControlCharacters(text)
-
-  if (plainText.length <= maxLength) {
-    return text
-  }
-
-  return `${plainText.slice(0, maxLength - 1)}…`
+  return utilsTruncateString(stripVTControlCharacters(text), maxLength)
 }
 
 function capitalize<T extends string>(text: T) {

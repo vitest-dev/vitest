@@ -241,7 +241,7 @@ export class SnapshotClient {
       inlineSnapshot,
     })
     expectedSnapshot.markAsChecked()
-    const matchResult = expectedSnapshot.data
+    const matchResult = expectedSnapshot.data !== undefined
       ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
@@ -291,7 +291,7 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
+    const reference = expectedSnapshot.data !== undefined && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
     const timedOut = timeout > 0
@@ -309,7 +309,7 @@ export class SnapshotClient {
 
     expectedSnapshot.markAsChecked()
 
-    if (!stableResult?.rendered) {
+    if (stableResult?.rendered === undefined) {
       // the original caller `expect.poll` later manipulates error via `throwWithCause`,
       // so here we can directly throw `lastPollError` if exists.
       if (stableResult?.lastPollError) {
@@ -324,7 +324,7 @@ export class SnapshotClient {
     // TODO: should `all` mode ignore parse error?
     // Sielently hiding the error and creating snaphsot full scratch isn't good either.
     // Users can fix or purge the broken snapshot manually and that decision affects how domain snapshot gets updated.
-    const matchResult = expectedSnapshot.data
+    const matchResult = expectedSnapshot.data !== undefined
       ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({

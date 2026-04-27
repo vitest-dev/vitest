@@ -30,6 +30,8 @@ await expect.element(page.getByRole('navigation')).toMatchAriaInlineSnapshot(`
 
 This catches accessibility regressions: missing labels, broken roles, incorrect heading levels, and more — things that DOM snapshots would miss. Even if the underlying HTML structure changes, the assertion would not fail as long as content matches semantically.
 
+For advanced cases, you can also generate and inspect the ARIA tree through `utils.aria` from `vitest/browser`. See the [Context API](/api/browser/context#aria) for details.
+
 ## Snapshot Workflow
 
 ARIA snapshots use the same Vitest snapshot workflow as other snapshot assertions. File snapshots, inline snapshots, `--update` / `-u`, watch mode updates, and CI snapshot behavior all work the same way.
