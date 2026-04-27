@@ -47,12 +47,13 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
     const resolvedLines: string[] = []
     let pass = true
 
-    for (const [key, actualValue] of Object.entries(captured)) {
-      const expectedValue = expected[key]
-
-      // non asserted keys are skipped (works as subset match)
-      if (typeof expectedValue === 'undefined') {
-        continue;
+    // iterate on `expected` side so extra key on `actual` side
+    // is ignored and works as subset match
+    for (const [key, expectedValue] of Object.entries(expected)) {
+      const actualValue = captured[key]
+      if (actualValue === undefined) {
+        pass = false
+        continue
       }
 
       // preserve matched pattern for normalized error diff and partial update
