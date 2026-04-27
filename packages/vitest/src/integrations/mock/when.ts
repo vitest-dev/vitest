@@ -43,7 +43,15 @@ interface When<Fn extends Procedure> extends Disposable {
   calledWith: (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
 }
 
-export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
+interface WhenOptions {
+  onUnmatched?: 'throw' | 'passthrough' | Procedure | undefined
+}
+
+function throwUnmatched() {
+  throw new Error('no behavior found in when')
+}
+
+export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions): When<Fn> {
   if (!isMockFunction(spy)) {
     throw new TypeError('`when` should be called with a spy') // @todo improve the error message
   }
@@ -69,13 +77,19 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
     return null
   }
 
+  const onUnmatched = typeof options?.onUnmatched === 'function'
+    ? options.onUnmatched
+    : options?.onUnmatched === 'throw'
+      ? throwUnmatched
+      : originalImplementation
+
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
     (...args: ScopedParameters) => {
       const action = findAction(args)
 
       if (action === null) {
-        return originalImplementation?.(...args)
+        return onUnmatched?.(...args)
       }
 
       action.times -= 1
