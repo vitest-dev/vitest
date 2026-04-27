@@ -1,6 +1,7 @@
 import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
+import { isMockFunction } from '@vitest/spy'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
@@ -33,7 +34,7 @@ interface When<Fn extends Procedure> extends Disposable {
 }
 
 export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>): When<Fn> {
-  if (!('_isMockFunction' in spy && spy._isMockFunction)) {
+  if (!isMockFunction(spy)) {
     throw new TypeError('`when` should be called with a spy') // @todo improve the error message
   }
 
