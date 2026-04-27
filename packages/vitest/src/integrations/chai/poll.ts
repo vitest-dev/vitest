@@ -136,6 +136,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             let executionPhase: 'fn' | 'assertion' = 'fn'
             let hasTimedOut = false
+            // Store _poll.assert_once value before assertion phase to prevent chai from clearing it
+            let shouldAssertOnce = false
 
             const timerId = setTimeout(() => {
               hasTimedOut = true
@@ -154,6 +156,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   const obj = await fn()
                   chai.util.flag(assertion, 'object', obj)
 
+                  // Capture _poll.assert_once flag before entering assertion phase
+                  // This prevents chai from clearing the flag during assertion failure
+                  shouldAssertOnce = !!chai.util.flag(assertion, '_poll.assert_once')
+
                   executionPhase = 'assertion'
                   const output = await assertionFunction.call(assertion, ...args)
                   await onSettled?.({ assertion, status: 'pass' })
@@ -161,9 +167,14 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 }
                 catch (err) {
-                  if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
+                  if (isLastAttempt || (executionPhase === 'assertion' && shouldAssertOnce)) {
                     await onSettled?.({ assertion, status: 'fail' })
                     throwWithCause(err, STACK_TRACE_ERROR)
+                  }
+
+                  // Re-set the flag to ensure it persists across retries
+                  if (shouldAssertOnce) {
+                    chai.util.flag(assertion, '_poll.assert_once', true)
                   }
 
                   await delay(interval, setTimeout)

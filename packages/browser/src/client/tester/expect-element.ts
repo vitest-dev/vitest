@@ -17,12 +17,18 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   }
 
   const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+    // Capture the matcher name early to set assert_once flag before any early returns
+    // This is critical for screenshot comparisons which should only run once
+    const name = chai.util.flag(this, '_name') as string
+    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
+      chai.util.flag(this, '_poll.assert_once', true)
+    }
+
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
 
     const isNot = chai.util.flag(this, 'negate') as boolean
-    const name = chai.util.flag(this, '_name') as string
     // special case for `toBeInTheDocument` matcher
     if (isNot && name === 'toBeInTheDocument') {
       return elementOrLocator.query()
@@ -31,11 +37,6 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       // we know that `toHaveLength` requires multiple elements,
       // but types generally expect a single one
       return elementOrLocator.elements() as unknown as HTMLElement
-    }
-
-    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
-      // `toMatchScreenshot` should only run once after the element resolves
-      chai.util.flag(this, '_poll.assert_once', true)
     }
 
     // element selector uses prettyDOM under the hood, which is an expensive call

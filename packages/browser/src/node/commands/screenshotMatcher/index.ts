@@ -27,8 +27,7 @@ interface ScreenshotData {
  * - `unstable-screenshot`: page never stabilized within timeout
  * - `missing-reference`: no baseline exists to compare against
  * - `update-reference`: snapshot update was requested (run with `--update`)
- * - `matched-immediately`: screenshot matched reference on first capture (no retries)
- * - `matched-after-comparison`: screenshot matched after another comparison
+ * - `matched-after-comparison`: screenshot matched reference after comparison
  * - `mismatch`: screenshot differs from reference
  */
 type MatchOutcome
@@ -45,7 +44,6 @@ type MatchOutcome
     type: 'update-reference'
     reference: ScreenshotData
   }
-  | { type: 'matched-immediately' }
   | { type: 'matched-after-comparison' }
   | {
     type: 'mismatch'
@@ -175,11 +173,6 @@ async function determineOutcome(
     }
   }
 
-  // first capture matched reference (used as baseline) - no further comparison needed
-  if (retries === 0) {
-    return { type: 'matched-immediately' }
-  }
-
   const comparisonResult = await comparator(
     reference,
     screenshot,
@@ -302,7 +295,6 @@ function buildOutput(
     }
 
     case 'update-reference':
-    case 'matched-immediately':
     case 'matched-after-comparison':
       return { pass: true, outcome: outcome.type }
 
