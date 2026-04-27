@@ -168,6 +168,9 @@ it('exports snapshot', async ({ skip, task }) => {
         "builtinEnvironments": "object",
         "populateGlobal": "function",
       },
+      "./snapshot": {
+        "VitestSnapshotEnvironment": "function",
+      },
       "./suite": {
         "createChainable": "function",
         "createTaskCollector": "function",
