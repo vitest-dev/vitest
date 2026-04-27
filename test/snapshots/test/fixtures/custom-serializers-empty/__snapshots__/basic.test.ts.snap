@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`file empty 1`] = ``;
+
+exports[`file whitespaces 1`] = `        `;
