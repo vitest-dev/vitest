@@ -67,8 +67,8 @@ export function getContext(): Context {
 }
 
 const file = createFileTask(
-  '/vitest/test/core/test/basic.test.ts',
-  '/vitest/test/core/test',
+  '/vitest/test/unit/test/basic.test.ts',
+  '/vitest/test/unit/test',
   '',
 )
 file.mode = 'run'
@@ -92,8 +92,8 @@ const suite: RunnerTestSuite = {
 }
 
 const passedFile = createFileTask(
-  '/vitest/test/core/test/basic.test.ts',
-  '/vitest/test/core/test',
+  '/vitest/test/unit/test/basic.test.ts',
+  '/vitest/test/unit/test',
   '',
 )
 passedFile.mode = 'run'
@@ -129,7 +129,7 @@ const error: TestError = {
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
-  + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
+  + '    at /vitest/test/unit/test/basic.test.ts:8:32\n'
   + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
   + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
   + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'

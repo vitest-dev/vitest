@@ -72,7 +72,7 @@ The new Explorer is using a flat structure to represent the tree via virtual scr
 It is using a new approach to handle the tree list, now we have a separated vue shallow ref for entries in the ui ([uiEntries in composables/explorer/state.ts](client/composables/explorer/state.ts)), and the WebSocket state using vue shallow ref for both, `idsMap` and `filesMap`, while keeping the state itself with Vue reactive.
 Now we are able to update the tree list only when the entries are updated and not when the WebSocket state is updated, which is a huge performance improvement.
 
-Some numbers running `test/core` with Vitest UI (162 files with 3 workspaces: 5100+ tests) in a `i7-12700H` laptop:
+Some numbers running `test/unit` with Vitest UI (162 files with 3 workspaces: 5100+ tests) in a `i7-12700H` laptop:
 - tree list: after server finishing running the tests, Vitest UI took ~1 minute to finish rendering the full tree (~150MB of memory usage)
 - explorer: Vitest UI finishing rendering the full tree before the server reporter shows the tests summary (~10MB of memory usage)
 

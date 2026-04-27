@@ -68,7 +68,7 @@ test('can run custom pools with Vitest', async () => {
     expect(trace).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
-          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl"
+          at <root>/test/e2e/fixtures/console/trace.test.ts:ln:cl"
     `)
   }
 })
