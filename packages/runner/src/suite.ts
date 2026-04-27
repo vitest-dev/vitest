@@ -314,7 +314,7 @@ function createSuiteCollector(
   let suite!: Suite
   initSuite(true)
 
-  const task = function (name = '', options: TaskCustomOptions = {}) {
+  const task = function (name = '', options: TaskCustomOptions = {}, inheritedSuiteOptions?: SuiteOptions) {
     const currentSuite = collectorContext.currentSuite?.suite
     const parentTask = currentSuite ?? collectorContext.currentSuite?.file
     const parentTags = parentTask?.tags || []
@@ -341,6 +341,7 @@ function createSuiteCollector(
 
     const testOwnMeta = options.meta
     options = {
+      ...(inheritedSuiteOptions || {}),
       ...tagsOptions,
       ...options,
     }
@@ -440,23 +441,19 @@ function createSuiteCollector(
     optionsOrFn?: TestOptions | TestFunction,
     timeoutOrTest?: number | TestFunction,
   ) {
-    let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
+    let { options: testOwnOptions, handler } = parseArguments(optionsOrFn, timeoutOrTest)
 
-    // inherit repeats, retry, timeout from suite
-    if (typeof suiteOptions === 'object') {
-      options = Object.assign({}, suiteOptions, options)
-    }
-
-    const concurrent = this.concurrent ?? options?.concurrent
+    const suiteObj = typeof suiteOptions === 'object' ? suiteOptions : undefined
+    const concurrent = this.concurrent ?? testOwnOptions?.concurrent
     if (concurrent != null) {
-      options.concurrent = concurrent
+      testOwnOptions = { ...testOwnOptions, concurrent }
     }
 
     const test = task(formatName(name), {
       ...this,
-      ...options,
+      ...testOwnOptions,
       handler,
-    }) as unknown as Test
+    }, suiteObj) as unknown as Test
 
     test.type = 'test'
   })
