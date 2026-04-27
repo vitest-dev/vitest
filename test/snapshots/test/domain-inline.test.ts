@@ -18,6 +18,7 @@ test('domain inline snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -34,6 +35,8 @@ test('domain inline snapshot', async () => {
         score=999
         status=active
       \`)
+
+    expect({}).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 
@@ -49,6 +52,7 @@ test('domain inline snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -93,6 +97,7 @@ test('domain inline snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": Array [
           "Snapshot \`with regex 1\` mismatched",
         ],
@@ -108,6 +113,7 @@ test('domain inline snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -127,6 +133,8 @@ test('domain inline snapshot', async () => {
         score=/\\\\d+/
         status=inactive
       \`)
+
+    expect({}).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 })

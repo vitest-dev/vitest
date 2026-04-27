@@ -17,6 +17,7 @@ test('domain inline snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -67,6 +68,10 @@ test('domain inline snapshot with poll', async () => {
       }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
+
+    expect.poll(() => {
+        return {}
+      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 
@@ -76,6 +81,7 @@ test('domain inline snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -122,6 +128,7 @@ test('domain inline snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": Array [
@@ -139,6 +146,7 @@ test('domain inline snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -189,6 +197,10 @@ test('domain inline snapshot with poll', async () => {
       }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
+
+    expect.poll(() => {
+        return {}
+      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 
@@ -201,6 +213,7 @@ test('domain inline snapshot with poll', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
         "stable": "passed",
@@ -251,6 +264,10 @@ test('domain inline snapshot with poll', async () => {
       }, { interval: 10 }).toMatchKvInlineSnapshot(\`polled=value\`)
 
     expect({ another: 'static' }).toMatchKvInlineSnapshot(\`another=static\`)
+
+    expect.poll(() => {
+        return {}
+      }, { interval: 10 }).toMatchKvInlineSnapshot(\`\`)
     "
   `)
 })

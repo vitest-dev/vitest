@@ -196,7 +196,7 @@ function toMatchDomainSnapshotImpl(opts: {
   const test = getTest(assertion)
 
   let { inlineSnapshot } = opts
-  if (inlineSnapshot) {
+  if (inlineSnapshot !== undefined) {
     inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
   }
 
