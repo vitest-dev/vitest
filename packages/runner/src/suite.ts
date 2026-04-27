@@ -447,9 +447,8 @@ function createSuiteCollector(
       options = Object.assign({}, suiteOptions, options)
     }
 
-    // inherit concurrent from suite
     const concurrent = this.concurrent ?? options?.concurrent
-    if (options.concurrent != null && concurrent != null) {
+    if (concurrent != null) {
       options.concurrent = concurrent
     }
 
@@ -594,16 +593,12 @@ function createSuite() {
       optionsOrFactory,
     ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
-    const concurrent = this.concurrent ?? options.concurrent
 
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
       ...parentOptions,
       ...options,
-    }
-    if (concurrent != null) {
-      options.concurrent = concurrent
     }
 
     const shuffle = this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle
@@ -622,6 +617,11 @@ function createSuite() {
     // passed as test(name), assume it's a "todo"
     if (mode === 'run' && !factory) {
       mode = 'todo'
+    }
+
+    const concurrent = this.concurrent ?? options.concurrent
+    if (concurrent != null) {
+      options.concurrent = concurrent
     }
 
     if (parentMeta) {
