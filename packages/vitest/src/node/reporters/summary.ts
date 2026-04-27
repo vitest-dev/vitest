@@ -146,6 +146,10 @@ export class SummaryReporter implements Reporter {
     stats.hook?.onFinish?.()
     stats.hook = hook
 
+    if (!Number.isFinite(this.ctx.config.slowTestThreshold)) {
+      return
+    }
+
     const timeout = setTimeout(() => {
       hook.visible = true
     }, this.ctx.config.slowTestThreshold).unref()
@@ -183,9 +187,11 @@ export class SummaryReporter implements Reporter {
       onFinish: () => {},
     }
 
-    const timeout = setTimeout(() => {
-      slowTest.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    const timeout = Number.isFinite(this.ctx.config.slowTestThreshold)
+      ? setTimeout(() => {
+          slowTest.visible = true
+        }, this.ctx.config.slowTestThreshold).unref()
+      : undefined
 
     slowTest.onFinish = () => {
       slowTest.hook?.onFinish()
