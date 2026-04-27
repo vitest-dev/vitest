@@ -5,7 +5,7 @@ exports[`json reporter > generates correct report 1`] = `
   "ancestorTitles": [],
   "failureMessages": [
     "AssertionError: expected 2 to deeply equal 1
-    at <root>/test/cli/fixtures/reporters/json-fail.test.ts:8:13",
+    at <root>/test/e2e/fixtures/reporters/json-fail.test.ts:8:13",
   ],
   "fullName": "should fail",
   "location": {

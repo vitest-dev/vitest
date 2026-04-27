@@ -58,7 +58,7 @@
       "label": "npm: test",
       "isBackground": true,
       "dependsOn": ["npm: dev"],
-      "detail": "vitest -r test/core --api",
+      "detail": "vitest -r test/unit --api",
       "problemMatcher": {
         "owner": "typescript",
         "fileLocation": "relative",
