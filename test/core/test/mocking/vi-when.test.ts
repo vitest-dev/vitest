@@ -261,22 +261,20 @@ describe('vi.when()', () => {
     expect(spy).toHaveBeenCalledTimes(2)
   })
 
-  describe.runIf(Symbol.dispose)('disposable', () => {
-    test('disposes of its mock', () => {
-      const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
+  test.runIf(Symbol.dispose)('disposes of its mock', () => {
+    const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
 
-      const args: FnData['args'] = ['a', 0]
-      const value: FnData['value'] = 97
+    const args: FnData['args'] = ['a', 0]
+    const value: FnData['value'] = 97
 
-      {
-        using _ = vi.when(spy)
-          .calledWith(...args)
-          .thenReturn(value)
+    {
+      using _ = vi.when(spy)
+        .calledWith(...args)
+        .thenReturn(value)
 
-        expect(spy(...args)).toBe(value)
-      }
+      expect(spy(...args)).toBe(value)
+    }
 
-      expect(spy(...args)).toBe(0)
-    })
+    expect(spy(...args)).toBe(0)
   })
 })
