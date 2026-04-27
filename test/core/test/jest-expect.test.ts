@@ -2106,3 +2106,52 @@ it('diff', () => {
   snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
   snapshotError(() => expect({ hello: 'world' }).toBeNull())
 })
+
+describe('toEqual warns on non-plain objects with empty Object.keys', () => {
+  // Uses private fields to guarantee Object.keys() === [] on all platforms
+  class HiddenState {
+    #value: string
+    constructor(value: string) { this.#value = value }
+  }
+
+  let warnSpy: ReturnType<typeof vi.spyOn>
+
+  beforeAll(() => {
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    return () => warnSpy.mockRestore()
+  })
+
+  it('warns with a message mentioning toEqual and false-negative when comparing two non-plain objects with no enumerable keys', () => {
+    expect(new HiddenState('a')).toEqual(new HiddenState('b'))
+    expect(warnSpy).toHaveBeenCalledOnce()
+    expect(warnSpy.mock.calls[0][0]).toContain('toEqual')
+    expect(warnSpy.mock.calls[0][0]).toContain('false-negative')
+  })
+
+  it('does not warn for plain empty objects', () => {
+    warnSpy.mockClear()
+    expect({}).toEqual({})
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it('does not warn when comparing objects with enumerable keys', () => {
+    warnSpy.mockClear()
+    expect({ a: 1 }).toEqual({ a: 1 })
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it('does not warn when only one side is a non-plain empty object', () => {
+    warnSpy.mockClear()
+    expect(() => expect(new HiddenState('a')).toEqual({ key: 'value' })).toThrow()
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it('does not warn for class instances with enumerable keys', () => {
+    warnSpy.mockClear()
+    class Foo {
+      x = 1
+    }
+    expect(new Foo()).toEqual(new Foo())
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+})

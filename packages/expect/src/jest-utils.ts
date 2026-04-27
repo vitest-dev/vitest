@@ -730,6 +730,22 @@ export function pluralize(word: string, count: number): string {
   return `${count} ${word}${count === 1 ? '' : 's'}`
 }
 
+export function isPlainObject(value: unknown): value is Record<string | symbol, unknown> {
+  if (value === null || typeof value !== 'object') {
+    return false
+  }
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+export function isNonPlainEmptyObject(value: unknown): boolean {
+  return value != null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && !isPlainObject(value)
+    && Object.keys(value).length === 0
+}
+
 export function getObjectKeys(object: object): Array<string | symbol> {
   return [
     ...Object.keys(object),
