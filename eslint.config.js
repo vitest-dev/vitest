@@ -142,4 +142,15 @@ export default antfu(
       'unicorn/consistent-function-scoping': 'off',
     },
   },
+  {
+    files: [`packages/browser/src/client/orchestrator.ts`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['vitest/internal/browser', 'vitest/node'],
+        },
+      ],
+    },
+  },
 )

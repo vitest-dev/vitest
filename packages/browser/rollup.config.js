@@ -12,7 +12,8 @@ const pkg = require('./package.json')
 const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
-  /^@?vitest(\/|$)/,
+  /^vitest(\/|$)/,
+  /^@vitest\/utils\//,
   '@vitest/browser/utils',
   '@vitest/browser/context',
   '@vitest/browser/client',
@@ -33,6 +34,7 @@ const dtsUtilsClient = createDtsUtils({
 const plugins = [
   resolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest_source__'],
   }),
   json(),
   commonjs(),

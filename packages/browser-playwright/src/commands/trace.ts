@@ -1,3 +1,4 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
@@ -58,7 +59,7 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-export const markTrace: BrowserCommand<[payload: { name: string; selector?: string; stack?: string }]> = async (
+export const markTrace: BrowserCommand<[payload: { name: string; selector?: SerializedLocator; stack?: string }]> = async (
   context,
   payload,
 ) => {

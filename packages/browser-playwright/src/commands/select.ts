@@ -1,3 +1,4 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { ElementHandle } from 'playwright'
 import type { UserEvent } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
@@ -9,7 +10,7 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
   userValues,
   options = {},
 ) => {
-  const value = userValues as any as (string | { element: string })[]
+  const value = userValues as any as (string | { element: SerializedLocator })[]
   const selectElement = getDescribedLocator(context, selector)
 
   const values = await Promise.all(value.map(async (v) => {

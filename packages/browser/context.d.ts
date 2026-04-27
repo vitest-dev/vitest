@@ -539,6 +539,11 @@ export interface LocatorSelectors {
 
 export interface FrameLocator extends LocatorSelectors {}
 
+export interface SerializedLocator {
+  selector: string
+  locator: string
+}
+
 export interface SelectorOptions {
   /**
    * How long to wait until a single element is found. By default, this has the same timeout as the test.
@@ -578,6 +583,8 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/api/browser/locators#length}
    */
   readonly length: number
+
+  toJSON(): SerializedLocator
 
   /**
    * Click on an element. You can use the options to set the cursor position.

@@ -72,7 +72,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const traceName = meta.status === 'fail' ? `${baseName} [ERROR]` : baseName
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
-        : elementOrLocator.selector
+        : elementOrLocator.toJSON()
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name: traceName,
