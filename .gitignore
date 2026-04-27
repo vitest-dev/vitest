@@ -23,16 +23,16 @@ bench/test/*/*/
 docs/public/user-avatars
 .eslintcache
 docs/.vitepress/cache/
-!test/cli/fixtures/dotted-files/**/.cache
+!test/e2e/fixtures/dotted-files/**/.cache
 test/**/__screenshots__/**/*
 test/**/__traces__/**/*
 test/browser/fixtures/update-snapshot/basic.test.ts
-test/cli/fixtures/browser-multiple/basic-*
+test/e2e/fixtures/browser-multiple/basic-*
 .vitest-reports
 *.tsbuildinfo
 # exclude static html reporter folder
 test/browser/html/
-test/core/html/
+test/unit/html/
 .vitest
 explainFiles.txt
 .vitest-dump

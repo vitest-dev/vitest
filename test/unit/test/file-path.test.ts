@@ -20,17 +20,17 @@ describe('current url', () => {
   describe.runIf(!isWindows)('unix', () => {
     it('__filename', () => {
       expect(__filename.startsWith('file://')).toBe(false)
-      expect(__filename.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+      expect(__filename.endsWith('test/unit/test/file-path.test.ts')).toBe(true)
     })
 
     it('__dirname', () => {
       expect(__dirname.startsWith('file://')).toBe(false)
-      expect(__dirname.endsWith('test/core/test')).toBe(true)
+      expect(__dirname.endsWith('test/unit/test')).toBe(true)
     })
 
     it('import.meta.url', () => {
       expect(import.meta.url.startsWith('file://')).toBe(true)
-      expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+      expect(import.meta.url.endsWith('test/unit/test/file-path.test.ts')).toBe(true)
     })
   })
 
@@ -56,7 +56,7 @@ describe('current url', () => {
 
     it('import.meta.url', () => {
       expect(import.meta.url.startsWith(`file:///${drivePosix}`)).toBe(true)
-      expect(import.meta.url.endsWith('test/core/test/file-path.test.ts')).toBe(true)
+      expect(import.meta.url.endsWith('test/unit/test/file-path.test.ts')).toBe(true)
     })
   })
 })

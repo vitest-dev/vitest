@@ -106,17 +106,17 @@ describe(GithubActionsReporter, () => {
 
         ##### \`flaky/math.spec.ts\` (5 flaky tests)
 
-        - [\`should multiply numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 5 out of 5**)
-        - [\`should handle edge cases\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
-        - [\`should validate input properly\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
-        - [\`should divide numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 2 out of 5)
-        - [\`should subtract numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 1 out of 5)
+        - [\`should multiply numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 5 out of 5**)
+        - [\`should handle edge cases\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+        - [\`should validate input properly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (**passed on retry 4 out of 5**)
+        - [\`should divide numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 2 out of 5)
+        - [\`should subtract numbers correctly\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/math.spec.ts) (passed on retry 1 out of 5)
 
         ##### \`flaky/network.spec.ts\` (3 flaky tests)
 
-        - [\`network > should handle network timeouts gracefully\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (**passed on retry 4 out of 4**)
-        - [\`network > should fetch user data from API\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 2 out of 3)
-        - [\`network > should retry failed requests\`](https://github.com/owner/repo/blob/aaa/test/cli/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 1 out of 3)
+        - [\`network > should handle network timeouts gracefully\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (**passed on retry 4 out of 4**)
+        - [\`network > should fetch user data from API\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 2 out of 3)
+        - [\`network > should retry failed requests\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 1 out of 3)
         "
       `)
     })
