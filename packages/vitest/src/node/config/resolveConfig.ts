@@ -768,6 +768,16 @@ export function resolveConfig(
     }
   }
 
+  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+  for (const reporter of resolved.reporters) {
+    if (Array.isArray(reporter) && reporter[0] === 'blob') {
+      const options = reporter[1] as any
+      if (options && typeof options.label === 'string') {
+        resolved.mergeReportsLabel = options.label
+      }
+    }
+  }
+
   if (resolved.changed) {
     resolved.passWithNoTests ??= true
   }

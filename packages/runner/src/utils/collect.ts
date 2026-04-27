@@ -193,23 +193,29 @@ export function calculateSuiteHash(parent: Suite): void {
   })
 }
 
+interface HashMeta {
+  typecheck?: boolean
+  __vitest_label__?: string
+}
+
 export function createFileTask(
   filepath: string,
   root: string,
   projectName: string | undefined,
   pool?: string,
   viteEnvironment?: string,
+  meta?: HashMeta,
 ): File {
   const path = relative(root, filepath)
   const file: File = {
-    id: generateFileHash(path, projectName),
+    id: generateFileHash(path, projectName, meta),
     name: path,
     fullName: path,
     type: 'suite',
     mode: 'queued',
     filepath,
     tasks: [],
-    meta: Object.create(null),
+    meta: Object.assign(Object.create(null), meta),
     projectName,
     file: undefined!,
     pool,
@@ -228,8 +234,15 @@ export function createFileTask(
 export function generateFileHash(
   file: string,
   projectName: string | undefined,
+  meta?: HashMeta,
 ): string {
-  return /* @__PURE__ */ generateHash(`${file}${projectName || ''}`)
+  const seed = [
+    file,
+    projectName || '',
+    meta?.typecheck ? '__typecheck__' : '',
+    meta?.__vitest_label__ || '',
+  ].join('\0')
+  return generateHash(seed)
 }
 
 export function findTestFileStackTrace(testFilePath: string, error: string): ParsedStack | undefined {

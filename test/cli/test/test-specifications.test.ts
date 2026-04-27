@@ -2,13 +2,13 @@ import type { TestSpecificationOptions } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
-test.each(
+test.for(
   [
     { testNamePattern: /two/ },
     { testLines: [8] },
-    { testIds: ['-109630875_1'] },
+    { testIds: ['-1838252165_1'] },
   ] satisfies TestSpecificationOptions[],
-)('runs with options %o', async (options) => {
+)('runs with options %o', async (options, { onTestFailed }) => {
   const { fs, ctx, errorTree } = await runInlineTests({
     'basic.test.js': /* js */ `
       import { test, expect } from 'vitest'
@@ -33,6 +33,18 @@ test.each(
   )
 
   await vitest.runTestSpecifications([specification])
+  onTestFailed(() => {
+    console.log('⚠️⚠️⚠️ Failed options', options)
+    for (const [id, task] of vitest.state.idMap.entries()) {
+      console.log({
+        id,
+        name: task.name,
+        mode: task.mode,
+        type: task.type,
+        location: task.location,
+      })
+    }
+  })
 
   expect(errorTree()).toEqual({
     'basic.test.js': {

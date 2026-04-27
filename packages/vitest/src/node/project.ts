@@ -1,3 +1,4 @@
+import type { TaskMeta } from '@vitest/runner/types'
 import type { GlobOptions } from 'tinyglobby'
 import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
@@ -152,12 +153,15 @@ export class TestProject {
     locationsOrOptions?: number[] | TestSpecificationOptions | undefined,
     /** @internal */
     pool?: string,
+    /** @internal */
+    metaOverride?: TaskMeta,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this),
       locationsOrOptions,
+      metaOverride,
     )
   }
 
@@ -551,6 +555,7 @@ export class TestProject {
       server.config,
     )
     this._config.api.token = this.vitest.config.api.token
+    this._config.mergeReportsLabel = this.vitest.config.mergeReportsLabel
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext

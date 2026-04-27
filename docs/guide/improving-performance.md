@@ -132,6 +132,12 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest run --merge-reports
 ```
 
+When running the same shards across multiple environments, set the `VITEST_BLOB_LABEL` environment variable so merged reports can display them separately:
+
+```sh
+VITEST_BLOB_LABEL=linux vitest run --reporter=blob --shard=1/3
+```
+
 ::: details GitHub Actions example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
@@ -144,9 +150,10 @@ on:
       - main
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
@@ -163,12 +170,14 @@ jobs:
 
       - name: Run tests
         run: pnpm run test --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          VITEST_BLOB_LABEL: ${{ matrix.os }}
 
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ matrix.shardIndex }}
+          name: blob-report-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest-reports/*
           include-hidden-files: true
           retention-days: 1
@@ -177,7 +186,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-attachments-${{ matrix.shardIndex }}
+          name: blob-attachments-${{ matrix.os }}-${{ matrix.shardIndex }}
           path: .vitest/**
           include-hidden-files: true
           retention-days: 1
