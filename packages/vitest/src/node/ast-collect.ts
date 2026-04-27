@@ -43,8 +43,7 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
-  concurrent: boolean
-  sequential: boolean
+  concurrent: boolean | undefined
   tags: string[]
 }
 
@@ -172,8 +171,7 @@ function astParseFile(filepath: string, code: string) {
           mode = 'skip'
         }
       }
-      let isConcurrent = properties.includes('concurrent')
-      let isSequential = properties.includes('sequential')
+      let concurrent = properties.includes('concurrent') || undefined
 
       let start: number
       const end = node.end
@@ -249,15 +247,12 @@ function astParseFile(filepath: string, code: string) {
               }
             }
           }
-          else if (prop.value?.type === 'Literal' && prop.value.value === true) {
-            if (keyName === 'skip' || keyName === 'only' || keyName === 'todo') {
+          else if (prop.value?.type === 'Literal') {
+            if ((keyName === 'skip' || keyName === 'only' || keyName === 'todo') && prop.value.value === true) {
               mode = keyName
             }
-            else if (keyName === 'concurrent') {
-              isConcurrent = true
-            }
-            else if (keyName === 'sequential') {
-              isSequential = true
+            else if (keyName === 'concurrent' && typeof prop.value.value === 'boolean') {
+              concurrent = prop.value.value
             }
           }
         }
@@ -272,8 +267,7 @@ function astParseFile(filepath: string, code: string) {
         mode,
         task: null as any,
         dynamic: isDynamicEach,
-        concurrent: isConcurrent,
-        sequential: isSequential,
+        concurrent,
         tags,
       } satisfies LocalCallDefinition)
     },
@@ -416,10 +410,7 @@ function createFileTask(
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
       const taskTags = unique([...parentTags, ...definition.tags])
-      // resolve concurrent/sequential: sequential cancels inherited concurrent
-      const concurrent = definition.sequential
-        ? undefined
-        : (definition.concurrent || latestSuite.concurrent || undefined)
+      const concurrent = definition.concurrent ?? latestSuite.concurrent
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
