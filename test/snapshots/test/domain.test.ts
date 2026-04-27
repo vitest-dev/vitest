@@ -31,9 +31,7 @@ test('domain snapshot', async () => {
     age=30
     \`;
 
-    exports[\`empty snapshot 1\`] = \`
-
-    \`;
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`with regex 1\`] = \`
     name=bob
@@ -70,9 +68,7 @@ test('domain snapshot', async () => {
     age=30
     \`;
 
-    exports[\`empty snapshot 1\`] = \`
-
-    \`;
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`with regex 1\`] = \`
     name=bob
@@ -153,9 +149,7 @@ test('domain snapshot', async () => {
     age=30
     \`;
 
-    exports[\`empty snapshot 1\`] = \`
-
-    \`;
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`with regex 1\`] = \`
     name=bob
@@ -175,28 +169,28 @@ test('domain parseExpected error', async () => {
 
      FAIL  basic.test.ts > file
     Error: Invalid KV Format: 'file-broken'
-     ❯ ../domain/basic.ts:37:15
-         35|       const eq = line.indexOf('=')
-         36|       if (eq === -1) {
-         37|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:38:15
+         36|       const eq = line.indexOf('=')
+         37|       if (eq === -1) {
+         38|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         38|       }
-         39|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:34:46
+         39|       }
+         40|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:35:46
      ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:16:44
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > inline
     Error: Invalid KV Format: 'inine-broken'
-     ❯ ../domain/basic.ts:37:15
-         35|       const eq = line.indexOf('=')
-         36|       if (eq === -1) {
-         37|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:38:15
+         36|       const eq = line.indexOf('=')
+         37|       if (eq === -1) {
+         38|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         38|       }
-         39|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:34:46
+         39|       }
+         40|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:35:46
      ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:22:50
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
