@@ -118,7 +118,7 @@ receives an object with the following properties:
   The value provided to [`attachmentsDir`](/config/attachmentsdir), if none is
   provided, its default value.
 
-- `project: TestProject` <Version type="experimental">4.1.5</Version> <Experimental />
+- `project: TestProject` <Version type="experimental">4.1.6</Version> <Experimental />
 
   The [`TestProject`](/api/advanced/test-project) the test belongs to.
 
