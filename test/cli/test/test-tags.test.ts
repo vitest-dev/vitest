@@ -654,7 +654,6 @@ test('concurrent false tag option opts out of sequence.concurrent', async () => 
     {
       "basic.test.js": {
         "test 1": {
-          "concurrent": true,
           "mode": "run",
           "tags": [
             "non-concurrent-tag",
@@ -662,7 +661,6 @@ test('concurrent false tag option opts out of sequence.concurrent', async () => 
           "timeout": 5000,
         },
         "test 2": {
-          "concurrent": true,
           "mode": "run",
           "tags": [
             "non-concurrent-tag",
