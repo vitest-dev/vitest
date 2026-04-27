@@ -1,5 +1,6 @@
 import type { BrowserCommand } from 'vitest/node'
-import type { BrowserTraceData, BrowserTraceEntry } from '../../client/tester/trace'
+import type { BrowserTraceEntry } from '../../types'
+import type { BrowserServerState } from '../state'
 
 interface MarkTracePayload {
   name: string
@@ -29,7 +30,7 @@ declare module 'vitest/browser' {
     /**
      * @internal
      */
-    __vitest_recordBrowserTrace: (payload: { testId: string; data: BrowserTraceData }) => Promise<void>
+    __vitest_recordBrowserTrace: (payload: { testId: string; retry: number; repeats: number }) => Promise<void>
   }
 }
 
@@ -59,12 +60,18 @@ export const _groupTraceEnd: BrowserCommand<[]> = async (
   }
 }
 
-export const _recordBrowserTrace: BrowserCommand<[payload: { testId: string; data: BrowserTraceData }]> = async (
+export const _recordBrowserTrace: BrowserCommand<[payload: { testId: string; retry: number; repeats: number }]> = async (
   { project },
-  { testId, data },
+  { testId, retry, repeats },
 ) => {
-  // resolve stack strings → source locations server-side (requires source maps)
-  const entries: BrowserTraceEntry[] = data.entries.map((entry) => {
+  const state = project.browser!.state as BrowserServerState
+  const key = `${testId}:${repeats}:${retry}`
+  const buffered = state.streamedTraceEntries.get(key)
+  if (!buffered) {
+    return
+  }
+  state.streamedTraceEntries.delete(key)
+  const entries: BrowserTraceEntry[] = buffered.entries.map((entry) => {
     if (!entry.stack || entry.location) {
       return entry
     }
@@ -76,6 +83,6 @@ export const _recordBrowserTrace: BrowserCommand<[payload: { testId: string; dat
   })
   await project.vitest._testRun.recordArtifact(testId, {
     type: 'internal:browserTrace',
-    data: { ...data, entries },
+    data: { retry: buffered.retry, repeats: buffered.repeats, recordCanvas: buffered.recordCanvas, entries },
   })
 }

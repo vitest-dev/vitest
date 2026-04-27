@@ -12,6 +12,39 @@ import type {
   UserConsoleLog,
 } from 'vitest'
 
+export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
+export type BrowserTraceEntryStatus = 'pass' | 'fail'
+export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+export type PseudoClassName = ':hover' | ':active' | ':focus' | ':focus-visible' | ':focus-within'
+
+interface TraceSnapshot {
+  serialized: unknown
+  viewport: {
+    width: number
+    height: number
+  }
+  scroll: {
+    x: number
+    y: number
+  }
+  selectorId?: number
+  selectorResolution?: BrowserTraceSelectorResolution
+  selectorError?: string
+  pseudoClassIds: Record<PseudoClassName, number[]>
+}
+
+export interface BrowserTraceEntry {
+  name: string
+  kind: BrowserTraceEntryKind
+  status?: BrowserTraceEntryStatus
+  startTime: number
+  duration?: number
+  stack?: string
+  location?: { file: string; line: number; column: number }
+  selector?: string
+  snapshot: TraceSnapshot
+}
+
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
@@ -53,6 +86,8 @@ export interface WebSocketBrowserHandlers {
   registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
+
+  streamBrowserTraceEntry: (testId: string, retry: number, repeats: number, recordCanvas: boolean, entry: BrowserTraceEntry) => void
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown

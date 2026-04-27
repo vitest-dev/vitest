@@ -4,7 +4,7 @@ import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/browser'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
-import type { BrowserTraceAttempt, BrowserTraceState } from './tester/trace'
+import type { BrowserTraceAttempt } from './tester/trace'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -99,7 +99,6 @@ export interface BrowserRunnerState {
   browserTraceAttempts: Map<string, BrowserTraceAttempt>
   // lazily loaded only when traceView is enabled
   browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
-  browserTraceState?: BrowserTraceState
   selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>
