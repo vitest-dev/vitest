@@ -68,6 +68,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:fs/promises',
   'node:os',
   'node:stream',
   'node:vm',
