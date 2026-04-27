@@ -97,10 +97,6 @@
       "types": "./dist/reporters.d.ts",
       "default": "./dist/reporters.js"
     },
-    "./snapshot": {
-      "types": "./dist/snapshot.d.ts",
-      "default": "./dist/snapshot.js"
-    },
     "./runtime": {
       "types": "./dist/runtime.d.ts",
       "default": "./dist/runtime.js"
@@ -189,7 +185,6 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:*",
     "@vitest/runner": "workspace:*",
-    "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "es-module-lexer": "^2.0.0",
@@ -221,6 +216,7 @@
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^15.0.1",
+    "@vitest/snapshot": "workspace:*",
     "acorn": "8.11.3",
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
