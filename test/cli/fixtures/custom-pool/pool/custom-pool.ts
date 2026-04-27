@@ -98,6 +98,7 @@ async function onMessage(message: WorkerRequest, project: TestProject, options: 
           artifacts: [],
           timeout: 0,
           file: taskFile,
+          benchmarks: [],
           result: {
             state: 'pass',
           },

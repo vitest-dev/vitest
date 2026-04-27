@@ -35,7 +35,6 @@ export interface VitestRunnerCLIOptions {
   printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
-  mode?: 'test' | 'benchmark'
 }
 
 export interface RunVitestConfig extends TestUserConfig {

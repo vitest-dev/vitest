@@ -51,8 +51,8 @@ interface BenchCompare {
 }
 
 interface BenchFactory {
-  <Name extends string>(name: Name, fn: Fn): BenchRegistration<Name>
-  <Name extends string>(name: Name, options: FnOptions, fn: Fn): BenchRegistration<Name>
+  <Name extends string>(name: Name | Function, fn: Fn): BenchRegistration<Name>
+  <Name extends string>(name: Name | Function, options: FnOptions, fn: Fn): BenchRegistration<Name>
 }
 
 export interface Bench extends BenchFactory {
@@ -202,7 +202,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   }
 
   const makeFactory = (flags: { baseline: boolean; perProject: boolean }): BenchFactory =>
-    ((name: string, a: Fn | FnOptions, b?: Fn | FnOptions) => {
+    ((nameOrFunction: string | Function, a: Fn | FnOptions, b?: Fn | FnOptions) => {
       validateBenchmarkProject(config)
       const { fn, fnOpts } = normalizeBenchArgs(a, b)
       const meta: TaskMeta = {}
@@ -212,6 +212,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       if (flags.perProject) {
         meta.perProject = true
       }
+      const name = typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
       const registration: BenchRegistration<string> = {
         [kRegistration]: true,
         name,

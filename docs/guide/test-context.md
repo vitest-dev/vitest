@@ -140,6 +140,10 @@ test('compare parsers', async ({ bench }) => {
 
 See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
 
+::: warning
+When the first argument is a function, Vitest uses it only to derive the benchmark's name. It is not executed. The benchmark body must be passed as the second argument.
+:::
+
 ### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
