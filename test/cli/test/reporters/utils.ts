@@ -117,6 +117,7 @@ passedFile.tasks.push({
     duration: 1.4422860145568848,
   },
   context: null as any,
+  benchmarks: [],
 })
 
 const error: TestError = {
@@ -165,6 +166,7 @@ const tasks: RunnerTestCase[] = [
     },
     timeout: 0,
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_1`,
@@ -182,6 +184,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 1.0237109661102295 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_3`,
@@ -199,6 +202,7 @@ const tasks: RunnerTestCase[] = [
     artifacts: [],
     result: undefined,
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_4`,
@@ -216,6 +220,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 100.50598406791687 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_5`,
@@ -233,6 +238,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 20.184875011444092 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_6`,
@@ -250,6 +256,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_7`,
@@ -267,6 +274,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 19.738605976104736 },
     context: null as any,
+    benchmarks: [],
   },
   {
     id: `${suite.id}_8`,
@@ -284,6 +292,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: { state: 'pass', duration: 0.1923508644104004 },
     context: null as any,
+    benchmarks: [],
     logs: [
       {
         content: '[33merror[39m',
@@ -309,6 +318,7 @@ const tasks: RunnerTestCase[] = [
     file,
     result: undefined,
     context: null as any,
+    benchmarks: [],
   },
 ]
 

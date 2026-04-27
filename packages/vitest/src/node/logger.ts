@@ -166,20 +166,20 @@ export class Logger {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
+      this.log(`No affected test files found\n`)
     }
     else if (config.watch) {
       this.log(
-        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
       )
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No test files found, exiting with code 0\n`)
       }
       else {
         this.error(
-          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+          c.red(`No test files found, exiting with code 1\n`),
         )
       }
     }

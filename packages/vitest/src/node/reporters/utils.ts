@@ -3,8 +3,8 @@ import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import type { Reporter } from '../types/reporter'
 import type { BlobReporter } from './blob'
-import type { BenchmarkBuiltinReporters, BenchmarkReporter, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
-import { BenchmarkReportsMap, ReportersMap } from './index'
+import type { BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
+import { ReportersMap } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(
   path: string,
@@ -70,32 +70,4 @@ function createReporters(
   return Promise.all(promisedReporters)
 }
 
-function createBenchmarkReporters(
-  reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>,
-  runner: ModuleRunner,
-): Promise<(Reporter | BenchmarkReporter)[]> {
-  const promisedReporters = reporterReferences.map(
-    async (referenceOrInstance) => {
-      if (typeof referenceOrInstance === 'string') {
-        if (referenceOrInstance in BenchmarkReportsMap) {
-          const BuiltinReporter
-            = BenchmarkReportsMap[
-              referenceOrInstance as BenchmarkBuiltinReporters
-            ]
-          return new BuiltinReporter()
-        }
-        else {
-          const CustomReporter = await loadCustomReporterModule(
-            referenceOrInstance,
-            runner,
-          )
-          return new CustomReporter()
-        }
-      }
-      return referenceOrInstance
-    },
-  )
-  return Promise.all(promisedReporters)
-}
-
-export { createBenchmarkReporters, createReporters }
+export { createReporters }

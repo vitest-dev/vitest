@@ -105,8 +105,8 @@ export async function collectTests(
         }
         catch (e) {
           const errors = e instanceof AggregateError
-            ? e.errors.map(e => processError(e, runner.config.diffOptions))
-            : [processError(e, runner.config.diffOptions)]
+            ? e.errors.map(e => processError(e, runner.config._diffOptions))
+            : [processError(e, runner.config._diffOptions)]
           file.result = {
             state: 'fail',
             errors,

@@ -215,6 +215,7 @@ export async function collectTests(
         start: definition.start,
         annotations: [],
         artifacts: [],
+        benchmarks: [],
         meta: {
           typecheck: true,
         },

@@ -73,7 +73,10 @@ export interface EnvironmentOptions {
 
 export type { HappyDOMOptions, JSDOMOptions }
 
-export type VitestRunMode = 'test' | 'benchmark'
+/**
+ * @deprecated
+ */
+export type VitestRunMode = 'test'
 
 export interface ProjectName {
   label: string
@@ -1091,14 +1094,10 @@ export interface UserConfig extends InlineConfig {
   clearScreen?: boolean
 
   /**
-   * benchmark.compare option exposed at the top level for cli
+   * Overwrite stored benchmark baselines with fresh results.
+   * benchmark.updateBaselines option exposed at the top level for cli
    */
-  compare?: string
-
-  /**
-   * benchmark.outputJson option exposed at the top level for cli
-   */
-  outputJson?: string
+  updateBaselines?: boolean
 
   /**
    * Directory of blob reports to merge
@@ -1156,8 +1155,6 @@ export interface ResolvedConfig
     | 'fileParallelism'
     | 'tagsFilter'
   > {
-  mode: VitestRunMode
-
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
@@ -1188,10 +1185,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark?: Required<
-    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  >
-  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark: Required<BenchmarkUserOptions>
   shard?: {
     index: number
     count: number

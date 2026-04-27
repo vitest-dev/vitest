@@ -1,4 +1,5 @@
-import type { JsonTestResults, Vitest } from 'vitest/node'
+import type { TestBenchmark } from 'vitest'
+import type { JsonTestResult, JsonTestResults, Vitest } from 'vitest/node'
 import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
@@ -12,10 +13,11 @@ describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
   let browserResultJson: JsonTestResults
-  let passedTests: any[]
-  let failedTests: any[]
+  let passedTests: JsonTestResult[]
+  let failedTests: JsonTestResult[]
   let vitest: Vitest
   const events: string[] = []
+  const emittedBenchmarks: Array<{ projectName: string; testName: string; benchmark: TestBenchmark }> = []
 
   beforeAll(async () => {
     ({
@@ -28,6 +30,13 @@ describe('running browser tests', async () => {
         {
           onBrowserInit(project) {
             events.push(`onBrowserInit ${project.name}`)
+          },
+          onTestCaseBenchmark(testCase, benchmark) {
+            emittedBenchmarks.push({
+              projectName: testCase.project.name || '',
+              testName: testCase.fullName,
+              benchmark,
+            })
           },
         },
         'json',
@@ -47,9 +56,9 @@ describe('running browser tests', async () => {
     }))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
-    browserResultJson = JSON.parse(browserResult)
-    const getPassed = results => results.filter(result => result.status === 'passed' && !result.message)
-    const getFailed = results => results.filter(result => result.status === 'failed')
+    browserResultJson = JSON.parse(browserResult) as JsonTestResults
+    const getPassed = (results: JsonTestResult[]) => results.filter(result => result.status === 'passed' && !result.message)
+    const getFailed = (results: JsonTestResult[]) => results.filter(result => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
   })
@@ -70,12 +79,58 @@ describe('running browser tests', async () => {
       .toEqual(vitest.projects.map(() => expect.arrayContaining(runtimeTestFiles)))
 
     const testFilesCount = readdirSync('./test')
-      .filter(n => n.includes('.test.') || n.includes('.test-d.'))
+      .filter(n => n.includes('.test.') || n.includes('.test-d.') || n.includes('.bench.'))
       .length + 1 // 1 is in-source-test
 
     expect(browserResultJson.testResults).toHaveLength(testFilesCount * instances.length)
     expect(passedTests).toHaveLength(browserResultJson.testResults.length)
     expect(failedTests).toHaveLength(0)
+  })
+
+  test('benchmarks run in a dedicated `(bench)` project per browser instance', () => {
+    const benchProjects = vitest.projects.filter(p => p.name.endsWith('(bench)'))
+    expect(benchProjects.map(p => p.name).sort()).toEqual(
+      instances.map(({ browser }) => `${browser} (bench)`).sort(),
+    )
+  })
+
+  test('bench.perProject emits tasks with the perProject flag in every browser', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'perProject registrations flow through the browser RPC (onTestBenchmark)',
+    )
+    // the test calls `.run()` twice, so each browser produces 2 benchmark records
+    expect(records.length, `perProject emitted: ${records.length}`).toBe(2 * instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
+      const [task] = record.benchmark.tasks
+      expect(task.perProject, `missing perProject flag on ${record.projectName}/${task.name}`).toBe(true)
+      expect(task.baseline).toBeUndefined()
+    }
+  })
+
+  test('bench.compare emits one benchmark with both registrations ranked', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'bench.compare resolves a BenchStorage in the browser',
+    )
+    expect(records.length).toBe(instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks.map(t => t.name).sort(), `unexpected tasks for ${record.projectName}`).toEqual(['a', 'b'])
+      expect(record.benchmark.tasks.map(t => t.rank).sort()).toEqual([1, 2])
+    }
+  })
+
+  test('bench.withBaseline flows through the baseline RPC in every browser', () => {
+    const records = emittedBenchmarks.filter(e =>
+      e.testName === 'bench.withBaseline exercises the readBenchmarkBaseline RPC round-trip',
+    )
+    expect(records.length).toBe(instances.length)
+    for (const record of records) {
+      expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
+      const [task] = record.benchmark.tasks
+      expect(task.name).toBe('with-baseline')
+      // either `baseline: true` (fresh run) or undefined (served from disk);
+      // in both cases the RPC round-trip is exercised, which is what we verify
+    }
   })
 
   test('tags are collected', () => {
@@ -110,7 +165,7 @@ describe('running browser tests', async () => {
   test('runs in-source tests', () => {
     expect(stdout).toContain('src/actions.ts')
     const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
-    expect(actionsTest).toBeDefined()
+    expect.assert(actionsTest)
     expect(actionsTest.assertionResults).toHaveLength(1)
   })
 
@@ -220,7 +275,7 @@ test(`stack trace points to correct file in every browser when failed`, async ()
             return
           }
           if (testCase.project.name === 'chromium' || testCase.project.name === 'chrome') {
-            expect(testCase.result().errors[0].stacks).toEqual([
+            expect(testCase.result().errors?.[0].stacks).toEqual([
               {
                 line: 11,
                 column: 12,
@@ -369,7 +424,7 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
   })
 
   const lines = stderr.split('\n')
-  const timeoutErrorsIndexes = []
+  const timeoutErrorsIndexes: number[] = []
   lines.forEach((line, index) => {
     if (line.includes('TimeoutError:')) {
       timeoutErrorsIndexes.push(index)

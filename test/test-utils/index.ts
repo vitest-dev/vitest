@@ -35,7 +35,6 @@ export interface VitestRunnerCLIOptions {
   printExitCode?: boolean
   preserveAnsi?: boolean
   tty?: boolean
-  mode?: 'test' | 'benchmark'
 }
 
 export interface RunVitestConfig extends TestUserConfig {
@@ -130,8 +129,6 @@ export async function runVitest(
     project,
     cliExclude,
     clearScreen,
-    compare,
-    outputJson,
     mergeReports,
     clearCache,
     // #endregion
@@ -147,7 +144,7 @@ export async function runVitest(
   ;(viteConfig as any).test = rest
 
   try {
-    ctx = await startVitest(runnerOptions.mode || 'test', cliFilters, {
+    ctx = await startVitest(cliFilters, {
       root,
       config: configFile,
       standalone,
@@ -159,8 +156,6 @@ export async function runVitest(
       project,
       cliExclude,
       clearScreen,
-      compare,
-      outputJson,
       mergeReports,
       clearCache,
       cache: 'cache' in config ? config.cache : false,
@@ -174,6 +169,7 @@ export async function runVitest(
       ...cliOptions,
       env: {
         NO_COLOR: 'true',
+        FORCE_COLOR: undefined,
         AI_AGENT: '',
         ...rest.env,
         ...cliOptions?.env,

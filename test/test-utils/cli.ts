@@ -86,7 +86,7 @@ export class Cli {
       const timeoutId = setTimeout(() => {
         error.message = `Timeout when waiting for error "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
         reject(error)
-      }, timeout ?? process.env.CI ? 20_000 : 4_000)
+      }, timeout ?? (process.env.CI ? 20_000 : 4_000))
 
       const listener = () => {
         if (this[source].includes(expected)) {

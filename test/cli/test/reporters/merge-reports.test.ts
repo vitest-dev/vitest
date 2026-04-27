@@ -172,6 +172,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "test 1-1",
               "meta": {},
@@ -181,6 +182,7 @@ test('merge reports', async () => {
             },
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/first.test.ts:15:13",
@@ -202,6 +204,7 @@ test('merge reports', async () => {
           "assertionResults": [
             {
               "ancestorTitles": [],
+              "benchmarks": [],
               "failureMessages": [
                 "AssertionError: expected 1 to be 2 // Object.is equality
         at <root>/fixtures/reporters/merge-reports/second.test.ts:5:13",
@@ -216,6 +219,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-2",
               "meta": {},
@@ -227,6 +231,7 @@ test('merge reports', async () => {
               "ancestorTitles": [
                 "group",
               ],
+              "benchmarks": [],
               "failureMessages": [],
               "fullName": "group test 2-3",
               "meta": {},
@@ -479,5 +484,6 @@ function createTest(name: string, file: File): Test {
     result: { state: 'pass' },
     meta: {},
     context: {} as any,
+    benchmarks: [],
   }
 }
