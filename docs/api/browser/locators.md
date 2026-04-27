@@ -1051,19 +1051,51 @@ Internally, this method calls `.elements` and wraps every element using [`page.e
 
 - [See `locator.elements()`](#elements)
 
+### serialize
+
+```ts
+function serialize(): SerializedLocator
+```
+
+Returns a JSON-serializable representation of the locator. The returned object has two fields:
+
+- [`selector`](#selector): the provider-specific selector string used to query the element at runtime.
+- `locator`: a human-readable description of the locator (e.g. `getByRole('button')`), used for error messages and tracing.
+
+This is primarily intended for forwarding a locator to a [browser command](/guide/browser/commands), which runs in Node and cannot receive a live `Locator` instance:
+
+```ts
+import { commands, page } from 'vitest/browser'
+
+await commands.myCommand(page.getByRole('button').serialize())
+```
+
+::: tip
+Vitest automatically serializes any `Locator` argument passed to a command, so calling `serialize()` explicitly is rarely necessary. You can also use `JSON.stringify(locator)` (it calls [`toJSON`](#tojson) internally), which produces the same result.
+:::
+
+### toJSON
+
+```ts
+function toJSON(): SerializedLocator
+```
+
+Alias of [`serialize`](#serialize). Defined so that `JSON.stringify(locator)` and structured-clone-based transports return a `SerializedLocator` object.
+
 ## Properties
 
 ### selector
 
-The `selector` is a string that will be used to locate the element by the browser provider. Playwright will use a `playwright` locator syntax while `preview` and `webdriverio` will use CSS.
+The `selector` is a string that will be used to locate the element by the browser provider. Playwright will use a `playwright` locator syntax, and `preview` and `webdriverio` will use CSS.
 
 ::: danger
 You should not use this string in your test code. The `selector` string should only be used when working with the Commands API:
 
 ```ts [commands.ts]
 import type { BrowserCommand } from 'vitest/node'
+import type { SerializedLocator } from '@vitest/browser'
 
-const test: BrowserCommand<string> = function test(context, selector) {
+const test: BrowserCommand<SerializedLocator> = function test(context, { selector }) {
   // playwright
   await context.iframe.locator(selector).click()
   // webdriverio
@@ -1076,8 +1108,8 @@ import { test } from 'vitest'
 import { commands, page } from 'vitest/browser'
 
 test('works correctly', async () => {
-  await commands.test(page.getByText('Hello').selector) // ✅
-  // vitest will automatically unwrap it to a string
+  await commands.test(page.getByText('Hello').serialize()) // ✅
+  // vitest will automatically unwrap it to a SerializedLocator
   await commands.test(page.getByText('Hello')) // ✅
 })
 ```

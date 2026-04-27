@@ -92,22 +92,22 @@ export abstract class Locator {
   }
 
   public click(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_click', this.toJSON(), options)
+    return this.triggerCommand<void>('__vitest_click', this.serialize(), options)
   }
 
   public dblClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_dblClick', this.toJSON(), options)
+    return this.triggerCommand<void>('__vitest_dblClick', this.serialize(), options)
   }
 
   public tripleClick(options?: UserEventClickOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_tripleClick', this.toJSON(), options)
+    return this.triggerCommand<void>('__vitest_tripleClick', this.serialize(), options)
   }
 
   public wheel(options: UserEventWheelOptions): Promise<void> {
     return ensureAwaited<void>(async (error) => {
       await getBrowserState().commands.triggerCommand<void>(
         '__vitest_wheel',
-        [this.toJSON(), resolveUserEventWheelOptions(options)],
+        [this.serialize(), resolveUserEventWheelOptions(options)],
         error,
       )
 
@@ -125,11 +125,11 @@ export abstract class Locator {
   }
 
   public clear(options?: UserEventClearOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_clear', this.toJSON(), options)
+    return this.triggerCommand<void>('__vitest_clear', this.serialize(), options)
   }
 
   public hover(options?: UserEventHoverOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', this.toJSON(), options)
+    return this.triggerCommand<void>('__vitest_hover', this.serialize(), options)
   }
 
   public unhover(options?: UserEventHoverOptions): Promise<void> {
@@ -137,7 +137,7 @@ export abstract class Locator {
   }
 
   public fill(text: string, options?: UserEventFillOptions): Promise<void> {
-    return this.triggerCommand<void>('__vitest_fill', this.toJSON(), text, options)
+    return this.triggerCommand<void>('__vitest_fill', this.serialize(), text, options)
   }
 
   public upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
@@ -162,7 +162,7 @@ export abstract class Locator {
       })
       return getBrowserState().commands.triggerCommand<void>(
         '__vitest_upload',
-        [this.toJSON(), await Promise.all(filesPromise), options],
+        [this.serialize(), await Promise.all(filesPromise), options],
         error,
       )
     })
@@ -183,12 +183,12 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = isLocator(v) ? v.toJSON() : selectorEngine.generateSelectorSimple(v)
+        const selector = isLocator(v) ? v.serialize() : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v
     })
-    return this.triggerCommand('__vitest_selectOptions', this.toJSON(), values, options)
+    return this.triggerCommand('__vitest_selectOptions', this.serialize(), values, options)
   }
 
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -218,7 +218,7 @@ export abstract class Locator {
         recordBrowserTraceEntry(currentTest, {
           name,
           kind: 'mark',
-          selector: this.toJSON(),
+          selector: this.serialize(),
           stack: options?.stack ?? error?.stack,
         })
       }
@@ -229,7 +229,7 @@ export abstract class Locator {
         '__vitest_markTrace',
         [{
           name,
-          selector: this.toJSON(),
+          selector: this.serialize(),
           stack: options?.stack ?? error?.stack,
         }],
         error,
@@ -346,12 +346,16 @@ export abstract class Locator {
     return this.selector
   }
 
-  public toJSON(): SerializedLocator {
+  public serialize(): SerializedLocator {
     const locator = this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
     return {
       selector: this.selector,
       locator,
     }
+  }
+
+  public toJSON(): SerializedLocator {
+    return this.serialize()
   }
 
   public async findElement(options_: SelectorOptions = {}): Promise<HTMLElement | SVGElement> {

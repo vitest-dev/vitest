@@ -36,7 +36,7 @@ test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 
 ### Locators in Commands are Serialized as Objects
 
-Locators forwarded to [browser commands](/guide/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:
+Locators forwarded to [browser commands](/api/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:
 
 - `selector`: the provider-specific selector string (the same value commands previously received).
 - `locator`: a human-readable representation of the locator (e.g. `getByRole('button')`), used for error messages and tracing.

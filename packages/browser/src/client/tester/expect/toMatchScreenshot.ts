@@ -5,7 +5,7 @@ import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../
 import type { Locator } from '../locators'
 import { recordArtifact } from 'vitest'
 import { getBrowserState } from '../../utils'
-import { convertToSelector } from '../tester-utils'
+import { serializeElement } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
 
@@ -41,10 +41,10 @@ export default async function toMatchScreenshot(
     : `${this.currentTestName} ${counter.current}`
 
   const [element, ...mask] = await Promise.all([
-    convertToSelector(actual, options),
+    serializeElement(actual, options),
     ...options.screenshotOptions && 'mask' in options.screenshotOptions
       ? (options.screenshotOptions.mask as Array<Element | Locator>)
-          .map(m => convertToSelector(m, options))
+          .map(m => serializeElement(m, options))
       : [],
   ])
 
