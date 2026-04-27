@@ -467,7 +467,7 @@ export interface InternalChainableContext<API = TestAPI> {
 
 type ChainableTestContextMap = Pick<
   Required<TestOptions>,
-  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails'
+  'concurrent' | 'only' | 'skip' | 'todo' | 'fails'
 >
 
 type ChainableTestAPI<ExtraContext = object> = TypedChainableFunction<
@@ -557,13 +557,6 @@ export interface TestOptions {
    * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
    */
   concurrent?: boolean
-  /**
-   * Whether tests run sequentially.
-   * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
-   *
-   * @deprecated Use `concurrent: false` instead.
-   */
-  sequential?: boolean
   /**
    * Whether the test should be skipped.
    */
@@ -1074,7 +1067,7 @@ interface SuiteCollectorCallable<ExtraContext = object> {
 
 type ChainableSuiteContextMap = Pick<
   Required<SuiteOptions>,
-  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle'
+  'concurrent' | 'only' | 'skip' | 'todo' | 'shuffle'
 >
 
 type ChainableSuiteAPI<ExtraContext = object> = TypedChainableFunction<
