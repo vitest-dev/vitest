@@ -41,6 +41,7 @@ type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & Record<
 
 interface When<Fn extends Procedure> extends Disposable {
   calledWith: (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
+  isExhausted: () => boolean
 }
 
 interface WhenOptions {
@@ -48,7 +49,7 @@ interface WhenOptions {
 }
 
 function throwUnmatched() {
-  throw new Error('no behavior found in when')
+  throw new Error('no behavior found in when') // @todo improve error message
 }
 
 export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions): When<Fn> {
@@ -196,7 +197,19 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
       return calledWithInstance
     },
-  }
+    isExhausted: () => {
+      if (behaviors.length === 0) {
+        return false
+      }
+
+      return behaviors.every(behavior =>
+        behavior.actions.every(action =>
+          /* times-behaviors reached 0 */ action.times === 0
+          /* infinite behaviors called at least once */ || (action.times === Number.POSITIVE_INFINITY && action.called),
+        ),
+      )
+    },
+  } satisfies Omit<When<Fn>, symbol>
 
   if (Symbol.dispose) {
     output[Symbol.dispose] = () => {
