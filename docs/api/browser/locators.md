@@ -1062,7 +1062,7 @@ Returns a JSON-serializable representation of the locator. The returned object h
 - [`selector`](#selector): the provider-specific selector string used to query the element at runtime.
 - `locator`: a human-readable description of the locator (e.g. `getByRole('button')`), used for error messages and tracing.
 
-This is primarily intended for forwarding a locator to a [browser command](/guide/browser/commands), which runs in Node and cannot receive a live `Locator` instance:
+This is primarily intended for forwarding a locator to a [browser command](/api/browser/commands), which runs in Node and cannot receive a live `Locator` instance:
 
 ```ts
 import { commands, page } from 'vitest/browser'

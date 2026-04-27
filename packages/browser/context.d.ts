@@ -590,7 +590,7 @@ export interface Locator extends LocatorSelectors {
    * - `locator`: a human-readable description of the locator (e.g. `getByRole('button')`),
    *   used for error messages and tracing.
    *
-   * Use this to forward a locator to a [browser command](https://vitest.dev/guide/browser/commands),
+   * Use this to forward a locator to a [browser command](https://vitest.dev/api/browser/commands),
    * which runs in Node and cannot receive a live `Locator` instance. Vitest also auto-serializes
    * any `Locator` argument passed to a command, so calling `serialize()` explicitly is rarely necessary.
    *
