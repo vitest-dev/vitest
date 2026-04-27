@@ -631,37 +631,41 @@ test('@module-tag with strictTags: false allows undefined tags', async () => {
   `)
 })
 
-test('sequential tag option makes tests run sequentially', async () => {
+test('concurrent false tag option opts out of sequence.concurrent', async () => {
   const { stderr, buildTree } = await runInlineTests({
     'basic.test.js': `
-      test('test 1', { tags: ['sequential-tag'] }, () => {})
-      test('test 2', { tags: ['sequential-tag'] }, () => {})
+      test('test 1', { tags: ['non-concurrent-tag'] }, () => {})
+      test('test 2', { tags: ['non-concurrent-tag'] }, () => {})
     `,
     'vitest.config.js': {
       test: {
         globals: true,
+        sequence: {
+          concurrent: true,
+        },
         tags: [
-          { name: 'sequential-tag', sequential: true },
+          { name: 'non-concurrent-tag', concurrent: false },
         ],
       },
     },
   })
   expect(stderr).toBe('')
-  // sequential is not visible in options, it affect "concurrent" only, which is not set if false
   expect(buildOptionsTree(buildTree)).toMatchInlineSnapshot(`
     {
       "basic.test.js": {
         "test 1": {
+          "concurrent": true,
           "mode": "run",
           "tags": [
-            "sequential-tag",
+            "non-concurrent-tag",
           ],
           "timeout": 5000,
         },
         "test 2": {
+          "concurrent": true,
           "mode": "run",
           "tags": [
-            "sequential-tag",
+            "non-concurrent-tag",
           ],
           "timeout": 5000,
         },

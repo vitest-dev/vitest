@@ -10,7 +10,8 @@ type KVCaptured = Record<string, string>
 type KVExpected = Record<string, string | RegExp>
 
 function renderKV(obj: Record<string, unknown>) {
-  return `\n${Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n')}\n`
+  const result = Object.entries(obj).map(([k, v]) => `${k}=${v}`).join('\n');
+  return result ? `\n${result}\n` : ''
 }
 
 export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
@@ -28,6 +29,9 @@ export const kvAdapter: DomainSnapshotAdapter<KVCaptured, KVExpected> = {
   },
 
   parseExpected(input: string): KVExpected {
+    if (!input.trim()) {
+      return {}
+    }
     const entries = input.trim().split('\n').map((line) => {
       const eq = line.indexOf('=')
       if (eq === -1) {

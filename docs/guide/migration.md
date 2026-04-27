@@ -13,47 +13,26 @@ outline: deep
 Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
 :::
 
-### String Values in `$` Test Titles Are No Longer Quoted
+### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
 
-When interpolating string values in `test.each`, `test.for`, `describe.each`, or `describe.for` titles with the `$` syntax, Vitest no longer wraps those string values in quotes.
-
-This affects generated task names in reporter output, snapshots, and any tooling that matches tests by their generated title.
+Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
 
 ```ts
-test.for([{ name: 'Alice' }])('I am $name', () => {})
-// Vitest 4 → I am 'Alice'
-// Vitest 5 → I am Alice
+test.sequential('example', async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 ```
-
-If you need quotes in the generated title, add them to the title template:
 
 ```ts
-test.for([{ name: 'Alice' }])('I am "$name"', () => {})
-// → I am "Alice"
+describe.sequential('suite', () => { /* ... */ }) // [!code --]
+describe('suite', { concurrent: false }, () => { /* ... */ }) // [!code ++]
 ```
 
-### `chaiConfig.truncateThreshold` No Longer Controls Test Title Value Truncation
+The same replacement applies to option objects:
 
-Vitest now formats interpolated task title values with its display formatter based on `@vitest/pretty-format`, instead of Chai/loupe formatting.
-
-Most output should stay similar, but generated titles or assertion output involving formatted values may have small formatting differences.
-
-If you used `chaiConfig.truncateThreshold` to control truncation in `test.each`, `test.for`, `describe.each`, or `describe.for` titles, use `taskTitleValueFormatTruncate` instead:
-
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    chaiConfig: { // [!code --]
-      truncateThreshold: 120, // [!code --]
-    }, // [!code --]
-    taskTitleValueFormatTruncate: 120, // [!code ++]
-  },
-})
+```ts
+test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 ```
-
-`chaiConfig.truncateThreshold` still controls truncation in assertion error messages.
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
