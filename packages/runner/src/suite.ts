@@ -391,10 +391,7 @@ function createSuiteCollector(
     if (task.mode === 'run' && !handler) {
       task.mode = 'todo'
     }
-    if (
-      options.concurrent
-      || (!options.sequential && runner.config.sequence.concurrent)
-    ) {
+    if (options.concurrent ?? runner.config.sequence.concurrent) {
       task.concurrent = true
     }
     task.shuffle = suiteOptions?.shuffle
@@ -451,15 +448,9 @@ function createSuiteCollector(
       options = Object.assign({}, suiteOptions, options)
     }
 
-    // inherit concurrent / sequential from suite
-    const concurrent = this.concurrent ?? (!this.sequential && options?.concurrent)
-    if (options.concurrent != null && concurrent != null) {
+    const concurrent = this.concurrent ?? options?.concurrent
+    if (concurrent != null) {
       options.concurrent = concurrent
-    }
-
-    const sequential = this.sequential ?? (!this.concurrent && options?.sequential)
-    if (options.sequential != null && sequential != null) {
-      options.sequential = sequential
     }
 
     const test = task(formatName(name), {
@@ -603,9 +594,6 @@ function createSuite() {
       optionsOrFactory,
     ) as { options: SuiteOptions; handler: SuiteFactory | undefined }
 
-    const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
-    const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
-
     const { meta: parentMeta, ...parentOptions } = currentSuite?.options || {}
     // inherit options from current suite
     options = {
@@ -631,14 +619,9 @@ function createSuite() {
       mode = 'todo'
     }
 
-    // inherit concurrent / sequential from suite
-    const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
-    const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
-    if (isConcurrent != null) {
-      options.concurrent = isConcurrent && !isSequential
-    }
-    if (isSequential != null) {
-      options.sequential = isSequential && !isConcurrent
+    const concurrent = this.concurrent ?? options.concurrent
+    if (concurrent != null) {
+      options.concurrent = concurrent
     }
 
     if (parentMeta) {
@@ -708,13 +691,13 @@ function createSuite() {
   }
 
   suiteFn.for = function <T>(
-    this: {
-      withContext: () => SuiteAPI
-      setContext: (key: string, value: boolean | undefined) => SuiteAPI
-    },
+    this: SuiteAPI,
     cases: ReadonlyArray<T>,
     ...args: any[]
   ) {
+    const context = getChainableContext(this)
+    const suite = context.withContext()
+
     if (Array.isArray(cases) && args.length) {
       cases = formatTemplateString(cases, args)
     }
@@ -738,7 +721,7 @@ function createSuite() {
     (condition ? suite : suite.skip) as SuiteAPI
 
   return createChainable(
-    ['concurrent', 'sequential', 'shuffle', 'skip', 'only', 'todo'],
+    ['concurrent', 'shuffle', 'skip', 'only', 'todo'],
     suiteFn,
   ) as unknown as SuiteAPI
 }
@@ -969,7 +952,7 @@ export function createTaskCollector(
   taskFn.aroundAll = aroundAll
 
   const _test = createChainable(
-    ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
+    ['concurrent', 'skip', 'only', 'todo', 'fails'],
     taskFn,
     { fixtures: new TestFixtures() },
   ) as TestAPI

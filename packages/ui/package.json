@@ -75,7 +75,6 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
     "@vitest/runner": "workspace:*",
-    "@vitest/ws-client": "workspace:*",
     "@vue/test-utils": "^2.4.6",
     "@vueuse/core": "catalog:",
     "ansi-to-html": "^0.7.2",

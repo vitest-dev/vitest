@@ -1,10 +1,10 @@
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 const delay = (timeout: number) => new Promise(resolve => setTimeout(resolve, timeout))
 
 let count = 0
 
-describe.sequential('sequential suite', () => {
+describe('sequential suite', { concurrent: false }, () => {
   test('first test completes first', async ({ task }) => {
     await delay(40)
     expect(task.concurrent).toBeFalsy()
@@ -18,13 +18,13 @@ describe.sequential('sequential suite', () => {
   })
 })
 
-test.sequential('third test completes third', async ({ task }) => {
+test('third test completes third', { concurrent: false }, async ({ task }) => {
   await delay(20)
   expect(task.concurrent).toBeFalsy()
   expect(++count).toBe(3)
 })
 
-test.sequential('last test completes last', async ({ task }) => {
+test('last test completes last', { concurrent: false }, async ({ task }) => {
   await delay(10)
   expect(task.concurrent).toBeFalsy()
   expect(++count).toBe(4)

@@ -302,10 +302,10 @@ Reference screenshot:
   tests/__screenshots__/button.test.ts/button-chromium-darwin.png
 
 Actual screenshot:
-  tests/.vitest-attachments/button.test.ts/button-chromium-darwin-actual.png
+  tests/.vitest/attachments/button.test.ts/button-chromium-darwin-actual.png
 
 Diff image:
-  tests/.vitest-attachments/button.test.ts/button-chromium-darwin-diff.png
+  tests/.vitest/attachments/button.test.ts/button-chromium-darwin-diff.png
 ```
 
 ### Understanding the diff image

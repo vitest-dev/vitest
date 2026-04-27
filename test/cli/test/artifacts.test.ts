@@ -108,10 +108,10 @@ describe('API', () => {
       [
         "[ready] simple",
         "[artifact] simple with-no-attachments path=undefined contentType=undefined body=undefined",
-        "[artifact] simple with-one-attachment path=[ '<root>/.vitest-attachments/<hash>.js' ] contentType=[ 'text/javascript' ] body=[ undefined ]",
+        "[artifact] simple with-one-attachment path=[ '<root>/.vitest/attachments/<hash>.js' ] contentType=[ 'text/javascript' ] body=[ undefined ]",
         "[artifact] simple with-multiple-attachments path=[
-        '<root>/.vitest-attachments/<hash>.js',
-        '<root>/.vitest-attachments/<hash>.js'
+        '<root>/.vitest/attachments/<hash>.js',
+        '<root>/.vitest/attachments/<hash>.js'
       ] contentType=[ 'text/javascript', 'text/javascript' ] body=[ undefined, undefined ]",
         "[artifact] simple external path=undefined contentType=undefined body=undefined",
         "[artifact] simple with-base64 path=[ undefined ] contentType=[ undefined ] body=[ 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' ]",
@@ -156,7 +156,7 @@ describe('API', () => {
             "attachments": [
               {
                 "contentType": "text/javascript",
-                "path": "<root>/.vitest-attachments/<hash>.js",
+                "path": "<root>/.vitest/attachments/<hash>.js",
               },
             ],
             "location": {
@@ -170,11 +170,11 @@ describe('API', () => {
             "attachments": [
               {
                 "contentType": "text/javascript",
-                "path": "<root>/.vitest-attachments/<hash>.js",
+                "path": "<root>/.vitest/attachments/<hash>.js",
               },
               {
                 "contentType": "text/javascript",
-                "path": "<root>/.vitest-attachments/<hash>.js",
+                "path": "<root>/.vitest/attachments/<hash>.js",
               },
             ],
             "location": {

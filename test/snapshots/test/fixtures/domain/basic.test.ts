@@ -8,3 +8,7 @@ test('all literal', () => {
 test('with regex', () => {
   expect({ name: 'bob', age: '24', score: '999', status: 'active' }).toMatchKvSnapshot()
 })
+
+test('empty snapshot', () => {
+  expect({}).toMatchKvSnapshot()
+})

@@ -863,7 +863,7 @@ export interface InlineConfig {
   /**
    * Directory path for storing attachments created by `context.annotate`
    *
-   * @default '.vitest-attachments'
+   * @default '.vitest/attachments'
    */
   attachmentsDir?: string
 

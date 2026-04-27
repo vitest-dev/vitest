@@ -9,13 +9,17 @@ outline: deep
 
 ## Migrating to Vitest 5.0 {#vitest-5}
 
+::: warning Work in progress
+Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
+:::
+
 ### Benchmarking API Rewrite
 
 The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
 
 Removed, with replacements where applicable:
 
-- **`bench(name, fn)` at module scope** — destructure `bench` from the test context instead.
+- **`bench(name, fn)` at module scope**: destructure `bench` from the test context instead.
 
 ```ts
 // v4
@@ -33,11 +37,32 @@ test('sort', async ({ bench }) => { // [!code ++]
 }) // [!code ++]
 ```
 
-- **`bench.skip`, `bench.only`, `bench.todo`** — removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
-- **`benchmark.reporters` / `benchmark.outputFile`** — removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
-- **`benchmark.compare` config and the `--compare` CLI flag** — removed. Use [`bench.withBaseline()`](/guide/benchmarking#baselines) to persist a baseline to `__benchmarks__/<file>.json` and compare on subsequent runs. Pass [`--update-baselines`](/config/benchmark#benchmark-updatebaselines) to regenerate a baseline.
-- **`benchmark.outputJson` config and the `--outputJson` CLI flag** — removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
-- **`Vitest` instance `mode` property** — always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
+- **`bench.skip`, `bench.only`, `bench.todo`** are removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
+- **`benchmark.reporters` / `benchmark.outputFile`** are removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
+- **`benchmark.compare` config and the `--compare` CLI flag** are removed. Use [`bench.withBaseline()`](/guide/benchmarking#baselines) to persist a baseline to `__benchmarks__/<file>.json` and compare on subsequent runs. Pass [`--update-baselines`](/config/benchmark#benchmark-updatebaselines) to regenerate a baseline.
+- **`benchmark.outputJson` config and the `--outputJson` CLI flag** are removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
+- **`Vitest` instance `mode` property** is now always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
+
+### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
+
+Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
+
+```ts
+test.sequential('example', async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
+
+```ts
+describe.sequential('suite', () => { /* ... */ }) // [!code --]
+describe('suite', { concurrent: false }, () => { /* ... */ }) // [!code ++]
+```
+
+The same replacement applies to option objects:
+
+```ts
+test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 

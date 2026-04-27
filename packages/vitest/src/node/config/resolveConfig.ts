@@ -575,7 +575,7 @@ export function resolveConfig(
 
   resolved.attachmentsDir = resolve(
     resolved.root,
-    resolved.attachmentsDir ?? '.vitest-attachments',
+    resolved.attachmentsDir ?? '.vitest/attachments',
   )
 
   if (resolved.snapshotEnvironment) {

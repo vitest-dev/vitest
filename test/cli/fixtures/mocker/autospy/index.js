@@ -1,7 +1,7 @@
 import { mocker } from 'virtual:mocker'
 import { calculate } from './test'
 
-mocker.customMock(import('./test'))
+mocker.customMock(import('./test'), { spy: true })
 
 document.querySelector('#mocked').textContent = calculate(1, 2)
 
