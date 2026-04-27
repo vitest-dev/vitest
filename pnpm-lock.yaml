@@ -1050,9 +1050,6 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
-      '@vitest/snapshot':
-        specifier: workspace:*
-        version: link:../snapshot
       '@vitest/spy':
         specifier: workspace:*
         version: link:../spy
@@ -1144,6 +1141,9 @@ importers:
       '@types/sinonjs__fake-timers':
         specifier: ^15.0.1
         version: 15.0.1
+      '@vitest/snapshot':
+        specifier: workspace:*
+        version: link:../snapshot
       acorn:
         specifier: 8.11.3
         version: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)

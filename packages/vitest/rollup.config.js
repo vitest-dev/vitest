@@ -41,8 +41,6 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
-
-  'snapshot': 'src/public/snapshot.ts',
 }
 
 const dtsEntries = {
@@ -56,7 +54,6 @@ const dtsEntries = {
   'config': 'src/public/config.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
-  'snapshot': 'src/public/snapshot.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
@@ -68,6 +65,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:fs/promises',
   'node:os',
   'node:stream',
   'node:vm',
@@ -86,8 +84,6 @@ const external = [
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
   /@vitest\/utils\/\w+/,
 
   '#module-evaluator',
