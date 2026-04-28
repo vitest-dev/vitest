@@ -68,7 +68,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
       const isNot = chai.util.flag(meta.assertion, 'negate')
       const name = chai.util.flag(meta.assertion, '_name') || '<unknown>'
-      const baseName = `expect.element().${isNot ? 'not.' : ''}${name}`
+      const baseName = `${isNot ? 'not.' : ''}${name}`
       const traceName = meta.status === 'fail' ? `${baseName} [ERROR]` : baseName
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
