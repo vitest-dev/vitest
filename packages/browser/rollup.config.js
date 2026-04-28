@@ -79,7 +79,7 @@ export default () =>
     // ivya chunk
     {
       input: {
-        'locators': './src/client/tester/locators/index.ts',
+        'locators': './src/client/tester/locators.ts',
         'expect-element': './src/client/tester/expect-element.ts',
       },
       output: {
