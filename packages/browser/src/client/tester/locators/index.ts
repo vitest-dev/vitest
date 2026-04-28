@@ -218,7 +218,7 @@ export abstract class Locator {
         recordBrowserTraceEntry(currentTest, {
           name,
           kind: 'mark',
-          selector: this.serialize(),
+          element: this.serialize(),
           stack: options?.stack ?? error?.stack,
         })
       }
@@ -229,7 +229,7 @@ export abstract class Locator {
         '__vitest_markTrace',
         [{
           name,
-          selector: this.serialize(),
+          element: this.serialize(),
           stack: options?.stack ?? error?.stack,
         }],
         error,

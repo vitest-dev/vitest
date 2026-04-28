@@ -72,7 +72,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       const traceName = meta.status === 'fail' ? `${baseName} [ERROR]` : baseName
       const selector = !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
-        : elementOrLocator.toJSON()
+        : elementOrLocator.serialize()
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name: traceName,
@@ -80,7 +80,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
           status: meta.status,
           startTime,
           duration: now() - startTime,
-          selector,
+          element: selector,
           stack: sourceError.stack,
         })
       }
@@ -89,7 +89,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
           '__vitest_markTrace',
           [{
             name: traceName,
-            selector,
+            element: selector,
             stack: sourceError.stack,
           }],
           sourceError,

@@ -59,7 +59,7 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
 }
 
-export const markTrace: BrowserCommand<[payload: { name: string; selector?: SerializedLocator; stack?: string }]> = async (
+export const markTrace: BrowserCommand<[payload: { name: string; element?: SerializedLocator; stack?: string }]> = async (
   context,
   payload,
 ) => {
@@ -70,14 +70,14 @@ export const markTrace: BrowserCommand<[payload: { name: string; selector?: Seri
     if (!context.provider.tracingContexts.has(context.sessionId)) {
       return
     }
-    const { name, selector, stack } = payload
+    const { name, element, stack } = payload
     const location = parseLocation(context, stack)
     // mark trace via group/groupEnd with dummy calls to force snapshot.
     // https://github.com/microsoft/playwright/issues/39308
     await context.context.tracing.group(name, { location })
     try {
-      if (selector) {
-        const locator = getDescribedLocator(context, selector) as any
+      if (element) {
+        const locator = getDescribedLocator(context, element) as any
         if (typeof locator._expect === 'function') {
           await locator._expect('to.be.attached', {
             isNot: false,

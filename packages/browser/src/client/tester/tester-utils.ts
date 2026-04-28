@@ -190,7 +190,7 @@ export class CommandsManager {
               status,
               startTime,
               duration: now() - startTime,
-              selector: typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined,
+              element: typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined,
               stack: clientError.stack,
             })
           }
