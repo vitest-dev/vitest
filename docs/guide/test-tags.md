@@ -7,9 +7,28 @@ outline: deep
 
 [`Tags`](/config/tags) let you label tests so you can filter what runs and override their options when needed.
 
+## Why tags
+
+Tags become useful once a suite has groups of tests that share runner options, like a longer timeout for database queries or retries for integration tests on CI. Repeating those options on every relevant test by hand is brittle, and the categories often don't line up with file paths anyway, so splitting them out by file isn't an option. Flaky tests in particular tend to accumulate wherever the bugs landed, not in a `flaky/` folder.
+
+A tag captures that kind of category: the definition holds the shared options, and any test marked with the tag inherits them. Those tag names can also be combined into expressions: `--tags-filter='db && !flaky'` runs database tests that aren't marked flaky. [`TestRunner.matchesTags`](#checking-tags-filter-at-runtime) exposes the same expression at runtime, useful when `globalSetup` does expensive work that should be skipped if no tagged tests are scheduled.
+
+## When to reach for tags
+
+| If you want to… | Use |
+| --- | --- |
+| Apply timeout/retry to a *category* of tests | **Tags** |
+| Mark cross-cutting categories (`flaky`, `slow`, `frontend`) scattered across many files | **Tags** |
+| Conditionally run expensive setup based on what's filtered | **Tags** + [`matchesTags`](#checking-tags-filter-at-runtime) |
+| Run a subset by test name match | [`-t` / `testNamePattern`](/config/testnamepattern) |
+| Run a subset by file path | `--include` / `--exclude` |
+| Run different files with different *runner settings* (isolation, pool, environment) | [Test Projects](/guide/projects) |
+
+You can combine projects and tags. A test that sits in a `Sequential` project can also carry a `flaky` tag, and Vitest applies both.
+
 ## Defining Tags
 
-Tags must be defined in your configuration file — Vitest does not provide any built-in tags. If a test uses a tag that isn't defined in the config, the test runner will throw an error. This prevents unexpected behavior from mistyped tag names. You can disable this check with the [`strictTags`](/config/stricttags) option.
+Tags must be defined in your configuration file. By default, Vitest does not provide any built-in tags. If a test uses a tag that isn't defined in the config, the test runner will throw an error. This prevents unexpected behavior from mistyped tag names. You can disable this check with the [`strictTags`](/config/stricttags) option.
 
 You must define a `name` of the tag, and you may define additional options that will be applied to every test marked with the tag, e.g., a `timeout`, or `retry`. For the full list of available options, see [`tags`](/config/tags).
 
@@ -43,24 +62,6 @@ export default defineConfig({
   },
 })
 ```
-
-::: warning
-If several tags have the same options and are used on the same test, they will be resolved in the order they were specified, or sorted by priority first (the lower the number, the higher the priority). Tags without a defined priority are merged first and will be overridden by higher priority ones:
-
-```ts
-test('flaky database test', { tags: ['flaky', 'db'] })
-// { timeout: 30_000, retry: 3 }
-```
-
-Note that the `timeout` is 30 seconds (and not 60) because `flaky` tag has a priority of `1` while `db` (that defines 60 second timeout) has no priority.
-
-If test defines its own options, they will have the highest priority:
-
-```ts
-test('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
-// { timeout: 120_000, retry: 3 }
-```
-:::
 
 If you are using TypeScript, you can enforce what tags are available by augmenting the `TestTags` type with a property that contains a union of strings (make sure this file is included by your `tsconfig`):
 
@@ -117,6 +118,24 @@ To print it in JSON, pass down `--list-tags=json`:
   ],
   "projects": []
 }
+```
+
+### Resolving option conflicts
+
+If several tags define the same option and are applied to the same test, they are resolved by `priority` first (lower number wins), then by the order they appear in the test's `tags` array. Tags without a `priority` are merged first and overridden by higher-priority ones:
+
+```ts
+test('flaky database test', { tags: ['flaky', 'db'] })
+// { timeout: 30_000, retry: 3 }
+```
+
+The `timeout` is 30 seconds (not 60) because `flaky` has priority `1` while `db` has no priority.
+
+Options defined on the test itself always win:
+
+```ts
+test('flaky database test', { tags: ['flaky', 'db'], timeout: 120_000 })
+// { timeout: 120_000, retry: 3 }
 ```
 
 ## Using Tags in Tests
@@ -303,7 +322,7 @@ vitest --tags-filter="unit || e2e" --tags-filter="!slow"
 
 ### Checking Tags Filter at Runtime
 
-You can use `TestRunner.matchesTags` (since Vitest 4.1.1) to check whether the current tags filter matches a set of tags. This is useful for conditionally running expensive setup logic only when relevant tests are included:
+You can use `TestRunner.matchesTags` to check whether the current tags filter matches a set of tags. This is useful for conditionally running expensive setup logic only when relevant tests are included:
 
 ```ts
 import { beforeAll, TestRunner } from 'vitest'
@@ -317,3 +336,9 @@ beforeAll(async () => {
 ```
 
 The method accepts an array of tags and returns `true` if the current `--tags-filter` would include a test with those tags. If no tags filter is active, it always returns `true`.
+
+## See also
+
+- [Per-File Isolation Settings](/guide/recipes/disable-isolation) and [Parallel and Sequential Test Files](/guide/recipes/parallel-sequential) use projects to partition tests by file. Reach for projects when categories need different runner settings rather than different timeouts or retries.
+- [Test Filtering](/guide/filtering) covers `-t`, `--include`, and the rest of the CLI filters.
+- [`tags`](/config/tags) and [`strictTags`](/config/stricttags) configuration reference.

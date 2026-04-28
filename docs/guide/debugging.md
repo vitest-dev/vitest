@@ -14,6 +14,8 @@ When debugging tests you might want to use following options:
 
 ## VS Code
 
+The [official VS Code](https://vitest.dev/vscode) extension supports debugging tests via "Debug Tests" button. However Vitest also exposes tools to define a custom configuration.
+
 Quick way to debug tests in VS Code is via `JavaScript Debug Terminal`. Open a new `JavaScript Debug Terminal` and run `npm run test` or `vitest` directly. *this works with any code run in Node, so will work with most JS testing frameworks*
 
 ![image](https://user-images.githubusercontent.com/5594348/212169143-72bf39ce-f763-48f5-822a-0c8b2e6a8484.png)
@@ -44,7 +46,9 @@ Then in the debug tab, ensure 'Debug Current Test File' is selected. You can the
 
 ### Browser mode
 
-To debug [Vitest Browser Mode](/guide/browser/index.md), pass `--inspect` or `--inspect-brk` in CLI or define it in your Vitest configuration:
+The simplest way to debug browser tests is to use the [official VS Code](https://vitest.dev/vscode) extension.
+
+However you can also pass `--inspect` or `--inspect-brk` in CLI or define it in your Vitest configuration:
 
 ::: code-group
 ```bash [CLI]
