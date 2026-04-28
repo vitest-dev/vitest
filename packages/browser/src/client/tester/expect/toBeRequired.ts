@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput, getTag } from './utils'
 
@@ -69,7 +69,7 @@ function isElementRequiredByARIA(element: HTMLElement | SVGElement) {
 export default function toBeRequired(
   this: MatcherState,
   element: HTMLElement | SVGElement | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(element, toBeRequired, this)
 
   const isRequired

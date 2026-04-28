@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getMessage, getNodeFromUserInput, matches, normalize } from './utils'
 
@@ -22,7 +22,7 @@ export default function toHaveTextContent(
   actual: Element | Locator,
   matcher: string | RegExp,
   options: { normalizeWhitespace?: boolean } = { normalizeWhitespace: true },
-): ExpectationResult {
+): MatcherResult {
   const node = getNodeFromUserInput(actual, toHaveTextContent, this)
 
   const textContent = options.normalizeWhitespace

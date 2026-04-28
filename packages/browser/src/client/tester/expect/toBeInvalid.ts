@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput, getTag } from './utils'
 
@@ -43,7 +43,7 @@ function isElementInvalid(element: HTMLElement | SVGElement) {
 export function toBeInvalid(
   this: MatcherState,
   element: HTMLElement | SVGElement | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(element, toBeInvalid, this)
 
   const isInvalid = isElementInvalid(htmlElement)
@@ -69,7 +69,7 @@ export function toBeInvalid(
 export function toBeValid(
   this: MatcherState,
   element: HTMLElement | SVGElement | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(element, toBeInvalid, this)
 
   const isValid = !isElementInvalid(htmlElement)

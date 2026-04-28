@@ -22,7 +22,7 @@ interface InlineSnapshotMatcher<T> {
   (hint?: string): void
 }
 
-declare module '@vitest/expect' {
+declare module 'vitest' {
   interface MatcherState {
     environment: string
     snapshotState: SnapshotState

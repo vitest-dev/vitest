@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { arrayAsSetComparison, getElementFromUserInput, getMessage, getSingleElementValue, isInputElement } from './utils'
 
@@ -21,7 +21,7 @@ export default function toHaveValue(
   this: MatcherState,
   actual: Element | Locator,
   expectedValue?: string,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveValue, this)
 
   if (

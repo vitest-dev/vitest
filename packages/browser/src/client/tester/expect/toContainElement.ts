@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput } from './utils'
 
@@ -21,7 +21,7 @@ export default function toContainElement(
   this: MatcherState,
   actual: Element | Locator,
   expectedElement: Element | Locator | null,
-): ExpectationResult {
+): MatcherResult {
   const containerElement = getElementFromUserInput(actual, toContainElement, this)
   const childElement = expectedElement !== null
     ? getElementFromUserInput(expectedElement, toContainElement, this)

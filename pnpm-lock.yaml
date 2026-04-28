@@ -1026,6 +1026,9 @@ importers:
 
   packages/vitest:
     dependencies:
+      '@types/chai':
+        specifier: 'catalog:'
+        version: 5.2.2
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../browser-playwright
@@ -1041,9 +1044,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: workspace:*
         version: link:../coverage-v8
-      '@vitest/expect':
-        specifier: workspace:*
-        version: link:../expect
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../mocker
@@ -1062,6 +1062,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
+      chai:
+        specifier: 'catalog:'
+        version: 6.2.2
       es-module-lexer:
         specifier: ^2.0.0
         version: 2.0.0
@@ -1144,6 +1147,9 @@ importers:
       '@types/sinonjs__fake-timers':
         specifier: ^15.0.1
         version: 15.0.1
+      '@vitest/expect':
+        specifier: workspace:*
+        version: link:../expect
       '@vitest/snapshot':
         specifier: workspace:*
         version: link:../snapshot

@@ -1,5 +1,5 @@
-import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { AsyncMatcherResult, MatcherState } from 'vitest'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
@@ -16,7 +16,7 @@ export default async function toMatchScreenshot(
   options: ScreenshotMatcherOptions = typeof nameOrOptions === 'object'
     ? nameOrOptions
     : {},
-): AsyncExpectationResult {
+): AsyncMatcherResult {
   if (this.isNot) {
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }

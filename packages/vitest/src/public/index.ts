@@ -90,14 +90,16 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  AsyncExpectationResult as AsyncMatcherResult,
   DeeplyAllowMatchers,
-  ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
   RawMatcherFn as Matcher,
   ExpectationResult as MatcherResult,
   Matchers,
+  MatchersObject,
   MatcherState,
+  SyncExpectationResult as SyncMatcherResult,
 } from '@vitest/expect'
 export {
   afterAll,
