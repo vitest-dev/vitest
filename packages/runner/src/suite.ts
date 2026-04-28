@@ -442,7 +442,7 @@ function createSuiteCollector(
     optionsOrFn?: TestOptions | TestFunction,
     timeoutOrTest?: number | TestFunction,
   ) {
-    let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
+    const { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
 
     const concurrent = this.concurrent ?? options?.concurrent
     if (concurrent != null) {
