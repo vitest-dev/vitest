@@ -2,9 +2,15 @@
 
 type Awaitable<T> = T | PromiseLike<T>
 
+type Mockable<T> = T extends (...args: any[]) => any
+  ? T | ((...args: any[]) => any)
+  : T extends object
+    ? { [K in keyof T]?: Mockable<T[K]> }
+    : T
+
 export type ModuleMockFactoryWithHelper<M = unknown> = (
   importOriginal: <T extends M = M>() => Promise<T>,
-) => Awaitable<Partial<M>>
+) => Awaitable<Mockable<M>>
 export type ModuleMockFactory = () => any
 export interface ModuleMockOptions {
   spy?: boolean
