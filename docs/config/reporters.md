@@ -55,6 +55,8 @@ export default defineConfig({
   test: {
     reporters: [
       ...configDefaults.reporters,
+      // conditional reporter
+      ...(process.env.CI ? ['html'] : []),
       // custom reporter from npm package
       // options are passed down as a tuple
       [

@@ -40,9 +40,7 @@ export default defineConfig({
 
 ## Default Reporters
 
-When `reporters` is not configured, Vitest uses `configDefaults.reporters`.
-
-This list is environment-aware:
+When `reporters` is not configured, Vitest uses following reporters:
 
 - [`default`](#default-reporter) in normal terminal runs
 - [`minimal`](#minimal-reporter) when Vitest detects an AI coding agent
