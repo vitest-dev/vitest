@@ -1,7 +1,6 @@
 import type {
   BenchmarkUserOptions,
   CoverageOptions,
-  ReporterWithOptions,
   UserConfig,
 } from './node/types/config'
 import type { FieldsWithDefaultValues } from './node/types/coverage'
@@ -78,7 +77,7 @@ export const configDefaults: Readonly<{
   teardownTimeout: number
   forceRerunTriggers: string[]
   update: boolean
-  reporters: ReporterWithOptions[]
+  reporters: string[]
   silent: boolean
   hideSkippedTests: boolean
   api: boolean
@@ -118,9 +117,9 @@ export const configDefaults: Readonly<{
   forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,
   reporters: [
-    [isAgent ? 'minimal' : 'default', {}],
-    ...(process.env.GITHUB_ACTIONS === 'true' ? [['github-actions', {}]] : []),
-  ] as any,
+    isAgent ? 'minimal' : 'default',
+    ...(process.env.GITHUB_ACTIONS === 'true' ? ['github-actions'] : []),
+  ],
   silent: false,
   hideSkippedTests: false,
   api: false,
