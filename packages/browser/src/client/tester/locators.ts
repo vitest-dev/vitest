@@ -317,7 +317,7 @@ export abstract class Locator {
   public element(): HTMLElement | SVGElement {
     const element = this.query()
     if (!element) {
-      throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
+      throw utils.getElementError(this, this._container || document.body)
     }
     return element
   }
@@ -379,14 +379,14 @@ export abstract class Locator {
       }
       if (elements.length > 1) {
         if (strict) {
-          throw createStrictModeViolationError(this._pwSelector || this.selector, elements)
+          throw createStrictModeViolationError(this, elements)
         }
         return elements[0]
       }
       const elapsed = now() - startTime
       const isLastCall = timeout != null && elapsed >= timeout
       if (isLastCall) {
-        throw utils.getElementError(this._pwSelector || this.selector, this._container || document.body)
+        throw utils.getElementError(this, this._container || document.body)
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
       const nextInterval = timeout != null
@@ -432,7 +432,7 @@ export interface SerializedLocator {
 }
 
 function createStrictModeViolationError(
-  selector: string,
+  locator: Locator,
   matches: Element[],
 ) {
   const infos = matches.slice(0, 10).map(m => ({
@@ -447,6 +447,6 @@ function createStrictModeViolationError(
     lines.push('\n    ...')
   }
   return new Error(
-    `strict mode violation: ${asLocator('javascript', selector)} resolved to ${matches.length} elements:${lines.join('')}\n`,
+    `strict mode violation: ${locator.asLocator()} resolved to ${matches.length} elements:${lines.join('')}\n`,
   )
 }

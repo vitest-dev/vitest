@@ -66,6 +66,7 @@ export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
+  ExpectPollOptions,
   LabelColor,
   ModuleGraphData,
   ParsedStack,
@@ -91,12 +92,12 @@ export type {
   Assertion,
   AsymmetricMatchersContaining,
   DeeplyAllowMatchers,
-  ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
   RawMatcherFn as Matcher,
   ExpectationResult as MatcherResult,
   Matchers,
+  MatchersObject,
   MatcherState,
 } from '@vitest/expect'
 export {

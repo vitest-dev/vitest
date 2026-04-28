@@ -1,4 +1,4 @@
-import type { MatchersObject } from '@vitest/expect'
+import type { MatchersObject } from 'vitest'
 import toBeChecked from './toBeChecked'
 import toBeEmptyDOMElement from './toBeEmptyDOMElement'
 import { toBeDisabled, toBeEnabled } from './toBeEnabled'
