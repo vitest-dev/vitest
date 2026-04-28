@@ -51,9 +51,3 @@ export interface AsyncLeak {
   stack: string
   type: string
 }
-
-export interface ExpectPollOptions {
-  interval?: number
-  timeout?: number
-  message?: string
-}

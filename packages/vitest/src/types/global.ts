@@ -3,7 +3,7 @@ import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
-import type { ExpectPollOptions, UserConsoleLog } from './general'
+import type { UserConsoleLog } from './general'
 
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
@@ -27,6 +27,12 @@ declare module 'vitest' {
     environment: string
     snapshotState: SnapshotState
     task?: Readonly<Test>
+  }
+
+  interface ExpectPollOptions {
+    interval?: number
+    timeout?: number
+    message?: string
   }
 
   interface ExpectStatic {
