@@ -529,6 +529,9 @@ importers:
       '@blazediff/core':
         specifier: 1.9.1
         version: 1.9.1
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../mocker
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
@@ -560,9 +563,6 @@ importers:
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.1
-      '@vitest/mocker':
-        specifier: workspace:*
-        version: link:../mocker
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -1041,6 +1041,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../mocker
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
@@ -1138,9 +1141,6 @@ importers:
       '@types/sinonjs__fake-timers':
         specifier: ^15.0.1
         version: 15.0.1
-      '@vitest/mocker':
-        specifier: workspace:*
-        version: link:../mocker
       '@vitest/snapshot':
         specifier: workspace:*
         version: link:../snapshot

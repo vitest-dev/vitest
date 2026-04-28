@@ -14,6 +14,7 @@ const external = [
   ...Object.keys(pkg.peerDependencies || {}),
   /^vitest(\/|$)/,
   /^@vitest\/utils\//,
+  /^@vitest\/mocker\//,
   '@vitest/browser/utils',
   '@vitest/browser/context',
   '@vitest/browser/client',

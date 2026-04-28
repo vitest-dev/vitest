@@ -75,6 +75,7 @@
   },
   "dependencies": {
     "@blazediff/core": "1.9.1",
+    "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
     "pngjs": "^7.0.0",
@@ -87,7 +88,6 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
-    "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",

@@ -83,6 +83,7 @@ const external = [
   '@vitest/runner/utils',
   '@vitest/runner/types',
   /@vitest\/utils\/\w+/,
+  /@vitest\/mocker\/\w+/,
 
   '#module-evaluator',
   '@opentelemetry/api',
