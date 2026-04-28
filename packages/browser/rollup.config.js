@@ -12,7 +12,9 @@ const pkg = require('./package.json')
 const external = [
   ...Object.keys(pkg.dependencies),
   ...Object.keys(pkg.peerDependencies || {}),
-  /^@?vitest(\/|$)/,
+  /^vitest(\/|$)/,
+  /^@vitest\/utils\//,
+  /^@vitest\/mocker\//,
   '@vitest/browser/utils',
   '@vitest/browser/context',
   '@vitest/browser/client',
@@ -33,6 +35,7 @@ const dtsUtilsClient = createDtsUtils({
 const plugins = [
   resolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest_source__'],
   }),
   json(),
   commonjs(),
@@ -73,9 +76,10 @@ export default () =>
         ...plugins,
       ],
     },
+    // ivya chunk
     {
       input: {
-        'locators': './src/client/tester/locators/index.ts',
+        'locators': './src/client/tester/locators.ts',
         'expect-element': './src/client/tester/expect-element.ts',
       },
       output: {

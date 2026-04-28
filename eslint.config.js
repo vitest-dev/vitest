@@ -142,4 +142,38 @@ export default antfu(
       'unicorn/consistent-function-scoping': 'off',
     },
   },
+  {
+    files: [`packages/browser/src/client/orchestrator.ts`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['vitest/internal/browser', 'vitest/node'],
+        },
+      ],
+    },
+  },
+  // ivya should be loaded only once in "ivya chunk" (see browser rollup config)
+  {
+    files: [`packages/browser/${GLOB_SRC}`],
+    ignores: [
+      // aria snapshots
+      `packages/browser/src/vendor-types.ts`,
+      `packages/browser/src/client/tester/aria.ts`,
+      // primary use case - creates the engine
+      `packages/browser/src/client/tester/locators.ts`,
+      // uses utils from ivya to reuse locator syntax
+      `packages/browser/src/client/tester/expect/${GLOB_SRC}`,
+      // used as a type
+      `packages/browser/src/client/utils.ts`,
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['ivya', 'ivya/utils', 'ivya/aria'],
+        },
+      ],
+    },
+  },
 )

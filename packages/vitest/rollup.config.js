@@ -32,6 +32,7 @@ const entries = {
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
+  'traces': 'src/utils/traces.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
@@ -77,14 +78,13 @@ const external = [
   'vitest/optional-types.js',
   'vitest/browser',
   'vite/module-runner',
-  '@vitest/mocker',
-  /@vitest\/mocker\/\w+/,
   '@vitest/utils/diff',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
   /@vitest\/utils\/\w+/,
+  /@vitest\/mocker\/\w+/,
 
   '#module-evaluator',
   '@opentelemetry/api',
@@ -97,6 +97,7 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest_source__'],
   }),
   json(),
   commonjs(),

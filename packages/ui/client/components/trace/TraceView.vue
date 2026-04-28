@@ -6,7 +6,7 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
-import { getLocationString, openLocation } from '~/composables/location'
+import { openLocation } from '~/composables/location'
 
 // TODO: component test to demo trace view inside trace view
 
@@ -172,16 +172,10 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
                 {{ formatTraceTiming(step) }}
               </div>
               <div
-                v-if="step.selector"
+                v-if="step.element"
                 class="font-mono text-xs opacity-70 truncate"
               >
-                {{ step.selector }}
-              </div>
-              <div
-                v-if="step.location"
-                class="text-xs opacity-50 truncate"
-              >
-                {{ getLocationString(step.location) }}
+                {{ step.element.locator }}
               </div>
             </div>
           </div>
