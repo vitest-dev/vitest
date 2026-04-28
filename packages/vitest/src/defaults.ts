@@ -118,7 +118,7 @@ export const configDefaults: Readonly<{
   forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,
   reporters: [
-    [isAgent ? 'agent' : 'default', {}],
+    [isAgent ? 'minimal' : 'default', {}],
     ...(process.env.GITHUB_ACTIONS === 'true' ? [['github-actions', {}]] : []),
   ] as any,
   silent: false,
