@@ -15,7 +15,7 @@ import type {
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
-import type { Locator as LocatorAPI } from './locators/index'
+import type { Locator as LocatorAPI } from './locators'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'

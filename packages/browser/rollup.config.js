@@ -76,6 +76,7 @@ export default () =>
         ...plugins,
       ],
     },
+    // ivya chunk
     {
       input: {
         'locators': './src/client/tester/locators/index.ts',
