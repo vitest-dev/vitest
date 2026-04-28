@@ -7821,7 +7821,7 @@ packages:
     engines: {node: '>=8'}
 
   ivya@https://pkg.pr.new/vitest-dev/ivya@3bfd7be:
-    resolution: {integrity: sha512-/3m9NIX0x+Uh/blfA4zKRzu81gnz8koc1IUsncbLEFULmoN7fiu7XC55IDisYx9w91OYD9UyIvFsETN0qgXfjQ==}
+    resolution: {tarball: https://pkg.pr.new/vitest-dev/ivya@3bfd7be}
     version: 1.8.0
 
   jackspeak@3.4.0:
