@@ -18,6 +18,7 @@ test('aria inline snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
       },
@@ -34,11 +35,13 @@ test('aria inline snapshot', async () => {
         - paragraph: Original
         - button "1234": Pattern
       \`)
+
+    expect(document.body).toMatchAriaInlineSnapshot(\`\`)
     "
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
     Object {
-      "added": 2,
+      "added": 3,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 1,
@@ -47,7 +50,7 @@ test('aria inline snapshot', async () => {
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
-      "total": 2,
+      "total": 3,
       "unchecked": 0,
       "uncheckedKeysByFile": Array [],
       "unmatched": 0,
@@ -66,6 +69,7 @@ test('aria inline snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
       },
@@ -111,6 +115,7 @@ test('aria inline snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": Array [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
         ],
@@ -125,6 +130,7 @@ test('aria inline snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
       },
@@ -143,6 +149,8 @@ test('aria inline snapshot', async () => {
         - paragraph: Changed
         - button /\\\\d+/: Pattern
       \`)
+
+    expect(document.body).toMatchAriaInlineSnapshot(\`\`)
     "
   `)
 })
