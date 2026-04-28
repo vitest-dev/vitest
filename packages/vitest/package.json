@@ -70,6 +70,7 @@
     },
     "./internal/browser": {
       "__vitest_source__": "./src/public/browser.ts",
+      "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
     "./internal/traces": {

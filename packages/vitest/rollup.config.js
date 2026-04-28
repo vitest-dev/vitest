@@ -48,6 +48,7 @@ const dtsEntries = {
   'index': 'src/public/index.ts',
   'node': 'src/public/node.ts',
   'environments': 'src/public/environments.ts',
+  'browser': 'src/public/browser.ts',
   'runners': 'src/public/runners.ts',
   'runtime': 'src/public/runtime.ts',
   'suite': 'src/public/suite.ts',
