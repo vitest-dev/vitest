@@ -573,8 +573,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.2
       ivya:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: https://pkg.pr.new/vitest-dev/ivya@3bfd7be
+        version: https://pkg.pr.new/vitest-dev/ivya@3bfd7be
       mime:
         specifier: ^4.1.0
         version: 4.1.0
@@ -7820,8 +7820,9 @@ packages:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
-  ivya@1.8.0:
-    resolution: {integrity: sha512-8qFMisQ9Y+rTy4kZZnD/+I5X3R4MMN0bR1Phnguub+MAk5FiMfOSNC45vItoUfkJGhhNbICIVOqxDFpOso1Wjg==}
+  ivya@https://pkg.pr.new/vitest-dev/ivya@3bfd7be:
+    resolution: {integrity: sha512-/3m9NIX0x+Uh/blfA4zKRzu81gnz8koc1IUsncbLEFULmoN7fiu7XC55IDisYx9w91OYD9UyIvFsETN0qgXfjQ==}
+    version: 1.8.0
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -16777,7 +16778,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@1.8.0: {}
+  ivya@https://pkg.pr.new/vitest-dev/ivya@3bfd7be: {}
 
   jackspeak@3.4.0:
     dependencies:
