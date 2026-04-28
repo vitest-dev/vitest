@@ -8,7 +8,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "collectDuration": 0,
       "environmentLoad": 0,
       "file": [Circular],
-      "filepath": "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+      "filepath": "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts",
       "fullName": "json-fail.test.ts",
       "id": 0,
       "importDurations": {},
@@ -70,7 +70,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "stacks": [
                   {
                     "column": 13,
-                    "file": "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+                    "file": "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts",
                     "line": 8,
                     "method": "",
                   },
@@ -95,22 +95,22 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   ],
   "moduleGraph": {
     "": {
-      "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": {
+      "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts": {
         "externalized": [],
         "graph": {
-          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": [],
+          "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts": [],
         },
         "inlined": [
-          "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+          "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts",
         ],
       },
     },
   },
   "paths": [
-    "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts",
+    "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts",
   ],
   "sources": {
-    "<rootDir>/test/cli/fixtures/reporters/json-fail.test.ts": "import { expect, test } from 'vitest'
+    "<rootDir>/test/e2e/fixtures/reporters/json-fail.test.ts": "import { expect, test } from 'vitest'
 
 // I am comment1
 // I am comment2
@@ -133,7 +133,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "collectDuration": 0,
       "environmentLoad": 0,
       "file": [Circular],
-      "filepath": "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+      "filepath": "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts",
       "fullName": "all-passing-or-skipped.test.ts",
       "id": 0,
       "importDurations": {},
@@ -201,22 +201,22 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   ],
   "moduleGraph": {
     "": {
-      "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": {
+      "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts": {
         "externalized": [],
         "graph": {
-          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": [],
+          "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts": [],
         },
         "inlined": [
-          "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+          "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts",
         ],
       },
     },
   },
   "paths": [
-    "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts",
+    "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts",
   ],
   "sources": {
-    "<rootDir>/test/cli/fixtures/reporters/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'
+    "<rootDir>/test/e2e/fixtures/reporters/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'
 
 test('2 + 3 = 5', () => {
   expect(2 + 3).toBe(5)

@@ -77,7 +77,7 @@ export const configDefaults: Readonly<{
   teardownTimeout: number
   forceRerunTriggers: string[]
   update: boolean
-  reporters: never[]
+  reporters: string[]
   silent: boolean
   hideSkippedTests: boolean
   api: boolean
@@ -116,7 +116,10 @@ export const configDefaults: Readonly<{
   teardownTimeout: 10000,
   forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,
-  reporters: [],
+  reporters: [
+    isAgent ? 'minimal' : 'default',
+    ...(process.env.GITHUB_ACTIONS === 'true' ? ['github-actions'] : []),
+  ],
   silent: false,
   hideSkippedTests: false,
   api: false,
