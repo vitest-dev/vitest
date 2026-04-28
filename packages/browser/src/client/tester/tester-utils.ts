@@ -1,7 +1,7 @@
 import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
-import { asLocator } from 'ivya'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
 import { recordBrowserTraceEntry } from './trace'
 
@@ -283,7 +283,7 @@ export async function serializeElement(elementOrLocator: Element | Locator, opti
   }
   if (elementOrLocator instanceof Element) {
     const selector = convertElementToCssSelector(elementOrLocator)
-    return { selector, locator: asLocator('javascript', selector) }
+    return { selector, locator: __INTERNAL._asLocator('javascript', selector) }
   }
   if (isLocator(elementOrLocator)) {
     if (provider === 'playwright' || kElementLocator in elementOrLocator) {
@@ -291,7 +291,7 @@ export async function serializeElement(elementOrLocator: Element | Locator, opti
     }
     const element = await elementOrLocator.findElement(options)
     const selector = convertElementToCssSelector(element)
-    const locator = asLocator('javascript', selector)
+    const locator = __INTERNAL._asLocator('javascript', selector)
     return { selector, locator }
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
