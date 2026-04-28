@@ -568,7 +568,7 @@ export default defineConfig({
 ### GitHub Actions Reporter {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
-to provide annotations for test failures. This reporter is included in Vitest's [default reporters](#default-configuration) when `process.env.GITHUB_ACTIONS === 'true'` (on GitHub Actions environment).
+to provide annotations for test failures. This reporter is [enabled automatically](#default-configuration) when `process.env.GITHUB_ACTIONS === 'true'` (on GitHub Actions environment).
 
 <img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
 <img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
@@ -670,7 +670,7 @@ export default defineConfig({
 Outputs a minimal report containing only failed tests and their error messages. Console logs from passing tests and the summary section are also suppressed.
 
 ::: tip Agent Reporter
-This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is included in Vitest's [default reporters](#default-configuration) when Vitest detects it is running inside an AI coding agent.
+This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is [enabled automatically](#default-configuration) when Vitest detects it is running inside an AI coding agent.
 
 :::code-group
 ```bash [CLI]
