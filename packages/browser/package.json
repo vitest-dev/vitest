@@ -91,7 +91,7 @@
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "https://pkg.pr.new/vitest-dev/ivya@3bfd7be",
+    "ivya": "^1.8.1",
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "rrweb-snapshot": "2.0.0-alpha.20",
