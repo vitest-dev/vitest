@@ -28,7 +28,7 @@ import {
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
+import { convertElementToCssSelector, escapeForTextSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
 import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
@@ -183,8 +183,13 @@ export abstract class Locator {
   ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = isLocator(v) ? v.serialize() : selectorEngine.generateSelectorSimple(v)
-        return { element: selector }
+        const element: SerializedLocator = isLocator(v)
+          ? v.serialize()
+          : {
+              selector: convertElementToCssSelector(v),
+              locator: __INTERNAL._asLocator('javascript', selectorEngine.generateSelectorSimple(v)),
+            }
+        return { element }
       }
       return v
     })

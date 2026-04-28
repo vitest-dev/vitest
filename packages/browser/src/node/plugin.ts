@@ -279,6 +279,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           entries.push(otelConfig.browserSdkPath)
           include.push('@opentelemetry/api')
         }
+        else {
+          exclude.push('@opentelemetry/api')
+        }
 
         return {
           define,
