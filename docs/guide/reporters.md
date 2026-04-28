@@ -576,18 +576,16 @@ to provide annotations for test failures. This reporter is included in Vitest's 
 You can customize the file paths that are printed in [GitHub's annotation command format](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions) by using the `onWritePath` option. This is useful when running Vitest in a containerized environment, such as Docker, where the file paths may not match the paths in the GitHub Actions environment.
 
 ```ts
-import { defineConfig } from 'vitest/config'
-
 export default defineConfig({
   test: {
-    reporters: [
-      'default',
-      ['github-actions', {
-        onWritePath(path) {
-          return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
-        }
-      }],
-    ],
+    reporters: process.env.GITHUB_ACTIONS === 'true'
+      ? [
+          'default',
+          ['github-actions', { onWritePath(path) {
+            return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
+          } }],
+        ]
+      : ['default'],
   },
 })
 ```
