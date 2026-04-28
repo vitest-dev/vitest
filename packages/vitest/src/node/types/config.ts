@@ -205,7 +205,7 @@ interface DepsOptions {
 
 type InlineReporter = Reporter
 type ReporterName = BuiltinReporters | 'html' | (string & {})
-type ReporterWithOptions<Name extends ReporterName = ReporterName>
+export type ReporterWithOptions<Name extends ReporterName = ReporterName>
   = Name extends keyof BuiltinReporterOptions
     ? BuiltinReporterOptions[Name] extends never
       ? [Name, object]
