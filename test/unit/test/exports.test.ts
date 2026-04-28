@@ -66,7 +66,6 @@ it('exports snapshot', async ({ skip, task }) => {
       "./internal/browser": {
         "DecodedMap": "function",
         "SpyModule": "object",
-        "Traces": "function",
         "__INTERNAL": "object",
         "collectTests": "function",
         "format": "function",
@@ -84,6 +83,9 @@ it('exports snapshot', async ({ skip, task }) => {
         "stopCoverageInsideWorker": "function",
         "stringify": "function",
         "takeCoverageInsideWorker": "function",
+      },
+      "./internal/traces": {
+        "Traces": "function",
       },
       "./node": {
         "AgentReporter": "function",

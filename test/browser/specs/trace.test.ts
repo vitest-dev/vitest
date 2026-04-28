@@ -1214,7 +1214,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "expect.element().toHaveTextContent [ERROR]",
+                    "name": "toHaveTextContent [ERROR]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1240,7 +1240,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "expect.element().toHaveTextContent",
+                    "name": "toHaveTextContent",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1911,7 +1911,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "expect.element().toHaveStyle",
+                    "name": "toHaveStyle",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
