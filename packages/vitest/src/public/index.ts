@@ -66,7 +66,6 @@ export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
-  ExpectPollOptions,
   LabelColor,
   ModuleGraphData,
   ParsedStack,
