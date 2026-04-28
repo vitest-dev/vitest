@@ -9,12 +9,12 @@ test('trace view artifacts', async () => {
   const result = await runBrowserTests({
     root: './fixtures/trace',
   })
-  const root = result.ctx.config.root
+  const root = result.ctx!.config.root
 
   function formatLocation(location: BrowserTraceEntry['location']) {
     // columns can differ between browsers
     // return `${relative(root, location.file)}:${location.line}:${location.column}`
-    return `${relative(root, location.file)}:${location.line}`
+    return `${relative(root, location!.file)}:${location!.line}`
   }
 
   function formatEntry(raw: BrowserTraceEntry) {
@@ -32,14 +32,15 @@ test('trace view artifacts', async () => {
       },
     }
     // remove noisy undefined properties
-    for (const key of Object.keys(result)) {
+    for (const _key in result) {
+      const key = _key as keyof typeof result
       if (result[key] === undefined) {
         delete result[key]
       }
       if (result[key] && typeof result[key] === 'object') {
-        for (const subKey of Object.keys(result[key])) {
-          if (result[key][subKey] === undefined) {
-            delete result[key][subKey]
+        for (const subKey in result[key]) {
+          if ((result as any)[key][subKey] === undefined) {
+            delete (result as any)[key][subKey]
           }
         }
       }
@@ -1053,10 +1054,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:58",
                     "name": "button rendered with adopted stylesheet",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1075,10 +1079,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByTestId('trace-canvas')",
+                      "selector": "internal:testid=[data-testid="trace-canvas"s]",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
-                    "selector": "internal:testid=[data-testid="trace-canvas"s]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1097,10 +1104,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Custom element button' })",
+                      "selector": "internal:role=button[name="Custom element button"i]",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:47",
                     "name": "custom element rendered",
-                    "selector": "internal:role=button[name="Custom element button"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1119,10 +1129,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Shadow button' })",
+                      "selector": "internal:role=button[name="Shadow button"i]",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:28",
                     "name": "shadow button rendered",
-                    "selector": "internal:role=button[name="Shadow button"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1143,10 +1156,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "vitest:click",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1166,10 +1182,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Missing' })",
+                      "selector": "internal:role=button[name="Missing"i]",
+                    },
                     "kind": "action",
                     "location": "expect.test.ts:33",
                     "name": "vitest:click",
-                    "selector": "internal:role=button[name="Missing"i]",
                     "snapshot": {
                       "selectorResolution": "missing",
                     },
@@ -1189,10 +1208,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
                     "name": "expect.element().toHaveTextContent [ERROR]",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1212,10 +1234,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
                     "name": "expect.element().toHaveTextContent",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1250,10 +1275,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "selector": "internal:role=button[name="Hello"i]",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:24",
                     "name": "render helper",
-                    "selector": "internal:role=button[name="Hello"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1272,10 +1300,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:10",
                     "name": "button rendered - locator",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1333,10 +1364,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:29",
                     "name": "button rendered - stack",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1357,10 +1391,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByAltText('external trace asset')",
+                      "selector": "internal:attr=[alt="external trace asset"i]",
+                    },
                     "kind": "mark",
                     "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
-                    "selector": "internal:attr=[alt="external trace asset"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1379,10 +1416,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByAltText('local trace asset')",
+                      "selector": "internal:attr=[alt="local trace asset"i]",
+                    },
                     "kind": "mark",
                     "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
-                    "selector": "internal:attr=[alt="local trace asset"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1403,10 +1443,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1423,10 +1466,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1444,10 +1490,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1465,10 +1514,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1486,10 +1538,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1509,10 +1564,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1529,10 +1587,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1550,10 +1611,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1573,10 +1637,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1593,10 +1660,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1614,10 +1684,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1636,10 +1709,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1659,10 +1735,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1679,10 +1758,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1700,10 +1782,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": "internal:role=list",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": "internal:role=list",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1820,50 +1905,65 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "internal:role=button[name="First pseudo state"i]",
+                    },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
                     "name": "expect.element().toHaveStyle",
-                    "selector": "internal:role=button[name="First pseudo state"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "internal:role=button[name="First pseudo state"i]",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:104",
                     "name": "vitest:hover",
-                    "selector": "internal:role=button[name="First pseudo state"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Second pseudo state' })",
+                      "selector": "internal:role=button[name="Second pseudo state"i]",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:105",
                     "name": "vitest:click",
-                    "selector": "internal:role=button[name="Second pseudo state"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
+                      "selector": "internal:role=textbox[name="Focused pseudo state"i]",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:106",
                     "name": "vitest:fill",
-                    "selector": "internal:role=textbox[name="Focused pseudo state"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
+                      "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:107",
                     "name": "vitest:fill",
-                    "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1904,10 +2004,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
                     "kind": "mark",
                     "location": "viewport.test.ts:31",
                     "name": "document scrolled before mark",
-                    "selector": "internal:role=button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1926,10 +2029,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByTestId('scroll-box')",
+                      "selector": "internal:testid=[data-testid="scroll-box"s]",
+                    },
                     "kind": "mark",
                     "location": "viewport.test.ts:47",
                     "name": "overflow container scrolled before mark",
-                    "selector": "internal:testid=[data-testid="scroll-box"s]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },

@@ -51,9 +51,6 @@ catalogs:
     '@types/istanbul-reports':
       specifier: ^3.0.4
       version: 3.0.4
-    '@types/node':
-      specifier: 24.12.0
-      version: 24.12.0
     '@types/ws':
       specifier: ^8.18.1
       version: 8.18.1
@@ -561,7 +558,7 @@ importers:
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@types/node':
-        specifier: 'catalog:'
+        specifier: 24.12.0
         version: 24.12.0
       '@types/pngjs':
         specifier: ^6.0.5

@@ -31,6 +31,7 @@
       "default": "./context.js"
     },
     "./client": {
+      "__vitest_source__": "./src/client/client.ts",
       "default": "./dist/client.js"
     },
     "./matchers": {
