@@ -31,7 +31,7 @@ test('respects root', async () => {
   })
   expect(viteConfig.configFile).toBe(resolve(configRoot, 'vitest.config.ts'))
   expect(vitestConfig.name).toBe('root config')
-  expect(vitestConfig.reporters).toEqual(configDefaults.reporters)
+  expect(vitestConfig.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
 })
 
 test('respects custom config', async () => {
@@ -42,7 +42,7 @@ test('respects custom config', async () => {
   })
   expect(viteConfig.configFile).toBe(config)
   expect(vitestConfig.name).toBe('custom config')
-  expect(vitestConfig.reporters).toEqual(configDefaults.reporters)
+  expect(vitestConfig.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
 })
 
 test('default value changes of coverage.exclude do not reflect to test.exclude', async () => {
