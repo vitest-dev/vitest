@@ -1,6 +1,7 @@
 import type { CoverageOptions } from 'vitest/node'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { configDefaults } from 'vitest/config'
 import { resolveConfig } from 'vitest/node'
 
 test('resolves the test config', async () => {
@@ -30,7 +31,7 @@ test('respects root', async () => {
   })
   expect(viteConfig.configFile).toBe(resolve(configRoot, 'vitest.config.ts'))
   expect(vitestConfig.name).toBe('root config')
-  expect(vitestConfig.reporters).toEqual([['default', {}]])
+  expect(vitestConfig.reporters).toEqual(configDefaults.reporters)
 })
 
 test('respects custom config', async () => {
@@ -41,7 +42,7 @@ test('respects custom config', async () => {
   })
   expect(viteConfig.configFile).toBe(config)
   expect(vitestConfig.name).toBe('custom config')
-  expect(vitestConfig.reporters).toEqual([['default', {}]])
+  expect(vitestConfig.reporters).toEqual(configDefaults.reporters)
 })
 
 test('default value changes of coverage.exclude do not reflect to test.exclude', async () => {
