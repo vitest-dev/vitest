@@ -50,6 +50,36 @@ describe('collector.extend should preserve handler wrapping', () => {
   })
 })
 
+describe('suite.task inherits suite options', { meta: { yay: true } as any, concurrent: true, repeats: 1, retry: 2, timeout: 1234 }, () => {
+  const customTest = TestRunner.createTaskCollector(function (
+    this: object,
+    name: string,
+    fn: () => void,
+  ) {
+    TestRunner.getCurrentSuite().task(name, { ...this, handler: fn })
+  })
+
+  customTest('inherits options from current suite', ({ task }) => {
+    expect({
+      concurrent: task.concurrent,
+      meta: task.meta,
+      repeats: task.repeats,
+      retry: task.retry,
+      timeout: task.timeout,
+    }).toMatchInlineSnapshot(`
+      {
+        "concurrent": true,
+        "meta": {
+          "yay": true,
+        },
+        "repeats": 1,
+        "retry": 2,
+        "timeout": 1234,
+      }
+    `)
+  })
+})
+
 describe('empty tests and suites are todos', () => {
   describe('suite should be todo')
   test('test should be todo')
