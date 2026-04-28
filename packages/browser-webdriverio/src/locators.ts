@@ -83,7 +83,7 @@ class WebdriverIOLocator extends Locator {
       const element = await this.findElement(options)
       const values = getWebdriverioSelectOptions(element, value)
       const selector = convertElementToCssSelector(element)
-      const locator = this._pwLocator || (this._pwLocator = __INTERNAL._asLocator('javascript', this._pwSelector || this.selector))
+      const locator = this.asLocator()
       return triggerCommandWithTrace<void>({
         name: '__vitest_selectOptions',
         arguments: [{ selector, locator }, values, options],

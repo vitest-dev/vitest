@@ -352,11 +352,15 @@ export abstract class Locator {
   }
 
   public serialize(): SerializedLocator {
-    const locator = this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
     return {
       selector: this.selector,
-      locator,
+      locator: this.asLocator(),
     }
+  }
+
+  protected asLocator() {
+    const locator = this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
+    return locator
   }
 
   public toJSON(): SerializedLocator {
