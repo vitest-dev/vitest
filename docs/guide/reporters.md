@@ -59,6 +59,8 @@ export default defineConfig({
 
 ## Combining Reporters
 
+TODO: probably dedicated default reporter section above
+
 You can use multiple reporters simultaneously to print your test results in different formats. For example:
 
 ```bash
@@ -66,9 +68,11 @@ npx vitest --reporter=json --reporter=default
 ```
 
 ```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
-    reporters: ['json', 'default'],
+    reporters: ['json', ...configDefaults.reporters],
     outputFile: './test-output.json'
   },
 })
@@ -555,12 +559,14 @@ to provide annotations for test failures. This reporter is automatically enabled
 <img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
 <img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
 
-If you configure reporters, you need to explicitly add `github-actions`.
+If you configure own reporters and want to keep default `GITHUB_ACTIONS` detection, you can extend `configDefaults.reporters`.
 
 ```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
-    reporters: process.env.GITHUB_ACTIONS === 'true' ? ['dot', 'github-actions'] : ['dot'],
+    reporters: ['dot', ...configDefaults.reporters],
   },
 })
 ```
@@ -568,16 +574,25 @@ export default defineConfig({
 You can customize the file paths that are printed in [GitHub's annotation command format](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions) by using the `onWritePath` option. This is useful when running Vitest in a containerized environment, such as Docker, where the file paths may not match the paths in the GitHub Actions environment.
 
 ```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
-    reporters: process.env.GITHUB_ACTIONS === 'true'
-      ? [
-          'default',
-          ['github-actions', { onWritePath(path) {
-            return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
-          } }],
-        ]
-      : ['default'],
+    reporters: [
+      ...configDefaults.reporters.filter(reporter => reporter !== 'github-actions'),
+      ...(process.env.GITHUB_ACTIONS === 'true'
+        ? [
+            [
+              'github-actions',
+              {
+                onWritePath(path) {
+                  return path.replace(/^\/app\//, `${process.env.GITHUB_WORKSPACE}/`)
+                }
+              },
+            ]
+          ]
+        : []),
+    ],
   },
 })
 ```
