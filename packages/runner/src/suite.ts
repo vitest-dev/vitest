@@ -340,7 +340,9 @@ function createSuiteCollector(
       }, {} as TestOptions)
 
     const testOwnMeta = options.meta
+    const parentOptions = collectorContext.currentSuite?.options
     options = {
+      ...parentOptions,
       ...tagsOptions,
       ...options,
     }
@@ -441,11 +443,6 @@ function createSuiteCollector(
     timeoutOrTest?: number | TestFunction,
   ) {
     let { options, handler } = parseArguments(optionsOrFn, timeoutOrTest)
-
-    // inherit repeats, retry, timeout from suite
-    if (typeof suiteOptions === 'object') {
-      options = Object.assign({}, suiteOptions, options)
-    }
 
     const concurrent = this.concurrent ?? options?.concurrent
     if (concurrent != null) {
