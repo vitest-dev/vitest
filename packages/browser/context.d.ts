@@ -605,6 +605,12 @@ export interface Locator extends LocatorSelectors {
    */
   toJSON(): SerializedLocator
   /**
+   * A human-readable description of the locator (e.g. `getByRole('button')`).
+   *
+   * @see {@link https://vitest.dev/api/browser/locators#aslocator}
+   */
+  asLocator(): string
+  /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/api/browser/interactivity#userevent-click}
    */
@@ -959,7 +965,7 @@ export const utils: {
   /**
    * Creates "Cannot find element" error. Useful for custom locators.
    */
-  getElementError(selector: string, container?: Element): Error
+  getElementError(selector: string | Locator, container?: Element): Error
 
   /**
    * Utilities for generating and working with ARIA trees and templates.

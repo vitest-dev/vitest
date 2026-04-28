@@ -358,9 +358,8 @@ export abstract class Locator {
     }
   }
 
-  protected asLocator() {
-    const locator = this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
-    return locator
+  public asLocator(): string {
+    return this._pwLocator || (this._pwLocator = asLocator('javascript', this._pwSelector || this.selector))
   }
 
   public toJSON(): SerializedLocator {

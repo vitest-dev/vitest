@@ -572,8 +572,8 @@ function prettyDOM(
     : pretty
 }
 
-function getElementError(selector: string, container: Element): Error {
-  const error = new Error(`Cannot find element with locator: ${__INTERNAL._asLocator('javascript', selector)}\n\n${prettyDOM(container)}`)
+function getElementError(selector: string | Locator, container: Element): Error {
+  const error = new Error(`Cannot find element with locator: ${typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()}\n\n${prettyDOM(container)}`)
   error.name = 'VitestBrowserElementError'
   return error
 }
