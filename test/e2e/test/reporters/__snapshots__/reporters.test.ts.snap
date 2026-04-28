@@ -17,8 +17,8 @@ exports[`JUnit reporter 1`] = `
 exports[`JUnit reporter with custom function classnameTemplate 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
-        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+    <testsuite name="test/unit/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/unit/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
 </testsuites>
@@ -28,7 +28,7 @@ exports[`JUnit reporter with custom function classnameTemplate 1`] = `
 exports[`JUnit reporter with custom string classname 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+    <testsuite name="test/unit/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
         <testcase classname="my-custom-classname" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
@@ -39,8 +39,8 @@ exports[`JUnit reporter with custom string classname 1`] = `
 exports[`JUnit reporter with custom string classnameTemplate 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
-        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+    <testsuite name="test/unit/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="filename:basic.test.ts - filepath:/vitest/test/unit/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
 </testsuites>
@@ -98,8 +98,8 @@ exports[`JUnit reporter with outputFile object in non-existing directory 2`] = `
 exports[`JUnit reporter without classname 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.145992842">
-    <testsuite name="test/core/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
-        <testcase classname="test/core/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
+    <testsuite name="test/unit/test/basic.test.ts" timestamp="2022-01-19T10:10:01.759Z" hostname="hostname" tests="1" failures="0" errors="0" skipped="0" time="0.145992842">
+        <testcase classname="test/unit/test/basic.test.ts" name="Math.sqrt()" time="0.001442286">
         </testcase>
     </testsuite>
 </testsuites>
@@ -133,7 +133,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -251,7 +251,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -286,7 +286,7 @@ exports[`json reporter 1`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -404,7 +404,7 @@ exports[`json reporter 1`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -444,7 +444,7 @@ exports[`json reporter with outputFile 2`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -562,7 +562,7 @@ exports[`json reporter with outputFile 2`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -602,7 +602,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -720,7 +720,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -760,7 +760,7 @@ exports[`json reporter with outputFile object 2`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -878,7 +878,7 @@ exports[`json reporter with outputFile object 2`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -918,7 +918,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
-    at /vitest/test/core/test/basic.test.ts:8:32
+    at /vitest/test/unit/test/basic.test.ts:8:32
     at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26
     at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)
     at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)
@@ -1036,7 +1036,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
       ],
       "endTime": 1642587001759,
       "message": "",
-      "name": "/vitest/test/core/test/basic.test.ts",
+      "name": "/vitest/test/unit/test/basic.test.ts",
       "startTime": 1642587001759,
       "status": "failed",
     },
@@ -1056,7 +1056,7 @@ not ok 1 - basic.test.ts # time=145.99ms {
             error:
                 name: "AssertionError"
                 message: "expected 2.23606797749979 to equal 2"
-            at: "/vitest/test/core/test/basic.test.ts:8:32"
+            at: "/vitest/test/unit/test/basic.test.ts:8:32"
             actual: "2.23606797749979"
             expected: "2"
             ...
@@ -1081,7 +1081,7 @@ not ok 1 - basic.test.ts > suite > Math.sqrt() # time=1.44ms
     error:
         name: "AssertionError"
         message: "expected 2.23606797749979 to equal 2"
-    at: "/vitest/test/core/test/basic.test.ts:8:32"
+    at: "/vitest/test/unit/test/basic.test.ts:8:32"
     actual: "2.23606797749979"
     expected: "2"
     ...

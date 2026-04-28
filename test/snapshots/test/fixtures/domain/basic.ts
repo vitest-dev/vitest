@@ -1,4 +1,4 @@
-import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from 'vitest'
 
 // Key-value domain adapter: each snapshot is multiple lines of `key=value`.
 // Values can be literal strings or `/regex/` patterns in the stored snapshot.
