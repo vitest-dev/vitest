@@ -21,7 +21,6 @@
       "@vitest/browser-playwright": ["./packages/browser-playwright/src/index.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/public/index.ts"],
-      "vitest/internal/browser": ["./packages/vitest/src/public/browser.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],
       "vitest/browser": ["./packages/vitest/browser/context.d.ts"],
       "vitest/*": ["./packages/vitest/src/public/*"],

@@ -140,10 +140,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > button",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:58",
                     "name": "button rendered with adopted stylesheet",
-                    "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -162,10 +165,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByTestId('trace-canvas')",
+                      "selector": " body > canvas",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:17",
                     "name": "canvas drawn before mark",
-                    "selector": " body > canvas",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -184,10 +190,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Custom element button' })",
+                      "selector": ">>>html > body > trace-widget > button",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:47",
                     "name": "custom element rendered",
-                    "selector": ">>>html > body > trace-widget > button",
                     "snapshot": {
                       "selectorError": "Unexpected token "" while parsing selector """,
                       "selectorResolution": "error",
@@ -207,10 +216,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Shadow button' })",
+                      "selector": ">>>html > body > section > button",
+                    },
                     "kind": "mark",
                     "location": "exotic.test.ts:28",
                     "name": "shadow button rendered",
-                    "selector": ">>>html > body > section > button",
                     "snapshot": {
                       "selectorError": "Unexpected token "" while parsing selector """,
                       "selectorResolution": "error",
@@ -232,10 +244,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "selector": " body > button",
+                    },
                     "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "vitest:click",
-                    "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -268,10 +283,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > button",
+                    },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "expect.element().toHaveTextContent [ERROR]",
-                    "selector": " body > button",
+                    "name": "toHaveTextContent [ERROR]",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -291,10 +309,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > button",
+                    },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "expect.element().toHaveTextContent",
-                    "selector": " body > button",
+                    "name": "toHaveTextContent",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -329,10 +350,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "selector": " body > button",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:24",
                     "name": "render helper",
-                    "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -351,10 +375,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > button",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:10",
                     "name": "button rendered - locator",
-                    "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -412,10 +439,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > button",
+                    },
                     "kind": "mark",
                     "location": "mark.test.ts:29",
                     "name": "button rendered - stack",
-                    "selector": " body > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -436,10 +466,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByAltText('external trace asset')",
+                      "selector": " body > img",
+                    },
                     "kind": "mark",
                     "location": "resources.test.ts:20",
                     "name": "image rendered from external url",
-                    "selector": " body > img",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -458,10 +491,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByAltText('local trace asset')",
+                      "selector": " body > img",
+                    },
                     "kind": "mark",
                     "location": "resources.test.ts:12",
                     "name": "image rendered from same-origin url",
-                    "selector": " body > img",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -482,10 +518,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -502,10 +541,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -523,10 +565,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -544,10 +589,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -565,10 +613,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -588,10 +639,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -608,10 +662,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -629,10 +686,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -652,10 +712,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -672,10 +735,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -693,10 +759,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -715,10 +784,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -738,10 +810,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -758,10 +833,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -779,10 +857,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('list')",
+                      "selector": " body > ul",
+                    },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
                     "name": "renderHelper",
-                    "selector": " body > ul",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -899,50 +980,65 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": " body > button:nth-child(1)",
+                    },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "expect.element().toHaveStyle",
-                    "selector": " body > button:nth-child(1)",
+                    "name": "toHaveStyle",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": " body > button:nth-child(1)",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:104",
                     "name": "vitest:hover",
-                    "selector": " body > button:nth-child(1)",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Second pseudo state' })",
+                      "selector": " body > button:nth-child(2)",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:105",
                     "name": "vitest:click",
-                    "selector": " body > button:nth-child(2)",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByLabel('Focused pseudo state')",
+                      "selector": " body > input",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:106",
                     "name": "vitest:fill",
-                    "selector": " body > input",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
                   {
+                    "element": {
+                      "locator": "getByLabel('Focus within pseudo state')",
+                      "selector": " body > label > input",
+                    },
                     "kind": "action",
                     "location": "styles.test.ts:107",
                     "name": "vitest:fill",
-                    "selector": " body > label > input",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -983,10 +1079,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": " body > main > button",
+                    },
                     "kind": "mark",
                     "location": "viewport.test.ts:31",
                     "name": "document scrolled before mark",
-                    "selector": " body > main > button",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
@@ -1005,10 +1104,13 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
+                    "element": {
+                      "locator": "getByTestId('scroll-box')",
+                      "selector": " body > section",
+                    },
                     "kind": "mark",
                     "location": "viewport.test.ts:47",
                     "name": "overflow container scrolled before mark",
-                    "selector": " body > section",
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
