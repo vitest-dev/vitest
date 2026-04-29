@@ -118,10 +118,10 @@ export interface JUnitOptions {
    */
   hostname?: string
   /**
-   * Omit stack traces from test failure reports.
-   * @default false
+   * Include stack traces in test failure reports.
+   * @default true
    */
-  noStackTrace?: boolean
+  stackTrace?: boolean
 }
 
 /**
@@ -229,6 +229,7 @@ export class JUnitReporter implements Reporter {
   constructor(options: JUnitOptions) {
     this.options = { ...options }
     this.options.includeConsoleOutput ??= true
+    this.options.stackTrace ??= true
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -391,7 +392,7 @@ export class JUnitReporter implements Reporter {
                   type: error?.name,
                 },
                 async () => {
-                  if (!error || this.options.noStackTrace) {
+                  if (!error || !this.options.stackTrace) {
                     return
                   }
 

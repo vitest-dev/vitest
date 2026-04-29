@@ -360,7 +360,7 @@ The output XML contains nested `testsuites` → `testsuite` → `testcase` tags.
 | `ancestorSeparator` | Separator used when joining ancestor describe block names in the `{classname}` placeholder and in the default test title. | `" > "` |
 | `addFileAttribute` | Add a `file` attribute to each `<testcase>`. | `false` |
 | `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output. | `true` |
-| `noStackTrace` | Omit stack traces from `<failure>` elements. | `false` |
+| `stackTrace` | Include stack traces in `<failure>` elements. | `true` |
 
 The following placeholders are available for `suiteNameTemplate`:
 - `{title}` – name of the first top-level `describe` block; falls back to the file basename when there is no top-level `describe`

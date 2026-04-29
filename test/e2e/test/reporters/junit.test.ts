@@ -321,9 +321,9 @@ test('ancestorSeparator changes separator in default testcase name', async () =>
   expect(xml).not.toContain('name="MyModule &gt; feature A &gt; works correctly"')
 })
 
-test('noStackTrace omits stack trace content from failure', async () => {
+test('stackTrace set to false omits stack trace content from failure', async () => {
   const { stdout } = await runVitest({
-    reporters: [['junit', { noStackTrace: true }]],
+    reporters: [['junit', { stackTrace: false }]],
     root,
     include: ['error.test.ts'],
   })
