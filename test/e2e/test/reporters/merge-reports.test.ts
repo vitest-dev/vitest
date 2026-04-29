@@ -9,7 +9,7 @@ import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import { writeBlob } from 'vitest/src/node/reporters/blob.js'
-import { getModuleGraph } from '../../../../packages/vitest/src/utils/graph'
+import { getModuleGraph } from 'vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here

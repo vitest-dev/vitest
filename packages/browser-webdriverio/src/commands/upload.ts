@@ -1,14 +1,15 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
 
-export const upload: UserEventCommand<(element: string, files: Array<string | {
+export const upload: UserEventCommand<(element: SerializedLocator, files: Array<string | {
   name: string
   mimeType: string
   base64: string
 }>, options: UserEventUploadOptions) => void> = async (
   context,
-  selector,
+  { selector },
   files,
   _options,
 ) => {

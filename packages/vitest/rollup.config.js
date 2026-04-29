@@ -32,6 +32,7 @@ const entries = {
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
+  'traces': 'src/utils/traces.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
@@ -41,8 +42,6 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
-
-  'snapshot': 'src/public/snapshot.ts',
 }
 
 const dtsEntries = {
@@ -56,7 +55,6 @@ const dtsEntries = {
   'config': 'src/public/config.ts',
   'coverage': 'src/public/coverage.ts',
   'reporters': 'src/public/reporters.ts',
-  'snapshot': 'src/public/snapshot.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
@@ -68,6 +66,7 @@ const external = [
   'worker_threads',
   'node:worker_threads',
   'node:fs',
+  'node:fs/promises',
   'node:os',
   'node:stream',
   'node:vm',
@@ -79,16 +78,13 @@ const external = [
   'vitest/optional-types.js',
   'vitest/browser',
   'vite/module-runner',
-  '@vitest/mocker',
-  /@vitest\/mocker\/\w+/,
   '@vitest/utils/diff',
   '@vitest/utils/error',
   '@vitest/utils/source-map',
   '@vitest/runner/utils',
   '@vitest/runner/types',
-  '@vitest/snapshot/environment',
-  '@vitest/snapshot/manager',
   /@vitest\/utils\/\w+/,
+  /@vitest\/mocker\/\w+/,
 
   '#module-evaluator',
   '@opentelemetry/api',
@@ -101,6 +97,7 @@ const dtsUtils = createDtsUtils()
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
+    exportConditions: ['__vitest_source__'],
   }),
   json(),
   commonjs(),

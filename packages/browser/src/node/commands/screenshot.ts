@@ -1,9 +1,9 @@
 import type { BrowserCommand } from 'vitest/node'
-import type { ScreenshotOptions } from '../../../context'
+import type { ScreenshotOptions, SerializedLocator } from '../../../context'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
-  element?: string
-  mask?: readonly string[]
+  element?: SerializedLocator
+  mask?: readonly SerializedLocator[]
 }
 
 declare module 'vitest/browser' {

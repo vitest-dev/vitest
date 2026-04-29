@@ -344,7 +344,7 @@ Custom serializers control how values are _rendered_ into snapshot strings, but 
 A domain adapter implements four methods and is generic over two types — `Captured` (what the value actually is) and `Expected` (what the stored snapshot parses into):
 
 ```ts
-import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from 'vitest'
 
 const myAdapter: DomainSnapshotAdapter<Captured, Expected> = {
   name: 'my-domain',
@@ -420,7 +420,7 @@ expect(value).toMatchMyDomainInlineSnapshot(`key=value`)
 A minimal adapter that stores objects as `key=value` lines, with regex pattern and subset key match support ([full source](https://github.com/vitest-dev/vitest/blob/main/test/snapshots/test/fixtures/domain/basic.ts)):
 
 ```ts [kv-adapter.ts]
-import type { DomainMatchResult, DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { DomainMatchResult, DomainSnapshotAdapter } from 'vitest'
 
 type KVCaptured = Record<string, string>
 type KVExpected = Record<string, string | RegExp>

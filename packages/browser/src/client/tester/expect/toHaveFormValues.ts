@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { cssEscape } from 'ivya/utils'
 import { arrayAsSetComparison, getElementFromUserInput, getSingleElementValue, getTag } from './utils'
@@ -22,7 +22,7 @@ export default function toHaveFormValues(
   this: MatcherState,
   actual: Element | Locator,
   expectedValues: Record<string, unknown>,
-): ExpectationResult {
+): MatcherResult {
   const formElement = getElementFromUserInput(actual, toHaveFormValues, this)
 
   const defaultView = formElement.ownerDocument.defaultView || window

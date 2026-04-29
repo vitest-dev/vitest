@@ -9,8 +9,8 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
 ) => {
   const frame = await context.frame()
   await frame.dragAndDrop(
-    source,
-    target,
+    source.selector,
+    target.selector,
     options_,
   )
 }

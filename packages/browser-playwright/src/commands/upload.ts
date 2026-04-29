@@ -1,9 +1,10 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { UserEventUploadOptions } from 'vitest/browser'
 import type { UserEventCommand } from './utils'
 import { resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
-export const upload: UserEventCommand<(element: string, files: Array<string | {
+export const upload: UserEventCommand<(element: SerializedLocator, files: Array<string | {
   name: string
   mimeType: string
   base64: string

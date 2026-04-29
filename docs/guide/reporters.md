@@ -5,7 +5,7 @@ outline: deep
 
 # Reporters
 
-Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/reporters). If no reporter is specified, Vitest will use the `default` reporter as described below.
+Vitest provides several built-in reporters to display test output in different formats, as well as the ability to use custom reporters. You can select different reporters either by using the `--reporter` command line option, or by including a `reporters` property in your [configuration file](/config/reporters). If no reporter is specified, Vitest [auto-selects reporters](#default-configuration) based on the environment.
 
 Using reporters via command line:
 
@@ -38,6 +38,26 @@ export default defineConfig({
 })
 ```
 
+## Default Configuration
+
+When `reporters` is not configured, Vitest uses the following reporters:
+
+- [`default`](#default-reporter) in normal terminal runs
+- [`minimal`](#minimal-reporter) when Vitest detects an AI coding agent
+- [`github-actions`](#github-actions-reporter) is added when `process.env.GITHUB_ACTIONS === 'true'`
+
+If you configure your own reporters, the configured list replaces the default list. To add a reporter while keeping Vitest's defaults, extend `configDefaults.reporters`:
+
+```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: ['json', ...configDefaults.reporters],
+  },
+})
+```
+
 ## Reporter Output
 
 By default, Vitest's reporters will print their output to the terminal. When using the `json`, `html` or `junit` reporters, you can instead write your tests' output to a file by including an `outputFile` [configuration option](/config/outputfile) either in your Vite configuration file or via CLI.
@@ -66,9 +86,11 @@ npx vitest --reporter=json --reporter=default
 ```
 
 ```ts
+import { configDefaults, defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
-    reporters: ['json', 'default'],
+    reporters: ['json', ...configDefaults.reporters],
     outputFile: './test-output.json'
   },
 })
@@ -96,11 +118,7 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 ### Default Reporter
 
-By default (i.e. if no reporter is specified), Vitest will display summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
-
-::: tip
-When Vitest detects it is running inside an AI coding agent, the [`minimal`](#minimal-reporter) reporter is used instead to reduce output and minimize token usage. You can override this by explicitly configuring the [`reporters`](/config/reporters) option.
-:::
+The `default` reporter displays summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
 
 You can disable the summary by configuring the reporter:
 
@@ -550,20 +568,10 @@ export default defineConfig({
 ### GitHub Actions Reporter {#github-actions-reporter}
 
 Output [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message)
-to provide annotations for test failures. This reporter is automatically enabled when the `reporters` option is not configured and `process.env.GITHUB_ACTIONS === 'true'` (on GitHub Actions environment).
+to provide annotations for test failures. This reporter is [enabled automatically](#default-configuration) when `process.env.GITHUB_ACTIONS === 'true'` (on GitHub Actions environment).
 
 <img alt="GitHub Actions" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/336cddc2-df6b-4b8a-8e72-4d00010e37f5">
 <img alt="GitHub Actions" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/ce8447c1-0eab-4fe1-abef-d0d322290dca">
-
-If you configure reporters, you need to explicitly add `github-actions`.
-
-```ts
-export default defineConfig({
-  test: {
-    reporters: process.env.GITHUB_ACTIONS === 'true' ? ['dot', 'github-actions'] : ['dot'],
-  },
-})
-```
 
 You can customize the file paths that are printed in [GitHub's annotation command format](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions) by using the `onWritePath` option. This is useful when running Vitest in a containerized environment, such as Docker, where the file paths may not match the paths in the GitHub Actions environment.
 
@@ -662,7 +670,7 @@ export default defineConfig({
 Outputs a minimal report containing only failed tests and their error messages. Console logs from passing tests and the summary section are also suppressed.
 
 ::: tip Agent Reporter
-This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is automatically enabled when no `reporters` option is configured and Vitest detects it is running inside an AI coding agent. If you configure custom reporters, you can explicitly add `minimal` or `agent`:
+This reporter is well optimized for AI coding assistants and LLM-based workflows to reduce token usage. It is [enabled automatically](#default-configuration) when Vitest detects it is running inside an AI coding agent.
 
 :::code-group
 ```bash [CLI]

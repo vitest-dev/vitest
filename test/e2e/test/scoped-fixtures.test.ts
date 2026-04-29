@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import type { afterAll, beforeAll, ExpectStatic, expectTypeOf as ExpectTypeOfFn, SuiteAPI, TestAPI } from 'vitest'
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestSpecification, TestUserConfig } from 'vitest/node'
