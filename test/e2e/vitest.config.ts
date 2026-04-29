@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     include: ['test/**/**.{test,spec}.ts'],
     includeTaskLocation: true,
-    reporters: ['verbose'],
+    // hide successfull tests in CI
+    reporters: [['verbose', { renderPassedTests: !process.env.CI }]],
     testTimeout: 60_000,
     isolate: false,
     fileParallelism: false,
