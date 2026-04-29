@@ -306,6 +306,7 @@ jobs:
           path: html-all
           retention-days: 7
 
-      - name: Viewer link in summary
+      - name: Link report viewer
         run: |
+          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
           echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
