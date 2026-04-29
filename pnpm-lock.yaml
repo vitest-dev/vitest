@@ -130,8 +130,8 @@ catalogs:
       specifier: ^3.1.0
       version: 3.1.0
     tinybench:
-      specifier: ^6.0.0
-      version: 6.0.0
+      specifier: ^6.0.1
+      version: 6.0.1
     tinyexec:
       specifier: ^1.0.2
       version: 1.0.2
@@ -849,7 +849,7 @@ importers:
         version: 2.0.3
       tinybench:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
 
   packages/snapshot:
     dependencies:
@@ -1094,7 +1094,7 @@ importers:
         version: 4.0.0-rc.1
       tinybench:
         specifier: 'catalog:'
-        version: 6.0.0
+        version: 6.0.1
       tinyexec:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9878,8 +9878,8 @@ packages:
   thread-stream@3.1.0:
     resolution: {integrity: sha512-OqyPZ9u96VohAyMfJykzmivOrY2wfMSf3C5TtFJVgN+Hm6aj+voFhlK+kZEIv2FBh1X6Xp3DlnCOfEQ3B2J86A==}
 
-  tinybench@6.0.0:
-    resolution: {integrity: sha512-BWlWpVbbZXaYjRV0twGLNQO00Zj4HA/sjLOQP2IvzQqGwRGp+2kh7UU3ijyJ3ywFRogYDRbiHDMrUOfaMnN56g==}
+  tinybench@6.0.1:
+    resolution: {integrity: sha512-cMdWsxmysdg8mNWf1pujiWl3TW0cU6m8QuNw55QlnP3I6N96Grb0wnu5N0syHIu3LbiVZCNqlfWzWDq84HZphA==}
     engines: {node: '>=20.0.0'}
 
   tinyexec@0.3.2:
@@ -19302,7 +19302,7 @@ snapshots:
     dependencies:
       real-require: 0.2.0
 
-  tinybench@6.0.0: {}
+  tinybench@6.0.1: {}
 
   tinyexec@0.3.2: {}
 
