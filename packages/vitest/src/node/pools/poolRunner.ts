@@ -367,7 +367,7 @@ export class PoolRunner {
   }
 
   private emitUnexpectedExit = (): void => {
-    const error = new Error('Worker exited unexpectedly')
+    const error = new Error(`Worker exited unexpectedly during ${this._state} state`)
 
     this._eventEmitter.emit('error', error)
   }
