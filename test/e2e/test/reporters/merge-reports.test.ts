@@ -1,19 +1,21 @@
 import type { RunVitestConfig } from '#test-utils'
 import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
-import { rmSync } from 'node:fs'
-import { resolve } from 'node:path'
+import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
+import { existsSync, rmSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
+import { stringify } from 'flatted'
+import { dirname, resolve } from 'pathe'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
-import { writeBlob } from 'vitest/src/node/reporters/blob.js'
 import { getModuleGraph } from 'vitest/src/utils/graph.js'
 
 // always relative to CWD because it's used only from the CLI,
 // so we need to correctly resolve it here
-const reportsDir = resolve('./fixtures/reporters/merge-reports/.vitest-reports')
+const reportsDir = resolve('./fixtures/reporters/merge-reports/.vitest/blob')
 
 beforeEach(() => {
   rmSync(reportsDir, { force: true, recursive: true })
@@ -23,13 +25,13 @@ test('merge reports', async () => {
   await runVitest({
     root: './fixtures/reporters/merge-reports',
     include: ['first.test.ts'],
-    reporters: [['blob', { outputFile: './.vitest-reports/first-run.json' }]],
+    reporters: [['blob', { outputFile: './.vitest/blob/first-run.json' }]],
   })
 
   await runVitest({
     root: './fixtures/reporters/merge-reports',
     include: ['second.test.ts'],
-    reporters: [['blob', { outputFile: './.vitest-reports/second-run.json' }]],
+    reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
   })
 
   const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
@@ -259,13 +261,13 @@ test('total and merged execution times are shown', async () => {
 
     await writeBlob(
       [version, [file], [], undefined, 1500 * index, {}],
-      resolve(`./fixtures/reporters/merge-reports/.vitest-reports/blob-${index}-2.json`),
+      resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
 
   const { stdout } = await runVitest({
     root: resolve('./fixtures/reporters/merge-reports'),
-    mergeReports: resolve('./fixtures/reporters/merge-reports/.vitest-reports'),
+    mergeReports: resolve('./fixtures/reporters/merge-reports/.vitest/blob'),
     reporters: [['default', { isTTY: false }]],
   })
 
@@ -281,7 +283,7 @@ test.for([
   'browser',
 ])('module graph and html reporter $0', async (mode) => {
   const root = resolve('./fixtures/reporters/merge-reports-module-graph')
-  const reportsDir = resolve(root, '.vitest-reports')
+  const reportsDir = resolve(root, '.vitest/blob')
   rmSync(reportsDir, { force: true, recursive: true })
 
   const baseConfig: TestUserConfig = {
@@ -414,7 +416,7 @@ test.for([
 
   const result3 = await runVitest({
     ...baseConfig,
-    mergeReports: resolve(root, '.vitest-reports'),
+    mergeReports: resolve(root, '.vitest/blob'),
     reporters: ['html'],
   })
   expect(result3.stderr).toMatchInlineSnapshot(`""`)
@@ -592,7 +594,7 @@ test("macos only", () => {})
   `)
   const result = await runVitest({
     root,
-    mergeReports: resolve(root, '.vitest-reports'),
+    mergeReports: resolve(root, '.vitest/blob'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
     "✓  linux  first.test.ts > always good <time>
@@ -788,7 +790,7 @@ test("works on browser", () => {
   `)
   const result = await runVitest({
     ...baseConfig,
-    mergeReports: resolve(root, '.vitest-reports'),
+    mergeReports: resolve(root, '.vitest/blob'),
   })
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
     "✓ |node|  linux  basic.test.ts > always good <time>
@@ -956,3 +958,14 @@ test("top-test", () => {})
     }
   `)
 })
+
+async function writeBlob(content: MergeReport, filename: string): Promise<void> {
+  const report = stringify(content)
+
+  const dir = dirname(filename)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
+  }
+
+  await writeFile(filename, report, 'utf-8')
+}
