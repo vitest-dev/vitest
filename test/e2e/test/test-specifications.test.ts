@@ -34,8 +34,10 @@ test.for(
 
   await vitest.runTestSpecifications([specification])
   onTestFailed(() => {
+    // eslint-disable-next-line no-console
     console.log('⚠️⚠️⚠️ Failed options', options)
     for (const [id, task] of vitest.state.idMap.entries()) {
+      // eslint-disable-next-line no-console
       console.log({
         id,
         name: task.name,
