@@ -4,7 +4,7 @@ title: Benchmarking | Guide
 
 # Benchmarking
 
-Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context) — it is not a top-level import from `vitest`. Benchmarks are powered by [Tinybench](https://github.com/tinylibs/tinybench) and are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner: retries, lifecycle hooks, filtering, and assertions.
+Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context). It is not a top-level import from `vitest`. Benchmarks are powered by [Tinybench](https://github.com/tinylibs/tinybench) and are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner: retries, lifecycle hooks, filtering, and assertions.
 
 ## Defining a Benchmark
 
@@ -206,7 +206,7 @@ test('compare against baseline', async ({ bench }) => {
 
 Baseline files should be committed to version control so the team shares the same reference points.
 
-To combine baselining with cross-project aggregation, access the factories as properties: `bench.withBaseline.perProject(...)` (or `bench.perProject.withBaseline(...)` — both compose to the same behaviour).
+To combine baselining with cross-project aggregation, access the factories as properties: `bench.withBaseline.perProject(...)` (or `bench.perProject.withBaseline(...)`; both compose to the same behaviour).
 
 ```ts
 test('cross-project baseline', async ({ bench }) => {
@@ -218,9 +218,9 @@ test('cross-project baseline', async ({ bench }) => {
 
 ## Stability
 
-Benchmarks are inherently flaky — CPU load, thermal throttling, GC pressure, and background processes all affect results. Vitest takes several steps to minimize this noise:
+Benchmarks are inherently flaky: CPU load, thermal throttling, GC pressure, and background processes all affect results. Vitest takes several steps to minimize this noise:
 
-- **Separate project**: Benchmark files are grouped into their own project based on the [`benchmark.include`](/config/#benchmark-include) pattern. The `bench` fixture is only exposed in files matched by that pattern — using it inside a regular test file will throw an error, and `bench` is not available as a top-level import from `vitest`.
+- **Separate project**: Benchmark files are grouped into their own project based on the [`benchmark.include`](/config/#benchmark-include) pattern. The `bench` fixture is only exposed in files matched by that pattern. Using it inside a regular test file will throw an error, and `bench` is not available as a top-level import from `vitest`.
 - **No concurrency**: Tests within a benchmark file always run sequentially. Benchmark files themselves also run one at a time, never in parallel. This prevents benchmarks from interfering with each other.
 
 To further improve stability:
@@ -236,12 +236,12 @@ JavaScript engines can optimize away code that has no observable side effects. I
 
 ```ts
 test('parsing', async ({ bench }) => {
-  // BAD — the engine may eliminate the work
+  // BAD: the engine may eliminate the work
   await bench('parse', () => {
     JSON.parse(input)
   }).run()
 
-  // GOOD — the result is consumed
+  // GOOD: the result is consumed
   await bench('parse', () => {
     const result = JSON.parse(input)
     doSomething(result)
@@ -253,7 +253,7 @@ This applies to all engines (V8, JavaScriptCore, SpiderMonkey) but is especially
 
 ### Module Runner Overhead
 
-By default, Vitest runs tests in Node.js using Vite's module runner (configured by [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner)). This transforms all module exports into getters — every access to an imported binding goes through something like `__vite_ssr_module__.value`. In regular tests this overhead is negligible, but in benchmarks where a function is called millions of times, the getter call itself can dominate the measurement.
+By default, Vitest runs tests in Node.js using Vite's module runner (configured by [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner)). This transforms all module exports into getters, so every access to an imported binding goes through something like `__vite_ssr_module__.value`. In regular tests this overhead is negligible, but in benchmarks where a function is called millions of times, the getter call itself can dominate the measurement.
 
 Vitest will print a warning if it detects excessive getter calls, but you should be aware of this when benchmarking imported functions:
 
@@ -263,12 +263,12 @@ import { parse } from './parser.js'
 const _parse = parse
 
 test('parsing', async ({ bench }) => {
-  // BAD — every call to `parse` goes through a getter
+  // BAD: every call to `parse` goes through a getter
   await bench('parse', () => {
     parse(input)
   }).run()
 
-  // GOOD — store the reference locally to bypass the getter
+  // GOOD: store the reference locally to bypass the getter
   await bench('parse', () => {
     _parse(input)
   }).run()
@@ -286,7 +286,7 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
 
   ```ts
   test('process items', async ({ bench }) => {
-    // BAD — mixed shapes cause deoptimization
+    // BAD: mixed shapes cause deoptimization
     await bench('process', () => {
       for (const item of items) {
         // some items have { name: string }, others have { name: string, id: number }
@@ -294,7 +294,7 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
       }
     }).run()
 
-    // GOOD — consistent object shapes
+    // GOOD: consistent object shapes
     await bench('process', () => {
       for (const item of items) {
         // all items have the same shape { name: string, id: number }
@@ -311,13 +311,13 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
     const original = Array.from({ length: 10000 }, () => Math.random())
     let data: number[]
 
-    // BAD — allocates a new array every iteration, GC adds noise
+    // BAD: allocates a new array every iteration, GC adds noise
     await bench('sort', () => {
       const data = Array.from({ length: 10000 }, () => Math.random())
       data.sort()
     }).run()
 
-    // GOOD — pre-allocate, copy in beforeEach
+    // GOOD: pre-allocate, copy in beforeEach
     await bench(
       'sort',
       () => { data.sort() },
@@ -337,7 +337,7 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
 
 #### Browser
 
-- **Timer resolution**: Browsers may reduce `performance.now()` precision (e.g., to 100μs or even 1ms) as a Spectre mitigation. This makes very fast operations difficult to measure accurately — increase iterations to compensate:
+- **Timer resolution**: Browsers may reduce `performance.now()` precision (e.g., to 100μs or even 1ms) as a Spectre mitigation. This makes very fast operations difficult to measure accurately, so increase iterations to compensate:
 
   ```ts
   test('fast operations', async ({ bench }) => {
