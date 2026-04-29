@@ -1,6 +1,7 @@
-import type { Locator, SelectorOptions, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
+import type { Locator, SelectorOptions, SerializedLocator, UserEventWheelDeltaOptions, UserEventWheelOptions } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
+import { __INTERNAL } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
 import { recordBrowserTraceEntry } from './trace'
 
@@ -189,7 +190,7 @@ export class CommandsManager {
               status,
               startTime,
               duration: now() - startTime,
-              selector: typeof args[0] === 'string' ? args[0] : undefined,
+              element: typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined,
               stack: clientError.stack,
             })
           }
@@ -276,19 +277,22 @@ export function escapeForTextSelector(text: string | RegExp, exact: boolean): st
 const provider = getBrowserState().provider
 const kElementLocator = Symbol.for('$$vitest:locator-resolved')
 
-export async function convertToSelector(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<string> {
+export async function serializeElement(elementOrLocator: Element | Locator, options?: SelectorOptions): Promise<SerializedLocator> {
   if (!elementOrLocator) {
     throw new Error('Expected element or locator to be defined.')
   }
   if (elementOrLocator instanceof Element) {
-    return convertElementToCssSelector(elementOrLocator)
+    const selector = convertElementToCssSelector(elementOrLocator)
+    return { selector, locator: __INTERNAL._asLocator('javascript', selector) }
   }
   if (isLocator(elementOrLocator)) {
     if (provider === 'playwright' || kElementLocator in elementOrLocator) {
-      return elementOrLocator.selector
+      return elementOrLocator.serialize()
     }
     const element = await elementOrLocator.findElement(options)
-    return convertElementToCssSelector(element)
+    const selector = convertElementToCssSelector(element)
+    const locator = __INTERNAL._asLocator('javascript', selector)
+    return { selector, locator }
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }

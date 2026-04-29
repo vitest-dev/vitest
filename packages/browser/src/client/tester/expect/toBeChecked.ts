@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getAriaChecked, getAriaCheckedRoles, getAriaRole } from 'ivya/utils'
 import { getElementFromUserInput, isInputElement, toSentence } from './utils'
@@ -23,7 +23,7 @@ const supportedRoles = getAriaCheckedRoles()
 export default function toBeChecked(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeChecked, this)
 
   const isValidInput = () => {

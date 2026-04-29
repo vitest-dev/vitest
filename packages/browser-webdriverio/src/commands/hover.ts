@@ -3,7 +3,7 @@ import type { UserEventCommand } from './utils'
 
 export const hover: UserEventCommand<UserEvent['hover']> = async (
   context,
-  selector,
+  { selector },
   options = {},
 ) => {
   const browser = context.browser

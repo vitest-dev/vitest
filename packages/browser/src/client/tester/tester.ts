@@ -10,8 +10,8 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
-  Traces,
 } from 'vitest/internal/browser'
+import { Traces } from 'vitest/internal/traces'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'

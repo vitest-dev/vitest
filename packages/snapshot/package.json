@@ -22,18 +22,21 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./environment": {
+      "__vitest_source__": "./src/environment.ts",
       "types": "./dist/environment.d.ts",
       "default": "./dist/environment.js"
     },
     "./manager": {
+      "__vitest_source__": "./src/manager.ts",
       "types": "./dist/manager.d.ts",
       "default": "./dist/manager.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

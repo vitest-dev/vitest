@@ -1,5 +1,5 @@
 import type { CancelReason, FileSpecification } from '@vitest/runner'
-import type { OTELCarrier } from 'vitest/internal/browser'
+import type { OTELCarrier } from 'vitest/internal/traces'
 import { getBrowserState } from './utils'
 
 export interface IframeViewportEvent {

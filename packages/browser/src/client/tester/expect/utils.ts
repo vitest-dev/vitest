@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { MatcherState } from '@vitest/expect'
+import type { MatcherState } from 'vitest'
 import { Locator } from '../locators'
 
 export function queryElementFromUserInput(

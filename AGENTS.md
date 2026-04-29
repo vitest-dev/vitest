@@ -32,7 +32,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **All tests**: `CI=true pnpm test:ci`
 - **Examples**: `CI=true pnpm test:examples`
 - **Specific test suite**: `CI=true cd test/<test-folder> && pnpm test <test-file>`
-- **Core directory test**: `CI=true pnpm test <test-file>` (for `test/core`)
+- **Unit directory test**: `CI=true pnpm test <test-file>` (for `test/unit`)
 - **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
 
 **IMPORTANT: Do NOT use `--` when passing test filters to pnpm.**
@@ -70,7 +70,7 @@ If you need to typecheck tests, run `pnpm typecheck` from the root of the worksp
 - `mocker` - Module mocking
 
 ### Test Organization (`test/`)
-- `test/core` - Core functionality tests
+- `test/unit` - Core functionality tests
 - `test/browser` - Browser-specific tests
 - Various test suites organized by feature
 

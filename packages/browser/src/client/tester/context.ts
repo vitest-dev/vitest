@@ -15,12 +15,12 @@ import type {
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
-import type { Locator as LocatorAPI } from './locators/index'
+import type { Locator as LocatorAPI } from './locators'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState, now } from '../utils'
-import { convertToSelector, isLocator, processTimeoutOptions, resolveUserEventWheelOptions } from './tester-utils'
+import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
@@ -106,11 +106,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     // testing-library user-event
     type(element, text, options) {
       return ensureAwaited(async (error) => {
-        const selector = await convertToSelector(element, options)
+        const serializedElement = await serializeElement(element, options)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
           [
-            selector,
+            serializedElement,
             text,
             { ...options, unreleased: keyboard.unreleased },
           ],
@@ -334,9 +334,9 @@ export const page: BrowserPage = {
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
     const [element, ...mask] = await Promise.all([
-      options.element ? convertToSelector(options.element, options) : undefined,
+      options.element ? serializeElement(options.element, options) : undefined,
       ...('mask' in options
-        ? (options.mask as Array<Element | Locator>).map(el => convertToSelector(el, options))
+        ? (options.mask as Array<Element | Locator>).map(el => serializeElement(el, options))
         : []),
     ])
 
@@ -572,8 +572,8 @@ function prettyDOM(
     : pretty
 }
 
-function getElementError(selector: string, container: Element): Error {
-  const error = new Error(`Cannot find element with locator: ${__INTERNAL._asLocator('javascript', selector)}\n\n${prettyDOM(container)}`)
+function getElementError(selector: string | Locator, container: Element): Error {
+  const error = new Error(`Cannot find element with locator: ${typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()}\n\n${prettyDOM(container)}`)
   error.name = 'VitestBrowserElementError'
   return error
 }

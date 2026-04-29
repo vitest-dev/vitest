@@ -898,7 +898,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
           else {
             for (let tasksGroup of partitionSuiteChildren(suite)) {
               if (tasksGroup[0].concurrent === true) {
-                await Promise.all(tasksGroup.map(c => runSuiteChild(c, runner)))
+                const groupLimiter = limitConcurrency(runner.config.maxConcurrency)
+                await Promise.all(tasksGroup.map(c => groupLimiter(() => runSuiteChild(c, runner))))
               }
               else {
                 const { sequence } = runner.config

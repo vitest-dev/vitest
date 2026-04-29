@@ -61,6 +61,7 @@ test('domain inline snapshot', async () => {
   // edit test values: score '999' -> '42' (regex still matches),
   //    status 'active' -> 'inactive' (literal mismatch)
   editFile(testFile, s => s
+    .replace(`name: 'alice',`, ``)
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
@@ -68,7 +69,26 @@ test('domain inline snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > all literal
+    Error: Snapshot \`all literal 1\` mismatched
+
+    - Expected
+    + Received
+
+    - name=alice
+      age=30
+
+     ❯ basic.test.ts:5:26
+          3|
+          4| test('all literal', () => {
+          5|   expect({  age: '30' }).toMatchKvInlineSnapshot(\`
+           |                          ^
+          6|     name=alice
+          7|     age=30
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > with regex
     Error: Snapshot \`with regex 1\` mismatched
@@ -89,14 +109,16 @@ test('domain inline snapshot', async () => {
          13|     name=bob
          14|     score=/\\\\d+/
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "all literal": "passed",
+        "all literal": Array [
+          "Snapshot \`all literal 1\` mismatched",
+        ],
         "empty snapshot": "passed",
         "with regex": Array [
           "Snapshot \`with regex 1\` mismatched",
@@ -123,10 +145,7 @@ test('domain inline snapshot', async () => {
   //    score regex preserved, status updated to 'inactive'
   expect(readInlineSnapshots(testFile)).toMatchInlineSnapshot(`
     "
-    expect({ name: 'alice', age: '30' }).toMatchKvInlineSnapshot(\`
-        name=alice
-        age=30
-      \`)
+    expect({  age: '30' }).toMatchKvInlineSnapshot(\`age=30\`)
 
     expect({ name: 'bob', score: '42', status: 'inactive' }).toMatchKvInlineSnapshot(\`
         name=bob
