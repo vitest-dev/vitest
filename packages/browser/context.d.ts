@@ -542,10 +542,6 @@ export interface FrameLocator extends LocatorSelectors {}
 export interface SerializedLocator {
   selector: string
   locator: string
-  /**
-   * @internal
-   */
-  _pwSelector?: string
 }
 
 export interface SelectorOptions {
