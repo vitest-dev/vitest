@@ -138,7 +138,7 @@ jobs:
           name: vitest-blob-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
-            test/core/.vitest-reports
+            test/unit/.vitest-reports
             test/cli/.vitest-reports
           retention-days: 1
           include-hidden-files: true
@@ -289,13 +289,13 @@ jobs:
 
       - name: Merge reports
         continue-on-error: true
-        run: pnpm --filter=./test/core --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
+        run: pnpm --filter=./test/unit --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
 
       - name: Merge reports html
         id: merge-html
         run: |
           mkdir -p html-all
-          cp -rf test/core/html html-all/core
+          cp -rf test/unit/html html-all/unit
           cp -rf test/cli/html html-all/cli
           echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
