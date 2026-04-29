@@ -126,8 +126,9 @@ export default defineConfig({
     },
     includeTaskLocation: true,
     reporters: process.env.GITHUB_ACTIONS
-      ? ['default', ['github-actions', { displayAnnotations: false }]]
+      ? [['verbose', { renderPassedTests: false }], ['github-actions', { displayAnnotations: false }]]
       : [['default', { summary: true }], 'hanging-process'],
+    hideSkippedTests: !!process.env.CI,
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
