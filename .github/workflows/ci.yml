@@ -139,7 +139,7 @@ jobs:
           path: |
             README.md
             test/unit/.vitest-reports
-            test/cli/.vitest-reports
+            test/e2e/.vitest-reports
           retention-days: 1
           include-hidden-files: true
 
@@ -289,14 +289,14 @@ jobs:
 
       - name: Merge reports
         continue-on-error: true
-        run: pnpm --filter=./test/unit --filter=./test/cli --no-bail --sequential test --merge-reports --reporter=html
+        run: pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports --reporter=html
 
       - name: Merge reports html
         id: merge-html
         run: |
           mkdir -p html-all
           cp -rf test/unit/html html-all/unit
-          cp -rf test/cli/html html-all/cli
+          cp -rf test/e2e/html html-all/e2e
           echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v7
