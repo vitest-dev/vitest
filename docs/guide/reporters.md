@@ -707,7 +707,7 @@ When running the same tests across multiple environments, use the `VITEST_BLOB_L
 VITEST_BLOB_LABEL=linux vitest run --reporter=blob
 ```
 
-You can also provide the label via the blob reporter option:
+You can also provide the label via the blob reporter option. This has higher priority than `VITEST_BLOB_LABEL`.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
