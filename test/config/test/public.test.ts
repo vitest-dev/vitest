@@ -18,7 +18,7 @@ test('applies custom options', async () => {
     setupFiles: ['/test/setup.ts'],
   })
   expect(viteConfig.mode).toBe('development')
-  expect(vitestConfig.mode).toBe('test') // vitest mode is "test" or "benchmark"
+  expect(vitestConfig.mode).toBe('development')
   expect(vitestConfig.setupFiles).toEqual(['/test/setup.ts'])
   expect(viteConfig.plugins.find(p => p.name === 'vitest')).toBeDefined()
 })

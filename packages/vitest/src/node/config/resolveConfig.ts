@@ -174,6 +174,8 @@ export function resolveConfig(
     root: viteConfig.root,
   } as any as ResolvedConfig
 
+  resolved.mode ??= viteConfig.mode ?? 'test'
+
   if (resolved.retry && typeof resolved.retry === 'object' && typeof resolved.retry.condition === 'function') {
     logger.console.warn(
       c.yellow('Warning: retry.condition function cannot be used inside a config file. '
