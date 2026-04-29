@@ -32,7 +32,7 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
-    if (this.isTTY) {
+    if (this.isTTY && this.options.renderPassedTests == null) {
       if (this.renderSucceed === undefined) {
         this.renderSucceed = !!this.renderSucceed
       }

@@ -29,6 +29,10 @@ export class VerboseReporter extends DefaultReporter {
       return
     }
 
+    if (testResult.state === 'passed' && !this.renderSucceed) {
+      return
+    }
+
     let title = ` ${this.getEntityPrefix(test)} `
 
     title += test.module.task.name
