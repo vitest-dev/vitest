@@ -77,30 +77,10 @@
       "__vitest_source__": "./src/utils/traces.ts",
       "default": "./dist/traces.js"
     },
-    "./runners": {
-      "types": "./dist/runners.d.ts",
-      "default": "./dist/runners.js"
-    },
-    "./suite": {
-      "types": "./dist/suite.d.ts",
-      "default": "./dist/suite.js"
-    },
-    "./environments": {
-      "types": "./dist/environments.d.ts",
-      "default": "./dist/environments.js"
-    },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
       "default": "./dist/config.js"
-    },
-    "./coverage": {
-      "types": "./coverage.d.ts",
-      "default": "./dist/coverage.js"
-    },
-    "./reporters": {
-      "types": "./dist/reporters.d.ts",
-      "default": "./dist/reporters.js"
     },
     "./runtime": {
       "types": "./dist/runtime.d.ts",

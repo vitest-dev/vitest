@@ -56,6 +56,19 @@ export async function customClick(
 }
 ```
 
+### Removed Deprecated Entrypoints
+
+Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
+
+- `vitest/coverage`: use `vitest/node` instead
+- `vitest/reporters`: use `vitest/node` instead
+- `vitest/environments`: use `vitest/runtime` instead
+- `vitest/snapshot`: use `vitest/runtime` instead
+- `vitest/runners`: use `TestRunner` from `vitest` instead
+- `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
+- `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
+- `vitest/internal/module-runner` is removed
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites

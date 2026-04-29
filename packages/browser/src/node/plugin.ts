@@ -201,8 +201,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           '@vitest/runner',
           '@vitest/spy',
           '@vitest/utils/error',
-          '@vitest/snapshot',
-          '@vitest/expect',
           'std-env',
           'tinybench',
           'tinyspy',
@@ -240,8 +238,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const include = [
           'vitest > expect-type',
-          'vitest > @vitest/snapshot > magic-string',
-          'vitest > @vitest/expect > chai',
+          'vitest > magic-string',
+          'vitest > chai',
         ]
 
         const provider = parentServer.config.browser.provider || [...parentServer.children][0]?.provider

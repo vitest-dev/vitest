@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-cli",
+  "name": "@vitest/test-e2e",
   "type": "module",
   "private": true,
   "imports": {
