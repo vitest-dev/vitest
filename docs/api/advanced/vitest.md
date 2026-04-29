@@ -5,26 +5,6 @@ title: Vitest API
 
 # Vitest
 
-Vitest instance requires the current test mode. It can be either:
-
-- `test` when running runtime tests
-- `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
-
-::: details New in Vitest 4
-Vitest 4 added several new APIs (they are marked with a "4.0.0+" badge) and removed deprecated APIs:
-
-- `invalidates`
-- `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
-- `server` (use [`vite`](#vite) instead)
-- `getProjectsByTestFile` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getFileWorkspaceSpecs` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getModuleProjects` (filter by [`this.projects`](#projects) yourself)
-- `updateLastChanged` (renamed to [`invalidateFile`](#invalidatefile))
-- `globTestSpecs` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `globTestFiles` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `listFile` (use [`getRelevantTestSpecifications`](#getrelevanttestspecifications) instead)
-:::
-
 ## mode <Deprecated /> {#mode}
 
 Since Vitest 5, this property is always `'test'`.
