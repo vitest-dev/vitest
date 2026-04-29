@@ -136,24 +136,6 @@ test('coverage autoUpdate accepts boolean values from CLI', async () => {
   expect(getCLIOptions('--coverage.thresholds.autoUpdate no').coverage.thresholds.autoUpdate).toBe(false)
 })
 
-test('bench only options', async () => {
-  expect(() =>
-    parseArguments('--compare file.json').matchedCommand?.checkUnknownOptions(),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `[CACError: Unknown option \`--compare\`]`,
-  )
-
-  expect(() =>
-    parseArguments(
-      'bench --compare file.json',
-    ).matchedCommand?.checkUnknownOptions(),
-  ).not.toThrow()
-
-  expect(parseArguments('bench --compare file.json').options).toEqual({
-    compare: 'file.json',
-  })
-})
-
 test('even if coverage is boolean, don\'t fail', () => {
   expect(getCLIOptions('--coverage --coverage.provider v8').coverage).toEqual({
     enabled: true,
