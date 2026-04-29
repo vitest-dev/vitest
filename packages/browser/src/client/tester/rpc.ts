@@ -37,7 +37,7 @@ export function createSafeRpc(
 ): VitestBrowserClient['rpc'] {
   return new Proxy(client.rpc, {
     get(target, p, handler) {
-      if (p === 'then') {
+      if (p === 'then' || p === 'toJSON') {
         return
       }
       const sendCall = get(target, p, handler)
