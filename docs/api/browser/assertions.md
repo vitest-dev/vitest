@@ -54,7 +54,7 @@ interface ExpectPollOptions {
 ```
 
 ::: tip
-`expect.element` is a shorthand for `expect.poll(() => element)` and works in exactly the same way.
+`expect.element` follows the same retry timeout and interval options as [`expect.poll`](/api/expect#poll), while resolving locators before running DOM assertions.
 
 `toHaveTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
 
