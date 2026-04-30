@@ -114,12 +114,6 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci
-
-      - name: Test Examples
-        run: pnpm run test:examples
-
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
 
@@ -129,6 +123,22 @@ jobs:
           name: test-ui-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: ./packages/ui/.vitest/html/index.html
           archive: false
+
+      - name: Test
+        run: pnpm run test:ci
+
+      - name: Test Examples
+        run: pnpm run test:examples
+
+      # - name: Unit Test UI
+      #   run: pnpm -C packages/ui test:ui
+
+      # - name: Upload Test UI Report
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: test-ui-report-${{ matrix.os }}-node-${{ matrix.node_version }}
+      #     path: ./packages/ui/.vitest/html/index.html
+      #     archive: false
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
