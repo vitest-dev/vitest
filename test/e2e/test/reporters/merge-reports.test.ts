@@ -931,9 +931,9 @@ test("top-test", () => {})
   `)
   const tree = buildTestTree(
     result.results,
-    t => ({ "@META": t.meta(), state: t.result().state }),
-    (suite, children) => ({ "@META": suite.meta(), ...children }),
-    (file, children) => ({ "@META": file.meta(), ...children }),
+    t => ({ '@META': t.meta(), 'state': t.result().state }),
+    (suite, children) => ({ '@META': suite.meta(), ...children }),
+    (file, children) => ({ '@META': file.meta(), ...children }),
   )
   expect(tree).toMatchInlineSnapshot(`
     {
