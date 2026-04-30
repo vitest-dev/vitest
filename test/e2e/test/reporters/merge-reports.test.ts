@@ -3,7 +3,7 @@ import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { runVitest, useFS } from '#test-utils'
+import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
 import { beforeEach, expect, test } from 'vitest'
@@ -896,6 +896,61 @@ test("works on browser", () => {
             "expected 'undefined' not to be 'undefined' // Object.is equality",
           ],
           "works on node": "passed",
+        },
+      },
+    }
+  `)
+})
+
+// currently file level meta is not inherited
+test('label meta', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'basic.test.ts': `
+describe("top-suite", () => {
+  test("inner-test", () => {})
+})
+test("top-test", () => {})
+`,
+  })
+  const result = await runVitest({
+    root,
+    globals: true,
+    reporters: [['blob', { label: 'windows' }]],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "top-suite": {
+          "inner-test": "passed",
+        },
+        "top-test": "passed",
+      },
+    }
+  `)
+  const tree = buildTestTree(
+    result.results,
+    t => ({ "@META": t.meta(), state: t.result().state }),
+    (suite, children) => ({ "@META": suite.meta(), ...children }),
+    (file, children) => ({ "@META": file.meta(), ...children }),
+  )
+  expect(tree).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "@META": {
+          "__vitest_label__": "windows",
+        },
+        "top-suite": {
+          "@META": {},
+          "inner-test": {
+            "@META": {},
+            "state": "passed",
+          },
+        },
+        "top-test": {
+          "@META": {},
+          "state": "passed",
         },
       },
     }
