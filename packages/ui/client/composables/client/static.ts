@@ -89,8 +89,6 @@ export function createStaticClient(): VitestClient {
   }
 
   async function registerMetadata() {
-    // const res = await fetch(window.METADATA_PATH!)
-    // const content = new Uint8Array(await res.arrayBuffer())
     const content = await window.HTML_REPORT_METADATA!
 
     // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed.
