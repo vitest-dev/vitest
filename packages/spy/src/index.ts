@@ -259,6 +259,20 @@ export function fn<T extends Procedure | Constructable = Procedure>(
   }) as Mock<T>
 }
 
+type SpyOnValue<T extends object, K extends keyof any> = K extends keyof Required<T>
+  ? Required<T>[K]
+  : (T & Record<K, unknown>)[K]
+
+type SpyOnMethod<T extends object, K extends keyof any>
+  = SpyOnValue<T, K> extends Constructable | Procedure
+    ? SpyOnValue<T, K>
+    : never
+
+type SpyOnMethodKey<T extends object, K extends keyof any>
+  = SpyOnValue<T, K> extends Constructable | Procedure
+    ? K
+    : never
+
 export function spyOn<T extends object, S extends Properties<Required<T>>>(
   object: T,
   key: S,
@@ -275,7 +289,11 @@ export function spyOn<T extends object, M extends Classes<Required<T>> | Methods
 ): Required<T>[M] extends Constructable | Procedure
   ? Mock<Required<T>[M]>
   : never
-export function spyOn<T extends object, K extends keyof T>(
+export function spyOn<T extends object, K extends keyof any>(
+  object: T,
+  key: SpyOnMethodKey<T, K>,
+): Mock<SpyOnMethod<T, K>>
+export function spyOn<T extends object, K extends keyof any>(
   object: T,
   key: K,
   accessor?: 'get' | 'set',
@@ -317,14 +335,14 @@ export function spyOn<T extends object, K extends keyof T>(
     // but there's still a value on the object when called
     // https://github.com/vitest-dev/vitest/issues/9439
     if (original == null && accessType === 'value') {
-      original = object[key] as unknown as Procedure
+      original = object[key as unknown as keyof T] as unknown as Procedure
     }
   }
   else if (accessType !== 'value') {
-    original = () => object[key]
+    original = () => object[key as unknown as keyof T]
   }
   else {
-    original = object[key] as unknown as Procedure
+    original = object[key as unknown as keyof T] as unknown as Procedure
   }
 
   const originalImplementation = ssr && original ? original() : original
