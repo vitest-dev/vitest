@@ -109,9 +109,11 @@ export default class HTMLReporter implements Reporter {
     await Promise.all(
       files.map(async (f) => {
         if (f === 'index.html') {
-          const html = await fs.readFile(resolve(ui, f), 'utf-8')
+          const htmlFilePath = resolve(ui, f)
+          let html = await fs.readFile(htmlFilePath, 'utf-8')
           let metadataCode: string
           if (this.options.singleFile) {
+            html = await inlineHtml(htmlFilePath, html)
             const base64 = Buffer.from(data).toString('base64')
             metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
           }
@@ -171,6 +173,11 @@ export default class HTMLReporter implements Reporter {
       await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
     }
   }
+}
+
+async function inlineHtml(file: string, content: string): Promise<string> {
+  // TODO:
+  return content
 }
 
 async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
