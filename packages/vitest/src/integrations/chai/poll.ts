@@ -134,39 +134,64 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             const { setTimeout, clearTimeout } = getSafeTimers()
 
-            let executionPhase: 'fn' | 'assertion' = 'fn'
-            let hasTimedOut = false
+            // let executionPhase: 'fn' | 'assertion' = 'fn'
+            // let hasTimedOut = false
 
-            const timerId = setTimeout(() => {
-              hasTimedOut = true
-            }, timeout)
+            // const timerId = setTimeout(() => {
+            //   hasTimedOut = true
+            // }, timeout)
+
+            let timerId: ReturnType<typeof setTimeout> | undefined
+            const timeoutController = new AbortController()
+            const timeoutPromise = new Promise<void>((resolve) => {
+              timerId = setTimeout(() => {
+                resolve()
+                timeoutController.abort();
+              }, timeout)
+            })
+            let lastError: unknown;
 
             try {
               while (true) {
-                const isLastAttempt = hasTimedOut
+                // const isLastAttempt = hasTimedOut
 
-                if (isLastAttempt) {
-                  chai.util.flag(assertion, '_isLastPollAttempt', true)
-                }
+                // if (isLastAttempt) {
+                //   chai.util.flag(assertion, '_isLastPollAttempt', true)
+                // }
 
                 try {
-                  executionPhase = 'fn'
-                  const obj = await fn()
+                  // executionPhase = 'fn'
+                  const result = await raceWith(
+                    Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
+                    timeoutPromise,
+                  )
+                  if (!result.ok) {
+                    lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
+                    break;
+                  }
+                  const obj = result.value
+                  // const obj = await fn({ signal: timeoutController.signal })
                   chai.util.flag(assertion, 'object', obj)
 
-                  executionPhase = 'assertion'
+                  // executionPhase = 'assertion'
                   const output = await assertionFunction.call(assertion, ...args)
                   await onSettled?.({ assertion, status: 'pass' })
 
                   return output
                 }
                 catch (err) {
-                  if (isLastAttempt || (executionPhase === 'assertion' && chai.util.flag(assertion, '_poll.assert_once'))) {
-                    await onSettled?.({ assertion, status: 'fail' })
-                    throwWithCause(err, STACK_TRACE_ERROR)
+                  lastError = err
+                  // if (isLastAttempt) {
+                  //   await onSettled?.({ assertion, status: 'fail' })
+                  //   throwWithCause(err, STACK_TRACE_ERROR)
+                  // }
+                  const result = await raceWith(
+                    delay(interval, setTimeout),
+                    timeoutPromise,
+                  )
+                  if (!result.ok) {
+                    break;
                   }
-
-                  await delay(interval, setTimeout)
                   if (vi.isFakeTimers()) {
                     vi.advanceTimersByTime(interval)
                   }
@@ -175,6 +200,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
             finally {
               clearTimeout(timerId)
+            }
+            if (lastError) {
+              await onSettled?.({ assertion, status: 'fail' })
+              throwWithCause(lastError, STACK_TRACE_ERROR)
             }
           }
           let awaited = false
@@ -220,4 +249,18 @@ function copyStackTrace(target: Error, source: Error) {
     target.stack = source.stack.replace(source.message, target.message)
   }
   return target
+}
+
+function raceWith<A, B>(
+  promise: Promise<A>,
+  other?: Promise<B>,
+): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
+  const left = promise.then(value => ({ ok: true as const, value }))
+  if (!other) {
+    return left
+  }
+  return Promise.race([
+    left,
+    other.then(value => ({ ok: false as const, value })),
+  ])
 }

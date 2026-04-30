@@ -404,6 +404,7 @@ async function getStableSnapshot(
 
   while (true) {
     try {
+      // TODO: pass poll({ signal })
       const pollResult = await raceWith(Promise.resolve(poll()), timedOut)
       if (!pollResult.ok) {
         break
