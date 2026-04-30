@@ -172,6 +172,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 }
                 catch (err) {
                   lastError = err
+                  // no retry for toMatchScreenshot since
+                  // it owns retry/stability after the first element resolution
+                  if (key === 'toMatchScreenshot') {
+                    break
+                  }
                   const result = await raceWith(
                     delay(interval, setTimeout),
                     timeoutPromise,
