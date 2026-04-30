@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "imports": {
+    "#mocks/*": "./src/mocks/*"
+  }
+}

@@ -424,6 +424,23 @@ test.for([
   `)
 })
 
+test('merge reports does not crash with fileless module edges', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['fileless-edge.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest-reports/fileless-run.json' }]],
+  })
+
+  const { stderr, exitCode } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stderr).not.toContain('Cannot read properties of undefined')
+  expect(exitCode).toBe(0)
+})
+
 async function getSerializedModuleGraph(ctx: Vitest) {
   const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
   const moduleGraphs = Object.fromEntries(
