@@ -1,5 +1,5 @@
-import type { ModuleGraphData, RunnerTestFile, SerializedRootConfig } from 'vitest'
 import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
+import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -9,6 +9,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { createHash } from 'node:crypto'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
@@ -24,16 +25,6 @@ function getOutputFile(config: PotentialConfig | undefined) {
   }
 
   return config.outputFile.html
-}
-
-interface HTMLReportData {
-  paths: string[]
-  files: RunnerTestFile[]
-  config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
-  unhandledErrors: unknown[]
-  // filename -> source
-  sources: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -65,7 +56,7 @@ export default class HTMLReporter implements Reporter {
   }
 
   async onTestRunEnd(): Promise<void> {
-    const result: HTMLReportData = {
+    const result: HTMLReportMetadata = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
       config: this.ctx.serializedRootConfig,
@@ -103,13 +94,10 @@ export default class HTMLReporter implements Reporter {
   }
 
   async writeReport(report: string): Promise<void> {
-    const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
-
     const promiseGzip = promisify(gzip)
     const data = await promiseGzip(report, {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
-    await fs.writeFile(metaFile, data, 'base64')
     const ui = resolve(distDir, 'client')
     // copy ui
     const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
@@ -117,12 +105,21 @@ export default class HTMLReporter implements Reporter {
       files.map(async (f) => {
         if (f === 'index.html') {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
-          const filePath = relative(this.reporterDir, metaFile)
+          let metadataCode: string;
+          if (this.options.singleFile ?? true) {
+            const base64 = Buffer.from(data).toString("base64")
+            metadataCode = `Promise.resolve((${decodeBase64.toString()})("${base64}"))`
+          } else {
+            const hash = createHash('sha256').update(data).digest('hex').slice(0, 6)
+            const dataFile = `metadata-${hash}.bin.gz`
+            await fs.writeFile(resolve(this.reporterDir, dataFile), data, 'base64')
+            metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+          }
           await fs.writeFile(
             this.htmlFilePath,
             html.replace(
               '<!-- !LOAD_METADATA! -->',
-              `<script>window.METADATA_PATH="${filePath}"</script>`,
+              `<script>window.HTML_REPORT_METADATA = ${metadataCode}</script>`,
             ),
           )
         }
@@ -168,4 +165,16 @@ export default class HTMLReporter implements Reporter {
       await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
     }
   }
+}
+
+function decodeBase64(base64: string): Uint8Array {
+  function stringToUint8Array(binary: string): Uint8Array {
+    const len = binary.length
+    const arr = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      arr[i] = binary.charCodeAt(i)
+    }
+    return arr
+  }
+  return stringToUint8Array(atob(base64))
 }

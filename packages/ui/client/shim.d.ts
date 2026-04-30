@@ -4,7 +4,7 @@
 const __BASE_PATH__: string
 
 declare interface Window {
-  METADATA_PATH?: string
+  HTML_REPORT_METADATA?: Promise<Uint8Array>
 }
 
 declare interface Error {
