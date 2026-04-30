@@ -27,7 +27,15 @@ const testConfig = defineConfig({
   },
   test: {
     reporters: [
-      process.env.CI ? ['html', { outputFile: '.vitest/html', singleFile: true }] : {},
+      process.env.CI
+        ? [
+            'html',
+            {
+              outputFile: '.vitest/html/index.html',
+              singleFile: true,
+            },
+          ]
+        : {},
       ...configDefaults.reporters,
     ],
     browser: {
