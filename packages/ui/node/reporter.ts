@@ -1,5 +1,6 @@
 import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -9,7 +10,6 @@ import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
-import { createHash } from 'node:crypto'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
@@ -105,11 +105,12 @@ export default class HTMLReporter implements Reporter {
       files.map(async (f) => {
         if (f === 'index.html') {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
-          let metadataCode: string;
+          let metadataCode: string
           if (this.options.singleFile ?? true) {
-            const base64 = Buffer.from(data).toString("base64")
-            metadataCode = `Promise.resolve((${decodeBase64.toString()})("${base64}"))`
-          } else {
+            const base64 = Buffer.from(data).toString('base64')
+            metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
+          }
+          else {
             const hash = createHash('sha256').update(data).digest('hex').slice(0, 6)
             const dataFile = `metadata-${hash}.bin.gz`
             await fs.writeFile(resolve(this.reporterDir, dataFile), data, 'base64')
@@ -167,7 +168,11 @@ export default class HTMLReporter implements Reporter {
   }
 }
 
-function decodeBase64(base64: string): Uint8Array {
+function uint8ArrayFromBase64(base64: string): Uint8Array {
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64
+  if ('fromBase64' in Uint8Array && typeof Uint8Array.fromBase64 === 'function') {
+    return Uint8Array.fromBase64(base64)
+  }
   function stringToUint8Array(binary: string): Uint8Array {
     const len = binary.length
     const arr = new Uint8Array(len)
