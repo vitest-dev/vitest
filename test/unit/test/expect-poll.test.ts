@@ -1,4 +1,4 @@
-import { chai, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
@@ -168,3 +168,27 @@ test('custom message', async () => {
 //     }),
 //   }))
 // })
+
+test('unresolved function', async () => {
+  expect(expect.poll(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return 'ok'
+  }, { timeout: 50 }).toBe('ok'))
+    .rejects
+    .toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+})
+
+test('unresolved assertion', async () => {
+  expect.extend({
+    toTestSlow: async () => {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      return {
+        pass: true,
+        message: () => 'ok',
+      }
+    },
+  })
+  expect((expect.poll(() => 1, { timeout: 50 }) as any).toTestSlow())
+    .rejects
+    .toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+})

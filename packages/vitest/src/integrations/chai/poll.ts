@@ -146,10 +146,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const timeoutPromise = new Promise<void>((resolve) => {
               timerId = setTimeout(() => {
                 resolve()
-                timeoutController.abort();
+                timeoutController.abort()
               }, timeout)
             })
-            let lastError: unknown;
+            let lastError: unknown
 
             try {
               while (true) {
@@ -167,7 +167,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   )
                   if (!fnResult.ok) {
                     lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
-                    break;
+                    break
                   }
                   const obj = fnResult.value
                   // const obj = await fn({ signal: timeoutController.signal })
@@ -179,8 +179,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!assertionResult.ok) {
-                    lastError ??= new Error(`expect.poll() assertion didn't succeed in time.`)
-                    break;
+                    lastError ??= new Error(`expect.poll() assertion didn't resolve in time.`)
+                    break
                   }
                   const output = assertionResult.value
                   // const output = await assertionFunction.call(assertion, ...args)
@@ -199,7 +199,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!result.ok) {
-                    break;
+                    break
                   }
                   if (vi.isFakeTimers()) {
                     vi.advanceTimersByTime(interval)
