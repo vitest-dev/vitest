@@ -127,7 +127,7 @@ export default class HTMLReporter implements Reporter {
             this.htmlFilePath,
             html.replace(
               '<!-- !LOAD_METADATA! -->',
-              `<script>window.HTML_REPORT_METADATA = ${metadataCode}</script>`,
+              `<script>window.HTML_REPORT_METADATA=${metadataCode}</script>`,
             ),
           )
         }
