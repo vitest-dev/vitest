@@ -93,30 +93,6 @@ $ npx vitest
   </a>
 </p>
 
-### Vladimir Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg' alt="vladimir's sponsors"/>
-  </a>
-</p>
-
-### Anthony Fu Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="anthony's sponsors"/>
-  </a>
-</p>
-
-### Patak Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg' alt="patak's sponsors"/>
-  </a>
-</p>
-
 ## Credits
 
 Thanks to:
