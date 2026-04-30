@@ -18,7 +18,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
 
   const pollOptions = processTimeoutOptions(options)
   const deadline = pollOptions?.timeout ? now() + pollOptions.timeout : undefined
-  const expectElement = expect.poll(function element(this: object) {
+  const expectElement = expect.poll(async function element(this: object): Promise<HTMLElement | SVGElement | null> {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
@@ -83,7 +83,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     })
   }
 
-  return expectElement as any
+  return expectElement
 }
 
 expect.extend(matchers)
