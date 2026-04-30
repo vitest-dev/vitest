@@ -161,20 +161,29 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
                 try {
                   // executionPhase = 'fn'
-                  const result = await raceWith(
+                  const fnResult = await raceWith(
                     Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
                     timeoutPromise,
                   )
-                  if (!result.ok) {
+                  if (!fnResult.ok) {
                     lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
                     break;
                   }
-                  const obj = result.value
+                  const obj = fnResult.value
                   // const obj = await fn({ signal: timeoutController.signal })
                   chai.util.flag(assertion, 'object', obj)
 
                   // executionPhase = 'assertion'
-                  const output = await assertionFunction.call(assertion, ...args)
+                  const assertionResult = await raceWith(
+                    Promise.resolve().then(() => assertionFunction.apply(assertion, args)),
+                    timeoutPromise,
+                  )
+                  if (!assertionResult.ok) {
+                    lastError ??= new Error(`expect.poll() assertion didn't succeed in time.`)
+                    break;
+                  }
+                  const output = assertionResult.value
+                  // const output = await assertionFunction.call(assertion, ...args)
                   await onSettled?.({ assertion, status: 'pass' })
 
                   return output
