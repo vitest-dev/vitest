@@ -16,8 +16,12 @@ import {
   showCoverage,
   showDashboard,
 } from '~/composables/navigation'
+import faviconSvg from '../../public/favicon.svg?raw'
 import Explorer from './explorer/Explorer.vue'
 import IconButton from './IconButton.vue'
+
+// inline icon to make singleFile html reporter simpler
+const logoUrl = `data:image/svg+xml,${encodeURIComponent(faviconSvg)}`
 
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
@@ -66,7 +70,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
   <Explorer border="r base" :on-item-click="clickOnTask" :nested="true" @run="onRunAll">
     <template #header="{ filteredFiles }">
-      <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
+      <img w-6 h-6 :src="logoUrl" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
       <div class="flex text-lg">
         <IconButton

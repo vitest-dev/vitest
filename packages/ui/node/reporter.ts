@@ -217,19 +217,28 @@ function uint8ArrayFromBase64(base64: string): Uint8Array {
   return stringToUint8Array(atob(base64))
 }
 
+// regex based inlining for packages/ui/dist/client/index.html
 async function inlineHtmlAssets(file: string, content: string): Promise<string> {
-  const base = dirname(file)
-
+  const baseDir = dirname(file)
+  content = content.replace(
+    /<link rel="icon" href="\.\/favicon\.ico" sizes="48x48">\n/,
+    '',
+  )
+  content = content.replace(
+    /<link rel="icon" href="(\.\/favicon\.svg)" sizes="any" type="image\/svg\+xml">/,
+    (_, asset: string) => {
+      const icon = readFileSync(resolve(baseDir, asset)).toString('base64')
+      return `<link rel="icon" href="data:image/svg+xml;base64,${icon}" sizes="any" type="image/svg+xml">`
+    },
+  )
   content = content.replace(
     /<script type="module" src="(\.\/assets\/[^"]+\.js)"><\/script>/,
-    (_, asset: string) => `<script type="module">${escapeInlineScript(readFileSync(resolve(base, asset), 'utf-8'))}</script>`,
+    (_, asset: string) => `<script type="module">${escapeInlineScript(readFileSync(resolve(baseDir, asset), 'utf-8'))}</script>`,
   )
-
   content = content.replace(
     /<link rel="stylesheet" href="(\.\/assets\/[^"]+\.css)">/,
-    (_, asset: string) => `<style>${escapeInlineStyle(readFileSync(resolve(base, asset), 'utf-8'))}</style>`,
+    (_, asset: string) => `<style>${escapeInlineStyle(readFileSync(resolve(baseDir, asset), 'utf-8'))}</style>`,
   )
-
   return content
 }
 
