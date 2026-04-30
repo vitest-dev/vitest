@@ -145,8 +145,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const timeoutController = new AbortController()
             const timeoutPromise = new Promise<void>((resolve) => {
               timerId = setTimeout(() => {
-                resolve()
                 timeoutController.abort()
+                resolve()
               }, timeout)
             })
             let lastError: unknown

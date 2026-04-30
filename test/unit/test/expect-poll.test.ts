@@ -170,12 +170,22 @@ test('custom message', async () => {
 // })
 
 test('unresolved function', async () => {
-  expect(expect.poll(async () => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    return 'ok'
-  }, { timeout: 50 }).toBe('ok'))
-    .rejects
-    .toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  let aborted = false
+  await expect(
+    expect
+      .poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          await new Promise(resolve => setTimeout(resolve, 500))
+          return 'ok'
+        },
+        { timeout: 50 },
+      )
+      .toBe('ok'),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  expect(aborted).toBe(true)
 })
 
 test('unresolved assertion', async () => {
@@ -188,7 +198,20 @@ test('unresolved assertion', async () => {
       }
     },
   })
-  expect((expect.poll(() => 1, { timeout: 50 }) as any).toTestSlow())
-    .rejects
-    .toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+
+  let aborted = false
+  await expect(
+    (
+      expect.poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          return 'ok'
+        },
+        { timeout: 50 },
+      ) as any
+    ).toTestSlow(),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+  expect(aborted).toBe(true)
 })
