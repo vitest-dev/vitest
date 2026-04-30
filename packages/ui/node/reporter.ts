@@ -111,7 +111,7 @@ export default class HTMLReporter implements Reporter {
         if (f === 'index.html') {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
           let metadataCode: string
-          if (this.options.singleFile ?? true) {
+          if (this.options.singleFile) {
             const base64 = Buffer.from(data).toString('base64')
             metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
           }
@@ -137,7 +137,7 @@ export default class HTMLReporter implements Reporter {
 
     // copy attachments
     // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
-    if (existsSync(this.ctx.config.attachmentsDir)) {
+    if (!this.options.singleFile && existsSync(this.ctx.config.attachmentsDir)) {
       const destAttachmentsDir = resolve(this.reporterDir, 'data')
       await fs.rm(destAttachmentsDir, { recursive: true, force: true })
       await fs.mkdir(destAttachmentsDir, { recursive: true })
