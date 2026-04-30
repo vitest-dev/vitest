@@ -99,13 +99,11 @@ interface When<Fn extends Procedure> extends Disposable {
    * @example
    * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
    *
-   * expect(spy('hello')).toBe('HELLO')
-   * expect(w.isExhausted()).toBe(true)
-   *
-   * @example
-   * const w = vi.when(spy).calledWith(1).thenReturnOnce(42)
-   *
    * expect(w.isExhausted()).toBe(false)
+   *
+   * expect(spy('hello')).toBe('HELLO')
+   *
+   * expect(w.isExhausted()).toBe(true)
    */
   isExhausted: () => boolean
 }
