@@ -1,7 +1,7 @@
 import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { createHash } from 'node:crypto'
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
@@ -113,7 +113,7 @@ export default class HTMLReporter implements Reporter {
           let html = await fs.readFile(htmlFilePath, 'utf-8')
           let metadataCode: string
           if (this.options.singleFile) {
-            html = await inlineHtml(htmlFilePath, html)
+            html = await inlineHtmlAssets(htmlFilePath, html)
             const base64 = Buffer.from(data).toString('base64')
             metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
           }
@@ -175,11 +175,6 @@ export default class HTMLReporter implements Reporter {
   }
 }
 
-async function inlineHtml(file: string, content: string): Promise<string> {
-  // TODO:
-  return content
-}
-
 async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
   for (const file of files) {
     await inlineTaskAttachments(file)
@@ -220,4 +215,31 @@ function uint8ArrayFromBase64(base64: string): Uint8Array {
     return arr
   }
   return stringToUint8Array(atob(base64))
+}
+
+async function inlineHtmlAssets(file: string, content: string): Promise<string> {
+  const base = dirname(file)
+
+  content = content.replace(
+    /<script type="module" src="(\.\/assets\/[^"]+\.js)"><\/script>/,
+    (_, asset: string) => `<script type="module">${escapeInlineScript(readFileSync(resolve(base, asset), 'utf-8'))}</script>`,
+  )
+
+  content = content.replace(
+    /<link rel="stylesheet" href="(\.\/assets\/[^"]+\.css)">/,
+    (_, asset: string) => `<style>${escapeInlineStyle(readFileSync(resolve(base, asset), 'utf-8'))}</style>`,
+  )
+
+  return content
+}
+
+function escapeInlineScript(content: string): string {
+  // https://github.com/devongovett/rsc-html-stream/blob/9b858445f4f5817470f373ae266dea04d5fcfac3/server.js#L94-L102
+  return content
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<\/(script)/gi, '</\\$1')
+}
+
+function escapeInlineStyle(content: string): string {
+  return content.replace(/<\/style/gi, '<\\/style')
 }
