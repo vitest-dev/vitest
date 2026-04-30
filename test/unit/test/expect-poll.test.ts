@@ -128,47 +128,6 @@ test('custom message', async () => {
   ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
 })
 
-// test('should set _isLastPollAttempt flag on last call', async () => {
-//   const fn = vi.fn(function (this: object) {
-//     return chai.util.flag(this, '_isLastPollAttempt')
-//   })
-//   await expect(async () => {
-//     await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
-//   }).rejects.toThrow()
-//   fn.mock.results.forEach((result, index) => {
-//     const isLastCall = index === fn.mock.results.length - 1
-//     expect(result.value).toBe(isLastCall ? true : undefined)
-//   })
-// })
-
-// test('should handle success on last attempt', async () => {
-//   const fn = vi.fn(function (this: object) {
-//     if (chai.util.flag(this, '_isLastPollAttempt')) {
-//       return 1
-//     }
-//     return undefined
-//   })
-//   await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(1)
-// })
-
-// test('should handle failure on last attempt', async () => {
-//   const fn = vi.fn(function (this: object) {
-//     if (chai.util.flag(this, '_isLastPollAttempt')) {
-//       return 3
-//     }
-//     return 2
-//   })
-//   await expect(async () => {
-//     await expect.poll(fn, { interval: 10, timeout: 100 }).toBe(1)
-//   }).rejects.toThrow(expect.objectContaining({
-//     // makes sure cause message reflects the last attempt value
-//     message: 'expected 3 to be 1 // Object.is equality',
-//     cause: expect.objectContaining({
-//       message: 'Matcher did not succeed in time.',
-//     }),
-//   }))
-// })
-
 test('unresolved function', async () => {
   let aborted = false
   await expect(
