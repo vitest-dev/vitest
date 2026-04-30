@@ -141,8 +141,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "mark",
                     "location": "exotic.test.ts:58",
@@ -166,8 +167,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:testid=[data-testid="trace-canvas"s]",
                       "locator": "getByTestId('trace-canvas')",
-                      "selector": " body > canvas",
+                      "selector": "html > body > canvas",
                     },
                     "kind": "mark",
                     "location": "exotic.test.ts:17",
@@ -191,6 +193,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="Custom element button"i]",
                       "locator": "getByRole('button', { name: 'Custom element button' })",
                       "selector": ">>>html > body > trace-widget > button",
                     },
@@ -198,8 +201,7 @@ test('trace view artifacts', async () => {
                     "location": "exotic.test.ts:47",
                     "name": "custom element rendered",
                     "snapshot": {
-                      "selectorError": "Unexpected token "" while parsing selector """,
-                      "selectorResolution": "error",
+                      "selectorResolution": "matched",
                     },
                   },
                   {
@@ -217,6 +219,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="Shadow button"i]",
                       "locator": "getByRole('button', { name: 'Shadow button' })",
                       "selector": ">>>html > body > section > button",
                     },
@@ -224,8 +227,7 @@ test('trace view artifacts', async () => {
                     "location": "exotic.test.ts:28",
                     "name": "shadow button rendered",
                     "snapshot": {
-                      "selectorError": "Unexpected token "" while parsing selector """,
-                      "selectorResolution": "error",
+                      "selectorResolution": "matched",
                     },
                   },
                   {
@@ -245,8 +247,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="Hello"i]",
                       "locator": "getByRole('button', { name: 'Hello' })",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "action",
                     "location": "expect.test.ts:25",
@@ -284,8 +287,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
@@ -310,8 +314,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
@@ -351,8 +356,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="Hello"i]",
                       "locator": "getByRole('button', { name: 'Hello' })",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "mark",
                     "location": "mark.test.ts:24",
@@ -376,8 +382,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "mark",
                     "location": "mark.test.ts:10",
@@ -440,8 +447,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > button",
+                      "selector": "html > body > button",
                     },
                     "kind": "mark",
                     "location": "mark.test.ts:29",
@@ -467,8 +475,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:attr=[alt="external trace asset"i]",
                       "locator": "getByAltText('external trace asset')",
-                      "selector": " body > img",
+                      "selector": "html > body > img",
                     },
                     "kind": "mark",
                     "location": "resources.test.ts:20",
@@ -492,8 +501,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:attr=[alt="local trace asset"i]",
                       "locator": "getByAltText('local trace asset')",
-                      "selector": " body > img",
+                      "selector": "html > body > img",
                     },
                     "kind": "mark",
                     "location": "resources.test.ts:12",
@@ -519,8 +529,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
@@ -542,8 +553,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
@@ -566,8 +578,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
@@ -590,8 +603,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
@@ -614,8 +628,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:29",
@@ -640,8 +655,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
@@ -663,8 +679,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
@@ -687,8 +704,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:18",
@@ -713,8 +731,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
@@ -736,8 +755,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
@@ -760,8 +780,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
@@ -785,8 +806,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:36",
@@ -811,8 +833,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
@@ -834,8 +857,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
@@ -858,8 +882,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=list",
                       "locator": "getByRole('list')",
-                      "selector": " body > ul",
+                      "selector": "html > body > ul",
                     },
                     "kind": "mark",
                     "location": "retry.test.ts:22",
@@ -981,8 +1006,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": " body > button:nth-child(1)",
+                      "selector": "html > body > button:nth-child(1)",
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
@@ -994,8 +1020,9 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": " body > button:nth-child(1)",
+                      "selector": "html > body > button:nth-child(1)",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:104",
@@ -1007,8 +1034,9 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button[name="Second pseudo state"i]",
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
-                      "selector": " body > button:nth-child(2)",
+                      "selector": "html > body > button:nth-child(2)",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:105",
@@ -1020,8 +1048,9 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "element": {
+                      "_pwSelector": "internal:label="Focused pseudo state"i",
                       "locator": "getByLabel('Focused pseudo state')",
-                      "selector": " body > input",
+                      "selector": "html > body > input",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:106",
@@ -1033,8 +1062,9 @@ test('trace view artifacts', async () => {
                   },
                   {
                     "element": {
+                      "_pwSelector": "internal:label="Focus within pseudo state"i",
                       "locator": "getByLabel('Focus within pseudo state')",
-                      "selector": " body > label > input",
+                      "selector": "html > body > label > input",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:107",
@@ -1080,8 +1110,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:role=button",
                       "locator": "getByRole('button')",
-                      "selector": " body > main > button",
+                      "selector": "html > body > main > button",
                     },
                     "kind": "mark",
                     "location": "viewport.test.ts:31",
@@ -1105,8 +1136,9 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
+                      "_pwSelector": "internal:testid=[data-testid="scroll-box"s]",
                       "locator": "getByTestId('scroll-box')",
-                      "selector": " body > section",
+                      "selector": "html > body > section",
                     },
                     "kind": "mark",
                     "location": "viewport.test.ts:47",
