@@ -133,14 +133,6 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
 
             const { setTimeout, clearTimeout } = getSafeTimers()
-
-            // let executionPhase: 'fn' | 'assertion' = 'fn'
-            // let hasTimedOut = false
-
-            // const timerId = setTimeout(() => {
-            //   hasTimedOut = true
-            // }, timeout)
-
             let timerId: ReturnType<typeof setTimeout> | undefined
             const timeoutController = new AbortController()
             const timeoutPromise = new Promise<void>((resolve) => {
@@ -153,14 +145,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
             try {
               while (true) {
-                // const isLastAttempt = hasTimedOut
-
-                // if (isLastAttempt) {
-                //   chai.util.flag(assertion, '_isLastPollAttempt', true)
-                // }
-
                 try {
-                  // executionPhase = 'fn'
                   const fnResult = await raceWith(
                     Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
                     timeoutPromise,
@@ -170,10 +155,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     break
                   }
                   const obj = fnResult.value
-                  // const obj = await fn({ signal: timeoutController.signal })
                   chai.util.flag(assertion, 'object', obj)
 
-                  // executionPhase = 'assertion'
                   const assertionResult = await raceWith(
                     Promise.resolve().then(() => assertionFunction.apply(assertion, args)),
                     timeoutPromise,
@@ -183,17 +166,12 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     break
                   }
                   const output = assertionResult.value
-                  // const output = await assertionFunction.call(assertion, ...args)
                   await onSettled?.({ assertion, status: 'pass' })
 
                   return output
                 }
                 catch (err) {
                   lastError = err
-                  // if (isLastAttempt) {
-                  //   await onSettled?.({ assertion, status: 'fail' })
-                  //   throwWithCause(err, STACK_TRACE_ERROR)
-                  // }
                   const result = await raceWith(
                     delay(interval, setTimeout),
                     timeoutPromise,
