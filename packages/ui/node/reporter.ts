@@ -1,4 +1,4 @@
-import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
+import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { createHash } from 'node:crypto'
 import { existsSync, promises as fs } from 'node:fs'
@@ -90,6 +90,11 @@ export default class HTMLReporter implements Reporter {
     }))
 
     await Promise.all(promises)
+
+    if (this.options.singleFile) {
+      await inlineAttachments(result.files)
+    }
+
     await this.writeReport(stringify(result))
   }
 
@@ -164,6 +169,32 @@ export default class HTMLReporter implements Reporter {
       await fs.rm(destCoverageDir, { recursive: true, force: true })
       await fs.mkdir(destCoverageDir, { recursive: true })
       await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
+    }
+  }
+}
+
+async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
+  for (const file of files) {
+    await inlineTaskAttachments(file)
+  }
+}
+
+async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
+  if ('tasks' in task) {
+    for (const child of task.tasks) {
+      await inlineTaskAttachments(child)
+    }
+  }
+  if ('artifacts' in task) {
+    for (const artifact of task.artifacts) {
+      for (const attachment of artifact.attachments ?? []) {
+        if (attachment.path) {
+          const buffer = await fs.readFile(attachment.path)
+          attachment.body = buffer.toString('base64')
+          attachment.bodyEncoding = 'base64'
+          attachment.path = undefined
+        }
+      }
     }
   }
 }
