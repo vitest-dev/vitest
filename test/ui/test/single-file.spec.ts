@@ -52,9 +52,16 @@ test.describe('html singleFile', () => {
     await page.goto(baseURL)
     await assetTestCount(page, { pass: 2, fail: 1 })
 
+    // test inlined attachments
     await openExplorerItem(page, 'annotation')
-    await downloadAnnotationAttachment(page, 'annotation-body', 'test-body-content')
-    await downloadAnnotationAttachment(page, 'annotation-path', 'test-path-content\n')
+    await assertDownloadAttachment(page, {
+      name: 'annotation-body',
+      content: 'test-body-content',
+    })
+    await assertDownloadAttachment(page, {
+      name: 'annotation-path',
+      content: 'test-path-content\n',
+    })
 
     // validate index.html is the only origin request
     expect(requestUrls).toEqual([baseURL])
@@ -71,11 +78,14 @@ async function openExplorerItem(page: Page, name: string) {
   await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
 }
 
-async function downloadAnnotationAttachment(page: Page, name: string, expectedContent: string) {
-  const annotation = page.getByRole('note').filter({ hasText: name })
+async function assertDownloadAttachment(
+  page: Page,
+  options: { name: string; content: string },
+) {
+  const annotation = page.getByRole('note').filter({ hasText: options.name })
   const downloadPromise = page.waitForEvent('download')
   await annotation.getByRole('link').click()
   const download = await downloadPromise
   const downloadPath = await download.path()
-  expect(readFileSync(downloadPath, 'utf-8')).toBe(expectedContent)
+  expect(readFileSync(downloadPath, 'utf-8')).toBe(options.content)
 }
