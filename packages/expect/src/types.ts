@@ -756,6 +756,20 @@ export interface Assertion<T = any>
   toHaveNthResolvedWith: <E>(nthCall: number, value: E) => void
 
   /**
+   * Ensures a @todo has been exhausted
+   *
+   * @example
+   * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+   *
+   * expect(w).not.toHaveBeenExhausted()
+   *
+   * expect(spy('hello')).toBe('HELLO')
+   *
+   * expect(w).toHaveBeenExhausted()
+   */
+  toHaveBeenExhausted: () => void
+
+  /**
    * Verifies that a promise resolves.
    *
    * @example
