@@ -49,7 +49,7 @@ test.describe('html singleFile', () => {
     })
 
     await page.goto(baseURL)
-    await assetTestCount(page, { pass: 1, fail: 1 })
+    await assetTestCount(page, { pass: 2, fail: 1 })
     expect(requestUrls).toEqual([baseURL])
   })
 })
