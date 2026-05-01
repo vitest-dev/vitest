@@ -2,6 +2,7 @@ import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
 import { isMockFunction } from '@vitest/spy'
+import { noop } from '@vitest/utils/helpers'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
@@ -353,9 +354,10 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
   if (Symbol.dispose) {
     output[Symbol.dispose] = () => {
-      if (originalImplementation) {
-        spy.mockImplementation(originalImplementation)
-      }
+      spy.mockImplementation(
+        // @ts-expect-error without an original implementation we should fall back to an undefined-returning function as that's what the mocking functions do
+        originalImplementation ?? noop,
+      )
     }
   }
 
