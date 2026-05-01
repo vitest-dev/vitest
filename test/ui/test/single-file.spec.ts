@@ -50,9 +50,12 @@ test.describe('html singleFile', () => {
 
     await page.goto(baseURL)
     await assetTestCount(page, { pass: 2, fail: 1 })
-    expect(requestUrls).toEqual([baseURL])
 
     // TODO: test inlineAttachments
+    await openExplorerItem(page, 'annotation')
+
+    // validate index.html is the only origin request
+    expect(requestUrls).toEqual([baseURL])
   })
 })
 
@@ -60,4 +63,8 @@ async function assetTestCount(page: Page, options: { pass: number; fail: number 
   const total = options.pass + options.fail
   await expect.soft(page.getByTestId('tests-entry'))
     .toContainText(`${options.pass} Pass ${options.fail} Fail ${total} Total`)
+}
+
+async function openExplorerItem(page: Page, name: string) {
+  await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
 }
