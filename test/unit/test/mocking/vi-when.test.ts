@@ -31,14 +31,14 @@ describe('vi.when()', () => {
         .calledWith(...entries[1].args)
         .thenReturn(entries[1].value)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...entries[0].args)).toBe(entries[0].value)
 
       expect(spy).toHaveBeenLastCalledWith(...entries[0].args)
       expect(spy).toHaveLastReturnedWith(entries[0].value)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...entries[1].args)).toBe(entries[1].value)
 
@@ -47,7 +47,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledTimes(2)
 
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
     })
 
     test('falls through to original implementation when arguments don\'t match', () => {
@@ -60,7 +60,7 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenReturn(value)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy('b', 1)).toBe(98)
 
@@ -69,7 +69,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledOnce()
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
     })
 
     test('returns provided value when arguments match using asymmetric matchers', () => {
@@ -82,12 +82,12 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenReturn(value)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy('a--z', Number.NEGATIVE_INFINITY)).toBe(value)
       expect(spy('z--a', Number.POSITIVE_INFINITY)).toBe(value)
 
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(spy('a__z', Number.NEGATIVE_INFINITY)).toBe(Number.NaN)
       expect(spy('z__a', Number.NEGATIVE_INFINITY)).toBe(Number.NaN)
@@ -103,7 +103,7 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenThrow(error)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(() => spy(...args)).toThrow(error)
 
@@ -111,7 +111,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledOnce()
 
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
     })
 
     test('resolves a promise when using `toResolve`', async () => {
@@ -124,7 +124,7 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenResolve(value)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       await expect(spy(...args)).resolves.toBe(value)
 
@@ -133,7 +133,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledOnce()
 
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
     })
 
     test('rejects a promise when using `toReject`', async () => {
@@ -146,7 +146,7 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenReject(error)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       await expect(spy(...args)).rejects.toThrow(error)
 
@@ -154,7 +154,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledOnce()
 
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
     })
 
     test.runIf(Symbol.dispose)('disposes of its mock', () => {
@@ -169,10 +169,10 @@ describe('vi.when()', () => {
           .calledWith(...args)
           .thenReturn(value)
 
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
 
         expect(firstSpy(...args)).toBe(value)
-        expect(w.isExhausted()).toBe(true)
+        expect(w).toHaveBeenExhausted()
       }
 
       expect(firstSpy(...args)).toBe(0)
@@ -182,10 +182,10 @@ describe('vi.when()', () => {
           .calledWith(...args)
           .thenReturn(value)
 
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
 
         expect(secondSpy(...args)).toBe(value)
-        expect(w.isExhausted()).toBe(true)
+        expect(w).toHaveBeenExhausted()
       }
 
       expect(secondSpy(...args)).toBe(undefined)
@@ -261,38 +261,38 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenReject(rejectError, { times })
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       for (let i = 0; i < times; i += 1) {
         await expect(spy(...args)).rejects.toThrow(rejectError)
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
       }
 
       expect(spy).toHaveBeenCalledTimes(times)
 
       for (let i = 0; i < times; i += 1) {
         await expect(spy(...args)).resolves.toBe(values[2])
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
       }
 
       expect(spy).toHaveBeenCalledTimes(times * 2)
 
       for (let i = 0; i < times; i += 1) {
         expect(() => spy(...args)).toThrow(throwError)
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
       }
 
       expect(spy).toHaveBeenCalledTimes(times * 3)
 
       for (let i = 0; i < times; i += 1) {
         expect(spy(...args)).toBe(values[1])
-        expect(w.isExhausted()).toBe(false)
+        expect(w).not.toHaveBeenExhausted()
       }
 
       expect(spy).toHaveBeenCalledTimes(times * 4)
 
       expect(spy(...args)).toBe(values[0])
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(spy).toHaveBeenCalledTimes(times * 4 + 1)
     })
@@ -311,16 +311,16 @@ describe('vi.when()', () => {
         .thenReturn(values[0])
         .thenReturn(values[1], { times: 2 })
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...args)).toBe(values[1])
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...args)).toBe(values[1])
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...args)).toBe(values[0])
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(spy).toHaveBeenCalledTimes(3)
     })
@@ -337,13 +337,13 @@ describe('vi.when()', () => {
         .calledWith(expect.stringContaining('--'), expect.any(Number))
         .thenReturnOnce(once)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy('a--z', 0)).toBe(once)
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy('a--z', 1)).toBe(value)
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
     })
 
     test('`*Once` behaviors are sugar syntax for `times: 1`', async () => {
@@ -366,22 +366,22 @@ describe('vi.when()', () => {
         .thenResolveOnce(values[2])
         .thenRejectOnce(rejectError)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       await expect(spy(...args)).rejects.toThrow(rejectError)
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       await expect(spy(...args)).resolves.toBe(values[2])
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(() => spy(...args)).toThrow(throwError)
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...args)).toBe(values[1])
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(spy(...args)).toBe(values[0])
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(spy).toHaveBeenCalledTimes(5)
     })
@@ -419,7 +419,7 @@ describe('vi.when()', () => {
 
       expect(spy).toHaveBeenCalledTimes(3)
 
-      expect(w.isExhausted()).toBe(false) // still `false` as the first two behaviors cannot be reached
+      expect(w).not.toHaveBeenExhausted() // still `false` as the first two behaviors cannot be reached
     })
   })
 
@@ -429,10 +429,10 @@ describe('vi.when()', () => {
 
       const w = vi.when(a.mockedA).calledWith().thenReturnOnce('B')
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(a.mockedA()).toBe('B')
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(a.mockedA()).toBe(undefined)
     })
@@ -445,10 +445,10 @@ describe('vi.when()', () => {
         .calledWith(expect.objectContaining({ message }))
         .thenReturn(value as never)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
 
       expect(console.error({ message })).toBe(value)
-      expect(w.isExhausted()).toBe(true)
+      expect(w).toHaveBeenExhausted()
 
       expect(console.error({ message: message.slice(0, 14) })).toBe(undefined)
     })
@@ -460,7 +460,7 @@ describe('vi.when()', () => {
 
       const w = vi.when(spy)
 
-      expect(w.isExhausted()).toBe(false)
+      expect(w).not.toHaveBeenExhausted()
     })
   })
 })
