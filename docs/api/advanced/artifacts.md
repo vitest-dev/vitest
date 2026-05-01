@@ -78,7 +78,7 @@ If your custom artifact narrows the `attachments` type (e.g. to a tuple), includ
 export interface TestAttachment {
   /** MIME type of the attachment (e.g., 'image/png', 'text/plain') */
   contentType?: string
-  /** File system path to the attachment */
+  /** Local file path or external HTTP(S) URL to the attachment */
   path?: string
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array
@@ -94,7 +94,9 @@ export interface TestAttachment {
 
 The `TestAttachment` interface represents a file or data attachment associated with a test artifact.
 
-Attachments can be either file-based (via `path`) or inline content (via `body`). The `contentType` helps consumers understand how to interpret the attachment data.
+Attachments can be either path-based (via `path`) or inline content (via `body`). The `contentType` helps consumers understand how to interpret the attachment data.
+
+Attachment `path` can point to a local file or an external `http`/`https` URL. Local files are copied into Vitest's attachments directory before reporters receive them. External URLs are preserved as-is.
 
 If you pass a string `body`, Vitest assumes it is already base64-encoded unless you set `bodyEncoding: 'utf-8'`. When you pass `body` as a `Uint8Array`, Vitest automatically encodes it as base64. The `bodyEncoding` option only applies to inline `body` attachments, not `path` attachments.
 
