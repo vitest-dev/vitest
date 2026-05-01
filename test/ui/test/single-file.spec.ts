@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import assert from 'node:assert'
+import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
@@ -51,8 +52,9 @@ test.describe('html singleFile', () => {
     await page.goto(baseURL)
     await assetTestCount(page, { pass: 2, fail: 1 })
 
-    // TODO: test inlineAttachments
     await openExplorerItem(page, 'annotation')
+    await downloadAnnotationAttachment(page, 'annotation-body', 'test-body-content')
+    await downloadAnnotationAttachment(page, 'annotation-path', 'test-path-content\n')
 
     // validate index.html is the only origin request
     expect(requestUrls).toEqual([baseURL])
@@ -67,4 +69,13 @@ async function assetTestCount(page: Page, options: { pass: number; fail: number 
 
 async function openExplorerItem(page: Page, name: string) {
   await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
+}
+
+async function downloadAnnotationAttachment(page: Page, name: string, expectedContent: string) {
+  const annotation = page.getByRole('note').filter({ hasText: name })
+  const downloadPromise = page.waitForEvent('download')
+  await annotation.getByRole('link').click()
+  const download = await downloadPromise
+  const downloadPath = await download.path()
+  expect(readFileSync(downloadPath, 'utf-8')).toBe(expectedContent)
 }
