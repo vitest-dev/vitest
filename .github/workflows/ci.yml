@@ -123,11 +123,10 @@ jobs:
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
 
-      # TODO: upload after merge https://github.com/vitest-dev/vitest/pull/10031
+      # TODO: merge after https://github.com/vitest-dev/vitest/pull/10031
       - name: Upload Test UI Report
         uses: actions/upload-artifact@v7
         with:
-          name: test-ui-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: ./packages/ui/.vitest/html/index.html
           archive: false
 

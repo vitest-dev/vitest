@@ -88,7 +88,6 @@ When you use `singleFile: true`, you can upload the report as a single file and 
 ```yaml
 - uses: actions/upload-artifact@v7
   with:
-    name: vitest-report
     path: html/index.html
     archive: false
 ```
