@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`same title exist 1`] = `"a"`;
+
+exports[`same title exist 2`] = `"b"`;
+
+exports[`same title new 1`] = `"a"`;
+
+exports[`same title new 2`] = `"b"`;
+
+exports[`same title new 3`] = `"c"`;

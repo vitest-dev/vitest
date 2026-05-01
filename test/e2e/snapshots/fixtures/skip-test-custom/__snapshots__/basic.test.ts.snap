@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`custom a > x 1`] = `0`;
+
+exports[`custom a > y 1`] = `0`;
+
+exports[`custom b > w 1`] = `0`;
+
+exports[`custom b > z 1`] = `0`;

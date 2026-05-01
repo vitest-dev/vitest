@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { defineConfig } from 'vite'
+import { defaultExclude } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -41,6 +42,7 @@ export default defineConfig({
         test: {
           name: 'snapshots',
           root: path.join(import.meta.dirname, 'snapshots'),
+          exclude: ['**/fixtures/**', ...defaultExclude],
           sequence: {
             groupOrder: 1,
           },
