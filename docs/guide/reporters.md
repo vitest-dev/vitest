@@ -522,30 +522,13 @@ export default defineConfig({
 ```
 :::
 
-You can pass reporter options by using tuple syntax:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: [
-      ['html', {
-        outputFile: './reports/index.html',
-      }],
-    ],
-  },
-})
-```
-
 Set `singleFile` to generate a self-contained HTML report:
 
 ```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: [
-      ['html', {
-        outputFile: './reports/index.html',
-        singleFile: true,
-      }],
+      ['html', { singleFile: true }],
     ],
   },
 })
