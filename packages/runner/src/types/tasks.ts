@@ -1269,7 +1269,7 @@ export type WriteableTestContext = {
 export interface TestAttachment {
   /** MIME type of the attachment (e.g., 'image/png', 'text/plain') */
   contentType?: string
-  /** Local file path or external HTTP(S) URL to the attachment */
+  /** Local file path or external HTTP(S) URL to the attachment. Relative paths are resolved from the project root. */
   path?: string
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array | undefined
