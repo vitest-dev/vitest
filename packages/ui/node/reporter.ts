@@ -195,19 +195,17 @@ async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
 }
 
 async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
-  if ('tasks' in task) {
+  if (task.type === 'suite') {
     for (const child of task.tasks) {
       await inlineTaskAttachments(child)
     }
   }
-  if ('annotations' in task) {
+  if (task.type === 'test') {
     for (const annotation of task.annotations) {
       if (annotation.attachment) {
         await inlineTestAttachment(annotation.attachment)
       }
     }
-  }
-  if ('artifacts' in task) {
     for (const artifact of task.artifacts) {
       for (const attachment of artifact.attachments ?? []) {
         await inlineTestAttachment(attachment)
