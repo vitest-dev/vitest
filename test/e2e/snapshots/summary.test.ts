@@ -17,7 +17,7 @@ test('summary', async () => {
 
   // write everything
   let vitest = await runVitest({
-    root: 'test/fixtures/summary',
+    root: dir,
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  12 written')
@@ -26,7 +26,7 @@ test('summary', async () => {
   fsUpdate(testFile, s => s.replace('`"@SNAP2"`', ''))
   fsUpdate(snapshotFile, s => s.replace('exports[`file repeats 1`] = `"@SNAP5"`;', ''))
   vitest = await runVitest({
-    root: 'test/fixtures/summary',
+    root: dir,
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  2 written')
@@ -35,7 +35,7 @@ test('summary', async () => {
   fsUpdate(testFile, s => s.replace('`"@SNAP2"`', '`"@WRONG"`'))
   fsUpdate(snapshotFile, s => s.replace('`"@SNAP5"`', '`"@WRONG"`'))
   vitest = await runVitest({
-    root: 'test/fixtures/summary',
+    root: dir,
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  2 updated')

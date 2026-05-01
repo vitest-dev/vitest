@@ -12,13 +12,13 @@ test('obsolete snapshot fails with update:none', async () => {
   let result = await runVitest({ root, update: true })
   expect(result.stderr).toBe('')
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "src/test1.test.ts": Object {
+    {
+      "src/test1.test.ts": {
         "bar": "passed",
         "foo": "passed",
         "fuu": "passed",
       },
-      "src/test2.test.ts": Object {
+      "src/test2.test.ts": {
         "bar": "passed",
         "foo": "passed",
       },
@@ -47,9 +47,9 @@ test('obsolete snapshot fails with update:none', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "src/test1.test.ts": Object {
-        "__module_errors__": Array [
+    {
+      "src/test1.test.ts": {
+        "__module_errors__": [
           "Obsolete snapshots found when no snapshot update is expected.
     · foo 1
     · fuu 1
@@ -59,7 +59,7 @@ test('obsolete snapshot fails with update:none', async () => {
         "foo": "passed",
         "fuu": "passed",
       },
-      "src/test2.test.ts": Object {
+      "src/test2.test.ts": {
         "bar": "passed",
         "foo": "passed",
       },

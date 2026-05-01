@@ -1,11 +1,12 @@
+import { join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { editFile, runInlineTests, runVitest } from '../../test-utils'
 
 test('non default snapshot format', () => {
   expect({ foo: ['bar'] }).toMatchInlineSnapshot(`
-    Object {
-      "foo": Array [
+    {
+      "foo": [
         "bar",
       ],
     }
@@ -15,14 +16,14 @@ test('non default snapshot format', () => {
 test('--update works for workspace project', async () => {
   // setup wrong snapshot value
   editFile(
-    'test/fixtures/workspace/packages/space/test/__snapshots__/basic.test.ts.snap',
+    join(import.meta.dirname, 'fixtures/workspace/packages/space/test/__snapshots__/basic.test.ts.snap'),
     data => data.replace('`1`', '`2`'),
   )
 
   // run with --update
   const { stdout, exitCode } = await runVitest({
     update: true,
-    root: 'test/fixtures/workspace',
+    root: join(import.meta.dirname, 'fixtures/workspace'),
   })
   expect.soft(stdout).include('Snapshots  1 updated')
   expect.soft(exitCode).toBe(0)
@@ -102,15 +103,15 @@ test.fails('soft', () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "file": Array [
+    {
+      "basic.test.ts": {
+        "file": [
           "'toMatchSnapshot' cannot be used with 'test.fails'",
         ],
-        "inline": Array [
+        "inline": [
           "'toMatchInlineSnapshot' cannot be used with 'test.fails'",
         ],
-        "soft": Array [
+        "soft": [
           "'toMatchSnapshot' cannot be used with 'test.fails'",
           "'toMatchInlineSnapshot' cannot be used with 'test.fails'",
         ],

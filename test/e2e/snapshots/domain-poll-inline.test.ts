@@ -15,8 +15,8 @@ test('domain inline snapshot with poll', async () => {
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
@@ -79,8 +79,8 @@ test('domain inline snapshot with poll', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
@@ -126,12 +126,12 @@ test('domain inline snapshot with poll', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
-        "stable": Array [
+        "stable": [
           "Snapshot \`stable 1\` mismatched",
         ],
         "throw then stable": "passed",
@@ -144,8 +144,8 @@ test('domain inline snapshot with poll', async () => {
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
@@ -211,8 +211,8 @@ test('domain inline snapshot with poll', async () => {
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty snapshot": "passed",
         "multiple poll snapshots": "passed",
         "non-poll alongside poll": "passed",
@@ -276,7 +276,7 @@ test('poll until stable match when "none"', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import '../test/fixtures/domain/basic-extend'
+import '../snapshots/fixtures/domain/basic-extend'
 
 test('stable wrong then right', async () => {
   let trial = 0
@@ -295,8 +295,8 @@ test('stable wrong then right', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "stable wrong then right": "passed",
       },
     }
@@ -307,7 +307,7 @@ test('poll until stable when "all"', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import '../test/fixtures/domain/basic-extend'
+import '../snapshots/fixtures/domain/basic-extend'
 
 test('stable wrong then right', async () => {
   let trial = 0
@@ -326,8 +326,8 @@ test('stable wrong then right', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "stable wrong then right": "passed",
       },
     }
@@ -335,7 +335,7 @@ test('stable wrong then right', async () => {
   expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
     "
     import { expect, test } from 'vitest'
-    import '../test/fixtures/domain/basic-extend'
+    import '../snapshots/fixtures/domain/basic-extend'
 
     test('stable wrong then right', async () => {
       let trial = 0
@@ -354,7 +354,7 @@ test('errors', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
 import { expect, test } from 'vitest'
-import '../test/fixtures/domain/basic-extend'
+import '../snapshots/fixtures/domain/basic-extend'
 
 test('unstable', async () => {
   let trial = 0
@@ -435,15 +435,15 @@ test('throwing', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "hanging": Array [
+    {
+      "basic.test.ts": {
+        "hanging": [
           "poll() did not produce a stable snapshot within the timeout",
         ],
-        "throwing": Array [
+        "throwing": [
           "ALWAYS_THROWS",
         ],
-        "unstable": Array [
+        "unstable": [
           "poll() did not produce a stable snapshot within the timeout",
         ],
       },

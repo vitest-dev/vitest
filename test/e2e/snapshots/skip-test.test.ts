@@ -5,13 +5,15 @@ import { runVitest } from '../../test-utils'
 
 test('snapshots in skipped test/suite is not obsolete', async () => {
   // create snapshot on first run
-  fs.rmSync('test/fixtures/skip-test/__snapshots__', { recursive: true, force: true })
+  const root = path.join(import.meta.dirname, 'fixtures/skip-test')
+
+  fs.rmSync(path.join(root, '__snapshots__'), { recursive: true, force: true })
   let vitest = await runVitest({
-    root: 'test/fixtures/skip-test',
+    root,
     update: true,
   })
   expect(vitest.stdout).toContain('Snapshots  2 written')
-  expect(fs.readFileSync('test/fixtures/skip-test/__snapshots__/repro.test.ts.snap', 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;
@@ -22,7 +24,7 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
 
   // running with `skipIf` enabled should not show "obsolete"
   vitest = await runVitest({
-    root: 'test/fixtures/skip-test',
+    root,
     env: {
       ENABLE_SKIP: '1',
     },
@@ -32,13 +34,13 @@ test('snapshots in skipped test/suite is not obsolete', async () => {
 
   // running with `skipIf` and `update` should keep snapshots
   vitest = await runVitest({
-    root: 'test/fixtures/skip-test',
+    root,
     update: true,
     env: {
       ENABLE_SKIP: '1',
     },
   })
-  expect(fs.readFileSync('test/fixtures/skip-test/__snapshots__/repro.test.ts.snap', 'utf-8')).toMatchInlineSnapshot(`
+  expect(fs.readFileSync(path.join(root, '__snapshots__/repro.test.ts.snap'), 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`repro suite > inner case 1\`] = \`"hi-1"\`;

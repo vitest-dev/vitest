@@ -17,26 +17,53 @@ test('custom snapshot matcher', async () => {
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
-  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > async inline
+    Error: [custom error] Snapshot \`async inline 1\` mismatched
+
+    - Expected
+    + Received
+
+    - Object {
+    + {
+        "length": 6,
+        "reversed": "uhuhuh",
+      }
+
+     ❯ basic.test.ts:86:3
+         84|       "length": 6,
+         85|       "reversed": "eheheh",
+         86|     }
+           |   ^
+         87|   \`)
+         88| })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`file 1\`] = \`
-    Object {
+    {
       "length": 6,
       "reversed": "ahahah",
     }
     \`;
 
     exports[\`properties 1 1\`] = \`
-    Object {
+    {
       "length": 6,
       "reversed": "opopop",
     }
     \`;
 
     exports[\`properties 2 1\`] = \`
-    Object {
+    {
       "length": toSatisfy<[Function lessThan10]>,
       "reversed": "epepep",
     }
@@ -44,7 +71,7 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(readFileSync(rawSnapshotFile, 'utf-8')).toMatchInlineSnapshot(`
-    "Object {
+    "{
       "length": 6,
       "reversed": "ihihih",
     }"
@@ -52,7 +79,7 @@ test('custom snapshot matcher', async () => {
   expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
     "
     expect(\`hehehe\`).toMatchCustomInlineSnapshot(\`
-        Object {
+        {
           "length": 6,
           "reversed": "eheheh",
         }
@@ -67,9 +94,11 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "async inline": "passed",
+    {
+      "basic.test.ts": {
+        "async inline": [
+          "[custom error] Snapshot \`async inline 1\` mismatched",
+        ],
         "file": "passed",
         "inline": "passed",
         "properties 1": "passed",
@@ -99,7 +128,7 @@ test('custom snapshot matcher', async () => {
     - Expected
     + Received
 
-      Object {
+      {
     -   "length": 6,
     +   "length": 11,
     -   "reversed": "ahahah",
@@ -166,7 +195,7 @@ test('custom snapshot matcher', async () => {
     - Expected
     + Received
 
-      Object {
+      {
     -   "length": 6,
     +   "length": 11,
     -   "reversed": "ihihih",
@@ -189,7 +218,7 @@ test('custom snapshot matcher', async () => {
     - Expected
     + Received
 
-      Object {
+      {
     -   "length": 6,
     +   "length": 11,
     -   "reversed": "eheheh",
@@ -201,7 +230,7 @@ test('custom snapshot matcher', async () => {
          81| test('inline', () => {
          82|   expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
            |                         ^
-         83|     Object {
+         83|     {
          84|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
@@ -212,7 +241,8 @@ test('custom snapshot matcher', async () => {
     - Expected
     + Received
 
-      Object {
+    - Object {
+    + {
     -   "length": 6,
     +   "length": 11,
     -   "reversed": "uhuhuh",
@@ -232,24 +262,24 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "async inline": Array [
+    {
+      "basic.test.ts": {
+        "async inline": [
           "[custom error] Snapshot \`async inline 1\` mismatched",
         ],
-        "file": Array [
+        "file": [
           "[custom error] Snapshot \`file 1\` mismatched",
         ],
-        "inline": Array [
+        "inline": [
           "[custom error] Snapshot \`inline 1\` mismatched",
         ],
-        "properties 1": Array [
+        "properties 1": [
           "[custom error] Snapshot properties mismatched",
         ],
-        "properties 2": Array [
+        "properties 2": [
           "[custom error] Snapshot properties mismatched",
         ],
-        "raw": Array [
+        "raw": [
           "[custom error] Snapshot \`raw 1\` mismatched",
         ],
       },
@@ -312,21 +342,21 @@ test('custom snapshot matcher', async () => {
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`file 1\`] = \`
-    Object {
+    {
       "length": 11,
       "reversed": "tide-ahahah",
     }
     \`;
 
     exports[\`properties 1 1\`] = \`
-    Object {
+    {
       "length": 6,
       "reversed": "opopop",
     }
     \`;
 
     exports[\`properties 2 1\`] = \`
-    Object {
+    {
       "length": toSatisfy<[Function lessThan10]>,
       "reversed": "epepep",
     }
@@ -334,7 +364,7 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(readFileSync(rawSnapshotFile, 'utf-8')).toMatchInlineSnapshot(`
-    "Object {
+    "{
       "length": 11,
       "reversed": "tide-ihihih",
     }"
@@ -342,14 +372,14 @@ test('custom snapshot matcher', async () => {
   expect(extractInlineSnaphsots(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
     "
     expect(\`hehehe-edit\`).toMatchCustomInlineSnapshot(\`
-        Object {
+        {
           "length": 11,
           "reversed": "tide-eheheh",
         }
       \`)
 
     expect(\`huhuhu-edit\`).toMatchCustomAsyncInlineSnapshot(\`
-        Object {
+        {
           "length": 11,
           "reversed": "tide-uhuhuh",
         }
@@ -357,15 +387,15 @@ test('custom snapshot matcher', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "async inline": "passed",
         "file": "passed",
         "inline": "passed",
-        "properties 1": Array [
+        "properties 1": [
           "[custom error] Snapshot properties mismatched",
         ],
-        "properties 2": Array [
+        "properties 2": [
           "[custom error] Snapshot properties mismatched",
         ],
         "raw": "passed",
@@ -425,8 +455,8 @@ test('raw file snapshot', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file snapshot": "passed",
         "inline snapshot": "passed",
         "raw file snapshot": "passed",
@@ -539,15 +569,15 @@ test('builtin properties mismatch', () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "builtin": Array [
+    {
+      "basic.test.ts": {
+        "builtin": [
           "outer message: Snapshot \`builtin 1\` mismatched",
         ],
-        "builtin properties mismatch": Array [
+        "builtin properties mismatch": [
           "outer message: Snapshot properties mismatched",
         ],
-        "custom snapshot matcher": Array [
+        "custom snapshot matcher": [
           "outer message: Snapshot \`custom snapshot matcher 1\` mismatched",
         ],
       },

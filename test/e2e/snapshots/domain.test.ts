@@ -15,8 +15,8 @@ test('domain snapshot', async () => {
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",
@@ -52,8 +52,8 @@ test('domain snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",
@@ -134,13 +134,13 @@ test('domain snapshot', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "all literal": Array [
+    {
+      "basic.test.ts": {
+        "all literal": [
           "Snapshot \`all literal 1\` mismatched",
         ],
         "empty snapshot": "passed",
-        "with regex": Array [
+        "with regex": [
           "Snapshot \`with regex 1\` mismatched",
         ],
       },
@@ -152,8 +152,8 @@ test('domain snapshot', async () => {
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",
@@ -219,12 +219,12 @@ test('domain parseExpected error', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "file": Array [
+    {
+      "basic.test.ts": {
+        "file": [
           "Invalid KV Format: 'file-broken'",
         ],
-        "inline": Array [
+        "inline": [
           "Invalid KV Format: 'inine-broken'",
         ],
       },

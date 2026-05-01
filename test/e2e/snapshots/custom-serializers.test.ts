@@ -6,7 +6,7 @@ import { readInlineSnapshots } from './utils'
 
 test('it should pass', async () => {
   const { stdout, stderr } = await runVitest({
-    root: 'test/fixtures/custom-serializers',
+    root: path.join(import.meta.dirname, 'fixtures/custom-serializers'),
   })
 
   expect(stdout).toContain('✓ custom-serializers.test.ts')
@@ -29,8 +29,8 @@ test('empty serializer output', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file empty": "passed",
         "file whitespaces": "passed",
         "inline empty": "passed",
@@ -60,8 +60,8 @@ test('empty serializer output', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file empty": "passed",
         "file whitespaces": "passed",
         "inline empty": "passed",
@@ -79,8 +79,8 @@ test('empty serializer output', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file empty": "passed",
         "file whitespaces": "passed",
         "inline empty": "passed",
@@ -110,8 +110,8 @@ test('empty serializer output', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file empty": "passed",
         "file whitespaces": "passed",
         "inline empty": "passed",

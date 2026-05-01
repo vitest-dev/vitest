@@ -15,8 +15,8 @@ test('domain inline snapshot', async () => {
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",
@@ -49,8 +49,8 @@ test('domain inline snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",
@@ -114,13 +114,13 @@ test('domain inline snapshot', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "all literal": Array [
+    {
+      "basic.test.ts": {
+        "all literal": [
           "Snapshot \`all literal 1\` mismatched",
         ],
         "empty snapshot": "passed",
-        "with regex": Array [
+        "with regex": [
           "Snapshot \`with regex 1\` mismatched",
         ],
       },
@@ -132,8 +132,8 @@ test('domain inline snapshot', async () => {
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "all literal": "passed",
         "empty snapshot": "passed",
         "with regex": "passed",

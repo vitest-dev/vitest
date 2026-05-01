@@ -26,21 +26,21 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`file 1\`] = \`
-    Object {
+    {
       "age": Any<Number>,
       "name": "alice",
     }
     \`;
 
     exports[\`file asymmetric 1\`] = \`
-    Object {
+    {
       "name": "bob",
       "score": toSatisfy<[Function lessThan100]>,
     }
     \`;
 
     exports[\`file snapshot-only 1\`] = \`
-    Object {
+    {
       "age": Any<Number>,
       "name": "dave",
     }
@@ -50,7 +50,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
   expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
     "test("inline", () => {
       expect({ name: "carol", age: 25 }).toMatchInlineSnapshot({ age: expect.any(Number) }, \`
-        Object {
+        {
           "age": Any<Number>,
           "name": "carol",
         }
@@ -58,8 +58,8 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     });"
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "file": "passed",
         "file asymmetric": "passed",
         "file snapshot-only": "passed",
@@ -137,7 +137,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     - Expected
     + Received
 
-      Object {
+      {
         "age": Any<Number>,
     -   "name": "dave",
     +   "name": "dave-edit",
@@ -170,7 +170,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
          20| test("inline", () => {
          21|   expect({ name: "carol", age: 'twenty-five' }).toMatchInlineSnapshot(…
            |                                                 ^
-         22|     Object {
+         22|     {
          23|       "age": Any<Number>,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
@@ -178,18 +178,18 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "file": Array [
+    {
+      "basic.test.ts": {
+        "file": [
           "Snapshot properties mismatched",
         ],
-        "file asymmetric": Array [
+        "file asymmetric": [
           "Snapshot properties mismatched",
         ],
-        "file snapshot-only": Array [
+        "file snapshot-only": [
           "Snapshot \`file snapshot-only 1\` mismatched",
         ],
-        "inline": Array [
+        "inline": [
           "Snapshot properties mismatched",
         ],
       },
@@ -263,7 +263,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
          20| test("inline", () => {
          21|   expect({ name: "carol", age: 'twenty-five' }).toMatchInlineSnapshot(…
            |                                                 ^
-         22|     Object {
+         22|     {
          23|       "age": Any<Number>,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
@@ -274,21 +274,21 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`file 1\`] = \`
-    Object {
+    {
       "age": Any<Number>,
       "name": "alice",
     }
     \`;
 
     exports[\`file asymmetric 1\`] = \`
-    Object {
+    {
       "name": "bob",
       "score": toSatisfy<[Function lessThan100]>,
     }
     \`;
 
     exports[\`file snapshot-only 1\`] = \`
-    Object {
+    {
       "age": Any<Number>,
       "name": "dave-edit",
     }
@@ -298,7 +298,7 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
   expect(extractInlineBlocks(readFileSync(testFile, 'utf-8'))).toMatchInlineSnapshot(`
     "test("inline", () => {
       expect({ name: "carol", age: 'twenty-five' }).toMatchInlineSnapshot({ age: expect.any(Number) }, \`
-        Object {
+        {
           "age": Any<Number>,
           "name": "carol",
         }
@@ -306,16 +306,16 @@ test('toMatchSnapshot and toMatchInlineSnapshot with properties', async () => {
     });"
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "file": Array [
+    {
+      "basic.test.ts": {
+        "file": [
           "Snapshot properties mismatched",
         ],
-        "file asymmetric": Array [
+        "file asymmetric": [
           "Snapshot properties mismatched",
         ],
         "file snapshot-only": "passed",
-        "inline": Array [
+        "inline": [
           "Snapshot properties mismatched",
         ],
       },

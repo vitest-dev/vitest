@@ -30,8 +30,8 @@ test('soft inline', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "toMatchInlineSnapshot": "passed",
         "toThrowErrorMatchingInlineSnapshot": "passed",
       },
@@ -47,13 +47,13 @@ test('soft inline', async () => {
 
   result = await runVitest({ root, update: false })
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "toMatchInlineSnapshot": Array [
+    {
+      "basic.test.ts": {
+        "toMatchInlineSnapshot": [
           "Snapshot \`toMatchInlineSnapshot 1\` mismatched",
           "Snapshot \`toMatchInlineSnapshot 2\` mismatched",
         ],
-        "toThrowErrorMatchingInlineSnapshot": Array [
+        "toThrowErrorMatchingInlineSnapshot": [
           "Snapshot \`toThrowErrorMatchingInlineSnapshot 1\` mismatched",
           "Snapshot \`toThrowErrorMatchingInlineSnapshot 2\` mismatched",
         ],
@@ -79,8 +79,8 @@ test('soft inline', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "toMatchInlineSnapshot": "passed",
         "toThrowErrorMatchingInlineSnapshot": "passed",
       },

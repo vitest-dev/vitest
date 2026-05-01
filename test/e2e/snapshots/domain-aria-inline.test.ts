@@ -16,8 +16,8 @@ test('aria inline snapshot', async () => {
   let result = await runVitest({ root, update: 'new' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
@@ -40,19 +40,19 @@ test('aria inline snapshot', async () => {
     "
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
-    Object {
+    {
       "added": 3,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 1,
       "filesRemoved": 0,
-      "filesRemovedList": Array [],
+      "filesRemovedList": [],
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
       "total": 3,
       "unchecked": 0,
-      "uncheckedKeysByFile": Array [],
+      "uncheckedKeysByFile": [],
       "unmatched": 0,
       "updated": 0,
     }
@@ -67,8 +67,8 @@ test('aria inline snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
@@ -91,7 +91,7 @@ test('aria inline snapshot', async () => {
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
 
     Failure screenshot:
-      - test/fixtures/domain-aria-inline/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
+      - snapshots/fixtures/domain-aria-inline/__screenshots__/basic.test.ts/semantic-match-with-regex-in-snapshot-1.png
 
     - Expected
     + Received
@@ -113,10 +113,10 @@ test('aria inline snapshot', async () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty": "passed",
-        "semantic match with regex in snapshot": Array [
+        "semantic match with regex in snapshot": [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
         ],
         "simple heading": "passed",
@@ -128,8 +128,8 @@ test('aria inline snapshot', async () => {
   result = await runVitest({ root, update: 'all' })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading": "passed",
@@ -182,8 +182,8 @@ test('basic', () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "basic": "passed",
       },
     }
@@ -256,9 +256,9 @@ test('basic', () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "basic": Array [
+    {
+      "basic.test.ts": {
+        "basic": [
           "toMatchAriaInlineSnapshot with different snapshots cannot be called at the same location",
         ],
       },
@@ -320,9 +320,9 @@ test('basic', () => {
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
-        "basic": Array [
+    {
+      "basic.test.ts": {
+        "basic": [
           "Aria snapshot must be a YAML sequence, elements starting with " -"",
         ],
       },
