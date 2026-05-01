@@ -461,6 +461,7 @@ export class JUnitReporter implements Reporter {
 
   private async writeUnhandledErrorsTestsuite(
     unhandledErrors: ReadonlyArray<UnhandledError>,
+    testModules: ReadonlyArray<TestModule>,
   ): Promise<void> {
     await this.writeElement(
       'testsuite',
@@ -478,6 +479,11 @@ export class JUnitReporter implements Reporter {
         for (const error of unhandledErrors) {
           // Prefer error.type ("Uncaught Exception" / "Unhandled Rejection") over error.name for the title.
           const errorTitle = error.type || error.name || 'Unhandled Error'
+          // Match the error back to the project/task that owns it so capturePrintError
+          // resolves paths against the right project root in multi-project workspaces.
+          const owningModule = error.VITEST_TEST_PATH
+            ? testModules.find(m => m.task.filepath === error.VITEST_TEST_PATH)
+            : undefined
           await this.writeElement(
             'testcase',
             {
@@ -489,7 +495,10 @@ export class JUnitReporter implements Reporter {
               time: '0',
             },
             async () => {
-              await this.writeErrorElement('error', error, {})
+              await this.writeErrorElement('error', error, {
+                project: owningModule?.project,
+                task: owningModule?.task,
+              })
             },
           )
         }
@@ -608,7 +617,7 @@ export class JUnitReporter implements Reporter {
       }
 
       if (unhandledErrors.length) {
-        await this.writeUnhandledErrorsTestsuite(unhandledErrors)
+        await this.writeUnhandledErrorsTestsuite(unhandledErrors, testModules)
       }
     })
 
