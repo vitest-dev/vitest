@@ -110,10 +110,10 @@ export default class HTMLReporter implements Reporter {
       files.map(async (f) => {
         if (f === 'index.html') {
           await handleIndexHtml({
-            data,
-            dstDir: this.reporterDir,
-            singleFile: this.options.singleFile,
             srcDir: ui,
+            dstDir: this.reporterDir,
+            data,
+            singleFile: this.options.singleFile,
           })
         }
         else {
@@ -160,17 +160,11 @@ export default class HTMLReporter implements Reporter {
   }
 }
 
-async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
-  for (const file of files) {
-    await inlineTaskAttachments(file)
-  }
-}
-
 async function handleIndexHtml(options: {
-  data: Buffer
   dstDir: string
-  singleFile: boolean | undefined
   srcDir: string
+  data: Buffer
+  singleFile?: boolean
 }): Promise<void> {
   const indexHtmlFilePath = resolve(options.srcDir, 'index.html')
   let html = await fs.readFile(indexHtmlFilePath, 'utf-8')
@@ -195,6 +189,12 @@ async function handleIndexHtml(options: {
       `<script>window.HTML_REPORT_METADATA=${metadataCode}</script>`,
     ),
   )
+}
+
+async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
+  for (const file of files) {
+    await inlineTaskAttachments(file)
+  }
 }
 
 async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
