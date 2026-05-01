@@ -95,10 +95,7 @@ export default class HTMLReporter implements Reporter {
       await inlineAttachments(result.files)
     }
 
-    await this.writeReport(stringify(result))
-  }
-
-  async writeReport(report: string): Promise<void> {
+    const report = stringify(result)
     const promiseGzip = promisify(gzip)
     const data = await promiseGzip(report, {
       level: zlibConstants.Z_BEST_COMPRESSION,
