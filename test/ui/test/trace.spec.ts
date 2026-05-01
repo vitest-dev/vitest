@@ -12,14 +12,16 @@ test.describe('ui', () => {
   let baseURL: string
 
   test.beforeAll(async () => {
+    // TODO: move to helper.ts
     // silence Vitest logs
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
+    const root = './fixtures/trace'
     vitest = await startVitest(
       'test',
       undefined,
       {
-        root: './fixtures-trace',
+        root,
         watch: true,
         ui: true,
         open: false,
@@ -74,11 +76,12 @@ test.describe('html reporter', () => {
     // silence Vitest logs
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
+    const root = './fixtures/trace'
     await startVitest(
       'test',
       undefined,
       {
-        root: './fixtures-trace',
+        root,
         run: true,
         ui: false,
         reporters: 'html',
@@ -93,7 +96,7 @@ test.describe('html reporter', () => {
       { stdout, stderr },
     )
     previewServer = await preview({
-      root: './fixtures-trace',
+      root,
       build: { outDir: 'html' },
     })
     const address = previewServer.httpServer?.address()
