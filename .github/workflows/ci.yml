@@ -123,7 +123,7 @@ jobs:
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
 
-      # TODO: merge after https://github.com/vitest-dev/vitest/pull/10031
+      # TODO: merge report https://github.com/vitest-dev/vitest/pull/10031
       - name: Upload Test UI Report
         uses: actions/upload-artifact@v7
         with:
