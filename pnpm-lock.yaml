@@ -1526,19 +1526,6 @@ importers:
 
   test/node-runner: {}
 
-  test/snapshots:
-    dependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      jest-image-snapshot:
-        specifier: ^6.5.1
-        version: 6.5.1
-
   test/test-utils:
     devDependencies:
       tinyexec:
