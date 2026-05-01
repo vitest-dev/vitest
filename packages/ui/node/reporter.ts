@@ -114,6 +114,10 @@ export default class HTMLReporter implements Reporter {
           let metadataCode: string
           if (this.options.singleFile) {
             html = await inlineHtmlAssets(htmlFilePath, html)
+            // singleFile uses gzip+base64 so the embedded report stays an ASCII-safe
+            // representation of the same gzipped metadata bytes used by the external-file path.
+            // - Raw JSON: simpler to inspect and can be smaller when the whole HTML is served with HTTP gzip/brotli, but needs careful script/HTML escaping and makes the browser scan more inline HTML before startup.
+            // - Gzip + base64: robust for arbitrary compressed bytes, keeps standalone artifacts smaller, and defers decode/gunzip/JSON parse behind HTML_REPORT_METADATA.
             const base64 = Buffer.from(data).toString('base64')
             metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
           }
