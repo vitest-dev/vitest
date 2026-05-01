@@ -190,6 +190,17 @@ async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
       await inlineTaskAttachments(child)
     }
   }
+  if ('annotations' in task) {
+    for (const annotation of task.annotations) {
+      const attachment = annotation.attachment
+      if (attachment?.path) {
+        const buffer = await fs.readFile(attachment.path)
+        attachment.body = buffer.toString('base64')
+        attachment.bodyEncoding = 'base64'
+        attachment.path = undefined
+      }
+    }
+  }
   if ('artifacts' in task) {
     for (const artifact of task.artifacts) {
       for (const attachment of artifact.attachments ?? []) {
