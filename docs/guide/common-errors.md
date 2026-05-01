@@ -182,7 +182,7 @@ You might see errors such as:
 
 - `Cannot find module './relative-path' imported from ...`
 - `Unexpected token 'export'`
-- `Must use import to load ES Module`
+- `Cannot use import statement outside a module`
 - `Module ... seems to be an ES Module but shipped in a CommonJS package.`
 - `Unknown file extension ".css"`
 
