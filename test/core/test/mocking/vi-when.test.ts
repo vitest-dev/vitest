@@ -50,7 +50,7 @@ describe('vi.when()', () => {
       expect(w.isExhausted()).toBe(true)
     })
 
-    test('falls back to default implementation when arguments don\'t match', () => {
+    test('falls through to original implementation when arguments don\'t match', () => {
       const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
 
       const args: FnData['args'] = ['a', 0]
@@ -158,54 +158,143 @@ describe('vi.when()', () => {
     })
 
     test.runIf(Symbol.dispose)('disposes of its mock', () => {
-      const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
+      const firstSpy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
+      const secondSpy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
       const value: FnData['value'] = 97
 
       {
-        using w = vi.when(spy)
+        using w = vi.when(firstSpy)
           .calledWith(...args)
           .thenReturn(value)
 
         expect(w.isExhausted()).toBe(false)
 
-        expect(spy(...args)).toBe(value)
+        expect(firstSpy(...args)).toBe(value)
         expect(w.isExhausted()).toBe(true)
       }
 
-      expect(spy(...args)).toBe(0)
+      expect(firstSpy(...args)).toBe(0)
+
+      {
+        using w = vi.when(secondSpy)
+          .calledWith(...args)
+          .thenReturn(value)
+
+        expect(w.isExhausted()).toBe(false)
+
+        expect(secondSpy(...args)).toBe(value)
+        expect(w.isExhausted()).toBe(true)
+      }
+
+      expect(secondSpy(...args)).toBe(undefined)
+    })
+  })
+
+  describe('non-matching behavior', () => {
+    test('falls through to original implementation when `onUnmatched` is set to "passthrough"', () => {
+      const spy = vi.fn<Fn>((a, b) => b * a.charCodeAt(0))
+
+      vi.when(spy, { onUnmatched: 'passthrough' })
+        .calledWith('a', 0)
+        .thenReturn(97)
+
+      expect(spy('b', 1)).toBe(98)
+    })
+
+    test('throws when `onUnmatched` is set to "throw"', () => {
+      const spy = vi.fn<Fn>()
+
+      const args: FnData['args'] = ['a', 0]
+      const value: FnData['value'] = 97
+
+      vi.when(spy, { onUnmatched: 'throw' })
+        .calledWith(...args)
+        .thenReturn(value)
+
+      expect(spy(...args)).toBe(value)
+      expect(() => spy('b', 1)).toThrow('vi.when: no behavior defined')
+    })
+
+    test('calls the provided function when `onUnmatched` is a function', () => {
+      const spy = vi.fn<Fn>()
+      const fallback = vi.fn<Fn>(() => 0)
+
+      const args: FnData['args'] = ['a', 0]
+      const value: FnData['value'] = 97
+
+      vi.when(spy, { onUnmatched: fallback })
+        .calledWith(...args)
+        .thenReturn(value)
+
+      expect(spy(...args)).toBe(value)
+      expect(spy('b', 1)).toBe(0)
+      expect(fallback).toHaveBeenCalledWith('b', 1)
     })
   })
 
   describe('exhausting behaviors', () => {
-    test('returns the provided value as described by the `times` option', () => {
+    test('returns the provided value as described by the `times` option', async () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
       const values: FnData['value'][] = [
         97,
         98,
+        99,
       ]
+      const throwError = new TypeError('[throw] Expected second argument > 0')
+      const rejectError = new TypeError('[reject] Expected second argument > 0')
+
+      const times = 2
 
       const w = vi.when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .calledWith(...args)
-        .thenReturn(values[1], { times: 2 })
+        .thenReturn(values[1], { times })
+        .calledWith(...args)
+        .thenThrow(throwError, { times })
+        .calledWith(...args)
+        .thenResolve(values[2], { times })
+        .calledWith(...args)
+        .thenReject(rejectError, { times })
 
       expect(w.isExhausted()).toBe(false)
 
-      expect(spy(...args)).toBe(values[1])
-      expect(w.isExhausted()).toBe(false)
+      for (let i = 0; i < times; i += 1) {
+        await expect(spy(...args)).rejects.toThrow(rejectError)
+        expect(w.isExhausted()).toBe(false)
+      }
 
-      expect(spy(...args)).toBe(values[1])
-      expect(w.isExhausted()).toBe(false)
+      expect(spy).toHaveBeenCalledTimes(times)
+
+      for (let i = 0; i < times; i += 1) {
+        await expect(spy(...args)).resolves.toBe(values[2])
+        expect(w.isExhausted()).toBe(false)
+      }
+
+      expect(spy).toHaveBeenCalledTimes(times * 2)
+
+      for (let i = 0; i < times; i += 1) {
+        expect(() => spy(...args)).toThrow(throwError)
+        expect(w.isExhausted()).toBe(false)
+      }
+
+      expect(spy).toHaveBeenCalledTimes(times * 3)
+
+      for (let i = 0; i < times; i += 1) {
+        expect(spy(...args)).toBe(values[1])
+        expect(w.isExhausted()).toBe(false)
+      }
+
+      expect(spy).toHaveBeenCalledTimes(times * 4)
 
       expect(spy(...args)).toBe(values[0])
       expect(w.isExhausted()).toBe(true)
 
-      expect(spy).toHaveBeenCalledTimes(3)
+      expect(spy).toHaveBeenCalledTimes(times * 4 + 1)
     })
 
     test('multiple behaviors can be chained on a single `calledWith` call', () => {
@@ -257,37 +346,44 @@ describe('vi.when()', () => {
       expect(w.isExhausted()).toBe(true)
     })
 
-    test('`*Once` behaviors are sugar syntax for `times: 1`', () => {
+    test('`*Once` behaviors are sugar syntax for `times: 1`', async () => {
       const spy = vi.fn<Fn>()
 
       const args: FnData['args'] = ['a', 0]
       const values: FnData['value'][] = [
         97,
         98,
+        99,
       ]
+      const throwError = new TypeError('[throw] Expected second argument > 0')
+      const rejectError = new TypeError('[reject] Expected second argument > 0')
 
       const w = vi.when(spy)
         .calledWith(...args)
         .thenReturn(values[0])
         .thenReturnOnce(values[1])
+        .thenThrowOnce(throwError)
+        .thenResolveOnce(values[2])
+        .thenRejectOnce(rejectError)
 
+      expect(w.isExhausted()).toBe(false)
+
+      await expect(spy(...args)).rejects.toThrow(rejectError)
+      expect(w.isExhausted()).toBe(false)
+
+      await expect(spy(...args)).resolves.toBe(values[2])
+      expect(w.isExhausted()).toBe(false)
+
+      expect(() => spy(...args)).toThrow(throwError)
       expect(w.isExhausted()).toBe(false)
 
       expect(spy(...args)).toBe(values[1])
-
-      expect(spy).toHaveBeenLastCalledWith(...args)
-      expect(spy).toHaveLastReturnedWith(values[1])
-
       expect(w.isExhausted()).toBe(false)
 
       expect(spy(...args)).toBe(values[0])
-
-      expect(spy).toHaveBeenLastCalledWith(...args)
-      expect(spy).toHaveLastReturnedWith(values[0])
-
       expect(w.isExhausted()).toBe(true)
 
-      expect(spy).toHaveBeenCalledTimes(2)
+      expect(spy).toHaveBeenCalledTimes(5)
     })
 
     test('resolves behaviors in a LIFO-style manner', () => {
