@@ -1058,6 +1058,16 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     })
   })
 
+  def('toHaveBeenExhausted', function () {
+    const when = this._obj
+
+    this.assert(
+      when.isExhausted(),
+      'expected when chain to have been exhausted', // @todo improve message
+      'expected at least one behavior to remain unexhausted, but all were consumed',
+    )
+  })
+
   // @ts-expect-error @internal
   def('withContext', function (this: any, context: Record<string, any>) {
     for (const key in context) {
