@@ -19,7 +19,7 @@ test("file snapshot-only", () => {
 // -- TEST INLINE START --
 test("inline", () => {
   expect({ name: "carol", age: 25 }).toMatchInlineSnapshot({ age: expect.any(Number) }, `
-    Object {
+    {
       "age": Any<Number>,
       "name": "carol",
     }

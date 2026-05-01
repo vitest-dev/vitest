@@ -80,7 +80,7 @@ test('raw', async () => {
 
 test('inline', () => {
   expect(`hehehe`).toMatchCustomInlineSnapshot(`
-    Object {
+    {
       "length": 6,
       "reversed": "eheheh",
     }
@@ -89,7 +89,7 @@ test('inline', () => {
 
 test('async inline', async () => {
   await expect(`huhuhu`).toMatchCustomAsyncInlineSnapshot(`
-    Object {
+    {
       "length": 6,
       "reversed": "uhuhuh",
     }
