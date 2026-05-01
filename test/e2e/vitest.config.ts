@@ -43,6 +43,7 @@ export default defineConfig({
           name: 'snapshots',
           root: path.join(import.meta.dirname, 'snapshots'),
           exclude: ['**/fixtures/**', ...defaultExclude],
+          testTimeout: process.env.CI ? 20_000 : undefined,
           sequence: {
             groupOrder: 1,
           },
