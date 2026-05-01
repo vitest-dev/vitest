@@ -1,6 +1,5 @@
 import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
-import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -122,8 +121,8 @@ export default class HTMLReporter implements Reporter {
             metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
           }
           else {
-            const hash = createHash('sha256').update(data).digest('hex').slice(0, 6)
-            const dataFile = `metadata-${hash}.bin.gz`
+            // TODO: should we add content hash?
+            const dataFile = `html.meta.json.gz`
             await fs.writeFile(resolve(this.reporterDir, dataFile), data, 'base64')
             metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
           }
