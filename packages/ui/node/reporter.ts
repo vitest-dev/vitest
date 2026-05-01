@@ -1,3 +1,4 @@
+import type { TestAttachment } from '@vitest/runner'
 import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
@@ -192,43 +193,33 @@ async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
   }
   if ('annotations' in task) {
     for (const annotation of task.annotations) {
-      const attachment = annotation.attachment
-      if (attachment?.path && !isExternalAttachmentPath(attachment.path)) {
-        try {
-          const buffer = await fs.readFile(attachment.path)
-          attachment.body = buffer.toString('base64')
-          attachment.bodyEncoding = 'base64'
-          attachment.path = undefined
-        }
-        catch {
-          // Keep the path so report generation does not fail when an attachment
-          // cannot be embedded.
-        }
+      if (annotation.attachment) {
+        await inlineTestAttachment(annotation.attachment)
       }
     }
   }
   if ('artifacts' in task) {
     for (const artifact of task.artifacts) {
       for (const attachment of artifact.attachments ?? []) {
-        if (attachment.path && !isExternalAttachmentPath(attachment.path)) {
-          try {
-            const buffer = await fs.readFile(attachment.path)
-            attachment.body = buffer.toString('base64')
-            attachment.bodyEncoding = 'base64'
-            attachment.path = undefined
-          }
-          catch {
-            // Keep the path so report generation does not fail when an attachment
-            // cannot be embedded.
-          }
-        }
+        await inlineTestAttachment(attachment)
       }
     }
   }
 }
 
-function isExternalAttachmentPath(path: string): boolean {
-  return path.startsWith('http://') || path.startsWith('https://')
+async function inlineTestAttachment(attachment: TestAttachment): Promise<void> {
+  if (attachment.path && !attachment.path.startsWith('http://') && !attachment.path.startsWith('https://')) {
+    try {
+      const buffer = await fs.readFile(attachment.path)
+      attachment.body = buffer.toString('base64')
+      attachment.bodyEncoding = 'base64'
+      attachment.path = undefined
+    }
+    catch {
+      // Keep the path so report generation does not fail when an attachment
+      // cannot be embedded.
+    }
+  }
 }
 
 function uint8ArrayFromBase64(base64: string): Uint8Array {
