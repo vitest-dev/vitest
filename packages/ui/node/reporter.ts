@@ -193,26 +193,42 @@ async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
   if ('annotations' in task) {
     for (const annotation of task.annotations) {
       const attachment = annotation.attachment
-      if (attachment?.path) {
-        const buffer = await fs.readFile(attachment.path)
-        attachment.body = buffer.toString('base64')
-        attachment.bodyEncoding = 'base64'
-        attachment.path = undefined
+      if (attachment?.path && !isExternalAttachmentPath(attachment.path)) {
+        try {
+          const buffer = await fs.readFile(attachment.path)
+          attachment.body = buffer.toString('base64')
+          attachment.bodyEncoding = 'base64'
+          attachment.path = undefined
+        }
+        catch {
+          // Keep the path so report generation does not fail when an attachment
+          // cannot be embedded.
+        }
       }
     }
   }
   if ('artifacts' in task) {
     for (const artifact of task.artifacts) {
       for (const attachment of artifact.attachments ?? []) {
-        if (attachment.path) {
-          const buffer = await fs.readFile(attachment.path)
-          attachment.body = buffer.toString('base64')
-          attachment.bodyEncoding = 'base64'
-          attachment.path = undefined
+        if (attachment.path && !isExternalAttachmentPath(attachment.path)) {
+          try {
+            const buffer = await fs.readFile(attachment.path)
+            attachment.body = buffer.toString('base64')
+            attachment.bodyEncoding = 'base64'
+            attachment.path = undefined
+          }
+          catch {
+            // Keep the path so report generation does not fail when an attachment
+            // cannot be embedded.
+          }
         }
       }
     }
   }
+}
+
+function isExternalAttachmentPath(path: string): boolean {
+  return path.startsWith('http://') || path.startsWith('https://')
 }
 
 function uint8ArrayFromBase64(base64: string): Uint8Array {
