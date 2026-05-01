@@ -61,7 +61,7 @@ Error: afterAll error
 
 exports[`format error 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="8" errors="0" time="...">
+<testsuites name="vitest tests" tests="10" failures="8" errors="1" time="...">
     <testsuite name="error.test.ts" timestamp="..." hostname="..." tests="9" failures="8" errors="0" skipped="0" time="...">
         <testcase classname="error.test.ts" name="stack" time="...">
             <failure message="throwSimple" type="Error">
@@ -122,6 +122,18 @@ Error: throwSuite
  ❯ throwSuite error.test.ts:48:9
  ❯ error.test.ts:4:3
             </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="vitest unhandled errors" timestamp="..." hostname="..." tests="1" failures="0" errors="1" skipped="0" time="...">
+        <testcase classname="vitest unhandled errors" name="Unhandled Rejection: throwSimple" time="...">
+            <error message="throwSimple" type="Error">
+Error: throwSimple
+ ❯ throwSimple error.test.ts:44:9
+ ❯ error.test.ts:16:16
+ ❯ error.test.ts:16:28
+
+This error originated in &quot;error.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+            </error>
         </testcase>
     </testsuite>
 </testsuites>
