@@ -24,6 +24,15 @@ export function MetaEnvReplacerPlugin(): Plugin {
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
+        // Skip replacement when import.meta.env itself is the assignment target (LHS).
+        // e.g. `import.meta.env = {}` or `import.meta.env ||= {}`.
+        // Replacing it would produce `Object.assign(...) = ...` which is not a valid LHS.
+        // Note: `import.meta.env.PROP = value` is fine — the property accessor is still valid LHS.
+        const tail = cleanCode.slice(endIndex)
+        if (/^\s*(\?\?=|\|\|=|&&=|=[^>=])/.test(tail)) {
+          continue
+        }
+
         s.overwrite(
           startIndex,
           endIndex,
