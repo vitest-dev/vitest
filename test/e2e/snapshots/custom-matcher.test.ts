@@ -13,38 +13,11 @@ test('custom snapshot matcher', async () => {
 
   // remove snapshots
   fs.rmSync(join(root, '__snapshots__'), { recursive: true, force: true })
-  editFile(testFile, s => s.replace(/toMatchCustomInlineSnapshot\(`[^`]*`\)/g, 'toMatchCustomInlineSnapshot()'))
+  editFile(testFile, s => s.replace(/(toMatchCustom(?:Async)?InlineSnapshot)\(`[^`]*`\)/g, '$1()'))
 
   // create snapshots from scratch
   let result = await runVitest({ root, update: 'new' })
-  expect(result.stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > async inline
-    Error: [custom error] Snapshot \`async inline 1\` mismatched
-
-    - Expected
-    + Received
-
-    - Object {
-    + {
-        "length": 6,
-        "reversed": "uhuhuh",
-      }
-
-     ❯ basic.test.ts:86:3
-         84|       "length": 6,
-         85|       "reversed": "eheheh",
-         86|     }
-           |   ^
-         87|   \`)
-         88| })
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
@@ -86,7 +59,7 @@ test('custom snapshot matcher', async () => {
       \`)
 
     expect(\`huhuhu\`).toMatchCustomAsyncInlineSnapshot(\`
-        Object {
+        {
           "length": 6,
           "reversed": "uhuhuh",
         }
@@ -96,9 +69,7 @@ test('custom snapshot matcher', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
-        "async inline": [
-          "[custom error] Snapshot \`async inline 1\` mismatched",
-        ],
+        "async inline": "passed",
         "file": "passed",
         "inline": "passed",
         "properties 1": "passed",
@@ -241,8 +212,7 @@ test('custom snapshot matcher', async () => {
     - Expected
     + Received
 
-    - Object {
-    + {
+      {
     -   "length": 6,
     +   "length": 11,
     -   "reversed": "uhuhuh",
@@ -254,7 +224,7 @@ test('custom snapshot matcher', async () => {
          90| test('async inline', async () => {
          91|   await expect(\`huhuhu-edit\`).toMatchCustomAsyncInlineSnapshot(\`
            |   ^
-         92|     Object {
+         92|     {
          93|       "length": 6,
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
