@@ -28,8 +28,6 @@ test.describe('html singleFile', () => {
     previewServer = await preview({
       root,
       build: { outDir: 'html' },
-      // TODO: assert no requests to server except index.html
-      plugins: [],
     })
     const address = previewServer.httpServer?.address()
     assert(address && typeof address === 'object', 'Invalid server address')
@@ -41,8 +39,18 @@ test.describe('html singleFile', () => {
   })
 
   test('basic', async ({ page }) => {
+    const requestUrls: string[] = []
+    const IGNORED_URLS = ['https://fonts.googleapis.com/', 'https://fonts.gstatic.com/']
+    page.on('request', (request) => {
+      const url = request.url()
+      if (!IGNORED_URLS.some(ignored => url.startsWith(ignored))) {
+        requestUrls.push(url)
+      }
+    })
+
     await page.goto(baseURL)
     await assetTestCount(page, { pass: 1, fail: 1 })
+    expect(requestUrls).toEqual([baseURL])
   })
 })
 

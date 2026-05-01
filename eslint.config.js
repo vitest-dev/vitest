@@ -11,6 +11,7 @@ export default antfu(
       '**/*.snap',
       '**/bench.json',
       '**/fixtures',
+      '**/test-results',
       '**/assets/**',
       '**/*.d.ts',
       '**/*.timestamp-*',
