@@ -109,31 +109,12 @@ export default class HTMLReporter implements Reporter {
     await Promise.all(
       files.map(async (f) => {
         if (f === 'index.html') {
-          const htmlFilePath = resolve(ui, f)
-          let html = await fs.readFile(htmlFilePath, 'utf-8')
-          let metadataCode: string
-          if (this.options.singleFile) {
-            html = await inlineHtmlAssets(htmlFilePath, html)
-            // singleFile uses gzip+base64 so the embedded report stays an ASCII-safe
-            // representation of the same gzipped metadata bytes used by the external-file path.
-            // - Raw JSON: simpler to inspect and can be smaller when the whole HTML is served with HTTP gzip/brotli, but needs careful script/HTML escaping and makes the browser scan more inline HTML before startup.
-            // - Gzip + base64: robust for arbitrary compressed bytes, keeps standalone artifacts smaller, and defers decode/gunzip/JSON parse behind HTML_REPORT_METADATA.
-            const base64 = Buffer.from(data).toString('base64')
-            metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
-          }
-          else {
-            // TODO: should we add content hash?
-            const dataFile = `html.meta.json.gz`
-            await fs.writeFile(resolve(this.reporterDir, dataFile), data, 'base64')
-            metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
-          }
-          await fs.writeFile(
-            this.htmlFilePath,
-            html.replace(
-              '<!-- !LOAD_METADATA! -->',
-              `<script>window.HTML_REPORT_METADATA=${metadataCode}</script>`,
-            ),
-          )
+          await handleIndexHtml({
+            data,
+            dstDir: this.reporterDir,
+            singleFile: this.options.singleFile,
+            srcDir: ui,
+          })
         }
         else {
           await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
@@ -183,6 +164,37 @@ async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
   for (const file of files) {
     await inlineTaskAttachments(file)
   }
+}
+
+async function handleIndexHtml(options: {
+  data: Buffer
+  dstDir: string
+  singleFile: boolean | undefined
+  srcDir: string
+}): Promise<void> {
+  const indexHtmlFilePath = resolve(options.srcDir, 'index.html')
+  let html = await fs.readFile(indexHtmlFilePath, 'utf-8')
+  let metadataCode: string
+
+  if (options.singleFile) {
+    html = await inlineHtmlAssets(indexHtmlFilePath, html)
+    const base64 = Buffer.from(options.data).toString('base64')
+    metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
+  }
+  else {
+    // TODO: should we add content hash?
+    const dataFile = `html.meta.json.gz`
+    await fs.writeFile(resolve(options.dstDir, dataFile), options.data, 'base64')
+    metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+  }
+
+  await fs.writeFile(
+    resolve(options.dstDir, 'index.html'),
+    html.replace(
+      '<!-- !LOAD_METADATA! -->',
+      `<script>window.HTML_REPORT_METADATA=${metadataCode}</script>`,
+    ),
+  )
 }
 
 async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
