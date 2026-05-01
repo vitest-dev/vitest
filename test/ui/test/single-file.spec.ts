@@ -1,0 +1,53 @@
+import type { Page } from '@playwright/test'
+import type { PreviewServer } from 'vite'
+import assert from 'node:assert'
+import { Writable } from 'node:stream'
+import { expect, test } from '@playwright/test'
+import { preview } from 'vite'
+import { startVitest } from 'vitest/node'
+
+test.describe('html singleFile', () => {
+  let previewServer: PreviewServer
+  let baseURL: string
+
+  test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    const root = './fixtures-single-file'
+    await startVitest(
+      'test',
+      undefined,
+      {
+        root,
+        run: true,
+      },
+      {},
+      { stdout, stderr },
+    )
+    previewServer = await preview({
+      root,
+      build: { outDir: 'html' },
+      // TODO: assert no requests to server except index.html
+      plugins: [],
+    })
+    const address = previewServer.httpServer?.address()
+    assert(address && typeof address === 'object', 'Invalid server address')
+    baseURL = `http://localhost:${address.port}/`
+  })
+
+  test.afterAll(async () => {
+    await previewServer.close()
+  })
+
+  test('basic', async ({ page }) => {
+    await page.goto(baseURL)
+    await assetTestCount(page, { pass: 1, fail: 1 })
+  })
+})
+
+async function assetTestCount(page: Page, options: { pass: number; fail: number }) {
+  const total = options.pass + options.fail
+  await expect.soft(page.getByTestId('tests-entry'))
+    .toContainText(`${options.pass} Pass ${options.fail} Fail ${total} Total`)
+}

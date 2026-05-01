@@ -111,7 +111,6 @@ test.describe('html reporter', () => {
   })
 
   test('basic', async ({ page }) => {
-    await page.goto(baseURL)
     await testBasic(page)
   })
 
