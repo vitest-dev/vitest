@@ -50,7 +50,7 @@ test.describe('html singleFile', () => {
     })
 
     await page.goto(baseURL)
-    await assetTestCount(page, { pass: 2, fail: 1 })
+    await assertTestCount(page, { pass: 2, fail: 1 })
 
     // test inlined attachments
     await openExplorerItem(page, 'annotation')
@@ -68,7 +68,7 @@ test.describe('html singleFile', () => {
   })
 })
 
-async function assetTestCount(page: Page, options: { pass: number; fail: number }) {
+async function assertTestCount(page: Page, options: { pass: number; fail: number }) {
   const total = options.pass + options.fail
   await expect.soft(page.getByTestId('tests-entry'))
     .toContainText(`${options.pass} Pass ${options.fail} Fail ${total} Total`)
