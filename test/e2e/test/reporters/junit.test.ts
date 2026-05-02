@@ -129,7 +129,21 @@ function stabilizeReport(report: string) {
   if (rolldownVersion) {
     normalized = normalized.replaceAll(' ❯ error.test.ts:16:29', ' ❯ error.test.ts:16:28')
   }
-  return normalized
+  return sortTestsuites(normalized)
+}
+
+// Projects in a multi-project run finish in non-deterministic order, so
+// the JUnit reporter emits <testsuite> blocks in completion order. Sort
+// them by name so snapshots stay stable across runs.
+function sortTestsuites(report: string) {
+  return report.replace(
+    /(<testsuites[^>]*>\n)([\s\S]*?)(\n<\/testsuites>)/,
+    (_, open, body, close) => {
+      const blocks = [...body.matchAll(/ {4}<testsuite name="([^"]*)"[\s\S]*?<\/testsuite>/g)]
+      blocks.sort((a, b) => a[1].localeCompare(b[1]))
+      return open + blocks.map(b => b[0]).join('\n') + close
+    },
+  )
 }
 
 function stabilizeReportWOTime(report: string) {
