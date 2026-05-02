@@ -48,12 +48,9 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   iframe.style.height = `${viewport.height}px`
   // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
   // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
-  // doc.open/close resets the iframe document to a blank state before rebuild.
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
   const doc = iframe.contentDocument!
-  doc.open()
-  doc.close()
   const mirror = createMirror()
   rebuild(serialized, {
     doc,
@@ -187,8 +184,9 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
         <iframe
           v-if="selectedStep"
           ref="iframeEl"
-          :key="iframeSandbox"
+          :key="`${iframeSandbox}:${selectedStepIndex}`"
           :sandbox="iframeSandbox"
+          srcdoc="<!doctype html><html><head></head><body></body></html>"
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
         <div v-else class="text-sm opacity-50 p-4">
