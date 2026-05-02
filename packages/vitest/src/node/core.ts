@@ -11,7 +11,6 @@ import type { VitestFetchFunction } from './environments/fetchModule'
 import type { ProcessPool } from './pool'
 import type { Report } from './reporters/report'
 import type { TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
@@ -54,6 +53,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
+import { TestSpecification } from './test-specification'
 import { loadVCSProvider } from './vcs/vcs'
 import { VitestWatcher } from './watcher'
 
@@ -1291,7 +1291,37 @@ export class Vitest {
 
   /** @internal */
   async rerunFailed(): Promise<void> {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
+    const failedFiles = this.state.getFailedFilepaths()
+    if (!failedFiles.length) {
+      await this.rerunFiles(failedFiles, 'rerun failed', false)
+      return
+    }
+
+    const trigger = 'rerun failed'
+    const specifications = failedFiles.flatMap((filepath) => {
+      const fileTasks = this.state.getFiles([filepath])
+      const failedTestIds = fileTasks.flatMap(file =>
+        getTasks(file)
+          .filter(task => task.type === 'test' && task.result?.state === 'fail')
+          .map(task => task.id),
+      )
+      return this.getModuleSpecifications(filepath).map((spec) => {
+        // If the file failed to collect, there are no test ids: rerun the whole file.
+        if (!failedTestIds.length) {
+          return spec
+        }
+        return new TestSpecification(spec.project, spec.moduleId, spec.pool, {
+          testIds: failedTestIds,
+        })
+      })
+    })
+
+    await Promise.all([
+      this.report('onWatcherRerun', failedFiles, trigger),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report('onWatcherStart', this.state.getFiles(failedFiles))
   }
 
   /**
