@@ -21,3 +21,23 @@ index 3a3b67808308f4b50ad906dccfaaf577b4264742..3cf40a7d3c7d847e34850b32c424e2b0
          });
        }
      };
+@@ -5375,19 +5387,17 @@ function buildNodeWithSN(n, options) {
+     mirror.replace(n.rootId, doc);
+   }
+   if (n.type === NodeType.Document) {
+-    doc.close();
+-    doc.open();
+     if (n.compatMode === "BackCompat" && n.childNodes && n.childNodes[0].type !== NodeType.DocumentType) {
+       if (n.childNodes[0].type === NodeType.Element && "xmlns" in n.childNodes[0].attributes && n.childNodes[0].attributes.xmlns === "http://www.w3.org/1999/xhtml") {
+         doc.write(
+           '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "">'
+         );
+       } else {
+         doc.write(
+           '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "">'
+         );
+       }
+     }
+     node2 = doc;
+   }
+   mirror.add(node2, n);
