@@ -5,6 +5,7 @@ import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
+import { createWebSocketConnection } from './connection'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
@@ -59,19 +60,15 @@ function waitForOrchestrator() {
 }
 
 function createClient() {
-  const autoReconnect = true
-  const reconnectInterval = 2000
-  const reconnectTries = 10
-  const connectTimeout = 60000
+  const connection = createWebSocketConnection({ url: ENTRY_URL })
 
-  let tries = reconnectTries
-
-  const ctx: VitestBrowserClient = {
-    ws: new WebSocket(ENTRY_URL),
-    waitForConnection,
+  const ctx = {
+    waitForConnection: connection.waitForConnection,
   } as VitestBrowserClient
-
-  let onMessage: Function
+  Object.defineProperty(ctx, 'ws', {
+    get: () => connection.socket,
+    enumerable: true,
+  })
 
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
@@ -110,8 +107,8 @@ function createClient() {
       },
     },
     {
-      post: msg => ctx.ws.send(msg),
-      on: fn => (onMessage = fn),
+      post: msg => connection.send(msg),
+      on: fn => connection.onMessage(fn as (data: unknown) => void),
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {
@@ -127,52 +124,6 @@ function createClient() {
       timeout: -1, // createTesters can take a while
     },
   )
-
-  let openPromise: Promise<void>
-
-  function reconnect(reset = false) {
-    if (reset) {
-      tries = reconnectTries
-    }
-    ctx.ws = new WebSocket(ENTRY_URL)
-    registerWS()
-  }
-
-  function registerWS() {
-    openPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
-          ),
-        )
-      }, connectTimeout)
-      if (ctx.ws.OPEN === ctx.ws.readyState) {
-        resolve()
-      }
-      // still have a listener even if it's already open to update tries
-      ctx.ws.addEventListener('open', () => {
-        tries = reconnectTries
-        resolve()
-        clearTimeout(timeout)
-      })
-    })
-    ctx.ws.addEventListener('message', (v) => {
-      onMessage(v.data)
-    })
-    ctx.ws.addEventListener('close', () => {
-      tries -= 1
-      if (autoReconnect && tries > 0) {
-        setTimeout(reconnect, reconnectInterval)
-      }
-    })
-  }
-
-  registerWS()
-
-  function waitForConnection() {
-    return openPromise
-  }
 
   return ctx
 }
