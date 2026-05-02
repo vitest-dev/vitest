@@ -340,15 +340,20 @@ test('stackTrace set to false omits stack trace content from failure', async () 
   expect(xml).not.toContain('❯ error.test.ts')
 })
 
-test('addFileAttribute attaches source path to unhandled-error testcases', async () => {
+test('emits one <testcase> per unhandled error and titles them by error.type', async () => {
+  const { stdout } = await runVitest({
+    reporters: 'junit',
+    root: './fixtures/reporters/unhandled-errors-multi',
+  })
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
+})
+
+test('resolves unhandled errors to the owning project in a multi-project workspace', async () => {
   const { stdout } = await runVitest({
     reporters: [['junit', { addFileAttribute: true }]],
-    root,
-  }, ['error.test.ts'])
-  const xml = stabilizeReport(stdout)
-
-  // file= maps unhandled errors back to source for CircleCI / GitLab
-  expect(xml).toMatch(/<testcase classname="vitest unhandled errors" file="error\.test\.ts" name="Unhandled Rejection: throwSimple"/)
+    root: './fixtures/reporters/unhandled-errors-multi-project',
+  })
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
 })
 
 function executionTime(durationMS: number) {
