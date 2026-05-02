@@ -164,6 +164,11 @@ describe('User API', () => {
   beforeAll(() => {
     // Runs once before all tests in this suite
     console.log('beforeAll')
+
+    return function beforeAllCleanup() {
+      // Runs once afterAll hooks have run
+      console.log('beforeAllCleanup')
+    }
   })
 
   aroundEach(async (runTest) => {
@@ -176,6 +181,11 @@ describe('User API', () => {
   beforeEach(() => {
     // Runs before each test
     console.log('beforeEach')
+
+    return function beforeEachCleanup() {
+      // Runs after afterEach hooks have run
+      console.log('beforeEachCleanup')
+    }
   })
 
   test('creates user', () => {
@@ -208,13 +218,16 @@ describe('User API', () => {
 //     beforeEach
 //       test 1
 //     afterEach
+//     beforeEachCleanup
 //   aroundEach after
 //   aroundEach before
 //     beforeEach
 //       test 2
 //     afterEach
+//     beforeEachCleanup
 //   aroundEach after
 //   afterAll
+//   beforeAllCleanup
 // aroundAll after
 ```
 
