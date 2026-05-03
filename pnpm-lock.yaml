@@ -1439,6 +1439,9 @@ importers:
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
+      jest-image-snapshot:
+        specifier: ^6.5.1
+        version: 6.5.1
       obug:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1522,19 +1525,6 @@ importers:
         version: link:../../../../packages/vitest
 
   test/node-runner: {}
-
-  test/snapshots:
-    dependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      jest-image-snapshot:
-        specifier: ^6.5.1
-        version: 6.5.1
 
   test/test-utils:
     devDependencies:

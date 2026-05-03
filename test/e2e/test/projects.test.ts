@@ -120,6 +120,7 @@ it('correctly inherits the root config', async () => {
 
 it('fails if workspace is empty', async () => {
   const { stderr } = await runVitest({
+    config: false,
     projects: [],
   }, [], { fails: true })
   expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The projects definition: [].')
