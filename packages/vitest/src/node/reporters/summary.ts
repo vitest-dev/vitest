@@ -148,7 +148,7 @@ export class SummaryReporter implements Reporter {
 
     const timeout = setTimeout(() => {
       hook.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    }, Math.min(this.ctx.config.slowTestThreshold, 2 ** 31 - 1)).unref()
 
     hook.onFinish = () => clearTimeout(timeout)
   }
@@ -185,7 +185,7 @@ export class SummaryReporter implements Reporter {
 
     const timeout = setTimeout(() => {
       slowTest.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    }, Math.min(this.ctx.config.slowTestThreshold, 2 ** 31 - 1)).unref()
 
     slowTest.onFinish = () => {
       slowTest.hook?.onFinish()
