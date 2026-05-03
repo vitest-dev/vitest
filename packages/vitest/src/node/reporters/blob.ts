@@ -320,9 +320,15 @@ function deserializeEnvironmentModuleGraph(
     const moduleNode = nodesById.get(moduleId)!
     importedIds.forEach((importedIdIndex) => {
       const importedId = serialized.idTable[importedIdIndex]
-      const importedNode = nodesById.get(importedId)!
+      const importedNode = nodesById.get(importedId)
+      if (!importedNode) {
+        // The imported module was not serialized (e.g. it had no `file`, such
+        // as a virtual/file-less module).  Skip the edge rather than crashing.
+        return
+      }
       moduleNode.importedModules.add(importedNode)
       importedNode.importers.add(moduleNode)
     })
   })
 }
+
