@@ -7,37 +7,78 @@ vi.setConfig({
   },
 })
 
-const hookOrder: number[] = []
+const hookOrder: string[] = []
 function callHook(hook: 'beforeAll' | 'beforeEach' | 'afterAll' | 'afterEach', order: number) {
   vitest[hook](() => {
-    hookOrder.push(order)
+    hookOrder.push(`${hook} #${order}`)
   })
 }
 
 describe('hooks are called sequentially', () => {
-  callHook('beforeAll', 1)
-  callHook('afterAll', 4)
+  vitest.beforeAll(() => {
+    hookOrder.push(`beforeAll #1`)
 
+    return function beforeAllCleanup() {
+      hookOrder.push(`beforeAllCleanup #1`)
+    }
+  })
   callHook('beforeAll', 2)
+  callHook('afterAll', 1)
+
+  callHook('beforeAll', 3)
   // will wait for it
   vitest.afterAll(async () => {
     await Promise.resolve()
-    hookOrder.push(5)
+    hookOrder.push(`afterAll #2`)
   })
 
-  callHook('beforeEach', 7)
-  callHook('afterEach', 10)
+  vitest.beforeEach(() => {
+    hookOrder.push(`beforeEach #1`)
 
-  callHook('beforeEach', 8)
-  callHook('afterEach', 11)
+    return function beforeEachCleanup() {
+      hookOrder.push(`beforeEachCleanup #1`)
+    }
+  })
+
+  callHook('beforeEach', 2)
+  callHook('afterEach', 1)
+
+  callHook('beforeEach', 3)
+  callHook('afterEach', 2)
 
   test('before hooks pushed in order', () => {
-    expect(hookOrder).toEqual([1, 2, 7, 8])
+    expect(hookOrder).toEqual([
+      'beforeAll #1',
+      'beforeAll #2',
+      'beforeAll #3',
+
+      'beforeEach #1',
+      'beforeEach #2',
+      'beforeEach #3',
+    ])
   })
 })
 
 describe('previous suite run all hooks', () => {
   test('after all hooks run in reverse order', () => {
-    expect(hookOrder).toEqual([1, 2, 7, 8, 11, 10, 5, 4])
+    expect(hookOrder).toEqual([
+      'beforeAll #1',
+      'beforeAll #2',
+      'beforeAll #3',
+
+      'beforeEach #1',
+      'beforeEach #2',
+      'beforeEach #3',
+
+      'afterEach #2',
+      'afterEach #1',
+
+      'beforeEachCleanup #1',
+
+      'afterAll #2',
+      'afterAll #1',
+
+      'beforeAllCleanup #1',
+    ])
   })
 })
