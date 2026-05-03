@@ -34,7 +34,14 @@ export { Snapshots } from '../integrations/snapshot/chai'
 
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
-export { bench } from '../runtime/benchmark'
+export type {
+  Bench,
+  BenchCompareOptions,
+  BenchFnOptions,
+  BenchRegistration,
+  BenchResult,
+  BenchStorage,
+} from '../runtime/benchmark'
 
 export type {
   RuntimeConfig,
@@ -45,18 +52,7 @@ export type {
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 
-export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
 export { TestRunner } from '../runtime/runners/test'
-export type {
-  BenchFactory,
-  BenchFunction,
-  Benchmark,
-  BenchmarkAPI,
-  BenchmarkResult,
-  BenchOptions,
-  BenchTask,
-  BenchTaskResult,
-} from '../runtime/types/benchmark'
 export { assertType } from '../typecheck/assertType'
 
 export type { AssertType } from '../typecheck/assertType'
@@ -117,6 +113,7 @@ export {
   test,
 } from '@vitest/runner'
 export type {
+  BaselineData,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
@@ -144,6 +141,8 @@ export type {
   TestArtifactLocation,
   TestArtifactRegistry,
   TestAttachment,
+  TestBenchmark,
+  TestBenchmarkTask,
   TestContext,
   TestFunction,
   TestOptions,

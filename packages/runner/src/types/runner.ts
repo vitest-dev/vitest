@@ -42,10 +42,14 @@ export interface VitestRunnerConfig {
   hookTimeout: number
   retry: SerializableRetry
   includeTaskLocation: boolean | undefined
-  diffOptions?: DiffOptions
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+
+  /**
+   * @internal
+   */
+  _diffOptions?: DiffOptions
 }
 
 /**
@@ -92,6 +96,11 @@ export type CancelReason
     | 'test-failure'
     | (string & Record<string, never>)
 
+export interface TestTryOptions {
+  retry: number
+  repeats: number
+}
+
 export interface VitestRunner {
   /**
    * First thing that's getting called before actually collecting and running tests.
@@ -122,7 +131,7 @@ export interface VitestRunner {
    */
   onBeforeTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
   /**
    * When the task has finished running, but before cleanup hooks are called
@@ -137,7 +146,7 @@ export interface VitestRunner {
    */
   onAfterTryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
   /**
    * Called after the retry resolution happened. Unlike `onAfterTryTask`, the test now has a new state.
@@ -145,7 +154,7 @@ export interface VitestRunner {
    */
   onAfterRetryTask?: (
     test: Test,
-    options: { retry: number; repeats: number },
+    options: TestTryOptions,
   ) => unknown
 
   /**

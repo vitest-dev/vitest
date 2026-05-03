@@ -9,6 +9,13 @@ outline: deep
 
 Options used when running `vitest bench`.
 
+## benchmark.enabled
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enables the benchmark project. When set, Vitest creates a dedicated benchmark project alongside your regular test project, runs files matching [`benchmark.include`](#benchmark-include) in it, and exposes the [`bench` fixture](/guide/test-context#bench) to those files. Running `vitest bench` enables this automatically.
+
 ## benchmark.include
 
 - **Type:** `string[]`
@@ -32,39 +39,17 @@ Include globs for in-source benchmark test files. This option is similar to [`in
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
-## benchmark.reporters
+## benchmark.retainSamples
 
-- **Type:** `Arrayable<BenchmarkBuiltinReporters | Reporter>`
-- **Default:** `'default'`
+- **Type:** `boolean`
+- **Default:** `false`
 
-Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
+Include the `samples` array of per-iteration timings on every benchmark result. Off by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
 
-## benchmark.outputFile
+## benchmark.updateBaselines
 
-Deprecated in favor of `benchmark.outputJson`.
+- **Type:** `boolean`
+- **Default:** `false`
+- **CLI:** `--update-baselines`
 
-## benchmark.outputJson {#benchmark-outputJson}
-
-- **Type:** `string | undefined`
-- **Default:** `undefined`
-
-A file path to store the benchmark result, which can be used for `--compare` option later.
-
-For example:
-
-```sh
-# save main branch's result
-git checkout main
-vitest bench --outputJson main.json
-
-# change a branch and compare against main
-git checkout feature
-vitest bench --compare main.json
-```
-
-## benchmark.compare {#benchmark-compare}
-
-- **Type:** `string | undefined`
-- **Default:** `undefined`
-
-A file path to a previous benchmark result to compare against current runs.
+Overwrite stored benchmark baselines with fresh results. Baselines are created by [`bench.withBaseline()`](/guide/benchmarking#baselines) and stored in a `__benchmarks__/<file>.json` file next to each benchmark file. When `false` (the default), `bench.withBaseline()` reuses the stored result instead of re-running the benchmark; set this to `true` (or pass `--update-baselines` on the CLI) to regenerate the baselines.

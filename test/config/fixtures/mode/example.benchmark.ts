@@ -1,8 +1,8 @@
-import { bench, describe } from 'vitest'
+import { test } from 'vitest'
 
-describe('example', () => {
-  bench('simple', () => {
+test('simple', async ({ bench }) => {
+  await bench('simple', () => {
     let _ = 0
     _ += 1
-  }, { iterations: 1, time: 1, warmupIterations: 0, warmupTime: 0 })
+  }).run({ iterations: 1, time: 1, warmupIterations: 0, warmupTime: 0 })
 })

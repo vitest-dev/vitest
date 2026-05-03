@@ -146,7 +146,7 @@ async function callTestHooks(
       await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
     }
     catch (e) {
-      failTask(test.result!, e, runner.config.diffOptions)
+      failTask(test.result!, e, runner.config._diffOptions)
     }
   }
   else {
@@ -155,7 +155,7 @@ async function callTestHooks(
         await limitMaxConcurrency(() => fn(test.context))
       }
       catch (e) {
-        failTask(test.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config._diffOptions)
       }
     }
   }
@@ -662,14 +662,14 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           }
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config._diffOptions)
         }
 
         try {
           await runner.onTaskFinished?.(test)
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config._diffOptions)
         }
 
         try {
@@ -685,7 +685,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config._diffOptions)
         }
 
         if (test.onFinished?.length) {
@@ -709,7 +709,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           repeats: repeatCount,
         })
       }).catch((error) => {
-        failTask(test.result!, error, runner.config.diffOptions)
+        failTask(test.result!, error, runner.config._diffOptions)
       })
 
       // Clean up fixtures that were created for aroundEach (before the checkpoint)
@@ -718,7 +718,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         await callFixtureCleanup(test.context)
       }
       catch (e) {
-        failTask(test.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config._diffOptions)
       }
 
       // skipped with new PendingError
@@ -886,7 +886,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             ))
           }
           catch (e) {
-            failTask(suite.result!, e, runner.config.diffOptions)
+            failTask(suite.result!, e, runner.config._diffOptions)
             markTasksAsSkipped(suite, runner)
             return
           }
@@ -934,7 +934,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
             }
           }
           catch (e) {
-            failTask(suite.result!, e, runner.config.diffOptions)
+            failTask(suite.result!, e, runner.config._diffOptions)
           }
         }
       })
@@ -944,7 +944,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       if (!suiteRan) {
         markTasksAsSkipped(suite, runner)
       }
-      failTask(suite.result!, e, runner.config.diffOptions)
+      failTask(suite.result!, e, runner.config._diffOptions)
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {

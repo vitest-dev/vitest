@@ -5,35 +5,9 @@ title: Vitest API
 
 # Vitest
 
-Vitest instance requires the current test mode. It can be either:
+## mode <Deprecated /> {#mode}
 
-- `test` when running runtime tests
-- `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
-
-::: details New in Vitest 4
-Vitest 4 added several new APIs (they are marked with a "4.0.0+" badge) and removed deprecated APIs:
-
-- `invalidates`
-- `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
-- `server` (use [`vite`](#vite) instead)
-- `getProjectsByTestFile` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getFileWorkspaceSpecs` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getModuleProjects` (filter by [`this.projects`](#projects) yourself)
-- `updateLastChanged` (renamed to [`invalidateFile`](#invalidatefile))
-- `globTestSpecs` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `globTestFiles` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `listFile` (use [`getRelevantTestSpecifications`](#getrelevanttestspecifications) instead)
-:::
-
-## mode
-
-### test
-
-Test mode will only call functions inside `test` or `it`, and throws an error when `bench` is encountered. This mode uses `include` and `exclude` options in the config to find test files.
-
-### benchmark <Badge type="warning">experimental</Badge>
-
-Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
+Since Vitest 5, this property is always `'test'`.
 
 ## config
 

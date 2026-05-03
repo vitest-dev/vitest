@@ -27,12 +27,11 @@ export async function resolveConfig(
         : find.any(configFiles, { cwd: root })
   options.config = configPath
 
-  const vitest = new Vitest('test', deepClone(options))
+  const vitest = new Vitest(deepClone(options))
   const config = await resolveViteConfig(
     mergeConfig(
       {
         configFile: configPath,
-        // this will make "mode": "test" | "benchmark" inside defineConfig
         mode: options.mode || 'test',
         plugins: [
           await VitestPlugin(options, vitest),

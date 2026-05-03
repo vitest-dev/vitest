@@ -14,7 +14,6 @@ You can import any method from the `vitest/node` entry-point.
 
 ```ts
 function startVitest(
-  mode: VitestRunMode,
   cliFilters: string[] = [],
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
@@ -60,7 +59,6 @@ The ["Running Tests"](/guide/advanced/tests#startvitest) guide has a usage examp
 
 ```ts
 function createVitest(
-  mode: VitestRunMode,
   options: CliOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},

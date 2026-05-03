@@ -31,6 +31,7 @@ import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { convertTasksToEvents } from '../utils/tasks'
 import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
+import { BenchmarkManager } from './benchmark'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
@@ -44,11 +45,11 @@ import { collectModuleDurationsDiagnostic, collectSourceModulesLocations } from 
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
-import { getDefaultTestProject, resolveBrowserProjects, resolveProjects } from './projects/resolveProjects'
+import { getDefaultTestProject, resolveDefaultProjects, resolveProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReport } from './reporters/report'
-import { createBenchmarkReporters, createReporters } from './reporters/utils'
+import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
@@ -77,7 +78,7 @@ export class Vitest {
    * The logger instance used to log messages. It's recommended to use this logger instead of `console`.
    * It's possible to override stdout and stderr streams when initiating Vitest.
    * @example
-   * new Vitest('test', {
+   * new Vitest({
    *   stdout: new Writable(),
    * })
    */
@@ -141,13 +142,41 @@ export class Vitest {
   private _state?: StateManager
   private _cache?: VitestCache
   private _snapshot?: SnapshotManager
+  public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
   private _coverageProvider?: CoverageProvider | null | undefined
 
+  /**
+   * @deprecated Do not rely on this property, it's always `test`. Scheduled to be removed in the next major.
+   */
+  public readonly mode = 'test'
+
   constructor(
-    public readonly mode: VitestRunMode,
     cliOptions: UserConfig,
-    options: VitestOptions = {},
+    options?: VitestOptions,
+  )
+  /**
+   * @deprecated The `mode` argument is no longer used. Use `new Vitest(cliOptions, options)` instead.
+   */
+  constructor(
+    mode: VitestRunMode,
+    cliOptions: UserConfig,
+    options?: VitestOptions,
+  )
+  constructor(
+    modeOrCliOptions: VitestRunMode | UserConfig,
+    cliOptionsOrOptions?: UserConfig | VitestOptions,
+    maybeOptions?: VitestOptions,
   ) {
+    let cliOptions: UserConfig
+    let options: VitestOptions
+    if (typeof modeOrCliOptions === 'string') {
+      cliOptions = cliOptionsOrOptions as UserConfig
+      options = maybeOptions ?? {}
+    }
+    else {
+      cliOptions = modeOrCliOptions
+      options = (cliOptionsOrOptions as VitestOptions) ?? {}
+    }
     this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
@@ -306,10 +335,13 @@ export class Vitest {
     }
     catch { }
 
-    const projects = await this.resolveProjects(this._cliOptions)
-    this.projects = projects
+    this.projects = await this.resolveProjects(this._cliOptions)
+    // TODO: root project gets included for some reason
+    if (this._cliOptions.benchmarkOnly) {
+      this.projects = this.projects.filter(c => c.config.benchmark.enabled)
+    }
 
-    await Promise.all(projects.flatMap((project) => {
+    await Promise.all(this.projects.flatMap((project) => {
       const hooks = project.vite.config.getSortedPluginHooks('configureVitest')
       return hooks.map(hook => hook({
         project,
@@ -356,9 +388,7 @@ export class Vitest {
       populateProjectsTags(this.coreWorkspaceProject, this.projects)
     }
 
-    this.reporters = resolved.mode === 'benchmark'
-      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this)
+    this.reporters = await createReporters(resolved.reporters, this)
 
     await this._fsCache.ensureCacheIntegrity()
 
@@ -567,7 +597,7 @@ export class Vitest {
     if (!project) {
       return []
     }
-    return resolveBrowserProjects(this, new Set([project.name]), [project])
+    return resolveDefaultProjects(this, new Set([project.name]), [project])
   }
 
   /**
@@ -797,7 +827,7 @@ export class Vitest {
         })
 
         if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
-          throw new FilesNotFoundError(this.mode)
+          throw new FilesNotFoundError()
         }
       }
 
@@ -1042,9 +1072,6 @@ export class Vitest {
     /** @default os.availableParallelism() */
     concurrency?: number
   }): Promise<TestModule[]> {
-    if (this.mode !== 'test') {
-      throw new Error(`The \`experimental_parseSpecifications\` does not support "${this.mode}" mode.`)
-    }
     const concurrency = options?.concurrency ?? (typeof os.availableParallelism === 'function'
       ? os.availableParallelism()
       : os.cpus().length)
@@ -1084,9 +1111,6 @@ export class Vitest {
   }
 
   public async experimental_parseSpecification(specification: TestSpecification): Promise<TestModule> {
-    if (this.mode !== 'test') {
-      throw new Error(`The \`experimental_parseSpecification\` does not support "${this.mode}" mode.`)
-    }
     const file = await astCollectTests(specification.project, specification.moduleId).catch((error) => {
       return createFailedFileTask(specification.project, specification.moduleId, error)
     })

@@ -29,6 +29,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         {
           "annotations": [],
           "artifacts": [],
+          "benchmarks": [],
           "file": [Circular],
           "fullName": "json-fail.test.ts > should fail",
           "fullTestName": "should fail",
@@ -154,6 +155,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "annotations": [],
           "artifacts": [],
+          "benchmarks": [],
           "file": [Circular],
           "fullName": "all-passing-or-skipped.test.ts > 2 + 3 = 5",
           "fullTestName": "2 + 3 = 5",
@@ -179,6 +181,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "annotations": [],
           "artifacts": [],
+          "benchmarks": [],
           "file": [Circular],
           "fullName": "all-passing-or-skipped.test.ts > 3 + 3 = 6",
           "fullTestName": "3 + 3 = 6",

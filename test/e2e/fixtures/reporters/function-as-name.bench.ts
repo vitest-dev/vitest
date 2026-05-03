@@ -1,4 +1,4 @@
-import { bench } from 'vitest'
+import { test } from 'vitest'
 
 const options = {
   time: 0,
@@ -10,6 +10,12 @@ const options = {
 function foo() {}
 class Bar {}
 
-bench(foo, () => {}, options)
-bench(Bar, () => {}, options)
-bench(() => {}, () => {}, options)
+test('benches', async ({ bench, annotate }) => {
+  await bench.compare(
+    bench(foo, () => {}),
+    bench(Bar, () => {}),
+    bench(() => {}, () => {}),
+    options,
+  )
+})
+

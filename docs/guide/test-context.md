@@ -117,6 +117,33 @@ it('stop request when test times out', async ({ signal }) => {
 }, 2000)
 ```
 
+### `bench` <Version>5.0.0</Version> {#bench}
+
+The `bench` fixture lets you define and run benchmarks inside regular tests. You can measure throughput, compare implementations, and assert relative performance:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('compare parsers', async ({ bench }) => {
+  const result = await bench.compare(
+    bench('JSON.parse', () => {
+      JSON.parse('{"key":"value"}')
+    }),
+    bench('custom parser', () => {
+      customParse('{"key":"value"}')
+    }),
+  )
+
+  expect(result.get('JSON.parse')).toBeFasterThan(result.get('custom parser'))
+})
+```
+
+See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
+
+::: warning
+When the first argument is a function, Vitest uses it only to derive the benchmark's name. It is not executed. The benchmark body must be passed as the second argument.
+:::
+
 ### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.

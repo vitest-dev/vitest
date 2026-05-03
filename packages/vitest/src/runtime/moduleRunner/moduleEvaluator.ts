@@ -333,6 +333,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
+      // TODO: track access during benchmark
+
       await initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],

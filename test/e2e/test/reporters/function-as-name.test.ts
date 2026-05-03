@@ -15,9 +15,13 @@ test('should print function name', async () => {
   expect(stdout).toContain('function-as-name.test.ts > Bar > Bar')
 })
 
-test('should print function name in benchmark', async () => {
+test.for(['default', 'verbose'])('should print function name in benchmark in %s reporter', async (reporters) => {
   const filename = resolve('./fixtures/reporters/function-as-name.bench.ts')
-  const { stdout } = await runVitest({ root: './fixtures/reporters' }, [filename], { mode: 'benchmark' })
+  const { stdout } = await runVitest({
+    root: './fixtures/reporters',
+    reporters,
+    benchmark: { enabled: true },
+  }, [filename])
 
   expect(stdout).toBeTruthy()
   expect(stdout).toContain('Bar')

@@ -332,7 +332,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   mode: {
-    description: 'Override Vite mode (default: `test` or `benchmark`)',
+    description: 'Override Vite mode (default: `test`)',
     argument: '<name>',
   },
   isolate: {
@@ -972,8 +972,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   snapshotEnvironment: null,
-  compare: null,
-  outputJson: null,
   json: null,
   provide: null,
   filesOnly: null,
@@ -982,20 +980,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  benchmarkOnly: null,
+  updateBaselines: null,
   taskTitleValueFormatTruncate: null,
 }
 
 export const benchCliOptionsConfig: Pick<
   VitestCLIOptions,
-  'compare' | 'outputJson'
+  'updateBaselines'
 > = {
-  compare: {
-    description: 'Benchmark output file to compare against',
-    argument: '<filename>',
-  },
-  outputJson: {
-    description: 'Benchmark output file',
-    argument: '<filename>',
+  updateBaselines: {
+    description: 'Overwrite stored benchmark baselines with fresh results',
   },
 }
 

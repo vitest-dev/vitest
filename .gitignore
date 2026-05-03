@@ -26,6 +26,7 @@ docs/.vitepress/cache/
 !test/e2e/fixtures/dotted-files/**/.cache
 test/**/__screenshots__/**/*
 test/**/__traces__/**/*
+test/browser/**/__benchmarks__
 test/browser/fixtures/update-snapshot/basic.test.ts
 test/e2e/fixtures/browser-multiple/basic-*
 .vitest-reports

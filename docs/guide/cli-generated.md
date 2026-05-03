@@ -311,7 +311,7 @@ Track coverage of the `node:child_process` and `node:worker_threads` spawned dur
 - **CLI:** `--mode <name>`
 - **Config:** [mode](/config/mode)
 
-Override Vite mode (default: `test` or `benchmark`)
+Override Vite mode (default: `test`)
 
 ### isolate
 
