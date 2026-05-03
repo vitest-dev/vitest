@@ -46,15 +46,13 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
-  // Rebuild into a freshly remounted srcdoc iframe. This relies on our
+  // Rebuild into a freshly remounted about:blank iframe. This relies on our
   // rrweb-snapshot patch removing rebuild's Document-level doc.open() reset:
   // the iframe navigation gives us a new document, and this loop clears the
   // parser-created srcdoc doctype/html so rrweb can append the serialized
   // document tree.
   const doc = iframe.contentDocument!
-  while (doc.firstChild) {
-    doc.removeChild(doc.firstChild)
-  }
+  doc.replaceChildren()
   const mirror = createMirror()
   rebuild(serialized, {
     doc,
@@ -190,7 +188,6 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           ref="iframeEl"
           :key="`${iframeSandbox}:${selectedStepIndex}`"
           :sandbox="iframeSandbox"
-          srcdoc="<!doctype html><html><head></head><body></body></html>"
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
         <div v-else class="text-sm opacity-50 p-4">
