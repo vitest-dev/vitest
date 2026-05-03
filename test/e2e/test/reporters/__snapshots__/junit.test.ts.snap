@@ -67,6 +67,17 @@ exports[`emits one <testcase> per unhandled error and titles them by error.type 
         </testcase>
     </testsuite>
     <testsuite name="vitest unhandled errors" timestamp="..." hostname="..." tests="3" failures="0" errors="3" skipped="0" time="...">
+        <testcase classname="vitest unhandled errors" name="Uncaught Exception: uncaught timer" time="...">
+            <error message="uncaught timer" type="Error">
+Error: uncaught timer
+ ❯ Timeout._onTimeout multi.test.ts:7:11
+
+This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
+        </testcase>
         <testcase classname="vitest unhandled errors" name="Unhandled Rejection: first rejection" time="...">
             <error message="first rejection" type="Error">
 Error: first rejection
@@ -82,17 +93,6 @@ The latest test that might&apos;ve caused the error is &quot;triggers two reject
             <error message="second rejection" type="Error">
 Error: second rejection
  ❯ multi.test.ts:5:23
-
-This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
-The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
-- The error was thrown, while Vitest was running this test.
-- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
-            </error>
-        </testcase>
-        <testcase classname="vitest unhandled errors" name="Uncaught Exception: uncaught timer" time="...">
-            <error message="uncaught timer" type="Error">
-Error: uncaught timer
- ❯ Timeout._onTimeout multi.test.ts:7:11
 
 This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
 The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:

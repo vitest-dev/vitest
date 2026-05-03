@@ -477,14 +477,21 @@ export class JUnitReporter implements Reporter {
         time: '0',
       },
       async () => {
-        for (const error of unhandledErrors) {
-          // Prefer error.type ("Uncaught Exception" / "Unhandled Rejection") over error.name for the title.
+        // Stable order across runs — workers/projects report errors concurrently.
+        const sortedErrors = [...unhandledErrors].sort((a, b) => {
+          const ka = `${a.VITEST_TEST_PATH ?? ''}\0${a.type ?? ''}\0${a.name ?? ''}\0${a.message ?? ''}`
+          const kb = `${b.VITEST_TEST_PATH ?? ''}\0${b.type ?? ''}\0${b.name ?? ''}\0${b.message ?? ''}`
+          return ka < kb ? -1 : ka > kb ? 1 : 0
+        })
+        for (const error of sortedErrors) {
           const errorTitle = error.type || error.name || 'Unhandled Error'
-          // Match the error back to the project/task that owns it so capturePrintError
-          // resolves paths against the right project root in multi-project workspaces.
-          const owningModule = error.VITEST_TEST_PATH
-            ? testModules.find(m => m.task.filepath === error.VITEST_TEST_PATH)
-            : undefined
+          // Only attribute when the path resolves to exactly one module — when
+          // multiple projects share a file, errors lack a project identifier and
+          // we can't disambiguate without one (tracked for follow-up).
+          const matches = error.VITEST_TEST_PATH
+            ? testModules.filter(m => m.task.filepath === error.VITEST_TEST_PATH)
+            : []
+          const owningModule = matches.length === 1 ? matches[0] : undefined
           await this.writeElement(
             'testcase',
             {
@@ -592,13 +599,19 @@ export class JUnitReporter implements Reporter {
     )
     stats.tests += unhandledErrors.length
 
-    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
-      for (let i = 0; i < transformed.length; i++) {
-        const file = transformed[i]
+    // Plain byte compare (not localeCompare) so output is identical across machines and ICU versions.
+    const orderedSuites = transformed
+      .map((file, i) => {
         const filename = relative(this.ctx.config.root, file.filepath)
         // resolveSuiteNameTemplate needs the original file (before task flattening) to
         // search for top-level describe blocks, so pass files[i] directly.
         const suiteName = this.resolveSuiteNameTemplate(files[i], filename)
+        return { file, filename, suiteName }
+      })
+      .sort((a, b) => a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0)
+
+    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
+      for (const { file, filename, suiteName } of orderedSuites) {
         await this.writeElement(
           'testsuite',
           {
