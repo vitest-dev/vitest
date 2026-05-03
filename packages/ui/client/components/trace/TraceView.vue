@@ -24,7 +24,7 @@ watch(() => props.trace, () => {
   selectedStepIndex.value = 0
 })
 
-const iframeEl = ref<HTMLIFrameElement>()
+const iframeHost = ref<HTMLDivElement>()
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
@@ -39,18 +39,29 @@ function onSelectStep(index: number) {
   }
 }
 
-watch([selectedStep, iframeEl], ([step, iframe]) => {
-  if (!step || !iframe) {
+watch([selectedStep, iframeSandbox, iframeHost], ([step, sandbox, host]) => {
+  if (!host) {
     return
   }
+
+  host.replaceChildren()
+
+  if (!step) {
+    return
+  }
+
+  const iframe = document.createElement('iframe')
+  iframe.setAttribute('sandbox', sandbox)
+  iframe.style.cssText = 'background: white; border: none; color-scheme: normal; flex: none'
+  host.appendChild(iframe)
+
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
-  // Rebuild into a freshly remounted about:blank iframe. This relies on our
+  // Rebuild into a freshly created about:blank iframe. This relies on our
   // rrweb-snapshot patch removing rebuild's Document-level doc.open() reset:
-  // the iframe navigation gives us a new document, and this loop clears the
-  // parser-created srcdoc doctype/html so rrweb can append the serialized
-  // document tree.
+  // the iframe creation gives us a new document, and this clears the initial
+  // doctype/html so rrweb can append the serialized document tree.
   const doc = iframe.contentDocument!
   doc.replaceChildren()
   const mirror = createMirror()
@@ -183,14 +194,8 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
     </Pane>
     <Pane :size="70" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
-        <iframe
-          v-if="selectedStep"
-          ref="iframeEl"
-          :key="`${iframeSandbox}:${selectedStepIndex}`"
-          :sandbox="iframeSandbox"
-          style="background: white; border: none; color-scheme: normal; flex: none"
-        />
-        <div v-else class="text-sm opacity-50 p-4">
+        <div ref="iframeHost" style="display: contents" />
+        <div v-if="!selectedStep" class="text-sm opacity-50 p-4">
           No trace step selected.
         </div>
       </div>
