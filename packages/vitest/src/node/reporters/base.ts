@@ -38,6 +38,10 @@ const BADGE_PADDING = '       '
 export interface BaseOptions {
   isTTY?: boolean
   silent?: boolean | 'passed-only'
+  /**
+   * Render all tests that passed.
+   */
+  renderPassedTests?: boolean
 }
 
 export abstract class BaseReporter implements Reporter {
@@ -58,6 +62,9 @@ export abstract class BaseReporter implements Reporter {
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
     this.silent = options.silent
+    if (options.renderPassedTests != null) {
+      this.renderSucceed = options.renderPassedTests
+    }
   }
 
   onInit(ctx: Vitest): void {

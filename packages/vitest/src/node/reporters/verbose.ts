@@ -1,3 +1,4 @@
+import type { DefaultReporterOptions } from './default'
 import type { TestCase, TestModule } from './reported-tasks'
 import { getTestName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
@@ -7,7 +8,13 @@ import { separator } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
   protected verbose = true
-  renderSucceed = true
+
+  constructor(options?: DefaultReporterOptions) {
+    super(options)
+    if (this.renderSucceed == null) {
+      this.renderSucceed = true
+    }
+  }
 
   printTestModule(_module: TestModule): void {
     // don't print test module, only print tests
@@ -19,6 +26,10 @@ export class VerboseReporter extends DefaultReporter {
     const testResult = test.result()
 
     if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
+      return
+    }
+
+    if (testResult.state === 'passed' && !this.renderSucceed) {
       return
     }
 

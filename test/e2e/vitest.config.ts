@@ -4,8 +4,10 @@ export default defineConfig({
   test: {
     include: ['test/**/**.{test,spec}.ts'],
     includeTaskLocation: true,
-    reporters: ['verbose'],
+    // hide successfull tests in CI
+    reporters: [['verbose', { renderPassedTests: !process.env.CI }]],
     testTimeout: 60_000,
+    hideSkippedTests: !!process.env.CI,
     isolate: false,
     fileParallelism: false,
     // TODO: should enabled when support for older node is dropped?
