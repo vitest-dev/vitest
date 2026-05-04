@@ -107,6 +107,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "VitestPlugin": "function",
         "VmForksPoolWorker": "function",
         "VmThreadsPoolWorker": "function",
+        "capturePrintError": "function",
         "createDebugger": "function",
         "createMethodsRPC": "function",
         "createViteLogger": "function",
