@@ -29,12 +29,34 @@ test.each([true/* , false */])('mocking works correctly - isolated %s', async (i
     expect(result.stdout).toReportPassedTest('import-actual-in-mock.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-actual-query.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-mock.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/aaa-dual-id-probe.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/zzz-dual-id-target.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-do-mock-factory.test.ts', browser)
     expect(result.stdout).toReportPassedTest('import-actual-dep.test.ts', browser)
   })
 
   expect(result.exitCode).toBe(0)
 })
+
+test('manual mocks do not leak across browser files when alias and relative ids resolve to the same module', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking',
+  }, ['src/aaa-dual-id-probe.test.ts', 'src/zzz-dual-id-target.test.ts'])
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('src/aaa-dual-id-probe.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('src/zzz-dual-id-target.test.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+}, 60_000)
 
 test('mocking dependency correctly invalidates it on rerun', async () => {
   const { vitest, ctx } = await runVitest({
