@@ -1,3 +1,4 @@
+import type { TaskMeta } from '@vitest/runner/types'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
@@ -55,17 +56,14 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
+    // merge-reports uses the original `file.meta` from the test run
+    metaOverride?: TaskMeta,
   ) {
     const projectName = project.config.name
-    const hashName = pool !== 'typescript'
-      ? projectName
-      : projectName
-      // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
-        ? `${projectName}:__typecheck__`
-        : '__typecheck__'
     this.taskId = generateFileHash(
       relative(project.config.root, moduleId),
-      hashName,
+      projectName,
+      metaOverride ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
     )
     this.project = project
     this.moduleId = moduleId

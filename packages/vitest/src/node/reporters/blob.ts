@@ -7,12 +7,14 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
 
 export interface BlobOptions {
   outputFile?: string
+  label?: string
 }
 
 export class BlobReporter implements Reporter {
@@ -46,15 +48,6 @@ export class BlobReporter implements Reporter {
     const errors = [...unhandledErrors]
     const coverage = this.coverage
 
-    let outputFile
-      = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
-    if (!outputFile) {
-      const shard = this.ctx.config.shard
-      outputFile = shard
-        ? `.vitest-reports/blob-${shard.index}-${shard.count}.json`
-        : '.vitest-reports/blob.json'
-    }
-
     const environmentModules: MergeReportEnvironmentModules = {}
     this.ctx.projects.forEach((project) => {
       const serializedProject: MergeReportEnvironmentModules[string] = {
@@ -82,31 +75,45 @@ export class BlobReporter implements Reporter {
       environmentModules[project.name] = serializedProject
     })
 
-    const report = [
+    const content = stringify([
       this.ctx.version,
       files,
       errors,
       coverage,
       executionTime,
       environmentModules,
-    ] satisfies MergeReport
+    ] satisfies MergeReport)
 
-    const reportFile = resolve(this.ctx.config.root, outputFile)
-    await writeBlob(report, reportFile)
+    let outputFile = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
 
-    this.ctx.logger.log('blob report written to', reportFile)
+    if (outputFile) {
+      outputFile = resolve(this.ctx.config.root, outputFile)
+
+      const dir = dirname(outputFile)
+      if (!existsSync(dir)) {
+        await mkdir(dir, { recursive: true })
+      }
+
+      await writeFile(outputFile, content, 'utf-8')
+    }
+    else {
+      const report = this.ctx.createReport('blob')
+
+      const shard = this.ctx.config.shard
+      outputFile = [
+        'blob',
+        this.ctx.config.mergeReportsLabel,
+        shard ? `-${shard.index}-${shard.count}` : '',
+      ].join('')
+
+      outputFile = `${sanitizeFilePath(outputFile)}.json`
+
+      await report.writeFile(outputFile, content, 'utf-8')
+      outputFile = resolve(report.root, outputFile)
+    }
+
+    this.ctx.logger.log('blob report written to', outputFile)
   }
-}
-
-export async function writeBlob(content: MergeReport, filename: string): Promise<void> {
-  const report = stringify(content)
-
-  const dir = dirname(filename)
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true })
-  }
-
-  await writeFile(filename, report, 'utf-8')
 }
 
 export async function readBlobs(
@@ -218,7 +225,7 @@ export interface MergedBlobs {
   executionTimes: number[]
 }
 
-type MergeReport = [
+export type MergeReport = [
   vitestVersion: string,
   files: File[],
   errors: unknown[],
