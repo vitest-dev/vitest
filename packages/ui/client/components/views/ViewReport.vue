@@ -2,8 +2,6 @@
 import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { computed } from 'vue'
 import { config } from '~/composables/client'
-import { isDark } from '~/composables/dark'
-import { mapLeveledTaskStacks } from '~/composables/error'
 import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -53,9 +51,7 @@ const failed = computed(() => {
     }
     failedFlatMap.unshift(fileErrorTask)
   }
-  return failedFlatMap.length > 0
-    ? mapLeveledTaskStacks(isDark.value, failedFlatMap)
-    : failedFlatMap
+  return failedFlatMap
 })
 </script>
 

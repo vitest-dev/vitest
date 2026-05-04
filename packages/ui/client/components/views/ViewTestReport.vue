@@ -3,8 +3,6 @@ import type { RunnerTestCase } from 'vitest'
 import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { config } from '~/composables/client'
-import { isDark } from '~/composables/dark'
-import { mapLeveledTaskStacks } from '~/composables/error'
 import { getLocationString, openLocation } from '~/composables/location'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
 import Artifacts from '../artifacts/Artifacts.vue'
@@ -19,7 +17,7 @@ const failed = computed(() => {
   if (!props.test.result || !props.test.result.errors?.length) {
     return null
   }
-  return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
+  return props.test
 })
 
 const kWellKnownMeta = new Set([
