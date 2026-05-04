@@ -44,14 +44,7 @@ const meta = computed(() => {
         rounded
       >
         <FailureScreenshot :task="test" />
-        <div
-          v-if="test.result?.htmlError"
-          class="scrolls scrolls-rounded task-error"
-          data-testid="task-error"
-        >
-          <pre v-html="test.result.htmlError" />
-        </div>
-        <template v-else-if="test.result?.errors && config.root">
+        <template v-if="test.result?.errors && config.root">
           <ViewReportError
             v-for="(error, idx) of test.result.errors"
             :key="idx"
