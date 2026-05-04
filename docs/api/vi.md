@@ -1336,7 +1336,7 @@ function resetConfig(): void
 
 If [`vi.setConfig`](#vi-setconfig) was called before, this will reset config to the original state.
 
-### vi.defineHelper <Version>4.1.0</Version> {#vi-defineHelper}
+### vi.defineHelper <Version>4.1.0</Version> {#vi-definehelper}
 
 ```ts
 function defineHelper<F extends (...args: any) => any>(fn: F): F

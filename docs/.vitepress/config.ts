@@ -818,29 +818,18 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
+          // Authoring — how to express a test in code: constructing it,
+          // asserting, mocking dependencies, attaching metadata. The page is
+          // about *test content*, not the runner. Discriminator: "How do I
+          // write X in a test?" If yes, it belongs here. Mocking sub-pages
+          // live nested because they're a multi-page subtopic.
           {
-            text: 'Guides',
+            text: 'Authoring',
             collapsed: false,
             items: [
               {
-                text: 'CLI',
-                link: '/guide/cli',
-              },
-              {
-                text: 'Test Filtering',
-                link: '/guide/filtering',
-              },
-              {
-                text: 'Test Tags',
-                link: '/guide/test-tags',
-              },
-              {
                 text: 'Test Context',
                 link: '/guide/test-context',
-              },
-              {
-                text: 'Test Environment',
-                link: '/guide/environment',
               },
               {
                 text: 'Test Run Lifecycle',
@@ -890,32 +879,8 @@ export default ({ mode }: { mode: string }) => {
                 ],
               },
               {
-                text: 'Parallelism',
-                link: '/guide/parallelism',
-              },
-              {
-                text: 'Test Projects',
-                link: '/guide/projects',
-              },
-              {
-                text: 'Reporters',
-                link: '/guide/reporters',
-              },
-              {
-                text: 'Coverage',
-                link: '/guide/coverage',
-              },
-              {
-                text: 'Testing Types',
-                link: '/guide/testing-types',
-              },
-              {
-                text: 'Vitest UI',
-                link: '/guide/ui',
-              },
-              {
-                text: 'In-Source Testing',
-                link: '/guide/in-source',
+                text: 'Test Tags',
+                link: '/guide/test-tags',
               },
               {
                 text: 'Test Annotations',
@@ -926,8 +891,72 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/extending-matchers',
               },
               {
+                text: 'Testing Types',
+                link: '/guide/testing-types',
+              },
+              {
+                text: 'In-Source Testing',
+                link: '/guide/in-source',
+              },
+            ],
+          },
+          // Workflow — how to invoke, select, and orchestrate test runs
+          // across files/projects/processes. The page is about the *runner
+          // and tooling around it*, not what's inside a test. Discriminator:
+          // "How do I run / filter / parallelize / integrate Vitest?" If a
+          // page is about the runtime environment of the tests themselves
+          // (jsdom, node), it still belongs here — that's a workflow choice.
+          {
+            text: 'Workflow',
+            collapsed: false,
+            items: [
+              {
+                text: 'CLI',
+                link: '/guide/cli',
+              },
+              {
+                text: 'Test Filtering',
+                link: '/guide/filtering',
+              },
+              {
+                text: 'Test Projects',
+                link: '/guide/projects',
+              },
+              {
+                text: 'Test Environment',
+                link: '/guide/environment',
+              },
+              {
+                text: 'Parallelism',
+                link: '/guide/parallelism',
+              },
+              {
+                text: 'Reporters',
+                link: '/guide/reporters',
+              },
+              {
+                text: 'Vitest UI',
+                link: '/guide/ui',
+              },
+              {
                 text: 'IDE Integration',
                 link: '/guide/ide',
+              },
+            ],
+          },
+          // Quality & Debugging — how to verify the test run is healthy and
+          // diagnose it when it isn't. Coverage, perf, leak detection, error
+          // triage, observability. Discriminator: "Is my suite good?" or
+          // "Why did this fail / leak / slow down?" If a page primarily
+          // measures or fixes the suite (rather than authoring or running
+          // it), put it here.
+          {
+            text: 'Quality & Debugging',
+            collapsed: false,
+            items: [
+              {
+                text: 'Coverage',
+                link: '/guide/coverage',
               },
               {
                 text: 'Debugging',
@@ -936,25 +965,6 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Common Errors',
                 link: '/guide/common-errors',
-              },
-              {
-                text: 'Migration Guide',
-                link: '/guide/migration',
-                collapsed: false,
-                items: [
-                  {
-                    text: 'Migrating to Vitest 4.0',
-                    link: '/guide/migration#vitest-4',
-                  },
-                  {
-                    text: 'Migrating from Jest',
-                    link: '/guide/migration#jest',
-                  },
-                  {
-                    text: 'Migrating from Mocha + Chai + Sinon',
-                    link: '/guide/migration#mocha-chai-sinon',
-                  },
-                ],
               },
               {
                 text: 'Performance',
@@ -973,6 +983,62 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'OpenTelemetry',
                 link: '/guide/open-telemetry',
+              },
+            ],
+          },
+          // Recipes — end-to-end patterns that solve a concrete problem by
+          // combining multiple features. Each entry is titled by the problem
+          // ("Database Transaction per Test"), not the feature. Add a recipe
+          // when a single feature page would over-explain, when the value
+          // comes from composition, or when users would search by intent
+          // rather than by API name.
+          {
+            text: 'Recipes',
+            collapsed: false,
+            items: [
+              {
+                text: 'Database Transaction per Test',
+                link: '/guide/recipes/db-transaction',
+              },
+              {
+                text: 'Cancellable Test Resources',
+                link: '/guide/recipes/cancellable',
+              },
+              {
+                text: 'Waiting for Async Conditions',
+                link: '/guide/recipes/wait-for',
+              },
+              {
+                text: 'Type Narrowing in Tests',
+                link: '/guide/recipes/type-narrowing',
+              },
+              {
+                text: 'Custom Assertion Helpers',
+                link: '/guide/recipes/custom-assertions',
+              },
+              {
+                text: 'Watching Non-Imported Files',
+                link: '/guide/recipes/watch-templates',
+              },
+              {
+                text: 'Domain Locators',
+                link: '/guide/recipes/domain-locators',
+              },
+              {
+                text: 'Schema-Driven Assertions',
+                link: '/guide/recipes/schema-matching',
+              },
+              {
+                text: 'Auto-Cleanup with `using`',
+                link: '/guide/recipes/explicit-resources',
+              },
+              {
+                text: 'Per-File Isolation Settings',
+                link: '/guide/recipes/disable-isolation',
+              },
+              {
+                text: 'Parallel and Sequential Test Files',
+                link: '/guide/recipes/parallel-sequential',
               },
             ],
           },
@@ -998,12 +1064,31 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
+          // Migration — one-time transitional content: cross-version
+          // upgrades and porting from other test runners (Jest, Mocha).
+          // Sits near the bottom because it's not daily-use and would push
+          // active-use guides further from the user's first scroll.
           {
+            text: 'Migration',
+            link: '/guide/migration',
+            collapsed: false,
             items: [
               {
-                text: 'Recipes',
-                link: '/guide/recipes',
+                text: 'Migrating to Vitest 4.0',
+                link: '/guide/migration#vitest-4',
               },
+              {
+                text: 'Migrating from Jest',
+                link: '/guide/migration#jest',
+              },
+              {
+                text: 'Migrating from Mocha + Chai + Sinon',
+                link: '/guide/migration#mocha-chai-sinon',
+              },
+            ],
+          },
+          {
+            items: [
               {
                 text: 'Comparisons',
                 link: '/guide/comparisons',
