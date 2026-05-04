@@ -293,7 +293,9 @@ jobs:
       - name: Merge reports (UI)
         continue-on-error: true
         run: |
-          pnpm --filter=./packages/ui test --merge-reports
+          ls ./packages/ui/.vitest/*
+          pnpm -C ./packages/ui test:ui --merge-reports
+          ls ./packages/ui/.vitest/*
           cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
         env:
           VITEST_CI_MERGE_REPORTS: 'true'
