@@ -83,7 +83,7 @@ test('locator error format all', async () => {
     root: './fixtures/locator-error-format',
     browser: {
       locators: {
-        errorFormat: 'both',
+        errorFormat: 'all',
       },
     },
   })

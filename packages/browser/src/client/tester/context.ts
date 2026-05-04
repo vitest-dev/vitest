@@ -585,7 +585,7 @@ function formatDOM(container: Element): string {
   if (format === 'aria') {
     return `ARIA tree:\n${formatAriaTree(container)}`
   }
-  if (format === 'both') {
+  if (format === 'all') {
     return `ARIA tree:\n${formatAriaTree(container)}\n\nHTML:\n${prettyDOM(container)}`
   }
   return prettyDOM(container)
