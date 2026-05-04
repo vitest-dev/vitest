@@ -427,6 +427,51 @@ test.for([
   `)
 })
 
+test('html reporter retains source for files unreachable from the merger filesystem', async () => {
+  const { gunzip } = await import('node:zlib')
+  const { promisify } = await import('node:util')
+  const { readFile, rename } = await import('node:fs/promises')
+  const flatted = await import('flatted')
+
+  const root = resolve('./fixtures/reporters/merge-reports-module-graph')
+  const reportsDir = resolve(root, '.vitest/blob')
+  const htmlMeta = resolve(root, 'html/html.meta.json.gz')
+  rmSync(reportsDir, { force: true, recursive: true })
+  rmSync(resolve(root, 'html'), { force: true, recursive: true })
+
+  await runVitest({ root, reporters: ['blob'] })
+
+  const movedFiles: { from: string; to: string }[] = []
+  for (const name of ['basic.test.ts', 'second.test.ts']) {
+    const from = resolve(root, name)
+    const to = `${from}.bak`
+    await rename(from, to)
+    movedFiles.push({ from, to })
+  }
+
+  try {
+    const result = await runVitest({ root, mergeReports: reportsDir, reporters: ['html'] })
+    expect(result.stderr).toMatchInlineSnapshot(`""`)
+
+    const gz = await readFile(htmlMeta)
+    const json = (await promisify(gunzip)(gz)).toString('utf-8')
+    const meta = flatted.parse(json) as { sources: Record<string, string> }
+
+    const basicPath = resolve(root, 'basic.test.ts')
+    const secondPath = resolve(root, 'second.test.ts')
+
+    expect(typeof meta.sources[basicPath]).toBe('string')
+    expect(meta.sources[basicPath].length).toBeGreaterThan(0)
+    expect(typeof meta.sources[secondPath]).toBe('string')
+    expect(meta.sources[secondPath].length).toBeGreaterThan(0)
+  }
+  finally {
+    for (const { from, to } of movedFiles) {
+      await rename(to, from)
+    }
+  }
+})
+
 async function getSerializedModuleGraph(ctx: Vitest) {
   const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
   const moduleGraphs = Object.fromEntries(
