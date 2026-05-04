@@ -20,6 +20,7 @@ test.describe('html report', () => {
       'test',
       [],
       {
+        root: './fixtures/main',
         run: true,
         reporters: 'html',
         coverage: {
@@ -35,6 +36,7 @@ test.describe('html report', () => {
 
     // run vite preview server
     previewServer = await preview({
+      root: './fixtures/main',
       base: '/custom/base/',
       build: { outDir: 'html' },
       preview: { port, strictPort: true },
@@ -90,7 +92,7 @@ test.describe('html report', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const sample = page.getByTestId('results-panel').getByLabel('fixtures/error.test.ts')
+    const sample = page.getByTestId('results-panel').getByLabel('error.test.ts')
     await sample.hover()
     await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
@@ -109,11 +111,11 @@ test.describe('html report', () => {
 
       await expect(annotations.first()).toContainText('hello world')
       await expect(annotations.first()).toContainText('notice')
-      await expect(annotations.first()).toContainText('fixtures/annotated.test.ts:4:9')
+      await expect(annotations.first()).toContainText('annotated.test.ts:4:9')
 
       await expect(annotations.last()).toContainText('second annotation')
       await expect(annotations.last()).toContainText('notice')
-      await expect(annotations.last()).toContainText('fixtures/annotated.test.ts:5:9')
+      await expect(annotations.last()).toContainText('annotated.test.ts:5:9')
     })
 
     await test.step('annotated typed test', async () => {
@@ -126,7 +128,7 @@ test.describe('html report', () => {
 
       await expect(annotation).toContainText('beware!')
       await expect(annotation).toContainText('warning')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:9:9')
+      await expect(annotation).toContainText('annotated.test.ts:9:9')
     })
 
     await test.step('annotated file test', async () => {
@@ -139,7 +141,7 @@ test.describe('html report', () => {
 
       await expect(annotation).toContainText('file annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:13:9')
+      await expect(annotation).toContainText('annotated.test.ts:13:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
     })
 
@@ -153,7 +155,7 @@ test.describe('html report', () => {
 
       await expect(annotation).toContainText('image annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
+      await expect(annotation).toContainText('annotated.test.ts:19:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
       const img = annotation.getByRole('img')
       await expect(img).toHaveAttribute('src', /data\/\w+/)
@@ -170,7 +172,7 @@ test.describe('html report', () => {
 
       await expect(annotation).toContainText('body base64 annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:25:9')
+      await expect(annotation).toContainText('annotated.test.ts:25:9')
 
       const downloadPromise = page.waitForEvent('download')
       await annotation.getByRole('link').click()
@@ -191,7 +193,7 @@ test.describe('html report', () => {
 
       await expect(annotation).toContainText('body utf-8 annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:32:9')
+      await expect(annotation).toContainText('annotated.test.ts:32:9')
 
       const downloadPromise = page.waitForEvent('download')
       await annotation.getByRole('link').click()
@@ -205,7 +207,7 @@ test.describe('html report', () => {
 
   test('annotations', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('fixtures/annotated.test.ts')
+    const item = page.getByLabel('annotated.test.ts')
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await page.getByTestId('btn-code').click({ force: true })
@@ -255,7 +257,7 @@ test.describe('html report', () => {
       await expect(artifact).toHaveCount(1)
 
       await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
-      await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
+      await expect(artifact).toContainText('visual-regression.test.ts:13:3')
       await expect(artifact.getByRole('tablist')).toHaveText('Reference')
       await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /data\/\w+\.png/)
       const vrImg = artifact.getByRole('tabpanel').getByRole('img')

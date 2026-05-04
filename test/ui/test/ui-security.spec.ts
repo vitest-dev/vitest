@@ -14,6 +14,7 @@ test.describe('ui', () => {
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
     vitest = await startVitest('test', [], {
+      root: './fixtures/main',
       watch: true,
       ui: true,
       open: false,

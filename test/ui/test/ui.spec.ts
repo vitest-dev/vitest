@@ -15,6 +15,7 @@ test.describe('ui', () => {
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
     vitest = await startVitest('test', [], {
+      root: './fixtures/main',
       watch: true,
       ui: true,
       open: false,
@@ -109,7 +110,7 @@ test.describe('ui', () => {
 
   test('console', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('fixtures/console.test.ts')
+    const item = page.getByLabel('console.test.ts')
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await page.getByTestId('btn-console').click()
@@ -132,11 +133,11 @@ test.describe('ui', () => {
 
       await expect(annotations.first()).toContainText('hello world')
       await expect(annotations.first()).toContainText('notice')
-      await expect(annotations.first()).toContainText('fixtures/annotated.test.ts:4:9')
+      await expect(annotations.first()).toContainText('annotated.test.ts:4:9')
 
       await expect(annotations.last()).toContainText('second annotation')
       await expect(annotations.last()).toContainText('notice')
-      await expect(annotations.last()).toContainText('fixtures/annotated.test.ts:5:9')
+      await expect(annotations.last()).toContainText('annotated.test.ts:5:9')
     })
 
     await test.step('annotated typed test', async () => {
@@ -149,7 +150,7 @@ test.describe('ui', () => {
 
       await expect(annotation).toContainText('beware!')
       await expect(annotation).toContainText('warning')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:9:9')
+      await expect(annotation).toContainText('annotated.test.ts:9:9')
     })
 
     await test.step('annotated file test', async () => {
@@ -162,7 +163,7 @@ test.describe('ui', () => {
 
       await expect(annotation).toContainText('file annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:13:9')
+      await expect(annotation).toContainText('annotated.test.ts:13:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
     })
 
@@ -176,7 +177,7 @@ test.describe('ui', () => {
 
       await expect(annotation).toContainText('image annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:19:9')
+      await expect(annotation).toContainText('annotated.test.ts:19:9')
       await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
       await expect(annotation.getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=/)
     })
@@ -191,7 +192,7 @@ test.describe('ui', () => {
 
       await expect(annotation).toContainText('body base64 annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:25:9')
+      await expect(annotation).toContainText('annotated.test.ts:25:9')
 
       const downloadPromise = page.waitForEvent('download')
       await annotation.getByRole('link').click()
@@ -212,7 +213,7 @@ test.describe('ui', () => {
 
       await expect(annotation).toContainText('body utf-8 annotation')
       await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('fixtures/annotated.test.ts:32:9')
+      await expect(annotation).toContainText('annotated.test.ts:32:9')
 
       const downloadPromise = page.waitForEvent('download')
       await annotation.getByRole('link').click()
@@ -226,7 +227,7 @@ test.describe('ui', () => {
 
   test('annotations in the editor tab', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('fixtures/annotated.test.ts')
+    const item = page.getByLabel('annotated.test.ts')
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await page.getByTestId('btn-code').click({ force: true })
@@ -250,7 +251,7 @@ test.describe('ui', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('fixtures/error.test.ts')
+    const item = page.getByLabel('error.test.ts')
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
@@ -262,7 +263,7 @@ test.describe('ui', () => {
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText('PASS (6)').click()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
     await page.getByPlaceholder('Search...').fill('nothing')
@@ -271,22 +272,22 @@ test.describe('ui', () => {
     // searching "add" will match "sample.test.ts" since it includes a test case named "add"
     await page.getByPlaceholder('Search...').fill('add')
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
 
     // match only failing files when fail filter applied
     await page.getByPlaceholder('Search...').fill('')
     await page.getByText(/^Fail$/, { exact: true }).click()
     await page.getByText('FAIL (2)').click()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
 
     // match only pass files when fail filter applied
     await page.getByPlaceholder('Search...').fill('console')
     await page.getByText(/^Fail$/, { exact: true }).click()
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
     await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+    await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
 
     // html entities in task names are escaped
     await page.locator('span').filter({ hasText: /^Pass$/ }).click()
@@ -295,12 +296,12 @@ test.describe('ui', () => {
     await page.getByTestId('collapse-all').click()
     await page.getByTestId('expand-all').click()
     await expect(page.getByText('<MyComponent />')).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
 
     // html entities in task names are escaped
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
 
     // pass files with special chars
     await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
@@ -368,7 +369,7 @@ test.describe('ui', () => {
       await expect(artifact).toHaveCount(1)
 
       await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
-      await expect(artifact).toContainText('fixtures-browser/visual-regression.test.ts:13:3')
+      await expect(artifact).toContainText('visual-regression.test.ts:13:3')
       await expect(artifact.getByRole('tablist')).toHaveText('Reference')
       await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=.*?\.png/)
       await expect(artifact.getByRole('tabpanel').getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=.*?\.png/)
@@ -384,6 +385,7 @@ test.describe('standalone', () => {
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
     vitest = await startVitest('test', [], {
+      root: './fixtures/main',
       watch: true,
       ui: true,
       standalone: true,
@@ -408,13 +410,13 @@ test.describe('standalone', () => {
     await expect(page.locator('[aria-labelledby=tests]')).toContainText('0 Pass 0 Fail 0 Total')
 
     // run single file
-    await page.getByText('fixtures/sample.test.ts').hover()
+    await page.getByText('sample.test.ts').hover()
     await page.getByRole('button', { name: 'Run current file' }).click()
 
     // check results
     await page.getByText('PASS (1)').click()
     expect(vitest?.state.getFiles().map(f => [f.name, f.result?.state])).toEqual([
-      ['fixtures/sample.test.ts', 'pass'],
+      ['sample.test.ts', 'pass'],
     ])
   })
 })
