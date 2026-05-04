@@ -40,20 +40,14 @@ function onSelectStep(index: number) {
 }
 
 watch([selectedStep, iframeSandbox, iframeHost], ([step, sandbox, host]) => {
-  if (!host) {
-    return
-  }
-
-  host.replaceChildren()
-
-  if (!step) {
+  if (!host || !step) {
     return
   }
 
   const iframe = document.createElement('iframe')
   iframe.setAttribute('sandbox', sandbox)
   iframe.style.cssText = 'background: white; border: none; color-scheme: normal; flex: none'
-  host.appendChild(iframe)
+  host.replaceChildren(iframe)
 
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
@@ -194,8 +188,8 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
     </Pane>
     <Pane :size="70" min-size="20">
       <div class="h-full min-h-0" flex="~ col" overflow-auto>
-        <div ref="iframeHost" style="display: contents" />
-        <div v-if="!selectedStep" class="text-sm opacity-50 p-4">
+        <div v-if="selectedStep" ref="iframeHost" style="display: contents" />
+        <div v-else class="text-sm opacity-50 p-4">
           No trace step selected.
         </div>
       </div>
