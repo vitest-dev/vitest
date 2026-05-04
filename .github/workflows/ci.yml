@@ -135,11 +135,11 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: vitest-blob-${{ matrix.os }}-node-${{ matrix.node_version }}
+          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: |
             README.md
-            test/unit/.vitest-reports
-            test/e2e/.vitest-reports
+            test/unit/.vitest
+            test/e2e/.vitest
           retention-days: 1
           include-hidden-files: true
 
@@ -284,7 +284,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: vitest-blob-*
+          pattern: vitest-results-*
           merge-multiple: true
 
       - name: Merge reports

@@ -1102,7 +1102,7 @@ export interface UserConfig extends InlineConfig {
 
   /**
    * Directory of blob reports to merge
-   * @default '.vitest-reports'
+   * @default '.vitest/blob'
    */
   mergeReports?: string
 
