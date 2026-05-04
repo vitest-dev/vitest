@@ -124,6 +124,8 @@ jobs:
 
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
+        env:
+          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
