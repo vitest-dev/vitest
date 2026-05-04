@@ -87,13 +87,19 @@ export default class HTMLReporter implements Reporter {
         browser,
       )
       if (!result.sources[file.filepath]) {
-        try {
-          result.sources[file.filepath] = await fs.readFile(file.filepath, {
-            encoding: 'utf-8',
-          })
+        const merged = this.ctx.state.blobs?.sources?.[file.filepath]
+        if (merged != null) {
+          result.sources[file.filepath] = merged
         }
-        catch {
-          // just ignore
+        else {
+          try {
+            result.sources[file.filepath] = await fs.readFile(file.filepath, {
+              encoding: 'utf-8',
+            })
+          }
+          catch {
+            // just ignore
+          }
         }
       }
     }))
