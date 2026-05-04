@@ -158,7 +158,7 @@ export class GithubActionsReporter implements Reporter {
 
     // format errors via `printError`
     for (const { project, title, error, file } of projectErrors) {
-      const result = capturePrintError(error, this.ctx, { project, task: file })
+      const result = capturePrintError(error, this.ctx, { project })
       const stack = result?.nearest
       if (!stack) {
         continue

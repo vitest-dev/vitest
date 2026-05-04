@@ -1,4 +1,3 @@
-import type { Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -17,7 +16,6 @@ export interface ErrorOptions {
   project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
-  task?: Task
   showCodeFrame?: boolean
 }
 
