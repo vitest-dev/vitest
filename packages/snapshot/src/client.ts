@@ -58,7 +58,7 @@ interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
 }
 
 interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
-  poll: () => Promise<unknown> | unknown
+  poll: (options: { signal: AbortSignal }) => Promise<unknown> | unknown
   timeout?: number
   interval?: number
 }
@@ -294,12 +294,16 @@ export class SnapshotClient {
     const reference = expectedSnapshot.data !== undefined && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
+    const timeoutController = new AbortController()
     const timedOut = timeout > 0
-      ? new Promise<void>(r => setTimeout(r, timeout))
+      ? new Promise<void>(r => setTimeout(() => {
+          timeoutController.abort()
+          r()
+        }, timeout))
       : undefined
     const stableResult = await getStableSnapshot({
       adapter,
-      poll,
+      poll: () => poll({ signal: timeoutController.signal }),
       interval,
       timedOut,
       match: reference

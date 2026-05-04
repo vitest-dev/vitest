@@ -16,7 +16,9 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+  const pollOptions = processTimeoutOptions(options)
+  const deadline = pollOptions?.timeout ? now() + pollOptions.timeout : undefined
+  const expectElement = expect.poll(async function element(this: object): Promise<HTMLElement | SVGElement | null> {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
@@ -33,28 +35,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       return elementOrLocator.elements() as unknown as HTMLElement
     }
 
-    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
-      // `toMatchScreenshot` should only run once after the element resolves
-      chai.util.flag(this, '_poll.assert_once', true)
-    }
-
-    // element selector uses prettyDOM under the hood, which is an expensive call
-    // that should not be called on each failed locator attempt to avoid memory leak:
-    // https://github.com/vitest-dev/vitest/issues/7139
-    const isLastPollAttempt = chai.util.flag(this, '_isLastPollAttempt')
-
-    if (isLastPollAttempt) {
-      return elementOrLocator.element()
-    }
-
-    const result = elementOrLocator.query()
-
-    if (!result) {
-      throw new Error(`Cannot find element with locator: ${JSON.stringify(elementOrLocator)}`)
-    }
-
-    return result
-  }, processTimeoutOptions(options))
+    return elementOrLocator.findElement({
+      ...pollOptions,
+      timeout: deadline ? Math.max(deadline - now(), 0) : undefined,
+    })
+  }, pollOptions)
 
   chai.util.flag(expectElement, '_poll.element', true)
 

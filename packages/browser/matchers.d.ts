@@ -18,7 +18,8 @@ declare module 'vitest' {
 
   interface ExpectStatic {
     /**
-     * `expect.element(locator)` is a shorthand for `expect.poll(() => locator.element())`.
+     * `expect.element(locator)` retries locator resolution and DOM assertions
+     * using the `expect.poll` timeout options.
      * You can set default timeout via `expect.poll.timeout` option in the config.
      * @see {@link https://vitest.dev/api/expect#poll}
      */
