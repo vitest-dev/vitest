@@ -1051,12 +1051,13 @@ vi.useRealTimers()
 ### vi.useFakeTimers
 
 ```ts
-function useFakeTimers(config?: FakeTimerInstallOpts): Vitest
+function useFakeTimers(config?: FakeTimersConfig): Vitest
 ```
 
 To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `setImmediate`, `clearImmediate`, and `Date`) until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
-Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked.
+When running with `--pool=forks`, Vitest automatically adds `nextTick` to the `toNotFake` array. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
 
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
@@ -1064,6 +1065,16 @@ The implementation is based internally on [`@sinonjs/fake-timers`](https://githu
 `vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
 But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
+
+You can use `toFake` to specify which timers to mock, or `toNotFake` to specify which timers to keep native — all others will be mocked. Note that `toFake` and `toNotFake` are mutually exclusive.
+
+```ts
+// only mock setTimeout and clearTimeout
+vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+// mock all timers except setInterval
+vi.useFakeTimers({ toNotFake: ['setInterval'] })
+```
 
 ### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 

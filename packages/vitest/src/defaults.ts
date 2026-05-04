@@ -88,7 +88,7 @@ export const configDefaults: Readonly<{
     include: never[]
   }
   coverage: CoverageOptions
-  fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
+  fakeTimers: import('@sinonjs/fake-timers').Config
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
   typecheck: {

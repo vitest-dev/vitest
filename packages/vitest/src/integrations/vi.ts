@@ -1,4 +1,4 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
@@ -27,7 +27,7 @@ export interface VitestUtils {
   /**
    * This method wraps all further calls to timers until [`vi.useRealTimers()`](https://vitest.dev/api/vi#vi-userealtimers) is called.
    */
-  useFakeTimers: (config?: FakeTimerInstallOpts) => VitestUtils
+  useFakeTimers: (config?: FakeTimersConfig) => VitestUtils
   /**
    * Restores mocked timers to their original implementations. All timers that were scheduled before will be discarded.
    */
@@ -496,7 +496,7 @@ function createVitest(): VitestUtils {
   const _envBooleans = ['PROD', 'DEV', 'SSR']
 
   const utils: VitestUtils = {
-    useFakeTimers(config?: FakeTimerInstallOpts) {
+    useFakeTimers(config?: FakeTimersConfig) {
       if (isChildProcess()) {
         if (
           config?.toFake?.includes('nextTick')
