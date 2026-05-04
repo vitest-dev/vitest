@@ -12,7 +12,7 @@ import { parse } from 'flatted'
 import { reactive } from 'vue'
 import { StateManager } from './state'
 
-interface HTMLReportMetadata {
+export interface HTMLReportMetadata {
   paths: string[]
   files: RunnerTestFile[]
   config: SerializedRootConfig
@@ -89,8 +89,7 @@ export function createStaticClient(): VitestClient {
   }
 
   async function registerMetadata() {
-    const res = await fetch(window.METADATA_PATH!)
-    const content = new Uint8Array(await res.arrayBuffer())
+    const content = await window.HTML_REPORT_METADATA!
 
     // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed.
     // This handles cases where a static server incorrectly sets Content-Encoding: gzip

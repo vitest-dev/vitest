@@ -522,6 +522,22 @@ export default defineConfig({
 ```
 :::
 
+Set `singleFile` to generate a self-contained HTML report:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['html', { singleFile: true }],
+    ],
+  },
+})
+```
+
+When `singleFile` is enabled, Vitest inlines the report assets, metadata, and test attachments into the generated HTML file. This is useful when you want to upload, download, or share a single report file without preserving the whole `html` output directory.
+
+If the report includes coverage HTML, coverage files are still emitted as separate files and should be kept with the report output directory.
+
 ::: tip
 This reporter requires installed [`@vitest/ui`](/guide/ui) package.
 :::

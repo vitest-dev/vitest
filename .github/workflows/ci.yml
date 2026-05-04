@@ -124,6 +124,8 @@ jobs:
 
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
+        env:
+          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
@@ -140,6 +142,7 @@ jobs:
             README.md
             test/unit/.vitest
             test/e2e/.vitest
+            packages/ui/.vitest
           retention-days: 1
           include-hidden-files: true
 
@@ -289,24 +292,43 @@ jobs:
 
       - name: Merge reports
         continue-on-error: true
-        run: pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports --reporter=html
-
-      - name: Merge reports html
-        id: merge-html
         run: |
-          mkdir -p html-all
-          cp -rf test/unit/html html-all/unit
-          cp -rf test/e2e/html html-all/e2e
-          echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
+          cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
+          pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
+          cp -rf ./test/unit/.vitest/html/index.html ./test/unit/.vitest/html/test-unit.html
+          cp -rf ./test/e2e/.vitest/html/index.html ./test/e2e/.vitest/html/test-e2e.html
+        env:
+          VITEST_CI_MERGE_REPORTS: 'true'
 
-      - uses: actions/upload-artifact@v7
-        id: upload-report
+      - name: Upload Test UI Report
+        id: upload-ui-report
+        uses: actions/upload-artifact@v7
         with:
-          name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
-          path: html-all
+          path: ./packages/ui/.vitest/html/test-ui.html
+          archive: false
           retention-days: 7
 
-      - name: Link report viewer
+      - name: Upload Test Unit Report
+        id: upload-unit-report
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./test/unit/.vitest/html/test-unit.html
+          archive: false
+          retention-days: 7
+
+      - name: Upload Test E2E Report
+        id: upload-e2e-report
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./test/e2e/.vitest/html/test-e2e.html
+          archive: false
+          retention-days: 7
+
+      - name: Link CI reports
         run: |
-          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
-          echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+          report_links=""
+          report_links+="test/unit: ${{ steps.upload-unit-report.outputs.artifact-url }}%0A"
+          report_links+="test/e2e: ${{ steps.upload-e2e-report.outputs.artifact-url }}%0A"
+          report_links+="packages/ui: ${{ steps.upload-ui-report.outputs.artifact-url }}%0A"
+          echo "::notice title=CI reports::${report_links}"
