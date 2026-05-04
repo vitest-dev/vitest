@@ -452,7 +452,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   locators: {
     testIdAttribute: string
     exact: boolean
-    errorFormat?: 'html' | 'aria' | 'both'
+    errorFormat: 'html' | 'aria' | 'both'
   }
   trace: {
     mode: BrowserTraceViewMode
