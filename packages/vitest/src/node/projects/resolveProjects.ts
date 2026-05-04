@@ -295,6 +295,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
         ? {
             testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
             exact: locators.exact ?? currentConfig.locators.exact,
+            errorFormat: locators.errorFormat ?? currentConfig.locators.errorFormat,
           }
         : project.config.browser.locators,
       viewport: viewport ?? currentConfig.viewport,

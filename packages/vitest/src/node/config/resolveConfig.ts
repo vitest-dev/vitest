@@ -850,6 +850,7 @@ export function resolveConfig(
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
   resolved.browser.locators.exact ??= false
+  resolved.browser.locators.errorFormat ??= 'all'
 
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`
