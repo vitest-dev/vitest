@@ -79,3 +79,24 @@ test('mocking out of root', async () => {
     expect(vitest.stdout).toReportPassedTest('basic.test.js', browser)
   })
 })
+
+test('mocks do not leak between files when isolate is false (fix #9957)', async () => {
+  const result = await runVitest({
+    root: 'fixtures/mocking-invalidate',
+    isolate: false,
+  })
+
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
+  })
+
+  expect(result.stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(result.stdout).toReportPassedTest('1_mocked.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('2_not-mocked.test.ts', browser)
+  })
+
+  expect(result.exitCode).toBe(0)
+})

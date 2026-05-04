@@ -56,6 +56,8 @@ export class ModuleMocker implements TestModuleMocker {
     await this.rpc.invalidate(ids)
     await this.interceptor.invalidate()
     this.registry.clear()
+    this.mockedIds.clear()
+    this.queue.clear()
   }
 
   public async importActual<T>(id: string, importer: string): Promise<T> {
