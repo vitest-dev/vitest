@@ -197,7 +197,7 @@
     "@types/estree": "catalog:",
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/jsdom": "^27.0.0",
+    "@types/jsdom": "^28.0.1",
     "@types/node": "^24.12.0",
     "@types/picomatch": "^4.0.2",
     "@types/prompts": "^2.4.9",
