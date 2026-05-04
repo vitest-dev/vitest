@@ -242,7 +242,7 @@ export interface BrowserConfigOptions {
     /**
      * Format used for locator "Cannot find element" error details.
      *
-     * @default 'html'
+     * @default 'all'
      */
     errorFormat?: 'html' | 'aria' | 'all'
   }

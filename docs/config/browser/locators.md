@@ -31,7 +31,7 @@ await locator.click()
 ## browser.locators.errorFormat <Version>5.0.0</Version> {#browser-locators-errorformat}
 
 - **Type:** `'html' | 'aria' | 'all'`
-- **Default:** `'html'`
+- **Default:** `'all'`
 
 Controls what Vitest prints when a locator cannot find an element. Vitest prints information for the DOM subtree where the locator search ran, or `document.body` for page-level locators.
 

@@ -36,8 +36,7 @@ test('locator error format html', async () => {
     root: './fixtures/locator-error-format',
     browser: {
       locators: {
-        // default
-        // errorFormat: 'html',
+        errorFormat: 'html',
       },
     },
   })
@@ -83,7 +82,8 @@ test('locator error format all', async () => {
     root: './fixtures/locator-error-format',
     browser: {
       locators: {
-        errorFormat: 'all',
+        // default
+        // errorFormat: 'all',
       },
     },
   })
