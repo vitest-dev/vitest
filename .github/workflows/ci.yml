@@ -116,6 +116,8 @@ jobs:
 
       - name: Test
         run: pnpm run test:ci
+        env:
+          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
         run: pnpm run test:examples
@@ -136,6 +138,17 @@ jobs:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: |
+            README.md
+            test/unit/.vitest
+            test/e2e/.vitest
+          retention-days: 1
+          include-hidden-files: true
 
   test-cached:
     needs: changed
@@ -258,3 +271,49 @@ jobs:
           name: playwright-report-rolldown
           path: rolldown/test/ui/test-results/
           retention-days: 30
+
+  merge-reports:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    name: Merge Reports
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+
+      - name: Install
+        run: pnpm i
+
+      - name: Build
+        run: pnpm run build
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: vitest-results-*
+          merge-multiple: true
+
+      - name: Merge reports
+        continue-on-error: true
+        run: pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports --reporter=html
+
+      - name: Merge reports html
+        id: merge-html
+        run: |
+          mkdir -p html-all
+          cp -rf test/unit/html html-all/unit
+          cp -rf test/e2e/html html-all/e2e
+          echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v7
+        id: upload-report
+        with:
+          name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
+          path: html-all
+          retention-days: 7
+
+      - name: Link report viewer
+        run: |
+          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
+          echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY

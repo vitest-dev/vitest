@@ -379,7 +379,7 @@ test('nextTick can be mocked inside worker_threads', async () => {
 })
 
 test('mergeReports doesn\'t work with watch mode enabled', async () => {
-  const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
+  const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest/blob' })
 
   expect(stderr).toMatch('Cannot merge reports with --watch enabled')
 })

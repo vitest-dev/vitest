@@ -464,7 +464,34 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 function generateFileId(file: string) {
   const config = getConfig()
   const path = relative(config.root, file)
-  return generateHash(`${path}${config.name || ''}`)
+  return generateFileHash(
+    path,
+    config.name,
+    {
+      typecheck: config.pool === 'typescript',
+      __vitest_label__: config.mergeReportsLabel,
+    },
+  )
+}
+
+// TODO: copied from packages/runner/src/utils/collect.ts
+interface HashMeta {
+  typecheck?: boolean
+  __vitest_label__?: string
+}
+
+function generateFileHash(
+  file: string,
+  projectName: string | undefined,
+  meta?: HashMeta,
+): string {
+  const seed = [
+    file,
+    projectName || '',
+    meta?.typecheck ? '__typecheck__' : '',
+    meta?.__vitest_label__ || '',
+  ].join('\0')
+  return generateHash(seed)
 }
 
 function generateHash(str: string): string {

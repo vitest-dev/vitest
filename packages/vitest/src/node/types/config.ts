@@ -1102,7 +1102,7 @@ export interface UserConfig extends InlineConfig {
 
   /**
    * Directory of blob reports to merge
-   * @default '.vitest-reports'
+   * @default '.vitest/blob'
    */
   mergeReports?: string
 
@@ -1226,6 +1226,7 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
+  mergeReportsLabel?: string
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
