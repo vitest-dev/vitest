@@ -134,7 +134,7 @@ function assertSingleInstallation(projectRoot: string, projectName: string): voi
   const projectBrowserDir = resolvePackageDir('@vitest/browser', projectRoot)
   const projectVitestDir = resolvePackageDir('vitest', projectRoot)
 
-  const mismatches: { name: string, running: string, project: string }[] = []
+  const mismatches: { name: string; running: string; project: string }[] = []
   if (runningBrowserDir && projectBrowserDir && projectBrowserDir !== runningBrowserDir) {
     mismatches.push({ name: '@vitest/browser', running: runningBrowserDir, project: projectBrowserDir })
   }
