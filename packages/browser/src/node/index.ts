@@ -1,6 +1,9 @@
 import type { BrowserCommand, BrowserProviderOption, BrowserServerFactory } from 'vitest/node'
+import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin } from '@vitest/mocker/node'
+import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
@@ -38,6 +41,8 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
       ),
     )
   }
+
+  assertSingleInstallation(project.config.root, project.name)
 
   const server = new ParentBrowserProject(project, '/')
 
@@ -110,6 +115,54 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
   setupBrowserRpc(server, mockerRegistry)
 
   return server
+}
+
+function resolvePackageDir(name: string, fromDir: string): string | undefined {
+  try {
+    const require = createRequire(join(fromDir, '_'))
+    return dirname(require.resolve(`${name}/package.json`))
+  }
+  catch {
+    return undefined
+  }
+}
+
+function assertSingleInstallation(projectRoot: string, projectName: string): void {
+  const runningFrom = dirname(fileURLToPath(import.meta.url))
+  const runningBrowserDir = resolvePackageDir('@vitest/browser', runningFrom)
+  const runningVitestDir = resolvePackageDir('vitest', runningFrom)
+  const projectBrowserDir = resolvePackageDir('@vitest/browser', projectRoot)
+  const projectVitestDir = resolvePackageDir('vitest', projectRoot)
+
+  const mismatches: { name: string; running: string; project: string }[] = []
+  if (runningBrowserDir && projectBrowserDir && projectBrowserDir !== runningBrowserDir) {
+    mismatches.push({ name: '@vitest/browser', running: runningBrowserDir, project: projectBrowserDir })
+  }
+  if (runningVitestDir && projectVitestDir && projectVitestDir !== runningVitestDir) {
+    mismatches.push({ name: 'vitest', running: runningVitestDir, project: projectVitestDir })
+  }
+  if (!mismatches.length) {
+    return
+  }
+
+  const lines = mismatches.map(m =>
+    `  - ${c.bold(m.name)}\n    running:  ${m.running}\n    project:  ${m.project}`,
+  ).join('\n')
+
+  throw new Error(
+    `[vitest] Detected duplicate installations of Vitest packages for project "${projectName || projectRoot}".\n`
+    + `This is unsupported in browser mode with \`projects\` and will cause tests to hang.\n\n`
+    + `${lines}\n\n`
+    + `To fix this:\n`
+    + `  1. Run \`pnpm why vitest\` (or \`npm ls vitest\`) to find why a package is duplicated.\n`
+    + `     A common cause is a peer dependency (e.g. \`@types/node\`, \`vite\`) resolving\n`
+    + `     to different versions across packages.\n`
+    + `  2. Recommended: declare \`vitest\` and \`@vitest/browser*\` only in the root\n`
+    + `     package.json, not in each sub-package, so they are hoisted as a single copy.\n`
+    + `  3. Otherwise, force a single version with \`pnpm.overrides\` / \`resolutions\`\n`
+    + `     for the diverging peer dependency, then run \`pnpm dedupe\`.\n\n`
+    + `See https://vitest.dev/guide/common-errors.html#duplicate-vitest-installation`,
+  )
 }
 
 export function defineBrowserProvider<T extends object = object>(options: Omit<
