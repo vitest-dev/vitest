@@ -39,7 +39,7 @@ An array with names of global methods and APIs to keep native. All other availab
 
 To only mock `setInterval()`, specify this property as `['setInterval']`.
 
-Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. If `toNotFake` does not include `nextTick`, Vitest will throw an error when running with `--pool=forks`.
+Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. When running with `--pool=forks`, Vitest automatically adds `nextTick` to the toNotFake array.
 
 ::: tip
 `toNotFake` and `toFake` are mutually exclusive — only set one or the other.
