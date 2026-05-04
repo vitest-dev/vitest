@@ -128,34 +128,65 @@ function createClient() {
     },
   )
 
-  let openPromise: Promise<void>
+  // A single persistent promise that survives reconnects: callers awaiting
+  // `waitForConnection()` follow the current attempt across drops, instead of
+  // being stuck on a failed first socket.
+  let resolveOpen!: () => void
+  let rejectOpen!: (error: Error) => void
+  let openSettled = false
+  let openPromise: Promise<void> = createOpenPromise()
+  let connectTimeoutId: ReturnType<typeof setTimeout> | undefined
+
+  function createOpenPromise() {
+    openSettled = false
+    return new Promise<void>((resolve, reject) => {
+      resolveOpen = () => {
+        openSettled = true
+        resolve()
+      }
+      rejectOpen = (error) => {
+        openSettled = true
+        reject(error)
+      }
+    })
+  }
 
   function reconnect(reset = false) {
     if (reset) {
       tries = reconnectTries
+    }
+    if (openSettled) {
+      openPromise = createOpenPromise()
     }
     ctx.ws = new WebSocket(ENTRY_URL)
     registerWS()
   }
 
   function registerWS() {
-    openPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new Error(
-            `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
-          ),
-        )
-      }, connectTimeout)
-      if (ctx.ws.OPEN === ctx.ws.readyState) {
-        resolve()
+    if (connectTimeoutId !== undefined) {
+      clearTimeout(connectTimeoutId)
+    }
+    connectTimeoutId = setTimeout(() => {
+      rejectOpen(
+        new Error(
+          `Cannot connect to the server in ${connectTimeout / 1000} seconds`,
+        ),
+      )
+    }, connectTimeout)
+    if (ctx.ws.OPEN === ctx.ws.readyState) {
+      tries = reconnectTries
+      clearTimeout(connectTimeoutId)
+      connectTimeoutId = undefined
+      resolveOpen()
+    }
+    // still have a listener even if it's already open to update tries
+    ctx.ws.addEventListener('open', () => {
+      tries = reconnectTries
+      if (connectTimeoutId !== undefined) {
+        clearTimeout(connectTimeoutId)
+        connectTimeoutId = undefined
       }
-      // still have a listener even if it's already open to update tries
-      ctx.ws.addEventListener('open', () => {
-        tries = reconnectTries
-        resolve()
-        clearTimeout(timeout)
-      })
+      resolveOpen()
     })
     ctx.ws.addEventListener('message', (v) => {
       onMessage(v.data)
@@ -163,7 +194,18 @@ function createClient() {
     ctx.ws.addEventListener('close', () => {
       tries -= 1
       if (autoReconnect && tries > 0) {
+        if (connectTimeoutId !== undefined) {
+          clearTimeout(connectTimeoutId)
+          connectTimeoutId = undefined
+        }
         setTimeout(reconnect, reconnectInterval)
+      }
+      else if (!openSettled) {
+        if (connectTimeoutId !== undefined) {
+          clearTimeout(connectTimeoutId)
+          connectTimeoutId = undefined
+        }
+        rejectOpen(new Error('WebSocket connection closed before opening'))
       }
     })
   }
