@@ -17,7 +17,7 @@ import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
-import { isPrimitive } from '@vitest/utils/helpers'
+import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
@@ -310,9 +310,4 @@ export class TestRun {
       }
     }
   }
-}
-
-function sanitizeFilePath(s: string): string {
-  // eslint-disable-next-line no-control-regex
-  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
 }
