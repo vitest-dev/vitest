@@ -1,5 +1,7 @@
 import type { Task } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
+import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
@@ -137,6 +139,15 @@ type TaskWithMeta = Task & {
   _classname?: string
   /** Top-level describe block name */
   _suitename?: string
+}
+
+/**
+ * Runtime additions on top of {@link SerializedError}: `type` is set by
+ * {@link state.catchError}, `VITEST_TEST_PATH` by the runtime error catcher.
+ */
+type UnhandledError = SerializedError & {
+  type?: string
+  VITEST_TEST_PATH?: string
 }
 
 function flattenTasks(task: Task, baseName = '', suiteName = '', ancestorSeparator = ' > '): TaskWithMeta[] {
@@ -385,27 +396,10 @@ export class JUnitReporter implements Reporter {
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {
-              await this.writeElement(
-                'failure',
-                {
-                  message: error?.message,
-                  type: error?.name,
-                },
-                async () => {
-                  if (!error || !this.options.stackTrace) {
-                    return
-                  }
-
-                  const result = capturePrintError(
-                    error,
-                    this.ctx,
-                    { project: this.ctx.getProjectByName(task.file?.projectName ?? ''), task },
-                  )
-                  await this.baseLog(
-                    escapeXML(stripVTControlCharacters(result.output.trim())),
-                  )
-                },
-              )
+              await this.writeErrorElement('failure', error, {
+                project: this.ctx.getProjectByName(task.file?.projectName ?? ''),
+                task,
+              })
             }
           }
         },
@@ -443,7 +437,87 @@ export class JUnitReporter implements Reporter {
       .replace(/\{title\}/g, () => vars.title)
   }
 
-  async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
+  private async writeErrorElement(
+    elementName: 'failure' | 'error',
+    error: SerializedError | undefined,
+    errorOptions: ErrorOptions,
+  ): Promise<void> {
+    await this.writeElement(
+      elementName,
+      {
+        message: error?.message,
+        type: error?.name,
+      },
+      async () => {
+        if (!error || !this.options.stackTrace) {
+          return
+        }
+        const result = capturePrintError(error, this.ctx, errorOptions)
+        await this.baseLog(
+          escapeXML(stripVTControlCharacters(result.output.trim())),
+        )
+      },
+    )
+  }
+
+  private async writeUnhandledErrorsTestsuite(
+    unhandledErrors: ReadonlyArray<UnhandledError>,
+    testModules: ReadonlyArray<TestModule>,
+  ): Promise<void> {
+    await this.writeElement(
+      'testsuite',
+      {
+        name: 'vitest unhandled errors',
+        timestamp: new Date().toISOString(),
+        hostname: this.options.hostname || hostname(),
+        tests: unhandledErrors.length,
+        failures: 0,
+        errors: unhandledErrors.length,
+        skipped: 0,
+        time: '0',
+      },
+      async () => {
+        // Stable order across runs — workers/projects report errors concurrently.
+        const sortedErrors = [...unhandledErrors].sort((a, b) => {
+          const ka = `${a.VITEST_TEST_PATH ?? ''}\0${a.type ?? ''}\0${a.name ?? ''}\0${a.message ?? ''}`
+          const kb = `${b.VITEST_TEST_PATH ?? ''}\0${b.type ?? ''}\0${b.name ?? ''}\0${b.message ?? ''}`
+          return ka < kb ? -1 : ka > kb ? 1 : 0
+        })
+        for (const error of sortedErrors) {
+          const errorTitle = error.type || error.name || 'Unhandled Error'
+          // Only attribute when the path resolves to exactly one module — when
+          // multiple projects share a file, errors lack a project identifier and
+          // we can't disambiguate without one (tracked for follow-up).
+          const matches = error.VITEST_TEST_PATH
+            ? testModules.filter(m => m.task.filepath === error.VITEST_TEST_PATH)
+            : []
+          const owningModule = matches.length === 1 ? matches[0] : undefined
+          await this.writeElement(
+            'testcase',
+            {
+              classname: 'vitest unhandled errors',
+              file: this.options.addFileAttribute && error.VITEST_TEST_PATH
+                ? relative(this.ctx.config.root, error.VITEST_TEST_PATH)
+                : undefined,
+              name: error.message ? `${errorTitle}: ${error.message}` : errorTitle,
+              time: '0',
+            },
+            async () => {
+              await this.writeErrorElement('error', error, {
+                project: owningModule?.project,
+                task: owningModule?.task,
+              })
+            },
+          )
+        }
+      },
+    )
+  }
+
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<UnhandledError> = [],
+  ): Promise<void> {
     const files = testModules.map(testModule => testModule.task)
     const separator = this.options.ancestorSeparator ?? ' > '
 
@@ -519,18 +593,25 @@ export class JUnitReporter implements Reporter {
         name: this.options.suiteName || 'vitest tests',
         tests: 0,
         failures: 0,
-        errors: 0, // we cannot detect those
+        errors: unhandledErrors.length,
         time: 0,
       },
     )
+    stats.tests += unhandledErrors.length
 
-    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
-      for (let i = 0; i < transformed.length; i++) {
-        const file = transformed[i]
+    // Plain byte compare (not localeCompare) so output is identical across machines and ICU versions.
+    const orderedSuites = transformed
+      .map((file, i) => {
         const filename = relative(this.ctx.config.root, file.filepath)
         // resolveSuiteNameTemplate needs the original file (before task flattening) to
         // search for top-level describe blocks, so pass files[i] directly.
         const suiteName = this.resolveSuiteNameTemplate(files[i], filename)
+        return { file, filename, suiteName }
+      })
+      .sort((a, b) => a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0)
+
+    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
+      for (const { file, filename, suiteName } of orderedSuites) {
         await this.writeElement(
           'testsuite',
           {
@@ -547,6 +628,10 @@ export class JUnitReporter implements Reporter {
             await this.writeTasks(file.tasks, filename, file.filepath)
           },
         )
+      }
+
+      if (unhandledErrors.length) {
+        await this.writeUnhandledErrorsTestsuite(unhandledErrors, testModules)
       }
     })
 
