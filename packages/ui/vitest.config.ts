@@ -27,7 +27,10 @@ const testConfig = defineConfig({
   },
   test: {
     reporters: [
-      process.env.CI
+      process.env.VITEST_CI_BLOB_LABEL
+        ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
+        : {},
+      process.env.VITEST_CI_MERGE_REPORTS
         ? [
             'html',
             {

@@ -125,13 +125,6 @@ jobs:
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
 
-      # TODO: merge report https://github.com/vitest-dev/vitest/pull/10031
-      - name: Upload Test UI Report
-        uses: actions/upload-artifact@v7
-        with:
-          path: ./packages/ui/.vitest/html/index.html
-          archive: false
-
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
@@ -147,6 +140,7 @@ jobs:
             README.md
             test/unit/.vitest
             test/e2e/.vitest
+            packages/ui/.vitest
           retention-days: 1
           include-hidden-files: true
 
@@ -293,6 +287,21 @@ jobs:
         with:
           pattern: vitest-results-*
           merge-multiple: true
+
+      - name: Merge reports (UI)
+        continue-on-error: true
+        run: |
+          pnpm --filter=./packages/ui test --merge-reports
+          cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
+        env:
+          VITEST_CI_MERGE_REPORTS: 'true'
+
+      - name: Upload Test UI Report
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./packages/ui/.vitest/html/test-ui.html
+          archive: false
+          retention-days: 7
 
       - name: Merge reports
         continue-on-error: true
