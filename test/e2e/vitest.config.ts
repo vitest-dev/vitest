@@ -9,6 +9,15 @@ export default defineConfig({
       ...(process.env.VITEST_CI_BLOB_LABEL
         ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] as any]
         : []),
+      process.env.VITEST_CI_MERGE_REPORTS
+        ? [
+            'html',
+            {
+              outputFile: '.vitest/html/index.html',
+              singleFile: true,
+            },
+          ]
+        : {},
     ],
     testTimeout: 60_000,
     isolate: false,

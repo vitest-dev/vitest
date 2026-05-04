@@ -114,10 +114,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      # - name: Test
-      #   run: pnpm run test:ci
-      #   env:
-      #     VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
+      - name: Test
+        run: pnpm run test:ci
+        env:
+          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
         run: pnpm run test:examples
@@ -290,13 +290,27 @@ jobs:
           pattern: vitest-results-*
           merge-multiple: true
 
-      - name: Merge reports (UI)
+      # - name: Merge reports (UI)
+      #   continue-on-error: true
+      #   run: |
+      #   env:
+      #     VITEST_CI_MERGE_REPORTS: 'true'
+
+      # - name: Upload Test UI Report
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     path: ./packages/ui/.vitest/html/test-ui.html
+      #     archive: false
+      #     retention-days: 7
+
+      - name: Merge reports
         continue-on-error: true
         run: |
-          ls ./packages/ui/.vitest/*
-          pnpm -C ./packages/ui test:ui --merge-reports
-          ls ./packages/ui/.vitest/*
+          pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
           cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
+          pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
+          cp -rf ./test/unit/.vitest/html/index.html ./test/unit/.vitest/html/test-unit.html
+          cp -rf ./test/e2e/.vitest/html/index.html ./test/e2e/.vitest/html/test-e2e.html
         env:
           VITEST_CI_MERGE_REPORTS: 'true'
 
@@ -307,26 +321,36 @@ jobs:
           archive: false
           retention-days: 7
 
-      - name: Merge reports
-        continue-on-error: true
-        run: pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports --reporter=html
-
-      - name: Merge reports html
-        id: merge-html
-        run: |
-          mkdir -p html-all
-          cp -rf test/unit/html html-all/unit
-          cp -rf test/e2e/html html-all/e2e
-          echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
-
-      - uses: actions/upload-artifact@v7
-        id: upload-report
+      - name: Upload Test Unit Report
+        uses: actions/upload-artifact@v7
         with:
-          name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
-          path: html-all
+          path: ./test/unit/.vitest/html/test-unit.html
+          archive: false
           retention-days: 7
 
-      - name: Link report viewer
-        run: |
-          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
-          echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+      - name: Upload Test E2E Report
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./test/e2e/.vitest/html/test-e2e.html
+          archive: false
+          retention-days: 7
+
+      # - name: Merge reports html
+      #   id: merge-html
+      #   run: |
+      #     mkdir -p html-all
+      #     cp test/unit/.vitest/html/index.html html-all/unit.html
+      #     cp test/e2e/.vitest/html/index.html html-all/e2e.html
+      #     echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      # - uses: actions/upload-artifact@v7
+      #   id: upload-report
+      #   with:
+      #     name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
+      #     path: html-all
+      #     retention-days: 7
+
+      # - name: Link report viewer
+      #   run: |
+      #     echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
+      #     echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
