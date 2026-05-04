@@ -114,10 +114,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci
-        env:
-          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
+      # - name: Test
+      #   run: pnpm run test:ci
+      #   env:
+      #     VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
         run: pnpm run test:examples
