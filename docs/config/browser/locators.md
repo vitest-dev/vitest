@@ -53,3 +53,26 @@ export default defineConfig({
   },
 })
 ```
+
+For example, `all` displays a following error:
+
+```html
+VitestBrowserElementError: Cannot find element with locator: getByRole('button', { name: 'Save' })
+
+ARIA tree:
+- main:
+  - heading "Settings" [level=1]
+  - button "Cancel"
+
+HTML:
+<body>
+  <main>
+    <h1>
+      Settings
+    </h1>
+    <button>
+      Cancel
+    </button>
+  </main>
+</body>
+```
