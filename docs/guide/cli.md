@@ -225,7 +225,7 @@ You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
 
 ::: tip
-If `--reporter=blob` is used without an output file, the default path will include the current shard config to avoid collisions with other Vitest processes.
+If `--reporter=blob` is used without an output file, the default path will include the current shard config and blob label from `VITEST_BLOB_LABEL` or the blob reporter `label` option to avoid collisions with other Vitest processes.
 :::
 
 ### merge-reports

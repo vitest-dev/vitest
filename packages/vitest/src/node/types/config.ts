@@ -1226,6 +1226,7 @@ export interface ResolvedConfig
   vmMemoryLimit?: UserConfig['vmMemoryLimit']
   dumpDir?: string
   tagsFilter?: string[]
+  mergeReportsLabel?: string
 
   experimental: Omit<Required<UserConfig>['experimental'], 'importDurations'> & {
     importDurations: {
