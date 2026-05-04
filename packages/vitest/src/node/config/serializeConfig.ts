@@ -119,6 +119,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
           exact: browser.locators.exact,
+          errorFormat: browser.locators.errorFormat,
         },
         providerOptions: provider?.name === 'playwright'
           ? {

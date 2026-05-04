@@ -239,6 +239,13 @@ export interface BrowserConfigOptions {
      * @default false
      */
     exact?: boolean
+    // TODO: default both?
+    /**
+     * Format used for locator "Cannot find element" error details.
+     *
+     * @default 'html'
+     */
+    errorFormat?: 'html' | 'aria' | 'both'
   }
 
   /**
@@ -445,6 +452,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   locators: {
     testIdAttribute: string
     exact: boolean
+    errorFormat?: 'html' | 'aria' | 'both'
   }
   trace: {
     mode: BrowserTraceViewMode

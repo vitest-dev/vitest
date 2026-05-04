@@ -573,9 +573,25 @@ function prettyDOM(
 }
 
 function getElementError(selector: string | Locator, container: Element): Error {
-  const error = new Error(`Cannot find element with locator: ${typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()}\n\n${prettyDOM(container)}`)
+  const error = new Error(`Cannot find element with locator: ${typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()}\n\n${formatElementErrorDetails(container)}`)
   error.name = 'VitestBrowserElementError'
   return error
+}
+
+function formatElementErrorDetails(container: Element): string {
+  const format = getBrowserState().config.browser.locators.errorFormat
+  if (format === 'aria') {
+    return `ARIA snapshot:\n${formatAriaSnapshot(container)}`
+  }
+  if (format === 'both') {
+    return `ARIA snapshot:\n${formatAriaSnapshot(container)}\n\nHTML:\n${prettyDOM(container)}`
+  }
+  return prettyDOM(container)
+}
+
+function formatAriaSnapshot(container: Element): string {
+  const { generateAriaTree, renderAriaTree } = getBrowserState().aria
+  return renderAriaTree(generateAriaTree(container))
 }
 
 function configurePrettyDOM(options: StringifyOptions) {
