@@ -11,7 +11,6 @@ import type { VitestFetchFunction } from './environments/fetchModule'
 import type { ProcessPool } from './pool'
 import type { Report } from './reporters/report'
 import type { TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './test-specification'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage'
 import type { Reporter } from './types/reporter'
@@ -54,6 +53,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
 import { TestRun } from './test-run'
+import { TestSpecification } from './test-specification'
 import { loadVCSProvider } from './vcs/vcs'
 import { VitestWatcher } from './watcher'
 
@@ -1291,7 +1291,58 @@ export class Vitest {
 
   /** @internal */
   async rerunFailed(): Promise<void> {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
+    let failedFiles = this.state.getFailedFilepaths()
+    if (!failedFiles.length) {
+      await this.rerunFiles(failedFiles, 'rerun failed', false)
+      return
+    }
+
+    if (this.filenamePattern) {
+      const filteredFiles = await this.globTestSpecifications(this.filenamePattern)
+      const allowed = new Set(filteredFiles.map(f => f.moduleId))
+      failedFiles = failedFiles.filter(file => allowed.has(file))
+      if (!failedFiles.length) {
+        await this.rerunFiles(failedFiles, 'rerun failed', false)
+        return
+      }
+    }
+
+    const trigger = 'rerun failed'
+    const specifications: TestSpecification[] = []
+    for (const filepath of failedFiles) {
+      const projectSpecs = this.getModuleSpecifications(filepath)
+      for (const file of this.state.getFiles([filepath])) {
+        if (file.result?.state !== 'fail') {
+          continue
+        }
+        const projectName = file.projectName || ''
+        const spec = projectSpecs.find(s => s.project.name === projectName)
+        if (!spec) {
+          continue
+        }
+        const failedTestIds = getTasks(file)
+          .filter(task => task.type === 'test' && task.result?.state === 'fail')
+          .map(task => task.id)
+        // If the file failed to collect, there are no test ids: rerun the whole file.
+        if (!failedTestIds.length) {
+          specifications.push(spec)
+        }
+        else {
+          specifications.push(
+            new TestSpecification(spec.project, spec.moduleId, spec.pool, {
+              testIds: failedTestIds,
+            }),
+          )
+        }
+      }
+    }
+
+    await Promise.all([
+      this.report('onWatcherRerun', failedFiles, trigger),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report('onWatcherStart', this.state.getFiles(failedFiles))
   }
 
   /**
