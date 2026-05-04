@@ -331,8 +331,14 @@ interface Thresholds {
   /** Set global thresholds to `100` */
   100?: boolean
 
-  /** Check thresholds per file. */
-  perFile?: boolean
+  /**
+   * Check thresholds per file. When set to an object, the top-level thresholds
+   * still apply to the aggregate and every file must additionally meet these
+   * per-file minimums.
+   *
+   * @default false
+   */
+  perFile?: boolean | PerFileThresholds
 
   /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
@@ -352,6 +358,23 @@ interface Thresholds {
   branches?: number
 
   /** Thresholds for lines */
+  lines?: number
+}
+
+interface PerFileThresholds {
+  /** Set per-file thresholds to `100` */
+  100?: boolean
+
+  /** Per-file minimum for statements */
+  statements?: number
+
+  /** Per-file minimum for functions */
+  functions?: number
+
+  /** Per-file minimum for branches */
+  branches?: number
+
+  /** Per-file minimum for lines */
   lines?: number
 }
 

@@ -1,4 +1,4 @@
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { CoverageMap, CoverageSummary } from 'istanbul-lib-coverage'
 import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
 import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
@@ -494,6 +494,11 @@ export class BaseCoverageProvider {
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
+    const perFileOption = this.options.thresholds?.perFile
+    const perFileThresholds = typeof perFileOption === 'object' && perFileOption !== null
+      ? resolveGlobThresholds(perFileOption)
+      : null
+
     for (const { coverageMap, thresholds, name } of allThresholds) {
       if (
         thresholds.branches === undefined
@@ -505,69 +510,82 @@ export class BaseCoverageProvider {
       }
 
       // Construct list of coverage summaries where thresholds are compared against
-      const summaries = this.options.thresholds?.perFile
-        ? coverageMap.files().map((file: string) => ({
+      const summaries = perFileOption === true
+        ? [...coverageMap.files()].sort().map((file: string) => ({
             file,
             summary: coverageMap.fileCoverageFor(file).toSummary(),
           }))
         : [{ file: null, summary: coverageMap.getCoverageSummary() }]
 
-      // Check thresholds of each summary
+      const label = name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+
       for (const { summary, file } of summaries) {
-        for (const thresholdKey of THRESHOLD_KEYS) {
-          const threshold = thresholds[thresholdKey]
+        this.reportThresholdViolations(thresholds, summary, file, label)
+      }
+    }
 
-          if (threshold === undefined) {
-            continue
+    // Object form of `perFile`: every file must meet these minimums on top of
+    // the aggregate checks above.
+    if (perFileThresholds && THRESHOLD_KEYS.some(key => perFileThresholds[key] !== undefined)) {
+      const globalEntry = allThresholds.find(t => t.name === GLOBAL_THRESHOLDS_KEY)
+
+      if (globalEntry) {
+        // Sort so that error output stays stable across providers and runs.
+        const files = [...globalEntry.coverageMap.files()].sort()
+        for (const file of files) {
+          const summary = globalEntry.coverageMap.fileCoverageFor(file).toSummary()
+          this.reportThresholdViolations(perFileThresholds, summary, file, 'per-file')
+        }
+      }
+    }
+  }
+
+  private reportThresholdViolations(
+    thresholds: ResolvedThreshold['thresholds'],
+    summary: CoverageSummary,
+    file: string | null,
+    label: string,
+  ) {
+    for (const thresholdKey of THRESHOLD_KEYS) {
+      const threshold = thresholds[thresholdKey]
+
+      if (threshold === undefined) {
+        continue
+      }
+
+      /**
+       * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+       * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+       */
+      if (threshold >= 0) {
+        const coverage = summary.data[thresholdKey].pct
+
+        if (coverage < threshold) {
+          process.exitCode = 1
+
+          let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${label} threshold (${threshold}%)`
+
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
 
-          /**
-           * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
-           * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
-           */
-          if (threshold >= 0) {
-            const coverage = summary.data[thresholdKey].pct
+          this.ctx.logger.error(errorMessage)
+        }
+      }
+      else {
+        const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
+        const absoluteThreshold = threshold * -1
 
-            if (coverage < threshold) {
-              process.exitCode = 1
+        if (uncovered > absoluteThreshold) {
+          process.exitCode = 1
 
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-               * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-               */
-              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${threshold}%)`
+          let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${label} threshold (${absoluteThreshold})`
 
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
+          if (file) {
+            errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
           }
-          else {
-            const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
-            const absoluteThreshold = threshold * -1
 
-            if (uncovered > absoluteThreshold) {
-              process.exitCode = 1
-
-              /**
-               * Generate error message based on perFile flag:
-               * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
-               * - ERROR: Uncovered statements (33) exceed global threshold (30)
-               */
-              let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-              } threshold (${absoluteThreshold})`
-
-              if (this.options.thresholds?.perFile && file) {
-                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-              }
-
-              this.ctx.logger.error(errorMessage)
-            }
-          }
+          this.ctx.logger.error(errorMessage)
         }
       }
     }
@@ -587,7 +605,7 @@ export class BaseCoverageProvider {
     assertConfigurationModule(config)
 
     for (const { coverageMap, thresholds, name } of allThresholds) {
-      const summaries = this.options.thresholds?.perFile
+      const summaries = this.options.thresholds?.perFile === true
         ? coverageMap
             .files()
             .map((file: string) =>
