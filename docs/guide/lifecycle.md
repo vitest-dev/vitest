@@ -137,10 +137,12 @@ The execution follows this order:
    - `beforeEach` hooks execute (in order defined, or based on [`sequence.hooks`](/config/sequence#sequence-hooks))
    - Test function executes
    - `afterEach` hooks execute (reverse order by default with `sequence.hooks: 'stack'`)
+   - Cleanup functions returned from `beforeEach` hooks execute (reverse order by default with `sequence.hooks: 'stack'`)
    - [`onTestFinished`](/api/hooks#ontestfinished) callbacks run (always in reverse order)
    - If test failed: [`onTestFailed`](/api/hooks#ontestfailed) callbacks run
    - Note: if `repeats` or `retry` are set, all of these steps are executed again
 6. **[`afterAll`](/api/hooks#afterall) hooks:** Run once after all tests in the suite complete
+7. **Cleanup functions returned from `beforeAll` hooks:** Run once after all tests in the suite complete
 
 **Example execution flow:**
 
@@ -162,6 +164,11 @@ describe('User API', () => {
   beforeAll(() => {
     // Runs once before all tests in this suite
     console.log('beforeAll')
+
+    return function beforeAllCleanup() {
+      // Runs once afterAll hooks have run
+      console.log('beforeAllCleanup')
+    }
   })
 
   aroundEach(async (runTest) => {
@@ -174,6 +181,11 @@ describe('User API', () => {
   beforeEach(() => {
     // Runs before each test
     console.log('beforeEach')
+
+    return function beforeEachCleanup() {
+      // Runs after afterEach hooks have run
+      console.log('beforeEachCleanup')
+    }
   })
 
   test('creates user', () => {
@@ -206,13 +218,16 @@ describe('User API', () => {
 //     beforeEach
 //       test 1
 //     afterEach
+//     beforeEachCleanup
 //   aroundEach after
 //   aroundEach before
 //     beforeEach
 //       test 2
 //     afterEach
+//     beforeEachCleanup
 //   aroundEach after
 //   afterAll
+//   beforeAllCleanup
 // aroundAll after
 ```
 
