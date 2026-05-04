@@ -261,9 +261,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private createMocker(): BrowserModuleMocker {
     const idPredicates = new Map<string, (url: URL) => boolean>()
-    const sessionIds = new Map<string, string[]>()
+    const sessionIds = new Map<string, Set<string>>()
 
-    function createPredicate(sessionId: string, url: string) {
+    function createPredicate(url: string) {
       const moduleUrl = new URL(url, 'http://localhost')
       const predicate = (url: URL) => {
         if (url.searchParams.has('_vitest_original')) {
@@ -293,11 +293,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         return true
       }
-      const ids = sessionIds.get(sessionId) || []
-      ids.push(moduleUrl.href)
-      sessionIds.set(sessionId, ids)
-      idPredicates.set(predicateKey(sessionId, moduleUrl.href), predicate)
-      return predicate
+      return { url: moduleUrl.href, predicate }
     }
 
     function predicateKey(sessionId: string, url: string) {
@@ -307,7 +303,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        await page.context().route(createPredicate(sessionId, module.url), async (route) => {
+        const { url: moduleUrl, predicate } = createPredicate(module.url)
+        const key = predicateKey(sessionId, moduleUrl)
+        const existingPredicate = idPredicates.get(key)
+        if (existingPredicate) {
+          await page.context().unroute(existingPredicate)
+        }
+        const ids = sessionIds.get(sessionId) ?? new Set<string>()
+        ids.add(moduleUrl)
+        sessionIds.set(sessionId, ids)
+        idPredicates.set(key, predicate)
+        await page.context().route(predicate, async (route) => {
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
             const body = createManualModuleSource(module.url, exports)
@@ -381,8 +387,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       },
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
-        const ids = sessionIds.get(sessionId) || []
-        const promises = ids.map((id) => {
+        const ids = sessionIds.get(sessionId) ?? new Set<string>()
+        const promises = [...ids].map((id) => {
           const key = predicateKey(sessionId, id)
           const predicate = idPredicates.get(key)
           if (predicate) {
