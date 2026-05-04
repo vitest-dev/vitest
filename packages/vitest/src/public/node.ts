@@ -40,6 +40,7 @@ export { ThreadsPoolWorker } from '../node/pools/workers/threadsWorker'
 export { TypecheckPoolWorker } from '../node/pools/workers/typecheckWorker'
 export { VmForksPoolWorker } from '../node/pools/workers/vmForksWorker'
 export { VmThreadsPoolWorker } from '../node/pools/workers/vmThreadsWorker'
+export { capturePrintError } from '../node/printError'
 export type { SerializedTestProject, TestProject } from '../node/project'
 
 export {
