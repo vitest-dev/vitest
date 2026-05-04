@@ -169,6 +169,21 @@ describe('FakeTimers', () => {
       expect(global.process.nextTick).not.toBe(origNextTick)
     })
 
+    it.runIf(isChildProcess)('does not mock process.nextTick when toNotFake does not include nextTick and is child_process', () => {
+      const origNextTick = () => {}
+      const global = {
+        Date: FakeDate,
+        clearTimeout,
+        process: {
+          nextTick: origNextTick,
+        },
+        setTimeout,
+      }
+      const timers = new FakeTimers({ global, config: { toNotFake: [] } })
+      timers.useFakeTimers()
+      expect(global.process.nextTick).toBe(origNextTick)
+    })
+
     it.skipIf(isChildProcess)('does not mock process.nextTick when toNotFake includes nextTick', () => {
       const origNextTick = () => {}
       const global = {
@@ -182,15 +197,6 @@ describe('FakeTimers', () => {
       const timers = new FakeTimers({ global, config: { toNotFake: ['nextTick'] } })
       timers.useFakeTimers()
       expect(global.process.nextTick).toBe(origNextTick)
-    })
-
-    it.runIf(isChildProcess)('throws when is child_process and toNotFake does not include nextTick', () => {
-      const global = { Date: FakeDate, process, setTimeout, clearTimeout }
-      const timers = new FakeTimers({ global, config: { toNotFake: [] } })
-
-      expect(() => timers.useFakeTimers()).toThrow(
-        'process.nextTick cannot be mocked inside child_process',
-      )
     })
   })
 

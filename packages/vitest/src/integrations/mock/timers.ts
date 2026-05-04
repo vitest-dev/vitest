@@ -156,14 +156,18 @@ export class FakeTimers {
     }
 
     // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-    const toFakeOverride = (this._userConfig?.toFake === undefined && this._userConfig?.toNotFake === undefined)
+    const toFakeOverride: Pick<FakeTimersConfig, 'toFake'> = (this._userConfig?.toFake === undefined && this._userConfig?.toNotFake === undefined)
       ? { toFake: (Object.keys(this._fakeTimers.timers) as FakeMethod[])
           .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask') }
       : {}
 
-    const wouldFakeNextTick = this._userConfig?.toNotFake !== undefined
-      ? !this._userConfig.toNotFake.includes('nextTick')
-      : this._userConfig?.toFake?.includes('nextTick') ?? false
+    const toNotFakeOverride: Pick<FakeTimersConfig, 'toNotFake'> = this._userConfig?.toNotFake !== undefined
+      && isChildProcess()
+      && !this._userConfig.toNotFake.includes('nextTick')
+      ? { toNotFake: [...this._userConfig.toNotFake, 'nextTick' as const] }
+      : {}
+
+    const wouldFakeNextTick = this._userConfig?.toFake?.includes('nextTick') ?? false
 
     if (wouldFakeNextTick && isChildProcess()) {
       throw new Error(
@@ -175,6 +179,7 @@ export class FakeTimers {
       now: fakeDate,
       ...this._userConfig,
       ...toFakeOverride,
+      ...toNotFakeOverride,
       ignoreMissingTimers: true,
     })
 
