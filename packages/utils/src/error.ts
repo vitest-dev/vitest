@@ -1,4 +1,4 @@
-import type { DiffOptions, StringifiedMemory } from './diff'
+import type { DiffOptions } from './diff'
 import type { TestError } from './types'
 import { format as prettyFormat } from '@vitest/pretty-format'
 import { getDefaultFormatOptions, printDiffOrStringify } from './diff'
@@ -22,7 +22,6 @@ export function processError(
       && err.expected !== undefined
       && err.actual !== undefined)
   ) {
-    const memory: StringifiedMemory = {}
     const options = {
       ...diffOptions,
       ...err.diffOptions as DiffOptions,
@@ -31,11 +30,11 @@ export function processError(
       err.actual,
       err.expected,
       options,
-      memory,
+      err,
     )
 
-    err.expected = prettifyValue('expected', err.expected, options, memory)
-    err.actual = prettifyValue('actual', err.actual, options, memory)
+    err.expected = prettifyValue(err.expected, options)
+    err.actual = prettifyValue(err.actual, options)
   }
 
   // some Error implementations may not allow rewriting cause
@@ -60,10 +59,7 @@ export function processError(
   }
 }
 
-function prettifyValue(pointer: 'expected' | 'actual', value: unknown, options: DiffOptions, memory: StringifiedMemory): string | undefined {
-  if (pointer in memory) {
-    return memory[pointer]
-  }
+function prettifyValue(value: unknown, options: DiffOptions): string | undefined {
   if (typeof value !== 'string') {
     return prettyFormat(value, getDefaultFormatOptions(options))
   }
