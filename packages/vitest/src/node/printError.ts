@@ -36,12 +36,17 @@ interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
+export interface CapturePrintErrorResult {
+  nearest: ParsedStack | undefined
+  output: string
+}
+
 // use Logger with custom Console to capture entire error printing
 export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-): { nearest: ParsedStack | undefined; output: string } {
+): CapturePrintErrorResult {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
