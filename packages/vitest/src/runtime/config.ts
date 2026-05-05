@@ -156,7 +156,7 @@ export interface SerializedConfig {
   strictTags: boolean
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
-  isAgent: boolean
+  disableColors: boolean
 }
 
 export interface SerializedCoverageConfig {
