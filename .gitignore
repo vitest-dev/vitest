@@ -28,7 +28,6 @@ test/**/__screenshots__/**/*
 test/**/__traces__/**/*
 test/browser/fixtures/update-snapshot/basic.test.ts
 test/e2e/fixtures/browser-multiple/basic-*
-.vitest-reports
 *.tsbuildinfo
 # exclude static html reporter folder
 test/browser/html/
