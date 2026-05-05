@@ -1,7 +1,7 @@
-import type { DiffOptions } from './diff'
+import type { DiffOptions, StringifiedMemory } from './diff'
 import type { TestError } from './types'
-import { printDiffOrStringify } from './diff'
-import { stringify } from './display'
+import { format as prettyFormat } from '@vitest/pretty-format'
+import { getDefaultFormatOptions, printDiffOrStringify } from './diff'
 import { serializeValue } from './serialize'
 
 export { serializeValue as serializeError }
@@ -22,17 +22,32 @@ export function processError(
       && err.expected !== undefined
       && err.actual !== undefined)
   ) {
-    err.diff = printDiffOrStringify(err.actual, err.expected, {
+    const memory: StringifiedMemory = {}
+    const options = {
       ...diffOptions,
       ...err.diffOptions as DiffOptions,
-    })
-  }
+    }
+    err.diff = printDiffOrStringify(
+      err.actual,
+      err.expected,
+      options,
+      memory,
+    )
 
-  if ('expected' in err && typeof err.expected !== 'string') {
-    err.expected = stringify(err.expected, 10)
-  }
-  if ('actual' in err && typeof err.actual !== 'string') {
-    err.actual = stringify(err.actual, 10)
+    // TODO: simplify if/else
+    if ('expected' in memory) {
+      err.expected = memory.expected
+    }
+    else if (typeof err.expected !== 'string') {
+      err.expected = prettyFormat(err.expected, getDefaultFormatOptions(options))
+    }
+
+    if ('actual' in memory) {
+      err.actual = memory.actual
+    }
+    else if (typeof err.actual !== 'string') {
+      err.actual = prettyFormat(err.actual, getDefaultFormatOptions(options))
+    }
   }
 
   // some Error implementations may not allow rewriting cause
