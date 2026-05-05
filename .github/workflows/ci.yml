@@ -327,8 +327,6 @@ jobs:
 
       - name: Link CI reports
         run: |
-          report_links=""
-          report_links+="test/unit: ${{ steps.upload-unit-report.outputs.artifact-url }}%0A"
-          report_links+="test/e2e: ${{ steps.upload-e2e-report.outputs.artifact-url }}%0A"
-          report_links+="packages/ui: ${{ steps.upload-ui-report.outputs.artifact-url }}%0A"
-          echo "::notice title=CI reports::${report_links}"
+          echo "::notice title=CI reports::test/unit: ${{ steps.upload-unit-report.outputs.artifact-url }}"
+          echo "::notice title=CI reports::test/e2e: ${{ steps.upload-e2e-report.outputs.artifact-url }}"
+          echo "::notice title=CI reports::packages/ui: ${{ steps.upload-ui-report.outputs.artifact-url }}"
