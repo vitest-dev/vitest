@@ -9,7 +9,7 @@ import type { TypedArray } from './types'
 import type { ResolvedOptions } from './utils'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname } from 'pathe'
-import { asyncTimeout, resolveOptions, takeDecodedScreenshot } from './utils'
+import { asyncTimeout, resolveOptions, takeDecodedScreenshot, takeScreenshotBuffer } from './utils'
 
 /** Decoded image data with dimensions metadata. */
 type DecodedImage = Awaited<ReturnType<AnyCodec['decode']>>
@@ -18,6 +18,12 @@ type DecodedImage = Awaited<ReturnType<AnyCodec['decode']>>
 interface ScreenshotData {
   image: DecodedImage
   path: string
+  buffer?: Buffer<ArrayBufferLike>
+}
+
+interface CapturedScreenshot {
+  image: DecodedImage
+  buffer: Buffer<ArrayBufferLike>
 }
 
 /**
@@ -77,16 +83,44 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     throw new Error('Cannot compare screenshots without a test path')
   }
 
-  const { element } = options
+  const { element, target } = options
   const {
     codec,
     comparator,
     paths,
-    resolvedOptions: { comparatorOptions, screenshotOptions, timeout },
+    resolvedOptions: { comparatorName, comparatorOptions, screenshotOptions, timeout },
   } = resolveOptions({ context, name, testName, options })
 
+  const screenshotName = `${Date.now()}-${basename(paths.reference)}`
+  const screenshotArgument = {
+    codec,
+    context,
+    element,
+    name: screenshotName,
+    screenshotOptions,
+    target,
+  } satisfies Parameters<typeof takeScreenshotData>[0]
+
   const referenceFile = await readFile(paths.reference).catch(() => null)
-  const reference = referenceFile && await codec.decode(referenceFile, {})
+  let reference: DecodedImage | null = null
+  let initialScreenshot: CapturedScreenshot | null = null
+
+  if (referenceFile) {
+    const initialScreenshotBuffer = await takeScreenshotBuffer(screenshotArgument)
+
+    // Built-in comparators always pass for byte-identical PNGs, so avoid decoding.
+    if (comparatorName === 'pixelmatch' && Buffer.compare(referenceFile, initialScreenshotBuffer) === 0) {
+      return buildOutput({ type: 'matched-immediately' }, timeout)
+    }
+
+    [reference, initialScreenshot] = await Promise.all([
+      codec.decode(referenceFile, {}),
+      takeScreenshotData({
+        ...screenshotArgument,
+        buffer: initialScreenshotBuffer,
+      }),
+    ])
+  }
 
   const screenshotResult = await waitForStableScreenshot({
     codec,
@@ -94,14 +128,17 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     comparatorOptions,
     context,
     element,
-    name: `${Date.now()}-${basename(paths.reference)}`,
+    initialScreenshot,
+    name: screenshotName,
     reference,
     screenshotOptions,
+    target,
   }, timeout)
 
   const outcome = await determineOutcome({
     reference,
     screenshot: screenshotResult && screenshotResult.actual,
+    screenshotBuffer: screenshotResult?.buffer,
     retries: screenshotResult?.retries ?? 0,
     updateSnapshot: context.project.serializedConfig.snapshotOptions.updateSnapshot,
     paths,
@@ -129,12 +166,14 @@ async function determineOutcome(
     reference,
     retries,
     screenshot,
+    screenshotBuffer,
     updateSnapshot,
   }: Pick<ResolvedOptions, 'comparator' | 'paths'> & {
     comparatorOptions: ResolvedOptions['resolvedOptions']['comparatorOptions']
     reference: DecodedImage | null
     retries: number
     screenshot: DecodedImage | null
+    screenshotBuffer?: Buffer<ArrayBufferLike>
     updateSnapshot: SnapshotUpdateState
   },
 ): Promise<MatchOutcome> {
@@ -156,6 +195,7 @@ async function determineOutcome(
         reference: {
           image: screenshot,
           path: paths.reference,
+          buffer: screenshotBuffer,
         },
       }
     }
@@ -172,6 +212,7 @@ async function determineOutcome(
         path: location === 'reference'
           ? paths.reference
           : paths.diffs.reference,
+        buffer: screenshotBuffer,
       },
     }
   }
@@ -197,6 +238,7 @@ async function determineOutcome(
       reference: {
         image: screenshot,
         path: paths.reference,
+        buffer: screenshotBuffer,
       },
     }
   }
@@ -210,6 +252,7 @@ async function determineOutcome(
     actual: {
       image: screenshot,
       path: paths.diffs.actual,
+      buffer: screenshotBuffer,
     },
     diff: comparisonResult.diff && {
       image: {
@@ -237,7 +280,7 @@ async function performSideEffects(
     case 'update-reference': {
       await writeScreenshot(
         outcome.reference.path,
-        await codec.encode(outcome.reference.image, {}),
+        await encodeScreenshot(outcome.reference, codec),
       )
 
       break
@@ -246,7 +289,7 @@ async function performSideEffects(
     case 'mismatch': {
       await writeScreenshot(
         outcome.actual.path,
-        await codec.encode(outcome.actual.image, {}),
+        await encodeScreenshot(outcome.actual, codec),
       )
 
       if (outcome.diff) {
@@ -259,6 +302,10 @@ async function performSideEffects(
       break
     }
   }
+}
+
+function encodeScreenshot(screenshot: ScreenshotData, codec: AnyCodec) {
+  return screenshot.buffer ?? codec.encode(screenshot.image, {})
 }
 
 /**
@@ -353,10 +400,12 @@ interface StableScreenshotOptions {
   comparator: AnyComparator
   comparatorOptions: ScreenshotMatcherOptions['comparatorOptions']
   context: BrowserCommandContext
-  element: SerializedLocator
+  element?: SerializedLocator
+  initialScreenshot: CapturedScreenshot | null
   name: string
   reference: ReturnType<AnyCodec['decode']> | null
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
+  target?: ScreenshotMatcherArguments[2]['target']
 }
 
 /**
@@ -365,7 +414,7 @@ interface StableScreenshotOptions {
  * Wraps {@linkcode getStableScreenshot} with an abort controller that triggers when the timeout expires. Returns `null` if the page never stabilizes.
  */
 async function waitForStableScreenshot(options: StableScreenshotOptions, timeout: number,
-): Promise<{ actual: DecodedImage; retries: number } | null> {
+): Promise<{ actual: DecodedImage; buffer: Buffer<ArrayBufferLike>; retries: number } | null> {
   const abortController = new AbortController()
 
   const stableScreenshot = getStableScreenshot(
@@ -406,12 +455,15 @@ async function getStableScreenshot({
   comparator,
   comparatorOptions,
   element,
+  initialScreenshot,
   name,
   reference,
   screenshotOptions,
+  target,
 }: StableScreenshotOptions, signal: AbortSignal): Promise<{
   retries: number
   actual: DecodedImage
+  buffer: Buffer<ArrayBufferLike>
 }> {
   const screenshotArgument = {
     codec,
@@ -419,21 +471,26 @@ async function getStableScreenshot({
     element,
     name,
     screenshotOptions,
+    target,
   } satisfies Parameters<typeof takeDecodedScreenshot>[0]
 
   let retries = 0
 
   let decodedBaseline = reference
+  let nextScreenshot = initialScreenshot
+  let lastCapturedScreenshot: CapturedScreenshot | null = null
 
   while (signal.aborted === false) {
     if (decodedBaseline === null) {
       decodedBaseline = takeDecodedScreenshot(screenshotArgument)
     }
 
-    const [image1, image2] = await Promise.all([
+    const [image1, capturedScreenshot] = await Promise.all([
       decodedBaseline,
-      takeDecodedScreenshot(screenshotArgument),
+      nextScreenshot ?? takeScreenshotData(screenshotArgument),
     ])
+    const { image: image2 } = capturedScreenshot
+    lastCapturedScreenshot = capturedScreenshot
 
     const isStable = (await comparator(
       image1,
@@ -442,17 +499,56 @@ async function getStableScreenshot({
     )).pass
 
     decodedBaseline = image2
+    nextScreenshot = null
 
     if (isStable) {
-      break
+      return {
+        retries,
+        actual: image2,
+        buffer: capturedScreenshot.buffer,
+      }
     }
 
     retries += 1
   }
 
+  lastCapturedScreenshot ??= await takeScreenshotData(screenshotArgument)
+
   return {
     retries,
-    actual: await decodedBaseline!,
+    actual: lastCapturedScreenshot.image,
+    buffer: lastCapturedScreenshot.buffer,
+  }
+}
+
+async function takeScreenshotData({
+  buffer,
+  codec,
+  context,
+  element,
+  name,
+  screenshotOptions,
+  target,
+}: {
+  buffer?: Buffer<ArrayBufferLike>
+  codec: AnyCodec
+  context: BrowserCommandContext
+  element?: SerializedLocator
+  name: string
+  screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
+  target?: ScreenshotMatcherArguments[2]['target']
+}): Promise<CapturedScreenshot> {
+  const screenshot = buffer ?? await takeScreenshotBuffer({
+    context,
+    element,
+    name,
+    screenshotOptions,
+    target,
+  })
+
+  return {
+    buffer: screenshot,
+    image: await codec.decode(screenshot, {}),
   }
 }
 

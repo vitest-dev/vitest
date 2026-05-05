@@ -64,6 +64,49 @@ describe('.toMatchScreenshot', () => {
     await expect(locator).toMatchScreenshot(filename)
   })
 
+  test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
+    'supports page screenshots',
+    async ({ onTestFinished }) => {
+      const filename = globalThis.crypto.randomUUID()
+
+      renderTestCase([
+        'oklch(39.6% 0.141 25.723)',
+        'oklch(40.5% 0.101 131.063)',
+        'oklch(37.9% 0.146 265.522)',
+      ])
+
+      let errorMessage: string
+
+      try {
+        await expect(page).toMatchScreenshot(filename)
+      }
+      catch (error) {
+        errorMessage = error.message
+      }
+
+      const [referencePath] = extractToMatchScreenshotPaths(errorMessage, filename)
+
+      expect(typeof referencePath).toBe('string')
+
+      onTestFinished(async () => {
+        await server.commands.removeFile(referencePath)
+      })
+
+      expect(errorMessage).toMatchInlineSnapshot(`
+        expect(page).toMatchScreenshot()
+
+        No existing reference screenshot found${
+          server.config.snapshotOptions.updateSnapshot === 'none'
+            ? '.'
+            : '; a new one was created. Review it before running tests again.'
+        }
+
+        Reference screenshot:
+          ${referencePath}
+      `)
+    },
+  )
+
   // Only run this test if snapshots aren't being updated
   test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')(
     "throws when screenshots don't match",
