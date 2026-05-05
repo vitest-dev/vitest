@@ -207,7 +207,7 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * @exorimental
+   * @experimental
    *
    * A list of benchmarks performed during the test.
    */
