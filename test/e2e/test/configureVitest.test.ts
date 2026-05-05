@@ -251,7 +251,7 @@ test('adding a plugin with existing name throws and error', async () => {
 })
 
 test('can access browser.instances[].browser', async () => {
-  const browsers: string[] = []
+  const names: { browser: string; project: string }[] = []
 
   await vitest({}, {
     name: 'custom-project-name',
@@ -269,23 +269,32 @@ test('can access browser.instances[].browser', async () => {
       {
         name: 'test',
         configureVitest(context) {
-          browsers.push(context.project.config.browser.name)
+          names.push({ browser: context.project.config.browser.name, project: context.project.name })
         },
       },
     ],
   })
 
-  expect(browsers).toMatchInlineSnapshot(`
+  expect(names).toMatchInlineSnapshot(`
     [
-      "chromium",
-      "webkit",
-      "firefox",
+      {
+        "browser": "chromium",
+        "project": "custom-name-for-chromium-browser",
+      },
+      {
+        "browser": "webkit",
+        "project": "custom-name-for-webkit-browser",
+      },
+      {
+        "browser": "firefox",
+        "project": "custom-name-for-firefox-browser",
+      },
     ]
   `)
 })
 
 test('can access project\'s browser.instances[].browser', async () => {
-  const browsers: string[] = []
+  const names: { browser: string; project: string }[] = []
 
   await vitest({}, {
     projects: [
@@ -294,7 +303,7 @@ test('can access project\'s browser.instances[].browser', async () => {
           {
             name: 'test',
             configureVitest(context) {
-              browsers.push(context.project.config.browser.name)
+              names.push({ browser: context.project.config.browser.name, project: context.project.name })
             },
           },
         ],
@@ -314,11 +323,20 @@ test('can access project\'s browser.instances[].browser', async () => {
     ],
   })
 
-  expect(browsers).toMatchInlineSnapshot(`
+  expect(names).toMatchInlineSnapshot(`
     [
-      "chromium",
-      "webkit",
-      "firefox",
+      {
+        "browser": "chromium",
+        "project": "custom-name-for-chromium-browser",
+      },
+      {
+        "browser": "webkit",
+        "project": "custom-name-for-webkit-browser",
+      },
+      {
+        "browser": "firefox",
+        "project": "custom-name-for-firefox-browser",
+      },
     ]
   `)
 })
