@@ -154,6 +154,7 @@ export interface SerializedConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+  mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
   isAgent: boolean
 }

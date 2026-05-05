@@ -4,7 +4,7 @@ import { runVitest } from '#test-utils'
 import { beforeEach, describe, expect, test } from 'vitest'
 
 const root = './fixtures/reporters/reporter-error'
-const reportsDir = resolve(root, '.vitest-reports')
+const reportsDir = resolve(root, '.vitest/blob')
 
 beforeEach(() => {
   rmSync(reportsDir, { force: true, recursive: true })

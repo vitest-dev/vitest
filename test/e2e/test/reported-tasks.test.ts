@@ -320,20 +320,26 @@ it('can create new test specifications', ({ testModule }) => {
   const testSuite = [...testModule.children.suites()][0]
   const suiteSpec = testSuite.toTestSpecification()
   expect(suiteSpec.moduleId).toBe(testModule.moduleId)
-  expect(suiteSpec.testIds).toEqual([
-    '-1008553841_11_0',
-    '-1008553841_11_1',
-    '-1008553841_11_2_0',
-    '-1008553841_11_2_1',
-    '-1008553841_11_2_2',
-    '-1008553841_11_2_3',
-  ])
+  expect(suiteSpec.testIds).toMatchInlineSnapshot(`
+    [
+      "1763725585_11_0",
+      "1763725585_11_1",
+      "1763725585_11_2_0",
+      "1763725585_11_2_1",
+      "1763725585_11_2_2",
+      "1763725585_11_2_3",
+    ]
+  `)
   expect(suiteSpec.project).toBe(testModule.project)
 
   const testCase = testSuite.children.at(0) as TestCase
   const caseSpec = testCase.toTestSpecification()
   expect(caseSpec.moduleId).toBe(testModule.moduleId)
-  expect(caseSpec.testIds).toEqual(['-1008553841_11_0'])
+  expect(caseSpec.testIds).toMatchInlineSnapshot(`
+    [
+      "1763725585_11_0",
+    ]
+  `)
   expect(caseSpec.project).toBe(testModule.project)
 })
 

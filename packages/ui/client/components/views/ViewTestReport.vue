@@ -20,9 +20,12 @@ const failed = computed(() => {
   return props.test
 })
 
+// filter out internal TaskMeta
+// packages/vitest/src/types/global.ts
 const kWellKnownMeta = new Set([
   'benchmark',
   'typecheck',
+  '__vitest_label__',
 ])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {
