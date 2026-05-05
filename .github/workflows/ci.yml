@@ -266,8 +266,10 @@ jobs:
           retention-days: 30
 
   merge-reports:
-    needs: test
-    if: ${{ !cancelled() }}
+    needs:
+      - test
+      - changed
+    if: needs.changed.outputs.should_skip != 'true' && !cancelled()
     runs-on: ubuntu-latest
     name: Merge Reports
     timeout-minutes: 10
