@@ -9,7 +9,6 @@ import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
-import { capturePrintError } from '../printError'
 import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {
@@ -156,7 +155,7 @@ export class GithubActionsReporter implements Reporter {
 
     // format errors via `printError`
     for (const { project, title, error } of projectErrors) {
-      const result = capturePrintError(error, this.ctx, { project })
+      const result = this.ctx.logger.formatError(error, { project })
       const stack = result?.nearest
       if (!stack) {
         continue
