@@ -34,20 +34,8 @@ export function processError(
       memory,
     )
 
-    // TODO: simplify if/else
-    if ('expected' in memory) {
-      err.expected = memory.expected
-    }
-    else if (typeof err.expected !== 'string') {
-      err.expected = prettyFormat(err.expected, getDefaultFormatOptions(options))
-    }
-
-    if ('actual' in memory) {
-      err.actual = memory.actual
-    }
-    else if (typeof err.actual !== 'string') {
-      err.actual = prettyFormat(err.actual, getDefaultFormatOptions(options))
-    }
+    err.expected = prettifyValue('expected', err.expected, options, memory)
+    err.actual = prettifyValue('actual', err.actual, options, memory)
   }
 
   // some Error implementations may not allow rewriting cause
@@ -70,4 +58,14 @@ export function processError(
       ),
     )
   }
+}
+
+function prettifyValue(pointer: 'expected' | 'actual', value: unknown, options: DiffOptions, memory: StringifiedMemory): string | undefined {
+  if (pointer in memory) {
+    return memory[pointer]
+  }
+  if (typeof value !== 'string') {
+    return prettyFormat(value, getDefaultFormatOptions(options))
+  }
+  return value
 }

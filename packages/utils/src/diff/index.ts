@@ -68,8 +68,10 @@ export interface StringifiedMemory {
 }
 
 interface Memorize {
-  (a: 'expected' | 'actual', value: string): string
+  (pointer: 'expected' | 'actual', stringifiedValue: string): string
 }
+
+const DEFAULT_MEMORIZE: Memorize = (_, v) => v
 
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)
@@ -80,7 +82,7 @@ interface Memorize {
  * @param options Diff options
  * @returns {string | null} a string diff
  */
-export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize = (_, v) => v): string | undefined {
+export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize = DEFAULT_MEMORIZE): string | undefined {
   if (Object.is(a, b)) {
     return ''
   }
@@ -154,7 +156,7 @@ function comparePrimitive(
   a: number | boolean,
   b: number | boolean,
   options?: DiffOptions,
-  memorize: Memorize = (_, v) => v,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ) {
   const aFormat = memorize('expected', prettyFormat(a, FORMAT_OPTIONS))
   const bFormat = memorize('actual', prettyFormat(b, FORMAT_OPTIONS))
@@ -175,7 +177,7 @@ function compareObjects(
   a: Record<string, any>,
   b: Record<string, any>,
   options?: DiffOptions,
-  memorize: Memorize = (_, v) => v,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ) {
   let difference
   let hasThrown = false
@@ -229,7 +231,7 @@ function getObjectsDifference(
   b: Record<string, any>,
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
-  memorize: Memorize = (_, v) => v,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ): string {
   const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
   const aCompare = prettyFormat(a, formatOptionsZeroIndent)
