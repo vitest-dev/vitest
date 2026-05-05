@@ -1,5 +1,6 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { TestProject, TestUserConfig, VitestOptions } from 'vitest/node'
+import { playwright } from '@vitest/browser-playwright'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
@@ -247,6 +248,79 @@ test('adding a plugin with existing name throws and error', async () => {
     ],
   }),
   ).rejects.toThrow('Project name "project-1" is not unique. All projects should have unique names. Make sure your configuration is correct.')
+})
+
+test('can access browser.instances[].browser', async () => {
+  const browsers: string[] = []
+
+  await vitest({}, {
+    name: 'custom-project-name',
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
+        { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
+        { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
+      ],
+    },
+  }, {
+    plugins: [
+      {
+        name: 'test',
+        configureVitest(context) {
+          browsers.push(context.project.config.browser.name)
+        },
+      },
+    ],
+  })
+
+  expect(browsers).toMatchInlineSnapshot(`
+    [
+      "chromium",
+      "webkit",
+      "firefox",
+    ]
+  `)
+})
+
+test('can access project\'s browser.instances[].browser', async () => {
+  const browsers: string[] = []
+
+  await vitest({}, {
+    projects: [
+      {
+        plugins: [
+          {
+            name: 'test',
+            configureVitest(context) {
+              browsers.push(context.project.config.browser.name)
+            },
+          },
+        ],
+        test: {
+          name: 'custom-project-name',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [
+              { browser: 'chromium', name: 'custom-name-for-chromium-browser' },
+              { browser: 'webkit', name: 'custom-name-for-webkit-browser' },
+              { browser: 'firefox', name: 'custom-name-for-firefox-browser' },
+            ],
+          },
+        },
+      },
+    ],
+  })
+
+  expect(browsers).toMatchInlineSnapshot(`
+    [
+      "chromium",
+      "webkit",
+      "firefox",
+    ]
+  `)
 })
 
 async function throws(cliOptions: TestUserConfig) {
