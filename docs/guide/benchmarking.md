@@ -22,6 +22,56 @@ test('parsing performance', async ({ bench }) => {
 
 The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. Vitest will print the benchmark output (ops/sec, mean time, etc.) after the test completes.
 
+::: warning
+The `bench` fixture is only available in files matched by [`benchmark.include`](/config/#benchmark-include) (default: `**/*.{bench,benchmark}.?(c|m)[jt]s?(x)`). Using `{ bench }` inside a regular test file will throw an error, and `bench` is not exported from `vitest` as a top-level import.
+
+Whether a file participates in the benchmark run is decided by the filename, not by whether the test uses the `bench` fixture. Renaming `parser.test.ts` to `parser.bench.ts` (or adjusting `benchmark.include`) is what moves it into the benchmark project.
+:::
+
+## Running Benchmarks
+
+Benchmark files are matched by [`benchmark.include`](/config/#benchmark-include) (default: `**/*.{bench,benchmark}.?(c|m)[jt]s?(x)`) and run in their own project, separate from your regular tests. There are three ways to run them, depending on whether you want to skip them, run them alongside tests, or run them on their own.
+
+### `vitest` (default)
+
+Without [`benchmark.enabled`](/config/#benchmark-enabled), the `vitest` command only runs regular tests. Benchmark files are ignored entirely. This is the default and the right choice for day-to-day development, since benchmarks are slow and noisy and shouldn't run on every save.
+
+### `vitest` with `benchmark.enabled`
+
+Set `benchmark.enabled: true` in your config to run benchmarks together with regular tests:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    benchmark: {
+      enabled: true,
+    },
+  },
+})
+```
+
+With this config, `vitest` runs your regular tests first, then runs the benchmarks in a separate isolated group (so benchmark execution never overlaps with test execution and adds noise to results). Useful in CI when you want a single command to validate correctness and performance.
+
+### `vitest bench`
+
+The `bench` subcommand runs benchmarks only and skips regular tests:
+
+```bash
+vitest bench
+```
+
+This implicitly enables `benchmark.enabled` for the run, so you don't need to set it in the config. Like the `vitest` command, it accepts filename filters and `-t`/`--testNamePattern` to narrow the run:
+
+```bash
+# only benchmarks in files matching "parser"
+vitest bench parser
+
+# only benchmarks whose test name matches "JSON"
+vitest bench -t JSON
+```
+
 ## Comparing Benchmarks
 
 Use `bench.compare()` to compare multiple benchmarks against each other:
