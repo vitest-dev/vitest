@@ -312,7 +312,7 @@ export function printDiffOrStringify(
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
   const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
-  const memorize = memory ? createMemorize(memory) : (_: unknown, v: string) => v
+  const memorize = memory ? createMemorize(memory) : DEFAULT_MEMORIZE
   const difference = diff(replacedExpected, replacedActual, options, memorize)
 
   return difference
