@@ -246,7 +246,7 @@ Baselines work inside `bench.compare()` too. You can mix regular and baseline be
 test('compare against baseline', async ({ bench }) => {
   const result = await bench.compare(
     bench('current implementation', () => { current() }),
-    bench.withBaseline('previous implementation', () => { previous() }),
+    bench.withBaseline('previous implementation', () => { current() }),
   )
 
   expect(result.get('current implementation'))
