@@ -108,7 +108,8 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
   if (referenceFile) {
     const initialScreenshotBuffer = await takeScreenshotBuffer(screenshotArgument)
 
-    // Built-in comparators always pass for byte-identical PNGs, so avoid decoding.
+    // Keep custom comparator semantics intact: only the built-in pixelmatch
+    // comparator is known to pass byte-identical PNGs without side effects.
     if (comparatorName === 'pixelmatch' && Buffer.compare(referenceFile, initialScreenshotBuffer) === 0) {
       return buildOutput({ type: 'matched-immediately' }, timeout)
     }

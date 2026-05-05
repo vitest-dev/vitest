@@ -446,9 +446,9 @@ describe('.toMatchScreenshot', () => {
       path,
     })
 
-    // Test that `toMatchScreenshot()` correctly uses a custom comparator; since
-    //  the element hasn't changed, it should match, but this custom comparator
-    //  will always fail
+    // Test that `toMatchScreenshot()` correctly uses a custom comparator even
+    // when the PNG bytes match. The byte fast path must not bypass custom
+    // comparator semantics.
     await expect(locator).toMatchScreenshot(filename)
 
     let errorMessage: string
