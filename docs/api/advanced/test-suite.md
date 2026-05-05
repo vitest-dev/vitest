@@ -221,6 +221,28 @@ Note that suite metadata will be inherited by tests since Vitest 4.1.
 If metadata was attached during collection (outside of the `test` function), then it will be available in [`onTestModuleCollected`](./reporters#ontestmodulecollected) hook in the custom reporter.
 :::
 
+## logs <Version>5.0.0</Version> {#logs}
+
+```ts
+function logs(): ReadonlyArray<UserConsoleLog>
+```
+
+Console logs recorded during test collection of this suite. For example:
+
+```ts
+describe('suite', () => {
+  console.log('included') // [!code highlight]
+
+  beforeAll(() => {
+    console.log('included') // [!code highlight]
+  })
+
+  test('test', () => {
+    console.log('not included') // [!code error]
+  })
+})
+```
+
 ## toTestSpecification <Version>4.1.0</Version> {#totestspecification}
 
 ```ts

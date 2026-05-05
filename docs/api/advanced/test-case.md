@@ -300,3 +300,11 @@ function toTestSpecification(): TestSpecification
 ```
 
 Returns a new [test specification](/api/advanced/test-specification) that can be used to filter or run this specific test case.
+
+## logs <Version>5.0.0</Version> {#logs}
+
+```ts
+function logs(): ReadonlyArray<UserConsoleLog>
+```
+
+Console logs recorded during the test execution.
