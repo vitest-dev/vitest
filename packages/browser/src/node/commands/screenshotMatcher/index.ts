@@ -92,21 +92,21 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
   } = resolveOptions({ context, name, testName, options })
 
   const screenshotName = `${Date.now()}-${basename(paths.reference)}`
-  const screenshotArgument = {
-    codec,
+  const screenshotCaptureOptions = {
     context,
     element,
     name: screenshotName,
     screenshotOptions,
     target,
-  } satisfies Parameters<typeof takeScreenshotData>[0]
+  } satisfies Parameters<typeof takeScreenshotBuffer>[0]
 
   const referenceFile = await readFile(paths.reference).catch(() => null)
   let reference: DecodedImage | null = null
   let initialScreenshot: CapturedScreenshot | null = null
 
   if (referenceFile) {
-    const initialScreenshotBuffer = await takeScreenshotBuffer(screenshotArgument)
+    // Reuse this capture in the stability loop so the byte fast path doesn't add another screenshot.
+    const initialScreenshotBuffer = await takeScreenshotBuffer(screenshotCaptureOptions)
 
     // Keep custom comparator semantics intact: only the built-in pixelmatch
     // comparator is known to pass byte-identical PNGs without side effects.
@@ -117,8 +117,9 @@ export const screenshotMatcher: BrowserCommand<ScreenshotMatcherArguments> = asy
     [reference, initialScreenshot] = await Promise.all([
       codec.decode(referenceFile, {}),
       takeScreenshotData({
-        ...screenshotArgument,
+        ...screenshotCaptureOptions,
         buffer: initialScreenshotBuffer,
+        codec,
       }),
     ])
   }
