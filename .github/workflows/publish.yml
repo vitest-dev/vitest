@@ -10,7 +10,6 @@ permissions:
   id-token: write
 
 env:
-  VITEST_GENERATE_UI_TOKEN: 'true'
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
