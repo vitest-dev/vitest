@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
@@ -62,6 +63,27 @@ export default defineConfig({
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
     //   },
     // },
+
+    {
+      name: 'proxy-api-token',
+      apply: 'serve',
+      async transformIndexHtml() {
+        const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
+        const apiTokenPattern = /<script>(window\.VITEST_API_TOKEN = .+?)<\/script>/s
+        const response = await fetch(new URL('/__vitest__/', apiOrigin))
+        assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${apiOrigin}/__vitest__/`)
+        const testHtml = await response.text()
+        const tokenScript = testHtml.match(apiTokenPattern)?.[1]
+        assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
+        return [
+          {
+            tag: 'script',
+            children: tokenScript,
+            injectTo: 'head-prepend',
+          },
+        ]
+      },
+    },
 
     // uncomment to see the browser tab
     // {
