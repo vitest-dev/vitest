@@ -69,11 +69,11 @@ export default defineConfig({
       apply: 'serve',
       async transformIndexHtml() {
         const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
-        const apiTokenPattern = /<script>(window\.VITEST_API_TOKEN = .+?)<\/script>/s
+        const apiTokenPattern = /window\.VITEST_API_TOKEN = "\w+"/
         const response = await fetch(new URL('/__vitest__/', apiOrigin))
         assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${apiOrigin}/__vitest__/`)
         const testHtml = await response.text()
-        const tokenScript = testHtml.match(apiTokenPattern)?.[1]
+        const tokenScript = testHtml.match(apiTokenPattern)?.[0]
         assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
         return [
           {
