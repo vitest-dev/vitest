@@ -104,9 +104,6 @@ function devUiScriptPlugin(): Plugin {
         if (!browserScript) {
           throw new Error('Failed to extract browser runner state from the response')
         }
-        if (browserScript.includes('sessionId: "none"')) {
-          throw new Error('Browser runner session is not active')
-        }
         return [
           {
             tag: 'script',
