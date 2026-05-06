@@ -7,25 +7,27 @@ Use this setup for developing UI features with Vite HMR. It serves the UI from a
 Start the UI dev server:
 
 ```bash
-pnpm -C packages/ui dev:client
+VITE_PORT=3023 pnpm -C packages/ui dev:client
 ```
 
-Start a Vitest server that serves the real UI and API token used by the dev server:
+Start a Vitest UI/API server for any test project you want to use as the backend. For example, from the repository root this runs the `test/unit` suite with UI enabled:
 
 ```bash
 pnpm test --ui --open=false
 ```
 
+The UI dev server only needs a real Vitest UI/API server to connect to; the backend can be `test/unit`, `packages/ui`, or another suite.
+
 Open the URL printed by the UI dev server, usually `http://localhost:5173/`.
 
-The UI dev server connects to the Vitest server on port `51204` by default. If the Vitest server uses another API port, pass the same port to the UI dev server:
+The UI dev server connects to the Vitest UI/API server on port `51204` by default. If that server uses another API port, pass the same port to the UI dev server:
 
 ```bash
-VITE_PORT=3200 pnpm -C packages/ui dev:client
+VITE_PORT=12345 pnpm -C packages/ui dev:client
 ```
 
 ```bash
-pnpm test --ui --open=false --api=3200
+pnpm test --ui --open=false --api=12345
 ```
 
 ## Browser Mode UI
