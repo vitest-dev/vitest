@@ -1,5 +1,4 @@
 import type { Plugin } from 'vite'
-import assert from 'node:assert'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
@@ -97,11 +96,17 @@ function devUiScriptPlugin(): Plugin {
     async transformIndexHtml() {
       if (process.env.BROWSER_DEV) {
         const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
-        assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
+        }
         const browserHtml = await response.text()
         const browserScript = browserHtml.match(BROWSER_SCRIPT_RE)?.[1]
-        assert(browserScript, 'Failed to extract browser runner state from the response')
-        assert(!browserScript.includes('sessionId: "none"'), 'Browser runner session is not active')
+        if (!browserScript) {
+          throw new Error('Failed to extract browser runner state from the response')
+        }
+        if (browserScript.includes('sessionId: "none"')) {
+          throw new Error('Browser runner session is not active')
+        }
         return [
           {
             tag: 'script',
@@ -113,10 +118,14 @@ function devUiScriptPlugin(): Plugin {
       }
 
       const response = await fetch(new URL('/__vitest__/', uiOrigin))
-      assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${uiOrigin}/__vitest__/`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiOrigin}/__vitest__/`)
+      }
       const testHtml = await response.text()
       const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
-      assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
+      if (!tokenScript) {
+        throw new Error('Failed to extract VITEST_API_TOKEN from the response')
+      }
       return [
         {
           tag: 'script',
