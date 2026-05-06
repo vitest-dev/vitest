@@ -75,7 +75,7 @@ export default defineConfig({
           const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
           assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
           const browserHtml = await response.text()
-          const browserScript = browserHtml.match(/<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=\s*[\s\S]*?)<\/script>/)?.[1]
+          const browserScript = browserHtml.match(/<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/)?.[1]
           assert(browserScript, 'Failed to extract browser runner state from the response')
           assert(!browserScript.includes('sessionId: "none"'), 'Browser runner session is not active')
           return [
