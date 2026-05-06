@@ -65,7 +65,7 @@ export default defineConfig({
     // },
 
     {
-      name: 'proxy-api-token',
+      name: 'dev-ui-script',
       apply(_config, env) {
         return env.command === 'serve' && env.mode !== 'test'
       },
