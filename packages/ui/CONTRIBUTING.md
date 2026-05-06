@@ -26,7 +26,7 @@ To preview the browser tab, start a browser-mode test server and run the UI dev 
 
 ```bash
 # run browser mode test server
-pnpm -C packages/ui test:ui --browser.headless --ui
+pnpm -C packages/ui test:ui --browser.headless --ui --open=false
 
 # run ui dev server
 BROWSER_DEV_PREVIEW=true pnpm -C packages/ui dev:client
