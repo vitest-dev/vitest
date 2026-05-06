@@ -1,11 +1,33 @@
 window.__vitest_browser_runner__ = {
-  files: [],
-  config: {
-    browser: {
-      name: 'chrome',
-    },
-  },
-  type: 'orchestrator',
-  provider: 'playwright',
-  wrapModule: () => {},
+  // files: [],
+  // runningFiles: [],
+  // config: {
+  //   name: '',
+  //   browser: {
+  //     name: 'chromium',
+  //   },
+  // },
+  // provider: 'playwright',
+  // method: 'orchestrate',
+  // type: 'orchestrator',
+  // sessionId: '<real active browser session id>',
+  // testerId: 'none',
+  // viteConfig: {
+  //   root: '/home/hiroshi/code/others/vitest/packages/ui',
+  // },
+  // providedContext: '{}',
+  disposeExceptionTracker: () => {},
+  wrapModule: f => f(),
+  wrapDynamicImport: f => f(),
+      disposeExceptionTracker: () => {},
+    cleanups: [],
+    config: {"mode":"test","isolate":true,"defines":{"__BASE_PATH__":"/__vitest__/"},"taskTitleValueFormatTruncate":40,"setupFiles":[],"allowOnly":true,"testTimeout":15000,"hookTimeout":30000,"clearMocks":false,"mockReset":false,"restoreMocks":false,"unstubEnvs":false,"unstubGlobals":false,"maxConcurrency":5,"pool":"forks","expect":{},"snapshotSerializers":[],"api":{"allowExec":true,"allowWrite":true},"disableConsoleIntercept":false,"root":"/home/hiroshi/code/others/vitest/packages/ui","name":"chromium","globals":false,"coverage":{"reportsDirectory":"/home/hiroshi/code/others/vitest/packages/ui/coverage","provider":"v8","enabled":false,"autoAttachSubprocess":false},"fakeTimers":{"loopLimit":10000,"shouldClearNativeTimers":true},"deps":{"web":{"transformAssets":true,"transformCss":true,"transformGlobPattern":[]},"optimizer":{"ssr":{"enabled":false},"client":{"enabled":false}},"moduleDirectories":["/node_modules/","/packages/"]},"snapshotOptions":{"updateSnapshot":"new","snapshotFormat":{},"expand":false},"sequence":{"hooks":"stack"},"inspector":{"enabled":false,"waitForDebugger":false},"detectAsyncLeaks":false,"watch":true,"env":{"BASE_URL":"/","MODE":"test","DEV":true,"PROD":false,"VITEST_BROWSER_DEBUG":""},"browser":{"name":"chromium","headless":true,"isolate":true,"fileParallelism":true,"ui":false,"detailsPanelPosition":"bottom","viewport":{"width":414,"height":896},"screenshotFailures":true,"locators":{"testIdAttribute":"data-testid","exact":false},"providerOptions":{"actionTimeout":5000},"trackUnhandledErrors":true,"trace":"off","traceView":{"enabled":true,"recordCanvas":false,"inlineImages":false}},"serializedDefines":"","experimental":{"fsModuleCache":false,"importDurations":{"print":false,"failOnDanger":false,"limit":10,"thresholds":{"warn":100,"danger":500}},"viteModuleRunner":true,"nodeLoader":true},"tags":[],"strictTags":true,"slowTestThreshold":300,"isAgent":false},
+    viteConfig: {"root":"/home/hiroshi/code/others/vitest/packages/ui"},
+    type: "orchestrator",
+    sessionId: "9a962055-78ca-45ae-9fc6-6d218e58040e",
+    testerId: "none",
+    otelCarrier: null,
+    provider: "playwright",
+    method: "orchestrate",
+    providedContext: "[{}]",
 }

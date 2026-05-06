@@ -85,16 +85,17 @@ export default defineConfig({
       },
     },
 
+    // TODO
     // uncomment to see the browser tab
-    // {
-    //   name: 'browser-dev-preview',
-    //   apply: 'serve',
-    //   transformIndexHtml() {
-    //     return [
-    //       { tag: 'script', attrs: { src: './browser.dev.js' } },
-    //     ]
-    //   },
-    // },
+    !!process.env.BROWSER_DEV_PREVIEW && {
+      name: 'browser-dev-preview',
+      apply: 'serve',
+      transformIndexHtml() {
+        return [
+          { tag: 'script', attrs: { src: './browser.dev.js' } },
+        ]
+      },
+    },
     {
       // workaround `crossorigin` issues on some browsers
       // https://github.com/vitejs/vite/issues/6648
