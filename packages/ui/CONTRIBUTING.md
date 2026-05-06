@@ -7,6 +7,7 @@ Use this setup for developing UI features with Vite HMR. It serves the UI from a
 Start the UI dev server:
 
 ```bash
+# align port with api config of test/unit/vite.config.ts
 VITE_PORT=3023 pnpm -C packages/ui dev:client
 ```
 
