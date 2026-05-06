@@ -7,7 +7,7 @@ Use this setup for developing UI features with Vite HMR. It serves the UI from a
 Start the UI dev server:
 
 ```bash
-# align port with api config of test/unit/vite.config.ts
+# Align with the API port configured in test/unit/vite.config.ts.
 VITE_PORT=3023 pnpm -C packages/ui dev:client
 ```
 
@@ -21,7 +21,7 @@ The UI dev server only needs a real Vitest UI/API server to connect to; the back
 
 Open the URL printed by the UI dev server, usually `http://localhost:5173/`.
 
-The UI dev server connects to the Vitest UI/API server on port `51204` by default. If that server uses another API port, pass the same port to the UI dev server:
+The UI dev server connects to the Vitest UI/API server on port `51204` by default. The root `test/unit` suite uses port `3023`, so the command above sets `VITE_PORT=3023`. If you use another backend port, pass the same port to the UI dev server:
 
 ```bash
 VITE_PORT=12345 pnpm -C packages/ui dev:client
