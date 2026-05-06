@@ -71,7 +71,7 @@ export default defineConfig({
       },
       async transformIndexHtml() {
         const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
-        const apiTokenPattern = /window\.VITEST_API_TOKEN = "\w+"/
+        const apiTokenPattern = /window\.VITEST_API_TOKEN\s*=\s*"[^"]+"/
         const response = await fetch(new URL('/__vitest__/', apiOrigin))
         assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${apiOrigin}/__vitest__/`)
         const testHtml = await response.text()
