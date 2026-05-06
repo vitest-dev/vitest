@@ -1,3 +1,4 @@
+import type { Plugin } from 'vite'
 import assert from 'node:assert'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
@@ -55,6 +56,7 @@ export default defineConfig({
     Pages({
       dirs: ['client/pages'],
     }),
+    devUiScriptPlugin(),
     // uncomment to see the HTML reporter preview
     // {
     //   name: 'debug-html-report',
@@ -63,46 +65,6 @@ export default defineConfig({
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
     //   },
     // },
-
-    {
-      name: 'dev-ui-script',
-      apply(_config, env) {
-        return env.command === 'serve' && env.mode !== 'test'
-      },
-      async transformIndexHtml() {
-        if (process.env.BROWSER_DEV) {
-          const browserOrigin = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}`
-          const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
-          assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
-          const browserHtml = await response.text()
-          const browserScript = browserHtml.match(/<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/)?.[1]
-          assert(browserScript, 'Failed to extract browser runner state from the response')
-          assert(!browserScript.includes('sessionId: "none"'), 'Browser runner session is not active')
-          return [
-            {
-              tag: 'script',
-              attrs: { type: 'module' },
-              children: browserScript,
-              injectTo: 'head-prepend',
-            },
-          ]
-        }
-
-        const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
-        const response = await fetch(new URL('/__vitest__/', apiOrigin))
-        assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${apiOrigin}/__vitest__/`)
-        const testHtml = await response.text()
-        const tokenScript = testHtml.match(/<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/)?.[1]
-        assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
-        return [
-          {
-            tag: 'script',
-            children: tokenScript,
-            injectTo: 'head-prepend',
-          },
-        ]
-      },
-    },
     {
       // workaround `crossorigin` issues on some browsers
       // https://github.com/vitejs/vite/issues/6648
@@ -119,3 +81,49 @@ export default defineConfig({
     outDir: './dist/client',
   },
 })
+
+function devUiScriptPlugin(): Plugin {
+  const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
+  const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
+
+  const uiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
+  const browserOrigin = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}`
+
+  return {
+    name: 'dev-ui-script',
+    apply(_config, env) {
+      return env.command === 'serve' && env.mode !== 'test'
+    },
+    async transformIndexHtml() {
+      if (process.env.BROWSER_DEV) {
+        const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
+        assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
+        const browserHtml = await response.text()
+        const browserScript = browserHtml.match(BROWSER_SCRIPT_RE)?.[1]
+        assert(browserScript, 'Failed to extract browser runner state from the response')
+        assert(!browserScript.includes('sessionId: "none"'), 'Browser runner session is not active')
+        return [
+          {
+            tag: 'script',
+            attrs: { type: 'module' },
+            children: browserScript,
+            injectTo: 'head-prepend',
+          },
+        ]
+      }
+
+      const response = await fetch(new URL('/__vitest__/', uiOrigin))
+      assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${uiOrigin}/__vitest__/`)
+      const testHtml = await response.text()
+      const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
+      assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
+      return [
+        {
+          tag: 'script',
+          children: tokenScript,
+          injectTo: 'head-prepend',
+        },
+      ]
+    },
+  }
+}
