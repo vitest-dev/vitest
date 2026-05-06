@@ -85,8 +85,8 @@ function devUiScriptPlugin(): Plugin {
   const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
   const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const uiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
-  const browserOrigin = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}`
+  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
+  const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 
   return {
     name: 'dev-ui-script',
@@ -95,9 +95,9 @@ function devUiScriptPlugin(): Plugin {
     },
     async transformIndexHtml() {
       if (process.env.BROWSER_DEV) {
-        const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
+        const response = await fetch(browserUrl)
         if (!response.ok) {
-          throw new Error(`Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
+          throw new Error(`Failed to fetch browser runner HTML from ${browserUrl}`)
         }
         const browserHtml = await response.text()
         const browserScript = browserHtml.match(BROWSER_SCRIPT_RE)?.[1]
@@ -114,9 +114,9 @@ function devUiScriptPlugin(): Plugin {
         ]
       }
 
-      const response = await fetch(new URL('/__vitest__/', uiOrigin))
+      const response = await fetch(uiUrl)
       if (!response.ok) {
-        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiOrigin}/__vitest__/`)
+        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiUrl}`)
       }
       const testHtml = await response.text()
       const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
