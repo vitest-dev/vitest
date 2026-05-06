@@ -70,12 +70,29 @@ export default defineConfig({
         return env.command === 'serve' && env.mode !== 'test'
       },
       async transformIndexHtml() {
+        if (process.env.BROWSER_DEV_PREVIEW) {
+          const browserOrigin = `http://localhost:${process.env.VITEST_BROWSER_DEV_PORT || '63315'}`
+          const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
+          assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
+          const browserHtml = await response.text()
+          const browserScript = browserHtml.match(/<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=\s*[\s\S]*?)<\/script>/)?.[1]
+          assert(browserScript, 'Failed to extract browser runner state from the response')
+          assert(!browserScript.includes('sessionId: "none"'), 'Browser runner session is not active')
+          return [
+            {
+              tag: 'script',
+              attrs: { type: 'module' },
+              children: browserScript,
+              injectTo: 'head-prepend',
+            },
+          ]
+        }
+
         const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
-        const apiTokenPattern = /window\.VITEST_API_TOKEN\s*=\s*"[^"]+"/
         const response = await fetch(new URL('/__vitest__/', apiOrigin))
         assert(response.ok, `Failed to fetch VITEST_API_TOKEN from ${apiOrigin}/__vitest__/`)
         const testHtml = await response.text()
-        const tokenScript = testHtml.match(apiTokenPattern)?.[0]
+        const tokenScript = testHtml.match(/<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/)?.[1]
         assert(tokenScript, 'Failed to extract VITEST_API_TOKEN from the response')
         return [
           {
@@ -83,18 +100,6 @@ export default defineConfig({
             children: tokenScript,
             injectTo: 'head-prepend',
           },
-        ]
-      },
-    },
-
-    // TODO
-    // uncomment to see the browser tab
-    !!process.env.BROWSER_DEV_PREVIEW && {
-      name: 'browser-dev-preview',
-      apply: 'serve',
-      transformIndexHtml() {
-        return [
-          { tag: 'script', attrs: { src: './browser.dev.js' } },
         ]
       },
     },
