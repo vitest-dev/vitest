@@ -70,8 +70,8 @@ export default defineConfig({
         return env.command === 'serve' && env.mode !== 'test'
       },
       async transformIndexHtml() {
-        if (process.env.BROWSER_DEV_PREVIEW) {
-          const browserOrigin = `http://localhost:${process.env.VITEST_BROWSER_DEV_PORT || '63315'}`
+        if (process.env.BROWSER_DEV) {
+          const browserOrigin = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}`
           const response = await fetch(new URL('/__vitest_test__/', browserOrigin))
           assert(response.ok, `Failed to fetch browser runner HTML from ${browserOrigin}/__vitest_test__/`)
           const browserHtml = await response.text()

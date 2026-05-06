@@ -20,18 +20,18 @@ nr test --ui --open=false --api=3200
 
 Open the browser at the URL printed by the first command. For example, `http://localhost:5173/`. If you see a connection error, it means the port is specified incorrectly.
 
-To preview the browser tab, start a browser-mode test server and run the UI dev server with `BROWSER_DEV_PREVIEW=true`.
+To preview the browser tab, start a browser-mode test server and run the UI dev server with `BROWSER_DEV=true`.
 
 ```bash
 # run browser mode test server
 pnpm -C packages/ui test:ui --browser.headless --ui --open=false
 
 # run ui dev server
-BROWSER_DEV_PREVIEW=true pnpm -C packages/ui dev:client
+BROWSER_DEV=true pnpm -C packages/ui dev:client
 ```
 
 If the browser runner starts on a custom port, pass the printed port to the UI dev server:
 
 ```bash
-VITEST_BROWSER_DEV_PORT=63315 BROWSER_DEV_PREVIEW=true pnpm -C packages/ui dev:client
+BROWSER_DEV_PORT=63315 BROWSER_DEV=true pnpm -C packages/ui dev:client
 ```
