@@ -66,7 +66,9 @@ export default defineConfig({
 
     {
       name: 'proxy-api-token',
-      apply: 'serve',
+      apply(_config, env) {
+        return env.command === 'serve' && env.mode !== 'test'
+      },
       async transformIndexHtml() {
         const apiOrigin = `http://localhost:${process.env.VITE_PORT || '51204'}`
         const apiTokenPattern = /window\.VITEST_API_TOKEN = "\w+"/
