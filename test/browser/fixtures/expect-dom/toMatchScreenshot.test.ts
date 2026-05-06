@@ -420,7 +420,7 @@ describe('.toMatchScreenshot', () => {
     },
   )
 
-  test('can use custom comparators', async ({ onTestFinished }) => {
+  test.runIf(server.config.snapshotOptions.updateSnapshot !== 'all')('can use custom comparators', async ({ onTestFinished }) => {
     const filename = globalThis.crypto.randomUUID()
     const path = join(
       '__screenshots__',
@@ -440,16 +440,27 @@ describe('.toMatchScreenshot', () => {
 
     const locator = page.getByTestId(dataTestId)
 
-    // Create a reference screenshot by explicitly saving one
-    await locator.screenshot({
-      save: true,
-      path,
-    })
-
     // Test that `toMatchScreenshot()` correctly uses a custom comparator even
     // when the PNG bytes match. The byte fast path must not bypass custom
     // comparator semantics.
-    await expect(locator).toMatchScreenshot(filename)
+    let firstErrorMessage: string
+    try {
+      await expect(locator).toMatchScreenshot(filename)
+    } catch (error) {
+      firstErrorMessage = error.message
+    }
+
+    const [createdReferencePath] = extractToMatchScreenshotPaths(firstErrorMessage, filename)
+    if (!createdReferencePath.endsWith(path)) {
+      await server.commands.writeFile(
+        path,
+        await server.commands.readFile(createdReferencePath, { encoding: 'base64' }),
+        { encoding: 'base64' },
+      )
+      onTestFinished(async () => {
+        await server.commands.removeFile(createdReferencePath)
+      })
+    }
 
     let errorMessage: string
 

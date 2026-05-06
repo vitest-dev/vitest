@@ -77,7 +77,6 @@ export async function takeScreenshot(
   const buffer = target === 'page'
     ? await context.page.screenshot({
         ...config,
-        fullPage: config.fullPage ?? true,
         mask,
         path: savePath,
         style,
