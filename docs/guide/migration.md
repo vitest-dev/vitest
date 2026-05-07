@@ -60,6 +60,14 @@ test.for<number>([1, 2])('retry %s', (retry) => { // [!code ++]
     const sameType: typeof retry = runtimeRetry
   })
 })
+
+test.for([1, 2] as const)('retry %s', (retry) => { // [!code --]
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
+})
+
+test.for([1, 2])('retry %s', (retry) => { // [!code ++]
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
+})
 ```
 
 ### Locators in Commands are Serialized as Objects
