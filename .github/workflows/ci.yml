@@ -222,7 +222,7 @@ jobs:
   test-vite7:
     needs: changed
     # macos-latest is the fastest one
-    name: 'Test: vite@7, node-22, macos-latest'
+    name: 'Test: vite@7, node-24, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
 
@@ -233,7 +233,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 22
+          node-version: 24
 
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
 
