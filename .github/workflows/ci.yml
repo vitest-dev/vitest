@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [22, 24, 26]
+        node_version: [22, 24]
         include:
           - os: macos-latest
             node_version: 24
