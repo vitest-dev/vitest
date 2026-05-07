@@ -8,8 +8,8 @@ import type {
   TestAnnotation,
 } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
-import { createFileTask } from '@vitest/runner/utils'
-import { createClient, getTasks } from '@vitest/ws-client'
+import type { VitestClient } from './ws'
+import { createFileTask, getTasks } from '@vitest/runner/utils'
 import { computed, reactive as reactiveVue, ref, shallowRef, watch } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
@@ -20,15 +20,16 @@ import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
+import { createWsClient } from './ws'
 
 export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
 
-export const client = (function createVitestClient() {
+export const client: VitestClient = (function createVitestClient() {
   if (isReport) {
     return createStaticClient()
   }
   else {
-    return createClient(ENTRY_URL, {
+    return createWsClient(ENTRY_URL, {
       reactive: (data, ctxKey) => {
         return ctxKey === 'state' ? reactiveVue(data as any) as any : shallowRef(data)
       },

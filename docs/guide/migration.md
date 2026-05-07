@@ -7,6 +7,68 @@ outline: deep
 
 [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
 
+## Migrating to Vitest 5.0 {#vitest-5}
+
+::: warning Work in progress
+Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
+:::
+
+### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
+
+Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
+
+```ts
+test.sequential('example', async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
+
+```ts
+describe.sequential('suite', () => { /* ... */ }) // [!code --]
+describe('suite', { concurrent: false }, () => { /* ... */ }) // [!code ++]
+```
+
+The same replacement applies to option objects:
+
+```ts
+test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
+
+### Locators in Commands are Serialized as Objects
+
+Locators forwarded to [browser commands](/api/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:
+
+- `selector`: the provider-specific selector string (the same value commands previously received).
+- `locator`: a human-readable representation of the locator (e.g. `getByRole('button')`), used for error messages and tracing.
+
+Update any custom commands that accept a locator to destructure `selector` from the new object:
+
+```ts
+import type { SerializedLocator } from '@vitest/browser'
+import type { BrowserCommandContext } from 'vitest/node'
+
+export async function customClick(
+  context: BrowserCommandContext,
+  selector: string, // [!code --]
+  { selector }: SerializedLocator, // [!code ++]
+) {
+  await context.page.locator(selector).click()
+}
+```
+
+### Removed Deprecated Entrypoints
+
+Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
+
+- `vitest/coverage`: use `vitest/node` instead
+- `vitest/reporters`: use `vitest/node` instead
+- `vitest/environments`: use `vitest/runtime` instead
+- `vitest/snapshot`: use `vitest/runtime` instead
+- `vitest/runners`: use `TestRunner` from `vitest` instead
+- `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
+- `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
+- `vitest/internal/module-runner` is removed
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites

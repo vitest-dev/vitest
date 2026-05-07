@@ -154,6 +154,7 @@ export interface SerializedConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+  mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
   isAgent: boolean
 }
@@ -164,6 +165,7 @@ export interface SerializedCoverageConfig {
   htmlDir: string | undefined
   enabled: boolean
   customProviderModule: string | undefined
+  autoAttachSubprocess: boolean
 }
 
 export interface SerializedRootConfig extends SerializedConfig {

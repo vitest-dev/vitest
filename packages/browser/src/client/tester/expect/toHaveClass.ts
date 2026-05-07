@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput, getMessage } from './utils'
 
@@ -21,7 +21,7 @@ export default function toHaveClass(
   this: MatcherState,
   actual: Element | Locator,
   ...params: (string | RegExp)[] | [string, options?: { exact: boolean }]
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveClass, this)
   const { expectedClassNames, options } = getExpectedClassNamesAndOptions(params)
 

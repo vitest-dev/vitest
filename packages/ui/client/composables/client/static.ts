@@ -1,4 +1,3 @@
-import type { VitestClient } from '@vitest/ws-client'
 import type { BirpcReturn } from 'birpc'
 import type {
   ModuleGraphData,
@@ -7,10 +6,11 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
+import type { VitestClient } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
-import { StateManager } from '../../../../ws-client/src/state'
+import { StateManager } from './state'
 
 interface HTMLReportMetadata {
   paths: string[]

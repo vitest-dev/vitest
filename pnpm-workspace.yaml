@@ -24,7 +24,7 @@ packages:
   - packages/*
   - examples/*
   - test/*
-  - test/cli/dts/*
+  - test/e2e/dts/*
   - test/config/fixtures/conditions-pkg
 overrides:
   '@types/node': $@types/node
@@ -61,6 +61,7 @@ catalog:
   '@types/istanbul-lib-report': ^3.0.3
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
+  '@types/node': 24.12.0
   '@types/ws': ^8.18.1
   '@types/yauzl': ^2.10.3
   '@unocss/reset': ^66.6.6

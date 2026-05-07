@@ -19,6 +19,7 @@ test.each([true/* , false */])('mocking works correctly - isolated %s', async (i
 
   instances.forEach(({ browser }) => {
     expect(result.stdout).toReportPassedTest('automocked.test.ts', browser)
+    expect(result.stdout).toReportPassedTest('automocked-default-return.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-__mocks__.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-factory.test.ts', browser)
     expect(result.stdout).toReportPassedTest('mocked-factory-hoisted.test.ts', browser)

@@ -3,7 +3,7 @@ import type { UserEventCommand } from './utils'
 
 export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async (
   context,
-  selector,
+  { selector },
   userValues,
   _options = {},
 ) => {

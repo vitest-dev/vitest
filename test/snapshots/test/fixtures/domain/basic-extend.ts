@@ -1,5 +1,5 @@
 import { expect, Snapshots } from "vitest"
-import type { MatchersObject } from "@vitest/expect"
+import type { MatchersObject } from "vitest"
 import { kvAdapter } from "./basic"
 
 interface CustomMatchers<R = unknown> {

@@ -21,3 +21,10 @@ test('semantic match with regex in snapshot', () => {
     - button "1234": Pattern
   `)
 })
+
+test("empty", () => {
+  document.body.innerHTML = `
+    <button aria-hidden="true">Hidden</button>
+  `
+  expect(document.body).toMatchAriaInlineSnapshot()
+})

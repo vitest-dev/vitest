@@ -1,6 +1,7 @@
+import type { SerializedLocator } from '@vitest/browser'
+
 // Note: this augments `screenshotOptions` types
 import type {} from '@vitest/browser-playwright'
-
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
@@ -143,6 +144,7 @@ export function resolveOptions(
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
     browserName: context.project.config.browser.name,
+    project: context.project,
   } satisfies Parameters<GlobalOptions['resolveDiffPath']>[0]
 
   return {
@@ -240,7 +242,7 @@ export function takeDecodedScreenshot({
 }: {
   codec: AnyCodec
   context: BrowserCommandContext
-  element: string
+  element: SerializedLocator
   name: string
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
 }): ReturnType<AnyCodec['decode']> {

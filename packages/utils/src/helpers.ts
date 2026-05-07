@@ -429,3 +429,8 @@ export function deepMerge<T extends object = object>(
 export function unique<T>(array: T[]): T[] {
   return Array.from(new Set(array))
 }
+
+export function sanitizeFilePath(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
+}

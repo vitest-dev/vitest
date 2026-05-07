@@ -14,17 +14,17 @@ export default antfu(
       '**/assets/**',
       '**/*.d.ts',
       '**/*.timestamp-*',
-      'test/core/src/self',
-      'test/core/test/mocking/already-hoisted.test.ts',
+      'test/unit/src/self',
+      'test/unit/test/mocking/already-hoisted.test.ts',
       'test/cache/cache/.vitest-base/results.json',
-      'test/core/src/wasm/wasm-bindgen-no-cyclic',
+      'test/unit/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/workspaces-browser/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
-      'test/cli/deps/error/*',
+      'test/e2e/deps/error/*',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
@@ -127,7 +127,7 @@ export default antfu(
     files: [
       `docs/${GLOB_SRC}`,
       `packages/web-worker/${GLOB_SRC}`,
-      `test/core/${GLOB_SRC}`,
+      `test/unit/${GLOB_SRC}`,
     ],
     rules: {
       'no-restricted-globals': 'off',
@@ -140,6 +140,40 @@ export default antfu(
     rules: {
       'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
+    },
+  },
+  {
+    files: [`packages/browser/src/client/orchestrator.ts`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['vitest/internal/browser', 'vitest/node'],
+        },
+      ],
+    },
+  },
+  // ivya should be loaded only once in "ivya chunk" (see browser rollup config)
+  {
+    files: [`packages/browser/${GLOB_SRC}`],
+    ignores: [
+      // aria snapshots
+      `packages/browser/src/vendor-types.ts`,
+      `packages/browser/src/client/tester/aria.ts`,
+      // primary use case - creates the engine
+      `packages/browser/src/client/tester/locators.ts`,
+      // uses utils from ivya to reuse locator syntax
+      `packages/browser/src/client/tester/expect/${GLOB_SRC}`,
+      // used as a type
+      `packages/browser/src/client/utils.ts`,
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['ivya', 'ivya/utils', 'ivya/aria'],
+        },
+      ],
     },
   },
 )

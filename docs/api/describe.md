@@ -208,6 +208,19 @@ describe.concurrent('suite', () => {
 })
 ```
 
+Set `concurrent` to `false` to opt out of concurrency inherited from a parent suite or [`sequence.concurrent`](/config/sequence#sequence-concurrent):
+
+```ts
+describe.concurrent('suite', () => {
+  test('concurrent test', async () => { /* ... */ })
+
+  describe('sequential suite', { concurrent: false }, () => {
+    test('sequential test 1', async () => { /* ... */ })
+    test('sequential test 2', async () => { /* ... */ })
+  })
+})
+```
+
 `.skip`, `.only`, and `.todo` works with concurrent suites. All the following combinations are valid:
 
 ```ts
@@ -226,26 +239,6 @@ describe.concurrent('suite', () => {
   })
   test('concurrent test 2', async ({ expect }) => {
     expect(foo).toMatchSnapshot()
-  })
-})
-```
-
-## describe.sequential
-
-- **Alias:** `suite.sequential`
-
-`describe.sequential` in a suite marks every test as sequential. This is useful if you want to run tests in sequence within `describe.concurrent` or with the `--sequence.concurrent` command option.
-
-```ts
-import { describe, test } from 'vitest'
-
-describe.concurrent('suite', () => {
-  test('concurrent test 1', async () => { /* ... */ })
-  test('concurrent test 2', async () => { /* ... */ })
-
-  describe.sequential('', () => {
-    test('sequential test 1', async () => { /* ... */ })
-    test('sequential test 2', async () => { /* ... */ })
   })
 })
 ```

@@ -1,13 +1,12 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
-import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
 import { promises as fs } from 'node:fs'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
+  createFileTask as createFileTaskOriginal,
   createTaskName,
-  generateHash,
   validateTags,
 } from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
@@ -43,8 +42,7 @@ interface LocalCallDefinition {
   mode: 'run' | 'skip' | 'only' | 'todo' | 'queued'
   task: ParsedSuite | ParsedFile | ParsedTest
   dynamic: boolean
-  concurrent: boolean
-  sequential: boolean
+  concurrent: boolean | undefined
   tags: string[]
 }
 
@@ -172,8 +170,7 @@ function astParseFile(filepath: string, code: string) {
           mode = 'skip'
         }
       }
-      let isConcurrent = properties.includes('concurrent')
-      let isSequential = properties.includes('sequential')
+      let concurrent = properties.includes('concurrent') || undefined
 
       let start: number
       const end = node.end
@@ -249,15 +246,12 @@ function astParseFile(filepath: string, code: string) {
               }
             }
           }
-          else if (prop.value?.type === 'Literal' && prop.value.value === true) {
-            if (keyName === 'skip' || keyName === 'only' || keyName === 'todo') {
+          else if (prop.value?.type === 'Literal') {
+            if ((keyName === 'skip' || keyName === 'only' || keyName === 'todo') && prop.value.value === true) {
               mode = keyName
             }
-            else if (keyName === 'concurrent') {
-              isConcurrent = true
-            }
-            else if (keyName === 'sequential') {
-              isSequential = true
+            else if (keyName === 'concurrent' && typeof prop.value.value === 'boolean') {
+              concurrent = prop.value.value
             }
           }
         }
@@ -272,8 +266,7 @@ function astParseFile(filepath: string, code: string) {
         mode,
         task: null as any,
         dynamic: isDynamicEach,
-        concurrent: isConcurrent,
-        sequential: isSequential,
+        concurrent,
         tags,
       } satisfies LocalCallDefinition)
     },
@@ -285,21 +278,20 @@ function astParseFile(filepath: string, code: string) {
 }
 
 export function createFailedFileTask(project: TestProject, filepath: string, error: Error): File {
-  const testFilepath = relative(project.config.root, filepath)
-  const file: ParsedFile = {
+  const config = project.serializedConfig
+  const baseFile = createFileTaskOriginal(
     filepath,
-    type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
-    name: testFilepath,
-    fullName: testFilepath,
+    config.root,
+    config.name,
+    config.pool,
+    undefined,
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+  )
+  const file: ParsedFile = {
+    ...baseFile,
     mode: 'run',
-    tasks: [],
     start: 0,
     end: 0,
-    projectName: project.name,
-    meta: {},
-    pool: project.browser ? 'browser' : project.config.pool,
-    file: null!,
     result: {
       state: 'fail',
       errors: serializeError(project, error),
@@ -332,28 +324,28 @@ function serializeError(ctx: TestProject, error: any): TestError[] {
 }
 
 function createFileTask(
+  project: TestProject,
   testFilepath: string,
   code: string,
   requestMap: any,
-  config: SerializedConfig,
   filepath: string,
   fileTags: string[] | undefined,
 ) {
   const { definitions, ast } = astParseFile(testFilepath, code)
-  const file: ParsedFile = {
+  const config = project.serializedConfig
+  const baseFile = createFileTaskOriginal(
     filepath,
-    type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${config.name || ''}`),
-    name: testFilepath,
-    fullName: testFilepath,
+    config.root,
+    config.name,
+    config.pool,
+    undefined,
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+  )
+  const file: ParsedFile = {
+    ...baseFile,
     mode: 'run',
-    tasks: [],
     start: ast.start,
     end: ast.end,
-    projectName: config.name,
-    meta: {},
-    pool: 'browser',
-    file: null!,
     tags: fileTags || [],
   }
   file.file = file
@@ -416,10 +408,7 @@ function createFileTask(
       // Inherit tags from parent suite and merge with own tags
       const parentTags = latestSuite.tags || []
       const taskTags = unique([...parentTags, ...definition.tags])
-      // resolve concurrent/sequential: sequential cancels inherited concurrent
-      const concurrent = definition.sequential
-        ? undefined
-        : (definition.concurrent || latestSuite.concurrent || undefined)
+      const concurrent = definition.concurrent ?? latestSuite.concurrent
 
       if (definition.type === 'suite') {
         const task: ParsedSuite = {
@@ -503,10 +492,10 @@ export async function astCollectTests(
     )
   }
   return createFileTask(
+    project,
     testFilepath,
     request.code,
     request.map,
-    project.serializedConfig,
     filepath,
     request.fileTags,
   )

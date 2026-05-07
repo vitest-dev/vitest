@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput, getMessage } from './utils'
 
@@ -22,7 +22,7 @@ export default function toHaveAttribute(
   actual: Element | Locator,
   attribute: string,
   expectedValue?: string,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAttribute, this)
   const isExpectedValuePresent = expectedValue !== undefined
   const hasAttribute = htmlElement.hasAttribute(attribute)

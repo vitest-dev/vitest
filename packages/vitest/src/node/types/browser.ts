@@ -524,6 +524,12 @@ type ToMatchScreenshotResolvePath = (data: {
    * if none is provided, its default value.
    */
   attachmentsDir: string
+  /**
+   * The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to.
+   *
+   * @experimental
+   */
+  project: TestProject
 }) => string
 
 export interface ToMatchScreenshotOptions {

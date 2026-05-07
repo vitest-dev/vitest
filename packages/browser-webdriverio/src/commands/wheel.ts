@@ -5,7 +5,7 @@ type WheelCommand = (element: Locator | Element, options: UserEventWheelDeltaOpt
 
 export const wheel: UserEventCommand<WheelCommand> = async (
   context,
-  selector,
+  { selector },
   options,
 ) => {
   const browser = context.browser

@@ -1,3 +1,4 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { SnapshotUpdateState } from 'vitest'
 import type { ScreenshotMatcherOptions } from 'vitest/browser'
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
@@ -352,7 +353,7 @@ interface StableScreenshotOptions {
   comparator: AnyComparator
   comparatorOptions: ScreenshotMatcherOptions['comparatorOptions']
   context: BrowserCommandContext
-  element: string
+  element: SerializedLocator
   name: string
   reference: ReturnType<AnyCodec['decode']> | null
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']

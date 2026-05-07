@@ -17,6 +17,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -24,6 +25,10 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty 1\`] = \`
+
+    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Original
@@ -38,7 +43,7 @@ test('aria snapshot', async () => {
   `)
   expect(result.ctx?.snapshot.summary).toMatchInlineSnapshot(`
     Object {
-      "added": 2,
+      "added": 3,
       "didUpdate": false,
       "failure": false,
       "filesAdded": 1,
@@ -47,7 +52,7 @@ test('aria snapshot', async () => {
       "filesUnmatched": 0,
       "filesUpdated": 0,
       "matched": 0,
-      "total": 2,
+      "total": 3,
       "unchecked": 0,
       "uncheckedKeysByFile": Array [],
       "unmatched": 0,
@@ -65,6 +70,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -72,6 +78,10 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty 1\`] = \`
+
+    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Original
@@ -124,6 +134,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": Array [
           "Snapshot \`semantic match with regex in snapshot 1\` mismatched",
         ],
@@ -138,6 +149,7 @@ test('aria snapshot', async () => {
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
+        "empty": "passed",
         "semantic match with regex in snapshot": "passed",
         "simple heading and paragraph": "passed",
       },
@@ -145,6 +157,10 @@ test('aria snapshot', async () => {
   `)
   expect(readFileSync(snapshotFile, 'utf-8')).toMatchInlineSnapshot(`
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`empty 1\`] = \`
+
+    \`;
 
     exports[\`semantic match with regex in snapshot 1\`] = \`
     - paragraph: Changed

@@ -50,3 +50,9 @@ test('non-poll alongside poll', async () => {
 
   expect({ another: 'static' }).toMatchKvSnapshot()
 })
+
+test('empty snapshot', async () => {
+  await expect.poll(() => {
+    return {}
+  }, { interval: 10 }).toMatchKvSnapshot()
+})

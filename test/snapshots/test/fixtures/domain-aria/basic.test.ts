@@ -19,3 +19,10 @@ test('semantic match with regex in snapshot', () => {
   `
   expect(document.body).toMatchAriaSnapshot()
 })
+
+test("empty", () => {
+  document.body.innerHTML = `
+    <button aria-hidden="true">Hidden</button>
+  `
+  expect(document.body).toMatchAriaSnapshot()
+})

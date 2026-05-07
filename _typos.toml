@@ -2,7 +2,7 @@
 extend-exclude = [
   "*.js.map",
   "*.svg",
-  "test/cli/test/fixtures/reporters/html/**",
+  "test/e2e/test/fixtures/reporters/html/**",
 ]
 
 [default.extend-words]

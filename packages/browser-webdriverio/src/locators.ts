@@ -82,9 +82,11 @@ class WebdriverIOLocator extends Locator {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
       const values = getWebdriverioSelectOptions(element, value)
+      const selector = convertElementToCssSelector(element)
+      const locator = this.asLocator()
       return triggerCommandWithTrace<void>({
         name: '__vitest_selectOptions',
-        arguments: [convertElementToCssSelector(element), values, options],
+        arguments: [{ selector, locator }, values, options],
         errorSource: error,
       })
     })

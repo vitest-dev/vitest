@@ -1,3 +1,4 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
 import crypto from 'node:crypto'
@@ -7,8 +8,8 @@ import { resolveScreenshotPath } from '@vitest/browser'
 import { dirname, normalize, resolve } from 'pathe'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
-  element?: string
-  mask?: readonly string[]
+  element?: SerializedLocator
+  mask?: readonly SerializedLocator[]
 }
 
 /**
@@ -54,7 +55,7 @@ export async function takeScreenshot(
   const page = context.browser
   const element = !options.element
     ? await page.$('body')
-    : await page.$(`${options.element}`)
+    : await page.$(`${options.element.selector}`)
 
   // webdriverio expects the path to contain the extension and only works with PNG files
   const savePathWithExtension = savePath.endsWith('.png') ? savePath : `${savePath}.png`

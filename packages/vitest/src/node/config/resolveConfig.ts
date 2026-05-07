@@ -568,7 +568,7 @@ export function resolveConfig(
 
   resolved.attachmentsDir = resolve(
     resolved.root,
-    resolved.attachmentsDir ?? '.vitest-attachments',
+    resolved.attachmentsDir ?? '.vitest/attachments',
   )
 
   if (resolved.snapshotEnvironment) {
@@ -692,22 +692,23 @@ export function resolveConfig(
    * { reporter: [[ 'json' ], 'html'] }
    * { reporter: [[ 'json', { outputFile: 'test.json' } ], 'html'] }
    */
-  if (options.reporters) {
-    if (!Array.isArray(options.reporters)) {
+  if (resolved.reporters) {
+    if (!Array.isArray(resolved.reporters)) {
       // Reporter name, e.g. { reporters: 'json' }
-      if (typeof options.reporters === 'string') {
-        resolved.reporters = [[options.reporters, {}]]
+      if (typeof resolved.reporters === 'string') {
+        resolved.reporters = [[resolved.reporters, {}]]
       }
       // Inline reporter e.g. { reporters: { onFinish() { method() } } }
       else {
-        resolved.reporters = [options.reporters]
+        resolved.reporters = [resolved.reporters]
       }
     }
     // It's an array of reporters
     else {
+      const reporters = resolved.reporters
       resolved.reporters = []
 
-      for (const reporter of options.reporters) {
+      for (const reporter of reporters) {
         if (Array.isArray(reporter)) {
           // Reporter with options, e.g. { reporters: [ [ 'json', { outputFile: 'test.json' } ] ] }
           resolved.reporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
@@ -759,12 +760,13 @@ export function resolveConfig(
     }
   }
 
-  if (!resolved.reporters.length) {
-    resolved.reporters.push([isAgent ? 'agent' : 'default', {}])
-
-    // also enable github-actions reporter as a default
-    if (process.env.GITHUB_ACTIONS === 'true') {
-      resolved.reporters.push(['github-actions', {}])
+  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+  for (const reporter of resolved.reporters) {
+    if (Array.isArray(reporter) && reporter[0] === 'blob') {
+      const options = reporter[1] as any
+      if (options && typeof options.label === 'string') {
+        resolved.mergeReportsLabel = options.label
+      }
     }
   }
 

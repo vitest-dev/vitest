@@ -18,6 +18,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -29,6 +30,8 @@ test('domain snapshot', async () => {
     name=alice
     age=30
     \`;
+
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`with regex 1\`] = \`
     name=bob
@@ -52,6 +55,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -64,6 +68,8 @@ test('domain snapshot', async () => {
     age=30
     \`;
 
+    exports[\`empty snapshot 1\`] = \`\`;
+
     exports[\`with regex 1\`] = \`
     name=bob
     score=/\\\\d+/
@@ -74,6 +80,7 @@ test('domain snapshot', async () => {
 
   // edit test
   editFile(testFile, s => s
+    .replace(`name: 'alice',`, ``)
     .replace(`score: '999'`, `score: '42'`)
     .replace(`status: 'active'`, `status: 'inactive'`))
 
@@ -82,7 +89,26 @@ test('domain snapshot', async () => {
   result = await runVitest({ root, update: 'none' })
   expect(result.stderr).toMatchInlineSnapshot(`
     "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > all literal
+    Error: Snapshot \`all literal 1\` mismatched
+
+    - Expected
+    + Received
+
+    - name=alice
+      age=30
+
+     ❯ basic.test.ts:5:26
+          3|
+          4| test('all literal', () => {
+          5|   expect({  age: '30' }).toMatchKvSnapshot()
+           |                          ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > with regex
     Error: Snapshot \`with regex 1\` mismatched
@@ -103,14 +129,17 @@ test('domain snapshot', async () => {
          10| })
          11|
 
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
 
     "
   `)
   expect(result.errorTree()).toMatchInlineSnapshot(`
     Object {
       "basic.test.ts": Object {
-        "all literal": "passed",
+        "all literal": Array [
+          "Snapshot \`all literal 1\` mismatched",
+        ],
+        "empty snapshot": "passed",
         "with regex": Array [
           "Snapshot \`with regex 1\` mismatched",
         ],
@@ -126,6 +155,7 @@ test('domain snapshot', async () => {
     Object {
       "basic.test.ts": Object {
         "all literal": "passed",
+        "empty snapshot": "passed",
         "with regex": "passed",
       },
     }
@@ -137,9 +167,10 @@ test('domain snapshot', async () => {
     "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
     exports[\`all literal 1\`] = \`
-    name=alice
     age=30
     \`;
+
+    exports[\`empty snapshot 1\`] = \`\`;
 
     exports[\`with regex 1\`] = \`
     name=bob
@@ -159,28 +190,28 @@ test('domain parseExpected error', async () => {
 
      FAIL  basic.test.ts > file
     Error: Invalid KV Format: 'file-broken'
-     ❯ ../domain/basic.ts:34:15
-         32|       const eq = line.indexOf('=')
-         33|       if (eq === -1) {
-         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:38:15
+         36|       const eq = line.indexOf('=')
+         37|       if (eq === -1) {
+         38|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         35|       }
-         36|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:31:46
+         39|       }
+         40|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:35:46
      ❯ Object.toMatchKvSnapshot ../domain/basic-extend.ts:16:44
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  basic.test.ts > inline
     Error: Invalid KV Format: 'inine-broken'
-     ❯ ../domain/basic.ts:34:15
-         32|       const eq = line.indexOf('=')
-         33|       if (eq === -1) {
-         34|         throw new Error(\`Invalid KV Format: '\${line}'\`)
+     ❯ ../domain/basic.ts:38:15
+         36|       const eq = line.indexOf('=')
+         37|       if (eq === -1) {
+         38|         throw new Error(\`Invalid KV Format: '\${line}'\`)
            |               ^
-         35|       }
-         36|       const key = line.slice(0, eq)
-     ❯ Object.parseExpected ../domain/basic.ts:31:46
+         39|       }
+         40|       const key = line.slice(0, eq)
+     ❯ Object.parseExpected ../domain/basic.ts:35:46
      ❯ Object.toMatchKvInlineSnapshot ../domain/basic-extend.ts:22:50
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯

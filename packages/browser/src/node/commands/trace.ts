@@ -1,10 +1,11 @@
 import type { BrowserCommand } from 'vitest/node'
+import type { SerializedLocator } from '..'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../client/tester/trace'
 
 interface MarkTracePayload {
   name: string
   stack?: string
-  selector?: string
+  element?: SerializedLocator
 }
 
 interface GroupTracePayload {

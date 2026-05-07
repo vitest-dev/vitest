@@ -3,9 +3,8 @@ import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChan
 import type { FileSpecification } from '@vitest/runner'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import { channel, client, globalChannel } from '@vitest/browser/client'
-import { generateFileHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
-import { Traces } from 'vitest/internal/browser'
+import { Traces } from 'vitest/internal/traces'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -465,7 +464,47 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 function generateFileId(file: string) {
   const config = getConfig()
   const path = relative(config.root, file)
-  return generateFileHash(path, config.name)
+  return generateFileHash(
+    path,
+    config.name,
+    {
+      typecheck: config.pool === 'typescript',
+      __vitest_label__: config.mergeReportsLabel,
+    },
+  )
+}
+
+// TODO: copied from packages/runner/src/utils/collect.ts
+interface HashMeta {
+  typecheck?: boolean
+  __vitest_label__?: string
+}
+
+function generateFileHash(
+  file: string,
+  projectName: string | undefined,
+  meta?: HashMeta,
+): string {
+  const seed = [
+    file,
+    projectName || '',
+    meta?.typecheck ? '__typecheck__' : '',
+    meta?.__vitest_label__ || '',
+  ].join('\0')
+  return generateHash(seed)
+}
+
+function generateHash(str: string): string {
+  let hash = 0
+  if (str.length === 0) {
+    return `${hash}`
+  }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return `${hash}`
 }
 
 async function setIframeViewport(

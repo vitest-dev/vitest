@@ -1,11 +1,11 @@
-import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { AsyncMatcherResult, MatcherState } from 'vitest'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { recordArtifact } from 'vitest'
 import { getBrowserState } from '../../utils'
-import { convertToSelector } from '../tester-utils'
+import { serializeElement } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
 
@@ -16,7 +16,7 @@ export default async function toMatchScreenshot(
   options: ScreenshotMatcherOptions = typeof nameOrOptions === 'object'
     ? nameOrOptions
     : {},
-): AsyncExpectationResult {
+): AsyncMatcherResult {
   if (this.isNot) {
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
@@ -41,10 +41,10 @@ export default async function toMatchScreenshot(
     : `${this.currentTestName} ${counter.current}`
 
   const [element, ...mask] = await Promise.all([
-    convertToSelector(actual, options),
+    serializeElement(actual, options),
     ...options.screenshotOptions && 'mask' in options.screenshotOptions
       ? (options.screenshotOptions.mask as Array<Element | Locator>)
-          .map(m => convertToSelector(m, options))
+          .map(m => serializeElement(m, options))
       : [],
   ])
 
