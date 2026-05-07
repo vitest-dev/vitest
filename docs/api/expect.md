@@ -1816,6 +1816,8 @@ describe('toSatisfy()', () => {
 
 `resolves` is intended to remove boilerplate when asserting asynchronous code. Use it to unwrap value from the pending promise and assert its value with usual assertions. If the promise rejects, the assertion will fail.
 
+You can also pass a function that returns a promise. Vitest will call the function and unwrap the returned promise before applying the matcher.
+
 It returns the same `Assertions` object, but all matchers now return `Promise`, so you would need to `await` it. Also works with `chai` assertions.
 
 For example, if you have a function, that makes an API call and returns some data, you may use this code to assert its return value:
