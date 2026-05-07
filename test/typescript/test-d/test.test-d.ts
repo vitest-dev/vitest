@@ -44,6 +44,28 @@ describe('test', () => {
     // @ts-expect-error
     vi.spyOn(google, 'sheets').mockReturnValue({ foo: 1234 })
   })
+
+  test('spyOn private and protected methods compiles', () => {
+    class TestClass {
+      private privateMethod(): number {
+        return 42
+      }
+
+      protected protectedMethod(): string {
+        return '42'
+      }
+    }
+
+    const instance = new TestClass()
+    vi.spyOn(instance, 'privateMethod').mockReturnValue(1)
+    vi.spyOn(instance, 'protectedMethod').mockReturnValue('1')
+    // @ts-expect-error private method returns number
+    vi.spyOn(instance, 'privateMethod').mockReturnValue('1')
+    // @ts-expect-error protected method returns string
+    vi.spyOn(instance, 'protectedMethod').mockReturnValue(1)
+    // @ts-expect-error unknown methods are rejected
+    vi.spyOn(instance, 'unknownMethod')
+  })
 })
 
 expectTypeOf({ wolk: 'true' }).toHaveProperty('wolk')

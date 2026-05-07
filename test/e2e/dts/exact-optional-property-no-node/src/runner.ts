@@ -1,7 +1,7 @@
 import type { VitestRunner } from '@vitest/runner'
 import type { FailureScreenshotArtifact } from '@vitest/runner/types'
-import { VitestTestRunner } from 'vitest/runners'
+import { TestRunner } from 'vitest'
 
 type _Override = FailureScreenshotArtifact
 
-export class MyRunner extends VitestTestRunner implements VitestRunner {}
+export class MyRunner extends TestRunner implements VitestRunner {}

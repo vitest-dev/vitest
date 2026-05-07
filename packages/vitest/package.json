@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.0-beta.1",
+  "version": "5.0.0-beta.2",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -77,30 +77,10 @@
       "__vitest_source__": "./src/utils/traces.ts",
       "default": "./dist/traces.js"
     },
-    "./runners": {
-      "types": "./dist/runners.d.ts",
-      "default": "./dist/runners.js"
-    },
-    "./suite": {
-      "types": "./dist/suite.d.ts",
-      "default": "./dist/suite.js"
-    },
-    "./environments": {
-      "types": "./dist/environments.d.ts",
-      "default": "./dist/environments.js"
-    },
     "./config": {
       "types": "./config.d.ts",
       "require": "./dist/config.cjs",
       "default": "./dist/config.js"
-    },
-    "./coverage": {
-      "types": "./coverage.d.ts",
-      "default": "./dist/coverage.js"
-    },
-    "./reporters": {
-      "types": "./dist/reporters.d.ts",
-      "default": "./dist/reporters.js"
     },
     "./runtime": {
       "types": "./dist/runtime.d.ts",
@@ -127,7 +107,7 @@
     "dist"
   ],
   "engines": {
-    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
     "build": "premove dist && rollup -c",
@@ -136,7 +116,7 @@
   "peerDependencies": {
     "@edge-runtime/vm": "*",
     "@opentelemetry/api": "^1.9.0",
-    "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
+    "@types/node": "^22.0.0 || >=24.0.0",
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
@@ -145,7 +125,7 @@
     "@vitest/ui": "workspace:*",
     "happy-dom": "*",
     "jsdom": "*",
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+    "vite": "^6.4.0 || ^7.0.0 || ^8.0.0"
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
@@ -204,7 +184,6 @@
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
-    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0",
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
@@ -237,6 +216,7 @@
     "prompts": "^2.4.2",
     "strip-literal": "catalog:",
     "tinyhighlight": "catalog:",
+    "vite": "^6.4.0 || ^7.0.0 || ^8.0.0",
     "ws": "catalog:"
   }
 }

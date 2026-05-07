@@ -1,13 +1,12 @@
 import type { File, Suite, Task, Test } from '@vitest/runner'
-import type { SerializedConfig } from '../runtime/config'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
 import { promises as fs } from 'node:fs'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import {
   calculateSuiteHash,
+  createFileTask as createFileTaskOriginal,
   createTaskName,
-  generateHash,
   validateTags,
 } from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
@@ -279,21 +278,20 @@ function astParseFile(filepath: string, code: string) {
 }
 
 export function createFailedFileTask(project: TestProject, filepath: string, error: Error): File {
-  const testFilepath = relative(project.config.root, filepath)
-  const file: ParsedFile = {
+  const config = project.serializedConfig
+  const baseFile = createFileTaskOriginal(
     filepath,
-    type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${project.config.name || ''}`),
-    name: testFilepath,
-    fullName: testFilepath,
+    config.root,
+    config.name,
+    config.pool,
+    undefined,
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+  )
+  const file: ParsedFile = {
+    ...baseFile,
     mode: 'run',
-    tasks: [],
     start: 0,
     end: 0,
-    projectName: project.name,
-    meta: {},
-    pool: project.browser ? 'browser' : project.config.pool,
-    file: null!,
     result: {
       state: 'fail',
       errors: serializeError(project, error),
@@ -326,28 +324,28 @@ function serializeError(ctx: TestProject, error: any): TestError[] {
 }
 
 function createFileTask(
+  project: TestProject,
   testFilepath: string,
   code: string,
   requestMap: any,
-  config: SerializedConfig,
   filepath: string,
   fileTags: string[] | undefined,
 ) {
   const { definitions, ast } = astParseFile(testFilepath, code)
-  const file: ParsedFile = {
+  const config = project.serializedConfig
+  const baseFile = createFileTaskOriginal(
     filepath,
-    type: 'suite',
-    id: /* @__PURE__ */ generateHash(`${testFilepath}${config.name || ''}`),
-    name: testFilepath,
-    fullName: testFilepath,
+    config.root,
+    config.name,
+    config.pool,
+    undefined,
+    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+  )
+  const file: ParsedFile = {
+    ...baseFile,
     mode: 'run',
-    tasks: [],
     start: ast.start,
     end: ast.end,
-    projectName: config.name,
-    meta: {},
-    pool: 'browser',
-    file: null!,
     tags: fileTags || [],
   }
   file.file = file
@@ -494,10 +492,10 @@ export async function astCollectTests(
     )
   }
   return createFileTask(
+    project,
     testFilepath,
     request.code,
     request.map,
-    project.serializedConfig,
     filepath,
     request.fileTags,
   )

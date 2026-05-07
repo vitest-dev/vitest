@@ -21,14 +21,9 @@ const entries = {
   'cli': 'src/node/cli.ts',
   'config': 'src/public/config.ts',
   'node': 'src/public/node.ts',
-  'suite': 'src/public/suite.ts',
   'browser': 'src/public/browser.ts',
-  'runners': 'src/public/runners.ts',
-  'environments': 'src/public/environments.ts',
   'spy': 'src/integrations/spy.ts',
   'runtime': 'src/public/runtime.ts',
-  'coverage': 'src/public/coverage.ts',
-  'reporters': 'src/public/reporters.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
@@ -47,14 +42,9 @@ const entries = {
 const dtsEntries = {
   'index': 'src/public/index.ts',
   'node': 'src/public/node.ts',
-  'environments': 'src/public/environments.ts',
   'browser': 'src/public/browser.ts',
-  'runners': 'src/public/runners.ts',
   'runtime': 'src/public/runtime.ts',
-  'suite': 'src/public/suite.ts',
   'config': 'src/public/config.ts',
-  'coverage': 'src/public/coverage.ts',
-  'reporters': 'src/public/reporters.ts',
   'worker': 'src/public/worker.ts',
   'module-evaluator': 'src/runtime/moduleRunner/moduleEvaluator.ts',
 }
@@ -105,10 +95,6 @@ const plugins = [
     transform: {
       target: 'node20',
       define: {
-        // __VITEST_GENERATE_UI_TOKEN__ is set as a global to catch accidental leaking,
-        // in the release version the "if" with this condition should not be present
-        // To test strict token locally, build by e.g. `VITEST_GENERATE_UI_TOKEN=true pnpm build`
-        __VITEST_GENERATE_UI_TOKEN__: process.env.VITEST_GENERATE_UI_TOKEN === 'true' ? 'true' : 'false',
         ...(process.env.VITE_TEST_WATCHER_DEBUG === 'false'
           ? {
               'process.env.VITE_TEST_WATCHER_DEBUG': 'false',

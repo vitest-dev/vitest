@@ -349,17 +349,70 @@ AssertionError: expected 5 to be 4 // Object.is equality
 </testsuites>
 ```
 
-The outputted XML contains nested `testsuites` and `testcase` tags. These can also be customized via reporter options `suiteName` and `classnameTemplate`. `classnameTemplate` can either be a template string or a function.
+The output XML contains nested `testsuites` → `testsuite` → `testcase` tags. You can customize the reporter's behaviour with the following options:
 
-The supported placeholders for the `classnameTemplate` option are:
-- filename
-- filepath
+| Option | Description | Default |
+|---|---|---|
+| `suiteName` | `name` attribute of `<testsuites>` | `"vitest tests"` |
+| `suiteNameTemplate` | Template for the `name` attribute of `<testsuite>`. Accepts a string with placeholders or a function. | Relative file path |
+| `classnameTemplate` | Template for the `classname` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Relative file path |
+| `titleTemplate` | Template for the `name` attribute of `<testcase>`. Accepts a string with placeholders or a function. | Full test title with ancestor hierarchy |
+| `ancestorSeparator` | Separator used when joining ancestor describe block names in the `{classname}` placeholder and in the default test title. | `" > "` |
+| `addFileAttribute` | Add a `file` attribute to each `<testcase>`. | `false` |
+| `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output. | `true` |
+| `stackTrace` | Include stack traces in `<failure>` elements. | `true` |
+
+The following placeholders are available for `suiteNameTemplate`:
+- `{title}` – name of the first top-level `describe` block; falls back to the file basename when there is no top-level `describe`
+- `{filename}` – relative file path from the root (e.g. `src/foo.test.ts`)
+- `{filepath}` – absolute file path
+- `{basename}` – file name without directory (e.g. `foo.test.ts`)
+- `{displayName}` – Vitest project name
+
+The following placeholders are available for `classnameTemplate` and `titleTemplate`:
+- `{classname}` – ancestor `describe` block names joined by `ancestorSeparator` (e.g. `outer > inner`)
+- `{title}` – leaf test title (the string passed to `it`/`test`)
+- `{suitename}` – top-level `describe` block name, empty string when the test has no enclosing `describe`
+- `{filename}` – relative file path from the root
+- `{filepath}` – absolute file path
+- `{basename}` – file name without directory
+- `{displayName}` – Vitest project name
+
+::: tip
+`{filename}` follows Vitest's convention and resolves to the **relative path** from the project root (e.g. `src/foo.test.ts`). This differs from jest-junit where `{filename}` is the bare file name. Use `{basename}` to get only the file name.
+:::
 
 ```ts
 export default defineConfig({
   test: {
     reporters: [
-      ['junit', { suiteName: 'custom suite name', classnameTemplate: 'filename:{filename} - filepath:{filepath}' }]
+      ['junit', {
+        suiteName: 'My Test Suite',
+        // Use the first top-level describe block name as the testsuite name
+        suiteNameTemplate: '{title}',
+        // classname = ancestor describe chain
+        classnameTemplate: '{classname}',
+        // name = leaf test title only (jest-junit-compatible)
+        titleTemplate: '{title}',
+        ancestorSeparator: ' > ',
+      }]
+    ]
+  },
+})
+```
+
+Function-based templates receive all available variables and can return any string:
+
+```ts
+export default defineConfig({
+  test: {
+    reporters: [
+      ['junit', {
+        classnameTemplate: ({ classname, filename }) =>
+          classname ? `${filename}::${classname}` : filename,
+        titleTemplate: ({ suitename, title }) =>
+          suitename ? `[${suitename}] ${title}` : title,
+      }]
     ]
   },
 })
@@ -689,17 +742,36 @@ export default defineConfig({
 ### Blob Reporter
 
 Stores test results on the machine so they can be later merged using [`--merge-reports`](/guide/cli#merge-reports) command.
-By default, stores all results in `.vitest-reports` folder, but can be overridden with `--outputFile` or `--outputFile.blob` flags.
+By default, stores all results in `.vitest/blob/` folder, but can be overridden with `--outputFile` or `--outputFile.blob` flags.
 
 ```bash
 npx vitest --reporter=blob --outputFile=reports/blob-1.json
 ```
 
-We recommend using this reporter if you are running Vitest on different machines with the [`--shard`](/guide/cli#shard) flag.
-All blob reports can be merged into any report by using `--merge-reports` command at the end of your CI pipeline:
+We recommend using this reporter if you are running Vitest on different machines with the [`--shard`](/guide/cli#shard) flag or across multiple environments (e.g., linux/macos/windows). All blob reports can be merged into any report by using `--merge-reports` command at the end of your CI pipeline:
 
 ```bash
 npx vitest --merge-reports=reports --reporter=json --reporter=default
+```
+
+When running the same tests across multiple environments, use the `VITEST_BLOB_LABEL` environment variable to distinguish each environment's blob. Vitest reads labels at merge time and displays results separately:
+
+```bash
+VITEST_BLOB_LABEL=linux vitest run --reporter=blob
+```
+
+You can also provide the label via the blob reporter option. This has higher priority than `VITEST_BLOB_LABEL`.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    reporters: [
+      ['blob', { label: 'linux' }],
+    ],
+  },
+})
 ```
 
 Blob reporter output doesn't include file-based [attachments](/api/advanced/artifacts.html#testattachment).

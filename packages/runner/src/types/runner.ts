@@ -46,6 +46,7 @@ export interface VitestRunnerConfig {
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined
   strictTags: boolean
+  mergeReportsLabel: string | undefined
 }
 
 /**

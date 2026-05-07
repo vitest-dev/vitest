@@ -12,7 +12,7 @@ test('--merge-reports', async () => {
 
   await runVitest({
     // Pass default value - this option is publicly only available via CLI so it's a bit hacky usage here
-    mergeReports: '.vitest-reports',
+    mergeReports: '.vitest/blob',
     coverage: {
       reporter: 'json',
     },

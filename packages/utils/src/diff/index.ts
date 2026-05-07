@@ -62,6 +62,17 @@ const FALLBACK_FORMAT_OPTIONS = {
   plugins: PLUGINS,
 } satisfies PrettyFormatOptions
 
+export interface StringifiedMemory {
+  expected?: string
+  actual?: string
+}
+
+interface Memorize {
+  (pointer: 'expected' | 'actual', stringifiedValue: string): string
+}
+
+const DEFAULT_MEMORIZE: Memorize = (_, v) => v
+
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)
 
@@ -71,7 +82,7 @@ const FALLBACK_FORMAT_OPTIONS = {
  * @param options Diff options
  * @returns {string | null} a string diff
  */
-export function diff(a: any, b: any, options?: DiffOptions): string | undefined {
+export function diff(a: any, b: any, options?: DiffOptions, memorize: Memorize = DEFAULT_MEMORIZE): string | undefined {
   if (Object.is(a, b)) {
     return ''
   }
@@ -108,8 +119,8 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     function truncate(s: string) {
       return s.length <= MAX_LENGTH ? s : (`${s.slice(0, MAX_LENGTH)}...`)
     }
-    aDisplay = truncate(aDisplay)
-    bDisplay = truncate(bDisplay)
+    aDisplay = memorize('expected', truncate(aDisplay))
+    bDisplay = memorize('actual', truncate(bDisplay))
     const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)}\n${aDisplay}`
     const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)}\n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
@@ -124,13 +135,20 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
       return diffLinesUnified(a.split('\n'), b.split('\n'), options)
     case 'boolean':
     case 'number':
-      return comparePrimitive(a, b, options)
+      return comparePrimitive(a, b, options, memorize)
     case 'map':
-      return compareObjects(sortMap(a), sortMap(b), options)
+      return compareObjects(sortMap(a), sortMap(b), options, memorize)
     case 'set':
-      return compareObjects(sortSet(a), sortSet(b), options)
+      return compareObjects(sortSet(a), sortSet(b), options, memorize)
     default:
-      return compareObjects(a, b, options)
+      return compareObjects(a, b, options, memorize)
+  }
+}
+
+function createMemorize(memory: StringifiedMemory) {
+  return (pointer: 'expected' | 'actual', stringifiedValue: string) => {
+    memory[pointer] = stringifiedValue
+    return stringifiedValue
   }
 }
 
@@ -138,9 +156,10 @@ function comparePrimitive(
   a: number | boolean,
   b: number | boolean,
   options?: DiffOptions,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ) {
-  const aFormat = prettyFormat(a, FORMAT_OPTIONS)
-  const bFormat = prettyFormat(b, FORMAT_OPTIONS)
+  const aFormat = memorize('expected', prettyFormat(a, FORMAT_OPTIONS))
+  const bFormat = memorize('actual', prettyFormat(b, FORMAT_OPTIONS))
   return aFormat === bFormat
     ? ''
     : diffLinesUnified(aFormat.split('\n'), bFormat.split('\n'), options)
@@ -158,13 +177,14 @@ function compareObjects(
   a: Record<string, any>,
   b: Record<string, any>,
   options?: DiffOptions,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ) {
   let difference
   let hasThrown = false
 
   try {
     const formatOptions = getFormatOptions(FORMAT_OPTIONS, options)
-    difference = getObjectsDifference(a, b, formatOptions, options)
+    difference = getObjectsDifference(a, b, formatOptions, options, memorize)
   }
   catch {
     hasThrown = true
@@ -175,7 +195,7 @@ function compareObjects(
   // without calling `toJSON`. It's also possible that toJSON might throw.
   if (difference === undefined || difference === noDiffMessage) {
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
-    difference = getObjectsDifference(a, b, formatOptions, options)
+    difference = getObjectsDifference(a, b, formatOptions, options, memorize)
 
     if (difference !== noDiffMessage && !hasThrown) {
       difference = `${getCommonMessage(
@@ -186,6 +206,10 @@ function compareObjects(
   }
 
   return difference
+}
+
+export function getDefaultFormatOptions(options?: DiffOptions): PrettyFormatOptions {
+  return getFormatOptions(FORMAT_OPTIONS, options)
 }
 
 function getFormatOptions(
@@ -207,6 +231,7 @@ function getObjectsDifference(
   b: Record<string, any>,
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
+  memorize: Memorize = DEFAULT_MEMORIZE,
 ): string {
   const formatOptionsZeroIndent = { ...formatOptions, indent: 0 }
   const aCompare = prettyFormat(a, formatOptionsZeroIndent)
@@ -216,8 +241,8 @@ function getObjectsDifference(
     return getCommonMessage(NO_DIFF_MESSAGE, options)
   }
   else {
-    const aDisplay = prettyFormat(a, formatOptions)
-    const bDisplay = prettyFormat(b, formatOptions)
+    const aDisplay = memorize('expected', prettyFormat(a, formatOptions))
+    const bDisplay = memorize('actual', prettyFormat(b, formatOptions))
 
     return diffLinesUnified2(
       aDisplay.split('\n'),
@@ -248,6 +273,7 @@ export function printDiffOrStringify(
   received: unknown,
   expected: unknown,
   options?: DiffOptions,
+  memory?: StringifiedMemory,
 ): string | undefined {
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
 
@@ -286,7 +312,8 @@ export function printDiffOrStringify(
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
   const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
-  const difference = diff(replacedExpected, replacedActual, options)
+  const memorize = memory ? createMemorize(memory) : DEFAULT_MEMORIZE
+  const difference = diff(replacedExpected, replacedActual, options, memorize)
 
   return difference
   // }
