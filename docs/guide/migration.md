@@ -48,7 +48,7 @@ function runWithRuntimeRetry(fn: (retry: number) => void) {
   fn(Math.trunc(Math.random() * 10))
 }
 
-test.for([1, 2])('retry %s', (retry) => { // [!code --]
+test.for([1, 2] as const)('retry %s', (retry) => { // [!code --]
   runWithRuntimeRetry((runtimeRetry) => {
     const sameType: typeof retry = runtimeRetry
     //                    ^ Type 'number' is not assignable to type '1 | 2'
@@ -59,14 +59,6 @@ test.for<number>([1, 2])('retry %s', (retry) => { // [!code ++]
   runWithRuntimeRetry((runtimeRetry) => {
     const sameType: typeof retry = runtimeRetry
   })
-})
-
-test.for([1, 2] as const)('retry %s', (retry) => { // [!code --]
-  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
-})
-
-test.for([1, 2])('retry %s', (retry) => { // [!code ++]
-  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
 })
 ```
 
