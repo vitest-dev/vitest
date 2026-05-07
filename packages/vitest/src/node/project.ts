@@ -631,14 +631,12 @@ export class TestProject {
     const url = new URL('/__vitest_test__/', origin)
     url.searchParams.set('sessionId', sessionId)
     const otelCarrier = this.vitest._traces.getContextCarrier()
-    if (otelCarrier) {
-      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
-    }
     this.vitest._browserSessions.sessionIds.add(sessionId)
     const sessionPromise = this.vitest._browserSessions.createSession(
       sessionId,
       this,
       pool,
+      { otelCarrier },
     )
     const pagePromise = this.browser.provider.openPage(
       sessionId,
