@@ -41,6 +41,13 @@ This means callback parameters can be inferred as literal unions (for example `1
 
 If your callback annotations intentionally reject literal values and relied on wider inference, update those annotations to accept the inferred literal unions.
 
+```ts
+test.each([1, 2])('value %s', (num) => {
+  expectTypeOf(num).toEqualTypeOf<number>() // [!code --]
+  expectTypeOf(num).toEqualTypeOf<1 | 2>() // [!code ++]
+})
+```
+
 ### Locators in Commands are Serialized as Objects
 
 Locators forwarded to [browser commands](/api/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:

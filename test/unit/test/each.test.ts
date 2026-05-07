@@ -23,6 +23,10 @@ test.each([1, 2])('preserves literal unions for test.each', (num) => {
   expectTypeOf(num).toEqualTypeOf<1 | 2>()
 })
 
+test.for([1, 2])('preserves literal unions for test.for', (num) => {
+  expectTypeOf(num).toEqualTypeOf<1 | 2>()
+})
+
 describe.each([
   [1, 1, 2],
   [1, 2, 3],
@@ -42,6 +46,12 @@ describe.each([
 })
 
 describe.each([1, 2])('preserves literal unions for describe.each', (num) => {
+  test('literal union type', () => {
+    expectTypeOf(num).toEqualTypeOf<1 | 2>()
+  })
+})
+
+describe.for([1, 2])('preserves literal unions for describe.for', (num) => {
   test('literal union type', () => {
     expectTypeOf(num).toEqualTypeOf<1 | 2>()
   })
