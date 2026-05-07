@@ -397,11 +397,11 @@ interface EachFunctionReturn<T extends any[]> {
 }
 
 interface TestEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
+  <const T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
+  <const T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
     ExtractEachCallbackArgs<T>
   >
-  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
+  <const T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
