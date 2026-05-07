@@ -219,7 +219,7 @@ jobs:
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
 
-  test-rolldown:
+  test-vite7:
     needs: changed
     # macos-latest is the fastest one
     name: 'Rolldown&Test: node-22, macos-latest'
@@ -239,7 +239,7 @@ jobs:
 
       - name: Install
         run: |
-          yq -i '.overrides.vite = "npm:vite@8"' pnpm-workspace.yaml
+          pnpm override-vite7
           git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
@@ -254,6 +254,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
+      - name: Unit Test UI
+        if: ${{ !cancelled() }}
+        run: pnpm -C packages/ui test:ui
+
       - name: Test Browser (playwright)
         if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
@@ -261,8 +265,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-rolldown
-          path: rolldown/test/ui/test-results/
+          name: playwright-report-vite7
+          path: test/ui/test-results/
           retention-days: 30
 
   merge-reports:
