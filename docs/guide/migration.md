@@ -41,24 +41,15 @@ This means callback parameters can be inferred as literal unions (for example `1
 
 `test.each` and `describe.each` are compatibility aliases and follow the same typing behavior.
 
-If your tests rely on wide callback inference, either widen the value before passing it to broader helpers or specify the case type explicitly.
+If your tests were using `as const` only to preserve literal unions, you can remove it.
 
 ```ts
-function runWithRuntimeRetry(fn: (retry: number) => void) {
-  fn(Math.trunc(Math.random() * 10))
-}
-
 test.for([1, 2] as const)('retry %s', (retry) => { // [!code --]
-  runWithRuntimeRetry((runtimeRetry) => {
-    const sameType: typeof retry = runtimeRetry
-    //                    ^ Type 'number' is not assignable to type '1 | 2'
-  })
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
 })
 
-test.for<number>([1, 2])('retry %s', (retry) => { // [!code ++]
-  runWithRuntimeRetry((runtimeRetry) => {
-    const sameType: typeof retry = runtimeRetry
-  })
+test.for([1, 2])('retry %s', (retry) => { // [!code ++]
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
 })
 ```
 
