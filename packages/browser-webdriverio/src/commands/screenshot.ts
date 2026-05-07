@@ -62,7 +62,7 @@ export async function takeScreenshot(
   // element and plain `page.screenshot()` calls keep the existing body fallback.
   const buffer = options.target === 'page'
     ? await context.browser.saveScreenshot(normalizedSavePath)
-    : await (await context.browser.$(options.element?.selector ?? 'body')).saveScreenshot(
+    : await context.browser.$(options.element?.selector ?? 'body').saveScreenshot(
         normalizedSavePath,
       )
 
