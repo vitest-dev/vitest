@@ -410,6 +410,10 @@ describe('expect with custom message', () => {
       await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected 1 to be 2 // Object.is equality]`)
     })
 
+    test('async resolves matcher accepts a promise-returning function', async ({ expect }) => {
+      await expect(() => Promise.resolve(1)).resolves.toBe(1)
+    })
+
     test('not matcher throws custom message on failure', () => {
       expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 not to be 1 // Object.is equality]`)
     })
