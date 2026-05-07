@@ -1,12 +1,12 @@
 ---
-title: Domain Locators | Recipes
+title: Extending Browser Locators | Recipes
 ---
 
 # Domain Locators
 
 Built-in [locators](/api/browser/locators) like `getByRole` and `getByText` cover queries that map onto accessibility attributes. They run out when an app has shapes that don't fit ARIA, like a "comment with N replies" or a row in a custom table component.
 
-The fallback is to use raw CSS. That works, but the result is a plain query rather than a locator, so you lose auto-retry and strict-mode protection.
+The fallback is to use `querySelector`. That works, but the result is a plain query rather than a locator, so you lose auto-retry and strict-mode protection.
 
 [`locators.extend`](/api/browser/locators#custom-locators) <Version>3.2.0</Version> adds a domain-specific locator without giving up the locator API. The value the method returns is still a locator, so auto-retry, strict-mode protection, and chaining all carry through to your custom methods. The names you give those methods become part of the team's test vocabulary: `page.getByCard({ id: 'product-1' })` reads like the product instead of the DOM, and the same name shows up consistently across the suite.
 

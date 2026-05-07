@@ -1001,7 +1001,7 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/recipes/db-transaction',
               },
               {
-                text: 'Cancellable Test Resources',
+                text: 'Cancelling Long-Running Operations Gracefully',
                 link: '/guide/recipes/cancellable',
               },
               {
@@ -1021,8 +1021,8 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/recipes/watch-templates',
               },
               {
-                text: 'Domain Locators',
-                link: '/guide/recipes/domain-locators',
+                text: 'Extending Browser Locators',
+                link: '/guide/recipes/browser-locators',
               },
               {
                 text: 'Schema-Driven Assertions',

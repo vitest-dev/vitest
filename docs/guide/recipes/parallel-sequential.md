@@ -66,7 +66,7 @@ export default defineConfig({
 })
 ```
 
-The parallel batch finishes, *then* the sequential batch starts. Total wall clock stays close to the parallel time plus the longest sequential chain.
+The parallel batch finishes, *then* the sequential batch starts. Total wall clock stays close to the parallel time plus sum of the sequential test run time.
 
 ## File scope vs. test scope
 

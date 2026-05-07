@@ -61,7 +61,7 @@ If the second run produces different results, you have order-dependent tests. Ei
 
 ## Per-pool isolation
 
-`isolate` only governs the [`threads`](/config/pool) and [`forks`](/config/pool) pools. The `vmThreads` and `vmForks` pools always run isolated regardless of the flag, since they trade startup cost for stronger guarantees. If you want maximum reuse, prefer `threads` or `forks`.
+`isolate` only governs the [`threads`](/config/pool) and [`forks`](/config/pool) pools. The `vmThreads` and `vmForks` pools always run isolated regardless of the flag, since they trade startup cost for stronger guarantees.
 
 ## See also
 
