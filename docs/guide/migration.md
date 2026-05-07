@@ -34,19 +34,32 @@ test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
 test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 ```
 
-### Narrower Inference for `test.each` and `describe.each`
+### Narrower Inference for `test.for` and `describe.for`
 
-`test.each` and `describe.each` now preserve literal types by default for array cases.
+`test.for` and `describe.for` now preserve literal types by default for array cases.
 This means callback parameters can be inferred as literal unions (for example `1 | 2`) instead of widened types (for example `number`) without needing `as const`.
 
-If your callback annotations intentionally reject literal values and relied on wider inference, update those annotations to accept the inferred literal unions.
+`test.each` and `describe.each` are compatibility aliases and follow the same typing behavior.
+
+If your tests rely on wide callback inference, either widen the value before passing it to broader helpers or specify the case type explicitly.
 
 ```ts
-// Vitest 5 infers `value` as `1 | 2`, so this callback is now too narrow:
-test.each([1, 2])('value %s', (value: Exclude<number, 1 | 2>) => {}) // [!code --]
+function runWithRuntimeRetry(fn: (retry: number) => void) {
+  fn(Math.trunc(Math.random() * 10))
+}
 
-// If you need the previous wide inference, specify the case type explicitly:
-test.each<number>([1, 2])('value %s', (value: Exclude<number, 1 | 2>) => {}) // [!code ++]
+test.for([1, 2])('retry %s', (retry) => { // [!code --]
+  runWithRuntimeRetry((runtimeRetry) => {
+    const sameType: typeof retry = runtimeRetry
+    //                    ^ Type 'number' is not assignable to type '1 | 2'
+  })
+})
+
+test.for<number>([1, 2])('retry %s', (retry) => { // [!code ++]
+  runWithRuntimeRetry((runtimeRetry) => {
+    const sameType: typeof retry = runtimeRetry
+  })
+})
 ```
 
 ### Locators in Commands are Serialized as Objects
