@@ -43,7 +43,7 @@ export function isSlowTestTask(task: Task) {
     return false
   }
 
-  const threshold = config.value.slowTestThreshold
+  const threshold = task.slowTestThreshold ?? config.value.slowTestThreshold
   return typeof threshold === 'number' && duration > threshold
 }
 

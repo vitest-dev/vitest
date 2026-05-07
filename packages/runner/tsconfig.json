@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "types": ["node"],
     "isolatedDeclarations": true
   },
   "include": ["./src/**/*.ts"],
