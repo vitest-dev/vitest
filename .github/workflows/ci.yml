@@ -92,9 +92,9 @@ jobs:
         node_version: [22, 24, 26]
         include:
           - os: macos-latest
-            node_version: 26
+            node_version: 24
           - os: windows-latest
-            node_version: 26
+            node_version: 24
       fail-fast: false
 
     steps:
@@ -153,7 +153,7 @@ jobs:
 
     strategy:
       matrix:
-        node_version: [26]
+        node_version: [24]
         os:
           - macos-latest
           - windows-latest
@@ -187,7 +187,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node_version: [26]
+        node_version: [24]
         os:
           - macos-latest
           - windows-latest
