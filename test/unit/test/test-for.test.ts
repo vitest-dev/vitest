@@ -32,7 +32,7 @@ myTest.concurrent.for(['case1', 'case2'])(
   },
 )
 
-myTest.concurrent.for(['case1', 'case2'] as const)(
+myTest.concurrent.for(['case1', 'case2'])(
   'const %s',
   (args, { expect, myFixture }) => {
     expectTypeOf(args).toEqualTypeOf<'case1' | 'case2'>()

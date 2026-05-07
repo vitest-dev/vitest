@@ -4,7 +4,7 @@ describe.for(['case1', 'case2'])(
   'basic %s',
   (...args) => {
     test('test', () => {
-      expectTypeOf(args).toEqualTypeOf<[string]>()
+      expectTypeOf(args).toEqualTypeOf<['case1' | 'case2']>()
       expect({ args }).matchSnapshot()
     })
   },

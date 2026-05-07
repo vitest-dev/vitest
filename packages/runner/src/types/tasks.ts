@@ -420,7 +420,7 @@ interface TestForFunctionReturn<Arg, Context> {
 interface TestForFunction<ExtraContext> {
   // test.for([1, 2, 3])
   // test.for([[1, 2], [3, 4, 5]])
-  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
+  <const T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
     T,
     TestContext & ExtraContext
   >
@@ -437,7 +437,7 @@ interface TestForFunction<ExtraContext> {
 }
 
 interface SuiteForFunction {
-  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
+  <const T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
