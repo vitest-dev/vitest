@@ -71,7 +71,7 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
 
 This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
 
-When you use `singleFile: true`, you can upload only `html/index.html`:
+When you use `singleFile: true`, you can upload the report as a single file and it will become viewable directly GitHub artifacts with `archive: false` option:
 
 ```yaml
 - uses: actions/upload-artifact@v7
