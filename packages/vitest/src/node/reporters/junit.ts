@@ -9,7 +9,6 @@ import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../printError'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface ClassnameTemplateVariables {
@@ -396,11 +395,9 @@ export class JUnitReporter implements Reporter {
                     return
                   }
 
-                  const result = capturePrintError(
-                    error,
-                    this.ctx,
-                    { project: this.ctx.getProjectByName(task.file?.projectName ?? ''), task },
-                  )
+                  const result = this.ctx.logger.formatError(error, {
+                    project: this.ctx.getProjectByName(task.file?.projectName ?? ''),
+                  })
                   await this.baseLog(
                     escapeXML(stripVTControlCharacters(result.output.trim())),
                   )

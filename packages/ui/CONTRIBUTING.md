@@ -1,25 +1,56 @@
-At project root, create terminals with each of the following commands:
+# @vitest/ui Development
+
+## UI
+
+Use this setup for developing UI features with Vite HMR. It serves the UI from a separate dev server, so it can differ from the exact `vitest --ui` runtime path.
+
+Start the UI dev server:
 
 ```bash
-nr ui:dev
+# Align with the API port configured in test/unit/vite.config.ts.
+VITE_PORT=3023 pnpm -C packages/ui dev:client
+```
+
+Start a Vitest UI/API server for any test project you want to use as the backend. For example, from the repository root this runs the `test/unit` suite with UI enabled:
+
+```bash
+pnpm test --ui --open=false
+```
+
+The UI dev server only needs a real Vitest UI/API server to connect to; the backend can be `test/unit`, `packages/ui`, or another suite.
+
+Open the URL printed by the UI dev server, usually `http://localhost:5173/`.
+
+The UI dev server connects to the Vitest UI/API server on port `51204` by default. The root `test/unit` suite uses port `3023`, so the command above sets `VITE_PORT=3023`. If you use another backend port, pass the same port to the UI dev server:
+
+```bash
+VITE_PORT=12345 pnpm -C packages/ui dev:client
 ```
 
 ```bash
-nr test --api
+pnpm test --ui --open=false --api=12345
 ```
 
-As the last command, you can use any of the available tests suites instead. Make sure that they run at 51204 port or specify a custom port with `VITE_PORT` environmental variable when running the first command. For example,
+## Browser Mode UI
+
+Use this setup for developing Browser Mode UI features with Vite HMR. It serves the Browser Mode UI from the UI dev server and injects state from a real browser-mode Vitest server.
+
+Start a browser-mode Vitest server:
 
 ```bash
-VITE_PORT=3200 nr ui:dev
+pnpm -C packages/ui test:ui --browser.headless --ui --open=false
 ```
+
+Start the UI dev server in browser preview mode:
 
 ```bash
-nr test --api=3200
+BROWSER_DEV=true pnpm -C packages/ui dev:client
 ```
 
-Open the browser at the URL printed by the first command. For example, `http://localhost:5173/`. If you see a connection error, it means the port is specified incorrectly.
+Open the URL printed by the UI dev server, usually `http://localhost:5173/`.
 
-To preview the browser tab, uncomment the "browser-dev-preview" plugin in `vite.config.ts`.
+The UI dev server fetches browser runner state from the browser runner server on port `63315` by default. If Vitest prints a different browser runner port, pass it to the UI dev server:
 
-To configure the browser state, update the `__vitest_browser_runner__` object in `browser.dev.js`.
+```bash
+BROWSER_DEV_PORT=63316 BROWSER_DEV=true pnpm -C packages/ui dev:client
+```

@@ -965,7 +965,6 @@ export abstract class BaseReporter implements Reporter {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
         screenshotPaths,
-        task: tasks[0],
       })
 
       if (tasks[0].type === 'test' && tasks[0].annotations.length) {

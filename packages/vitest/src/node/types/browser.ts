@@ -6,6 +6,7 @@ import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserCommands, CDPSession } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
@@ -354,6 +355,7 @@ export interface BrowserCommandContext {
 
 export interface BrowserServerStateSession {
   project: TestProject
+  otelCarrier?: OTELCarrier
   connected: () => void
   fail: (v: Error) => void
 }
