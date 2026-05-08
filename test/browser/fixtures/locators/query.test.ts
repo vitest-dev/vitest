@@ -69,6 +69,16 @@ describe('locator.or', () => {
 })
 
 describe('locator.filter', () => {
+  test('can find role by text filter option', async () => {
+    document.body.innerHTML = `
+    <button>Vitest</button>
+    <button>Rolldown</button>
+    `
+    const locator = page.getByRole('button', { hasText: 'Vitest' })
+    expect(locator.element()).toBe(document.querySelector('button'))
+    await locator.click()
+  })
+
   test('can find element with a text inside', () => {
     document.body.innerHTML = `
     <button>Vitest</button>
