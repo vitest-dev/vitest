@@ -534,10 +534,13 @@ export default defineConfig({
 })
 ```
 
-When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. Coverage HTML reports are not inlined yet, so they remain as separate files. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
+When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
 
 ::: warning
-Because everything is embedded inline, the file can grow very large — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
+`singleFile` has two caveats:
+
+- The file can grow very large because everything is embedded inline — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
+- Coverage HTML reports are not inlined yet and remain as separate files.
 
 Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
 :::
