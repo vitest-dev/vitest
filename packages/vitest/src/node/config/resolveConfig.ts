@@ -675,7 +675,7 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>

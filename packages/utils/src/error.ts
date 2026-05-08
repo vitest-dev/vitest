@@ -1,7 +1,7 @@
 import type { DiffOptions } from './diff'
 import type { TestError } from './types'
-import { printDiffOrStringify } from './diff'
-import { stringify } from './display'
+import { format as prettyFormat } from '@vitest/pretty-format'
+import { getDefaultFormatOptions, printDiffOrStringify } from './diff'
 import { serializeValue } from './serialize'
 
 export { serializeValue as serializeError }
@@ -22,17 +22,19 @@ export function processError(
       && err.expected !== undefined
       && err.actual !== undefined)
   ) {
-    err.diff = printDiffOrStringify(err.actual, err.expected, {
+    const options = {
       ...diffOptions,
       ...err.diffOptions as DiffOptions,
-    })
-  }
+    }
+    err.diff = printDiffOrStringify(
+      err.actual,
+      err.expected,
+      options,
+      err,
+    )
 
-  if ('expected' in err && typeof err.expected !== 'string') {
-    err.expected = stringify(err.expected, 10)
-  }
-  if ('actual' in err && typeof err.actual !== 'string') {
-    err.actual = stringify(err.actual, 10)
+    err.expected = prettifyValue(err.expected, options)
+    err.actual = prettifyValue(err.actual, options)
   }
 
   // some Error implementations may not allow rewriting cause
@@ -55,4 +57,11 @@ export function processError(
       ),
     )
   }
+}
+
+function prettifyValue(value: unknown, options: DiffOptions): string | undefined {
+  if (typeof value !== 'string') {
+    return prettyFormat(value, getDefaultFormatOptions(options))
+  }
+  return value
 }
