@@ -6,9 +6,12 @@ import { client } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
+// TODO: review slop
+
 export interface ActiveTraceView {
   test: RunnerTestCase
   attemptKey: string
+  trace?: BrowserTraceArtifactWithData
 }
 
 export interface BrowserTraceArtifactWithData extends Omit<BrowserTraceArtifact, 'data'> {
@@ -98,30 +101,24 @@ export function useTraceAttempts(test: () => RunnerTestCase | undefined) {
   })
 }
 
-// TODO: consolidate activeTraceView, activeTrace and useTraceAttempts.
-export const activeTrace = computed(() => {
-  const active = activeTraceView.value
-  if (!active) {
-    return
-  }
-
+function resolveActiveTrace(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>) {
   const attempt = groupTraceAttempts(active.test).find(attempt => attempt.key === active.attemptKey)
-  const trace = attempt && deriveTraceAttempt(attempt)
-  if (!trace) {
-    return
-  }
+  return attempt && deriveTraceAttempt(attempt)
+}
 
-  return {
-    test: active.test,
-    trace,
+function updateActiveTraceView(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>) {
+  activeTraceView.value = {
+    ...active,
+    trace: resolveActiveTrace(active),
   }
-})
+}
 
 export function openTrace(trace: BrowserTraceArtifactWithData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
     test,
     attemptKey: getTraceAttemptKey(trace.data),
+    trace,
   }
 }
 
@@ -129,14 +126,50 @@ export function closeTrace() {
   activeTraceView.value = undefined
 }
 
-// sync with selected test / url navigation
+// Close trace view when URL/navigation moves away from the active test.
 watch(selectedTest, (testId) => {
   if (!testId || activeTraceView.value?.test.id !== testId) {
     closeTrace()
   }
 })
 
-// TODO: what's this
+// Keep the pane open across reruns by replacing stale test object references.
+watchEffect(() => {
+  const active = activeTraceView.value
+  const testId = selectedTest.value
+  if (!active || !testId || active.test.id !== testId) {
+    return
+  }
+
+  const test = client.state.idMap.get(testId)
+  if (test?.type === 'test' && active.test !== test) {
+    updateActiveTraceView({
+      test,
+      attemptKey: active.attemptKey,
+    })
+  }
+})
+
+// Refresh derived trace data as new stream artifacts are appended to the active test.
+watchEffect(() => {
+  const active = activeTraceView.value
+  if (!active) {
+    return
+  }
+
+  const trace = resolveActiveTrace(active)
+  if (
+    trace?.data.entries.length !== active.trace?.data.entries.length
+    || trace?.data.stream !== active.trace?.data.stream
+  ) {
+    activeTraceView.value = {
+      ...active,
+      trace,
+    }
+  }
+})
+
+// Auto-open trace view for the selected test once its first trace artifact appears.
 watchEffect(() => {
   const testId = selectedTest.value
   if (!testId || activeTraceView.value?.test.id === testId) {
