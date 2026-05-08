@@ -9,7 +9,6 @@ import { resolve } from 'pathe'
 import { startVitest } from 'vitest/node'
 
 // TODO:
-// - re-run
 // - trace range (action, expect.element, functional mark)
 
 test.describe('trace stream', () => {
@@ -58,7 +57,7 @@ test.describe('trace stream', () => {
   test('basic', async ({ page }) => {
     await page.goto(baseURL)
 
-    const runResultPromise = vitest!.runTestSpecifications(
+    const runPromise = vitest!.runTestSpecifications(
       await vitest!.globTestSpecifications(),
     )
 
@@ -92,7 +91,26 @@ test.describe('trace stream', () => {
       'render-c',
       'test finished',
     ])
-    await runResultPromise
+    await runPromise
+
+    // re-run and verify trace view is cleared
+    await rm(gatesDir, { recursive: true, force: true })
+    await mkdir(gatesDir, { recursive: true })
+    const rerunPromise = vitest!.runTestSpecifications(
+      await vitest!.globTestSpecifications(),
+    )
+    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+      'render-a',
+    ])
+    await writeFile(resolve(gatesDir, 'b.txt'), 'open')
+    await writeFile(resolve(gatesDir, 'c.txt'), 'open')
+    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+      'render-a',
+      'render-b',
+      'render-c',
+      'test finished',
+    ])
+    await rerunPromise
   })
 })
 
