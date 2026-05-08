@@ -856,7 +856,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
-        return '.vitest-reports'
+        return '.vitest/blob'
       }
       return value
     },

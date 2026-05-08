@@ -4,7 +4,12 @@ export default defineConfig({
   test: {
     include: ['test/**/**.{test,spec}.ts'],
     includeTaskLocation: true,
-    reporters: ['verbose'],
+    reporters: [
+      'verbose',
+      ...(process.env.VITEST_CI_BLOB_LABEL
+        ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] as any]
+        : []),
+    ],
     testTimeout: 60_000,
     isolate: false,
     fileParallelism: false,

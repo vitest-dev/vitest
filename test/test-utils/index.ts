@@ -1,6 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
+import type { ParsedStack, SerializedConfig, TestContext, WorkerGlobalState } from 'vitest'
 import type { TestProjectConfiguration } from 'vitest/config'
 import type {
   TestCase,
@@ -26,8 +26,6 @@ import { Cli } from './cli'
 
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
-// @ts-expect-error not typed global
-globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -243,7 +241,7 @@ export async function runVitest(
     get results() {
       return ctx?.state.getTestModules() || []
     },
-    errorTree(options?: { project?: boolean; stackTrace?: boolean; diff?: boolean }) {
+    errorTree(options?: BuildErrorTreeOptions & { project?: boolean }) {
       const modules = ctx?.state.getTestModules() || []
       const tree = options?.project
         ? buildErrorProjectTree(modules, options)
@@ -572,10 +570,16 @@ export class StableTestFileOrderSorter {
   }
 }
 
-export function buildErrorTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
+export interface BuildErrorTreeOptions {
+  stackTrace?: boolean
+  diff?: boolean
+  fileLabel?: boolean
+}
+
+export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTreeOptions) {
   const root = testModules[0]?.project.config.root
 
-  function mapError(e: { message: string; diff?: string; stacks?: { file: string; line: number; column: number; method: string }[] }) {
+  function mapError(e: { message: string; diff?: string; stacks?: ParsedStack[] }) {
     let message = stripVTControlCharacters(e.message)
     if (options?.diff && e.diff) {
       message = [message, stripVTControlCharacters(e.diff)].join('\n')
@@ -619,6 +623,9 @@ export function buildErrorTree(testModules: TestModule[], options?: { stackTrace
       }
       return moduleChildren
     },
+    options?.fileLabel
+      ? module => `${module.relativeModuleId} (${module.meta().__vitest_label__})`
+      : undefined,
   )
 }
 
@@ -627,6 +634,7 @@ export function buildTestTree(
   onTestCase?: (result: TestCase) => unknown,
   onTestSuite?: (testSuite: TestSuite, suiteChildren: Record<string, any>) => unknown,
   onTestModule?: (testModule: TestModule, moduleChildren: Record<string, any>) => unknown,
+  onTestModuleKey?: (testModule: TestModule) => string,
 ) {
   type TestTree = Record<string, any>
 
@@ -657,7 +665,7 @@ export function buildTestTree(
 
   for (const module of testModules) {
     // Use relative module ID for cleaner output
-    const key = module.relativeModuleId
+    const key = onTestModuleKey ? onTestModuleKey(module) : module.relativeModuleId
     const moduleChildren = walkCollection(module.children)
     tree[key] = onTestModule ? onTestModule(module, moduleChildren) : moduleChildren
   }
@@ -679,7 +687,7 @@ export function buildTestProjectTree(testModules: TestModule[], onTestCase?: (re
   return projectTree
 }
 
-export function buildErrorProjectTree(testModules: TestModule[], options?: { stackTrace?: boolean; diff?: boolean }) {
+export function buildErrorProjectTree(testModules: TestModule[], options?: BuildErrorTreeOptions) {
   const projectTree: Record<string, Record<string, any>> = {}
 
   for (const testModule of testModules) {

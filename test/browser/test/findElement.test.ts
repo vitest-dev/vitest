@@ -108,3 +108,16 @@ function createButton() {
   document.body.append(button)
   return button
 }
+
+test('expect.element is strict', async () => {
+  createButton()
+  createButton()
+  await expect(
+    () => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible(),
+  ).rejects.toThrowErrorMatchingInlineSnapshot(`
+    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
+        1) <button></button> aka getByRole('button').first()
+        2) <button></button> aka getByRole('button').nth(1)
+    ]
+  `)
+})
