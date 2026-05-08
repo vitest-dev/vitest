@@ -19,7 +19,6 @@ export interface BrowserTraceArtifactWithData extends Omit<BrowserTraceArtifact,
   data: BrowserTraceData
 }
 
-// TODO: clear on watch re-run
 interface TraceAttempt {
   test: RunnerTestCase
   // TODO: explicitly lift attempt key repeats/retry?
