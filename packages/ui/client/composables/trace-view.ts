@@ -180,6 +180,7 @@ watchEffect(() => {
     return
   }
 
+  // TODO: always open view (even if no trace artifact yet)
   const trace = getTraceAttempts(test)[0]
   if (trace) {
     openTrace(trace, test)
