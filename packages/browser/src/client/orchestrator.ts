@@ -80,7 +80,7 @@ export class IframeOrchestrator {
       return
     }
 
-    this.iframes.forEach(iframe => iframe.remove())
+    this.iframes.forEach(iframe => this.removeIframe(iframe))
     this.iframes.clear()
 
     for (let i = 0; i < options.files.length; i++) {
@@ -140,7 +140,7 @@ export class IframeOrchestrator {
       // because we called "cleanup" in the previous run
       // the iframe is not removed immediately to let the user see the last test
       this.recreateNonIsolatedIframe = false
-      this.iframes.get(ID_ALL)!.remove()
+      this.removeIframe(this.iframes.get(ID_ALL)!)
       this.iframes.delete(ID_ALL)
       debug('recreate non-isolated iframe')
     }
@@ -180,7 +180,7 @@ export class IframeOrchestrator {
     const file = spec.filepath
 
     if (this.iframes.has(file)) {
-      this.iframes.get(file)!.remove()
+      this.removeIframe(this.iframes.get(file)!)
       this.iframes.delete(file)
     }
 
@@ -234,8 +234,7 @@ export class IframeOrchestrator {
           )))
         }
         else if (this.iframes.has(iframeId)) {
-          const events = this.iframeEvents.get(iframe)
-          if (events?.size) {
+          if (this.pendingAborts.get(iframe)?.size) {
             this.dispatchIframeError(new Error(this.createWarningMessage(iframeId, 'during a test')))
           }
           else {
@@ -402,41 +401,58 @@ export class IframeOrchestrator {
     }
   }
 
-  private iframeEvents = new WeakMap<HTMLIFrameElement, Set<string>>()
+  private pendingAborts = new WeakMap<HTMLIFrameElement, Set<(error: Error) => void>>()
+
+  private removeIframe(iframe: HTMLIFrameElement) {
+    // Reject any pending sendEventToIframe so suspended async callers release the
+    // detached iframe; otherwise its document/listeners stay retained in the renderer.
+    const aborts = this.pendingAborts.get(iframe)
+    if (aborts) {
+      const error = new Error('Iframe was removed before responding to the event.')
+      for (const abort of aborts) {
+        abort(error)
+      }
+    }
+    iframe.remove()
+  }
 
   private async sendEventToIframe(event: IframeChannelOutgoingEvent): Promise<void> {
     const iframe = this.iframes.get(event.iframeId)
     if (!iframe) {
       throw new Error(`Cannot find iframe with id ${event.iframeId}`)
     }
-    let events = this.iframeEvents.get(iframe)
-    if (!events) {
-      events = new Set()
-      this.iframeEvents.set(iframe, events)
+    let aborts = this.pendingAborts.get(iframe)
+    if (!aborts) {
+      aborts = new Set()
+      this.pendingAborts.set(iframe, aborts)
     }
-    events.add(event.event)
 
     channel.postMessage(event)
     return new Promise<void>((resolve, reject) => {
-      const cleanupEvents = () => {
+      const cleanup = () => {
         channel.removeEventListener('message', onReceived)
         this.eventTarget.removeEventListener('iframeerror', onError)
+        aborts!.delete(abort)
       }
 
       function onReceived(e: MessageEvent) {
         if (e.data.iframeId === event.iframeId && e.data.event === `response:${event.event}`) {
+          cleanup()
           resolve()
-          cleanupEvents()
-          events!.delete(event.event)
         }
       }
 
       function onError(e: Event) {
+        cleanup()
         reject((e as CustomEvent).detail)
-        cleanupEvents()
-        events!.delete(event.event)
       }
 
+      function abort(error: Error) {
+        cleanup()
+        reject(error)
+      }
+
+      aborts.add(abort)
       this.eventTarget.addEventListener('iframeerror', onError)
       channel.addEventListener('message', onReceived)
     })
