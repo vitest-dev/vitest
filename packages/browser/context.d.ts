@@ -445,7 +445,7 @@ export interface LocatorOptions {
   hasNot?: Locator
 }
 
-export interface LocatorByRoleOptions extends LocatorOptions {
+export interface LocatorByRoleOptions extends Pick<LocatorOptions, 'exact'> {
   /**
    * Should checked elements (set by `aria-checked` or `<input type="checkbox"/>`) be included or not. By default, the filter is not applied.
    *

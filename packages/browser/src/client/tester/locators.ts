@@ -246,7 +246,7 @@ export abstract class Locator {
   protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return applyLocatorFilters(this.locator(getByRoleSelector(role, options)), options)
+    return this.locator(getByRoleSelector(role, options))
   }
 
   public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
@@ -411,14 +411,6 @@ export abstract class Locator {
       errorSource: error,
     }))
   }
-}
-
-export function applyLocatorFilters(locator: Locator, options?: LocatorOptions): Locator {
-  if (options?.hasText || options?.hasNotText || options?.has || options?.hasNot) {
-    return locator.filter(options)
-  }
-
-  return locator
 }
 
 export function triggerCommandWithTrace<T>(
