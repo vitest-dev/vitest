@@ -2,7 +2,7 @@ import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
 import { computed, ref, watch, watchEffect } from 'vue'
-import { client } from './client'
+import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
@@ -168,7 +168,7 @@ watchEffect(() => {
   }
 })
 
-// Auto-open trace view for the selected test once its first trace artifact appears.
+// Auto-open trace view for the selected test
 watchEffect(() => {
   const testId = selectedTest.value
   if (!testId || activeTraceView.value?.test.id === testId) {
@@ -180,12 +180,28 @@ watchEffect(() => {
     return
   }
 
-  // TODO: always open view (even if no trace artifact yet)
-  const trace = getTraceAttempts(test)[0]
-  if (trace) {
-    openTrace(trace, test)
+  if (isTraceViewEnabled(test)) {
+    activeTraceView.value = {
+      test,
+      // TODO: sad
+      attemptKey: '0:0',
+    }
   }
 })
+
+function isTraceViewEnabled(test: RunnerTestCase): boolean {
+  const project = getProjectConfigByTest(test)
+  const traceView
+    = browserState?.config.browser?.traceView
+      ?? project?.browser.traceView
+      ?? config.value.browser?.traceView
+  return traceView?.enabled ?? false
+}
+
+function getProjectConfigByTest(test: RunnerTestCase) {
+  const projectName = test.file.projectName || ''
+  return config.value.projects?.find(project => project.name === projectName)
+}
 
 export function getTraceAttemptLabel(trace: BrowserTraceData) {
   const parts: string[] = []
