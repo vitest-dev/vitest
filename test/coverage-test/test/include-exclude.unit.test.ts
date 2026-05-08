@@ -59,6 +59,19 @@ test('include without actual glob', async () => {
   expect.soft(isIncluded('src-file-in-root.js')).toBe(false)
 })
 
+test('test.include with negations', async () => {
+  const isIncluded = await init({
+    include: ['src/**'],
+    testInclude: ['!something'],
+  })
+
+  expect.soft(isIncluded('src/component.js')).toBe(true)
+  expect.soft(isIncluded('src/nested/component.ts')).toBe(true)
+
+  expect.soft(isIncluded('top-level.ts')).toBe(false)
+  expect.soft(isIncluded('utils/math.ts')).toBe(false)
+})
+
 test('no include defaults to match all files', async () => {
   const isIncluded = await init({
     exclude: [],
@@ -131,10 +144,10 @@ test('files outside project when allowExternal: true', async () => {
   expect(isIncluded(resolve(process.cwd(), '../../package-b/src/two.ts'))).toBe(false)
 })
 
-async function init(options: Partial<CoverageOptions>) {
+async function init(options: Partial<CoverageOptions> & { testInclude?: string[] }) {
   const vitest = await createVitest('test', {
     config: false,
-    include: ['dont-match-anything'],
+    include: ['dont-match-anything', ...(options.testInclude || [])],
     coverage: {
       ...options,
       enabled: true,
@@ -143,7 +156,7 @@ async function init(options: Partial<CoverageOptions>) {
   }, {}, { stdout: new Writable() })
 
   onTestFinished(() => vitest.close())
-  await vitest.init()
+  await vitest.standalone()
 
   const provider = vitest.coverageProvider as unknown as BaseCoverageProvider
 
