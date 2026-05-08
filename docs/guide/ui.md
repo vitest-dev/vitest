@@ -53,19 +53,7 @@ npx vite preview --outDir ./html
 You can configure output with [`outputFile`](/config/outputfile) config option. You need to specify `.html` path there. For example, `./html/index.html` is the default value.
 :::
 
-If you need a portable report that can be opened or shared as one file, configure the HTML reporter with `singleFile: true`:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    reporters: [
-      ['html', { singleFile: true }],
-    ],
-  },
-})
-```
-
-This embeds the UI assets, test metadata, and attachments into `index.html`.
+If you need a portable report that can be opened or shared as one file, see [`singleFile`](/guide/reporters#html-reporter) in the HTML reporter documentation.
 
 ::: tip
 To view the HTML report from CI, for example in GitHub Actions, upload the output directory as an artifact:
@@ -83,7 +71,7 @@ To view the HTML report from CI, for example in GitHub Actions, upload the outpu
 
 This adds a link to the job summary. Click it to open the report in [Vitest Viewer](https://viewer.vitest.dev/) directly in the browser. You can also download the artifact manually and extract it, then run `vite preview` locally as above.
 
-When you use `singleFile: true`, you can upload the report as a single file and it will become viewable directly GitHub artifacts:
+When you use `singleFile: true`, you can upload only `html/index.html`:
 
 ```yaml
 - uses: actions/upload-artifact@v7
