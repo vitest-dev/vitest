@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { activeTraceView, closeTrace, getTraceAttemptLabel } from '~/composables/trace-view'
+import { activeTrace, closeTrace, getTraceAttemptLabel } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
-const trace = computed(() => activeTraceView.value!.trace)
-const test = computed(() => activeTraceView.value!.test)
-const attemptLabel = computed(() => getTraceAttemptLabel(trace.value.data))
+const trace = computed(() => activeTrace.value?.trace)
+const test = computed(() => activeTrace.value?.test)
+const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value.data) : '')
 </script>
 
 <template>
@@ -28,6 +28,7 @@ const attemptLabel = computed(() => getTraceAttemptLabel(trace.value.data))
       />
     </div>
     <TraceView
+      v-if="trace && test"
       :trace="trace"
       :test="test"
     />

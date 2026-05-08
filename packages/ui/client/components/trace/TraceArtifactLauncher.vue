@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
-import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
+import type { BrowserTraceArtifactWithData } from '~/composables/trace-view'
 import { computed } from 'vue'
 import { getTraceAttemptLabel, openTrace } from '~/composables/trace-view'
 
 const props = defineProps<{
-  trace: BrowserTraceArtifact
+  trace: BrowserTraceArtifactWithData
   test: RunnerTestCase
 }>()
 
-const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data as BrowserTraceData))
+const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data))
 </script>
 
 <template>

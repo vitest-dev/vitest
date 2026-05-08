@@ -21,6 +21,7 @@ const entries = computed(() => traceData.value.entries)
 const selectedStepIndex = ref(0)
 const selectedStep = computed(() => entries.value[selectedStepIndex.value])
 watch(() => props.trace, () => {
+  // TODO: preserve step index on stream
   selectedStepIndex.value = 0
 })
 
