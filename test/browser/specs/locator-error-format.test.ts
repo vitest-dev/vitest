@@ -14,7 +14,7 @@ test('locator error format aria', async () => {
   const trees = result.errorTree({ project: true })
   for (const { browser } of instances) {
     const tree = trees[browser]
-    expect(tree).toMatchInlineSnapshot(`
+    expect.soft(tree, browser).toMatchInlineSnapshot(`
       {
         "basic.test.ts": {
           "not found": [
@@ -44,7 +44,7 @@ test('locator error format html', async () => {
   const trees = result.errorTree({ project: true })
   for (const { browser } of instances) {
     const tree = trees[browser]
-    expect(tree).toMatchInlineSnapshot(`
+    expect.soft(tree, browser).toMatchInlineSnapshot(`
       {
         "basic.test.ts": {
           "not found": [
@@ -91,7 +91,7 @@ test('locator error format all', async () => {
   const trees = result.errorTree({ project: true })
   for (const { browser } of instances) {
     const tree = trees[browser]
-    expect(tree).toMatchInlineSnapshot(`
+    expect.soft(tree, browser).toMatchInlineSnapshot(`
       {
         "basic.test.ts": {
           "not found": [
