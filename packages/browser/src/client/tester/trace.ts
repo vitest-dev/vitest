@@ -1,12 +1,17 @@
 import type { Task } from '@vitest/runner'
 import type { SerializedLocator } from './locators'
-import { getBrowserState, now } from '../utils'
+import { getBrowserRpc, getBrowserState, now } from '../utils'
 
 export interface BrowserTraceData {
   retry: number
   repeats: number
+  // TODO: UI can grab config.recordCanvas directly?
   recordCanvas: boolean
   entries: BrowserTraceEntry[]
+  // TODO:
+  // stream same format but with a single entry.
+  // UI should organize streamed entries somehow.
+  stream?: boolean
 }
 
 export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
@@ -98,6 +103,21 @@ export function recordBrowserTraceEntry(
   const traceKey = getTraceStateKey(task.id, repeats, retry)
   state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
   state[traceKey].entries.push(entry)
+
+  // TODO: make it async or fire-and-forget resolved last
+  const dataV2: BrowserTraceData = {
+    retry,
+    repeats,
+    recordCanvas,
+    entries: [entry],
+    stream: true,
+  }
+  getBrowserRpc().triggerCommand<void>(
+    getBrowserState().sessionId,
+    '__vitest_recordBrowserTrace',
+    undefined,
+    [{ testId: task.id, data: dataV2 }],
+  )
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror

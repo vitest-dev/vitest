@@ -389,6 +389,7 @@ export const page: BrowserPage = {
         finally {
           if (hasActiveTraceView) {
             // TODO: support nested trace
+            // TODO: record also at the start
             recordBrowserTraceEntry(currentTest, {
               name,
               kind: 'mark',
