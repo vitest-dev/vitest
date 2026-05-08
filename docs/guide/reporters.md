@@ -534,12 +534,12 @@ export default defineConfig({
 })
 ```
 
-When `singleFile` is enabled, Vitest inlines the report assets, metadata, and test attachments into the generated HTML file. This is useful when you want to upload, download, or share a single report file without preserving the whole `html` output directory.
+When `singleFile` is enabled, Vitest inlines the UI assets, metadata, and test attachments into a single self-contained `index.html`. Coverage HTML reports are not inlined yet, so they remain as separate files. This makes the report easy to share, upload, or download as one artifact instead of preserving the whole `html` output directory.
 
 ::: warning
-`singleFile` can produce a very large `index.html` because UI assets, metadata, and attachments are embedded directly in the file. Large reports can take longer to open in a browser, use more memory, and may hit size limits in artifact viewers or static hosting providers. Also, it currently does not support embedding coverage HTML.
+Because everything is embedded inline, the file can grow very large — slow to open, memory-hungry, and possibly over the size limits of artifact viewers or static hosts.
 
-For large test suites, reports with many/large attachments, or reports that need to include coverage results, keep the default multi-file HTML report and use the whole output directory for upload or static deployment.
+Prefer the default multi-file report when the suite has many or large attachments, or when you need coverage included in the bundle.
 :::
 
 ::: tip
