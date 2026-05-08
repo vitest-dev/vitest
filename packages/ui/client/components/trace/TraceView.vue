@@ -18,12 +18,16 @@ const props = defineProps<{
 const traceData = computed(() => props.trace.data as BrowserTraceData)
 const entries = computed(() => traceData.value.entries)
 
+// preserve step on live update
 const selectedStepIndex = ref(0)
-const selectedStep = computed(() => entries.value[selectedStepIndex.value])
-watch(() => props.trace, () => {
-  // TODO: preserve step index on stream
+watch([
+  () => props.test,
+  () => traceData.value.repeats,
+  () => traceData.value.retry,
+], () => {
   selectedStepIndex.value = 0
 })
+const selectedStep = computed(() => entries.value[selectedStepIndex.value])
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
