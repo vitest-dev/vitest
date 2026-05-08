@@ -70,27 +70,40 @@ test.describe('trace stream', () => {
     await testItem.click()
     await expect(traceView).toBeVisible()
 
-    // partially recorded traces up-to `render-a`
-    const traceSteps = traceView.getByTestId('trace-step-name')
-    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+    const traceSteps = traceView.getByTestId('trace-step')
+    const traceStepNames = traceView.getByTestId('trace-step-name')
+
+    // traces progress up-to `render-a`
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
     ])
 
-    // continue test and record more traces up-to `render-b`
+    // first step is selected by default
+    await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+
+    // progresses up-to `render-b`
     await writeFile(resolve(gatesDir, 'b.txt'), 'open')
-    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
       'render-b',
     ])
 
+    // select next step
+    await traceStepNames.nth(1).click()
+    await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+
     // continue test and record more traces up-to `render-c` and test finishes
     await writeFile(resolve(gatesDir, 'c.txt'), 'open')
-    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
       'render-b',
       'render-c',
       'test finished',
     ])
+
+    // last selected step is preserved as trace progresses
+    await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+
     await runPromise
 
     // re-run and verify trace view is cleared
@@ -99,12 +112,13 @@ test.describe('trace stream', () => {
     const rerunPromise = vitest!.runTestSpecifications(
       await vitest!.globTestSpecifications(),
     )
-    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
     ])
+    await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
     await writeFile(resolve(gatesDir, 'b.txt'), 'open')
     await writeFile(resolve(gatesDir, 'c.txt'), 'open')
-    await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
       'render-b',
       'render-c',

@@ -160,8 +160,10 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           v-for="(step, index) of entries"
           :key="index"
           type="button"
+          data-testid="trace-step"
           class="w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
+          :aria-current="selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
           <div class="flex items-start gap-2">
