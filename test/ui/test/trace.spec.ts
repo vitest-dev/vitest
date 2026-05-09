@@ -173,6 +173,10 @@ async function testBasic(page: Page) {
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // verify closing trace viewer doesn't immediately auto-open it again
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).toBeHidden()
 }
 
 async function testViewport(page: Page) {
@@ -292,5 +296,4 @@ async function testAttempts(page: Page) {
 }
 
 // TODO: more tests
-// - close trace view
 // - switch trace view on test selection
