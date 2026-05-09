@@ -1,5 +1,5 @@
 import type { BrowserTraceArtifact } from '@vitest/runner'
-import type { RunnerTestCase } from 'vitest'
+import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
@@ -19,83 +19,43 @@ export interface BrowserTraceArtifactWithData extends Omit<BrowserTraceArtifact,
   data: BrowserTraceData
 }
 
-interface TraceAttempt {
-  test: RunnerTestCase
-  // TODO: explicitly lift attempt key repeats/retry?
-  key: string
-  // TODO: should be directly BrowserTraceData
-  artifacts: BrowserTraceArtifactWithData[]
-}
-
 export const activeTraceView = ref<ActiveTraceView>()
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-// TODO: ditch final artifact and just use merged stream entries
-function getFinalTraceArtifact(artifacts: BrowserTraceArtifactWithData[]) {
-  for (let i = artifacts.length - 1; i >= 0; i--) {
-    if (!artifacts[i].data.stream) {
-      return artifacts[i]
-    }
-  }
-}
-
-function deriveTraceAttempt(attempt: TraceAttempt): BrowserTraceArtifactWithData | undefined {
-  const finalArtifact = getFinalTraceArtifact(attempt.artifacts)
-  if (finalArtifact) {
-    return finalArtifact
-  }
-
-  const firstArtifact = attempt.artifacts[0]
-  if (!firstArtifact) {
-    return
-  }
-
-  return {
-    ...firstArtifact,
-    data: {
-      ...firstArtifact.data,
-      entries: attempt.artifacts.flatMap(artifact => artifact.data.entries),
-      stream: true,
-    },
-  }
-}
-
-function groupTraceAttempts(test: RunnerTestCase): TraceAttempt[] {
-  const attempts = new Map<string, TraceAttempt>()
-  for (const artifact of test.artifacts) {
+export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, BrowserTraceData> {
+  const attempts: Record<string, BrowserTraceData> = {}
+  for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
       continue
     }
 
     const trace = artifact as BrowserTraceArtifactWithData
     const key = getTraceAttemptKey(trace.data)
-    let attempt = attempts.get(key)
-    if (!attempt) {
-      attempt = {
-        test,
-        key,
-        artifacts: [],
-      }
-      attempts.set(key, attempt)
+    const attempt = attempts[key]
+    if (!attempt || !trace.data.stream) {
+      attempts[key] = trace.data
+      continue
     }
-    attempt.artifacts.push(trace)
+
+    if (attempt.stream) {
+      attempts[key] = {
+        ...attempt,
+        entries: attempt.entries.concat(trace.data.entries),
+      }
+    }
   }
 
-  return Array.from(attempts.values())
+  return attempts
 }
 
 export function getTraceAttempts(test: RunnerTestCase): BrowserTraceArtifactWithData[] {
-  return groupTraceAttempts(test)
-    .map(attempt => deriveTraceAttempt(attempt))
-    .filter((trace): trace is BrowserTraceArtifactWithData => !!trace)
-}
-
-function resolveActiveTrace(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>) {
-  const attempt = groupTraceAttempts(active.test).find(attempt => attempt.key === active.attemptKey)
-  return attempt && deriveTraceAttempt(attempt)
+  return Object.values(getTraceAttemptMap(test.artifacts)).map(data => ({
+    type: 'internal:browserTrace',
+    data,
+  }))
 }
 
 export function openTrace(trace: BrowserTraceArtifactWithData, test: RunnerTestCase) {
@@ -143,7 +103,15 @@ watchEffect(() => {
     return
   }
 
-  const trace = resolveActiveTrace(active)
+  let trace: BrowserTraceArtifactWithData | undefined
+  const data = getTraceAttemptMap(active.test.artifacts)[active.attemptKey]
+  if (data) {
+    trace = {
+      type: 'internal:browserTrace',
+      data,
+    }
+  }
+
   if (
     trace?.data.entries.length !== active.trace?.data.entries.length
     || trace?.data.stream !== active.trace?.data.stream
