@@ -103,6 +103,12 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 
 function getStepButtonClass(step: BrowserTraceEntry, index: number) {
   const selected = selectedStepIndex.value === index
+  // TODO: move trace step state colors to shared semantic UI shortcuts.
+  if (isTraceStepInProgress(step)) {
+    return selected
+      ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
+      : 'text-yellow-700 hover:bg-yellow-500/10 dark:text-yellow-400'
+  }
   if (step.status === 'fail') {
     return selected
       ? 'bg-red-500/20 text-red-600 dark:text-red-400'
@@ -118,6 +124,10 @@ function formatTraceTime(ms: number) {
 }
 
 function formatTraceTiming(step: BrowserTraceEntry) {
+  if (isTraceStepInProgress(step)) {
+    return 'running'
+  }
+
   const startTime = `+${formatTraceTime(step.startTime)}`
   return step.duration == null
     ? startTime
@@ -146,6 +156,10 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
   }
   return 'bg-gray-400/80 dark:bg-gray-500/80'
 }
+
+function isTraceStepInProgress(step: BrowserTraceEntry) {
+  return step.range?.phase === 'start'
+}
 </script>
 
 <template>
@@ -165,10 +179,17 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           @click="onSelectStep(index)"
         >
           <div class="flex items-start gap-2">
-            <span
-              class="mt-1.5 h-2 w-2 rounded-full flex-shrink-0"
-              :class="getStepMarkerClass(step)"
-            />
+            <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
+              <span
+                v-if="isTraceStepInProgress(step)"
+                class="h-3 w-3 animate-spin rounded-full border border-yellow-500 border-t-transparent"
+              />
+              <span
+                v-else
+                class="h-2 w-2 rounded-full"
+                :class="getStepMarkerClass(step)"
+              />
+            </span>
             <div class="min-w-0 flex-1">
               <div truncate data-testid="trace-step-name">
                 {{ formatStepName(step) }}
