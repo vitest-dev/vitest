@@ -175,8 +175,8 @@ export class CommandsManager {
         const element = typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined
         if (hasActiveTraceView) {
           // Covers provider-backed actionability/waiting after command dispatch.
-          // Local pre-command resolution, such as serializeElement/findElement paths,
-          // needs its own range if it should appear in trace view.
+          // Local pre-command resolution, such as serializeElement/findElement paths
+          // is not coverd within by this action trace range.
           await recordBrowserTraceEntry(currentTest, {
             name: actionTraceGroupName,
             kind: 'action',
