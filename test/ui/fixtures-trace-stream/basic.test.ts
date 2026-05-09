@@ -1,24 +1,6 @@
-import { test, vi } from 'vitest'
-import { commands, page } from 'vitest/browser'
-
-// use file system command to communicate with e2e
-// to assert trace view is updated incrementally
-async function waitForGate(name: string) {
-  if (!(import.meta as any).env.TEST_GATE_FILE) {
-    await new Promise(r => setTimeout(r, 2000))
-    return
-  }
-  const gatePath = `./node_modules/.vitest-e2e/${name}.txt`
-  await vi.waitUntil(async () => {
-    try {
-      const content = await commands.readFile(gatePath)
-      return content.includes('open')
-    }
-    catch {
-      return false
-    }
-  }, { timeout: 10000 })
-}
+import { test } from 'vitest'
+import { page } from 'vitest/browser'
+import { waitForGate } from './helper'
 
 test('simple', async () => {
   document.body.innerHTML = '<button>A</button>'
