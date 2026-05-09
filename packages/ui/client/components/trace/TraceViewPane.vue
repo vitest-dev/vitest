@@ -34,7 +34,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       />
     </div>
     <TraceView
-      v-if="trace && test"
+      v-if="trace"
       :trace="trace"
       :test="test"
     />

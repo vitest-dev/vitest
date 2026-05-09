@@ -8,9 +8,6 @@ import { expect, test } from '@playwright/test'
 import { resolve } from 'pathe'
 import { startVitest } from 'vitest/node'
 
-// TODO:
-// - trace range (action, expect.element, functional mark)
-
 test.describe('trace stream', () => {
   let vitest: Vitest | undefined
   let baseURL: string

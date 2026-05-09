@@ -5,7 +5,7 @@ import { getBrowserRpc, getBrowserState, now } from '../utils'
 export interface BrowserTraceData {
   retry: number
   repeats: number
-  // TODO: UI can grab config.recordCanvas directly?
+  // UI has access to original config but let artifact own this
   recordCanvas: boolean
   // Each artifact currently carries one entry; the UI merges entries by attempt.
   // TODO: revisit whether this should be modeled as a single entry.

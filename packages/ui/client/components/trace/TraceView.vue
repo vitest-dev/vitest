@@ -7,8 +7,6 @@ import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
 
-// TODO: component test to demo trace view inside trace view
-
 const props = defineProps<{
   trace: BrowserTraceData
   test: RunnerTestCase
