@@ -98,6 +98,8 @@ export async function recordBrowserTraceEntry(
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
+  // TODO: fire-and-forget artifact recording and
+  // only await pending promise on test run end?
   const data: BrowserTraceData = {
     retry,
     repeats,
