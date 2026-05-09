@@ -34,17 +34,3 @@ test('simple', async () => {
   document.body.innerHTML += '<button>C</button>'
   await page.getByRole('button', { name: 'C' }).mark('render-c')
 })
-
-// TODO: test in-progress state
-// test.only('in-progress', async () => {
-//   document.body.innerHTML = '<button>A</button>'
-//   await page.getByRole('button', { name: 'B' }).click({ timeout: 2000 }).catch(() => {})
-//   await page.getByRole('button', { name: 'C' }).click({ timeout: 2000 }).catch(() => {})
-// })
-
-// TODO: test in-progress state
-// test.only('in-progress', async () => {
-//   document.body.innerHTML = '<button>A</button>'
-//   await expect.element(page.getByRole('button'), { timeout: 2000 }).toHaveTextContent('B').catch(() => {})
-//   await expect.element(page.getByRole('button'), { timeout: 2000 }).toHaveTextContent('C').catch(() => {})
-// })

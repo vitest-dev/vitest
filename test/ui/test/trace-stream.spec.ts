@@ -58,7 +58,7 @@ test.describe('trace stream', () => {
     await page.goto(baseURL)
 
     const runPromise = vitest!.runTestSpecifications(
-      await vitest!.globTestSpecifications(),
+      await vitest!.globTestSpecifications(['basic.test.ts']),
     )
 
     const testItem = getExplorerItem(page, 'simple')
@@ -108,7 +108,7 @@ test.describe('trace stream', () => {
     await rm(gatesDir, { recursive: true, force: true })
     await mkdir(gatesDir, { recursive: true })
     const rerunPromise = vitest!.runTestSpecifications(
-      await vitest!.globTestSpecifications(),
+      await vitest!.globTestSpecifications(['basic.test.ts']),
     )
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
