@@ -173,6 +173,7 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
           :key="index"
           type="button"
           data-testid="trace-step"
+          :data-test-range="step.range?.phase"
           class="w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
           :aria-current="selectedStepIndex === index ? 'step' : undefined"

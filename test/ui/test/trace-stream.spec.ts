@@ -57,6 +57,7 @@ test.describe('trace stream', () => {
   test('basic', async ({ page }) => {
     await page.goto(baseURL)
 
+    // start test
     const runPromise = vitest!.runTestSpecifications(
       await vitest!.globTestSpecifications(['basic.test.ts']),
     )
@@ -123,6 +124,53 @@ test.describe('trace stream', () => {
       'test finished',
     ])
     await rerunPromise
+  })
+
+  test('expect.element range', async ({ page }) => {
+    await page.goto(baseURL)
+
+    // start test
+    const runPromise = vitest!.runTestSpecifications(
+      await vitest!.globTestSpecifications(['range.test.ts']),
+    )
+
+    const testItem = getExplorerItem(page, 'expect')
+    await expect(testItem).toBeVisible()
+
+    const traceView = page.getByTestId('trace-view')
+    await expect(traceView).not.toBeVisible()
+    await testItem.click()
+    await expect(traceView).toBeVisible()
+
+    const traceSteps = traceView.getByTestId('trace-step')
+    const traceStepNames = traceView.getByTestId('trace-step-name')
+
+    // first expect.element range is shown as in-progress
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'toHaveTextContent',
+    ])
+    await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
+
+    // completing the first gate resolves the first range
+    await writeFile(resolve(gatesDir, 'expect-b.txt'), 'open')
+    await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'end')
+
+    // next expect.element range starts while polling continues
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'toHaveTextContent',
+      'toHaveAttribute',
+    ])
+    await expect(traceSteps.nth(1)).toHaveAttribute('data-test-range', 'start')
+
+    // completing the final gate records the end marker and test result
+    await writeFile(resolve(gatesDir, 'expect-c.txt'), 'open')
+    await runPromise
+
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'toHaveTextContent',
+      'toHaveAttribute',
+      'test finished',
+    ])
   })
 })
 
