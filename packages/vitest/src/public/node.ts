@@ -70,6 +70,7 @@ export type {
   ReportedHookContext,
   Reporter,
   TestRunEndReason,
+  UserConsoleLog,
 } from '../node/reporters'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'

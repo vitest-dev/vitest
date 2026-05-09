@@ -1,4 +1,5 @@
 import type { Reporter, TestRunEndReason } from '../types/reporter'
+import type { UserConsoleLog } from '../types/general'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
@@ -33,7 +34,7 @@ export {
   TreeReporter,
   VerboseReporter,
 }
-export type { BaseReporter, Reporter, TestRunEndReason }
+export type { BaseReporter, Reporter, TestRunEndReason, UserConsoleLog }
 
 export type { BenchmarkBuiltinReporters } from './benchmark'
 export {
