@@ -78,7 +78,7 @@ export interface BrowserTraceAttempt {
 }
 
 export function createBrowserTraceRangeId(): string {
-  return Math.random().toString(36).slice(2)
+  return crypto.randomUUID()
 }
 
 export async function recordBrowserTraceEntry(
