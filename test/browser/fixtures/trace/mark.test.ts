@@ -35,3 +35,10 @@ test('mark function', async () => {
     document.body.innerHTML = '<button>Hello</button>'
   })
 })
+
+test('mark function fail', async () => {
+  await page.mark('failed render group', async () => {
+    document.body.innerHTML = '<button>Hello</button>'
+    throw new Error('Mark failure')
+  })
+})
