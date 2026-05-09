@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import type { RunnerTestCase } from 'vitest'
 import { computed } from 'vue'
-import { getTraceAttempts } from '~/composables/trace-view'
-import TraceArtifactLauncher from './TraceArtifactLauncher.vue'
+import { getTraceAttemptLabel, getTraceAttemptMap, openTrace } from '~/composables/trace-view'
 
 const props = defineProps<{
   test: RunnerTestCase
 }>()
 
-const traces = computed(() => getTraceAttempts(props.test))
+const traces = computed(() => {
+  const traceMap = getTraceAttemptMap(props.test.artifacts)
+  return Object.values(traceMap).map(trace => ({
+    trace,
+    label: getTraceAttemptLabel(trace),
+  }))
+})
 </script>
 
 <template>
@@ -17,7 +22,7 @@ const traces = computed(() => getTraceAttempts(props.test))
       Trace View
     </h1>
     <div
-      v-for="trace of traces"
+      v-for="{ trace, label } of traces"
       :key="`${trace.repeats}:${trace.retry}`"
       bg="yellow-500/10"
       text="yellow-500 sm"
@@ -26,7 +31,18 @@ const traces = computed(() => getTraceAttempts(props.test))
       rounded
       role="note"
     >
-      <TraceArtifactLauncher :trace="trace" :test="test" />
+      <button
+        data-testid="trace-open-button"
+        type="button"
+        class="flex items-center gap-2 rounded px-2 py-1 hover:bg-yellow-500/10"
+        @click="openTrace(trace, test)"
+      >
+        <span class="i-carbon:play-outline block" />
+        Open trace viewer
+        <span v-if="label" class="text-xs opacity-70">
+          {{ label }}
+        </span>
+      </button>
     </div>
   </template>
 </template>
