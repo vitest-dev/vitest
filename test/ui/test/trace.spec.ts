@@ -145,7 +145,7 @@ test.describe('html reporter', () => {
 })
 
 async function testReady(page: Page) {
-  const count = 10
+  const count = 11
   await expect.soft(page.getByTestId('tests-entry'))
     .toContainText(`${count} Pass 0 Fail ${count} Total`)
 }
@@ -173,6 +173,11 @@ async function testBasic(page: Page) {
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // verify selecting another test switches trace viewer
+  await openExplorerItem(page, 'switch-target')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
 
   // verify closing trace viewer doesn't immediately auto-open it again
   await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
@@ -294,6 +299,3 @@ async function testAttempts(page: Page) {
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 }
-
-// TODO: more tests
-// - switch trace view on test selection
