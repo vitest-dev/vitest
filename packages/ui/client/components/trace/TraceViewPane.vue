@@ -34,7 +34,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
       :test="test"
     />
     <div v-else class="text-sm opacity-50 p-4">
-      No trace step selected.
+      No trace found
     </div>
   </div>
 </template>

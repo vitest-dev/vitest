@@ -199,7 +199,7 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
         <div v-else class="text-sm opacity-50 p-4">
-          No trace step selected.
+          No trace step found
         </div>
       </div>
     </Pane>
