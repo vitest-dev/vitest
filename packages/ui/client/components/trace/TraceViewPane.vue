@@ -2,19 +2,14 @@
 import type { TraceSelection } from '~/composables/trace-view'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
-import { closeTrace, getTraceAttemptLabel, getTraceAttemptMap } from '~/composables/trace-view'
+import { closeTrace, getSelectedTrace, getTraceAttemptLabel } from '~/composables/trace-view'
 import TraceView from './TraceView.vue'
 
 const props = defineProps<{
   selection: TraceSelection
 }>()
 
-const trace = computed(() => {
-  const attempts = getTraceAttemptMap(props.selection.test.artifacts)
-  return props.selection.attemptKey
-    ? attempts[props.selection.attemptKey]
-    : Object.values(attempts)[0]
-})
+const trace = computed(() => getSelectedTrace(props.selection))
 const test = computed(() => props.selection.test)
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
 </script>

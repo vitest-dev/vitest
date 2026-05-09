@@ -44,6 +44,13 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
   return attempts
 }
 
+export function getSelectedTrace(selection: TraceSelection): BrowserTraceData | undefined {
+  const attempts = getTraceAttemptMap(selection.test.artifacts)
+  return selection.attemptKey
+    ? attempts[selection.attemptKey]
+    : Object.values(attempts)[0]
+}
+
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
