@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { RunnerTestCase } from 'vitest'
-import { useTraceAttempts } from '~/composables/trace-view'
+import { computed } from 'vue'
+import { getTraceAttempts } from '~/composables/trace-view'
 import TraceArtifactLauncher from './TraceArtifactLauncher.vue'
 
 const props = defineProps<{
   test: RunnerTestCase
 }>()
 
-const traces = useTraceAttempts(() => props.test)
+const traces = computed(() => getTraceAttempts(props.test))
 </script>
 
 <template>

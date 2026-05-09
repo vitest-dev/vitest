@@ -1,7 +1,7 @@
 import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
@@ -91,13 +91,6 @@ export function getTraceAttempts(test: RunnerTestCase): BrowserTraceArtifactWith
   return groupTraceAttempts(test)
     .map(attempt => deriveTraceAttempt(attempt))
     .filter((trace): trace is BrowserTraceArtifactWithData => !!trace)
-}
-
-export function useTraceAttempts(test: () => RunnerTestCase | undefined) {
-  return computed(() => {
-    const resolved = test()
-    return resolved ? getTraceAttempts(resolved) : []
-  })
 }
 
 function resolveActiveTrace(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>) {
