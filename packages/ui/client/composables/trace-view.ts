@@ -7,13 +7,12 @@ import { selectedTest } from './params'
 
 // TODO: review slop
 
-export interface ActiveTraceView {
+export interface TraceSelection {
   test: RunnerTestCase
   attemptKey: string
-  trace?: BrowserTraceData
 }
 
-export const activeTraceView = ref<ActiveTraceView>()
+export const activeTraceView = ref<TraceSelection>()
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
@@ -45,16 +44,11 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
   return attempts
 }
 
-export function getTraceAttempts(test: RunnerTestCase): BrowserTraceData[] {
-  return Object.values(getTraceAttemptMap(test.artifacts))
-}
-
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
     test,
     attemptKey: getTraceAttemptKey(trace),
-    trace,
   }
 }
 
@@ -81,28 +75,7 @@ watchEffect(() => {
   if (test?.type === 'test' && active.test !== test) {
     activeTraceView.value = {
       test,
-      // TODO: make it optional to pick first?
-      attemptKey: '0:0',
-    }
-  }
-})
-
-// Refresh derived trace data as new stream artifacts are appended to the active test.
-watchEffect(() => {
-  const active = activeTraceView.value
-  if (!active) {
-    return
-  }
-
-  const trace = getTraceAttemptMap(active.test.artifacts)[active.attemptKey]
-
-  if (
-    trace?.entries.length !== active.trace?.entries.length
-    || trace?.stream !== active.trace?.stream
-  ) {
-    activeTraceView.value = {
-      ...active,
-      trace,
+      attemptKey: active.attemptKey,
     }
   }
 })
