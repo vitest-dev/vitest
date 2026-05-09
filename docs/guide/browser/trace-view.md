@@ -102,6 +102,8 @@ Trace entries are recorded automatically for:
 
 Each entry captures the DOM state at that point, along with timing information, the selector, and the source location that triggered it.
 
+In Vitest UI, trace entries are streamed as the test runs, so you can inspect recorded steps before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries appear as in-progress steps first, then update with their final status and duration.
+
 Element highlighting is best-effort. Some provider-specific selectors, shadow DOM selectors, or elements that are not present in the captured snapshot may not be highlighted.
 
 ## Custom Trace Entries
