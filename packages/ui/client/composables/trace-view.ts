@@ -5,8 +5,6 @@ import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
-// TODO: slop
-
 export interface TraceSelection {
   test: RunnerTestCase
   attemptKey?: string
