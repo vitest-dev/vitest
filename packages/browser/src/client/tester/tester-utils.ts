@@ -3,7 +3,7 @@ import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
-import { recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -171,6 +171,18 @@ export class CommandsManager {
         }
         let status: BrowserTraceEntryStatus = 'pass'
         const startTime = now()
+        const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+        const element = typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined
+        if (hasActiveTraceView) {
+          await recordBrowserTraceEntry(currentTest, {
+            name: actionTraceGroupName,
+            kind: 'action',
+            range: { id: traceRangeId!, phase: 'start' },
+            startTime,
+            element,
+            stack: clientError.stack,
+          })
+        }
         try {
           return await rpc.triggerCommand<T>(sessionId, command, filepath, args)
         }
@@ -184,14 +196,14 @@ export class CommandsManager {
         }
         finally {
           if (hasActiveTraceView) {
-            // TODO: record also at the start
             await recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
               kind: 'action',
+              range: { id: traceRangeId!, phase: 'end' },
               status,
               startTime,
               duration: now() - startTime,
-              element: typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined,
+              element,
               stack: clientError.stack,
             })
           }

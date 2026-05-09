@@ -1,9 +1,11 @@
 import type { RunnerTestCase, TestArtifact } from 'vitest'
-import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
+import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
+
+// TODO: slop
 
 export interface TraceSelection {
   test: RunnerTestCase
@@ -16,6 +18,42 @@ function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
+function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry[] {
+  const merged: BrowserTraceEntry[] = []
+  const ranges = new Map<string, number>()
+
+  for (const entry of entries) {
+    const range = entry.range
+    if (!range) {
+      merged.push(entry)
+      continue
+    }
+
+    if (range.phase === 'start') {
+      ranges.set(range.id, merged.length)
+      merged.push(entry)
+      continue
+    }
+
+    const index = ranges.get(range.id)
+    if (index == null) {
+      merged.push(entry)
+      continue
+    }
+
+    const start = merged[index]
+    // Keep completed ranges at the start position; nested entries remain
+    // visible after the parent range until the UI models nested trace groups.
+    merged[index] = {
+      ...start,
+      ...entry,
+      startTime: start.startTime,
+    }
+  }
+
+  return merged
+}
+
 export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, BrowserTraceData> {
   const attempts: Record<string, BrowserTraceData> = {}
   for (const artifact of artifacts) {
@@ -26,14 +64,16 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
     const trace = artifact.data as BrowserTraceData
     const key = getTraceAttemptKey(trace)
     const attempt = attempts[key]
-    if (!attempt) {
-      attempts[key] = trace
-      continue
-    }
-
     attempts[key] = {
-      ...attempt,
-      entries: attempt.entries.concat(trace.entries),
+      ...(attempt ?? trace),
+      entries: attempt ? attempt.entries.concat(trace.entries) : trace.entries,
+    }
+  }
+
+  for (const key in attempts) {
+    attempts[key] = {
+      ...attempts[key],
+      entries: mergeTraceRangeEntries(attempts[key].entries),
     }
   }
 

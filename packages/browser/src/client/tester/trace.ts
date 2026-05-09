@@ -14,11 +14,18 @@ export interface BrowserTraceData {
 
 export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
+export type BrowserTraceEntryRangePhase = 'start' | 'end'
 export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+
+export interface BrowserTraceEntryRange {
+  id: string
+  phase: BrowserTraceEntryRangePhase
+}
 
 export interface BrowserTraceEntry {
   name: string
   kind: BrowserTraceEntryKind
+  range?: BrowserTraceEntryRange
   status?: BrowserTraceEntryStatus
   startTime: number
   duration?: number
@@ -68,6 +75,10 @@ export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
+}
+
+export function createBrowserTraceRangeId(): string {
+  return Math.random().toString(36).slice(2)
 }
 
 export async function recordBrowserTraceEntry(
