@@ -92,19 +92,17 @@ test.describe('trace stream', () => {
     await traceStepNames.nth(1).click()
     await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
 
-    // continue test and record more traces up-to `render-c` and test finishes
+    // continue test and wait for finishes
     await writeFile(resolve(gatesDir, 'c.txt'), 'open')
+    await runPromise
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
       'render-a',
       'render-b',
       'render-c',
       'test finished',
     ])
-
-    // last selected step is preserved as trace progresses
+    // last selected step is preserved
     await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
-
-    await runPromise
 
     // re-run and verify trace view is cleared
     await rm(gatesDir, { recursive: true, force: true })
