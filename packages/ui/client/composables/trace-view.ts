@@ -98,13 +98,6 @@ function resolveActiveTrace(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>
   return attempt && deriveTraceAttempt(attempt)
 }
 
-function updateActiveTraceView(active: Pick<ActiveTraceView, 'test' | 'attemptKey'>) {
-  activeTraceView.value = {
-    ...active,
-    trace: resolveActiveTrace(active),
-  }
-}
-
 export function openTrace(trace: BrowserTraceArtifactWithData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
@@ -135,11 +128,11 @@ watchEffect(() => {
 
   const test = client.state.idMap.get(testId)
   if (test?.type === 'test' && active.test !== test) {
-    updateActiveTraceView({
+    activeTraceView.value = {
       test,
       // TODO: make it optional to pick first?
       attemptKey: '0:0',
-    })
+    }
   }
 })
 
