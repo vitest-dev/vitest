@@ -5,8 +5,6 @@ import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
 
-// TODO: review slop
-
 export interface TraceSelection {
   test: RunnerTestCase
   attemptKey?: string
@@ -28,16 +26,14 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
     const trace = artifact.data as BrowserTraceData
     const key = getTraceAttemptKey(trace)
     const attempt = attempts[key]
-    if (!attempt || !trace.stream) {
+    if (!attempt) {
       attempts[key] = trace
       continue
     }
 
-    if (attempt.stream) {
-      attempts[key] = {
-        ...attempt,
-        entries: attempt.entries.concat(trace.entries),
-      }
+    attempts[key] = {
+      ...attempt,
+      entries: attempt.entries.concat(trace.entries),
     }
   }
 

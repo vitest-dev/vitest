@@ -7,11 +7,9 @@ export interface BrowserTraceData {
   repeats: number
   // TODO: UI can grab config.recordCanvas directly?
   recordCanvas: boolean
+  // Each artifact currently carries one entry; the UI merges entries by attempt.
+  // TODO: revisit whether this should be modeled as a single entry.
   entries: BrowserTraceEntry[]
-  // TODO:
-  // stream same format but with a single entry.
-  // UI should organize streamed entries somehow.
-  stream?: boolean
 }
 
 export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
@@ -66,23 +64,12 @@ const PSEUDO_CLASS_NAMES = [
 ] as const
 type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
-export type BrowserTraceState = Record<string, BrowserTraceData>
-
 export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
 }
 
-function getBrowserTraceState(): BrowserTraceState {
-  return getBrowserState().browserTraceState ??= {}
-}
-
-function getTraceStateKey(testId: string, repeats: number, retry: number) {
-  return `${testId}:${repeats}:${retry}`
-}
-
-// TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
 export async function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
@@ -99,23 +86,18 @@ export async function recordBrowserTraceEntry(
   }
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(task.id, repeats, retry)
-  state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
-  state[traceKey].entries.push(entry)
 
-  const dataV2: BrowserTraceData = {
+  const data: BrowserTraceData = {
     retry,
     repeats,
     recordCanvas,
     entries: [entry],
-    stream: true,
   }
   await getBrowserRpc().triggerCommand<void>(
     getBrowserState().sessionId,
     '__vitest_recordBrowserTrace',
     undefined,
-    [{ testId: task.id, data: dataV2 }],
+    [{ testId: task.id, data }],
   )
 }
 
@@ -179,14 +161,4 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
     }
   }
   return result
-}
-
-export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(testId, repeats, retry)
-  const result = state[traceKey]
-  if (result) {
-    delete state[traceKey]
-    return result
-  }
 }

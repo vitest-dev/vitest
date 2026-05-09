@@ -29,7 +29,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { getBrowserTrace, recordBrowserTraceEntry } from './trace'
+import { recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -84,6 +84,7 @@ export function createBrowserRunner(
       const shouldTrace = trace !== 'off'
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
+      // TODO: model trace-view retention like Playwright, e.g. retain-on-failure.
       const shouldTraceView = this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
@@ -129,14 +130,6 @@ export function createBrowserRunner(
           ...(status === 'pass' || status === 'fail' ? { status } : {}),
           ...(stack ? { stack } : location ? { location } : {}),
         })
-        // TODO: model the same retention mechanism as playwright e.g. retain-on-failure
-        const traceData = getBrowserTrace(test.id, repeats, retry)
-        if (traceData) {
-          await this.commands.triggerCommand(
-            '__vitest_recordBrowserTrace',
-            [{ testId: test.id, data: traceData }],
-          )
-        }
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
