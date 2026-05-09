@@ -64,6 +64,10 @@ test.describe('ui', () => {
   test('scroll', async ({ page }) => {
     await testScroll(page)
   })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -133,6 +137,10 @@ test.describe('html reporter', () => {
 
   test('scroll', async ({ page }) => {
     await testScroll(page)
+  })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
   })
 })
 
@@ -254,3 +262,35 @@ async function testScroll(page: Page) {
   await expect(traceFrame.getByText('(0, 0)')).not.toBeInViewport()
   await expect(traceFrame.getByText('(300, 300)')).toBeInViewport()
 }
+
+async function testAttempts(page: Page) {
+  await openExplorerItem(page, 'retried test')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  await expect(traceView).toBeVisible()
+
+  const traceOpenButtons = page.getByTestId('trace-open-button')
+  await expect(traceOpenButtons).toHaveText([
+    'Open trace viewer',
+    'Open trace viewer Retry 1',
+    'Open trace viewer Retry 2',
+  ])
+
+  await traceOpenButtons.nth(0).click()
+  await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(1).click()
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(2).click()
+  await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+// TODO: more tests
+// - close trace view
+// - switch trace view on test selection

@@ -14,6 +14,7 @@ const attemptLabel = computed(() => getTraceAttemptLabel(props.trace.data))
 
 <template>
   <button
+    data-testid="trace-open-button"
     type="button"
     class="flex items-center gap-2 rounded px-2 py-1 hover:bg-yellow-500/10"
     @click="openTrace(trace, test)"

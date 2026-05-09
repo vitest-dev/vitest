@@ -2,8 +2,6 @@ import type { TestContext } from 'vitest'
 import { test, vi } from 'vitest'
 import { page } from 'vitest/browser'
 
-// TODO: test retry/repeat attempt selection
-
 const renderContext = vi.defineHelper(async (context: TestContext) => {
   const result = context.task.result
   const content = `
