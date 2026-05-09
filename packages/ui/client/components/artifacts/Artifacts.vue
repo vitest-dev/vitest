@@ -20,6 +20,7 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   for (const artifact of test.artifacts) {
     switch (artifact.type) {
       case 'internal:browserTrace': {
+        // handled by <TraceArtifacts />
         continue
       }
       case 'internal:toMatchScreenshot': {
