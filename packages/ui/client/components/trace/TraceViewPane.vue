@@ -6,7 +6,7 @@ import TraceView from './TraceView.vue'
 
 const trace = computed(() => activeTraceView.value?.trace)
 const test = computed(() => activeTraceView.value?.test)
-const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value.data) : '')
+const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
 </script>
 
 <template>

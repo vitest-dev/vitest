@@ -18,7 +18,7 @@ const traces = computed(() => getTraceAttempts(props.test))
     </h1>
     <div
       v-for="trace of traces"
-      :key="`${trace.data.repeats}:${trace.data.retry}`"
+      :key="`${trace.repeats}:${trace.retry}`"
       bg="yellow-500/10"
       text="yellow-500 sm"
       p="x3 y2"

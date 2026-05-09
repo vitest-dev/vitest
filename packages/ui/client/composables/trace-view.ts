@@ -1,4 +1,3 @@
-import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
@@ -11,12 +10,7 @@ import { selectedTest } from './params'
 export interface ActiveTraceView {
   test: RunnerTestCase
   attemptKey: string
-  trace?: BrowserTraceArtifactWithData
-}
-
-export interface BrowserTraceArtifactWithData extends Omit<BrowserTraceArtifact, 'data'> {
-  // fill up actual data type since runner-level BrowserTraceArtifact has `unknown`
-  data: BrowserTraceData
+  trace?: BrowserTraceData
 }
 
 export const activeTraceView = ref<ActiveTraceView>()
@@ -32,18 +26,18 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
       continue
     }
 
-    const trace = artifact as BrowserTraceArtifactWithData
-    const key = getTraceAttemptKey(trace.data)
+    const trace = artifact.data as BrowserTraceData
+    const key = getTraceAttemptKey(trace)
     const attempt = attempts[key]
-    if (!attempt || !trace.data.stream) {
-      attempts[key] = trace.data
+    if (!attempt || !trace.stream) {
+      attempts[key] = trace
       continue
     }
 
     if (attempt.stream) {
       attempts[key] = {
         ...attempt,
-        entries: attempt.entries.concat(trace.data.entries),
+        entries: attempt.entries.concat(trace.entries),
       }
     }
   }
@@ -51,18 +45,15 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
   return attempts
 }
 
-export function getTraceAttempts(test: RunnerTestCase): BrowserTraceArtifactWithData[] {
-  return Object.values(getTraceAttemptMap(test.artifacts)).map(data => ({
-    type: 'internal:browserTrace',
-    data,
-  }))
+export function getTraceAttempts(test: RunnerTestCase): BrowserTraceData[] {
+  return Object.values(getTraceAttemptMap(test.artifacts))
 }
 
-export function openTrace(trace: BrowserTraceArtifactWithData, test: RunnerTestCase) {
+export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
     test,
-    attemptKey: getTraceAttemptKey(trace.data),
+    attemptKey: getTraceAttemptKey(trace),
     trace,
   }
 }
@@ -103,18 +94,11 @@ watchEffect(() => {
     return
   }
 
-  let trace: BrowserTraceArtifactWithData | undefined
-  const data = getTraceAttemptMap(active.test.artifacts)[active.attemptKey]
-  if (data) {
-    trace = {
-      type: 'internal:browserTrace',
-      data,
-    }
-  }
+  const trace = getTraceAttemptMap(active.test.artifacts)[active.attemptKey]
 
   if (
-    trace?.data.entries.length !== active.trace?.data.entries.length
-    || trace?.data.stream !== active.trace?.data.stream
+    trace?.entries.length !== active.trace?.entries.length
+    || trace?.stream !== active.trace?.stream
   ) {
     activeTraceView.value = {
       ...active,

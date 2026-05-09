@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { BrowserTraceArtifact } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
@@ -11,19 +10,18 @@ import { openLocation } from '~/composables/location'
 // TODO: component test to demo trace view inside trace view
 
 const props = defineProps<{
-  trace: BrowserTraceArtifact
+  trace: BrowserTraceData
   test: RunnerTestCase
 }>()
 
-const traceData = computed(() => props.trace.data as BrowserTraceData)
-const entries = computed(() => traceData.value.entries)
+const entries = computed(() => props.trace.entries)
 
 // preserve step on live update
 const selectedStepIndex = ref(0)
 watch([
   () => props.test,
-  () => traceData.value.repeats,
-  () => traceData.value.retry,
+  () => props.trace.repeats,
+  () => props.trace.retry,
 ], () => {
   selectedStepIndex.value = 0
 })
@@ -33,7 +31,7 @@ const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
-  return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
+  return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
 function onSelectStep(index: number) {
