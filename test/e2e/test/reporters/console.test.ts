@@ -92,3 +92,26 @@ test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
     },
   ])
 })
+
+test.for(['forks', 'threads'])('separate stdout/stderr timestamps (pool = %s)', async (pool) => {
+  const logs: UserConsoleLog[] = []
+  const { stderr } = await runVitest({
+    root: './fixtures/reporters',
+    pool,
+    reporters: [
+      {
+        onUserConsoleLog(log) {
+          logs.push(log)
+        },
+      } satisfies Reporter,
+    ],
+  }, [resolve('./fixtures/reporters/console-time.test.ts')])
+  expect(stderr).toBe('')
+
+  const stdout = logs.find(log => log.type === 'stdout' && log.content.includes('foo'))
+  const stderrLog = logs.find(log => log.type === 'stderr' && log.content.includes('bar'))
+
+  expect(stdout).toBeDefined()
+  expect(stderrLog).toBeDefined()
+  expect(stderrLog!.time).toBeGreaterThan(stdout!.time)
+})
