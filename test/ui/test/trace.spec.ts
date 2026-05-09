@@ -137,7 +137,7 @@ test.describe('html reporter', () => {
 })
 
 async function testReady(page: Page) {
-  const count = 6
+  const count = 10
   await expect.soft(page.getByTestId('tests-entry'))
     .toContainText(`${count} Pass 0 Fail ${count} Total`)
 }
