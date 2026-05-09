@@ -7,7 +7,8 @@ export type ScreenshotMatcherArguments<
   testName: string,
   options: ScreenshotMatcherOptions<ComparatorName>
     & {
-      element: SerializedLocator
+      element?: SerializedLocator
+      target?: 'element' | 'page'
       screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly SerializedLocator[] }
     },
 ]
