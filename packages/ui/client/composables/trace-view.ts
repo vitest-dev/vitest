@@ -137,7 +137,8 @@ watchEffect(() => {
   if (test?.type === 'test' && active.test !== test) {
     updateActiveTraceView({
       test,
-      attemptKey: active.attemptKey,
+      // TODO: make it optional to pick first?
+      attemptKey: '0:0',
     })
   }
 })
