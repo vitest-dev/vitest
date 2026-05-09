@@ -20,7 +20,7 @@ function getTraceAttemptKey(trace: BrowserTraceData): string {
 
 function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry[] {
   const merged: BrowserTraceEntry[] = []
-  const ranges = new Map<string, number>()
+  const startMap = new Map<string, number>()
 
   for (const entry of entries) {
     const range = entry.range
@@ -30,20 +30,21 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry
     }
 
     if (range.phase === 'start') {
-      ranges.set(range.id, merged.length)
+      startMap.set(range.id, merged.length)
       merged.push(entry)
       continue
     }
 
-    const index = ranges.get(range.id)
+    const index = startMap.get(range.id)
     if (index == null) {
+      // unpaired range shouldn't happen but just leave it there
       merged.push(entry)
       continue
     }
 
+    // mutate range "start" entry with data from "end" entry.
+    // for example, this will update snapshot and duration.
     const start = merged[index]
-    // Keep completed ranges at the start position; nested entries remain
-    // visible after the parent range until the UI models nested trace groups.
     merged[index] = {
       ...start,
       ...entry,
@@ -55,29 +56,27 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry
 }
 
 export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, BrowserTraceData> {
-  const attempts: Record<string, BrowserTraceData> = {}
+  const grouped: Record<string, BrowserTraceData[]> = {}
   for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
       continue
     }
-
     const trace = artifact.data as BrowserTraceData
     const key = getTraceAttemptKey(trace)
-    const attempt = attempts[key]
-    attempts[key] = {
-      ...(attempt ?? trace),
-      entries: attempt ? attempt.entries.concat(trace.entries) : trace.entries,
-    }
+    grouped[key] ??= []
+    grouped[key].push(trace)
   }
 
-  for (const key in attempts) {
-    attempts[key] = {
-      ...attempts[key],
-      entries: mergeTraceRangeEntries(attempts[key].entries),
+  const merged: Record<string, BrowserTraceData> = {}
+  for (const [key, traces] of Object.entries(grouped)) {
+    const trace = traces[0]
+    const entries = traces.flatMap(trace => trace.entries)
+    merged[key] = {
+      ...trace,
+      entries: mergeTraceRangeEntries(entries),
     }
   }
-
-  return attempts
+  return merged
 }
 
 export function getSelectedTrace(selection: TraceSelection): BrowserTraceData | undefined {
