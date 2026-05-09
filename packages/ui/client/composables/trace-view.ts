@@ -9,7 +9,7 @@ import { selectedTest } from './params'
 
 export interface TraceSelection {
   test: RunnerTestCase
-  attemptKey: string
+  attemptKey?: string
 }
 
 export const activeTraceView = ref<TraceSelection>()
@@ -75,7 +75,6 @@ watchEffect(() => {
   if (test?.type === 'test' && active.test !== test) {
     activeTraceView.value = {
       test,
-      attemptKey: active.attemptKey,
     }
   }
 })
@@ -95,8 +94,6 @@ watchEffect(() => {
   if (isTraceViewEnabled(test)) {
     activeTraceView.value = {
       test,
-      // TODO: sad
-      attemptKey: '0:0',
     }
   }
 })

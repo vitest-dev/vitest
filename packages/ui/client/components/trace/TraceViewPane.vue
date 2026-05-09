@@ -10,7 +10,10 @@ const props = defineProps<{
 }>()
 
 const trace = computed(() => {
-  return getTraceAttemptMap(props.selection.test.artifacts)[props.selection.attemptKey]
+  const attempts = getTraceAttemptMap(props.selection.test.artifacts)
+  return props.selection.attemptKey
+    ? attempts[props.selection.attemptKey]
+    : Object.values(attempts)[0]
 })
 const test = computed(() => props.selection.test)
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
