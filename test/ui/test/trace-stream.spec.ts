@@ -144,7 +144,7 @@ test.describe('trace stream', () => {
 
     // first expect.element range is shown as in-progress
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
-      'toHaveTextContent',
+      'toBeVisible',
     ])
     await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
 
@@ -154,7 +154,7 @@ test.describe('trace stream', () => {
 
     // next expect.element range starts while polling continues
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
-      'toHaveTextContent',
+      'toBeVisible',
       'toHaveAttribute',
     ])
     await expect(traceSteps.nth(1)).toHaveAttribute('data-test-range', 'start')
@@ -164,7 +164,7 @@ test.describe('trace stream', () => {
     await runPromise
 
     await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
-      'toHaveTextContent',
+      'toBeVisible',
       'toHaveAttribute',
       'test finished',
     ])
