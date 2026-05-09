@@ -185,7 +185,7 @@ export class CommandsManager {
         finally {
           if (hasActiveTraceView) {
             // TODO: record also at the start
-            recordBrowserTraceEntry(currentTest, {
+            await recordBrowserTraceEntry(currentTest, {
               name: actionTraceGroupName,
               kind: 'action',
               status,

@@ -123,7 +123,7 @@ export function createBrowserRunner(
         const status = test.result?.state
         const stack = status === 'fail' ? test.result?.errors?.[0].stack : undefined
         const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
-        recordBrowserTraceEntry(test, {
+        await recordBrowserTraceEntry(test, {
           name: `vitest:onAfterRetryTask`,
           kind: 'lifecycle',
           ...(status === 'pass' || status === 'fail' ? { status } : {}),

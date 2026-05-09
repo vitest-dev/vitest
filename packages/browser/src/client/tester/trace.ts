@@ -83,12 +83,12 @@ function getTraceStateKey(testId: string, repeats: number, retry: number) {
 }
 
 // TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
-export function recordBrowserTraceEntry(
+export async function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
     startTime?: number
   },
-): void {
+): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = (options.startTime ?? now()) - attemptInfo.startTime
   const snapshot = takeSnapshot(options.element)
@@ -104,7 +104,6 @@ export function recordBrowserTraceEntry(
   state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
   state[traceKey].entries.push(entry)
 
-  // TODO: make it async or fire-and-forget resolved last
   const dataV2: BrowserTraceData = {
     retry,
     repeats,
@@ -112,7 +111,7 @@ export function recordBrowserTraceEntry(
     entries: [entry],
     stream: true,
   }
-  getBrowserRpc().triggerCommand<void>(
+  await getBrowserRpc().triggerCommand<void>(
     getBrowserState().sessionId,
     '__vitest_recordBrowserTrace',
     undefined,

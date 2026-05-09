@@ -390,7 +390,7 @@ export const page: BrowserPage = {
           if (hasActiveTraceView) {
             // TODO: support nested trace
             // TODO: record also at the start
-            recordBrowserTraceEntry(currentTest, {
+            await recordBrowserTraceEntry(currentTest, {
               name,
               kind: 'mark',
               status,
@@ -410,9 +410,9 @@ export const page: BrowserPage = {
       return Promise.resolve()
     }
 
-    return ensureAwaited((error) => {
+    return ensureAwaited(async (error) => {
       if (hasActiveTraceView) {
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
           name,
           kind: 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,

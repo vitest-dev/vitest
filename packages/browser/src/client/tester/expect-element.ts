@@ -60,7 +60,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
         : elementOrLocator.serialize()
       if (hasActiveTraceView) {
         // TODO: record also at the start
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
           name: traceName,
           kind: 'expect',
           status: meta.status,
