@@ -1,5 +1,5 @@
 import type { Reporter, TestRunEndReason } from '../types/reporter'
-import type { UserConsoleLog } from '../types/general'
+import type { UserConsoleLog } from '../../types/general'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
