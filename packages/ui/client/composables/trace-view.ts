@@ -1,6 +1,6 @@
 import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { BrowserTraceData } from '../../../browser/src/client/tester/trace'
-import { ref, watchEffect } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest } from './params'
@@ -63,32 +63,33 @@ export function closeTrace() {
   activeTraceView.value = undefined
 }
 
-watchEffect(() => {
-  const active = activeTraceView.value
-  const testId = selectedTest.value
-
+// Open/close only on selected-test navigation so the close button can clear the
+// trace view without being auto-opened again for the same selected test.
+watch(selectedTest, (testId) => {
   if (testId) {
     const test = client.state.idMap.get(testId)
-    if (test?.type === 'test') {
-      if (active?.test.id === testId) {
-        if (active.test !== test) {
-          // Rerun produced a fresh test object; reset attempt selection.
-          activeTraceView.value = { test }
-        }
-        return
-      }
-
-      if (isTraceViewEnabled(test)) {
-        // Auto-open trace view when selecting a trace-enabled test.
-        activeTraceView.value = { test }
-        return
-      }
+    if (test?.type === 'test' && isTraceViewEnabled(test)) {
+      // Auto-open trace view when selecting a trace-enabled test.
+      activeTraceView.value = { test }
+      return
     }
   }
 
-  if (active) {
-    // Close trace view when navigation moves away from a trace-enabled test.
-    closeTrace()
+  // Close trace view when navigation moves away from a trace-enabled test.
+  closeTrace()
+})
+
+// Keep the pane attached to the latest test object after reruns, and reset the
+// attempt selection because retries/repeats belong to one run.
+watchEffect(() => {
+  const active = activeTraceView.value
+  const testId = selectedTest.value
+  if (active && testId && active.test.id === testId) {
+    const test = client.state.idMap.get(testId)
+    if (test?.type === 'test' && active.test !== test) {
+      // Rerun produced a fresh test object; reset attempt selection.
+      activeTraceView.value = { test }
+    }
   }
 })
 
