@@ -14,4 +14,3 @@ test('coverage roots do not include sibling directories with the same prefix', (
   expect(provider.isIncluded('/workspace/packages/test/src/index.ts')).toBe(true)
   expect(provider.isIncluded('/workspace/packages/test-a/src/index.ts')).toBe(false)
 })
-
