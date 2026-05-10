@@ -96,6 +96,18 @@ Since Vitest defaults to the `node` environment (which uses `viteEnvironment: 's
 You can learn more about Vite environments and Vitest environments in [`environment`](/config/environment).
 :::
 
+## Duplicate Vitest Installation
+
+When running browser-mode tests via [`projects`](/guide/projects) in a monorepo, Vitest may detect that `vitest` or `@vitest/browser` resolves to two different physical copies (one used by the root runner, another used by a sub-package). Two copies cannot share the in-memory state needed to drive the browser, which previously caused the test run to hang silently. Vitest now throws a clear error instead, naming both paths and the affected project.
+
+The most common cause is a peer dependency (typically `@types/node` or `vite`) resolving to different versions across packages. Even when `vitest` is pinned to the exact same version everywhere, pnpm will create two `.pnpm/` snapshots with different peer-dep hashes, and Node loads each as a distinct module.
+
+### Fix
+
+1. Run `pnpm why vitest` (or `npm ls vitest`) and look for the diverging peer dep.
+2. **Recommended**: declare `vitest` and `@vitest/browser*` only in the root `package.json`. Sub-packages should keep their own `vitest.config.ts` but inherit the hoisted Vitest install.
+3. If a sub-package must declare `vitest` directly, pin the diverging peer dep in the root `pnpm.overrides` / `resolutions` and run `pnpm dedupe` so a single copy is shared.
+
 ## Segfaults and Native Code Errors
 
 Running [native NodeJS modules](https://nodejs.org/api/addons.html) in `pool: 'threads'` can run into cryptic errors coming from the native code.

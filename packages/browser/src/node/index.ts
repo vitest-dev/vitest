@@ -5,6 +5,7 @@ import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
 import { distRoot } from './constants'
+import { assertSingleInstallation } from './duplicateInstallation'
 import BrowserPlugin from './plugin'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
@@ -38,6 +39,8 @@ export const createBrowserServer: BrowserServerFactory = async (options) => {
       ),
     )
   }
+
+  assertSingleInstallation(project.config.root, project.name)
 
   const server = new ParentBrowserProject(project, '/')
 
