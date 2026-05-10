@@ -146,6 +146,7 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
         if (url.pathname === `/${REPORT_FILE}`) {
           const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
           res.end(data)
+          return
         }
         next()
       })
