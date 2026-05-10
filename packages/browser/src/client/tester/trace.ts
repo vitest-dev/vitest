@@ -97,8 +97,10 @@ export async function recordBrowserTraceEntry(
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
-  // TODO: fire-and-forget artifact recording and
-  // only await pending promise on test run end?
+  // An async lane could defer artifact recording and flush it at test-attempt end,
+  // but the synchronous snapshot work is already a comparable cost, and this path
+  // is mostly data passing after that.
+  // Keep it simple unless measurements show artifact recording is a bottleneck.
   const data: BrowserTraceData = {
     retry,
     repeats,
