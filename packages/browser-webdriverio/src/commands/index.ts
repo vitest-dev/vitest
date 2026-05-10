@@ -29,4 +29,6 @@ export default {
   __vitest_hover: hover as typeof hover,
   __vitest_cleanup: keyboardCleanup as typeof keyboardCleanup,
   __vitest_viewport: viewport as typeof viewport,
+  // diagnostic-only: stub so the runner's RPC call does not error here.
+  __vitest_logTraceDbg: (() => {}) as () => void,
 }

@@ -85,6 +85,9 @@ export function createBrowserRunner(
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
       const shouldTraceView = this.config.browser.traceView.enabled
+      void this.commands.triggerCommand('__vitest_logTraceDbg', [{
+        msg: `BEFORE id=${test.id} name=${getTestName(test)} retry=${retry} repeats=${repeats} mode=${trace} shouldTrace=${shouldTrace} activeIds.size=${getBrowserState().activeTraceTaskIds.size} prevState=${test.result?.state ?? 'n/a'}`,
+      }]).catch(() => {})
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
         getBrowserState().browserTraceAttempts.delete(test.id)
@@ -140,6 +143,9 @@ export function createBrowserRunner(
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
+      void this.commands.triggerCommand('__vitest_logTraceDbg', [{
+        msg: `AFTER  id=${test.id} retry=${retry} repeats=${repeats} hasActive=${hasActiveTrace} state=${test.result?.state ?? 'n/a'} err=${test.result?.errors?.[0]?.message ?? ''}`,
+      }]).catch(() => {})
       if (!hasActiveTrace) {
         return
       }
@@ -152,6 +158,9 @@ export function createBrowserRunner(
         this.traces.set(test.id, [])
       }
       const traces = this.traces.get(test.id)!
+      void this.commands.triggerCommand('__vitest_logTraceDbg', [{
+        msg: `STOP   id=${test.id} name=${name} retry=${retry} repeats=${repeats}`,
+      }]).catch(() => {})
       const { tracePath } = await this.commands.triggerCommand(
         '__vitest_stopChunkTrace',
         [{ name }],
