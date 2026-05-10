@@ -54,3 +54,18 @@ The UI dev server fetches browser runner state from the browser runner server on
 ```bash
 BROWSER_DEV_PORT=63316 BROWSER_DEV=true pnpm -C packages/ui dev:client
 ```
+
+## HTML report
+
+TODO
+
+```bash
+HTML_REPORT_DIR=<path-to-report> pnpm -C packages/ui dev:client
+```
+
+For example,
+
+```bash
+pnpm -C packages/ui test:ui --reporter=html --browser.headless --run
+HTML_REPORT_DIR="$PWD/packages/ui/html" pnpm -C packages/ui dev:client
+```
