@@ -77,27 +77,37 @@ test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
     ],
   }, [resolve('./fixtures/reporters/console-interleave.test.ts')])
   expect(stderr).toBe('')
-  expect(logs).toMatchObject([
-    {
-      type: 'stdout',
-      content: expect.stringContaining('1'),
-    },
-    {
-      type: 'stderr',
-      content: expect.stringContaining('2'),
-    },
-    {
-      type: 'stdout',
-      content: expect.stringContaining('3'),
-    },
-  ])
+  const formatted = logs.map((log, i) =>
+    ({
+      type: log.type,
+      content: log.content.trim(),
+      timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
+    }))
+  expect(formatted).toMatchInlineSnapshot(`
+    [
+      {
+        "content": "1",
+        "timeSign": undefined,
+        "type": "stdout",
+      },
+      {
+        "content": "2",
+        "timeSign": 1,
+        "type": "stderr",
+      },
+      {
+        "content": "3",
+        "timeSign": 1,
+        "type": "stdout",
+      },
+    ]
+  `)
 })
 
-test.for(['forks', 'threads'])('separate stdout/stderr timestamps (pool = %s)', async (pool) => {
+test('console batching', async () => {
   const logs: UserConsoleLog[] = []
   const { stderr } = await runVitest({
-    root: './fixtures/reporters',
-    pool,
+    root: './fixtures/reporters/console-batch',
     reporters: [
       {
         onUserConsoleLog(log) {
@@ -105,13 +115,31 @@ test.for(['forks', 'threads'])('separate stdout/stderr timestamps (pool = %s)', 
         },
       } satisfies Reporter,
     ],
-  }, [resolve('./fixtures/reporters/console-time.test.ts')])
+  })
   expect(stderr).toBe('')
-
-  const stdout = logs.find(log => log.type === 'stdout' && log.content.includes('foo'))
-  const stderrLog = logs.find(log => log.type === 'stderr' && log.content.includes('bar'))
-
-  expect(stdout).toBeDefined()
-  expect(stderrLog).toBeDefined()
-  expect(stderrLog!.time).toBeGreaterThan(stdout!.time)
+  const formatted = logs.map((log, i) =>
+    ({
+      type: log.type,
+      content: log.content.replace(/\n/g, '_'),
+      timeSign: i > 0 ? Math.sign(log.time - logs[i - 1].time) : undefined,
+    }))
+  expect(formatted).toMatchInlineSnapshot(`
+    [
+      {
+        "content": "1_",
+        "timeSign": undefined,
+        "type": "stdout",
+      },
+      {
+        "content": "2_4_",
+        "timeSign": 1,
+        "type": "stdout",
+      },
+      {
+        "content": "3_",
+        "timeSign": 1,
+        "type": "stderr",
+      },
+    ]
+  `)
 })
