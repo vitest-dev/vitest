@@ -19,7 +19,7 @@ import type { Locator as LocatorAPI } from './locators'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState, getWorkerState, now } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
@@ -368,7 +368,6 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         let status: BrowserTraceEntryStatus = 'pass'
-        const startTime = now()
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         if (hasActiveTrace) {
           await triggerCommand(
@@ -385,7 +384,6 @@ export const page: BrowserPage = {
             name,
             kind: 'mark',
             range: { id: traceRangeId!, phase: 'start' },
-            startTime,
             stack: options?.stack ?? error?.stack,
           })
         }
@@ -403,8 +401,6 @@ export const page: BrowserPage = {
               kind: 'mark',
               range: { id: traceRangeId!, phase: 'end' },
               status,
-              startTime,
-              duration: now() - startTime,
               stack: options?.stack ?? error?.stack,
             })
           }

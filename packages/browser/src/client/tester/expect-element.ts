@@ -50,7 +50,6 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
     const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
-    let startTime = 0
     const getSelector = () => !elementOrLocator || elementOrLocator instanceof Element
       ? undefined
       : elementOrLocator.serialize()
@@ -61,13 +60,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       return status === 'fail' ? `${baseName} [ERROR]` : baseName
     }
     chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
-      startTime = now()
       if (hasActiveTraceView) {
         await recordBrowserTraceEntry(currentTest, {
           name: getTraceName(meta.assertion),
           kind: 'expect',
           range: { id: traceRangeId!, phase: 'start' },
-          startTime,
           element: getSelector(),
           stack: sourceError.stack,
         })
@@ -81,8 +78,6 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
           kind: 'expect',
           range: { id: traceRangeId!, phase: 'end' },
           status: meta.status,
-          startTime,
-          duration: now() - startTime,
           element: getSelector(),
           stack: sourceError.stack,
         })

@@ -40,13 +40,15 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry
       continue
     }
 
-    // mutate range "start" entry with data from "end" entry.
-    // for example, this will update snapshot and duration.
+    // Keep the start timestamp for positioning, but derive display duration
+    // from the end event timestamp.
     const start = merged[index]
+    const duration = entry.startTime - start.startTime
     merged[index] = {
       ...start,
       ...entry,
       startTime: start.startTime,
+      duration,
     }
   }
 

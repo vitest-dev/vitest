@@ -28,6 +28,7 @@ export interface BrowserTraceEntry {
   range?: BrowserTraceEntryRange
   status?: BrowserTraceEntryStatus
   startTime: number
+  // Derived on UI side from range start/end entries.
   duration?: number
   stack?: string
   // resolved server-side from stack in __vitest_recordBrowserTrace command
@@ -83,12 +84,10 @@ export function createBrowserTraceRangeId(): string {
 
 export async function recordBrowserTraceEntry(
   task: Task,
-  options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
-    startTime?: number
-  },
+  options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'>,
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
-  const relativeStartTime = (options.startTime ?? now()) - attemptInfo.startTime
+  const relativeStartTime = now() - attemptInfo.startTime
   const snapshot = takeSnapshot(options.element)
   const entry: BrowserTraceEntry = {
     ...options,

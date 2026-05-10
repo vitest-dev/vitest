@@ -170,7 +170,6 @@ export class CommandsManager {
           )
         }
         let status: BrowserTraceEntryStatus = 'pass'
-        const startTime = now()
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         const element = typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0] ? args[0] : undefined
         if (hasActiveTraceView) {
@@ -181,7 +180,6 @@ export class CommandsManager {
             name: actionTraceGroupName,
             kind: 'action',
             range: { id: traceRangeId!, phase: 'start' },
-            startTime,
             element,
             stack: clientError.stack,
           })
@@ -204,8 +202,6 @@ export class CommandsManager {
               kind: 'action',
               range: { id: traceRangeId!, phase: 'end' },
               status,
-              startTime,
-              duration: now() - startTime,
               element,
               stack: clientError.stack,
             })
