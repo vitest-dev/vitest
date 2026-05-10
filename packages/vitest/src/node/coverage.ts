@@ -156,14 +156,19 @@ export class BaseCoverageProvider {
       return cacheHit
     }
 
+    const normalizedRoots = roots.map(root => slash(root))
+    const matchingRoot = normalizedRoots.find((root) => {
+      const rootWithSeparator = root.endsWith('/') ? root : `${root}/`
+      return filename === root || filename.startsWith(rootWithSeparator)
+    })
+
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+    if (this.options.allowExternal === false && !matchingRoot) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
     if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
