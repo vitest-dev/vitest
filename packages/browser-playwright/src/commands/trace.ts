@@ -4,6 +4,7 @@ import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vit
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { traceDbg } from '../dbg'
 import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
@@ -40,6 +41,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
     }
     const path = resolveTracesPath(command, name)
     provider.pendingTraces.set(path, sessionId)
+    traceDbg(`PROVIDER start name=${name} path=${path} session=${sessionId} pendingSize=${provider.pendingTraces.size}`)
     await context.tracing.startChunk({ name, title })
     return
   }
@@ -53,6 +55,7 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   if (isPlaywrightProvider(context.provider)) {
     const path = resolveTracesPath(context, name)
     context.provider.pendingTraces.delete(path)
+    traceDbg(`PROVIDER stop  name=${name} path=${path} session=${context.sessionId} pendingSize=${context.provider.pendingTraces.size}`)
     await context.context.tracing.stopChunk({ path })
     return { tracePath: path }
   }

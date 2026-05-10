@@ -1,5 +1,6 @@
 import { clear } from './clear'
 import { click, dblClick, tripleClick } from './click'
+import { logTraceDbg } from './dbg'
 import { dragAndDrop } from './dragAndDrop'
 import { fill } from './fill'
 import { hover } from './hover'
@@ -47,4 +48,5 @@ export default {
   __vitest_groupTraceStart: groupTraceStart as typeof groupTraceStart,
   __vitest_groupTraceEnd: groupTraceEnd as typeof groupTraceEnd,
   __vitest_viewport: viewport as typeof viewport,
+  __vitest_logTraceDbg: logTraceDbg as typeof logTraceDbg,
 }
