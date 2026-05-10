@@ -57,10 +57,10 @@ BROWSER_DEV_PORT=63316 BROWSER_DEV=true pnpm -C packages/ui dev:client
 
 ## HTML report
 
-TODO
+Use this setup for developing static HTML report UI with Vite HMR. It is best for layout and styling changes in report mode.
 
 ```bash
-HTML_REPORT_DIR=<path-to-report> pnpm -C packages/ui dev:client
+HTML_REPORT_DIR=<path-to-html-report-dir> pnpm -C packages/ui dev:client
 ```
 
 For example,
