@@ -4,7 +4,6 @@ import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
-import Pages from 'vite-plugin-pages'
 
 // for debug:
 // open a static file serve to share the report json
@@ -48,9 +47,6 @@ export default defineConfig({
         transformerDirectives(),
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
-    }),
-    Pages({
-      dirs: ['client/pages'],
     }),
     devUiScriptPlugin(),
     // uncomment to see the HTML reporter preview
