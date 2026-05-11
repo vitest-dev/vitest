@@ -846,7 +846,7 @@ The `path` is also ignored in that case.
 ### mark
 
 ```ts
-function mark(name: string, options?: { stack?: string; kind?: Kind }): Promise<void>
+function mark(name: string, options?: { stack?: string; kind?: MarkKind }): Promise<void>
 ```
 
 Adds a named marker to the trace timeline and uses the current locator as marker context.
