@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
 
-const __BASE_PATH__: string
-
 declare interface Window {
   METADATA_PATH?: string
 }
