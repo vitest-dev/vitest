@@ -214,7 +214,7 @@ describe('vi.when()', () => {
         .thenReturn(value)
 
       expect(spy(...args)).toBe(value)
-      expect(() => spy('b', 1)).toThrow('vi.when: no behavior defined')
+      expect(() => spy('b', 1)).toThrowErrorMatchingInlineSnapshot(`[Error: vi.when: no behavior defined when called with ["b", 1]]`)
     })
 
     test('calls the provided function when `onUnmatched` is a function', () => {
@@ -461,6 +461,12 @@ describe('vi.when()', () => {
       const w = vi.when(spy)
 
       expect(w).not.toHaveBeenExhausted()
+    })
+
+    test('throws when not used with a mock', () => {
+      expect(() => {
+        vi.when(() => {})
+      }).toThrowErrorMatchingInlineSnapshot(`[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`)
     })
 
     test('throws error when `times` option is not greater than 0', () => {
