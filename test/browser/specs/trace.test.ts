@@ -382,30 +382,28 @@ test('trace view artifacts', async () => {
               {
                 "entries": [
                   {
-                    "element": {
-                      "_pwSelector": "internal:role=button",
-                      "locator": "getByRole('button')",
-                      "selector": "html > body > button",
-                    },
                     "kind": "action",
-                    "location": "mark.test.ts:41",
+                    "location": "mark.test.ts:42",
                     "name": "action marker",
-                    "snapshot": {
-                      "selectorResolution": "matched",
-                    },
+                    "snapshot": {},
                   },
                   {
                     "kind": "expect",
-                    "location": "mark.test.ts:42",
+                    "location": "mark.test.ts:43",
                     "name": "expect marker",
                     "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
-                    "location": "mark.test.ts:43",
+                    "location": "mark.test.ts:44",
                     "name": "lifecycle group",
                     "snapshot": {},
-                    "status": "pass",
+                  },
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:45",
+                    "name": "lifecycle group",
+                    "snapshot": {},
                   },
                   {
                     "kind": "lifecycle",
