@@ -448,7 +448,7 @@ test('throwing', async () => {
 test('signal', async () => {
   const result = await runInlineTests({
     'basic.test.ts': `
-import '../test/fixtures/domain/basic-extend'
+import '../snapshots/fixtures/domain/basic-extend'
 
 test('signal', async () => {
   let aborted = false
@@ -469,15 +469,15 @@ test('signal', async () => {
   })
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`
-    Object {
-      "basic.test.ts": Object {
+    {
+      "basic.test.ts": {
         "signal": "passed",
       },
     }
   `)
   expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
     "
-    import '../test/fixtures/domain/basic-extend'
+    import '../snapshots/fixtures/domain/basic-extend'
 
     test('signal', async () => {
       let aborted = false
