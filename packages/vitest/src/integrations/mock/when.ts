@@ -141,10 +141,6 @@ interface WhenOptions {
   onUnmatched?: 'throw' | 'passthrough' | Procedure | undefined
 }
 
-function throwUnmatched() {
-  throw new Error('vi.when: no behavior defined') // @todo improve error message
-}
-
 /**
  * Defines conditional behaviors on a Vitest spy based on the arguments it is called with.
  *
@@ -225,18 +221,19 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
     return null
   }
 
-  const onUnmatched = typeof options?.onUnmatched === 'function'
-    ? options.onUnmatched
-    : options?.onUnmatched === 'throw'
-      ? throwUnmatched
-      : originalImplementation
-
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
     (...args: ScopedParameters) => {
       const action = findAction(args)
 
       if (action === null) {
+        const onUnmatched = typeof options?.onUnmatched === 'function'
+          ? options.onUnmatched
+          : options?.onUnmatched === 'throw'
+            ? () => {
+                throw new Error(`vi.when: no behavior defined when called with [${args.map(arg => format(arg)).join(', ')}]`)
+              }
+            : originalImplementation
         return onUnmatched?.(...args)
       }
 
