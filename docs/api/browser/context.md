@@ -82,11 +82,11 @@ export const page: {
   /**
    * Add a trace marker when browser tracing is enabled.
    */
-  mark(name: string, options?: { stack?: string; kind?: MarkKind }): Promise<void>
+  mark(name: string, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<void>
   /**
    * Group multiple operations under a trace marker when browser tracing is enabled.
    */
-  mark<T>(name: string, body: () => T | Promise<T>, options?: { stack?: string; kind?: MarkKind }): Promise<T>
+  mark<T>(name: string, body: () => T | Promise<T>, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<T>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -127,11 +127,11 @@ The `path` is also ignored in that case.
 ### mark
 
 ```ts
-function mark(name: string, options?: { stack?: string; kind?: MarkKind }): Promise<void>
+function mark(name: string, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<void>
 function mark<T>(
   name: string,
   body: () => T | Promise<T>,
-  options?: { stack?: string; kind?: MarkKind },
+  options?: { stack?: string; kind?: BrowserTraceEntryKind },
 ): Promise<T>
 ```
 

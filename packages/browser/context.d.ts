@@ -42,7 +42,7 @@ export interface ScreenshotOptions extends SelectorOptions {
   save?: boolean
 }
 
-export type MarkKind = 'action' | 'expect' | 'mark' | 'lifecycle'
+export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 
 export interface MarkOptions {
   /**
@@ -55,7 +55,7 @@ export interface MarkOptions {
    * Optional marker kind that's used to categorize the marker in the trace viewer.
    * @default 'mark'
    */
-  kind?: MarkKind
+  kind?: BrowserTraceEntryKind
 }
 
 interface StandardScreenshotComparators {
