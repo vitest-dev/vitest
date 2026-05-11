@@ -105,11 +105,13 @@ test('expect.soft test', () => {
 
 ```ts
 interface ExpectPoll extends ExpectStatic {
-  (actual: () => T, options?: { interval?: number; timeout?: number; message?: string }): Promise<Assertions<T>>
+  (actual: (options: { signal: AbortSignal }) => T, options?: { interval?: number; timeout?: number; message?: string }): Promise<Assertions<Awaited<T>>>
 }
 ```
 
-`expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
+`expect.poll` reruns the _assertion_ until it is succeeded. You can configure how often Vitest retries and how long it waits by setting `interval` and `timeout` options. The `timeout` applies to the whole polling operation, including pending callback and async matcher execution.
+
+The callback receives an `AbortSignal` that is aborted when the poll timeout is reached.
 
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 

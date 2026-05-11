@@ -2106,3 +2106,32 @@ it('diff', () => {
   snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
   snapshotError(() => expect({ hello: 'world' }).toBeNull())
 })
+
+it('expected and actual reuse the stringification from the diff', () => {
+  // primitives
+  snapshotError(() => expect(1).toEqual(2))
+  snapshotError(() => expect(false).toEqual(true))
+
+  // strings
+  snapshotError(() => expect('a\nb\nc').toEqual('a\nB\nc'))
+  snapshotError(() => expect('foo').toEqual('bar'))
+
+  // map/set (stringification happens after sorting)
+  snapshotError(() => expect(new Map([['x', 1], ['y', 2]])).toEqual(new Map([['x', 1], ['y', 3]])))
+  snapshotError(() => expect(new Set([1, 2])).toEqual(new Set([1, 3])))
+
+  // mismatched types
+  snapshotError(() => expect(1).toEqual('foo'))
+
+  // asymmetric matchers in arrays
+  snapshotError(() => expect([
+    { x: 1, y: 2, z: 3 },
+    { x: 3, y: 1, z: 2 },
+    { x: 2, y: 3, z: 1 },
+    'wrong',
+  ]).toEqual([
+    expect.objectContaining({ x: 1 }),
+    expect.objectContaining({ z: 2 }),
+    expect.objectContaining({ y: 3 }),
+  ]))
+})

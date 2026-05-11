@@ -445,6 +445,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           exact: {
             description: 'Should locators match the text exactly by default (default: `false`)',
           },
+          errorFormat: null,
         },
         transform(val) {
           if (typeof val !== 'object' || val == null) {

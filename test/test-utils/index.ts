@@ -26,8 +26,6 @@ import { Cli } from './cli'
 
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
-// @ts-expect-error not typed global
-globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
 
 export interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -582,7 +580,7 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
   const root = testModules[0]?.project.config.root
 
   function mapError(e: { message: string; diff?: string; stacks?: ParsedStack[] }) {
-    let message = e.message
+    let message = stripVTControlCharacters(e.message)
     if (options?.diff && e.diff) {
       message = [message, stripVTControlCharacters(e.diff)].join('\n')
     }

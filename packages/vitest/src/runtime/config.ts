@@ -109,6 +109,7 @@ export interface SerializedConfig {
     locators: {
       testIdAttribute: string
       exact: boolean
+      errorFormat: 'html' | 'aria' | 'all'
     }
     screenshotFailures: boolean
     providerOptions: {
@@ -156,7 +157,7 @@ export interface SerializedConfig {
   strictTags: boolean
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
-  isAgent: boolean
+  disableColors: boolean
 }
 
 export interface SerializedCoverageConfig {
