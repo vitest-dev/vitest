@@ -27,6 +27,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",
     "flatted": "catalog:",
+    "jest-image-snapshot": "^6.5.1",
     "obug": "^2.1.1",
     "playwright": "catalog:",
     "test-dep-invalid": "link:./deps/dep-invalid",

@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
@@ -71,9 +72,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.getByTestId('pass-entry')).toContainText('17 Pass')
-    await expect(page.getByTestId('fail-entry')).toContainText('2 Fail')
-    await expect(page.getByTestId('total-entry')).toContainText('19 Total')
+    await assertTestCounts(page, { pass: 17, fail: 3 })
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -254,6 +253,9 @@ test.describe('ui', () => {
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+
+    await getExplorerItem(page, 'colored error message').click()
+    await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /fixtures/error.test.ts:12:17')
   })
 
   test('file-filter', async ({ page }) => {
@@ -375,6 +377,16 @@ test.describe('ui', () => {
     })
   })
 })
+
+// TODO: consolidate in https://github.com/vitest-dev/vitest/pull/10237
+function getExplorerItem(page: Page, name: string) {
+  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+}
+
+async function assertTestCounts(page: Page, options: { pass: number; fail: number }) {
+  await expect.soft(page.getByTestId('tests-entry'))
+    .toContainText(`${options.pass} Pass ${options.fail} Fail ${options.pass + options.fail} Total`)
+}
 
 test.describe('standalone', () => {
   let vitest: Vitest | undefined
