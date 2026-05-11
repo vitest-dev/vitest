@@ -3,12 +3,27 @@ import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
+// runVitest startup completes in <2s in the green path but exceeds the 10s
+// default on Cache&Test: windows under load; 20s leaves headroom without
+// stretching the fail window unnecessarily.
+const HOOK_TIMEOUT_MS = 20_000
+
 beforeAll(async () => {
-  await runVitest({
-    include: ['fixtures/test/vue-fixture.test.ts'],
-    coverage: { reporter: ['json', 'html'] },
-  })
-})
+  const start = Date.now()
+  process.stderr.write(`[flake-dbg] vue.test beforeAll start\n`)
+  try {
+    await runVitest({
+      include: ['fixtures/test/vue-fixture.test.ts'],
+      coverage: { reporter: ['json', 'html'] },
+    })
+    process.stderr.write(`[flake-dbg] vue.test beforeAll done in ${Date.now() - start}ms\n`)
+  }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    process.stderr.write(`[flake-dbg] vue.test beforeAll failed after ${Date.now() - start}ms: ${message}\n`)
+    throw error
+  }
+}, HOOK_TIMEOUT_MS)
 
 test('files should not contain query parameters', () => {
   const coveragePath = resolve('./coverage/Vue/Counter/')

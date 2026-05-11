@@ -178,6 +178,18 @@ jobs:
       - name: Test
         run: pnpm run test:ci:cache
 
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ci-debug-cached-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: |
+            test/**/.vitest
+            test/**/test-results
+            test/**/__screenshots__
+          if-no-files-found: ignore
+          retention-days: 7
+          include-hidden-files: true
+
   test-browser:
     needs: changed
     name: 'Browsers: node-${{ matrix.node_version }}, ${{ matrix.os }}'
@@ -204,6 +216,19 @@ jobs:
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
       - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
 
+      - name: Enable Windows crash dumps
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $dir = "${{ runner.temp }}\dumps"
+          New-Item -Path $dir -ItemType Directory -Force | Out-Null
+          $key = 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+          New-Item -Path $key -Force | Out-Null
+          Set-ItemProperty -Path $key -Name DumpFolder -Type ExpandString -Value $dir
+          Set-ItemProperty -Path $key -Name DumpCount -Type DWORD -Value 10
+          Set-ItemProperty -Path $key -Name DumpType -Type DWORD -Value 1
+          Write-Host "Crash dumps configured at $dir"
+
       - name: Install
         run: pnpm i
 
@@ -214,9 +239,28 @@ jobs:
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
+        env:
+          VITEST_TRACE_DBG_FILE: ${{ runner.temp }}/trace-dbg.log
+
+      - name: Upload trace-dbg log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: trace-dbg-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: ${{ runner.temp }}/trace-dbg.log
+          if-no-files-found: ignore
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+
+      - name: Upload Windows crash dumps
+        if: always() && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: crash-dumps-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: ${{ runner.temp }}/dumps/*.dmp
+          if-no-files-found: ignore
+          retention-days: 7
 
   test-vite7:
     needs: changed

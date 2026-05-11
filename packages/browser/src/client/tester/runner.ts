@@ -157,6 +157,10 @@ export function createBrowserRunner(
         [{ name }],
       ) as { tracePath: string }
       traces.push(tracePath)
+      await this.commands.triggerCommand(
+        '__vitest_waitTracesFlushed',
+        [{ paths: [tracePath], timeoutMs: 5000 }],
+      ).catch(() => {})
     }
 
     onAfterRunTask = async (task: Test) => {

@@ -1,12 +1,18 @@
 import { readdirSync, rmSync } from 'node:fs'
 import { resolve } from 'pathe'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { provider, runBrowserTests } from './utils'
 
 const tracesFolder = resolve(import.meta.dirname, '../fixtures/trace-view/__traces__')
 const basicTestTracesFolder = resolve(tracesFolder, 'basic.test.ts')
 
 describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
+  // also clean before each test — webkit can flush traces async after stopChunk,
+  // racing afterEach and leaving stale `.trace.zip` files in the shared folder.
+  beforeEach(() => {
+    rmSync(tracesFolder, { recursive: true, force: true })
+  })
+
   afterEach(() => {
     rmSync(tracesFolder, { recursive: true, force: true })
   })

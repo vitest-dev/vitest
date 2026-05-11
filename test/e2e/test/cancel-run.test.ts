@@ -46,7 +46,9 @@ test('can force cancel a run via CLI', async () => {
   stdin.emit('data', CTRL_C)
   await promise
 
-  expect(onExit).toHaveBeenCalled()
+  // process.exit is invoked from the shortcut handler asynchronously to vitest.start(),
+  // so awaiting `promise` alone is not enough on slower runners.
+  await vi.waitFor(() => expect(onExit).toHaveBeenCalled())
 })
 
 test('cancelling test run stops test execution immediately', async () => {

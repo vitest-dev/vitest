@@ -35,6 +35,7 @@ import c from 'tinyrainbow'
 import { createDebugger, isCSSRequest } from 'vitest/node'
 import commands from './commands'
 import { distRoot } from './constants'
+import { traceDbg } from './dbg'
 
 const debug = createDebugger('vitest:browser:playwright')
 
@@ -140,6 +141,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private onSIGTERM = () => {
+    traceDbg(`SIGTERM browser=${this.browserName} hasBrowser=${!!this.browser} pendingTraces=${this.pendingTraces.size} contexts=${this.contexts.size} pages=${this.pages.size}`)
     if (!this.browser) {
       return
     }
@@ -555,6 +557,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   async close(): Promise<void> {
     process.off('SIGTERM', this.onSIGTERM)
 
+    const closeStart = Date.now()
+    traceDbg(`CLOSE start browser=${this.browserName} contexts=${this.contexts.size} pages=${this.pages.size} pendingTraces=${this.pendingTraces.size}`)
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     if (this.browserPromise) {
@@ -573,6 +577,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     this.contexts.clear()
     await browser?.close()
+    traceDbg(`CLOSE done  browser=${this.browserName} elapsed=${Date.now() - closeStart}ms`)
     debug?.('[%s] provider is closed', this.browserName)
   }
 }

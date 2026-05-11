@@ -4,7 +4,7 @@ import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
@@ -146,8 +146,40 @@ export async function startVitest(
     if (!ctx?.shouldKeepServer()) {
       stdinCleanup?.()
       await ctx.close()
+      armCloseWatchdog()
     }
   }
+}
+
+// When VITEST_CLOSE_DBG_FILE is set and the process fails to natural-exit
+// after ctx.close() resolves, dump active handles/requests to that file.
+// Diagnostic for the "Tests closed successfully but something prevents Vite
+// server from exiting" flake on vite@7 + windows.
+function armCloseWatchdog(): void {
+  const file = process.env.VITEST_CLOSE_DBG_FILE
+  if (!file) {
+    return
+  }
+  const t0 = Date.now()
+  const timer = setTimeout(() => {
+    try {
+      const handles: unknown[] = (process as any)._getActiveHandles?.() ?? []
+      const requests: unknown[] = (process as any)._getActiveRequests?.() ?? []
+      const summary = [
+        `${Date.now()} CLOSE-WATCHDOG fired at +${Date.now() - t0}ms pid=${process.pid}`,
+        `handles=${handles.length} requests=${requests.length}`,
+        ...handles.map((h, i) => {
+          const ctor = (h as any)?.constructor?.name
+          const fd = (h as any)?._handle?.fd ?? (h as any)?.fd
+          return `  handle[${i}] ${ctor}${fd != null ? ` fd=${fd}` : ''}`
+        }),
+        ...requests.map((r, i) => `  request[${i}] ${(r as any)?.constructor?.name}`),
+      ].join('\n')
+      appendFileSync(file, `${summary}\n`)
+    }
+    catch {}
+  }, 5000)
+  timer.unref?.()
 }
 
 export async function prepareVitest(

@@ -16,6 +16,7 @@ import {
   startChunkTrace,
   startTracing,
   stopChunkTrace,
+  waitTracesFlushed,
 } from './trace'
 import { type } from './type'
 import { upload } from './upload'
@@ -42,6 +43,7 @@ export default {
   __vitest_startChunkTrace: startChunkTrace as typeof startChunkTrace,
   __vitest_startTracing: startTracing as typeof startTracing,
   __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
+  __vitest_waitTracesFlushed: waitTracesFlushed as typeof waitTracesFlushed,
   __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
   __vitest_markTrace: markTrace as typeof markTrace,
   __vitest_groupTraceStart: groupTraceStart as typeof groupTraceStart,

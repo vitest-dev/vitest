@@ -18,6 +18,15 @@ describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) =
       pool,
     })
 
+    // diagnostic: this assertion intermittently fails because the
+    // MaxListenersExceededWarning isn't present in the captured stderr; dump
+    // the relevant slices so a future flake leaves enough trail to tell us
+    // whether the warning was emitted at all and how the pool serialised it.
+    if (!stderr.includes('MaxListenersExceededWarning')) {
+      process.stderr.write(`[flake-dbg] pool.test ${pool} stderr len=${stderr.length} preview=${JSON.stringify(stderr).slice(0, 800)}\n`)
+      process.stderr.write(`[flake-dbg] pool.test ${pool} stdout len=${stdout.length} preview=${JSON.stringify(stdout).slice(0, 400)}\n`)
+    }
+
     expect(stderr).toContain('Worker writing to stderr')
     expect(stdout).toContain('Worker writing to stdout')
     expect(stderr).toContain('MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 3 message listeners added to [TestFixturesCustomEmitter]')

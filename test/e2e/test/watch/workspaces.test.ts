@@ -11,6 +11,9 @@ const root = resolve(dir, '..', '..', '..', 'workspaces')
 const config = resolve(root, 'vitest.config.watch.ts')
 const cleanups: (() => void)[] = []
 
+// chokidar startup on macOS CI occasionally exceeds the 20s default before reporting the new file.
+const NEW_FILE_DETECTION_WAIT_MS = 30_000
+
 const srcMathFile = resolve(root, 'src', 'math.ts')
 const specSpace2File = resolve(root, 'space_2', 'test', 'node.spec.ts')
 
@@ -91,7 +94,7 @@ it('adding a new test file matching core project config triggers re-run', async 
   cleanups.push(() => rmSync(testFile))
   writeFileSync(testFile, dynamicTestContent, 'utf-8')
 
-  await vitest.waitForStdout('Running added dynamic test')
+  await vitest.waitForStdout('Running added dynamic test', NEW_FILE_DETECTION_WAIT_MS)
   await vitest.waitForStdout('RERUN  space_2/test/new-dynamic.test.ts')
   await vitest.waitForStdout('|space_2| test/new-dynamic.test.ts')
 

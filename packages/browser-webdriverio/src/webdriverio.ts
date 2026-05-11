@@ -19,6 +19,7 @@ import { resolve } from 'pathe'
 import { createDebugger } from 'vitest/node'
 import commands from './commands'
 import { distRoot } from './constants'
+import { wdioDbg } from './dbg'
 
 const debug = createDebugger('vitest:browser:wdio')
 
@@ -159,7 +160,10 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       }
     }
 
+    const t0 = Date.now()
+    wdioDbg(`[${this.browserName}] openBrowser start`)
     const { remote } = await import('webdriverio')
+    wdioDbg(`[${this.browserName}] import(webdriverio) ${Date.now() - t0}ms`)
 
     const remoteOptions: Capabilities.WebdriverIOConfig = {
       logLevel: 'silent',
@@ -169,7 +173,9 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     debug?.('[%s] opening the browser with options: %O', this.browserName, remoteOptions)
     // TODO: close everything, if browser is closed from the outside
+    const tRemote = Date.now()
     this.browser = await remote(remoteOptions)
+    wdioDbg(`[${this.browserName}] remote() ${Date.now() - tRemote}ms`)
     await this._throwIfClosing()
 
     return this.browser
@@ -237,9 +243,13 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   async openPage(sessionId: string, url: string): Promise<void> {
     await this._throwIfClosing('creating the browser')
     debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
+    const tOpen = Date.now()
     const browserInstance = await this.openBrowser()
+    wdioDbg(`[${this.browserName}][${sessionId}] openBrowser total ${Date.now() - tOpen}ms`)
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
+    const tUrl = Date.now()
     await browserInstance.url(url)
+    wdioDbg(`[${this.browserName}][${sessionId}] url() ${Date.now() - tUrl}ms`)
     this.topLevelContext = await browserInstance.getWindowHandle()
     await this._throwIfClosing('opening the url')
   }

@@ -2,8 +2,9 @@ import type { SerializedLocator } from '@vitest/browser'
 import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
-import { unlink } from 'node:fs/promises'
+import { stat, unlink } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { traceDbg } from '../dbg'
 import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({ context, project, provider, sessionId }) => {
@@ -40,6 +41,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
     }
     const path = resolveTracesPath(command, name)
     provider.pendingTraces.set(path, sessionId)
+    traceDbg(`PROVIDER start name=${name} path=${path} session=${sessionId} pendingSize=${provider.pendingTraces.size}`)
     await context.tracing.startChunk({ name, title })
     return
   }
@@ -53,10 +55,41 @@ export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (
   if (isPlaywrightProvider(context.provider)) {
     const path = resolveTracesPath(context, name)
     context.provider.pendingTraces.delete(path)
+    traceDbg(`PROVIDER stop  name=${name} path=${path} session=${context.sessionId} pendingSize=${context.provider.pendingTraces.size}`)
     await context.context.tracing.stopChunk({ path })
     return { tracePath: path }
   }
   throw new TypeError(`The ${context.provider.name} provider does not support tracing.`)
+}
+
+// Some webkit builds resolve `tracing.stopChunk({ path })` before the trace
+// zip is fully written. Poll fs.stat to confirm the file exists with non-zero
+// size before letting the runner proceed to the next retry or to teardown.
+export const waitTracesFlushed: BrowserCommand<[{ paths: string[]; timeoutMs?: number }]> = async (
+  context,
+  { paths, timeoutMs = 5000 },
+) => {
+  if (!isPlaywrightProvider(context.provider)) {
+    return
+  }
+  const deadline = Date.now() + timeoutMs
+  for (const path of paths) {
+    while (true) {
+      try {
+        const s = await stat(path)
+        if (s.size > 0) {
+          break
+        }
+      }
+      catch {}
+      if (Date.now() > deadline) {
+        traceDbg(`PROVIDER flush TIMEOUT path=${path} after ${timeoutMs}ms`)
+        return
+      }
+      await new Promise(r => setTimeout(r, 25))
+    }
+  }
+  traceDbg(`PROVIDER flush OK paths=${paths.length}`)
 }
 
 export const markTrace: BrowserCommand<[payload: { name: string; element?: SerializedLocator; stack?: string }]> = async (

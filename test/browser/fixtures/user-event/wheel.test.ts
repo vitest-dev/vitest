@@ -55,7 +55,8 @@ describe.for([
 
     await (testType === 'userEvent' ? userEvent.wheel(selector, options) : selector.wheel(options))
 
-    expect(wheel).toHaveBeenCalledOnce()
+    // matches the pattern at line 28 — passive wheel listeners can fire after the action resolves.
+    await expect.poll(() => wheel).toHaveBeenCalledOnce()
     expect(wheel.mock.calls[0][0].deltaX).toBe(deltaX)
     expect(wheel.mock.calls[0][0].deltaY).toBe(deltaY)
   })
