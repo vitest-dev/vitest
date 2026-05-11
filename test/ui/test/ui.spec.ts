@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
@@ -254,6 +255,9 @@ test.describe('ui', () => {
     await item.hover()
     await item.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+
+    await getExplorerItem(page, 'colored error message').click()
+    await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /fixtures/error.test.ts:12:17')
   })
 
   test('file-filter', async ({ page }) => {
@@ -375,6 +379,11 @@ test.describe('ui', () => {
     })
   })
 })
+
+// TODO: consolidate in https://github.com/vitest-dev/vitest/pull/10237
+function getExplorerItem(page: Page, name: string) {
+  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+}
 
 test.describe('standalone', () => {
   let vitest: Vitest | undefined

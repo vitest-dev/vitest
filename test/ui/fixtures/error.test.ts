@@ -4,3 +4,11 @@ import { expect, it } from "vitest"
 it('escape html in error diff', () => {
   expect('<style>* {border: 2px solid green};</style>').toBe("")
 })
+
+it('colored error message', () => {
+  const blue = '\x1B[34m'
+  const reset = '\x1B[0m'
+  const message = `${blue}this-is-blue${reset}`
+  const error = new Error(message)
+  throw error
+})
