@@ -208,9 +208,9 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
    * Controls what happens when the spy is called with arguments that have no matching `calledWith` behavior.
    *
    * Valid configurations are:
-   * - `'passthrough'` — delegates to the spy's original implementation (default)
-   * - `'throw'` — throws an error
-   * - a function — called with the unmatched arguments; its return value is used
+   * - `'passthrough'`: delegates to the spy's original implementation (default)
+   * - `'throw'`: throws an error
+   * - a function: called with the unmatched arguments; its return value is used
    *
    * @default
    * 'passthrough'
@@ -284,7 +284,7 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
  */
 export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions<Fn>): When<Fn> {
   if (!isMockFunction(spy)) {
-    throw new TypeError('`when` requires a mock function created with `vi.fn()` or `vi.spyOn()`')
+    throw new TypeError('vi.when: the argument must be a mock function created with `vi.fn()` or `vi.spyOn()`')
   }
 
   type ScopedParameters = Parameters<Fn>
