@@ -61,23 +61,79 @@ type OnceBehaviorOptions = Omit<BehaviorOptions, 'times'>
  *   .thenReturn(true)
  *   .thenReturnOnce(false)
  */
-type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & Record<
-  | 'thenReturn'
-  | 'thenResolve',
-  (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
-> & Record<
-  | 'thenReturnOnce'
-  | 'thenResolveOnce',
-  (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
-> & Record<
-  | 'thenThrow'
-  | 'thenReject',
-  (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
-> & Record<
-  | 'thenThrowOnce'
-  | 'thenRejectOnce',
-  (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
->
+type CalledWithInstance<ReturnType, Fn extends Procedure> = When<Fn> & {
+  /**
+   * Schedules a synchronous return value for when the spy is called with the registered arguments.
+   *
+   * @param value - The value to return.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenReturn: (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a resolved `Promise` return value for when the spy is called with the registered arguments.
+   *
+   * @param value - The value to resolve with.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenResolve: (value: ReturnType, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a synchronous return value for a single call with the registered arguments, then removes the behavior.
+   *
+   * @param value - The value to return.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenReturnOnce: (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a resolved `Promise` return value for a single call with the registered arguments, then removes the behavior.
+   *
+   * @param value - The value to resolve with.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenResolveOnce: (value: ReturnType, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a thrown error for when the spy is called with the registered arguments.
+   *
+   * @param value - The value to throw.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenThrow: (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a rejected `Promise` for when the spy is called with the registered arguments.
+   *
+   * @param value - The value to reject with.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenReject: (value: unknown, options?: BehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a thrown error for a single call with the registered arguments, then removes the behavior.
+   *
+   * @param value - The value to throw.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenThrowOnce: (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+
+  /**
+   * Schedules a rejected `Promise` for a single call with the registered arguments, then removes the behavior.
+   *
+   * @param value - The value to reject with.
+   * @param options - Optional behavior configuration.
+   * @returns The same {@linkcode when|vi.when} instance for chaining.
+   */
+  thenRejectOnce: (value: unknown, options?: OnceBehaviorOptions | undefined) => CalledWithInstance<ReturnType, Fn>
+}
 
 /**
  * A handle returned by {@linkcode when|vi.when} that lets define per-argument behaviors on a spy and check whether all defined behaviors have been consumed.
