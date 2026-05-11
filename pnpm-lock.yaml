@@ -935,9 +935,6 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
-      '@vue/test-utils':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@vueuse/core':
         specifier: 'catalog:'
         version: 14.2.1(vue@3.5.29(typescript@5.9.3))
@@ -1354,7 +1351,7 @@ importers:
         version: link:../../packages/web-worker
       '@vue/test-utils':
         specifier: latest
-        version: 2.4.6
+        version: 2.4.10(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       happy-dom:
         specifier: latest
         version: 20.8.7
@@ -5575,9 +5572,6 @@ packages:
     peerDependenciesMeta:
       '@vue/server-renderer':
         optional: true
-
-  '@vue/test-utils@2.4.6':
-    resolution: {integrity: sha512-FMxEjOpYNYiFe0GkaHsnJPXFHxQ6m4t8vI/ElPGpMWxZKpmRvQ33OIrvRXemy6yha03RxhOlQuy+gZMC3CQSow==}
 
   '@vueuse/core@12.8.2':
     resolution: {integrity: sha512-HbvCmZdzAu3VGi/pWYm5Ut+Kd9mn1ZHnn4L5G8kOQTPs/IwIAmJoBrmYk2ckLArgMXZj0AW3n5CAejLUO+PhdQ==}
@@ -10236,9 +10230,6 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
-  vue-component-type-helpers@2.0.17:
-    resolution: {integrity: sha512-2car49m8ciqg/JjgMBkx7o/Fd2A7fHESxNqL/2vJYFLXm4VwYO4yH0rexOi4a35vwNgDyvt17B07Vj126l9rAQ==}
-
   vue-component-type-helpers@3.2.8:
     resolution: {integrity: sha512-9689efAXhN/EV86plgkL/XFiJSXhGtWPG6JDboZ+QnjlUWUUQrQ0ILKQtw4iQsuwIwu5k6Aw+JnehDe7161e7A==}
 
@@ -14161,11 +14152,6 @@ snapshots:
     optionalDependencies:
       '@vue/server-renderer': 3.5.29(vue@3.5.29(typescript@5.9.3))
 
-  '@vue/test-utils@2.4.6':
-    dependencies:
-      js-beautify: 1.15.1
-      vue-component-type-helpers: 2.0.17
-
   '@vueuse/core@12.8.2(typescript@5.9.3)':
     dependencies:
       '@types/web-bluetooth': 0.0.21
@@ -15209,7 +15195,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.3
+      semver: 7.7.4
 
   ee-first@1.1.1: {}
 
@@ -19608,8 +19594,6 @@ snapshots:
       vitest: link:packages/vitest
 
   vscode-uri@3.1.0: {}
-
-  vue-component-type-helpers@2.0.17: {}
 
   vue-component-type-helpers@3.2.8: {}
 
