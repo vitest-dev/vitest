@@ -756,7 +756,9 @@ export interface Assertion<T = any>
   toHaveNthResolvedWith: <E>(nthCall: number, value: E) => void
 
   /**
-   * Ensures a @todo has been exhausted
+   * Ensures a `vi.when` chain has been exhausted
+   *
+   * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
    *
    * @example
    * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')

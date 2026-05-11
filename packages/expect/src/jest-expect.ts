@@ -1061,9 +1061,11 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toHaveBeenExhausted', function () {
     const when = this._obj
 
+    const whenState = when['~getDiagnostics']()
+
     this.assert(
-      when.isExhausted(),
-      'expected when chain to have been exhausted', // @todo improve message
+      whenState.isExhausted,
+      `expected all behaviors to have been exhausted, but some remain:\n\n${whenState.pendingBehaviors}`,
       'expected at least one behavior to remain unexhausted, but all were consumed',
     )
   })
