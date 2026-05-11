@@ -276,7 +276,7 @@ function serializeEnvironmentModuleGraph(
   const modules: SerializedEnvironmentModuleNode[] = []
   for (const [id, mod] of environment.moduleGraph.idToModuleMap.entries()) {
     // Vite can generate module with `file = ""` for module id "#..."
-    // when module is non-existing.
+    // when the actual module doesn't exist (e.g. resolve failure or mocked module)
     if (mod.file == null) {
       continue
     }
@@ -312,9 +312,10 @@ function deserializeEnvironmentModuleGraph(
     const moduleId = serialized.idTable[id]
     const filePath = serialized.idTable[file]
     const urlPath = serialized.idTable[url]
-    // TODO: `createFileOnlyEntry('')` normalizes the file to ".". This keeps
+    // `createFileOnlyEntry('')` normalizes the file to ".". This keeps
     // the graph usable, but doesn't perfectly round-trip Vite's `file = ""`
     // nodes for ids like "#...".
+    // We may just do moduleNode.file = filePath in the future.
     const moduleNode = environment.moduleGraph.createFileOnlyEntry(filePath)
     moduleNode.url = urlPath
     moduleNode.id = moduleId
