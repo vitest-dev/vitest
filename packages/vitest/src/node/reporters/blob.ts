@@ -312,6 +312,9 @@ function deserializeEnvironmentModuleGraph(
     const moduleId = serialized.idTable[id]
     const filePath = serialized.idTable[file]
     const urlPath = serialized.idTable[url]
+    // TODO: `createFileOnlyEntry('')` normalizes the file to ".". This keeps
+    // the graph usable, but doesn't perfectly round-trip Vite's `file = ""`
+    // nodes for ids like "#...".
     const moduleNode = environment.moduleGraph.createFileOnlyEntry(filePath)
     moduleNode.url = urlPath
     moduleNode.id = moduleId
