@@ -6,6 +6,12 @@ import { noop } from '@vitest/utils/helpers'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
+const whenSymbol = Symbol.for('$$vitest:when')
+
+export function isWhenChain(input: object): input is When<Procedure> {
+  return Reflect.has(input, whenSymbol)
+}
+
 interface Behavior<Arguments extends unknown[], Value> {
   arguments: Arguments
   actions: {
@@ -360,6 +366,12 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       )
     }
   }
+
+  Reflect.defineProperty(output, whenSymbol, {
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
 
   return output
 }
