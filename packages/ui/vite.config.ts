@@ -20,14 +20,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    Vue({
-      features: {
-        propsDestructure: true,
-      },
-      script: {
-        defineModel: true,
-      },
-    }),
+    Vue(),
     Unocss({
       presets: [presetWind3(), presetAttributify(), presetIcons()],
       shortcuts: {
