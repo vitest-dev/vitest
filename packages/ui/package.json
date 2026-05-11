@@ -90,7 +90,7 @@
     "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "latest",
-    "vitest-browser-vue": "2.0.2",
+    "vitest-browser-vue": "2.1.0",
     "vue": "catalog:",
     "vue-router": "^5.0.3",
     "vue-tsc": "^3.2.5",
