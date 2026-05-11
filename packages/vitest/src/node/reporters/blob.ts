@@ -275,13 +275,15 @@ function serializeEnvironmentModuleGraph(
 
   const modules: SerializedEnvironmentModuleNode[] = []
   for (const [id, mod] of environment.moduleGraph.idToModuleMap.entries()) {
-    if (!mod.file) {
+    // Vite can generate module with `file = ""` for module id "#..."
+    // when module is non-existing.
+    if (mod.file == null) {
       continue
     }
 
     const importedIds: number[] = []
     for (const importedNode of mod.importedModules) {
-      if (importedNode.id) {
+      if (importedNode.id !== null) {
         importedIds.push(getIdIndex(importedNode.id))
       }
     }
