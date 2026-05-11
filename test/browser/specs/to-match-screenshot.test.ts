@@ -12,6 +12,9 @@ const testFilename = 'basic.test.ts'
 const testName = 'screenshot-snapshot'
 const bgColor = '#fff'
 
+// restart-on-config-change + UI mode boot can exceed the 20s default on webdriverio CI runs.
+const UI_MODE_WAIT_MS = 30_000
+
 const testContent = /* ts */`
 import { page, server } from 'vitest/browser'
 import { describe, test } from 'vitest'
@@ -260,7 +263,7 @@ describe('--watch', () => {
       // switch to UI mode
       fs.editFile('vitest.config.js', content => content.replace('ui: false,', 'ui: true,'))
 
-      await vitest.waitForStdout(`Test Files  ${instances.length} passed`, 20_000)
+      await vitest.waitForStdout(`Test Files  ${instances.length} passed`, UI_MODE_WAIT_MS)
     },
   )
 })

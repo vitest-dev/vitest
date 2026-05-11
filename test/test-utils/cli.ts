@@ -5,6 +5,8 @@ type Listener = (() => void)
 type ReadableOrWritable = Readable | Writable
 type Source = 'stdout' | 'stderr'
 
+const DEFAULT_WAIT_TIMEOUT_MS = process.env.CI ? 20_000 : 4_000
+
 export class Cli {
   stdout = ''
   stderr = ''
@@ -86,7 +88,7 @@ export class Cli {
       const timeoutId = setTimeout(() => {
         error.message = `Timeout when waiting for error "${expected}".\nReceived:\nstdout: ${this.stdout}\nstderr: ${this.stderr}`
         reject(error)
-      }, timeout ?? process.env.CI ? 20_000 : 4_000)
+      }, timeout ?? DEFAULT_WAIT_TIMEOUT_MS)
 
       const listener = () => {
         if (this[source].includes(expected)) {
