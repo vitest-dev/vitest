@@ -1453,6 +1453,34 @@ test('spy function returns bananas on second call', async () => {
 })
 ```
 
+## toHaveBeenExhausted <Version>5.0.0</Version> {#tohavebeenexhausted}
+
+- **Type:** `() => void`
+
+This assertion checks that every behavior registered on a [`vi.when`](/api/vi#vi-when) chain has been consumed. A behavior is considered exhausted when it has been called the number of times specified by its `times` option, or at least once for behaviors that apply indefinitely.
+
+Requires a `When` chain returned by `vi.when` to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('all behaviors were consumed', () => {
+  const spy = vi.fn()
+  const w = vi.when(spy)
+    .calledWith(1)
+    .thenReturnOnce('once')
+    .calledWith(2)
+    .thenReturn('always')
+
+  expect(w).not.toHaveBeenExhausted()
+
+  spy(1) // consumes the `thenReturnOnce` behavior
+  spy(2) // satisfies the `thenReturn` behavior (called at least once)
+
+  expect(w).toHaveBeenExhausted()
+})
+```
+
 ## called <Version>4.1.0</Version> {#called}
 
 - **Type:** `Assertion` (property, not a method)

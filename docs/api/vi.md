@@ -797,6 +797,134 @@ globalThis.IntersectionObserver === undefined
 IntersectionObserver === undefined
 ```
 
+### vi.when <Version type="experimental">5.0</Version> <Experimental /> {#vi-when}
+
+```ts
+interface WhenOptions {
+  onUnmatched?: 'throw' | 'passthrough' | ((...args: unknown[]) => unknown)
+}
+
+interface BehaviorOptions {
+  times?: number
+}
+
+function when(spy: Mock, options?: WhenOptions): When
+```
+
+Defines per-argument behaviors on a spy, replacing its implementation for the duration of the `when` chain.
+
+Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with deep equality and support asymmetric matchers such as `expect.any()`.
+
+```ts
+const spy = vi.fn()
+
+vi.when(spy)
+  .calledWith(1)
+  .thenReturn('one')
+  .calledWith(2)
+  .thenReturn('two')
+
+expect(spy(1)).toBe('one')
+expect(spy(2)).toBe('two')
+```
+
+Available `then*` methods:
+
+| Method | Description |
+|--------|-------------|
+| `thenReturn(value, options?)` | Returns `value`. |
+| `thenReturnOnce(value)` | Returns `value` once, then falls back. |
+| `thenThrow(error, options?)` | Throws `error`. |
+| `thenThrowOnce(error)` | Throws `error` once, then falls back. |
+| `thenResolve(value, options?)` | Returns a resolved `Promise` with `value`. |
+| `thenResolveOnce(value)` | Resolves once, then falls back. |
+| `thenReject(error, options?)` | Returns a rejected `Promise` with `error`. |
+| `thenRejectOnce(error)` | Rejects once, then falls back. |
+
+The optional `times` option limits how many times a behavior applies before being exhausted. Behaviors registered for the same arguments are consumed last-in-first-out: the most recently registered behavior is tried first, and once exhausted, earlier ones act as fallbacks.
+
+```ts
+const spy = vi.fn<(key: string) => string>()
+
+vi.when(spy)
+  .calledWith('theme')
+  .thenReturn('light') // fallback, applies indefinitely
+  .thenReturn('dark', { times: 2 }) // applied first for the next 2 calls
+
+expect(spy('theme')).toBe('dark')
+expect(spy('theme')).toBe('dark')
+expect(spy('theme')).toBe('light') // falls back
+```
+
+When called with arguments that match no registered behavior, the spy falls through to its original implementation by default. Use the `onUnmatched` option to change this:
+
+- `'passthrough'` (**default**): delegates to the spy's original implementation
+- `'throw'`: throws an error listing the unmatched arguments
+- a function: called with the unmatched arguments; its return value is used
+
+```ts
+const spy = vi.fn<(id: number) => string>()
+
+vi.when(spy, { onUnmatched: 'throw' })
+  .calledWith(1)
+  .thenReturn('Alice')
+
+expect(spy(1)).toBe('Alice')
+expect(() => spy(99)).toThrow() // no behavior defined for 99
+```
+
+The `When` object returned by `vi.when` supports the [`toHaveBeenExhausted` assertion](/api/expect#tohavebeenexhausted), which passes once every registered behavior has been consumed.
+
+```ts
+const spy = vi.fn()
+const w = vi.when(spy)
+  .calledWith(1)
+  .thenReturnOnce('once')
+  .calledWith(2)
+  .thenReturn('always')
+
+expect(w).not.toHaveBeenExhausted()
+
+spy(1) // consumes the `thenReturnOnce` behavior
+spy(2) // satisfies `thenReturn` (called at least once)
+
+expect(w).toHaveBeenExhausted()
+```
+
+::: tip
+In environments that support [Explicit Resource Management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management), you can use `using` instead of `const` to automatically restore the spy's original implementation when the containing block exits:
+
+```ts
+const spy = vi.fn(() => 'original')
+
+{
+  using w = vi.when(spy)
+    .calledWith('hello')
+    .thenReturn('mocked')
+
+  expect(spy('hello')).toBe('mocked')
+} // ← spy's original implementation is restored here
+
+expect(spy('hello')).toBe('original')
+```
+:::
+
+### vi.isWhenChain <Version type="experimental">5.0</Version> <Experimental /> {#vi-iswhenchain}
+
+```ts
+function isWhenChain(input: object): input is When
+```
+
+Returns `true` if the given value is a `When` chain created by [`vi.when`](#vi-when). If you are using TypeScript, it will also narrow down its type.
+
+```ts
+const spy = vi.fn()
+const w = vi.when(spy).calledWith(1).thenReturn(0)
+
+expect(vi.isWhenChain(w)).toBe(true)
+expect(vi.isWhenChain(spy)).toBe(false)
+```
+
 ## Fake Timers
 
 This sections describes how to work with [fake timers](/guide/mocking/timers).
