@@ -203,7 +203,7 @@ interface When<Fn extends Procedure> extends Disposable {
 /**
  * Options for {@linkcode when|vi.when}.
  */
-interface WhenOptions {
+interface WhenOptions<Fn extends Procedure = Procedure> {
   /**
    * Controls what happens when the spy is called with arguments that have no matching `calledWith` behavior.
    *
@@ -223,7 +223,7 @@ interface WhenOptions {
    * expect(spy(1)).toEqual({ id: 1, name: 'Alice' })
    * expect(() => spy(2)).toThrow()
    */
-  onUnmatched?: 'throw' | 'passthrough' | Procedure | undefined
+  onUnmatched?: 'throw' | 'passthrough' | Fn | undefined
 }
 
 /**
@@ -282,7 +282,7 @@ interface WhenOptions {
  * expect(spy(1)).toEqual({ id: 1, name: 'Alice' })
  * expect(() => spy(2)).toThrow()
  */
-export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions): When<Fn> {
+export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOptions<Fn>): When<Fn> {
   if (!isMockFunction(spy)) {
     throw new TypeError('`when` requires a mock function created with `vi.fn()` or `vi.spyOn()`')
   }
