@@ -462,6 +462,16 @@ describe('vi.when()', () => {
 
       expect(w).not.toHaveBeenExhausted()
     })
+
+    test('throws error when `times` option is not greater than 0', () => {
+      expect(() => {
+        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: 0 })
+      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+
+      expect(() => {
+        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: -1 })
+      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+    })
   })
 
   describe('state snapshots', () => {
