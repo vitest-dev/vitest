@@ -59,9 +59,55 @@ Error: afterAll error
 "
 `;
 
+exports[`emits one <testcase> per unhandled error and titles them by error.type 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="4" failures="0" errors="3" time="...">
+    <testsuite name="multi.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="multi.test.ts" name="triggers two rejections and one uncaught exception" time="...">
+        </testcase>
+    </testsuite>
+    <testsuite name="vitest unhandled errors" timestamp="..." hostname="..." tests="3" failures="0" errors="3" skipped="0" time="...">
+        <testcase classname="vitest unhandled errors" name="Uncaught Exception: uncaught timer" time="...">
+            <error message="uncaught timer" type="Error">
+Error: uncaught timer
+ ❯ Timeout._onTimeout multi.test.ts:7:11
+
+This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
+        </testcase>
+        <testcase classname="vitest unhandled errors" name="Unhandled Rejection: first rejection" time="...">
+            <error message="first rejection" type="Error">
+Error: first rejection
+ ❯ multi.test.ts:4:23
+
+This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
+        </testcase>
+        <testcase classname="vitest unhandled errors" name="Unhandled Rejection: second rejection" time="...">
+            <error message="second rejection" type="Error">
+Error: second rejection
+ ❯ multi.test.ts:5:23
+
+This error originated in &quot;multi.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers two rejections and one uncaught exception&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
 exports[`format error 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="8" errors="0" time="...">
+<testsuites name="vitest tests" tests="10" failures="8" errors="1" time="...">
     <testsuite name="error.test.ts" timestamp="..." hostname="..." tests="9" failures="8" errors="0" skipped="0" time="...">
         <testcase classname="error.test.ts" name="stack" time="...">
             <failure message="throwSimple" type="Error">
@@ -124,6 +170,18 @@ Error: throwSuite
             </failure>
         </testcase>
     </testsuite>
+    <testsuite name="vitest unhandled errors" timestamp="..." hostname="..." tests="1" failures="0" errors="1" skipped="0" time="...">
+        <testcase classname="vitest unhandled errors" name="Unhandled Rejection: throwSimple" time="...">
+            <error message="throwSimple" type="Error">
+Error: throwSimple
+ ❯ throwSimple error.test.ts:44:9
+ ❯ error.test.ts:16:16
+ ❯ error.test.ts:16:28
+
+This error originated in &quot;error.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+            </error>
+        </testcase>
+    </testsuite>
 </testsuites>
 "
 `;
@@ -152,6 +210,45 @@ __test_stdout__
 __test_stderr__
 
             </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>
+"
+`;
+
+exports[`resolves unhandled errors to the owning project in a multi-project workspace 1`] = `
+"<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="4" failures="0" errors="2" time="...">
+    <testsuite name="space-1/test/reject.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="space-1/test/reject.test.ts" file="space-1/test/reject.test.ts" name="triggers a rejection from project 1" time="...">
+        </testcase>
+    </testsuite>
+    <testsuite name="space-2/test/reject.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+        <testcase classname="space-2/test/reject.test.ts" file="space-2/test/reject.test.ts" name="triggers a rejection from project 2" time="...">
+        </testcase>
+    </testsuite>
+    <testsuite name="vitest unhandled errors" timestamp="..." hostname="..." tests="2" failures="0" errors="2" skipped="0" time="...">
+        <testcase classname="vitest unhandled errors" file="space-1/test/reject.test.ts" name="Unhandled Rejection: rejection from space-1" time="...">
+            <error message="rejection from space-1" type="Error">
+Error: rejection from space-1
+ ❯ test/reject.test.ts:4:23
+
+This error originated in &quot;test/reject.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers a rejection from project 1&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
+        </testcase>
+        <testcase classname="vitest unhandled errors" file="space-2/test/reject.test.ts" name="Unhandled Rejection: rejection from space-2" time="...">
+            <error message="rejection from space-2" type="Error">
+Error: rejection from space-2
+ ❯ test/reject.test.ts:4:23
+
+This error originated in &quot;test/reject.test.ts&quot; test file. It doesn&apos;t mean the error was thrown inside the file itself, but while it was running.
+The latest test that might&apos;ve caused the error is &quot;triggers a rejection from project 2&quot;. It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+            </error>
         </testcase>
     </testsuite>
 </testsuites>

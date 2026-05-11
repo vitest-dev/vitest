@@ -4,7 +4,12 @@ import { defaultExclude } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    reporters: ['verbose'],
+    reporters: [
+      'verbose',
+      (process.env.VITEST_CI_BLOB_LABEL
+        ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
+        : {}),
+    ],
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {
         return false

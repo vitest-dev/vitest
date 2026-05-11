@@ -36,12 +36,17 @@ interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
+export interface CapturePrintErrorResult {
+  nearest: ParsedStack | undefined
+  output: string
+}
+
 // use Logger with custom Console to capture entire error printing
 export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-): { nearest: ParsedStack | undefined; output: string } {
+): CapturePrintErrorResult {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
@@ -90,7 +95,7 @@ export function printError(
 
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
-      if (options.task?.file.pool === 'browser' && project.browser) {
+      if (project.browser) {
         return project.browser.parseErrorStacktrace(error, {
           frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,

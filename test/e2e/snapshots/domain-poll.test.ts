@@ -444,3 +444,53 @@ test('throwing', async () => {
     }
   `)
 })
+
+test('signal', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': `
+import '../test/fixtures/domain/basic-extend'
+
+test('signal', async () => {
+  let aborted = false
+  await expect(
+    expect.poll(({ signal }) => {
+      signal.addEventListener('abort', () => {
+        aborted = true
+      })
+      return new Promise(() => {})
+    }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
+  ).rejects.toThrowErrorMatchingInlineSnapshot()
+  expect(aborted).toMatchInlineSnapshot()
+})
+`,
+  }, {
+    globals: true,
+    update: 'all',
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    Object {
+      "basic.test.ts": Object {
+        "signal": "passed",
+      },
+    }
+  `)
+  expect(result.fs.readFile('basic.test.ts')).toMatchInlineSnapshot(`
+    "
+    import '../test/fixtures/domain/basic-extend'
+
+    test('signal', async () => {
+      let aborted = false
+      await expect(
+        expect.poll(({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          return new Promise(() => {})
+        }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
+      ).rejects.toThrowErrorMatchingInlineSnapshot(\`[Error: poll() did not produce a stable snapshot within the timeout]\`)
+      expect(aborted).toMatchInlineSnapshot(\`true\`)
+    })
+    "
+  `)
+})

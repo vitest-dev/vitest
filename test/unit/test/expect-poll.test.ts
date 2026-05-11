@@ -1,4 +1,4 @@
-import { chai, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
@@ -128,43 +128,49 @@ test('custom message', async () => {
   ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
 })
 
-test('should set _isLastPollAttempt flag on last call', async () => {
-  const fn = vi.fn(function (this: object) {
-    return chai.util.flag(this, '_isLastPollAttempt')
-  })
-  await expect(async () => {
-    await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
-  }).rejects.toThrow()
-  fn.mock.results.forEach((result, index) => {
-    const isLastCall = index === fn.mock.results.length - 1
-    expect(result.value).toBe(isLastCall ? true : undefined)
-  })
+test('unresolved function', async () => {
+  let aborted = false
+  await expect(
+    expect
+      .poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          await new Promise(resolve => setTimeout(resolve, 500))
+          return 'ok'
+        },
+        { timeout: 50 },
+      )
+      .toBe('ok'),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  expect(aborted).toBe(true)
 })
 
-test('should handle success on last attempt', async () => {
-  const fn = vi.fn(function (this: object) {
-    if (chai.util.flag(this, '_isLastPollAttempt')) {
-      return 1
-    }
-    return undefined
+test('unresolved assertion', async () => {
+  expect.extend({
+    toTestSlow: async () => {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      return {
+        pass: true,
+        message: () => 'ok',
+      }
+    },
   })
-  await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(1)
-})
 
-test('should handle failure on last attempt', async () => {
-  const fn = vi.fn(function (this: object) {
-    if (chai.util.flag(this, '_isLastPollAttempt')) {
-      return 3
-    }
-    return 2
-  })
-  await expect(async () => {
-    await expect.poll(fn, { interval: 10, timeout: 100 }).toBe(1)
-  }).rejects.toThrow(expect.objectContaining({
-    // makes sure cause message reflects the last attempt value
-    message: 'expected 3 to be 1 // Object.is equality',
-    cause: expect.objectContaining({
-      message: 'Matcher did not succeed in time.',
-    }),
-  }))
+  let aborted = false
+  await expect(
+    (
+      expect.poll(
+        async ({ signal }) => {
+          signal.addEventListener('abort', () => {
+            aborted = true
+          })
+          return 'ok'
+        },
+        { timeout: 50 },
+      ) as any
+    ).toTestSlow(),
+  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+  expect(aborted).toBe(true)
 })

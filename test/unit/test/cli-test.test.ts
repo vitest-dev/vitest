@@ -4,9 +4,6 @@ import { ReportersMap, rolldownVersion } from 'vitest/node'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
-// @ts-expect-error not typed global
-globalThis.__VITEST_GENERATE_UI_TOKEN__ = true
-
 const vitestCli = createCLI()
 
 function parseArguments(commands: string, full = false) {
@@ -345,7 +342,7 @@ test('clearScreen', async (ctx) => {
 })
 
 test('merge-reports', () => {
-  expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest-reports' })
+  expect(getCLIOptions('--merge-reports')).toEqual({ mergeReports: '.vitest/blob' })
   expect(getCLIOptions('--merge-reports=different-folder')).toEqual({ mergeReports: 'different-folder' })
   expect(getCLIOptions('--merge-reports different-folder')).toEqual({ mergeReports: 'different-folder' })
 })

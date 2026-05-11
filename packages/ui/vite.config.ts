@@ -1,3 +1,4 @@
+import type { Plugin } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
@@ -54,23 +55,13 @@ export default defineConfig({
     Pages({
       dirs: ['client/pages'],
     }),
+    devUiScriptPlugin(),
     // uncomment to see the HTML reporter preview
     // {
     //   name: 'debug-html-report',
     //   apply: 'serve',
     //   transformIndexHtml(html) {
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
-    //   },
-    // },
-
-    // uncomment to see the browser tab
-    // {
-    //   name: 'browser-dev-preview',
-    //   apply: 'serve',
-    //   transformIndexHtml() {
-    //     return [
-    //       { tag: 'script', attrs: { src: './browser.dev.js' } },
-    //     ]
     //   },
     // },
     {
@@ -89,3 +80,56 @@ export default defineConfig({
     outDir: './dist/client',
   },
 })
+
+function devUiScriptPlugin(): Plugin {
+  const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
+  const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
+
+  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
+  const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
+
+  return {
+    name: 'dev-ui-script',
+    apply(_config, env) {
+      return env.command === 'serve' && env.mode !== 'test'
+    },
+    async transformIndexHtml() {
+      if (process.env.BROWSER_DEV) {
+        const response = await fetch(browserUrl)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch browser runner HTML from ${browserUrl}`)
+        }
+        const browserHtml = await response.text()
+        const browserScript = browserHtml.match(BROWSER_SCRIPT_RE)?.[1]
+        if (!browserScript) {
+          throw new Error('Failed to extract browser runner state from the response')
+        }
+        return [
+          {
+            tag: 'script',
+            attrs: { type: 'module' },
+            children: browserScript,
+            injectTo: 'head-prepend',
+          },
+        ]
+      }
+
+      const response = await fetch(uiUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiUrl}`)
+      }
+      const testHtml = await response.text()
+      const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
+      if (!tokenScript) {
+        throw new Error('Failed to extract VITEST_API_TOKEN from the response')
+      }
+      return [
+        {
+          tag: 'script',
+          children: tokenScript,
+          injectTo: 'head-prepend',
+        },
+      ]
+    },
+  }
+}

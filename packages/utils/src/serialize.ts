@@ -3,6 +3,11 @@ declare class Element {
   tagName: string
 }
 
+// buffer exists only in node
+declare class Buffer {
+  length: number
+}
+
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
 

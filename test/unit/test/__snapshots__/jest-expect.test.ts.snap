@@ -20,7 +20,7 @@ exports[`asymmetric matcher error 2`] = `
 
 exports[`asymmetric matcher error 3`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "foo": "hello",
 }",
   "diff": "- Expected
@@ -30,7 +30,7 @@ exports[`asymmetric matcher error 3`] = `
 -   "foo": StringContaining "xx",
 +   "foo": "hello",
   }",
-  "expected": "Object {
+  "expected": "{
   "foo": StringContaining "xx",
 }",
   "message": "expected { foo: 'hello' } to deeply equal { foo: StringContaining "xx" }",
@@ -39,7 +39,7 @@ exports[`asymmetric matcher error 3`] = `
 
 exports[`asymmetric matcher error 4`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "foo": "hello",
 }",
   "diff": "- Expected
@@ -49,7 +49,7 @@ exports[`asymmetric matcher error 4`] = `
 -   "foo": StringNotContaining "ll",
 +   "foo": "hello",
   }",
-  "expected": "Object {
+  "expected": "{
   "foo": StringNotContaining "ll",
 }",
   "message": "expected { foo: 'hello' } to deeply equal { foo: StringNotContaining "ll" }",
@@ -58,7 +58,7 @@ exports[`asymmetric matcher error 4`] = `
 
 exports[`asymmetric matcher error 5`] = `
 {
-  "actual": "hello",
+  "actual": ""hello"",
   "diff": "- Expected:
 stringContainingCustom<"xx">
 
@@ -71,7 +71,7 @@ stringContainingCustom<"xx">
 
 exports[`asymmetric matcher error 6`] = `
 {
-  "actual": "hello",
+  "actual": ""hello"",
   "diff": "- Expected:
 not.stringContainingCustom<"ll">
 
@@ -84,7 +84,7 @@ not.stringContainingCustom<"ll">
 
 exports[`asymmetric matcher error 7`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "foo": "hello",
 }",
   "diff": "- Expected
@@ -94,7 +94,7 @@ exports[`asymmetric matcher error 7`] = `
 -   "foo": stringContainingCustom<"xx">,
 +   "foo": "hello",
   }",
-  "expected": "Object {
+  "expected": "{
   "foo": stringContainingCustom<"xx">,
 }",
   "message": "expected { foo: 'hello' } to deeply equal { foo: stringContainingCustom<"xx"> }",
@@ -103,7 +103,7 @@ exports[`asymmetric matcher error 7`] = `
 
 exports[`asymmetric matcher error 8`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "foo": "hello",
 }",
   "diff": "- Expected
@@ -113,7 +113,7 @@ exports[`asymmetric matcher error 8`] = `
 -   "foo": not.stringContainingCustom<"ll">,
 +   "foo": "hello",
   }",
-  "expected": "Object {
+  "expected": "{
   "foo": not.stringContainingCustom<"ll">,
 }",
   "message": "expected { foo: 'hello' } to deeply equal { foo: not.stringContainingCustom{…} }",
@@ -122,25 +122,25 @@ exports[`asymmetric matcher error 8`] = `
 
 exports[`asymmetric matcher error 9`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expected "hello" to contain "xx"",
 }
 `;
 
 exports[`asymmetric matcher error 10`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expected "hello" not to contain "ll"",
 }
 `;
 
 exports[`asymmetric matcher error 11`] = `
 {
-  "actual": "hello",
+  "actual": ""hello"",
   "diff": "- Expected:
 testComplexMatcher<Object {
   "x": "y",
@@ -157,7 +157,7 @@ testComplexMatcher<Object {
 
 exports[`asymmetric matcher error 12`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "k": "v",
   "k2": "v2",
 }",
@@ -180,7 +180,7 @@ exports[`asymmetric matcher error 12`] = `
 
 exports[`asymmetric matcher error 13`] = `
 {
-  "actual": "Array [
+  "actual": "[
   "a",
   "b",
 ]",
@@ -225,7 +225,7 @@ exports[`asymmetric matcher error 15`] = `
 
 exports[`asymmetric matcher error 16`] = `
 {
-  "actual": "foo",
+  "actual": ""foo"",
   "diff": "- Expected:
 toBeOneOf<Array [
   "bar",
@@ -268,7 +268,7 @@ toBeOneOf<Array [
 
 exports[`asymmetric matcher error 18`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "k": "v",
   "k2": "v2",
 }",
@@ -319,7 +319,7 @@ exports[`asymmetric matcher error 20`] = `
 
 exports[`asymmetric matcher error 21`] = `
 {
-  "actual": "hello",
+  "actual": ""hello"",
   "diff": "- Expected:
 stringContainingCustom<"xx">
 
@@ -341,7 +341,7 @@ exports[`asymmetric matcher error 22`] = `
 
 exports[`asymmetric matcher error 23`] = `
 {
-  "actual": "hello",
+  "actual": ""hello"",
   "diff": "- Expected:
 stringContainingCustom<"ll">
 
@@ -354,7 +354,9 @@ stringContainingCustom<"ll">
 
 exports[`asymmetric matcher error 24`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+}",
   "diff": "- Expected:
 StringContaining "ll"
 
@@ -369,7 +371,9 @@ Error {
 
 exports[`asymmetric matcher error 25`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+}",
   "diff": "- Expected:
 stringContainingCustom<"ll">
 
@@ -384,7 +388,9 @@ Error {
 
 exports[`asymmetric matcher error 26`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "MyError2 {
+  "message": "hello",
+}",
   "diff": "- Expected:
 [Function MyError1]
 
@@ -412,7 +418,7 @@ undefined",
 
 exports[`diff 2`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "hello": "world",
 }",
   "diff": "- Expected:
@@ -429,7 +435,7 @@ false
 
 exports[`diff 3`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "hello": "world",
 }",
   "diff": "- Expected:
@@ -446,7 +452,7 @@ NaN
 
 exports[`diff 4`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "hello": "world",
 }",
   "diff": "- Expected:
@@ -463,7 +469,7 @@ undefined
 
 exports[`diff 5`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "hello": "world",
 }",
   "diff": "- Expected:
@@ -480,7 +486,10 @@ null
 
 exports[`error equality 1`] = `
 {
-  "actual": "[Error: hi]",
+  "actual": "MyError {
+  "message": "hi",
+  "custom": "a",
+}",
   "diff": "- Expected
 + Received
 
@@ -489,14 +498,20 @@ exports[`error equality 1`] = `
 -   "custom": "b",
 +   "custom": "a",
   }",
-  "expected": "[Error: hi]",
+  "expected": "MyError {
+  "message": "hi",
+  "custom": "b",
+}",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hi { custom: 'b' }",
 }
 `;
 
 exports[`error equality 2`] = `
 {
-  "actual": "[Error: hi]",
+  "actual": "MyError {
+  "message": "hi",
+  "custom": "a",
+}",
   "diff": "- Expected
 + Received
 
@@ -505,14 +520,20 @@ exports[`error equality 2`] = `
 -   "custom": "b",
 +   "custom": "a",
   }",
-  "expected": "[Error: hi]",
+  "expected": "MyError {
+  "message": "hi",
+  "custom": "b",
+}",
   "message": "expected a thrown error to be Error: hi { custom: 'b' }",
 }
 `;
 
 exports[`error equality 3`] = `
 {
-  "actual": "[Error: hi]",
+  "actual": "MyError {
+  "message": "hi",
+  "custom": "a",
+}",
   "diff": "- Expected
 + Received
 
@@ -521,14 +542,20 @@ exports[`error equality 3`] = `
 +   "message": "hi",
     "custom": "a",
   }",
-  "expected": "[Error: hello]",
+  "expected": "MyError {
+  "message": "hello",
+  "custom": "a",
+}",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }
 `;
 
 exports[`error equality 4`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "MyError {
+  "message": "hello",
+  "custom": "a",
+}",
   "diff": "- Expected
 + Received
 
@@ -537,14 +564,20 @@ exports[`error equality 4`] = `
     "message": "hello",
     "custom": "a",
   }",
-  "expected": "[Error: hello]",
+  "expected": "YourError {
+  "message": "hello",
+  "custom": "a",
+}",
   "message": "expected Error: hello { custom: 'a' } to strictly equal Error: hello { custom: 'a' }",
 }
 `;
 
 exports[`error equality 5`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
   "diff": "- Expected
 + Received
 
@@ -553,14 +586,19 @@ exports[`error equality 5`] = `
 -   "cause": "y",
 +   "cause": "x",
   }",
-  "expected": "[Error: hello]",
+  "expected": "Error {
+  "message": "hello",
+  "cause": "y",
+}",
   "message": "expected Error: hello to deeply equal Error: hello",
 }
 `;
 
 exports[`error equality 6`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+}",
   "diff": "- Expected
 + Received
 
@@ -568,14 +606,19 @@ exports[`error equality 6`] = `
     "message": "hello",
 -   "cause": "y",
   }",
-  "expected": "[Error: hello]",
+  "expected": "Error {
+  "message": "hello",
+  "cause": "y",
+}",
   "message": "expected Error: hello to deeply equal Error: hello",
 }
 `;
 
 exports[`error equality 7`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+}",
   "diff": "- Expected
 + Received
 
@@ -583,14 +626,19 @@ exports[`error equality 7`] = `
 -   "message": "world",
 +   "message": "hello",
   }",
-  "expected": "[Error: world]",
+  "expected": "Error {
+  "message": "world",
+}",
   "message": "expected Error: hello to deeply equal Error: world",
 }
 `;
 
 exports[`error equality 8`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
   "diff": "- Expected
 + Received
 
@@ -600,7 +648,7 @@ exports[`error equality 8`] = `
 +   "message": "hello",
 +   "cause": "x",
   }",
-  "expected": "Object {
+  "expected": "{
   "something": "else",
 }",
   "message": "expected Error: hello to deeply equal { something: 'else' }",
@@ -609,7 +657,16 @@ exports[`error equality 8`] = `
 
 exports[`error equality 9`] = `
 {
-  "actual": "[AggregateError: outer]",
+  "actual": "AggregateError {
+  "message": "outer",
+  "cause": "x",
+  "errors": [
+    Error {
+      "message": "inner",
+      "cause": "x",
+    },
+  ],
+}",
   "diff": "- Expected
 + Received
 
@@ -624,14 +681,26 @@ exports[`error equality 9`] = `
       },
     ],
   }",
-  "expected": "[AggregateError: outer]",
+  "expected": "AggregateError {
+  "message": "outer",
+  "cause": "x",
+  "errors": [
+    Error {
+      "message": "inner",
+      "cause": "y",
+    },
+  ],
+}",
   "message": "expected AggregateError: outer { …(1) } to deeply equal AggregateError: outer { …(1) }",
 }
 `;
 
 exports[`error equality 10`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": [Circular],
+}",
   "diff": "- Expected
 + Received
 
@@ -640,14 +709,20 @@ exports[`error equality 10`] = `
 +   "message": "hello",
     "cause": [Circular],
   }",
-  "expected": "[Error: world]",
+  "expected": "Error {
+  "message": "world",
+  "cause": [Circular],
+}",
   "message": "expected Error: hello to deeply equal Error: world",
 }
 `;
 
 exports[`error equality 11`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
   "diff": "- Expected
 + Received
 
@@ -667,7 +742,10 @@ exports[`error equality 11`] = `
 
 exports[`error equality 12`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
   "diff": "- Expected
 + Received
 
@@ -687,7 +765,10 @@ exports[`error equality 12`] = `
 
 exports[`error equality 13`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
   "diff": "- Expected
 + Received
 
@@ -706,11 +787,185 @@ exports[`error equality 13`] = `
 }
 `;
 
+exports[`expected and actual reuse the stringification from the diff 1`] = `
+{
+  "actual": "1",
+  "diff": "- Expected
++ Received
+
+- 2
++ 1",
+  "expected": "2",
+  "message": "expected 1 to deeply equal 2",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 2`] = `
+{
+  "actual": "false",
+  "diff": "- Expected
++ Received
+
+- true
++ false",
+  "expected": "true",
+  "message": "expected false to deeply equal true",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 3`] = `
+{
+  "actual": "a
+b
+c",
+  "diff": "- Expected
++ Received
+
+  a
+- B
++ b
+  c",
+  "expected": "a
+B
+c",
+  "message": "expected 'a\\nb\\nc' to deeply equal 'a\\nB\\nc'",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 4`] = `
+{
+  "actual": "foo",
+  "diff": "Expected: "bar"
+Received: "foo"",
+  "expected": "bar",
+  "message": "expected 'foo' to deeply equal 'bar'",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 5`] = `
+{
+  "actual": "Map {
+  "x" => 1,
+  "y" => 2,
+}",
+  "diff": "- Expected
++ Received
+
+  Map {
+    "x" => 1,
+-   "y" => 3,
++   "y" => 2,
+  }",
+  "expected": "Map {
+  "x" => 1,
+  "y" => 3,
+}",
+  "message": "expected Map{ 'x' => 1, 'y' => 2 } to deeply equal Map{ 'x' => 1, 'y' => 3 }",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 6`] = `
+{
+  "actual": "Set {
+  1,
+  2,
+}",
+  "diff": "- Expected
++ Received
+
+  Set {
+    1,
+-   3,
++   2,
+  }",
+  "expected": "Set {
+  1,
+  3,
+}",
+  "message": "expected Set{ 1, 2 } to deeply equal Set{ 1, 3 }",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 7`] = `
+{
+  "actual": "1",
+  "diff": "- Expected:
+"foo"
+
++ Received:
+1",
+  "expected": ""foo"",
+  "message": "expected 1 to deeply equal 'foo'",
+}
+`;
+
+exports[`expected and actual reuse the stringification from the diff 8`] = `
+{
+  "actual": "[
+  {
+    "x": 1,
+    "y": 2,
+    "z": 3,
+  },
+  {
+    "x": 3,
+    "y": 1,
+    "z": 2,
+  },
+  {
+    "x": 2,
+    "y": 3,
+    "z": 1,
+  },
+  "wrong",
+]",
+  "diff": "- Expected
++ Received
+
+  [
+    {
+      "x": 1,
+      "y": 2,
+      "z": 3,
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "z": 2,
+    },
+    {
+      "x": 2,
+      "y": 3,
+      "z": 1,
+    },
++   "wrong",
+  ]",
+  "expected": "[
+  {
+    "x": 1,
+    "y": 2,
+    "z": 3,
+  },
+  {
+    "x": 3,
+    "y": 1,
+    "z": 2,
+  },
+  {
+    "x": 2,
+    "y": 3,
+    "z": 1,
+  },
+]",
+  "message": "expected [ { x: 1, y: 2, z: 3 }, …(3) ] to deeply equal [ ObjectContaining {"x": 1}, …(2) ]",
+}
+`;
+
 exports[`toBeOneOf() > error message 1`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expect(received).toBeOneOf()
 
 Expected value to be one of:
@@ -727,9 +982,9 @@ Received:
 
 exports[`toBeOneOf() > error message 2`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expect(received).toBeOneOf()
 
 Expected value to be one of:
@@ -744,7 +999,7 @@ Received:
 
 exports[`toBeOneOf() > error message 3`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "a": 0,
 }",
   "diff": "- Expected:
@@ -773,7 +1028,7 @@ toBeOneOf<Array [
 
 exports[`toBeOneOf() > error message 4`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "name": "mango",
 }",
   "diff": "- Expected
@@ -787,7 +1042,7 @@ exports[`toBeOneOf() > error message 4`] = `
 - ]>,
 +   "name": "mango",
   }",
-  "expected": "Object {
+  "expected": "{
   "name": toBeOneOf<Array [
   "apple",
   "banana",
@@ -800,7 +1055,7 @@ exports[`toBeOneOf() > error message 4`] = `
 
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
-  "actual": "Array [
+  "actual": "[
   "Hi",
 ]",
   "diff": "- Expected
@@ -810,7 +1065,7 @@ exports[`toHaveBeenNthCalledWith error 1`] = `
 -   "hey",
 +   "Hi",
   ]",
-  "expected": "Array [
+  "expected": "[
   "hey",
 ]",
   "message": "expected 2nd "vi.fn()" call to have been called with [ 'hey' ]",
@@ -819,11 +1074,11 @@ exports[`toHaveBeenNthCalledWith error 1`] = `
 
 exports[`toHaveBeenNthCalledWith error 2`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "Array [
-  "hey",
-]",
+  "expected": [
+    "hey",
+  ],
   "message": "expected 3rd "vi.fn()" call to have been called with [ 'hey' ], but called only 2 times",
 }
 `;
@@ -850,7 +1105,7 @@ Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohell
 
 exports[`toMatch/toContain diff 3`] = `
 {
-  "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "actual": ""hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "diff": "- Expected:
 /world/
 
@@ -863,9 +1118,9 @@ exports[`toMatch/toContain diff 3`] = `
 
 exports[`toSatisfy() > error message 1`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expect(received).toSatisfy()
 
 Expected value to satisfy:
@@ -878,9 +1133,9 @@ Received:
 
 exports[`toSatisfy() > error message 2`] = `
 {
-  "actual": "undefined",
+  "actual": undefined,
   "diff": undefined,
-  "expected": "undefined",
+  "expected": undefined,
   "message": "expect(received).toSatisfy()
 
 Expected value to satisfy:
@@ -893,7 +1148,7 @@ Received:
 
 exports[`toSatisfy() > error message 3`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "value": 2,
 }",
   "diff": "- Expected
@@ -903,7 +1158,7 @@ exports[`toSatisfy() > error message 3`] = `
 -   "value": toSatisfy<[Function isOdd]>,
 +   "value": 2,
   }",
-  "expected": "Object {
+  "expected": "{
   "value": toSatisfy<[Function isOdd]>,
 }",
   "message": "expected { value: 2 } to deeply equal { value: toSatisfy<[Function isOdd]> }",
@@ -912,7 +1167,7 @@ exports[`toSatisfy() > error message 3`] = `
 
 exports[`toSatisfy() > error message 4`] = `
 {
-  "actual": "Object {
+  "actual": "{
   "value": 2,
 }",
   "diff": "- Expected
@@ -922,7 +1177,7 @@ exports[`toSatisfy() > error message 4`] = `
 -   "value": toSatisfy<[Function isOdd], "ODD">,
 +   "value": 2,
   }",
-  "expected": "Object {
+  "expected": "{
   "value": toSatisfy<[Function isOdd], "ODD">,
 }",
   "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",

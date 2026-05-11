@@ -331,6 +331,7 @@ const {
                 :indent="item.indent"
                 :name="item.name"
                 :typecheck="item.typecheck === true"
+                :label="item.label"
                 :project-name="item.projectName ?? ''"
                 :project-name-color="item.projectNameColor ?? ''"
                 :state="item.state"
