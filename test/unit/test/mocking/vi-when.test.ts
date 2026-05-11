@@ -596,15 +596,7 @@ describe('vi.when()', () => {
       const d = w['~getDiagnostics']()
 
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
-        "calledWith(StringContaining {
-          "$$typeof": Symbol(jest.asymmetricMatcher),
-          "inverse": false,
-          "sample": "--",
-        }, Any {
-          "$$typeof": Symbol(jest.asymmetricMatcher),
-          "inverse": false,
-          "sample": [Function Number],
-        })
+        "calledWith(StringContaining "--", Any<Number>)
           ✗ thenReturn(0)  never called"
       `)
     })
