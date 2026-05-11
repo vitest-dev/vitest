@@ -386,6 +386,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       const calledWithInstance: CalledWithInstance<ScopedReturn, Fn> = ({
         ...output,
         thenThrow: (value, options) => {
+          validateOptions(options)
           appendAction(behavior, 'throw', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
@@ -396,6 +397,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           return calledWithInstance
         },
         thenReturn: (value, options) => {
+          validateOptions(options)
           appendAction(behavior, 'return', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
@@ -406,6 +408,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           return calledWithInstance
         },
         thenResolve: (value, options) => {
+          validateOptions(options)
           appendAction(behavior, 'resolve', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
@@ -416,6 +419,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           return calledWithInstance
         },
         thenReject: (value, options) => {
+          validateOptions(options)
           appendAction(behavior, 'reject', value, options?.times ?? Number.POSITIVE_INFINITY)
 
           return calledWithInstance
@@ -528,4 +532,10 @@ function getSymbol(action: Behavior<unknown[], unknown>['actions'][number]): str
   }
 
   return '✗'
+}
+
+function validateOptions(options: BehaviorOptions | undefined) {
+  if (typeof options?.times === 'number' && options.times <= 0) {
+    throw new RangeError('vi.when: `times` option must be greater than 0')
+  }
 }
