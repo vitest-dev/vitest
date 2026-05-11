@@ -391,7 +391,7 @@ export const page: BrowserPage = {
             // TODO: support nested trace
             recordBrowserTraceEntry(currentTest, {
               name,
-              kind: 'mark',
+              kind: options?.kind ?? 'mark',
               status,
               startTime,
               duration: now() - startTime,
@@ -413,7 +413,7 @@ export const page: BrowserPage = {
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name,
-          kind: 'mark',
+          kind: bodyOrOptions?.kind ?? 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,
         })
       }
