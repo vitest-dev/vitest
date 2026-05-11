@@ -1,6 +1,7 @@
 import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
+import { format } from '@vitest/pretty-format'
 import { isMockFunction } from '@vitest/spy'
 import { noop } from '@vitest/utils/helpers'
 
@@ -8,6 +9,19 @@ type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
 const whenSymbol = Symbol.for('$$vitest:when')
 
+/**
+ * Returns `true` if the given value is a {@linkcode When} chain created by {@linkcode when|vi.when}.
+ *
+ * @param input - The value to check.
+ * @returns `true` if `input` is a {@linkcode When} instance, `false` otherwise.
+ *
+ * @example
+ * const spy = vi.fn()
+ * const w = vi.when(spy).calledWith(1).thenReturn(0)
+ *
+ * expect(isWhenChain(w)).toBe(true)
+ * expect(isWhenChain(spy)).toBe(false)
+ */
 export function isWhenChain(input: object): input is When<Procedure> {
   return Reflect.has(input, whenSymbol)
 }
@@ -18,6 +32,7 @@ interface Behavior<Arguments extends unknown[], Value> {
     type: BehaviorType
     value: Value | unknown
     times: number
+    remaining: number
     called: boolean
   }[]
 }
@@ -95,24 +110,38 @@ interface When<Fn extends Procedure> extends Disposable {
    *   .thenReturn(true)
    *   .thenReturnOnce(false)
    */
-  calledWith: (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
+  'calledWith': (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
   /**
-   * Returns `true` if every registered behavior has been consumed:
-   * - finite behaviors (registered with `times` or `*Once`) must have reached `0` remaining calls
-   * - infinite behaviors must have been called at least once
+   * Returns a diagnostic snapshot of the current state of all registered behaviors.
    *
-   * Returns `false` otherwise or if no behaviors have been registered.
+   * Useful for producing human-readable failure messages in custom assertions or test helpers.
+   *
+   * @returns An object with:
+   * - `isExhausted` — `true` if every registered behavior has been consumed, `false` otherwise or if no behaviors have been registered.
+   * - `pendingBehaviors` — A formatted multi-line string describing behaviors that have not yet been fully consumed.
+   *
+   * @internal
    *
    * @example
-   * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+   * const spy = vi.fn()
+   * const w = vi.when(spy)
+   *   .calledWith(1).thenReturnOnce(0)
+   *   .calledWith(2).thenReturn(42)
    *
-   * expect(w.isExhausted()).toBe(false)
+   * spy(1)
    *
-   * expect(spy('hello')).toBe('HELLO')
+   * const { isExhausted, pendingBehaviors } = w.collectPendingBehaviors()
    *
-   * expect(w.isExhausted()).toBe(true)
+   * expect(isExhausted).toBe(false)
+   *
+   * console.log(pendingBehaviors)
+   * // calledWith(2)
+   * //   ✗ thenReturn(42)    never called
    */
-  isExhausted: () => boolean
+  '~getDiagnostics': () => {
+    isExhausted: boolean
+    pendingBehaviors: string
+  }
 }
 
 /**
@@ -155,6 +184,8 @@ interface WhenOptions {
  * @throws {TypeError} If `spy` is not a Vitest mock function.
  *
  * @experimental
+ * @since 5.0.0
+ * @see {@link https://vitest.dev/api/vi#vi-when}
  *
  * @example
  * // Basic usage
@@ -214,7 +245,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
     for (const behavior of behaviors) {
       if (equals(args, behavior.arguments, testers)) {
-        return behavior.actions.findLast(action => !(action.times === 0 && action.called)) ?? null
+        return behavior.actions.findLast(action => !(action.remaining === 0 && action.called)) ?? null
       }
     }
 
@@ -237,7 +268,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
         return onUnmatched?.(...args)
       }
 
-      action.times -= 1
+      action.remaining -= 1
       action.called = true
 
       switch (action.type) {
@@ -283,7 +314,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node >= 24
   const output: When<Fn> = {
     // @todo strictlyCalledWith for strict equality?
-    calledWith: (...args: ScopedParameters) => {
+    'calledWith': (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
       function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, times: number) {
@@ -291,6 +322,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           type,
           value,
           times,
+          remaining: times,
           called: false,
         })
       }
@@ -341,17 +373,21 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
       return calledWithInstance
     },
-    isExhausted: () => {
-      if (behaviors.length === 0) {
-        return false
-      }
+    '~getDiagnostics': () => {
+      const pendingBehaviors = behaviors
+        .filter(behavior =>
+          behavior.actions.some(action =>
+            /* times-behaviors reached 0 */ action.remaining !== 0
+            /* infinite behaviors called at least once */ && !(action.remaining === Number.POSITIVE_INFINITY && action.called),
+          ),
+        )
 
-      return behaviors.every(behavior =>
-        behavior.actions.every(action =>
-          /* times-behaviors reached 0 */ action.times === 0
-          /* infinite behaviors called at least once */ || (action.times === Number.POSITIVE_INFINITY && action.called),
-        ),
-      )
+      return {
+        isExhausted: behaviors.length !== 0 && pendingBehaviors.length === 0,
+        pendingBehaviors: pendingBehaviors
+          .map(behavior => `calledWith(${behavior.arguments.map(argument => format(argument)).join(', ')})\n${formatActions(behavior.actions)}`)
+          .join('\n\n'),
+      }
     },
   } satisfies Omit<When<Fn>, symbol>
 
@@ -371,4 +407,69 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   })
 
   return output
+}
+
+function formatActions(actions: Behavior<unknown[], unknown>['actions']): string {
+  const lines = actions.map((action, index) => {
+    const method = getMethodName(action.type)
+    const symbol = getSymbol(action)
+    const left = `  ${symbol} ${method}(${format(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
+    const unreachable = !isExhausted(action)
+      && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
+    const remaining = getRemainingLabel(action) + (unreachable ? '  ⚠ unreachable' : '')
+
+    return { left, remaining }
+  })
+
+  const maxLeft = Math.max(...lines.map(line => line.left.length))
+
+  return lines
+    .map(({ left, remaining }) => `${left.padEnd(maxLeft + 2)}${remaining}`)
+    .join('\n')
+}
+
+function getMethodName(type: BehaviorType): string {
+  switch (type) {
+    case 'return': {
+      return 'thenReturn'
+    }
+    case 'resolve': {
+      return 'thenResolve'
+    }
+    case 'throw': {
+      return 'thenThrow'
+    }
+    case 'reject': {
+      return 'thenReject'
+    }
+    default: {
+      (type satisfies never)
+
+      throw new Error(`vi.when: "${type}" is not a known method`)
+    }
+  }
+}
+
+function isExhausted(action: Behavior<unknown[], unknown>['actions'][number]): boolean {
+  return action.remaining === 0 || (action.remaining === Number.POSITIVE_INFINITY && action.called)
+}
+
+function getRemainingLabel(action: Behavior<unknown[], unknown>['actions'][number]): string {
+  if (isExhausted(action)) {
+    return action.remaining === Number.POSITIVE_INFINITY
+      ? 'exhausted'
+      : `exhausted (${action.times} of ${action.times})`
+  }
+
+  return action.remaining === Number.POSITIVE_INFINITY
+    ? 'never called'
+    : `${action.remaining} remaining (of ${action.times})`
+}
+
+function getSymbol(action: Behavior<unknown[], unknown>['actions'][number]): string {
+  if (isExhausted(action)) {
+    return '✓'
+  }
+
+  return '✗'
 }

@@ -326,7 +326,7 @@ describe('vi.when()', () => {
     })
 
     test('groups behaviors based on asymmetric matchers correctly', () => {
-      const spy = vi.fn<Fn>(() => Number.NaN)
+      const spy = vi.fn<Fn>()
 
       const value: FnData['value'] = 0
       const once: FnData['value'] = 1
@@ -455,12 +455,158 @@ describe('vi.when()', () => {
   })
 
   describe('edge cases', () => {
-    test('`isExhausted` returns false when no behaviors are registered', () => {
+    test('is not exhausted when no behaviors are registered', () => {
       const spy = vi.fn<Fn>()
 
       const w = vi.when(spy)
 
       expect(w).not.toHaveBeenExhausted()
+    })
+  })
+
+  describe('state snapshots', () => {
+    test('multiple `calledWith` stacks', () => {
+      const spy = vi.fn<Fn>()
+
+      const entries: FnData['entries'] = [
+        { args: ['a', 0], value: 97 },
+        { args: ['b', 1], value: 99 },
+      ]
+
+      const w = vi.when(spy)
+        .calledWith(...entries[0].args)
+        .thenReturn(entries[0].value)
+        .thenReturnOnce(entries[0].value)
+        .calledWith(...entries[1].args)
+        .thenReturn(entries[1].value)
+
+      let d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("a", 0)
+          ✗ thenReturn(97)                never called
+          ✗ thenReturn(97, { times: 1 })  1 remaining (of 1)
+
+        calledWith("b", 1)
+          ✗ thenReturn(99)  never called"
+      `)
+
+      spy(...entries[0].args)
+
+      d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("a", 0)
+          ✗ thenReturn(97)                never called
+          ✓ thenReturn(97, { times: 1 })  exhausted (1 of 1)
+
+        calledWith("b", 1)
+          ✗ thenReturn(99)  never called"
+      `)
+
+      spy(...entries[0].args)
+
+      d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("b", 1)
+          ✗ thenReturn(99)  never called"
+      `)
+
+      spy(...entries[1].args)
+
+      d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(true)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`""`)
+    })
+
+    test('points out unreachable actions', () => {
+      const spy = vi.fn<Fn>()
+
+      const args: FnData['args'] = ['a', 0]
+      const value: FnData['value'] = 97
+
+      const w = vi.when(spy)
+        .calledWith(...args)
+        .thenReturn(value)
+        .thenReturn(value + 1)
+
+      let d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("a", 0)
+          ✗ thenReturn(97)  never called  ⚠ unreachable
+          ✗ thenReturn(98)  never called"
+      `)
+
+      spy(...args)
+
+      d = w['~getDiagnostics']()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("a", 0)
+          ✗ thenReturn(97)  never called  ⚠ unreachable
+          ✓ thenReturn(98)  exhausted"
+      `)
+    })
+
+    test('prints different return methods correctly', () => {
+      const spy = vi.fn<Fn>()
+
+      const args: FnData['args'] = ['a', 0]
+      const value: FnData['value'] = 97
+      const error = new TypeError('Expected second argument > 0')
+
+      const times = 2
+
+      const w = vi.when(spy)
+        .calledWith(...args)
+        .thenReturn(value, { times })
+        .thenThrow(error, { times })
+        .thenResolve(value, { times })
+        .thenReject(error, { times })
+
+      const d = w['~getDiagnostics']()
+
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith("a", 0)
+          ✗ thenReturn(97, { times: 2 })                                         2 remaining (of 2)
+          ✗ thenThrow([TypeError: Expected second argument > 0], { times: 2 })   2 remaining (of 2)
+          ✗ thenResolve(97, { times: 2 })                                        2 remaining (of 2)
+          ✗ thenReject([TypeError: Expected second argument > 0], { times: 2 })  2 remaining (of 2)"
+      `)
+    })
+
+    test('formats asymmetric matchers correctly', () => {
+      const spy = vi.fn<Fn>()
+
+      const args: FnData['args'] = [expect.stringContaining('--'), expect.any(Number)]
+      const value: FnData['value'] = 0
+
+      const w = vi.when(spy)
+        .calledWith(...args)
+        .thenReturn(value)
+
+      const d = w['~getDiagnostics']()
+
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`
+        "calledWith(StringContaining {
+          "$$typeof": Symbol(jest.asymmetricMatcher),
+          "inverse": false,
+          "sample": "--",
+        }, Any {
+          "$$typeof": Symbol(jest.asymmetricMatcher),
+          "inverse": false,
+          "sample": [Function Number],
+        })
+          ✗ thenReturn(0)  never called"
+      `)
     })
   })
 })
