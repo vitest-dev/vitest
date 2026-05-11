@@ -1,8 +1,8 @@
 import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
-import { format } from '@vitest/pretty-format'
 import { isMockFunction } from '@vitest/spy'
+import { stringify } from '@vitest/utils/display'
 import { noop } from '@vitest/utils/helpers'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
@@ -318,7 +318,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           ? options.onUnmatched
           : options?.onUnmatched === 'throw'
             ? () => {
-                throw new Error(`vi.when: no behavior defined when called with [${args.map(arg => format(arg)).join(', ')}]`)
+                throw new Error(`vi.when: no behavior defined when called with [${args.map(arg => stringify(arg)).join(', ')}]`)
               }
             : originalImplementation
         return onUnmatched?.(...args)
@@ -441,7 +441,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       return {
         isExhausted: behaviors.length !== 0 && pendingBehaviors.length === 0,
         pendingBehaviors: pendingBehaviors
-          .map(behavior => `calledWith(${behavior.arguments.map(argument => format(argument)).join(', ')})\n${formatActions(behavior.actions)}`)
+          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})\n${formatActions(behavior.actions)}`)
           .join('\n\n'),
       }
     },
@@ -469,7 +469,7 @@ function formatActions(actions: Behavior<unknown[], unknown>['actions']): string
   const lines = actions.map((action, index) => {
     const method = getMethodName(action.type)
     const symbol = getSymbol(action)
-    const left = `  ${symbol} ${method}(${format(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
+    const left = `  ${symbol} ${method}(${stringify(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
     const unreachable = !isExhausted(action)
       && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
     const remaining = getRemainingLabel(action) + (unreachable ? '  ⚠ unreachable' : '')
