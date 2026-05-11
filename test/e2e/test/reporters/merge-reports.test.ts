@@ -281,7 +281,8 @@ test('total and merged execution times are shown', async () => {
 test('merges reports with a file-less imported module graph entry', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
-    // TODO: vite 8 crashes when resolving non existing `imports` subpath.
+    // TODO: vite 8 crashes when trying to resolve
+    // non existing `imports` subpath in `test/e2e/package.json`.
     'package.json': '{ "type": "module" }',
     'repro1.test.ts': `
 test('repro1', async () => {
