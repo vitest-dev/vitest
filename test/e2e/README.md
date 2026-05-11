@@ -6,8 +6,8 @@ This directory [`./snapshots`](./snapshots) contains integration tests for Vites
 
 ```bash
 # Run all integration tests
-pnpm test --project=snapshots
+pnpm -C test/e2e test --project=snapshots
 
 # Run indivisual fixture directly
-pnpm test --root snapshots/fixtures/domain
+pnpm -C test/e2e test --root snapshots/fixtures/domain
 ```
