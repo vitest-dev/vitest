@@ -38,7 +38,7 @@ Use this setup for developing Browser Mode UI features with Vite HMR. It serves 
 Start a browser-mode Vitest server:
 
 ```bash
-pnpm -C packages/ui test:ui --browser.headless --ui --open=false
+pnpm -C packages/ui test:ui --ui --open=false
 ```
 
 Start the UI dev server in browser preview mode:
@@ -66,6 +66,6 @@ HTML_REPORT_DIR=<path-to-html-report-dir> pnpm -C packages/ui dev:client
 For example,
 
 ```bash
-pnpm -C packages/ui test:ui --reporter=html --browser.headless --run
+pnpm -C packages/ui test:ui --reporter=html --run
 HTML_REPORT_DIR="$PWD/packages/ui/html" pnpm -C packages/ui dev:client
 ```
