@@ -3,7 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
-import type { BrowserCommands, CDPSession } from 'vitest/browser'
+import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
@@ -353,6 +353,7 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  mark: (name: string, options?: MarkOptions) => Promise<void>
   triggerCommand: <K extends keyof BrowserCommands>(
     name: K,
     ...args: Parameters<BrowserCommands[K]>

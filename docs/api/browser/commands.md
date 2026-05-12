@@ -124,6 +124,25 @@ declare module 'vitest/browser' {
 Custom functions will override built-in ones if they have the same name.
 :::
 
+### Recording trace markers
+
+Custom commands can record [trace markers](/api/browser/context#mark) for the test that triggered them through `context.mark`. This is the server-side equivalent of `page.mark` and helps annotate the [trace view](/guide/browser/trace-view) with custom actions performed inside a command.
+
+```ts
+import type { BrowserCommand } from 'vitest/node'
+
+export const uploadFixture: BrowserCommand<[name: string]> = async (
+  context,
+  name,
+) => {
+  await context.mark(`upload start: ${name}`, { kind: 'action' })
+  // ... do server-side work
+  await context.mark(`upload done: ${name}`, { kind: 'action' })
+}
+```
+
+`context.mark` is a no-op when browser tracing is not enabled or no test is currently running in the session. Unlike `page.mark`, it does not accept a callback form.
+
 ### Custom `playwright` commands
 
 Vitest exposes several `playwright` specific properties on the command context.

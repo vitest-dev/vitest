@@ -106,6 +106,7 @@ test('trace view artifacts', async () => {
           ],
         },
         "mark.test.ts": {
+          "custom command": "passed",
           "helper": "passed",
           "kind": "passed",
           "locator.mark": "passed",
@@ -459,6 +460,28 @@ test('trace view artifacts', async () => {
             ],
           },
           "mark.test.ts": {
+            "custom command": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "name": "from server command",
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:48",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
             "helper": [
               {
                 "entries": [
@@ -617,7 +640,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:49",
+                    "location": "mark.test.ts:57",
                     "name": "failed render group",
                     "range": {
                       "phase": "start",
@@ -630,7 +653,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:49",
+                    "location": "mark.test.ts:57",
                     "name": "failed render group",
                     "range": {
                       "phase": "end",
@@ -644,7 +667,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "mark.test.ts:51",
+                    "location": "mark.test.ts:59",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "fail",
@@ -2013,6 +2036,28 @@ test('trace view artifacts', async () => {
             ],
           },
           "mark.test.ts": {
+            "custom command": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "name": "from server command",
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:48",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
             "helper": [
               {
                 "entries": [
@@ -2169,7 +2214,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:49",
+                    "location": "mark.test.ts:57",
                     "name": "failed render group",
                     "range": {
                       "phase": "start",
@@ -2182,7 +2227,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:49",
+                    "location": "mark.test.ts:57",
                     "name": "failed render group",
                     "range": {
                       "phase": "end",
@@ -2196,7 +2241,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "mark.test.ts:51",
+                    "location": "mark.test.ts:59",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "fail",
