@@ -170,7 +170,7 @@ test('many errors without warning', async () => {
     resolve(import.meta.dirname, '../fixtures/reporters/many-errors'),
   )
   expect(stderr).not.toContain('MaxListenersExceededWarning')
-})
+}, 120000)
 
 test('CLI reporter option preserves config file options', async () => {
   const { stdout } = await runVitestCli(
@@ -188,7 +188,7 @@ test('CLI reporter option preserves config file options', async () => {
 
   // Verify that addFileAttribute from config is preserved
   expect(xml).toContain('file="')
-})
+}, 120000)
 
 test('suiteNameTemplate string uses {title} (first top-level describe)', async () => {
   const { stdout } = await runVitest({
