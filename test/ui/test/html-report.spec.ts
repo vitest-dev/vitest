@@ -1,16 +1,15 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
+import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
-const port = 9001
-const pageUrl = `http://localhost:${port}/custom/base/`
-
 test.describe('html report', () => {
   let previewServer: PreviewServer
+  let pageUrl: string
 
   test.beforeAll(async () => {
     // silence Vitest logs
@@ -40,8 +39,10 @@ test.describe('html report', () => {
       root: './fixtures/main',
       base: '/custom/base/',
       build: { outDir: 'html' },
-      preview: { port, strictPort: true },
     })
+    const address = previewServer.httpServer?.address()
+    assert(address && typeof address === 'object', 'Invalid server address')
+    pageUrl = `http://localhost:${address.port}/custom/base/`
   })
 
   test.afterAll(async () => {

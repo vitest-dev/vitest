@@ -1,15 +1,14 @@
 import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
+import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { startVitest } from 'vitest/node'
 
-const port = 9000
-const pageUrl = `http://localhost:${port}/__vitest__/`
-
 test.describe('ui', () => {
   let vitest: Vitest | undefined
+  let pageUrl: string
 
   test.beforeAll(async () => {
     // silence Vitest logs
@@ -20,7 +19,6 @@ test.describe('ui', () => {
       watch: true,
       ui: true,
       open: false,
-      api: { port },
       coverage: { enabled: true },
       reporters: [],
     }, {}, {
@@ -28,6 +26,9 @@ test.describe('ui', () => {
       stderr,
     })
     expect(vitest).toBeDefined()
+    const address = vitest.vite.httpServer?.address()
+    assert(address && typeof address === 'object', 'Invalid server address')
+    pageUrl = `http://localhost:${address.port}/__vitest__/`
   })
 
   test.afterAll(async () => {
@@ -359,6 +360,7 @@ async function assertTestCounts(page: Page, options: { pass: number; fail: numbe
 
 test.describe('standalone', () => {
   let vitest: Vitest | undefined
+  let pageUrl: string
 
   test.beforeAll(async () => {
     // silence Vitest logs
@@ -370,13 +372,15 @@ test.describe('standalone', () => {
       ui: true,
       standalone: true,
       open: false,
-      api: { port },
       reporters: [],
     }, {}, {
       stdout,
       stderr,
     })
     expect(vitest).toBeDefined()
+    const address = vitest.vite.httpServer?.address()
+    assert(address && typeof address === 'object', 'Invalid server address')
+    pageUrl = `http://localhost:${address.port}/__vitest__/`
   })
 
   test.afterAll(async () => {

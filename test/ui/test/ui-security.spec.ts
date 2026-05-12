@@ -1,13 +1,12 @@
 import type { Vitest } from 'vitest/node'
+import assert from 'node:assert'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { startVitest } from 'vitest/node'
 
-const port = 9002
-const pageUrl = `http://localhost:${port}/__vitest__/`
-
 test.describe('ui', () => {
   let vitest: Vitest | undefined
+  let pageUrl: string
 
   test.beforeAll(async () => {
     // silence Vitest logs
@@ -19,7 +18,6 @@ test.describe('ui', () => {
       ui: true,
       open: false,
       api: {
-        port,
         allowExec: false,
         allowWrite: false,
       },
@@ -29,6 +27,9 @@ test.describe('ui', () => {
       stderr,
     })
     expect(vitest).toBeDefined()
+    const address = vitest.vite.httpServer?.address()
+    assert(address && typeof address === 'object', 'Invalid server address')
+    pageUrl = `http://localhost:${address.port}/__vitest__/`
   })
 
   test.afterAll(async () => {
