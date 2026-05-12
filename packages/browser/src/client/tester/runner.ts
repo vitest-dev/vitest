@@ -84,7 +84,6 @@ export function createBrowserRunner(
       const shouldTrace = trace !== 'off'
         && !(trace === 'on-all-retries' && retry === 0)
         && !(trace === 'on-first-retry' && retry !== 1)
-      // TODO: model trace-view retention like Playwright, e.g. retain-on-failure.
       const shouldTraceView = this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
