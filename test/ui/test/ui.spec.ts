@@ -178,13 +178,7 @@ test.describe('ui', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('error.test.ts')
-    await item.hover()
-    await item.getByTestId('btn-open-details').click({ force: true })
-    await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
-
-    await getExplorerItem(page, 'colored error message').click()
-    await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
+    await testError(page)
   })
 
   test('file-filter', async ({ page }) => {
@@ -335,10 +329,7 @@ test.describe('html report', () => {
 
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
-    const sample = page.getByTestId('results-panel').getByLabel('error.test.ts')
-    await sample.hover()
-    await sample.getByTestId('btn-open-details').click({ force: true })
-    await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+    await testError(page)
   })
 
   test('annotations in the report tab', async ({ page }) => {
@@ -537,6 +528,16 @@ async function testBasic(page: Page, pageUrl: string) {
 async function testCoverage(page: Page) {
   await page.getByLabel('Show coverage').click()
   await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+}
+
+async function testError(page: Page) {
+  const item = page.getByLabel('error.test.ts')
+  await item.hover()
+  await item.getByTestId('btn-open-details').click({ force: true })
+  await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+
+  await getExplorerItem(page, 'colored error message').click()
+  await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
 }
 
 async function testTagsFilter(page: Page) {
