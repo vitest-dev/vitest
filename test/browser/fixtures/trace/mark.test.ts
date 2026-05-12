@@ -36,6 +36,15 @@ test('mark function', async () => {
   })
 })
 
+test('kind', async () => {
+  document.body.innerHTML = '<button>Hello</button>'
+
+  await page.mark('action marker', { kind: 'action' })
+  await page.mark('expect marker', { kind: 'expect' })
+  await page.mark('lifecycle group', { kind: 'lifecycle' })
+  await page.mark('lifecycle group', { kind: 'mark' })
+})
+
 test('mark function fail', async () => {
   await page.mark('failed render group', async () => {
     document.body.innerHTML = '<button>Hello</button>'

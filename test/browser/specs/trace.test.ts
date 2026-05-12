@@ -107,6 +107,7 @@ test('trace view artifacts', async () => {
         },
         "mark.test.ts": {
           "helper": "passed",
+          "kind": "passed",
           "locator.mark": "passed",
           "mark function": "passed",
           "mark function fail": [
@@ -481,6 +482,43 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:23",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "kind": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "location": "mark.test.ts:42",
+                    "name": "action marker",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "expect",
+                    "location": "mark.test.ts:43",
+                    "name": "expect marker",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:44",
+                    "name": "lifecycle group",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:45",
+                    "name": "lifecycle group",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:39",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",
@@ -1981,6 +2019,43 @@ test('trace view artifacts', async () => {
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:23",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "kind": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "location": "mark.test.ts:42",
+                    "name": "action marker",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "expect",
+                    "location": "mark.test.ts:43",
+                    "name": "expect marker",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:44",
+                    "name": "lifecycle group",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:45",
+                    "name": "lifecycle group",
+                    "snapshot": {},
+                  },
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:39",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",

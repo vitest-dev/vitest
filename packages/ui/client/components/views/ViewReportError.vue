@@ -32,6 +32,10 @@ const diff = computed(() =>
     : undefined,
 )
 
+const message = computed(() =>
+  filter.value.toHtml(escapeHtml(props.error.message || '')),
+)
+
 function showCode(stack: ParsedStack) {
   if (isTestFile(stack.file, props.filename)) {
     return showLocationSource(props.fileId, stack)
@@ -42,7 +46,7 @@ function showCode(stack: ParsedStack) {
 
 <template>
   <div class="scrolls scrolls-rounded task-error">
-    <pre><b>{{ error.name }}</b>: {{ error.message }}</pre>
+    <pre><b>{{ error.name }}</b>: <span v-html="message" /></pre>
     <div
       v-for="(stack, i) of error.stacks"
       :key="i"

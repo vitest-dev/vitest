@@ -398,7 +398,7 @@ export const page: BrowserPage = {
           if (hasActiveTraceView) {
             await recordBrowserTraceEntry(currentTest, {
               name,
-              kind: 'mark',
+              kind: options?.kind ?? 'mark',
               range: { id: traceRangeId!, phase: 'end' },
               status,
               stack: options?.stack ?? error?.stack,
@@ -419,7 +419,7 @@ export const page: BrowserPage = {
       if (hasActiveTraceView) {
         await recordBrowserTraceEntry(currentTest, {
           name,
-          kind: 'mark',
+          kind: bodyOrOptions?.kind ?? 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,
         })
       }

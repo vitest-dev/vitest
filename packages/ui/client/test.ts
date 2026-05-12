@@ -1,4 +1,4 @@
-import type { ComponentRenderOptions } from 'vitest-browser-vue'
+import type { ComponentRenderOptions, RenderResult } from 'vitest-browser-vue'
 import { vTooltip } from 'floating-vue'
 import {
   render as _render,
@@ -6,7 +6,10 @@ import {
 
 export { page } from 'vitest/browser'
 
-export function render<C>(component: C, options?: ComponentRenderOptions<C, any>) {
+export function render<C>(
+  component: C,
+  options?: ComponentRenderOptions<C, any>,
+): PromiseLike<RenderResult<any>> {
   return _render(component, {
     ...options,
     global: {
