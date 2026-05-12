@@ -325,6 +325,18 @@ test('parsing', async ({ bench }) => {
 })
 ```
 
+If you are the library author, the same overhead applies inside the library you are benchmarking: every cross-module call within its source goes through the same getter wrapper. If you are benchmarking your own library, you have two ways to remove this:
+
+**Benchmark the pre-built artifact.** Import the library through its package name (which resolves to its built output) instead of reaching into its source. The built file has already collapsed internal imports into direct references, so Vite's module runner sees a single module with no internal getters:
+
+```ts
+// BAD: every internal call inside the library goes through a getter
+import { parse } from '../src/index.ts'
+
+// GOOD: the published entry has no internal getters
+import { parse } from 'my-library'
+```
+
 This only affects Node.js mode. Browser mode uses native ESM imports and does not have this overhead.
 
 ### Engine-Specific Considerations
