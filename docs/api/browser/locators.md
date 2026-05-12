@@ -846,12 +846,14 @@ The `path` is also ignored in that case.
 ### mark
 
 ```ts
-function mark(name: string, options?: { stack?: string }): Promise<void>
+function mark(name: string, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<void>
 ```
 
 Adds a named marker to the trace timeline and uses the current locator as marker context.
 
 Pass `options.stack` to override the callsite location in trace metadata. This is useful for wrapper libraries that need to preserve the end-user source location.
+
+Pass `options.kind` to categorize your marker as specific type, for example as `'action'`.
 
 ```ts
 import { page } from 'vitest/browser'

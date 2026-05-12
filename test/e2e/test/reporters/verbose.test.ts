@@ -185,6 +185,15 @@ test('hides skipped tests when --hideSkippedTests and in non-TTY', async () => {
   `)
 })
 
+test('slowTestThreshold: Infinity does not trigger TimeoutOverflowWarning', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/reporters/duration',
+    reporters: [['verbose', { isTTY: true, summary: true }]],
+    slowTestThreshold: Infinity,
+  })
+  expect(stderr).not.toContain('TimeoutOverflowWarning')
+})
+
 function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
 

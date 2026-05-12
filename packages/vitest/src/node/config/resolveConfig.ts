@@ -540,7 +540,7 @@ export function resolveConfig(
     ),
 
     // Exclude test files
-    ...resolved.include,
+    ...resolved.include.filter(pattern => !pattern.startsWith('!')),
 
     // Configs
     resolved.config && slash(resolved.config),
@@ -860,6 +860,7 @@ export function resolveConfig(
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
   resolved.browser.locators.exact ??= false
+  resolved.browser.locators.errorFormat ??= 'all'
 
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`

@@ -580,7 +580,7 @@ export function buildErrorTree(testModules: TestModule[], options?: BuildErrorTr
   const root = testModules[0]?.project.config.root
 
   function mapError(e: { message: string; diff?: string; stacks?: ParsedStack[] }) {
-    let message = e.message
+    let message = stripVTControlCharacters(e.message)
     if (options?.diff && e.diff) {
       message = [message, stripVTControlCharacters(e.diff)].join('\n')
     }

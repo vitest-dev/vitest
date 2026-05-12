@@ -278,6 +278,66 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
+test('merges reports with a file-less imported module graph entry', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    // TODO: vite 8 crashes when trying to resolve
+    // non existing `imports` subpath in `test/e2e/package.json`.
+    'package.json': '{ "type": "module" }',
+    'repro1.test.ts': `
+test('repro1', async () => {
+  await expect(import('#repro1')).rejects.toThrow()
+})
+`,
+    'repro2.test.ts': `
+import * as repro from "#repro2";
+
+vi.mock("#repro2", () => ({
+  someExport: { mocked: true },
+}));
+
+it("repro2", () => {
+  expect(repro.someExport).toEqual({ mocked: true })
+});
+`,
+  })
+
+  const result1 = await runVitest({
+    root,
+    reporters: ['blob'],
+    globals: true,
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result1.exitCode).toBe(0)
+
+  const result2 = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest/blob'),
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result2.exitCode).toBe(0)
+})
+
 test.for([
   'node',
   'browser',

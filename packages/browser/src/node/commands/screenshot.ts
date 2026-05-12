@@ -4,6 +4,7 @@ import type { ScreenshotOptions, SerializedLocator } from '../../../context'
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
   element?: SerializedLocator
   mask?: readonly SerializedLocator[]
+  target?: 'element' | 'page'
 }
 
 declare module 'vitest/browser' {

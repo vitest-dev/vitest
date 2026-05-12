@@ -1,10 +1,9 @@
 import type { Plugin } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
-import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
+import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
-import Pages from 'vite-plugin-pages'
 
 // for debug:
 // open a static file serve to share the report json
@@ -12,28 +11,18 @@ import Pages from 'vite-plugin-pages'
 // const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
 export default defineConfig({
-  root: import.meta.dirname,
   base: './',
   resolve: {
-    dedupe: ['vue'],
+    // TODO: keep manual alias for vite 7 CI
+    // tsconfigPaths: true,
     alias: {
       '~/': `${resolve(import.meta.dirname, 'client')}/`,
     },
   },
-  define: {
-    __BASE_PATH__: '"/__vitest__/"',
-  },
   plugins: [
-    Vue({
-      features: {
-        propsDestructure: true,
-      },
-      script: {
-        defineModel: true,
-      },
-    }),
+    Vue(),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
+      presets: [presetWind3(), presetAttributify(), presetIcons()],
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -48,12 +37,9 @@ export default defineConfig({
         'tab-button-active': 'op100 bg-gray-500:10',
       },
       transformers: [
-        transformerDirectives() as any,
+        transformerDirectives(),
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
-    }),
-    Pages({
-      dirs: ['client/pages'],
     }),
     devUiScriptPlugin(),
     // uncomment to see the HTML reporter preview

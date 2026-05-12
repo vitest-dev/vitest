@@ -222,7 +222,7 @@ export abstract class Locator {
       if (hasActiveTraceView) {
         recordBrowserTraceEntry(currentTest, {
           name,
-          kind: 'mark',
+          kind: options?.kind ?? 'mark',
           element: this.serialize(),
           stack: options?.stack ?? error?.stack,
         })
