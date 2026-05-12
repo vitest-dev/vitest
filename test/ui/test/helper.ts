@@ -41,14 +41,18 @@ export async function startHtmlReportPreview(
   }
 }
 
-export function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
-}
-
 export async function assertTestCounts(page: Page, { pass, fail }: { pass: number; fail: number }) {
   await expect
     .soft(page.getByTestId('tests-entry'))
     .toContainText(
       `${pass} Pass ${fail} Fail ${pass + fail} Total`,
     )
+}
+
+export function getExplorerItem(page: Page, name: string) {
+  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+}
+
+export async function openExplorerItem(page: Page, name: string) {
+  await getExplorerItem(page, name).click()
 }

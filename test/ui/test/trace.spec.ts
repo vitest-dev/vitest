@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await testReady(page)
+    await assertTestCounts(page, { pass: 6, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -88,7 +88,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await testReady(page)
+    await assertTestCounts(page, { pass: 6, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -116,16 +116,6 @@ test.describe('html reporter', () => {
     await testScroll(page)
   })
 })
-
-async function testReady(page: Page) {
-  const count = 6
-  await expect.soft(page.getByTestId('tests-entry'))
-    .toContainText(`${count} Pass 0 Fail ${count} Total`)
-}
-
-async function openExplorerItem(page: Page, name: string) {
-  await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
-}
 
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer
