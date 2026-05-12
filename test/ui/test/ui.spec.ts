@@ -51,7 +51,7 @@ test.describe('ui', () => {
 
   test('filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testFilter(page, { isStatic: false })
+    await testFilter(page, { mode: 'ui' })
   })
 
   test('tags filter', async ({ page }) => {
@@ -139,7 +139,7 @@ test.describe('html report', () => {
 
   test('filter', async ({ page }) => {
     await page.goto(pageUrl)
-    await testFilter(page, { isStatic: true })
+    await testFilter(page, { mode: 'static' })
   })
 
   test('tags filter', async ({ page }) => {
@@ -420,7 +420,7 @@ async function testDashboardFilter(page: Page) {
   await expect(page.getByLabel(/skip/i)).not.toBeChecked()
 }
 
-async function testFilter(page: Page, options: { isStatic: boolean }) {
+async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
   await page.getByText('PASS (6)').click()
@@ -468,7 +468,7 @@ async function testFilter(page: Page, options: { isStatic: boolean }) {
   await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
   const testItem = getExplorerItem(page, 'char () - Square root of nine (9)')
   await expect(testItem).toBeVisible()
-  if (!options.isStatic) {
+  if (options.mode === 'ui') {
     await testItem.hover()
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
