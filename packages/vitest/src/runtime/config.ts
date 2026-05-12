@@ -90,6 +90,7 @@ export interface SerializedConfig extends VitestRunnerConfig {
     locators: {
       testIdAttribute: string
       exact: boolean
+      errorFormat: 'html' | 'aria' | 'all'
     }
     screenshotFailures: boolean
     providerOptions: {
@@ -134,8 +135,9 @@ export interface SerializedConfig extends VitestRunnerConfig {
       browserSdkPath?: string
     } | undefined
   }
+  mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
-  isAgent: boolean
+  disableColors: boolean
 }
 
 export interface SerializedCoverageConfig {

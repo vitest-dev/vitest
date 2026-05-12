@@ -41,7 +41,6 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          VITEST_GENERATE_UI_TOKEN: 'true'
           VITE_TEST_WATCHER_DEBUG: 'false'
 
       - name: Publish to StackBlitz

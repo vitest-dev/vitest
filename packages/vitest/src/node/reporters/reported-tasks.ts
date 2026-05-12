@@ -12,6 +12,7 @@ import type {
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { DevEnvironment } from 'vite'
+import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 
@@ -64,6 +65,13 @@ class ReportedTaskImplementation {
    */
   public meta(): TaskMeta {
     return this.task.meta
+  }
+
+  /**
+   * Console logs recorded during the test execution.
+   */
+  public logs(): ReadonlyArray<UserConsoleLog> {
+    return [...this.task.logs || []]
   }
 
   /**

@@ -692,7 +692,9 @@ MyClass.mock.instances[0] === a
 If you return a value from the constructor, it will not be in the `instances` array, but instead inside `results`:
 
 ```js
-const Spy = vi.fn(() => ({ method: vi.fn() }))
+const Spy = vi.fn(function () {
+  return { method: vi.fn() }
+})
 const a = new Spy()
 
 Spy.mock.instances[0] !== a

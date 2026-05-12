@@ -10,7 +10,6 @@ permissions:
   id-token: write
 
 env:
-  VITEST_GENERATE_UI_TOKEN: 'true'
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
@@ -42,7 +41,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: npm i -g npm@^11.5.2 && pnpm run publish-ci ${{ github.ref_name }}
+        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${{ github.ref_name }}"
 
       - name: Generate Changelog
         run: npx changelogithub

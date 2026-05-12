@@ -1,13 +1,13 @@
-import type { Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
+import type { CapturePrintErrorResult } from './printError'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './printError'
+import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
@@ -17,7 +17,6 @@ export interface ErrorOptions {
   project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
-  task?: Task
   showCodeFrame?: boolean
 }
 
@@ -107,6 +106,10 @@ export class Logger {
 
   printError(err: unknown, options: ErrorOptions = {}): void {
     printError(err, this.ctx, this, options)
+  }
+
+  formatError(err: unknown, options: ErrorOptions = {}): CapturePrintErrorResult {
+    return capturePrintError(err, this.ctx, options)
   }
 
   deprecate(message: string): void {

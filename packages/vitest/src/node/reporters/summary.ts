@@ -38,7 +38,7 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   projectColor: TestModule['project']['color']
   step?: Omit<SlowTask, 'step'>
   tests: Map<TestCase['id'], SlowTask>
-  typecheck: boolean
+  meta: TestModule['task']['meta']
 }
 
 /**
@@ -140,6 +140,10 @@ export class SummaryReporter implements Reporter {
     stats.step?.onFinish?.()
     stats.step = step
 
+    if (!Number.isFinite(this.ctx.config.slowTestThreshold)) {
+      return
+    }
+
     const timeout = setTimeout(() => {
       step.visible = true
     }, this.ctx.config.slowTestThreshold).unref()
@@ -185,9 +189,11 @@ export class SummaryReporter implements Reporter {
       onFinish: () => {},
     }
 
-    const timeout = setTimeout(() => {
-      slowTest.visible = true
-    }, this.ctx.config.slowTestThreshold).unref()
+    const timeout = Number.isFinite(this.ctx.config.slowTestThreshold)
+      ? setTimeout(() => {
+          slowTest.visible = true
+        }, this.ctx.config.slowTestThreshold).unref()
+      : undefined
 
     slowTest.onFinish = () => {
       slowTest.step?.onFinish()
@@ -290,11 +296,13 @@ export class SummaryReporter implements Reporter {
     const summary = ['']
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
-      const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const typecheck = testFile.meta.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
+      const label = this.ctx.state.blobs && testFile.meta.__vitest_label__ ? `${c.bgCyan(c.bold(` ${testFile.meta.__vitest_label__} `))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
+        + label
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
@@ -400,6 +408,6 @@ function initializeStats(module: TestModule): RunningModule {
     projectName: module.project.name,
     projectColor: module.project.color,
     tests: new Map(),
-    typecheck: !!module.task.meta.typecheck,
+    meta: module.task.meta,
   }
 }

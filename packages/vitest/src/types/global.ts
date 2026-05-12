@@ -40,7 +40,7 @@ declare module 'vitest' {
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
-      actual: () => T,
+      actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
@@ -149,6 +149,7 @@ declare module '@vitest/runner' {
   interface TaskMeta {
     typecheck?: boolean
     benchmark?: boolean
+    __vitest_label__?: string
   }
 
   interface File {

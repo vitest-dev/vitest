@@ -50,6 +50,7 @@ export interface VitestRunnerConfig {
    * @internal
    */
   _diffOptions?: DiffOptions
+  mergeReportsLabel: string | undefined
 }
 
 /**

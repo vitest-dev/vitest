@@ -6,7 +6,7 @@ import cac from 'cac'
 import { normalize } from 'pathe'
 import { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
-import { isAgent } from '../../utils/env'
+import { isAgent, isForceColor } from '../../utils/env'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
@@ -74,7 +74,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
 }
 
 export function createCLI(options: CliParseOptions = {}): CAC {
-  if (isAgent) {
+  if (isAgent && !isForceColor()) {
     disableDefaultColors()
   }
 

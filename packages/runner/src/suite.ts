@@ -347,6 +347,18 @@ function createSuiteCollector(
       ...options,
     }
     const timeout = options.timeout ?? runner.config.testTimeout
+    // TODO: should this be `parentTask.meta`?
+    // currently we don't inherit
+    //   file.meta -> task.meta
+    //   file.meta -> suite.meta (see initSuite)
+    // but we do inherit
+    //   suite.meta -> task.meta
+    //   suite.meta -> suite.meta
+    // and also
+    //   file.tags -> task.tags
+    //   file.tags -> suite.tags
+    //   suite.tags -> suite.tags
+    //   suite.tags -> task.tags
     const parentMeta = currentSuite?.meta
     const tagMeta = tagsOptions.meta
     const testMeta = Object.create(null)

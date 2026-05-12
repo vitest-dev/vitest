@@ -122,10 +122,10 @@ function formatTraceTiming(step: BrowserTraceEntry) {
 }
 
 function formatStepName(step: BrowserTraceEntry) {
-  if (step.kind === 'lifecycle' && step.name === 'vitest:onAfterRetryTask') {
+  if (step.name === 'vitest:onAfterRetryTask') {
     return 'test finished'
   }
-  if (step.kind === 'action' && step.name.startsWith('vitest:')) {
+  if (step.name.startsWith('vitest:')) {
     return step.name.slice('vitest:'.length)
   }
   return step.name

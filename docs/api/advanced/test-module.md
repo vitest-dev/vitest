@@ -34,6 +34,14 @@ Module id relative to the project. This is the same as `task.name` in the deprec
 'project\\example.test.ts' // ❌
 ```
 
+## viteEnvironment <Version>4.1.0</Version> {#viteenvironment}
+
+This is a Vite's [`DevEnvironment`](https://vite.dev/guide/api-environment) that transforms all files inside of the test module.
+
+::: details History
+- `v4.0.15`: added as experimental
+:::
+
 ## state
 
 ```ts
@@ -121,13 +129,25 @@ interface ImportDuration {
 }
 ```
 
-## viteEnvironment <Version>4.1.0</Version> {#viteenvironment}
+## logs <Version>5.0.0</Version> {#logs}
 
-This is a Vite's [`DevEnvironment`](https://vite.dev/guide/api-environment) that transforms all files inside of the test module.
+```ts
+function logs(): ReadonlyArray<UserConsoleLog>
+```
 
-::: details History
-- `v4.0.15`: added as experimental
-:::
+Console logs recorded on top level of the module during test collection.For example:
+
+```ts
+console.log('included') // [!code highlight]
+
+describe('suite', () => {
+  console.log('not included') // [!code error]
+
+  test('test', () => {
+    console.log('not included') // [!code error]
+  })
+})
+```
 
 ## toTestSpecification <Version>4.1.0</Version> {#totestspecification}
 
