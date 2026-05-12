@@ -57,3 +57,16 @@ export function getExplorerItem(page: Page, name: string) {
 export async function openExplorerItem(page: Page, name: string) {
   await getExplorerItem(page, name).click()
 }
+
+// TODO: https://github.com/vitest-dev/vitest/pull/10235
+// async function assertDownloadAttachment(
+//   page: Page,
+//   options: { name: string; content: string },
+// ) {
+//   const annotation = page.getByRole('note').filter({ hasText: options.name })
+//   const downloadPromise = page.waitForEvent('download')
+//   await annotation.getByRole('link').click()
+//   const download = await downloadPromise
+//   const downloadPath = await download.path()
+//   expect(readFileSync(downloadPath, 'utf-8')).toBe(options.content)
+// }

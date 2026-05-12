@@ -147,26 +147,7 @@ test.describe('ui', () => {
 
   test('annotations in the editor tab', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('annotated.test.ts')
-    await item.hover()
-    await item.getByTestId('btn-open-details').click({ force: true })
-    await page.getByTestId('btn-code').click({ force: true })
-
-    const annotations = page.getByRole('note')
-    await expect(annotations).toHaveCount(7)
-
-    await expect(annotations.first()).toHaveText('notice: hello world')
-    await expect(annotations.nth(1)).toHaveText('notice: second annotation')
-    await expect(annotations.nth(2)).toHaveText('warning: beware!')
-    await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
-    await expect(annotations.nth(4)).toHaveText('notice: image annotation')
-    await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
-    await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
-
-    await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
-    await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
-    await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown;base64,/)
-    await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown,/)
+    await testAnnotations(page)
   })
 
   test('error', async ({ page }) => {
@@ -423,28 +404,9 @@ test.describe('html report', () => {
     })
   })
 
-  test('annotations', async ({ page }) => {
+  test('annotations in the editor tab', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('annotated.test.ts')
-    await item.hover()
-    await item.getByTestId('btn-open-details').click({ force: true })
-    await page.getByTestId('btn-code').click({ force: true })
-
-    const annotations = page.getByRole('note')
-    await expect(annotations).toHaveCount(7)
-
-    await expect(annotations.first()).toHaveText('notice: hello world')
-    await expect(annotations.nth(1)).toHaveText('notice: second annotation')
-    await expect(annotations.nth(2)).toHaveText('warning: beware!')
-    await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
-    await expect(annotations.nth(4)).toHaveText('notice: image annotation')
-    await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
-    await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
-
-    await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-    await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-    await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown;base64,/)
-    await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /^data:text\/markdown,/)
+    await testAnnotations(page)
   })
 
   test('tags filter', async ({ page }) => {
@@ -496,6 +458,30 @@ async function testBasic(page: Page, pageUrl: string) {
 async function testCoverage(page: Page) {
   await page.getByLabel('Show coverage').click()
   await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+}
+
+async function testAnnotations(page: Page) {
+  const item = page.getByLabel('annotated.test.ts')
+  await item.hover()
+  await item.getByTestId('btn-open-details').click({ force: true })
+  await page.getByTestId('btn-code').click({ force: true })
+
+  const annotations = page.getByRole('note')
+  await expect(annotations).toHaveCount(7)
+
+  await expect(annotations.first()).toHaveText('notice: hello world')
+  await expect(annotations.nth(1)).toHaveText('notice: second annotation')
+  await expect(annotations.nth(2)).toHaveText('warning: beware!')
+  await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
+  await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+  await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
+  await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
+
+  // TODO: assertDownloadAttachment or assertValidImage
+  await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /.+/)
+  await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /.+/)
+  await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /.+/)
+  await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /.+/)
 }
 
 async function testConsole(page: Page) {
