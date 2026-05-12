@@ -11,13 +11,13 @@ test('annotated typed test', async ({ annotate }) => {
 
 test('annotated file test', async ({ annotate }) => {
   await annotate('file annotation', {
-    path: './fixtures/example.txt'
+    path: './example.txt'
   })
 })
 
 test('annotated image test', async ({ annotate }) => {
   await annotate('image annotation', {
-    path: './fixtures/cute-puppy.jpg'
+    path: './cute-puppy.jpg'
   })
 })
 

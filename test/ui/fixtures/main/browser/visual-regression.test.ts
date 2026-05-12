@@ -6,7 +6,7 @@ test('visual regression test', async ({ expect, onTestFinished }) => {
 
   onTestFinished(async () => {
     if (server.config.snapshotOptions.updateSnapshot !== 'none') {
-      await server.commands.removeFile(`fixtures-browser/${screenshotName}`)
+      await server.commands.removeFile(`./${screenshotName}`)
     }
   })
 

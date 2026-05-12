@@ -256,7 +256,7 @@ test.describe('ui', () => {
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
 
     await getExplorerItem(page, 'colored error message').click()
-    await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /fixtures/error.test.ts:12:17')
+    await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
   })
 
   test('file-filter', async ({ page }) => {
