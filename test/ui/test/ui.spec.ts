@@ -38,44 +38,12 @@ test.describe('ui', () => {
   })
 
   test('basic', async ({ page }) => {
-    const pageErrors: unknown[] = []
-    page.on('pageerror', error => pageErrors.push(error))
-
-    await page.goto(pageUrl)
-
-    // dashboard
-    await assertTestCounts(page, { pass: 17, fail: 3 })
-
-    // unhandled errors
-    await expect(page.getByTestId('unhandled-errors')).toContainText(
-      'Vitest caught 2 errors during the test run. This might cause false positive tests. '
-      + 'Resolve unhandled errors to make sure your tests are not affected.',
-    )
-
-    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
-    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
-
-    // report
-    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
-    await sample.hover()
-    await sample.getByTestId('btn-open-details').click({ force: true })
-    await page.getByText('All tests passed in this file').click()
-
-    // graph tab
-    await page.getByTestId('btn-graph').click()
-    await expect(page.locator('[data-testid=graph] text')).toContainText('sample.test.ts')
-
-    // console tab
-    await page.getByTestId('btn-console').click()
-    await expect(page.getByTestId('console')).toContainText('log test')
-
-    expect(pageErrors).toEqual([])
+    await testBasic(page, pageUrl)
   })
 
   test('coverage', async ({ page }) => {
     await page.goto(pageUrl)
-    await page.getByLabel('Show coverage').click()
-    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+    await testCoverage(page)
   })
 
   test('console', async ({ page }) => {
@@ -287,18 +255,7 @@ test.describe('ui', () => {
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await page.getByPlaceholder('Search...').fill('tag:db')
-
-    // only one test with the tag "db"
-    await expect(page.getByText('PASS (1)')).toBeVisible()
-    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
-
-    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
-    await expect(page.getByText('No matched test')).toBeVisible()
-
-    await page.getByPlaceholder('Search...').fill('tag:unknown')
-    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
+    await testTagsFilter(page)
   })
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
@@ -393,44 +350,12 @@ test.describe('html report', () => {
   })
 
   test('basic', async ({ page }) => {
-    const pageErrors: unknown[] = []
-    page.on('pageerror', error => pageErrors.push(error))
-
-    await page.goto(pageUrl)
-
-    // dashboard
-    await assertTestCounts(page, { pass: 17, fail: 3 })
-
-    // unhandled errors
-    await expect(page.getByTestId('unhandled-errors')).toContainText(
-      'Vitest caught 2 errors during the test run. This might cause false positive tests. '
-      + 'Resolve unhandled errors to make sure your tests are not affected.',
-    )
-
-    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
-    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
-
-    // report
-    const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
-    await sample.hover()
-    await sample.getByTestId('btn-open-details').click({ force: true })
-    await page.getByText('All tests passed in this file').click()
-
-    // graph tab
-    await page.getByTestId('btn-graph').click()
-    await expect(page.locator('[data-testid=graph] text')).toContainText('sample.test.ts')
-
-    // console tab
-    await page.getByTestId('btn-console').click()
-    await expect(page.getByTestId('console')).toContainText('log test')
-
-    expect(pageErrors).toEqual([])
+    await testBasic(page, pageUrl)
   })
 
   test('coverage', async ({ page }) => {
     await page.goto(pageUrl)
-    await page.getByLabel('Show coverage').click()
-    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+    await testCoverage(page)
   })
 
   test('error', async ({ page }) => {
@@ -574,18 +499,7 @@ test.describe('html report', () => {
 
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await page.getByPlaceholder('Search...').fill('tag:db')
-
-    // only one test with the tag "db"
-    await expect(page.getByText('PASS (1)')).toBeVisible()
-    await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
-
-    await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
-    await expect(page.getByText('No matched test')).toBeVisible()
-
-    await page.getByPlaceholder('Search...').fill('tag:unknown')
-    await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
+    await testTagsFilter(page)
   })
 
   test('visual regression in the report tab', async ({ page }) => {
@@ -615,9 +529,63 @@ function getExplorerItem(page: Page, name: string) {
   return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
 }
 
+async function testBasic(page: Page, pageUrl: string) {
+  const pageErrors: unknown[] = []
+  page.on('pageerror', error => pageErrors.push(error))
+
+  await page.goto(pageUrl)
+
+  // dashboard
+  await assertTestCounts(page, { pass: 17, fail: 3 })
+
+  // unhandled errors
+  await expect(page.getByTestId('unhandled-errors')).toContainText(
+    'Vitest caught 2 errors during the test run. This might cause false positive tests. '
+    + 'Resolve unhandled errors to make sure your tests are not affected.',
+  )
+
+  await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
+  await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
+
+  // report
+  const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
+  await sample.hover()
+  await sample.getByTestId('btn-open-details').click({ force: true })
+  await page.getByText('All tests passed in this file').click()
+
+  // graph tab
+  await page.getByTestId('btn-graph').click()
+  await expect(page.locator('[data-testid=graph] text')).toContainText('sample.test.ts')
+
+  // console tab
+  await page.getByTestId('btn-console').click()
+  await expect(page.getByTestId('console')).toContainText('log test')
+
+  expect(pageErrors).toEqual([])
+}
+
 async function assertTestCounts(page: Page, options: { pass: number; fail: number }) {
   await expect.soft(page.getByTestId('tests-entry'))
     .toContainText(`${options.pass} Pass ${options.fail} Fail ${options.pass + options.fail} Total`)
+}
+
+async function testCoverage(page: Page) {
+  await page.getByLabel('Show coverage').click()
+  await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+}
+
+async function testTagsFilter(page: Page) {
+  await page.getByPlaceholder('Search...').fill('tag:db')
+
+  // only one test with the tag "db"
+  await expect(page.getByText('PASS (1)')).toBeVisible()
+  await expect(page.getByTestId('explorer-item').filter({ hasText: 'has tags' })).toBeVisible()
+
+  await page.getByPlaceholder('Search...').fill('tag:db && !flaky')
+  await expect(page.getByText('No matched test')).toBeVisible()
+
+  await page.getByPlaceholder('Search...').fill('tag:unknown')
+  await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
 }
 
 test.describe('standalone', () => {
