@@ -540,7 +540,7 @@ export function resolveConfig(
     ),
 
     // Exclude test files
-    ...resolved.include,
+    ...resolved.include.filter(pattern => !pattern.startsWith('!')),
 
     // Configs
     resolved.config && slash(resolved.config),
