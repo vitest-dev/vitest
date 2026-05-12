@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test'
 import type { InlineConfig, PreviewServer } from 'vite'
 import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
+import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { expect } from '@playwright/test'
 import { preview } from 'vite'
@@ -58,15 +59,19 @@ export async function openExplorerItem(page: Page, name: string) {
   await getExplorerItem(page, name).click()
 }
 
-// TODO: https://github.com/vitest-dev/vitest/pull/10235
-// async function assertDownloadAttachment(
-//   page: Page,
-//   options: { name: string; content: string },
-// ) {
-//   const annotation = page.getByRole('note').filter({ hasText: options.name })
-//   const downloadPromise = page.waitForEvent('download')
-//   await annotation.getByRole('link').click()
-//   const download = await downloadPromise
-//   const downloadPath = await download.path()
-//   expect(readFileSync(downloadPath, 'utf-8')).toBe(options.content)
-// }
+export async function assertDownloadAttachment(
+  page: Page,
+  options: {
+    name: string
+    suggestedFilename: string
+    content: string
+  },
+) {
+  const annotation = page.getByRole('note').filter({ hasText: options.name })
+  const downloadPromise = page.waitForEvent('download')
+  await annotation.getByRole('link').click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe(options.suggestedFilename)
+  const downloadPath = await download.path()
+  expect(readFileSync(downloadPath, 'utf-8')).toBe(options.content)
+}

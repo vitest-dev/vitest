@@ -1,9 +1,8 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
-import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertDownloadAttachment, assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -244,9 +243,7 @@ async function testAnnotationsInCode(page: Page) {
 
 async function testAnnotationsInReport(page: Page) {
   await test.step('annotated test', async () => {
-    const item = page.getByLabel('annotated test')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated test').click()
 
     const annotations = page.getByRole('note')
     await expect(annotations).toHaveCount(2)
@@ -261,9 +258,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated typed test', async () => {
-    const item = page.getByLabel('annotated typed test')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated typed test').click()
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -274,9 +269,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated file test', async () => {
-    const item = page.getByLabel('annotated file test')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated file test').click()
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -284,13 +277,15 @@ async function testAnnotationsInReport(page: Page) {
     await expect(annotation).toContainText('file annotation')
     await expect(annotation).toContainText('notice')
     await expect(annotation).toContainText('annotated.test.ts:13:9')
-    await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
+    await assertDownloadAttachment(page, {
+      name: 'file annotation',
+      suggestedFilename: 'file-annotation.txt',
+      content: 'hello world\n',
+    })
   })
 
   await test.step('annotated image test', async () => {
-    const item = page.getByLabel('annotated image test')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated image test').click()
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -303,9 +298,7 @@ async function testAnnotationsInReport(page: Page) {
   })
 
   await test.step('annotated with body base64', async () => {
-    const item = page.getByLabel('annotated with body base64')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated with body base64').click()
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -313,20 +306,15 @@ async function testAnnotationsInReport(page: Page) {
     await expect(annotation).toContainText('body base64 annotation')
     await expect(annotation).toContainText('notice')
     await expect(annotation).toContainText('annotated.test.ts:25:9')
-
-    const downloadPromise = page.waitForEvent('download')
-    await annotation.getByRole('link').click()
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
-    const downloadPath = await download.path()
-    const content = readFileSync(downloadPath, 'utf-8')
-    expect(content).toBe('Hello base64 **markdown**')
+    await assertDownloadAttachment(page, {
+      name: 'body base64 annotation',
+      suggestedFilename: 'body-base64-annotation.md',
+      content: 'Hello base64 **markdown**',
+    })
   })
 
   await test.step('annotated with body utf-8', async () => {
-    const item = page.getByLabel('annotated with body utf-8')
-    await item.click({ force: true })
-    await page.getByTestId('btn-report').click({ force: true })
+    await getExplorerItem(page, 'annotated with body utf-8').click()
 
     const annotation = page.getByRole('note')
     await expect(annotation).toHaveCount(1)
@@ -334,14 +322,11 @@ async function testAnnotationsInReport(page: Page) {
     await expect(annotation).toContainText('body utf-8 annotation')
     await expect(annotation).toContainText('notice')
     await expect(annotation).toContainText('annotated.test.ts:32:9')
-
-    const downloadPromise = page.waitForEvent('download')
-    await annotation.getByRole('link').click()
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
-    const downloadPath = await download.path()
-    const content = readFileSync(downloadPath, 'utf-8')
-    expect(content).toBe('Hello utf-8 **markdown**')
+    await assertDownloadAttachment(page, {
+      name: 'body utf-8 annotation',
+      suggestedFilename: 'body-utf-8-annotation.md',
+      content: 'Hello utf-8 **markdown**',
+    })
   })
 }
 
