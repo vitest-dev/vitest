@@ -14,6 +14,8 @@ export default defineConfig({
         test: {
           name: "node",
           root: path.join(import.meta.dirname, "node"),
+          // TODO: https://github.com/vitest-dev/vitest/issues/10326
+          attachmentsDir: path.join(import.meta.dirname, ".vitest/attachments"),
           environment: "happy-dom",
         },
       },
@@ -22,6 +24,7 @@ export default defineConfig({
         test: {
           name: "browser",
           root: path.join(import.meta.dirname, "browser"),
+          attachmentsDir: path.join(import.meta.dirname, ".vitest/attachments"),
           browser: {
             enabled: true,
             headless: true,
