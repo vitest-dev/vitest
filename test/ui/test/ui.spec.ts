@@ -1,37 +1,25 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
-import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
-import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { preview } from 'vite'
-import { startVitest } from 'vitest/node'
-import { assertTestCounts, getExplorerItem } from './helper'
+import { assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let pageUrl: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    vitest = await startVitest('test', [], {
+    const server = await startVitestUi({
       root: './fixtures/main',
       watch: true,
       ui: true,
       open: false,
       coverage: { enabled: true },
       reporters: [],
-    }, {}, {
-      stdout,
-      stderr,
     })
-    expect(vitest).toBeDefined()
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    pageUrl = `http://localhost:${address.port}/__vitest__/`
+    vitest = server.vitest
+    pageUrl = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {
@@ -313,13 +301,7 @@ test.describe('html report', () => {
   let pageUrl: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    // generate vitest html report
-    await startVitest(
-      'test',
-      [],
+    const server = await startHtmlReportPreview(
       {
         root: './fixtures/main',
         run: true,
@@ -328,22 +310,14 @@ test.describe('html report', () => {
           enabled: true,
         },
       },
-      {},
       {
-        stdout,
-        stderr,
+        root: './fixtures/main',
+        base: '/custom/base/',
+        build: { outDir: 'html' },
       },
     )
-
-    // run vite preview server
-    previewServer = await preview({
-      root: './fixtures/main',
-      base: '/custom/base/',
-      build: { outDir: 'html' },
-    })
-    const address = previewServer.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    pageUrl = `http://localhost:${address.port}/custom/base/`
+    previewServer = server.previewServer
+    pageUrl = `${server.url}/custom/base/`
   })
 
   test.afterAll(async () => {
@@ -584,24 +558,16 @@ test.describe('standalone', () => {
   let pageUrl: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    vitest = await startVitest('test', [], {
+    const server = await startVitestUi({
       root: './fixtures/main',
       watch: true,
       ui: true,
       standalone: true,
       open: false,
       reporters: [],
-    }, {}, {
-      stdout,
-      stderr,
     })
-    expect(vitest).toBeDefined()
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    pageUrl = `http://localhost:${address.port}/__vitest__/`
+    vitest = server.vitest
+    pageUrl = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {

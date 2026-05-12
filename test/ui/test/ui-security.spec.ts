@@ -1,18 +1,13 @@
 import type { Vitest } from 'vitest/node'
-import assert from 'node:assert'
-import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { startVitest } from 'vitest/node'
+import { startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let pageUrl: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    vitest = await startVitest('test', [], {
+    const server = await startVitestUi({
       root: './fixtures/main',
       watch: true,
       ui: true,
@@ -22,14 +17,9 @@ test.describe('ui', () => {
         allowWrite: false,
       },
       reporters: [],
-    }, {}, {
-      stdout,
-      stderr,
     })
-    expect(vitest).toBeDefined()
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    pageUrl = `http://localhost:${address.port}/__vitest__/`
+    vitest = server.vitest
+    pageUrl = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {

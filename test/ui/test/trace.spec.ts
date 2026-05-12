@@ -1,37 +1,23 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
-import assert from 'node:assert'
-import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { preview } from 'vite'
-import { startVitest } from 'vitest/node'
+import { startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
   test.beforeAll(async () => {
-    // TODO: move to helper.ts
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
     const root = './fixtures/trace'
-    vitest = await startVitest(
-      'test',
-      undefined,
-      {
-        root,
-        watch: true,
-        ui: true,
-        open: false,
-      },
-      {},
-      { stdout, stderr },
-    )
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    baseURL = `http://localhost:${address.port}/__vitest__/`
+    const server = await startVitestUi({
+      root,
+      watch: true,
+      ui: true,
+      open: false,
+    })
+    vitest = server.vitest
+    baseURL = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {
@@ -73,13 +59,8 @@ test.describe('html reporter', () => {
   let baseURL: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
     const root = './fixtures/trace'
-    await startVitest(
-      'test',
-      undefined,
+    const server = await startHtmlReportPreview(
       {
         root,
         run: true,
@@ -92,16 +73,13 @@ test.describe('html reporter', () => {
           },
         },
       },
-      {},
-      { stdout, stderr },
+      {
+        root,
+        build: { outDir: 'html' },
+      },
     )
-    previewServer = await preview({
-      root,
-      build: { outDir: 'html' },
-    })
-    const address = previewServer.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    baseURL = `http://localhost:${address.port}/`
+    previewServer = server.previewServer
+    baseURL = `${server.url}/`
   })
 
   test.afterAll(async () => {
