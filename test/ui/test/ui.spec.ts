@@ -117,31 +117,7 @@ test.describe('ui', () => {
 
   test('dashboard entries filter tests correctly', async ({ page }) => {
     await page.goto(pageUrl)
-
-    // Initial state should show all tests
-    await expect(page.getByTestId('pass-entry')).toBeVisible()
-    await expect(page.getByTestId('fail-entry')).toBeVisible()
-    await expect(page.getByTestId('total-entry')).toBeVisible()
-
-    // Click "Pass" entry and verify only passing tests are shown
-    await page.getByTestId('pass-entry').click()
-    await expect(page.getByLabel(/pass/i)).toBeChecked()
-
-    // Click "Fail" entry and verify only failing tests are shown
-    await page.getByTestId('fail-entry').click()
-    await expect(page.getByLabel(/fail/i)).toBeChecked()
-
-    // Click "Skip" entry if there are skipped tests
-    if (await page.getByTestId('skipped-entry').isVisible()) {
-      await page.getByTestId('skipped-entry').click()
-      await expect(page.getByLabel(/skip/i)).toBeChecked()
-    }
-
-    // Click "Total" entry to reset filters and show all tests again
-    await page.getByTestId('total-entry').click()
-    await expect(page.getByLabel(/pass/i)).not.toBeChecked()
-    await expect(page.getByLabel(/fail/i)).not.toBeChecked()
-    await expect(page.getByLabel(/skip/i)).not.toBeChecked()
+    await testDashboardFilter(page)
   })
 
   test('visual regression in the report tab', async ({ page }) => {
@@ -215,6 +191,11 @@ test.describe('html report', () => {
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
+  })
+
+  test('dashboard entries filter tests correctly', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testDashboardFilter(page)
   })
 })
 
@@ -431,6 +412,35 @@ async function testVisualRegression(page: Page) {
   await expect(artifact.getByRole('tablist')).toHaveText('Reference')
   await expect(artifact.getByRole('tabpanel').getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
 }
+
+async function testDashboardFilter(page: Page) {
+  // Initial state should show all tests
+  await expect(page.getByTestId('pass-entry')).toBeVisible()
+  await expect(page.getByTestId('fail-entry')).toBeVisible()
+  await expect(page.getByTestId('total-entry')).toBeVisible()
+
+  // Click "Pass" entry and verify only passing tests are shown
+  await page.getByTestId('pass-entry').click()
+  await expect(page.getByLabel(/pass/i)).toBeChecked()
+
+  // Click "Fail" entry and verify only failing tests are shown
+  await page.getByTestId('fail-entry').click()
+  await expect(page.getByLabel(/fail/i)).toBeChecked()
+
+  // TODO: test skip
+  // Click "Skip" entry if there are skipped tests
+  if (await page.getByTestId('skipped-entry').isVisible()) {
+    await page.getByTestId('skipped-entry').click()
+    await expect(page.getByLabel(/skip/i)).toBeChecked()
+  }
+
+  // Click "Total" entry to reset filters and show all tests again
+  await page.getByTestId('total-entry').click()
+  await expect(page.getByLabel(/pass/i)).not.toBeChecked()
+  await expect(page.getByLabel(/fail/i)).not.toBeChecked()
+  await expect(page.getByLabel(/skip/i)).not.toBeChecked()
+}
+
 
 test.describe('standalone', () => {
   let vitest: Vitest | undefined
