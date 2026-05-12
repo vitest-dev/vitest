@@ -42,107 +42,7 @@ test.describe('ui', () => {
 
   test('annotations in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await test.step('annotated test', async () => {
-      const item = page.getByLabel('annotated test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotations = page.getByRole('note')
-      await expect(annotations).toHaveCount(2)
-
-      await expect(annotations.first()).toContainText('hello world')
-      await expect(annotations.first()).toContainText('notice')
-      await expect(annotations.first()).toContainText('annotated.test.ts:4:9')
-
-      await expect(annotations.last()).toContainText('second annotation')
-      await expect(annotations.last()).toContainText('notice')
-      await expect(annotations.last()).toContainText('annotated.test.ts:5:9')
-    })
-
-    await test.step('annotated typed test', async () => {
-      const item = page.getByLabel('annotated typed test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('beware!')
-      await expect(annotation).toContainText('warning')
-      await expect(annotation).toContainText('annotated.test.ts:9:9')
-    })
-
-    await test.step('annotated file test', async () => {
-      const item = page.getByLabel('annotated file test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('file annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:13:9')
-      await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
-    })
-
-    await test.step('annotated image test', async () => {
-      const item = page.getByLabel('annotated image test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('image annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:19:9')
-      await expect(annotation.getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=/)
-      await expect(annotation.getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=/)
-    })
-
-    await test.step('annotated with body base64', async () => {
-      const item = page.getByLabel('annotated with body base64')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('body base64 annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:25:9')
-
-      const downloadPromise = page.waitForEvent('download')
-      await annotation.getByRole('link').click()
-      const download = await downloadPromise
-      expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
-      const downloadPath = await download.path()
-      const content = readFileSync(downloadPath, 'utf-8')
-      expect(content).toBe('Hello base64 **markdown**')
-    })
-
-    await test.step('annotated with body utf-8', async () => {
-      const item = page.getByLabel('annotated with body utf-8')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('body utf-8 annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:32:9')
-
-      const downloadPromise = page.waitForEvent('download')
-      await annotation.getByRole('link').click()
-      const download = await downloadPromise
-      expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
-      const downloadPath = await download.path()
-      const content = readFileSync(downloadPath, 'utf-8')
-      expect(content).toBe('Hello utf-8 **markdown**')
-    })
+    await testReportAnnotations(page)
   })
 
   test('annotations in the editor tab', async ({ page }) => {
@@ -299,109 +199,7 @@ test.describe('html report', () => {
 
   test('annotations in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await test.step('annotated test', async () => {
-      const item = page.getByLabel('annotated test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotations = page.getByRole('note')
-      await expect(annotations).toHaveCount(2)
-
-      await expect(annotations.first()).toContainText('hello world')
-      await expect(annotations.first()).toContainText('notice')
-      await expect(annotations.first()).toContainText('annotated.test.ts:4:9')
-
-      await expect(annotations.last()).toContainText('second annotation')
-      await expect(annotations.last()).toContainText('notice')
-      await expect(annotations.last()).toContainText('annotated.test.ts:5:9')
-    })
-
-    await test.step('annotated typed test', async () => {
-      const item = page.getByLabel('annotated typed test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('beware!')
-      await expect(annotation).toContainText('warning')
-      await expect(annotation).toContainText('annotated.test.ts:9:9')
-    })
-
-    await test.step('annotated file test', async () => {
-      const item = page.getByLabel('annotated file test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('file annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:13:9')
-      await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-    })
-
-    await test.step('annotated image test', async () => {
-      const item = page.getByLabel('annotated image test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('image annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:19:9')
-      await expect(annotation.getByRole('link')).toHaveAttribute('href', /data\/\w+/)
-      const img = annotation.getByRole('img')
-      await expect(img).toHaveAttribute('src', /data\/\w+/)
-      await expect(img).not.toHaveJSProperty('naturalWidth', 0)
-    })
-
-    await test.step('annotated with body base64', async () => {
-      const item = page.getByLabel('annotated with body base64')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('body base64 annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:25:9')
-
-      const downloadPromise = page.waitForEvent('download')
-      await annotation.getByRole('link').click()
-      const download = await downloadPromise
-      expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
-      const downloadPath = await download.path()
-      const content = readFileSync(downloadPath, 'utf-8')
-      expect(content).toBe('Hello base64 **markdown**')
-    })
-
-    await test.step('annotated with body utf-8', async () => {
-      const item = page.getByLabel('annotated with body utf-8')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const annotation = page.getByRole('note')
-      await expect(annotation).toHaveCount(1)
-
-      await expect(annotation).toContainText('body utf-8 annotation')
-      await expect(annotation).toContainText('notice')
-      await expect(annotation).toContainText('annotated.test.ts:32:9')
-
-      const downloadPromise = page.waitForEvent('download')
-      await annotation.getByRole('link').click()
-      const download = await downloadPromise
-      expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
-      const downloadPath = await download.path()
-      const content = readFileSync(downloadPath, 'utf-8')
-      expect(content).toBe('Hello utf-8 **markdown**')
-    })
+    await testReportAnnotations(page)
   })
 
   test('annotations in the editor tab', async ({ page }) => {
@@ -482,6 +280,109 @@ async function testAnnotations(page: Page) {
   await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /.+/)
   await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /.+/)
   await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /.+/)
+}
+
+async function testReportAnnotations(page: Page) {
+  await test.step('annotated test', async () => {
+    const item = page.getByLabel('annotated test')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotations = page.getByRole('note')
+    await expect(annotations).toHaveCount(2)
+
+    await expect(annotations.first()).toContainText('hello world')
+    await expect(annotations.first()).toContainText('notice')
+    await expect(annotations.first()).toContainText('annotated.test.ts:4:9')
+
+    await expect(annotations.last()).toContainText('second annotation')
+    await expect(annotations.last()).toContainText('notice')
+    await expect(annotations.last()).toContainText('annotated.test.ts:5:9')
+  })
+
+  await test.step('annotated typed test', async () => {
+    const item = page.getByLabel('annotated typed test')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotation = page.getByRole('note')
+    await expect(annotation).toHaveCount(1)
+
+    await expect(annotation).toContainText('beware!')
+    await expect(annotation).toContainText('warning')
+    await expect(annotation).toContainText('annotated.test.ts:9:9')
+  })
+
+  await test.step('annotated file test', async () => {
+    const item = page.getByLabel('annotated file test')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotation = page.getByRole('note')
+    await expect(annotation).toHaveCount(1)
+
+    await expect(annotation).toContainText('file annotation')
+    await expect(annotation).toContainText('notice')
+    await expect(annotation).toContainText('annotated.test.ts:13:9')
+    await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
+  })
+
+  await test.step('annotated image test', async () => {
+    const item = page.getByLabel('annotated image test')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotation = page.getByRole('note')
+    await expect(annotation).toHaveCount(1)
+
+    await expect(annotation).toContainText('image annotation')
+    await expect(annotation).toContainText('notice')
+    await expect(annotation).toContainText('annotated.test.ts:19:9')
+    await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
+    await expect(annotation.getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+  })
+
+  await test.step('annotated with body base64', async () => {
+    const item = page.getByLabel('annotated with body base64')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotation = page.getByRole('note')
+    await expect(annotation).toHaveCount(1)
+
+    await expect(annotation).toContainText('body base64 annotation')
+    await expect(annotation).toContainText('notice')
+    await expect(annotation).toContainText('annotated.test.ts:25:9')
+
+    const downloadPromise = page.waitForEvent('download')
+    await annotation.getByRole('link').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toBe('body-base64-annotation.md')
+    const downloadPath = await download.path()
+    const content = readFileSync(downloadPath, 'utf-8')
+    expect(content).toBe('Hello base64 **markdown**')
+  })
+
+  await test.step('annotated with body utf-8', async () => {
+    const item = page.getByLabel('annotated with body utf-8')
+    await item.click({ force: true })
+    await page.getByTestId('btn-report').click({ force: true })
+
+    const annotation = page.getByRole('note')
+    await expect(annotation).toHaveCount(1)
+
+    await expect(annotation).toContainText('body utf-8 annotation')
+    await expect(annotation).toContainText('notice')
+    await expect(annotation).toContainText('annotated.test.ts:32:9')
+
+    const downloadPromise = page.waitForEvent('download')
+    await annotation.getByRole('link').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toBe('body-utf-8-annotation.md')
+    const downloadPath = await download.path()
+    const content = readFileSync(downloadPath, 'utf-8')
+    expect(content).toBe('Hello utf-8 **markdown**')
+  })
 }
 
 async function testConsole(page: Page) {
