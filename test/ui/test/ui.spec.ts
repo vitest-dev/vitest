@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertDownloadAttachment, assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -217,30 +217,6 @@ async function testCoverage(page: Page) {
   await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
 }
 
-async function testAnnotationsInCode(page: Page) {
-  const item = page.getByLabel('annotated.test.ts')
-  await item.hover()
-  await item.getByTestId('btn-open-details').click({ force: true })
-  await page.getByTestId('btn-code').click({ force: true })
-
-  const annotations = page.getByRole('note')
-  await expect(annotations).toHaveCount(7)
-
-  await expect(annotations.first()).toHaveText('notice: hello world')
-  await expect(annotations.nth(1)).toHaveText('notice: second annotation')
-  await expect(annotations.nth(2)).toHaveText('warning: beware!')
-  await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
-  await expect(annotations.nth(4)).toHaveText('notice: image annotation')
-  await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
-  await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
-
-  // TODO: assertDownloadAttachment or assertValidImage
-  await expect(annotations.nth(3).getByRole('link')).toHaveAttribute('href', /.+/)
-  await expect(annotations.nth(4).getByRole('link')).toHaveAttribute('href', /.+/)
-  await expect(annotations.nth(5).getByRole('link')).toHaveAttribute('href', /.+/)
-  await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /.+/)
-}
-
 async function testAnnotationsInReport(page: Page) {
   await test.step('annotated test', async () => {
     await getExplorerItem(page, 'annotated test').click()
@@ -293,8 +269,9 @@ async function testAnnotationsInReport(page: Page) {
     await expect(annotation).toContainText('image annotation')
     await expect(annotation).toContainText('notice')
     await expect(annotation).toContainText('annotated.test.ts:19:9')
-    await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
-    await expect(annotation.getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+    await assertImageAttachment(page, {
+      name: 'image annotation',
+    })
   })
 
   await test.step('annotated with body base64', async () => {
@@ -327,6 +304,43 @@ async function testAnnotationsInReport(page: Page) {
       suggestedFilename: 'body-utf-8-annotation.md',
       content: 'Hello utf-8 **markdown**',
     })
+  })
+}
+
+async function testAnnotationsInCode(page: Page) {
+  const item = page.getByLabel('annotated.test.ts')
+  await item.hover()
+  await item.getByTestId('btn-open-details').click({ force: true })
+  await page.getByTestId('btn-code').click({ force: true })
+
+  const annotations = page.getByRole('note')
+  await expect(annotations).toHaveCount(7)
+
+  await expect(annotations.first()).toHaveText('notice: hello world')
+  await expect(annotations.nth(1)).toHaveText('notice: second annotation')
+  await expect(annotations.nth(2)).toHaveText('warning: beware!')
+  await expect(annotations.nth(3)).toHaveText(/notice: file annotation/)
+  await expect(annotations.nth(4)).toHaveText('notice: image annotation')
+  await expect(annotations.nth(5)).toHaveText(/notice: body base64 annotation/)
+  await expect(annotations.nth(6)).toHaveText(/notice: body utf-8 annotation/)
+
+  await assertDownloadAttachment(page, {
+    name: 'file annotation',
+    suggestedFilename: 'file-annotation.txt',
+    content: 'hello world\n',
+  })
+  await assertDownloadAttachment(page, {
+    name: 'body base64 annotation',
+    suggestedFilename: 'body-base64-annotation.md',
+    content: 'Hello base64 **markdown**',
+  })
+  await assertDownloadAttachment(page, {
+    name: 'body utf-8 annotation',
+    suggestedFilename: 'body-utf-8-annotation.md',
+    content: 'Hello utf-8 **markdown**',
+  })
+  await assertImageAttachment(page, {
+    name: 'image annotation',
   })
 }
 

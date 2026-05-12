@@ -75,3 +75,14 @@ export async function assertDownloadAttachment(
   const downloadPath = await download.path()
   expect(readFileSync(downloadPath, 'utf-8')).toBe(options.content)
 }
+
+export async function assertImageAttachment(
+  page: Page,
+  options: {
+    name: string
+  },
+) {
+  const annotation = page.getByRole('note').filter({ hasText: options.name })
+  await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
+  await expect(annotation.getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+}
