@@ -158,6 +158,8 @@ await page.mark('submit flow', async () => {
 
 ::: tip
 This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
+
+A server-side equivalent is available on the [`BrowserCommandContext`](/api/browser/commands#recording-trace-markers) so [custom commands](/api/browser/commands#custom-commands) can record markers attributed to the test that triggered them.
 :::
 
 ### frameLocator

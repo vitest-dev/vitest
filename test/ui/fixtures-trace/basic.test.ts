@@ -10,6 +10,11 @@ test('simple', async () => {
   await page.getByRole('button').mark('Render simple')
 })
 
+test('switch-target', async () => {
+  document.body.innerHTML = '<button>Switch Target</button>'
+  await page.getByRole('button').mark('Render switch target')
+})
+
 test('pseudo-state', async () => {
   document.body.innerHTML = `
 <style>

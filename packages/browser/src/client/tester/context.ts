@@ -19,9 +19,9 @@ import type { Locator as LocatorAPI } from './locators'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState, getWorkerState, now } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
-import { recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
@@ -368,7 +368,7 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         let status: BrowserTraceEntryStatus = 'pass'
-        const startTime = now()
+        const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         if (hasActiveTrace) {
           await triggerCommand(
             '__vitest_groupTraceStart',
@@ -379,6 +379,14 @@ export const page: BrowserPage = {
             error,
           )
         }
+        if (hasActiveTraceView) {
+          await recordBrowserTraceEntry(currentTest, {
+            name,
+            kind: 'mark',
+            range: { id: traceRangeId!, phase: 'start' },
+            stack: options?.stack ?? error?.stack,
+          })
+        }
         try {
           return await bodyOrOptions()
         }
@@ -388,13 +396,11 @@ export const page: BrowserPage = {
         }
         finally {
           if (hasActiveTraceView) {
-            // TODO: support nested trace
-            recordBrowserTraceEntry(currentTest, {
+            await recordBrowserTraceEntry(currentTest, {
               name,
               kind: options?.kind ?? 'mark',
+              range: { id: traceRangeId!, phase: 'end' },
               status,
-              startTime,
-              duration: now() - startTime,
               stack: options?.stack ?? error?.stack,
             })
           }
@@ -409,9 +415,9 @@ export const page: BrowserPage = {
       return Promise.resolve()
     }
 
-    return ensureAwaited((error) => {
+    return ensureAwaited(async (error) => {
       if (hasActiveTraceView) {
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
           name,
           kind: bodyOrOptions?.kind ?? 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,

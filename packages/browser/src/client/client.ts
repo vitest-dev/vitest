@@ -1,6 +1,7 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
+import type { MarkOptions } from 'vitest/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'
 import { createBirpc } from 'birpc'
@@ -24,6 +25,12 @@ const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
 export function onCancel(callback: (reason: CancelReason) => void): void {
   onCancelCallbacks.push(callback)
+}
+
+let pageMarkHandler: ((name: string, options?: MarkOptions) => Promise<void>) | null = null
+
+export function registerPageMarkHandler(handler: NonNullable<typeof pageMarkHandler>): void {
+  pageMarkHandler = handler
 }
 
 export interface VitestBrowserClient {
@@ -92,6 +99,11 @@ function createClient() {
           return
         }
         cdp.emit(event, payload)
+      },
+      async pageMark(name, options) {
+        if (pageMarkHandler) {
+          await pageMarkHandler(name, options)
+        }
       },
       async resolveManualMock(url: string) {
         // @ts-expect-error not typed global API

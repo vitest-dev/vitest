@@ -41,7 +41,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: npm i -g npm@^11.5.2 && pnpm run publish-ci ${{ github.ref_name }}
+        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${{ github.ref_name }}"
 
       - name: Generate Changelog
         run: npx changelogithub

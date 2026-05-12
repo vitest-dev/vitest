@@ -4,7 +4,7 @@ import { defaultExclude, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    exclude: ['**/fixtures-trace/**', '**/fixtures-single-file/**', ...defaultExclude],
+    exclude: ['**/fixtures-trace/**', '**/fixtures-trace-stream/**', '**/fixtures-single-file/**', ...defaultExclude],
     coverage: {
       reportOnFailure: true,
     },

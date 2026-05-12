@@ -218,9 +218,9 @@ export abstract class Locator {
     if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
-    return ensureAwaited((error) => {
+    return ensureAwaited(async (error) => {
       if (hasActiveTraceView) {
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
           name,
           kind: options?.kind ?? 'mark',
           element: this.serialize(),
