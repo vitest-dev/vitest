@@ -534,9 +534,7 @@ async function testTagsFilter(page: Page) {
 }
 
 async function testVisualRegression(page: Page) {
-  const item = page.getByLabel('visual regression test')
-  await item.click({ force: true })
-  await page.getByTestId('btn-report').click({ force: true })
+  await getExplorerItem(page, 'visual regression test').click()
 
   const artifact = page.getByRole('note')
   await expect(artifact).toHaveCount(1)
