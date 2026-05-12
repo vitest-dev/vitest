@@ -14,5 +14,4 @@ export default defineConfig({
   },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1, // some test files share the same fixture
 })
