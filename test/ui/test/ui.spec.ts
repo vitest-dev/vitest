@@ -265,21 +265,7 @@ test.describe('ui', () => {
 
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await test.step('attachments get processed', async () => {
-      const item = page.getByLabel('visual regression test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const artifact = page.getByRole('note')
-      await expect(artifact).toHaveCount(1)
-
-      await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
-      await expect(artifact).toContainText('visual-regression.test.ts:13:3')
-      await expect(artifact.getByRole('tablist')).toHaveText('Reference')
-      await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /__vitest_attachment__\?path=.*?\.png/)
-      await expect(artifact.getByRole('tabpanel').getByRole('img')).toHaveAttribute('src', /__vitest_attachment__\?path=.*?\.png/)
-    })
+    await testVisualRegression(page)
   })
 })
 
@@ -468,23 +454,7 @@ test.describe('html report', () => {
 
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-
-    await test.step('attachments get processed', async () => {
-      const item = page.getByLabel('visual regression test')
-      await item.click({ force: true })
-      await page.getByTestId('btn-report').click({ force: true })
-
-      const artifact = page.getByRole('note')
-      await expect(artifact).toHaveCount(1)
-
-      await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
-      await expect(artifact).toContainText('visual-regression.test.ts:13:3')
-      await expect(artifact.getByRole('tablist')).toHaveText('Reference')
-      await expect(artifact.getByRole('tabpanel').getByRole('link')).toHaveAttribute('href', /data\/\w+\.png/)
-      const vrImg = artifact.getByRole('tabpanel').getByRole('img')
-      await expect(vrImg).toHaveAttribute('src', /data\/\w+\.png/)
-      await expect(vrImg).not.toHaveJSProperty('naturalWidth', 0)
-    })
+    await testVisualRegression(page)
   })
 })
 
@@ -561,6 +531,20 @@ async function testTagsFilter(page: Page) {
 
   await page.getByPlaceholder('Search...').fill('tag:unknown')
   await expect(page.getByText('The tag pattern "unknown" is not defined in the configuration')).toBeVisible()
+}
+
+async function testVisualRegression(page: Page) {
+  const item = page.getByLabel('visual regression test')
+  await item.click({ force: true })
+  await page.getByTestId('btn-report').click({ force: true })
+
+  const artifact = page.getByRole('note')
+  await expect(artifact).toHaveCount(1)
+
+  await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
+  await expect(artifact).toContainText('visual-regression.test.ts:13:3')
+  await expect(artifact.getByRole('tablist')).toHaveText('Reference')
+  await expect(artifact.getByRole('tabpanel').getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
 }
 
 test.describe('standalone', () => {
