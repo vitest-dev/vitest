@@ -59,6 +59,12 @@ export async function openExplorerItem(page: Page, name: string) {
   await getExplorerItem(page, name).click()
 }
 
+export async function openExplorerFileItem(page: Page, name: string) {
+  const item = getExplorerItem(page, name)
+  await item.hover()
+  await item.getByTestId('btn-open-details').click()
+}
+
 export async function assertDownloadAttachment(
   page: Page,
   options: {

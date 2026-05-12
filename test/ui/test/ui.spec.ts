@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertDownloadAttachment, assertImageAttachment, assertTestCounts, getExplorerItem, openExplorerFileItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -196,9 +196,7 @@ async function testBasic(page: Page, pageUrl: string) {
   await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
 
   // report
-  const sample = page.getByTestId('results-panel').getByLabel('sample.test.ts')
-  await sample.hover()
-  await sample.getByTestId('btn-open-details').click({ force: true })
+  await openExplorerFileItem(page, 'sample.test.ts')
   await page.getByText('All tests passed in this file').click()
 
   // graph tab
@@ -308,10 +306,8 @@ async function testAnnotationsInReport(page: Page) {
 }
 
 async function testAnnotationsInCode(page: Page) {
-  const item = page.getByLabel('annotated.test.ts')
-  await item.hover()
-  await item.getByTestId('btn-open-details').click({ force: true })
-  await page.getByTestId('btn-code').click({ force: true })
+  await openExplorerFileItem(page, 'annotated.test.ts')
+  await page.getByTestId('btn-code').click()
 
   const annotations = page.getByRole('note')
   await expect(annotations).toHaveCount(7)
@@ -345,9 +341,7 @@ async function testAnnotationsInCode(page: Page) {
 }
 
 async function testConsole(page: Page) {
-  const item = page.getByLabel('console.test.ts')
-  await item.hover()
-  await item.getByTestId('btn-open-details').click({ force: true })
+  await openExplorerFileItem(page, 'console.test.ts')
   await page.getByTestId('btn-console').click()
   await page.getByText('/(?<char>\\w)/').click()
 
@@ -356,9 +350,7 @@ async function testConsole(page: Page) {
 }
 
 async function testError(page: Page) {
-  const item = page.getByLabel('error.test.ts')
-  await item.hover()
-  await item.getByTestId('btn-open-details').click({ force: true })
+  await openExplorerFileItem(page, 'error.test.ts')
   await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
 
   await getExplorerItem(page, 'colored error message').click()
