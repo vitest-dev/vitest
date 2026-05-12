@@ -55,59 +55,9 @@ test.describe('ui', () => {
     await testError(page)
   })
 
-  test('file-filter', async ({ page }) => {
+  test('filter', async ({ page }) => {
     await page.goto(pageUrl)
-
-    // match all files when no filter
-    await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (6)').click()
-    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
-
-    // match nothing
-    await page.getByPlaceholder('Search...').fill('nothing')
-    await page.getByText('No matched test').click()
-
-    // searching "add" will match "sample.test.ts" since it includes a test case named "add"
-    await page.getByPlaceholder('Search...').fill('add')
-    await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
-
-    // match only failing files when fail filter applied
-    await page.getByPlaceholder('Search...').fill('')
-    await page.getByText(/^Fail$/, { exact: true }).click()
-    await page.getByText('FAIL (2)').click()
-    await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
-
-    // match only pass files when fail filter applied
-    await page.getByPlaceholder('Search...').fill('console')
-    await page.getByText(/^Fail$/, { exact: true }).click()
-    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
-    await page.getByText('PASS (1)').click()
-    await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
-
-    // html entities in task names are escaped
-    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
-    await page.getByPlaceholder('Search...').fill('<MyComponent />')
-    // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
-    await page.getByTestId('collapse-all').click()
-    await page.getByTestId('expand-all').click()
-    await expect(page.getByText('<MyComponent />')).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
-
-    // html entities in task names are escaped
-    await page.getByPlaceholder('Search...').fill('<>\'"')
-    await expect(page.getByText('<>\'"')).toBeVisible()
-    await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
-
-    // pass files with special chars
-    await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
-    await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
-    const testItem = page.getByTestId('explorer-item').filter({ hasText: 'char () - Square root of nine (9)' })
-    await testItem.hover()
-    await testItem.getByLabel('Run current test').click()
-    await expect(page.getByText('The test has passed without any errors')).toBeVisible()
+    await testFilter(page, { isStatic: false })
   })
 
   test('tags filter', async ({ page }) => {
@@ -171,6 +121,11 @@ test.describe('html report', () => {
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     await testError(page)
+  })
+
+  test('filter', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testFilter(page, { isStatic: true })
   })
 
   test('annotations in the report tab', async ({ page }) => {
@@ -441,6 +396,60 @@ async function testDashboardFilter(page: Page) {
   await expect(page.getByLabel(/skip/i)).not.toBeChecked()
 }
 
+async function testFilter(page: Page, options: { isStatic: boolean }) {
+  // match all files when no filter
+  await page.getByPlaceholder('Search...').fill('')
+  await page.getByText('PASS (6)').click()
+  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+
+  // match nothing
+  await page.getByPlaceholder('Search...').fill('nothing')
+  await page.getByText('No matched test').click()
+
+  // searching "add" will match "sample.test.ts" since it includes a test case named "add"
+  await page.getByPlaceholder('Search...').fill('add')
+  await page.getByText('PASS (1)').click()
+  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
+
+  // match only failing files when fail filter applied
+  await page.getByPlaceholder('Search...').fill('')
+  await page.getByText(/^Fail$/, { exact: true }).click()
+  await page.getByText('FAIL (2)').click()
+  await expect(page.getByTestId('results-panel').getByText('error.test.ts', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+
+  // match only pass files when fail filter applied
+  await page.getByPlaceholder('Search...').fill('console')
+  await page.getByText(/^Fail$/, { exact: true }).click()
+  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+  await page.getByText('PASS (1)').click()
+  await expect(page.getByTestId('results-panel').getByText('console.test.ts', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeHidden()
+
+  // html entities in task names are escaped
+  await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+  await page.getByPlaceholder('Search...').fill('<MyComponent />')
+  // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
+  await page.getByTestId('collapse-all').click()
+  await page.getByTestId('expand-all').click()
+  await expect(page.getByText('<MyComponent />')).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+
+  // html entities in task names are escaped
+  await page.getByPlaceholder('Search...').fill('<>\'"')
+  await expect(page.getByText('<>\'"')).toBeVisible()
+  await expect(page.getByTestId('results-panel').getByText('task-name.test.ts', { exact: true })).toBeVisible()
+
+  // pass files with special chars
+  await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
+  const testItem = getExplorerItem(page, 'char () - Square root of nine (9)')
+  await expect(testItem).toBeVisible()
+  if (!options.isStatic) {
+    await testItem.hover()
+    await testItem.getByLabel('Run current test').click()
+    await expect(page.getByText('The test has passed without any errors')).toBeVisible()
+  }
+}
 
 test.describe('standalone', () => {
   let vitest: Vitest | undefined
