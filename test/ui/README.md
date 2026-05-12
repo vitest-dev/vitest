@@ -6,6 +6,6 @@ pnpm test
 pnpm test --ui
 
 # run fixture projects
-pnpm test-fixtures --ui
-pnpm test-fixtures --root fixtures-trace
+pnpm test-fixtures --root fixtures/main --ui
+pnpm test-fixtures --root fixtures/trace
 ```
