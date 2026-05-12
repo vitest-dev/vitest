@@ -10,6 +10,7 @@ import { startVitest } from 'vitest/node'
 export async function startVitestUi(
   cliOptions: CliOptions,
 ): Promise<{ vitest: Vitest; url: string }> {
+  // silence Vitest logs
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
   const vitest = await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
