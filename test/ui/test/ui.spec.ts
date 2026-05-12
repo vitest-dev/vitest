@@ -7,6 +7,7 @@ import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
+import { assertTestCounts, getExplorerItem } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -524,11 +525,6 @@ test.describe('html report', () => {
   })
 })
 
-// TODO: consolidate in https://github.com/vitest-dev/vitest/pull/10237
-function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
-}
-
 async function testBasic(page: Page, pageUrl: string) {
   const pageErrors: unknown[] = []
   page.on('pageerror', error => pageErrors.push(error))
@@ -562,11 +558,6 @@ async function testBasic(page: Page, pageUrl: string) {
   await expect(page.getByTestId('console')).toContainText('log test')
 
   expect(pageErrors).toEqual([])
-}
-
-async function assertTestCounts(page: Page, options: { pass: number; fail: number }) {
-  await expect.soft(page.getByTestId('tests-entry'))
-    .toContainText(`${options.pass} Pass ${options.fail} Fail ${options.pass + options.fail} Total`)
 }
 
 async function testCoverage(page: Page) {
