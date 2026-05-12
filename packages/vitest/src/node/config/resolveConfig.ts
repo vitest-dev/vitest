@@ -675,7 +675,7 @@ export function resolveConfig(
 
   // the server has been created, we don't need to override vite.server options
   const api = resolveApiServerConfig(options, defaultPort)
-  resolved.api = { ...api, token: __VITEST_GENERATE_UI_TOKEN__ ? crypto.randomUUID() : '0' }
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -757,6 +757,16 @@ export function resolveConfig(
       resolved.reporters = Array.from(new Set(toArray(cliReporters)))
         .filter(Boolean)
         .map(reporter => [reporter, configReportersMap.get(reporter) || {}])
+    }
+  }
+
+  resolved.mergeReportsLabel = process.env.VITEST_BLOB_LABEL
+  for (const reporter of resolved.reporters) {
+    if (Array.isArray(reporter) && reporter[0] === 'blob') {
+      const options = reporter[1] as any
+      if (options && typeof options.label === 'string') {
+        resolved.mergeReportsLabel = options.label
+      }
     }
   }
 
@@ -850,6 +860,7 @@ export function resolveConfig(
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
   resolved.browser.locators.exact ??= false
+  resolved.browser.locators.errorFormat ??= 'all'
 
   if (typeof resolved.browser.provider === 'string') {
     const source = `@vitest/browser-${resolved.browser.provider}`

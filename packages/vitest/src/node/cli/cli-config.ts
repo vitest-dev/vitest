@@ -445,6 +445,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           exact: {
             description: 'Should locators match the text exactly by default (default: `false`)',
           },
+          errorFormat: null,
         },
         transform(val) {
           if (typeof val !== 'object' || val == null) {
@@ -855,7 +856,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
-        return '.vitest-reports'
+        return '.vitest/blob'
       }
       return value
     },

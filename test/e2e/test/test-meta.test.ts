@@ -657,6 +657,71 @@ test('empty meta object is allowed', async () => {
   expect(testCase.meta()).toMatchInlineSnapshot(`{}`)
 })
 
+test('testCase, testSuite, and testModule record their logs', async () => {
+  const { ctx } = await runInlineTests({
+    'basic.test.js': `
+      console.log('module log')
+      console.error('module error')
+
+      describe('suite', () => {
+        beforeAll(() => {
+          console.log('suite log')
+        })
+
+        test('test 1', () => {
+          console.log('test log')
+          console.error('test error')
+        })
+      })
+    `,
+    'vitest.config.js': {
+      test: {
+        globals: true,
+      },
+    },
+  })
+
+  const testModule = ctx!.state.getTestModules()[0]
+  const testSuite = testModule.children.at(0) as TestSuite
+  const testCase = testSuite.children.at(0) as TestCase
+
+  const projectLogs = (logs: ReturnType<typeof testModule.logs>) =>
+    logs.map(({ content, type }) => ({ content: content.trim(), type }))
+
+  expect(projectLogs(testModule.logs())).toMatchInlineSnapshot(`
+    [
+      {
+        "content": "module log",
+        "type": "stdout",
+      },
+      {
+        "content": "module error",
+        "type": "stderr",
+      },
+    ]
+  `)
+  expect(projectLogs(testSuite.logs())).toMatchInlineSnapshot(`
+    [
+      {
+        "content": "suite log",
+        "type": "stdout",
+      },
+    ]
+  `)
+  expect(projectLogs(testCase.logs())).toMatchInlineSnapshot(`
+    [
+      {
+        "content": "test log",
+        "type": "stdout",
+      },
+      {
+        "content": "test error",
+        "type": "stderr",
+      },
+    ]
+  `)
+})
+
 test('meta inheritance across multiple files', async () => {
   const { stderr, ctx } = await runInlineTests({
     'file1.test.js': `

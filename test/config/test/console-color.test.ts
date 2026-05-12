@@ -44,6 +44,17 @@ test('agent', async () => {
   expect.soft(stdout).not.toContain('\x1B[46m RUN')
 })
 
+test('agent with FORCE_COLOR=1', async () => {
+  // FORCE_COLOR opts back into colours even when isAgent is detected, both in the CLI process and in workers
+  const { stdout } = await runVitestCli({
+    preserveAnsi: true,
+    nodeOptions: { env: { AI_AGENT: 'copilot', FORCE_COLOR: '1' } },
+  }, '--root', 'fixtures/console-color', '--reporter', 'default')
+
+  expect.soft(stdout).toContain('\x1B[33mtrue\x1B[39m\n')
+  expect.soft(stdout).toContain('\x1B[46m RUN')
+})
+
 test.skipIf(process.platform === 'win32')('without color, forks pool in non-TTY parent', async () => {
   const { stdout } = await runVitest({
     root: 'fixtures/console-color',

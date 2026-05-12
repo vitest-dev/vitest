@@ -6,6 +6,7 @@ import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserCommands, CDPSession } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
@@ -239,6 +240,12 @@ export interface BrowserConfigOptions {
      * @default false
      */
     exact?: boolean
+    /**
+     * Format used for locator "Cannot find element" error details.
+     *
+     * @default 'all'
+     */
+    errorFormat?: 'html' | 'aria' | 'all'
   }
 
   /**
@@ -354,6 +361,7 @@ export interface BrowserCommandContext {
 
 export interface BrowserServerStateSession {
   project: TestProject
+  otelCarrier?: OTELCarrier
   connected: () => void
   fail: (v: Error) => void
 }
@@ -445,6 +453,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   locators: {
     testIdAttribute: string
     exact: boolean
+    errorFormat: 'html' | 'aria' | 'all'
   }
   trace: {
     mode: BrowserTraceViewMode

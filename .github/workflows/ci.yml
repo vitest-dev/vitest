@@ -19,7 +19,6 @@ concurrency:
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-  VITEST_GENERATE_UI_TOKEN: 'true'
 
 jobs:
   lint:
@@ -89,7 +88,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [20, 22, 24]
+        node_version: [22, 24]
         include:
           - os: macos-latest
             node_version: 24
@@ -116,6 +115,8 @@ jobs:
 
       - name: Test
         run: pnpm run test:ci
+        env:
+          VITEST_CI_BLOB_LABEL: ${{ matrix.os }}-node-${{ matrix.node_version }}
 
       - name: Test Examples
         run: pnpm run test:examples
@@ -129,6 +130,17 @@ jobs:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
+          path: |
+            README.md
+            test/unit/.vitest
+            test/e2e/.vitest
+          retention-days: 1
+          include-hidden-files: true
 
   test-cached:
     needs: changed
@@ -206,10 +218,10 @@ jobs:
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
 
-  test-rolldown:
+  test-vite7:
     needs: changed
     # macos-latest is the fastest one
-    name: 'Rolldown&Test: node-22, macos-latest'
+    name: 'Test: vite@7, node-24, macos-latest'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: macos-latest
 
@@ -220,13 +232,13 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 22
+          node-version: 24
 
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
 
       - name: Install
         run: |
-          yq -i '.overrides.vite = "npm:vite@8"' pnpm-workspace.yaml
+          pnpm override-vite7
           git add . && git commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile
 
       - uses: ./.github/actions/setup-playwright
@@ -241,6 +253,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run test:examples
 
+      - name: Unit Test UI
+        if: ${{ !cancelled() }}
+        run: pnpm -C packages/ui test:ui
+
       - name: Test Browser (playwright)
         if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
@@ -248,6 +264,54 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-rolldown
-          path: rolldown/test/ui/test-results/
+          name: playwright-report-vite7
+          path: test/ui/test-results/
           retention-days: 30
+
+  merge-reports:
+    needs:
+      - test
+      - changed
+    if: needs.changed.outputs.should_skip != 'true' && !cancelled()
+    runs-on: ubuntu-latest
+    name: Merge Reports
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-and-cache
+
+      - name: Install
+        run: pnpm i
+
+      - name: Build
+        run: pnpm run build
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: vitest-results-*
+          merge-multiple: true
+
+      - name: Merge reports
+        continue-on-error: true
+        run: pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports --reporter=html
+
+      - name: Merge reports html
+        id: merge-html
+        run: |
+          mkdir -p html-all
+          cp -rf test/unit/html html-all/unit
+          cp -rf test/e2e/html html-all/e2e
+          echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v7
+        id: upload-report
+        with:
+          name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
+          path: html-all
+          retention-days: 7
+
+      - name: Link report viewer
+        run: |
+          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
+          echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY

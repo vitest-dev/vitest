@@ -622,7 +622,7 @@ export class Vitest {
       const specifications: TestSpecification[] = []
       for (const file of files) {
         const project = this.getProjectByName(file.projectName || '')
-        const specification = project.createSpecification(file.filepath, undefined, file.pool)
+        const specification = project.createSpecification(file.filepath, undefined, file.pool, file.meta)
         specifications.push(specification)
       }
 

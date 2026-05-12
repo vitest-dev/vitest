@@ -1,4 +1,5 @@
 import type { Task } from '@vitest/runner'
+import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { SerializedLocator } from './locators'
 import { getBrowserState, now } from '../utils'
 
@@ -9,7 +10,6 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
 export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
 

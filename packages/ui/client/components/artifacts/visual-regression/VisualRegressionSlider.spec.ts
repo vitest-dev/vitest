@@ -27,7 +27,7 @@ const inputLabel = 'Adjust slider to compare reference and actual images'
 
 describe('VisualRegressionSlider', () => {
   it('renders both images with correct URLs', async () => {
-    render(VisualRegressionSlider, {
+    await render(VisualRegressionSlider, {
       props: {
         reference,
         actual,
@@ -67,7 +67,7 @@ describe('VisualRegressionSlider', () => {
   })
 
   it('has accessible descriptions', async () => {
-    render(VisualRegressionSlider, {
+    await render(VisualRegressionSlider, {
       props: {
         reference,
         actual,
@@ -101,7 +101,7 @@ describe('VisualRegressionSlider', () => {
   })
 
   it('has slider boundaries', async () => {
-    render(VisualRegressionSlider, {
+    await render(VisualRegressionSlider, {
       props: {
         reference,
         actual,
@@ -116,7 +116,7 @@ describe('VisualRegressionSlider', () => {
   })
 
   it('updates split percentage on slider movement', async () => {
-    render(VisualRegressionSlider, {
+    await render(VisualRegressionSlider, {
       props: {
         reference,
         actual,
