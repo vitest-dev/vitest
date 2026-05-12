@@ -37,14 +37,7 @@ test.describe('ui', () => {
 
   test('console', async ({ page }) => {
     await page.goto(pageUrl)
-    const item = page.getByLabel('console.test.ts')
-    await item.hover()
-    await item.getByTestId('btn-open-details').click({ force: true })
-    await page.getByTestId('btn-console').click()
-    await page.getByText('/(?<char>\\w)/').click()
-
-    expect(await page.getByText('beforeAll').all()).toHaveLength(6)
-    expect(await page.getByText('afterAll').all()).toHaveLength(6)
+    await testConsole(page)
   })
 
   test('annotations in the report tab', async ({ page }) => {
@@ -327,6 +320,11 @@ test.describe('html report', () => {
     await testCoverage(page)
   })
 
+  test('console', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testConsole(page)
+  })
+
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     await testError(page)
@@ -528,6 +526,17 @@ async function testBasic(page: Page, pageUrl: string) {
 async function testCoverage(page: Page) {
   await page.getByLabel('Show coverage').click()
   await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
+}
+
+async function testConsole(page: Page) {
+  const item = page.getByLabel('console.test.ts')
+  await item.hover()
+  await item.getByTestId('btn-open-details').click({ force: true })
+  await page.getByTestId('btn-console').click()
+  await page.getByText('/(?<char>\\w)/').click()
+
+  expect(await page.getByText('beforeAll').all()).toHaveLength(6)
+  expect(await page.getByText('afterAll').all()).toHaveLength(6)
 }
 
 async function testError(page: Page) {
