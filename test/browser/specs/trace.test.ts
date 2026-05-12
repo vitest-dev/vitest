@@ -498,24 +498,40 @@ test('trace view artifacts', async () => {
                     "name": "action marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "expect",
                     "location": "mark.test.ts:43",
                     "name": "expect marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:44",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "mark",
                     "location": "mark.test.ts:45",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:39",
@@ -601,7 +617,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:40",
+                    "location": "mark.test.ts:49",
                     "name": "failed render group",
                     "range": {
                       "phase": "start",
@@ -614,7 +630,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:40",
+                    "location": "mark.test.ts:49",
                     "name": "failed render group",
                     "range": {
                       "phase": "end",
@@ -628,7 +644,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "mark.test.ts:42",
+                    "location": "mark.test.ts:51",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "fail",
@@ -2035,24 +2051,40 @@ test('trace view artifacts', async () => {
                     "name": "action marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "expect",
                     "location": "mark.test.ts:43",
                     "name": "expect marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:44",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "mark",
                     "location": "mark.test.ts:45",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:39",
@@ -2137,7 +2169,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:40",
+                    "location": "mark.test.ts:49",
                     "name": "failed render group",
                     "range": {
                       "phase": "start",
@@ -2150,7 +2182,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "mark",
-                    "location": "mark.test.ts:40",
+                    "location": "mark.test.ts:49",
                     "name": "failed render group",
                     "range": {
                       "phase": "end",
@@ -2164,7 +2196,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "kind": "lifecycle",
-                    "location": "mark.test.ts:42",
+                    "location": "mark.test.ts:51",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "fail",
