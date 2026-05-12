@@ -2,7 +2,6 @@ import type { VitestRunner } from '@vitest/runner'
 import type { Ivya } from 'ivya'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/traces'
-import type { BrowserRPC } from './client'
 import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/tester-utils'
 import type { BrowserTraceAttempt } from './tester/trace'
@@ -127,10 +126,4 @@ export function getWorkerState(): WorkerGlobalState {
     throw new Error('Worker state is not found. This is an issue with Vitest. Please, open an issue.')
   }
   return state
-}
-
-// dts build breaks without internal
-/** @internal */
-export function getBrowserRpc(): BrowserRPC {
-  return getWorkerState().rpc as any
 }

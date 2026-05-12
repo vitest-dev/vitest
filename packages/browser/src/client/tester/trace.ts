@@ -1,7 +1,8 @@
 import type { Task } from '@vitest/runner'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
+import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
-import { getBrowserRpc, getBrowserState, now } from '../utils'
+import { getBrowserState, getWorkerState, now } from '../utils'
 
 export interface BrowserTraceData {
   retry: number
@@ -107,7 +108,8 @@ export async function recordBrowserTraceEntry(
     recordCanvas,
     entries: [entry],
   }
-  await getBrowserRpc().triggerCommand<void>(
+  const rpc = getWorkerState().rpc as any as BrowserRPC
+  await rpc.triggerCommand<void>(
     getBrowserState().sessionId,
     '__vitest_recordBrowserTrace',
     undefined,
