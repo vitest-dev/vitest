@@ -78,6 +78,11 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
   })
+
+  test('can edit file', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testEditFile(page, { isStatic: false })
+  })
 })
 
 test.describe('html report', () => {
@@ -155,6 +160,11 @@ test.describe('html report', () => {
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
+  })
+
+  test('cannot edit file', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testEditFile(page, { isStatic: true })
   })
 })
 
@@ -490,6 +500,22 @@ async function testCrossOriginAccess(page: Page, pageUrl: string) {
     })
   }, pageUrl)
   expect(wsResult).toBe('error')
+}
+
+async function testEditFile(page: Page, options: { isStatic: boolean }) {
+  await getExplorerItem(page, 'add').click()
+  const codeTabButton = page.getByTestId('btn-code')
+  await expect(codeTabButton).toHaveText('Code')
+  await codeTabButton.click()
+  const editor = page.getByTestId('editor')
+  await expect(editor).toContainText('expect(1 + 1).toEqual(2)')
+  await page.keyboard.type('\n// edited \n')
+  if (options.isStatic) {
+    await expect(editor).not.toContainText('// edited')
+  }
+  else {
+    await expect(editor).toContainText('// edited')
+  }
 }
 
 test.describe('standalone', () => {
