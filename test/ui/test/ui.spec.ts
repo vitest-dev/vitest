@@ -81,7 +81,12 @@ test.describe('ui', () => {
 
   test('can edit file', async ({ page }) => {
     await page.goto(pageUrl)
-    await testEditFile(page, { isStatic: false })
+    await testWriteFile(page, { enabled: true })
+  })
+
+  test('can execute', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testExecute(page, { mode: 'ui' })
   })
 })
 
@@ -164,7 +169,12 @@ test.describe('html report', () => {
 
   test('cannot edit file', async ({ page }) => {
     await page.goto(pageUrl)
-    await testEditFile(page, { isStatic: true })
+    await testWriteFile(page, { enabled: false })
+  })
+
+  test('cannot execute', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testExecute(page, { mode: 'static' })
   })
 })
 
@@ -502,7 +512,7 @@ async function testCrossOriginAccess(page: Page, pageUrl: string) {
   expect(wsResult).toBe('error')
 }
 
-async function testEditFile(page: Page, options: { isStatic: boolean }) {
+async function testWriteFile(page: Page, options: { enabled: boolean }) {
   await getExplorerItem(page, 'add').click()
   const codeTabButton = page.getByTestId('btn-code')
   await expect(codeTabButton).toHaveText('Code')
@@ -510,11 +520,50 @@ async function testEditFile(page: Page, options: { isStatic: boolean }) {
   const editor = page.getByTestId('editor')
   await expect(editor).toContainText('expect(1 + 1).toEqual(2)')
   await page.keyboard.type('\n// edited \n')
-  if (options.isStatic) {
-    await expect(editor).not.toContainText('// edited')
+  if (options.enabled) {
+    await expect(editor).toContainText('// edited')
   }
   else {
-    await expect(editor).toContainText('// edited')
+    await expect(editor).not.toContainText('// edited')
+  }
+}
+
+async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | 'static' }) {
+  if (options.mode === 'ui') {
+    await expect(page.getByTestId('btn-run-all')).toBeEnabled()
+
+    const item = getExplorerItem(page, 'add')
+    await item.hover()
+    await expect(item.getByTestId('btn-run-test')).toBeEnabled()
+
+    await page.getByPlaceholder('Search...').fill('snapshot')
+    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    await snapshotItem.hover()
+    await expect(snapshotItem.getByTestId('btn-fix-snapshot')).toBeVisible()
+  }
+  if (options.mode === 'ui-disallow') {
+    await expect(page.getByTestId('btn-run-all')).toBeDisabled()
+
+    const item = getExplorerItem(page, 'add')
+    await item.hover()
+    await expect(item.getByTestId('btn-run-test')).toBeDisabled()
+
+    await page.getByPlaceholder('Search...').fill('snapshot')
+    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    await snapshotItem.hover()
+    await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
+  }
+  if (options.mode === 'static') {
+    await expect(page.getByTestId('btn-run-all')).not.toBeVisible()
+
+    const item = getExplorerItem(page, 'add')
+    await item.hover()
+    await expect(item.getByTestId('btn-run-test')).not.toBeVisible()
+
+    await page.getByPlaceholder('Search...').fill('snapshot')
+    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    await snapshotItem.hover()
+    await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
   }
 }
 
@@ -555,5 +604,40 @@ test.describe('standalone', () => {
     expect(vitest?.state.getFiles().map(f => [f.name, f.result?.state])).toEqual([
       ['sample.test.ts', 'pass'],
     ])
+  })
+})
+
+test.describe('security', () => {
+  let vitest: Vitest | undefined
+  let pageUrl: string
+
+  test.beforeAll(async () => {
+    const server = await startVitestUi({
+      root: './fixtures/main',
+      watch: true,
+      ui: true,
+      open: false,
+      api: {
+        allowExec: false,
+        allowWrite: false,
+      },
+      reporters: [],
+    })
+    vitest = server.vitest
+    pageUrl = `${server.url}/__vitest__/`
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('cannot write file', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testWriteFile(page, { enabled: false })
+  })
+
+  test('cannot execute', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testExecute(page, { mode: 'ui-disallow' })
   })
 })
