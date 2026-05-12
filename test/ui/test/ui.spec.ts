@@ -535,8 +535,8 @@ async function testConsole(page: Page) {
   await page.getByTestId('btn-console').click()
   await page.getByText('/(?<char>\\w)/').click()
 
-  expect(await page.getByText('beforeAll').all()).toHaveLength(6)
-  expect(await page.getByText('afterAll').all()).toHaveLength(6)
+  await expect(page.getByText('beforeAll')).toHaveCount(6)
+  await expect(page.getByText('afterAll')).toHaveCount(6)
 }
 
 async function testError(page: Page) {
