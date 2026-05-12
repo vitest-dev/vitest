@@ -30,6 +30,10 @@ test.describe('ui', () => {
     await testBasic(page, pageUrl)
   })
 
+  test('cross origin access', async ({ page }) => {
+    await testCrossOriginAccess(page, pageUrl)
+  })
+
   test('coverage', async ({ page }) => {
     await page.goto(pageUrl)
     await testCoverage(page)
@@ -449,6 +453,43 @@ async function testFilter(page: Page, options: { isStatic: boolean }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function testCrossOriginAccess(page: Page, pageUrl: string) {
+  await page.route('https://example.com/**', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: '<html><body><h1>Faked Cross Origin Site</h1></body></html>',
+    })
+  })
+  await page.goto('https://example.com/', { timeout: 5000 })
+
+  // request html
+  const htmlResult = await page.evaluate(async (pageUrl) => {
+    try {
+      const res = await fetch(pageUrl)
+      return res.status
+    }
+    catch (e) {
+      return e instanceof Error ? e.message : e
+    }
+  }, pageUrl)
+  expect(htmlResult).toBe('Failed to fetch')
+
+  // request websocket
+  const wsResult = await page.evaluate(async (pageUrl) => {
+    const ws = new WebSocket(new URL('/__vitest_api__', pageUrl))
+    return new Promise((resolve) => {
+      ws.addEventListener('open', () => {
+        resolve('open')
+      })
+      ws.addEventListener('error', () => {
+        resolve('error')
+      })
+    })
+  }, pageUrl)
+  expect(wsResult).toBe('error')
 }
 
 test.describe('standalone', () => {

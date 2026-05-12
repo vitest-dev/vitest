@@ -56,36 +56,4 @@ test.describe('ui', () => {
 
     await expect(editor).not.toContainText('// some comment')
   })
-
-  test('cross origin disallowed', async ({ page }, testInfo) => {
-    const response = await page.goto('https://example.com/', { timeout: 5000 }).catch(() => null)
-
-    testInfo.skip(!response, 'External resource is not available')
-
-    // request html
-    const htmlResult = await page.evaluate(async (pageUrl) => {
-      try {
-        const res = await fetch(pageUrl)
-        return res.status
-      }
-      catch (e) {
-        return e instanceof Error ? e.message : e
-      }
-    }, pageUrl)
-    expect(htmlResult).toBe('Failed to fetch')
-
-    // request websocket
-    const wsResult = await page.evaluate(async (pageUrl) => {
-      const ws = new WebSocket(new URL('/__vitest_api__', pageUrl))
-      return new Promise((resolve) => {
-        ws.addEventListener('open', () => {
-          resolve('open')
-        })
-        ws.addEventListener('error', () => {
-          resolve('error')
-        })
-      })
-    }, pageUrl)
-    expect(wsResult).toBe('error')
-  })
 })
