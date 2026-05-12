@@ -578,14 +578,15 @@ test.describe('standalone', () => {
     await page.goto(pageUrl)
 
     // initially no stats
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('0 Pass 0 Fail 0 Total')
+    await assertTestCounts(page, { pass: 0, fail: 0 })
 
     // run single file
-    await page.getByText('sample.test.ts').hover()
+    await getExplorerItem(page, 'sample.test.ts').hover()
     await page.getByRole('button', { name: 'Run current file' }).click()
 
     // check results
-    await page.getByText('PASS (1)').click()
+    await page.getByRole('button', { name: 'Show dashboard' }).click()
+    await assertTestCounts(page, { pass: 2, fail: 0 })
     expect(vitest?.state.getFiles().map(f => [f.name, f.result?.state])).toEqual([
       ['sample.test.ts', 'pass'],
     ])
