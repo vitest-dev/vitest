@@ -42,12 +42,12 @@ test.describe('ui', () => {
 
   test('annotations in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-    await testReportAnnotations(page)
+    await testAnnotationsInReport(page)
   })
 
   test('annotations in the editor tab', async ({ page }) => {
     await page.goto(pageUrl)
-    await testAnnotations(page)
+    await testAnnotationsInCode(page)
   })
 
   test('error', async ({ page }) => {
@@ -130,12 +130,12 @@ test.describe('html report', () => {
 
   test('annotations in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
-    await testReportAnnotations(page)
+    await testAnnotationsInReport(page)
   })
 
   test('annotations in the editor tab', async ({ page }) => {
     await page.goto(pageUrl)
-    await testAnnotations(page)
+    await testAnnotationsInCode(page)
   })
 
   test('tags filter', async ({ page }) => {
@@ -194,7 +194,7 @@ async function testCoverage(page: Page) {
   await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
 }
 
-async function testAnnotations(page: Page) {
+async function testAnnotationsInCode(page: Page) {
   const item = page.getByLabel('annotated.test.ts')
   await item.hover()
   await item.getByTestId('btn-open-details').click({ force: true })
@@ -218,7 +218,7 @@ async function testAnnotations(page: Page) {
   await expect(annotations.nth(6).getByRole('link')).toHaveAttribute('href', /.+/)
 }
 
-async function testReportAnnotations(page: Page) {
+async function testAnnotationsInReport(page: Page) {
   await test.step('annotated test', async () => {
     const item = page.getByLabel('annotated test')
     await item.click({ force: true })
