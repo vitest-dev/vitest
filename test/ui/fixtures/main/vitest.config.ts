@@ -1,6 +1,13 @@
 import path, { resolve } from "node:path";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
+import { BrowserCommand } from "vitest/node";
+import fs from "node:fs"
+
+const rmCommand: BrowserCommand<[filepath: string]> = async (ctx, filePath) => {
+  const resolved = resolve(ctx.project.config.root, filePath)
+  fs.rmSync(resolved, { recursive: true, force: true })
+}
 
 export default defineConfig({
   test: {
@@ -31,12 +38,9 @@ export default defineConfig({
             provider: playwright(),
             instances: [{ browser: "chromium" }],
             screenshotFailures: false,
-            expect: {
-              toMatchScreenshot: {
-                resolveScreenshotPath: ({ root, testFileDirectory, arg, ext }) =>
-                  resolve(root, testFileDirectory, `${arg}${ext}`),
-              },
-            },
+            commands: {
+              rm: rmCommand,
+            }
           },
         },
       },

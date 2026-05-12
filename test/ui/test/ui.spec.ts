@@ -386,7 +386,7 @@ async function testVisualRegression(page: Page) {
   await expect(artifact).toHaveCount(1)
 
   await expect(artifact.getByRole('heading')).toContainText('Visual Regression')
-  await expect(artifact).toContainText('visual-regression.test.ts:13:3')
+  await expect(artifact).toContainText('visual-regression.test.ts:7:3')
   await expect(artifact.getByRole('tablist')).toHaveText('Reference')
   await expect(artifact.getByRole('tabpanel').getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
 }
