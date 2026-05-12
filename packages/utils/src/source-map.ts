@@ -20,6 +20,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
+  '/packages/expect/src/',
   '/node_modules/chai/',
   '/node_modules/tinyspy/',
   '/vite/dist/node/module-runner',
