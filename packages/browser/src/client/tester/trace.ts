@@ -1,23 +1,35 @@
 import type { Task } from '@vitest/runner'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
+import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
-import { getBrowserState, now } from '../utils'
+import { getBrowserState, getWorkerState, now } from '../utils'
 
 export interface BrowserTraceData {
   retry: number
   repeats: number
+  // UI has access to original config but let artifact own this
   recordCanvas: boolean
+  // Each artifact currently carries one entry; the UI merges entries by attempt.
+  // TODO: revisit whether this should be modeled as a single entry.
   entries: BrowserTraceEntry[]
 }
 
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
+export type BrowserTraceEntryRangePhase = 'start' | 'end'
 export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+
+export interface BrowserTraceEntryRange {
+  id: string
+  phase: BrowserTraceEntryRangePhase
+}
 
 export interface BrowserTraceEntry {
   name: string
   kind: BrowserTraceEntryKind
+  range?: BrowserTraceEntryRange
   status?: BrowserTraceEntryStatus
   startTime: number
+  // Derived on UI side from range start/end entries.
   duration?: number
   stack?: string
   // resolved server-side from stack in __vitest_recordBrowserTrace command
@@ -61,31 +73,22 @@ const PSEUDO_CLASS_NAMES = [
 ] as const
 type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
-export type BrowserTraceState = Record<string, BrowserTraceData>
-
 export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
 }
 
-function getBrowserTraceState(): BrowserTraceState {
-  return getBrowserState().browserTraceState ??= {}
+export function createBrowserTraceRangeId(): string {
+  return Math.random().toString(36).slice(2)
 }
 
-function getTraceStateKey(testId: string, repeats: number, retry: number) {
-  return `${testId}:${repeats}:${retry}`
-}
-
-// TODO: should we avoid accumulating? send and immediately clear each entry to save memory?
-export function recordBrowserTraceEntry(
+export async function recordBrowserTraceEntry(
   task: Task,
-  options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'> & {
-    startTime?: number
-  },
-): void {
+  options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'>,
+): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
-  const relativeStartTime = (options.startTime ?? now()) - attemptInfo.startTime
+  const relativeStartTime = now() - attemptInfo.startTime
   const snapshot = takeSnapshot(options.element)
   const entry: BrowserTraceEntry = {
     ...options,
@@ -94,10 +97,24 @@ export function recordBrowserTraceEntry(
   }
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(task.id, repeats, retry)
-  state[traceKey] ??= { retry, repeats, recordCanvas, entries: [] }
-  state[traceKey].entries.push(entry)
+
+  // An async lane could defer artifact recording and flush it at test-attempt end,
+  // but the synchronous snapshot work is already a comparable cost, and this path
+  // is mostly data passing after that.
+  // Keep it simple unless measurements show artifact recording is a bottleneck.
+  const data: BrowserTraceData = {
+    retry,
+    repeats,
+    recordCanvas,
+    entries: [entry],
+  }
+  const rpc = getWorkerState().rpc as any as BrowserRPC
+  await rpc.triggerCommand<void>(
+    getBrowserState().sessionId,
+    '__vitest_recordBrowserTrace',
+    undefined,
+    [{ testId: task.id, data }],
+  )
 }
 
 // Resolve ivya selector to a DOM element and take a snapshot with rrweb Mirror
@@ -160,14 +177,4 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
     }
   }
   return result
-}
-
-export function getBrowserTrace(testId: string, repeats: number, retry: number): BrowserTraceData | undefined {
-  const state = getBrowserTraceState()
-  const traceKey = getTraceStateKey(testId, repeats, retry)
-  const result = state[traceKey]
-  if (result) {
-    delete state[traceKey]
-    return result
-  }
 }

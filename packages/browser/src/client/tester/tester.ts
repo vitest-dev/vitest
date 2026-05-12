@@ -1,6 +1,6 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
-import { channel, client, onCancel } from '@vitest/browser/client'
+import { channel, client, onCancel, registerPageMarkHandler } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
 import {
@@ -111,6 +111,8 @@ getBrowserState().commands = commands
 getBrowserState().activeTraceTaskIds = new Set()
 getBrowserState().browserTraceAttempts = new Map()
 getBrowserState().iframeId = iframeId
+
+registerPageMarkHandler((name, options) => page.mark(name, options))
 
 let contextSwitched = false
 

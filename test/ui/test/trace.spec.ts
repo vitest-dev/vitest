@@ -52,6 +52,10 @@ test.describe('ui', () => {
   test('scroll', async ({ page }) => {
     await testScroll(page)
   })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -115,6 +119,10 @@ test.describe('html reporter', () => {
   test('scroll', async ({ page }) => {
     await testScroll(page)
   })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
+  })
 })
 
 async function testBasic(page: Page) {
@@ -136,6 +144,15 @@ async function testBasic(page: Page) {
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // verify selecting another test switches trace viewer
+  await openExplorerItem(page, 'switch-target')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
+
+  // verify closing trace viewer doesn't immediately auto-open it again
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).toBeHidden()
 }
 
 async function testViewport(page: Page) {
@@ -224,4 +241,32 @@ async function testScroll(page: Page) {
   await expect(traceView).toBeVisible()
   await expect(traceFrame.getByText('(0, 0)')).not.toBeInViewport()
   await expect(traceFrame.getByText('(300, 300)')).toBeInViewport()
+}
+
+async function testAttempts(page: Page) {
+  await openExplorerItem(page, 'retried test')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  await expect(traceView).toBeVisible()
+
+  const traceOpenButtons = page.getByTestId('trace-open-button')
+  await expect(traceOpenButtons).toHaveText([
+    'Open trace viewer',
+    'Open trace viewer Retry 1',
+    'Open trace viewer Retry 2',
+  ])
+
+  await traceOpenButtons.nth(0).click()
+  await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(1).click()
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(2).click()
+  await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 }
