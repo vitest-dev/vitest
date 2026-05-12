@@ -40,16 +40,6 @@ test.describe('ui', () => {
     await testConsole(page)
   })
 
-  test('annotations in the report tab', async ({ page }) => {
-    await page.goto(pageUrl)
-    await testAnnotationsInReport(page)
-  })
-
-  test('annotations in the editor tab', async ({ page }) => {
-    await page.goto(pageUrl)
-    await testAnnotationsInCode(page)
-  })
-
   test('error', async ({ page }) => {
     await page.goto(pageUrl)
     await testError(page)
@@ -68,6 +58,16 @@ test.describe('ui', () => {
   test('dashboard entries filter tests correctly', async ({ page }) => {
     await page.goto(pageUrl)
     await testDashboardFilter(page)
+  })
+
+  test('annotations in the report tab', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testAnnotationsInReport(page)
+  })
+
+  test('annotations in the editor tab', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testAnnotationsInCode(page)
   })
 
   test('visual regression in the report tab', async ({ page }) => {
@@ -128,6 +128,16 @@ test.describe('html report', () => {
     await testFilter(page, { isStatic: true })
   })
 
+  test('tags filter', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testTagsFilter(page)
+  })
+
+  test('dashboard entries filter tests correctly', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testDashboardFilter(page)
+  })
+
   test('annotations in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testAnnotationsInReport(page)
@@ -138,19 +148,9 @@ test.describe('html report', () => {
     await testAnnotationsInCode(page)
   })
 
-  test('tags filter', async ({ page }) => {
-    await page.goto(pageUrl)
-    await testTagsFilter(page)
-  })
-
   test('visual regression in the report tab', async ({ page }) => {
     await page.goto(pageUrl)
     await testVisualRegression(page)
-  })
-
-  test('dashboard entries filter tests correctly', async ({ page }) => {
-    await page.goto(pageUrl)
-    await testDashboardFilter(page)
   })
 })
 
