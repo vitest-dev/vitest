@@ -479,7 +479,7 @@ function formatActions(actions: Behavior<unknown[], unknown>['actions']): string
     const left = `  ${symbol} ${method}(${stringify(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
     const unreachable = !isExhausted(action)
       && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
-    const remaining = getRemainingLabel(action) + (unreachable ? '  → unreachable' : '')
+    const remaining = getRemainingLabel(action) + (unreachable ? '  → unreachable action' : '')
 
     return { left, remaining }
   })

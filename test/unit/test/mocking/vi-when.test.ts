@@ -530,7 +530,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97)  never called  → unreachable
+          ✗ thenReturn(97)  never called  → unreachable action
           ✗ thenReturn(98)  never called"
       `)
 
@@ -541,7 +541,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97)  never called  → unreachable
+          ✗ thenReturn(97)  never called  → unreachable action
           ✓ thenReturn(98)  exhausted"
       `)
     })
