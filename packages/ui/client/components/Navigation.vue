@@ -16,7 +16,7 @@ import {
   showCoverage,
   showDashboard,
 } from '~/composables/navigation'
-import faviconSvg from '../../public/favicon.svg?raw'
+import faviconSvg from '../assets/favicon.svg?raw'
 import Explorer from './explorer/Explorer.vue'
 import IconButton from './IconButton.vue'
 
