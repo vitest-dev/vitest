@@ -173,7 +173,6 @@ async function handleIndexHtml(options: {
     metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
   }
   else {
-    // TODO: should we add content hash?
     const dataFile = `html.meta.json.gz`
     await fs.writeFile(resolve(options.dstDir, dataFile), options.data, 'base64')
     metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
