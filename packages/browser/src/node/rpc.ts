@@ -185,7 +185,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return vitest._testRun.recordBenchmark(testId, benchmark)
         },
         async readBenchmarkBaseline(testFilepath, key) {
-          // TODO: test
           checkFileAccess(testFilepath)
           return vitest.benchmark.readBaseline(testFilepath, key)
         },

@@ -336,7 +336,6 @@ export class Vitest {
     catch { }
 
     this.projects = await this.resolveProjects(this._cliOptions)
-    // TODO: root project gets included for some reason
     if (this._cliOptions.benchmarkOnly) {
       this.projects = this.projects.filter(c => c.config.benchmark.enabled)
     }

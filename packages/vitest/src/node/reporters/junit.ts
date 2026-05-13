@@ -11,7 +11,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { renderBenchmarkTableText } from './base'
+import { renderBenchmarkTableText } from './renderers/benchmark-table'
 import { IndentedLogger } from './renderers/indented-logger'
 
 export interface ClassnameTemplateVariables {

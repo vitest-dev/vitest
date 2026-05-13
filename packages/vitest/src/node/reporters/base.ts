@@ -7,7 +7,6 @@ import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { stripVTControlCharacters } from 'node:util'
 import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -17,6 +16,7 @@ import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
+import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -35,19 +35,6 @@ import {
 } from './renderers/utils'
 
 const BADGE_PADDING = '       '
-
-const BENCH_TABLE_HEAD = [
-  'hz',
-  'min',
-  'max',
-  'mean',
-  'p75',
-  'p99',
-  'p995',
-  'p999',
-  'rme',
-  'samples',
-]
 
 export interface BaseOptions {
   isTTY?: boolean
@@ -911,9 +898,8 @@ export abstract class BaseReporter implements Reporter {
 
     for (const [benchName, projectMap] of this._perProjectBenchmarks) {
       const tasks = [...projectMap.entries()]
-        .map(([projectName, task]) => ({ ...task, name: projectName }))
-        .sort((a, b) => a.latency.mean - b.latency.mean)
-        .map((task, idx) => ({ ...task, rank: idx + 1 }))
+        .sort((a, b) => a[1].latency.mean - b[1].latency.mean)
+        .map(([projectName, task], index) => ({ ...task, name: projectName, rank: index + 1 }))
 
       this.log('')
       this.log(`  ${c.dim(benchName)}`)
@@ -1083,71 +1069,6 @@ function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
   return items.reduce((total, next) => {
     return total + Math.max(cb(next) || 0, 0)
   }, 0)
-}
-
-function formatBenchNumber(number: number): string {
-  const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)\B/g, ',') + (res[1] ? `.${res[1]}` : '')
-}
-
-// Plain-text rendering of the benchmark table (no ANSI colors, no indent).
-// Used by the junit reporter to embed benchmark data in <system-out>.
-export function renderBenchmarkTableText(
-  benchmarks: readonly TestBenchmark[],
-  columnName = 'name',
-): string {
-  const lines: string[] = []
-  for (const benchmark of benchmarks) {
-    const { tasks } = benchmark
-    if (tasks.length === 0) {
-      continue
-    }
-    if (lines.length > 0) {
-      lines.push('')
-    }
-    const rows = tasks.map(renderBenchmarkRow)
-    const head = [columnName, ...BENCH_TABLE_HEAD]
-    const widths = computeBenchColumnWidths(head, rows)
-    lines.push(padBenchRow(head, widths).join('  '))
-    for (const task of tasks) {
-      let row = padBenchRow(renderBenchmarkRow(task), widths).join('  ')
-      if (task.rank === 1 && tasks.length > 1) {
-        row += '   fastest'
-      }
-      if (task.rank === tasks.length && tasks.length > 2) {
-        row += '   slowest'
-      }
-      lines.push(row)
-    }
-  }
-  return lines.join('\n')
-}
-
-function renderBenchmarkRow(task: TestBenchmarkTask): string[] {
-  return [
-    task.name,
-    formatBenchNumber(task.throughput.mean || 0),
-    formatBenchNumber(task.latency.min || 0),
-    formatBenchNumber(task.latency.max || 0),
-    formatBenchNumber(task.latency.mean || 0),
-    formatBenchNumber(task.latency.p75 || 0),
-    formatBenchNumber(task.latency.p99 || 0),
-    formatBenchNumber(task.latency.p995 || 0),
-    formatBenchNumber(task.latency.p999 || 0),
-    `\u00B1${(task.latency.rme || 0).toFixed(2)}%`,
-    String(task.latency.samplesCount || 0),
-  ]
-}
-
-function computeBenchColumnWidths(header: string[], rows: string[][]): number[] {
-  const allRows = [header, ...rows]
-  return Array.from(header, (_, i) => Math.max(...allRows.map(row => stripVTControlCharacters(row[i]).length)))
-}
-
-function padBenchRow(row: string[], widths: number[]): string[] {
-  return row.map(
-    (v, i) => (i === 0 ? v.padEnd(widths[i]) : v.padStart(widths[i])),
-  )
 }
 
 function getIndentation(suite: Task, level = 1): number {

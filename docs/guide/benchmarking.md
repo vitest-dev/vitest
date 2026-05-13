@@ -256,6 +256,31 @@ test('compare against baseline', async ({ bench }) => {
 
 Baseline files should be committed to version control so the team shares the same reference points.
 
+You can keep historical baselines for older versions and compare them against the current implementation. Once a baseline exists, Vitest reuses it unless you run with `--update-baselines`, so the function can throw to prevent accidental reruns of an old implementation:
+
+```ts
+import { test } from 'vitest'
+import { customParser } from 'my-library'
+
+test('compare parser versions', async ({ bench }) => {
+  const input = '{"key":"value"}'
+
+  await bench.compare(
+    bench.withBaseline('v1', () => {
+      throw new Error('The v1 baseline is already recorded')
+    }),
+    bench.withBaseline('v2', () => {
+      throw new Error('The v2 baseline is already recorded')
+    }),
+    bench('current', () => {
+      customParser(input)
+    }),
+  )
+})
+```
+
+When adding a new historical baseline, temporarily point the new `bench.withBaseline()` entry at that version's implementation and run the benchmark once. After the baseline is written, replace the function body with an error if you want to make accidental `--update-baselines` runs obvious.
+
 To combine baselining with cross-project aggregation, access the factories as properties: `bench.withBaseline.perProject(...)` (or `bench.perProject.withBaseline(...)`; both compose to the same behaviour).
 
 ```ts
@@ -336,6 +361,10 @@ import { parse } from '../src/index.ts'
 // GOOD: the published entry has no internal getters
 import { parse } from 'my-library'
 ```
+
+If you compare your library against other packages, benchmark the same kind of artifact for every implementation. For workspace packages, make sure the package name resolves to the built output instead of source, for example by externalizing the package in Vite or by importing from `dist`.
+
+**Disable the module runner for the benchmark.** If the benchmark does not need Vite transforms, mocks, or Vitest module interception, disable [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner) for the benchmark project so Node runs native ESM directly.
 
 This only affects Node.js mode. Browser mode uses native ESM imports and does not have this overhead.
 

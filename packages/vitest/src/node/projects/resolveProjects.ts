@@ -237,6 +237,10 @@ export async function resolveDefaultProjects(
       include: benchmark.include,
       exclude: benchmark.exclude,
       includeSource: benchmark.includeSource,
+      coverage: {
+        ...project.config.coverage,
+        enabled: false,
+      },
       maxWorkers: 1,
       maxConcurrency: 1,
       testTimeout: project.config.testTimeout < 60_000 ? 60_000 : project.config.testTimeout,

@@ -279,6 +279,8 @@ async function run(cliFilters: string[], options: CliOptions): Promise<void> {
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
   options.benchmarkOnly = true
+  options.coverage ??= {}
+  options.coverage.enabled = false
   await start(cliFilters, options)
 }
 
