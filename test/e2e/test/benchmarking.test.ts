@@ -593,7 +593,7 @@ test('`bench.from()` rejects a path that escapes the project root', async () => 
   await runPassingBench('escape.bench.ts', /* ts */`
     import { test, expect } from 'vitest'
     test('escape', async ({ bench }) => {
-      await expect(bench.from('x', '../../../etc/passwd').run()).rejects.toThrow(
+      await expect(bench.from('x', '../package.json').run()).rejects.toThrow(
         /resolves outside the project root/,
       )
     })
