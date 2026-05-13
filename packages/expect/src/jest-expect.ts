@@ -1075,6 +1075,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       utils.flag(this, 'error', error)
       const test: Test = utils.flag(this, 'vitest-test')
       const obj = utils.flag(this, 'object')
+      const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
 
       if (utils.flag(this, 'poll')) {
         throw new SyntaxError(
@@ -1082,9 +1083,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (typeof obj?.then !== 'function') {
+      if (typeof wrapper?.then !== 'function') {
         throw new TypeError(
-          `You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`,
+          `You must provide a Promise to expect() when using .resolves, not '${typeof wrapper}'.`,
         )
       }
 
@@ -1098,7 +1099,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
           return (...args: any[]) => {
             utils.flag(this, '_name', key)
-            const promise = Promise.resolve(obj).then(
+            const promise = Promise.resolve(wrapper).then(
               (value: any) => {
                 utils.flag(this, 'object', value)
                 return result.call(this, ...args)
