@@ -12,6 +12,12 @@ const FINISHED_TEST_CLEANUP_TIME_MS = 1_000
 
 interface Options {
   verbose?: boolean
+
+  /** @internal */
+  interval?: ConstructorParameters<typeof WindowRenderer>[0]['interval']
+
+  /** @internal */
+  threshold?: ConstructorParameters<typeof WindowRenderer>[0]['threshold']
 }
 
 interface Counter {
@@ -76,6 +82,8 @@ export class SummaryReporter implements Reporter {
     this.renderer = new WindowRenderer({
       logger: ctx.logger,
       getWindow: () => this.createSummary(),
+      interval: this.options.interval,
+      threshold: this.options.threshold,
     })
 
     this.ctx.onClose(() => {
