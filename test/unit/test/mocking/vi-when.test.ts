@@ -496,13 +496,13 @@ describe('vi.when()', () => {
         .calledWith(...entries[1].args)
         .thenReturn(entries[1].value)
 
-      let d = w['~getDiagnostics']()
+      let d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
           ✗ thenReturn(97)                never called
-          ✗ thenReturn(97, { times: 1 })  1 remaining (of 1)
+          ✗ thenReturn(97, { times: 1 })  1 remaining (out of 1)
 
         calledWith("b", 1)
           ✗ thenReturn(99)  never called"
@@ -510,7 +510,7 @@ describe('vi.when()', () => {
 
       spy(...entries[0].args)
 
-      d = w['~getDiagnostics']()
+      d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
@@ -524,7 +524,7 @@ describe('vi.when()', () => {
 
       spy(...entries[0].args)
 
-      d = w['~getDiagnostics']()
+      d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
@@ -534,7 +534,7 @@ describe('vi.when()', () => {
 
       spy(...entries[1].args)
 
-      d = w['~getDiagnostics']()
+      d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(true)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`""`)
@@ -551,7 +551,7 @@ describe('vi.when()', () => {
         .thenReturn(value)
         .thenReturn(value + 1)
 
-      let d = w['~getDiagnostics']()
+      let d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
@@ -562,7 +562,7 @@ describe('vi.when()', () => {
 
       spy(...args)
 
-      d = w['~getDiagnostics']()
+      d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
@@ -588,14 +588,14 @@ describe('vi.when()', () => {
         .thenResolve(value, { times })
         .thenReject(error, { times })
 
-      const d = w['~getDiagnostics']()
+      const d = w._getDiagnostics()
 
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97, { times: 2 })                                         2 remaining (of 2)
-          ✗ thenThrow([TypeError: Expected second argument > 0], { times: 2 })   2 remaining (of 2)
-          ✗ thenResolve(97, { times: 2 })                                        2 remaining (of 2)
-          ✗ thenReject([TypeError: Expected second argument > 0], { times: 2 })  2 remaining (of 2)"
+          ✗ thenReturn(97, { times: 2 })                                         2 remaining (out of 2)
+          ✗ thenThrow([TypeError: Expected second argument > 0], { times: 2 })   2 remaining (out of 2)
+          ✗ thenResolve(97, { times: 2 })                                        2 remaining (out of 2)
+          ✗ thenReject([TypeError: Expected second argument > 0], { times: 2 })  2 remaining (out of 2)"
       `)
     })
 
@@ -609,7 +609,7 @@ describe('vi.when()', () => {
         .calledWith(...args)
         .thenReturn(value)
 
-      const d = w['~getDiagnostics']()
+      const d = w._getDiagnostics()
 
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith(StringContaining "--", Any<Number>)

@@ -26,15 +26,17 @@ export function isWhenChain(input: object): input is When<Procedure> {
   return Reflect.has(input, whenSymbol)
 }
 
+interface BehaviorAction<Value> {
+  type: BehaviorType
+  value: Value | unknown
+  times: number
+  remaining: number
+  called: boolean
+}
+
 interface Behavior<Arguments extends unknown[], Value> {
   arguments: Arguments
-  actions: {
-    type: BehaviorType
-    value: Value | unknown
-    times: number
-    remaining: number
-    called: boolean
-  }[]
+  actions: BehaviorAction<Value>[]
 }
 
 interface BehaviorOptions {
@@ -166,7 +168,7 @@ interface When<Fn extends Procedure> extends Disposable {
    *   .thenReturn(true)
    *   .thenReturnOnce(false)
    */
-  'calledWith': (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
+  calledWith: (...args: Parameters<Fn>) => CalledWithInstance<ReturnType<Fn>, Fn>
   /**
    * Returns a diagnostic snapshot of the current state of all registered behaviors.
    *
@@ -194,7 +196,7 @@ interface When<Fn extends Procedure> extends Disposable {
    * // calledWith(2)
    * //   ✗ thenReturn(42)    never called
    */
-  '~getDiagnostics': () => {
+  _getDiagnostics: () => {
     isExhausted: boolean
     pendingBehaviors: string
   }
@@ -239,7 +241,6 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
  *
  * @throws {TypeError} If `spy` is not a Vitest mock function.
  *
- * @experimental
  * @since 5.0.0
  * @see {@link https://vitest.dev/api/vi#vi-when}
  *
@@ -370,7 +371,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node >= 24
   const output: When<Fn> = {
     // @todo strictlyCalledWith for strict equality?
-    'calledWith': (...args: ScopedParameters) => {
+    calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
       function appendAction(behavior: Behavior<ScopedParameters, ScopedReturn>, type: BehaviorType, value: unknown, times: number) {
@@ -433,7 +434,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
       return calledWithInstance
     },
-    '~getDiagnostics': () => {
+    _getDiagnostics: () => {
       const pendingBehaviors = behaviors
         .filter(behavior =>
           behavior.actions.some(action =>
@@ -510,11 +511,11 @@ function getMethodName(type: BehaviorType): string {
   }
 }
 
-function isExhausted(action: Behavior<unknown[], unknown>['actions'][number]): boolean {
+function isExhausted(action: BehaviorAction<unknown>): boolean {
   return action.remaining === 0 || (action.remaining === Number.POSITIVE_INFINITY && action.called)
 }
 
-function getRemainingLabel(action: Behavior<unknown[], unknown>['actions'][number]): string {
+function getRemainingLabel(action: BehaviorAction<unknown>): string {
   if (isExhausted(action)) {
     return action.remaining === Number.POSITIVE_INFINITY
       ? 'exhausted'
@@ -523,10 +524,10 @@ function getRemainingLabel(action: Behavior<unknown[], unknown>['actions'][numbe
 
   return action.remaining === Number.POSITIVE_INFINITY
     ? 'never called'
-    : `${action.remaining} remaining (of ${action.times})`
+    : `${action.remaining} remaining (out of ${action.times})`
 }
 
-function getSymbol(action: Behavior<unknown[], unknown>['actions'][number]): string {
+function getSymbol(action: BehaviorAction<unknown>): string {
   if (isExhausted(action)) {
     return '✓'
   }
