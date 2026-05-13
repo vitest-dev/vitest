@@ -1087,6 +1087,74 @@ test('`bench.compare` trailing options propagate through to the underlying Tinyb
   expect(benchmarks[0].name).toBe('custom-bench-name')
 })
 
+test('benchmark warns when module export getters are accessed too many times', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'fixture.ts': /* ts */`
+        export const value = 1
+`,
+      'getter-warning.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        import * as fixture from './fixture'
+
+        test('getter warning', async ({ bench }) => {
+          await bench('read getter', () => {
+            for (let i = 0; i < 1_000_001; i++) {
+              void fixture.value
+            }
+          }).run(inject('options'))
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true },
+      provide: { options: { ...fastBenchOptions, iterations: 1 } },
+    },
+  )
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "stderr | getter-warning.bench.ts > getter warning
+    Benchmark Warning
+    Benchmark "getter warning 1" accessed module export getters too many times.
+
+    This can make results unreliable because export getters add overhead.
+    See https://vitest.dev/guide/benchmarking#module-runner-overhead
+
+    Tracked exports:
+      - fixture.ts > value
+
+    "
+  `)
+})
+
+test('benchmark export getter warning can be suppressed', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'fixture.ts': /* ts */`
+        export const value = 1
+`,
+      'getter-warning.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        import * as fixture from './fixture'
+
+        test('getter warning', async ({ bench }) => {
+          await bench('read getter', () => {
+            for (let i = 0; i < 1_000_001; i++) {
+              void fixture.value
+            }
+          }).run(inject('options'))
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true, suppressExportGetterWarnings: true },
+      provide: { options: { ...fastBenchOptions, iterations: 1 } },
+    },
+  )
+
+  expect(stderr).toBe('')
+})
+
 test('`BenchStorage.get("missing")` throws a descriptive error', async () => {
   await runPassingBench('missing.bench.ts', /* ts */`
     import { test, expect, inject } from 'vitest'

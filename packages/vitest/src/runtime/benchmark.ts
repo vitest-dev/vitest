@@ -9,9 +9,12 @@ import type {
   Task as TinybenchTask,
 } from 'tinybench'
 import type { SerializedConfig } from './config'
+import { isAbsolute, relative } from 'pathe'
 import { Bench as Tinybench } from 'tinybench'
+import c from 'tinyrainbow'
 import { rpc } from './rpc'
 import { TestRunner } from './runners/test'
+import { getWorkerState } from './utils'
 
 const now = globalThis.performance
   ? globalThis.performance.now.bind(globalThis.performance)
@@ -159,9 +162,41 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     await rpc().onTestBenchmark(test.id, serializedBenchmark)
   }
 
+  const runBenchmarks = async (tinybench: Tinybench) => {
+    const workerState = getWorkerState()
+    const getterTracker = workerState.getterTracker
+    getterTracker?.resetInvocations()
+    try {
+      return await TestRunner.runBenchmarks(tinybench)
+    }
+    finally {
+      const excessiveInvocations = config.benchmark.suppressExportGetterWarnings
+        ? undefined
+        : getterTracker?.getExcessiveInvocations()
+      if (excessiveInvocations?.length) {
+        const entries = excessiveInvocations
+          .map(({ moduleId, exportName }) => `  - ${formatModuleId(moduleId, workerState.config.root)} > ${exportName}`)
+          .join('\n')
+        console.warn(
+          [
+            c.yellow(c.bold('Benchmark Warning')),
+            `Benchmark ${c.bold(`"${tinybench.name}"`)} accessed module export getters too many times.`,
+            '',
+            'This can make results unreliable because export getters add overhead.',
+            'See https://vitest.dev/guide/benchmarking#module-runner-overhead',
+            '',
+            'Tracked exports:',
+            entries,
+          ].join('\n'),
+        )
+      }
+    }
+  }
+
   const runSingle = async (name: string, fn: Fn, fnOpts: FnOptions | undefined, options: BenchCompareOptions | undefined, meta?: TaskMeta): Promise<BenchResult> => {
     const tinybench = createTinybench(options).add(name, fn, fnOpts)
-    const tasks = await TestRunner.runBenchmarks(tinybench)
+
+    const tasks = await runBenchmarks(tinybench)
     await recordBenchmark(tasks, tinybench.name, meta ? new Map([[name, meta]]) : undefined)
     const task = tinybench.getTask(name)!
     return task.result as BenchResult
@@ -192,7 +227,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     }
     // no stored baseline or updating — run the benchmark and save
     const tinybench = createTinybench(options).add(name, fn, fnOpts)
-    const tasks = await TestRunner.runBenchmarks(tinybench)
+    const tasks = await runBenchmarks(tinybench)
     const task = tinybench.getTask(name)!
     if (task.result.state === 'errored') {
       throw task.result.error
@@ -303,7 +338,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     // skip the tinybench run when every registration is already served from
     // a stored baseline — serializing + the storage fall back to baselines
     if (filteredRegistrations.length > 0) {
-      tasks = await TestRunner.runBenchmarks(tinybench)
+      tasks = await runBenchmarks(tinybench)
       const errors = tinybench.tasks
         .filter(task => task.result.state === 'errored')
         .map(task => (task.result as any).error)
@@ -317,6 +352,13 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
   }
 
   return bench
+}
+
+function formatModuleId(moduleId: string, root: string): string {
+  if (!root || !isAbsolute(moduleId)) {
+    return moduleId
+  }
+  return relative(root, moduleId)
 }
 
 function normalizeBenchArgs(

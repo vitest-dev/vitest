@@ -21,6 +21,7 @@ export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
   includeSource: [],
   retainSamples: false,
   updateBaselines: false,
+  suppressExportGetterWarnings: false,
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.

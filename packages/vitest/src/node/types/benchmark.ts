@@ -33,4 +33,10 @@ export interface BenchmarkUserOptions {
    * @default false
    */
   updateBaselines?: boolean
+
+  /**
+   * Disable warnings when a benchmark accesses module export getters too many times.
+   * @default false
+   */
+  suppressExportGetterWarnings?: boolean
 }
