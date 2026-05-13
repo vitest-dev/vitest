@@ -21,13 +21,7 @@ interface HTMLReportMetadata {
   sources: Record<string, string>
 }
 
-const noop: any = () => {}
 const asyncNoop: any = () => Promise.resolve()
-
-type StaticWebSocketHandlers = Omit<
-  WebSocketHandlers,
-  'getResolvedProjectLabels' | 'getPaths'
->
 
 export function createStaticClient(): VitestClient {
   const ctx = reactive({
@@ -42,7 +36,7 @@ export function createStaticClient(): VitestClient {
 
   let metadata!: HTMLReportMetadata
 
-  const rpc = {
+  const rpc: WebSocketHandlers = {
     getFiles: () => {
       return metadata.files
     },
@@ -55,31 +49,19 @@ export function createStaticClient(): VitestClient {
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
     },
+    readTestFile: async (id) => {
+      return metadata.sources[id]
+    },
+    getPaths: () => [],
+    getResolvedProjectLabels: () => [],
     getExternalResult: asyncNoop,
     getTransformResult: asyncNoop,
-    onDone: noop,
-    writeFile: asyncNoop,
     rerun: asyncNoop,
     rerunTask: asyncNoop,
     updateSnapshot: asyncNoop,
-    resolveSnapshotPath: asyncNoop,
-    snapshotSaved: asyncNoop,
-    onAfterSuiteRun: asyncNoop,
-    onCancel: asyncNoop,
-    getCountOfFailedTests: () => 0,
-    sendLog: asyncNoop,
-    resolveSnapshotRawPath: asyncNoop,
-    readSnapshotFile: asyncNoop,
-    saveSnapshotFile: asyncNoop,
-    readTestFile: async (id: string) => {
-      return metadata.sources[id]
-    },
-    removeSnapshotFile: asyncNoop,
-    onUnhandledError: noop,
     saveTestFile: asyncNoop,
-    getProvidedContext: () => ({}),
     getTestFiles: asyncNoop,
-  } as StaticWebSocketHandlers
+  }
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
