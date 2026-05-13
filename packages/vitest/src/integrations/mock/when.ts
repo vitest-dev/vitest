@@ -240,6 +240,8 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
  * @returns A {@linkcode When} instance for registering behaviors.
  *
  * @throws {TypeError} If `spy` is not a Vitest mock function.
+ * @throws {Error} If chaining a non-existent method after `calledWith`.
+ * @throws {RangeError} If setting the `times` option on a `then*` method as a negative value or `0`.
  *
  * @since 5.0.0
  * @see {@link https://vitest.dev/api/vi#vi-when}
