@@ -44,6 +44,7 @@ const testConfig = defineConfig({
     browser: {
       enabled: true,
       traceView: true,
+      headless: true,
       provider:
         providerName === 'preview'
           ? preview()

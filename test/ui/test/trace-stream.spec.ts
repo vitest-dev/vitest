@@ -1,32 +1,23 @@
-import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
-import assert from 'node:assert'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import { resolve } from 'pathe'
-import { startVitest } from 'vitest/node'
+import { getExplorerItem, startVitestUi } from './helper'
 
 test.describe('trace stream', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
-  const root = path.join(import.meta.dirname, '../fixtures-trace-stream')
+  const root = path.join(import.meta.dirname, '../fixtures/trace-stream')
   const gatesDir = path.join(root, 'node_modules/.vitest-e2e')
 
   test.beforeAll(async () => {
     await rm(gatesDir, { recursive: true, force: true })
     await mkdir(gatesDir, { recursive: true })
 
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-
     // start standalone to hold off running tests
-    vitest = await startVitest(
-      'test',
-      undefined,
+    const server = await startVitestUi(
       {
         root,
         watch: true,
@@ -39,11 +30,9 @@ test.describe('trace stream', () => {
           'import.meta.env.TEST_GATE_FILE': 'true',
         },
       },
-      { stdout, stderr },
     )
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    baseURL = `http://localhost:${address.port}/__vitest__/`
+    vitest = server.vitest
+    baseURL = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {
@@ -170,7 +159,3 @@ test.describe('trace stream', () => {
     ])
   })
 })
-
-function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
-}

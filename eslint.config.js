@@ -15,6 +15,7 @@ export default antfu(
       '**/assets/**',
       '**/*.d.ts',
       '**/*.timestamp-*',
+      '**/test-results',
       'test/unit/src/self',
       'test/unit/test/mocking/already-hoisted.test.ts',
       'test/cache/cache/.vitest-base/results.json',
