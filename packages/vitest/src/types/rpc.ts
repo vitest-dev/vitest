@@ -30,7 +30,8 @@ export interface RuntimeRPC {
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
 
-  readBenchmarkBaseline: (testFilepath: string, key: string) => Promise<BaselineData | null>
+  readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
+  writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
 
   ensureModuleGraphEntry: (id: string, importer: string) => void
 }

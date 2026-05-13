@@ -7,7 +7,7 @@ import { normalize } from 'pathe'
 import { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { isAgent, isForceColor } from '../../utils/env'
-import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -178,12 +178,9 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('dev [...filters]', undefined, options)
     .action(watch)
 
-  addCliOptions(
-    cli
-      .command('bench [...filters]', undefined, options)
-      .action(benchmark),
-    benchCliOptionsConfig,
-  )
+  cli
+    .command('bench [...filters]', undefined, options)
+    .action(benchmark)
 
   cli
     .command('init <project>', undefined, options)

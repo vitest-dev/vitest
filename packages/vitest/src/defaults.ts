@@ -20,7 +20,6 @@ export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
   exclude: defaultExclude,
   includeSource: [],
   retainSamples: false,
-  updateBaselines: false,
   suppressExportGetterWarnings: false,
 }
 

@@ -184,9 +184,19 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         async onTestBenchmark(testId, benchmark) {
           return vitest._testRun.recordBenchmark(testId, benchmark)
         },
-        async readBenchmarkBaseline(testFilepath, key) {
-          checkFileAccess(testFilepath)
-          return vitest.benchmark.readBaseline(testFilepath, key)
+        async readBenchmarkResult(relativePath) {
+          const path = vitest.benchmark.resolve(relativePath)
+          checkFileAccess(path)
+          return vitest.benchmark.readResult(path)
+        },
+        async writeBenchmarkResult(relativePath, data) {
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot write benchmark artifact "${relativePath}" because file writing is disabled. See https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
+          return vitest.benchmark.writeResult(relativePath, data)
         },
         async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {

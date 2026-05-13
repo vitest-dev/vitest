@@ -133,13 +133,13 @@ test('benchmarks with setup', async ({ bench }) => {
 
 ## Comparing Across Projects
 
-When your workspace defines multiple projects (e.g., different browsers or runtimes), you can use `bench.perProject()` to compare how the same benchmark performs across all of them. Instead of printing results inline per project, Vitest collects them and prints a single comparison table at the end of the test run.
+When your workspace defines multiple projects (e.g., different browsers or runtimes), pass `perProject: true` in the bench options to compare how the same benchmark performs across all of them. Vitest still prints the result inline for the current project, and additionally collects per-project results into a single comparison table at the end of the test run.
 
 ```ts
 import { test } from 'vitest'
 
 test('simple example', async ({ bench }) => {
-  await bench.perProject('1 + 1', () => {
+  await bench('1 + 1', { perProject: true }, () => {
     1 + 1
   }).run()
 })
@@ -149,12 +149,12 @@ The same test file runs in each project (chromium, firefox, webkit, etc.), and V
 
 <<< ./snippets/benchmark-per-project.ansi
 
-`bench.perProject()` returns a `BenchRegistration` just like `bench()`, so you call `.run()` to execute it. You can also mix it with `bench.compare()`:
+You can also mix `perProject` benchmarks with regular ones inside `bench.compare()`:
 
 ```ts
 test('compare implementations across browsers', async ({ bench }) => {
   await bench.compare(
-    bench.perProject('JSON.parse', () => {
+    bench('JSON.parse', { perProject: true }, () => {
       JSON.parse('{"key":"value"}')
     }),
     bench('custom parser', () => {
@@ -224,72 +224,86 @@ test('performance comparison', { retry: 3 }, async ({ bench }) => {
 })
 ```
 
-## Baselines
+## Storing and Replaying Results
 
-Use `bench.withBaseline()` to store benchmark results on disk and compare against them in future runs, similar to how [snapshot testing](/guide/snapshot) works:
+Two primitives let you persist benchmark results to disk and compare against them in future runs: the `writeResult` option saves a result, and `bench.from()` reads one back.
+
+### `writeResult`
+
+Pass `writeResult` as a per-bench option to write the result to a JSON file every time the benchmark runs. The path is resolved against the project root:
 
 ```ts
-test('no performance regression', async ({ bench }) => {
-  const result = await bench.withBaseline('parse', () => {
-    parse(largeInput)
-  }).run()
+test('parse', async ({ bench }) => {
+  await bench(
+    'parse',
+    { writeResult: './benchmarks/parse.json' },
+    () => parse(largeInput),
+  ).run()
 })
 ```
 
-- **First run**: Executes the benchmark and stores the result to a `__benchmarks__/` directory next to the test file.
-- **Subsequent runs**: Executes the benchmark and compares against the stored result, reporting any regressions.
-- **Updating baselines**: Use the `--update-baselines` flag to overwrite stored baselines with fresh results.
+- The benchmark always runs. There is no skip-when-cached behaviour and no CLI flag, the file is overwritten on every successful run.
+- If the function throws, the file is not written.
+- Commit these files alongside your code so reviewers and CI share the same reference points.
 
-Baselines work inside `bench.compare()` too. You can mix regular and baseline benchmarks:
+### `bench.from()`
+
+`bench.from(name, source)` is a registration that doesn't execute a function. It reads a previously stored result and feeds it into `bench.compare()` (or returns it directly when you call `.run()`).
+
+The source can be a path (relative to the project root) or a function that returns the result data, including a Promise:
 
 ```ts
-test('compare against baseline', async ({ bench }) => {
+test('compare against the stored baseline', async ({ bench }) => {
   const result = await bench.compare(
-    bench('current implementation', () => { current() }),
-    bench.withBaseline('previous implementation', () => { current() }),
+    bench(
+      'current',
+      { writeResult: './benchmarks/parse.json' },
+      () => parse(largeInput),
+    ),
+    bench.from('previous', './benchmarks/parse.json'),
+    bench.from('remote', () => fetch('https://path/to/external/file.json').then(r => r.json())),
   )
 
-  expect(result.get('current implementation'))
-    .toBeFasterThan(result.get('previous implementation'))
+  expect(result.get('current')).toBeFasterThan(result.get('previous'))
 })
 ```
 
-Baseline files should be committed to version control so the team shares the same reference points.
-
-You can keep historical baselines for older versions and compare them against the current implementation. Once a baseline exists, Vitest reuses it unless you run with `--update-baselines`, so the function can throw to prevent accidental reruns of an old implementation:
+You can keep historical artifacts for older versions and compare them against the current implementation. Because `bench.from()` never invokes the function that produced the file, the original benchmark code can be deleted once the artifact is committed:
 
 ```ts
-import { test } from 'vitest'
-import { customParser } from 'my-library'
-
 test('compare parser versions', async ({ bench }) => {
   const input = '{"key":"value"}'
 
   await bench.compare(
-    bench.withBaseline('v1', () => {
-      throw new Error('The v1 baseline is already recorded')
-    }),
-    bench.withBaseline('v2', () => {
-      throw new Error('The v2 baseline is already recorded')
-    }),
-    bench('current', () => {
-      customParser(input)
-    }),
+    bench.from('v1', './benchmarks/parse.v1.json'),
+    bench.from('v2', './benchmarks/parse.v2.json'),
+    bench(
+      'current',
+      { writeResult: './benchmarks/parse.current.json' },
+      () => customParser(input),
+    ),
   )
 })
 ```
 
-When adding a new historical baseline, temporarily point the new `bench.withBaseline()` entry at that version's implementation and run the benchmark once. After the baseline is written, replace the function body with an error if you want to make accidental `--update-baselines` runs obvious.
+To produce a new historical artifact, point a fresh `bench()` at that version's implementation, set `writeResult` to a versioned path (`./benchmarks/parse.v3.json`), run it once, then replace the call with `bench.from('v3', './benchmarks/parse.v3.json')`.
 
-To combine baselining with cross-project aggregation, access the factories as properties: `bench.withBaseline.perProject(...)` (or `bench.perProject.withBaseline(...)`; both compose to the same behaviour).
+### Per-project artifacts
+
+In a multi-project workspace (different browsers, different runtimes), share one benchmark file across projects by including `${projectName}` in the path. The placeholder is substituted with the current project name at write time:
 
 ```ts
 test('cross-project baseline', async ({ bench }) => {
-  await bench.withBaseline.perProject('parse', () => {
-    parse(largeInput)
-  }).run()
+  await bench(
+    'parse',
+    // eslint-disable-next-line no-template-curly-in-string
+    { perProject: true, writeResult: './benchmarks/parse.${projectName}.json' },
+    () => parse(largeInput),
+  ).run()
 })
 ```
+
+Use the same template in `bench.from()` so each project reads its own artifact.
 
 ## Stability
 

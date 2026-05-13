@@ -46,10 +46,3 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 Include the `samples` array of per-iteration timings on every benchmark result. Disabled by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
 
-## benchmark.updateBaselines
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **CLI:** `--update-baselines`
-
-Overwrite stored benchmark baselines with fresh results. Baselines are created by [`bench.withBaseline()`](/guide/benchmarking#baselines) and stored in a `__benchmarks__/<file>.json` file next to each benchmark file. When `false` (the default), `bench.withBaseline()` reuses the stored result instead of re-running the benchmark; set this to `true` (or pass `--update-baselines` on the CLI) to regenerate the baselines.

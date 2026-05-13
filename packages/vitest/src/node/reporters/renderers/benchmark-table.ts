@@ -63,8 +63,8 @@ export function renderBenchmarkRow(task: TestBenchmarkTask): string[] {
     formatBenchNumber(task.latency.p99 || 0),
     formatBenchNumber(task.latency.p995 || 0),
     formatBenchNumber(task.latency.p999 || 0),
-    `\u00B1${(task.latency.rme || 0).toFixed(2)}%`,
-    String(task.latency.samplesCount || 0),
+    task.fromStore ? '-' : `\u00B1${(task.latency.rme || 0).toFixed(2)}%`,
+    task.fromStore ? '-' : String(task.latency.samplesCount || 0),
   ]
 }
 

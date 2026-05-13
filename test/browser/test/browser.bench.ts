@@ -1,7 +1,8 @@
 import { expect, test } from 'vitest'
 
 // Keep runs tiny — this file smoke-tests the browser RPC path
-// (onTestBenchmark, readBenchmarkBaseline). It is not a measurement harness.
+// (onTestBenchmark, readBenchmarkResult / writeBenchmarkResult).
+// It is not a measurement harness.
 const fastBenchOptions = {
   time: 0,
   iterations: 2,
@@ -10,14 +11,14 @@ const fastBenchOptions = {
 }
 
 test('perProject registrations flow through the browser RPC (onTestBenchmark)', async ({ bench }) => {
-  await bench.perProject('1 + 1', () => {
+  await bench('1 + 1', { perProject: true, ...fastBenchOptions }, () => {
     const result = 1 + 1
     expect.assert(result === 2)
-  }).run(fastBenchOptions)
-  await bench.perProject('1 + 2', () => {
+  }).run()
+  await bench('1 + 2', { perProject: true, ...fastBenchOptions }, () => {
     const result = 1 + 2
     expect.assert(result === 3)
-  }).run(fastBenchOptions)
+  }).run()
 })
 
 test('bench.compare resolves a BenchStorage in the browser', async ({ bench }) => {
@@ -31,12 +32,12 @@ test('bench.compare resolves a BenchStorage in the browser', async ({ bench }) =
   expect.assert(typeof storage.get('b').latency.mean === 'number')
 })
 
-test('bench.withBaseline exercises the readBenchmarkBaseline RPC round-trip', async ({ bench }) => {
-  // First call writes the baseline; the reporter path + saveBaselines RPC run.
-  // Subsequent runs would read it back via readBenchmarkBaseline — this smoke
-  // just verifies the round-trip doesn't throw.
-  const result = await bench.withBaseline('with-baseline', () => {
+test('writeResult exercises the writeBenchmarkResult RPC round-trip', async ({ bench }) => {
+  // The browser worker forwards writeResult through the WebSocket RPC to the
+  // node side. We don't assert on the file contents here (the spec layer can
+  // do that), just that the round-trip completes without throwing.
+  const result = await bench('with-write', { writeResult: './out/with-write.json', ...fastBenchOptions }, () => {
     const _ = 1 + 1
-  }).run(fastBenchOptions)
+  }).run()
   expect.assert(typeof result.latency.mean === 'number')
 })

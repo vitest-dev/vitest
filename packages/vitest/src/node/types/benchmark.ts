@@ -29,12 +29,6 @@ export interface BenchmarkUserOptions {
   retainSamples?: boolean
 
   /**
-   * Overwrite stored benchmark baselines with fresh results.
-   * @default false
-   */
-  updateBaselines?: boolean
-
-  /**
    * Disable warnings when a benchmark accesses module export getters too many times.
    * @default false
    */

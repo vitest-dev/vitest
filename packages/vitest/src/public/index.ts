@@ -38,6 +38,7 @@ export type {
   Bench,
   BenchCompareOptions,
   BenchFnOptions,
+  BenchFromSource,
   BenchRegistration,
   BenchResult,
   BenchStorage,

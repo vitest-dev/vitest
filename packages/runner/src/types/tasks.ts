@@ -372,8 +372,12 @@ export interface TestBenchmarkTask {
   totalTime: number
   rank: number
   perProject?: boolean
-  baseline?: boolean
-  baselineResult?: BaselineData
+  /**
+   * `true` when the task was produced by `bench.from()` rather than by
+   * executing a function. Reporters can use this to render the row as a
+   * static reference (no margin of error, no samples).
+   */
+  fromStore?: boolean
 }
 
 export type Task = Test | Suite | File

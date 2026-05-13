@@ -982,17 +982,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   watchTriggerPatterns: null,
   tags: null,
   benchmarkOnly: null,
-  updateBaselines: null,
   taskTitleValueFormatTruncate: null,
-}
-
-export const benchCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'updateBaselines'
-> = {
-  updateBaselines: {
-    description: 'Overwrite stored benchmark baselines with fresh results',
-  },
 }
 
 export const collectCliOptionsConfig: VitestCLIOptions = {

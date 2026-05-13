@@ -94,7 +94,7 @@ describe('running browser tests', async () => {
     )
   })
 
-  test('bench.perProject emits tasks with the perProject flag in every browser', () => {
+  test('perProject benchmarks emit tasks with the perProject flag in every browser', () => {
     const records = emittedBenchmarks.filter(e =>
       e.testName === 'perProject registrations flow through the browser RPC (onTestBenchmark)',
     )
@@ -104,7 +104,7 @@ describe('running browser tests', async () => {
       expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
       const [task] = record.benchmark.tasks
       expect(task.perProject, `missing perProject flag on ${record.projectName}/${task.name}`).toBe(true)
-      expect(task.baseline).toBeUndefined()
+      expect(task.fromStore).toBeUndefined()
     }
   })
 
@@ -119,17 +119,15 @@ describe('running browser tests', async () => {
     }
   })
 
-  test('bench.withBaseline flows through the baseline RPC in every browser', () => {
+  test('writeResult flows through the write-artifact RPC in every browser', () => {
     const records = emittedBenchmarks.filter(e =>
-      e.testName === 'bench.withBaseline exercises the readBenchmarkBaseline RPC round-trip',
+      e.testName === 'writeResult exercises the writeBenchmarkResult RPC round-trip',
     )
     expect(records.length).toBe(instances.length)
     for (const record of records) {
       expect(record.benchmark.tasks, `empty tasks for ${record.projectName}`).toHaveLength(1)
       const [task] = record.benchmark.tasks
-      expect(task.name).toBe('with-baseline')
-      // either `baseline: true` (fresh run) or undefined (served from disk);
-      // in both cases the RPC round-trip is exercised, which is what we verify
+      expect(task.name).toBe('with-write')
     }
   })
 

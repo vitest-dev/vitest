@@ -39,7 +39,7 @@ test('sort', async ({ bench }) => { // [!code ++]
 
 - **`bench.skip`, `bench.only`, `bench.todo`** are removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
 - **`benchmark.reporters` / `benchmark.outputFile`** are removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
-- **`benchmark.compare` config and the `--compare` CLI flag** are removed. Use [`bench.withBaseline()`](/guide/benchmarking#baselines) to persist a baseline to `__benchmarks__/<file>.json` and compare on subsequent runs. Pass [`--update-baselines`](/config/benchmark#benchmark-updatebaselines) to regenerate a baseline.
+- **`benchmark.compare` config and the `--compare` CLI flag** are removed. Pass [`writeResult`](/guide/benchmarking#storing-and-replaying-results) as a per-bench option to persist a result, and read it back with [`bench.from()`](/guide/benchmarking#bench-from) inside `bench.compare()`.
 - **`benchmark.outputJson` config and the `--outputJson` CLI flag** are removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
 - **`Vitest` instance `mode` property** is now always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
 
