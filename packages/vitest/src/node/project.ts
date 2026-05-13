@@ -551,6 +551,9 @@ export class TestProject {
       {
         ...options,
         coverage: this.vitest.config.coverage,
+        // TODO: doc
+        // root-only attachmentsDir
+        attachmentsDir: this.vitest.config.attachmentsDir,
       },
       server.config,
     )
