@@ -169,6 +169,9 @@ test('many errors without warning', async () => {
     '--root',
     resolve(import.meta.dirname, '../../fixtures/reporters/many-errors'),
   )
+  expect(stabilizeReport(result.stdout).split('\n')[1]).toMatchInlineSnapshot(
+    `"<testsuites name="vitest tests" tests="20" failures="20" errors="0" time="...">"`,
+  )
   expect(result.stderr).not.toContain('MaxListenersExceededWarning')
   expect(result.exitCode).not.toBe(0)
 })
