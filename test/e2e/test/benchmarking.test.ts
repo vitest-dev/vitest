@@ -673,6 +673,45 @@ test('`bench.compare` with only `bench.from()` registrations skips tinybench ent
   expect(tasks.every(t => t.fromStore)).toBe(true)
 })
 
+test('`bench.from()` rows render rme and samples columns from the stored data', async () => {
+  // The on-disk BaselineData includes the full `latency` Statistics — including
+  // `rme` and `samplesCount` — so a stored row should display real numbers in
+  // those columns, not placeholder dashes.
+  const seed = { ...fakeBaseline(0.5), latency: { ...fakeStats(0.5), rme: 1.23, samplesCount: 7 } }
+  const { stderr, stdout } = await runInlineTests(
+    {
+      'render.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('render', async ({ bench }) => {
+          await bench.compare(
+            bench('live', () => {}),
+            bench.from('stored', './out/from.json'),
+            inject('options'),
+          )
+        })
+`,
+      'out/from.json': JSON.stringify(seed),
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: ['default'],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  const lines = stdout.split('\n')
+  const headerIdx = lines.findIndex(l => /^\s*name\s+hz\s+min/.test(l))
+  expect(headerIdx, `inline table header not found in stdout:\n${stdout}`).toBeGreaterThanOrEqual(0)
+  // The header columns are: name, hz, min, max, mean, p75, p99, p995, p999, rme, samples.
+  // Find the row for "stored" and inspect its last two cells.
+  const storedRow = lines.slice(headerIdx + 1, headerIdx + 3).find(l => /^\s*stored\b/.test(l))!
+  expect(storedRow, `stored row not found in:\n${stdout}`).toBeDefined()
+  const cells = storedRow.trim().replace(/\s+(?:fastest|slowest)\s*$/, '').split(/\s+/)
+  // rme + samples must be real values, not the `-` placeholder
+  expect(cells[cells.length - 2]).toBe('±1.23%')
+  expect(cells[cells.length - 1]).toBe('7')
+})
+
 test('`benchmark.include` overrides the default `*.bench.ts` pattern', async () => {
   const tasks: TestBenchmarkTask[] = []
   const { stderr } = await runInlineTests(
