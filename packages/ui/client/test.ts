@@ -1,16 +1,13 @@
-import type { ComponentRenderOptions, RenderResult } from 'vitest-browser-vue'
 import { vTooltip } from 'floating-vue'
+import { vi } from 'vitest'
 import {
-  render as _render,
+  render as renderOriginal,
 } from 'vitest-browser-vue'
 
 export { page } from 'vitest/browser'
 
-export function render<C>(
-  component: C,
-  options?: ComponentRenderOptions<C, any>,
-): PromiseLike<RenderResult<any>> {
-  return _render(component, {
+export const render: typeof renderOriginal = vi.defineHelper((component, options) => {
+  return renderOriginal(component, {
     ...options,
     global: {
       directives: {
@@ -18,4 +15,4 @@ export function render<C>(
       },
     },
   })
-}
+})
