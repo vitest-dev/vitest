@@ -448,7 +448,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       return {
         isExhausted: behaviors.length !== 0 && pendingBehaviors.length === 0,
         pendingBehaviors: pendingBehaviors
-          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})${behavior.actions.length === 0 ? '  ⚠ no actions' : `\n${formatActions(behavior.actions)}`}`)
+          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})${behavior.actions.length === 0 ? '  → no actions' : `\n${formatActions(behavior.actions)}`}`)
           .join('\n\n'),
       }
     },
@@ -479,7 +479,7 @@ function formatActions(actions: Behavior<unknown[], unknown>['actions']): string
     const left = `  ${symbol} ${method}(${stringify(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
     const unreachable = !isExhausted(action)
       && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
-    const remaining = getRemainingLabel(action) + (unreachable ? '  ⚠ unreachable' : '')
+    const remaining = getRemainingLabel(action) + (unreachable ? '  → unreachable' : '')
 
     return { left, remaining }
   })
