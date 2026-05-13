@@ -468,7 +468,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
   await page.route('https://example.com/**', (route) => {
-    route.fulfill({
+    return route.fulfill({
       status: 200,
       contentType: 'text/html',
       body: '<html><body><h1>Faked Cross Origin Site</h1></body></html>',

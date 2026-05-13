@@ -1,7 +1,7 @@
 import path, { resolve } from "node:path";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
-import { BrowserCommand } from "vitest/node";
+import type { BrowserCommand } from "vitest/node";
 import fs from "node:fs"
 
 const rmCommand: BrowserCommand<[filepath: string]> = async (ctx, filePath) => {
