@@ -33,4 +33,13 @@ export interface BenchmarkUserOptions {
    * @default false
    */
   suppressExportGetterWarnings?: boolean
+
+  /**
+   * The name of the parent project that this benchmark project was cloned
+   * from. Populated automatically when Vitest creates the dedicated benchmark
+   * project for a parent project. Used by the runtime as the value for the
+   * `${projectName}` placeholder in `writeResult` / `bench.from()` paths.
+   * @internal
+   */
+  projectName?: string
 }

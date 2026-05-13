@@ -132,7 +132,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     })
   }
 
-  const resolveTemplate = (template: string) => substitutePath(template, test.file.projectName)
+  const resolveTemplate = (template: string) => substitutePath(template, config.benchmark.projectName)
 
   const resolveFromSource = async (source: string | BenchFromSource): Promise<BaselineData> => {
     if (typeof source === 'function') {

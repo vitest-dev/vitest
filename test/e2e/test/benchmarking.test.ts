@@ -515,10 +515,11 @@ test('`writeResult` substitutes `${projectName}` so multi-project runs do not co
     },
   )
   expect(stderr).toBe('')
-  // Project names get a "(bench)" suffix because the bench project is cloned
-  // from the parent project — the substitution preserves the cloned name as-is
-  expect(typeof JSON.parse(fs.readFile('out/x.one (bench).json')).latency.mean).toBe('number')
-  expect(typeof JSON.parse(fs.readFile('out/x.two (bench).json')).latency.mean).toBe('number')
+  // ${projectName} substitutes to the parent project name (not the cloned
+  // bench project name) so users never see the internal " (bench)" suffix
+  // bleed into their paths.
+  expect(typeof JSON.parse(fs.readFile('out/x.one.json')).latency.mean).toBe('number')
+  expect(typeof JSON.parse(fs.readFile('out/x.two.json')).latency.mean).toBe('number')
 })
 
 test('`writeResult` does NOT write a file when the benchmark throws', async () => {

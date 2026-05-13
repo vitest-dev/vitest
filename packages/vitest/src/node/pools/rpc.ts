@@ -125,7 +125,7 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       return vitest._testRun.recordBenchmark(testId, benchmark)
     },
     async readBenchmarkResult(relativePath) {
-      return vitest.benchmark.readResult(relativePath)
+      return vitest.benchmark.readResult(vitest.benchmark.resolve(relativePath))
     },
     async writeBenchmarkResult(relativePath, data) {
       return vitest.benchmark.writeResult(relativePath, data)

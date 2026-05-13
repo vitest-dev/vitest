@@ -245,8 +245,12 @@ export async function resolveDefaultProjects(
       maxConcurrency: 1,
       testTimeout: project.config.testTimeout < 60_000 ? 60_000 : project.config.testTimeout,
       hookTimeout: project.config.hookTimeout < 120_000 ? 120_000 : project.config.hookTimeout,
-      // Spread because we disable it in the original project
-      benchmark: { ...benchmark },
+      // Spread because we disable it in the original project. `projectName`
+      // carries the parent's name so the runtime can substitute it into
+      // `${projectName}` placeholders inside `writeResult` / `bench.from()`
+      // paths — `project.config.name` already excludes the ` (bench)` suffix
+      // we add to the cloned project's own name above.
+      benchmark: { ...benchmark, projectName: project.config.name ?? '' },
       sequence: {
         ...project.config.sequence,
         concurrent: false,

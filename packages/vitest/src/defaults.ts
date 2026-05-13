@@ -21,6 +21,9 @@ export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
   includeSource: [],
   retainSamples: false,
   suppressExportGetterWarnings: false,
+  // Populated automatically when Vitest clones the parent project; the default
+  // here applies to the (unused) raw config that's never run as a benchmark.
+  projectName: '',
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
