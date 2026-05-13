@@ -454,32 +454,6 @@ describe('vi.when()', () => {
     })
   })
 
-  describe('edge cases', () => {
-    test('is not exhausted when no behaviors are registered', () => {
-      const spy = vi.fn<Fn>()
-
-      const w = vi.when(spy)
-
-      expect(w).not.toHaveBeenExhausted()
-    })
-
-    test('throws when not used with a mock', () => {
-      expect(() => {
-        vi.when(() => {})
-      }).toThrowErrorMatchingInlineSnapshot(`[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`)
-    })
-
-    test('throws error when `times` option is not greater than 0', () => {
-      expect(() => {
-        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: 0 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
-
-      expect(() => {
-        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: -1 })
-      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
-    })
-  })
-
   describe('state snapshots', () => {
     test('multiple `calledWith` stacks', () => {
       const spy = vi.fn<Fn>()
@@ -615,6 +589,55 @@ describe('vi.when()', () => {
         "calledWith(StringContaining "--", Any<Number>)
           ✗ thenReturn(0)  never called"
       `)
+    })
+  })
+
+  describe('edge cases', () => {
+    test('is not exhausted when no behaviors are registered', () => {
+      const spy = vi.fn<Fn>()
+
+      const w = vi.when(spy)
+
+      const d = w._getDiagnostics()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toBe('')
+    })
+
+    test('is not exhausted when a behavior with no actions is registered', () => {
+      const spy = vi.fn<Fn>()
+
+      const args: FnData['args'] = ['a', 0]
+
+      const w = vi.when(spy).calledWith(...args)
+
+      let d = w._getDiagnostics()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  ⚠ no actions"`)
+
+      spy(...args)
+
+      d = w._getDiagnostics()
+
+      expect(d.isExhausted).toBe(false)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  ⚠ no actions"`)
+    })
+
+    test('throws when not used with a mock', () => {
+      expect(() => {
+        vi.when(() => {})
+      }).toThrowErrorMatchingInlineSnapshot(`[TypeError: vi.when: the argument must be a mock function created with \`vi.fn()\` or \`vi.spyOn()\`]`)
+    })
+
+    test('throws error when `times` option is not greater than 0', () => {
+      expect(() => {
+        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: 0 })
+      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
+
+      expect(() => {
+        vi.when(vi.fn()).calledWith(0).thenReturn(0, { times: -1 })
+      }).toThrowErrorMatchingInlineSnapshot(`[RangeError: vi.when: \`times\` option must be greater than 0]`)
     })
   })
 })

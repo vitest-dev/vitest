@@ -439,7 +439,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
     _getDiagnostics: () => {
       const pendingBehaviors = behaviors
         .filter(behavior =>
-          behavior.actions.some(action =>
+          behavior.actions.length === 0 || behavior.actions.some(action =>
             /* times-behaviors reached 0 */ action.remaining !== 0
             /* infinite behaviors called at least once */ && !(action.remaining === Number.POSITIVE_INFINITY && action.called),
           ),
@@ -448,7 +448,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
       return {
         isExhausted: behaviors.length !== 0 && pendingBehaviors.length === 0,
         pendingBehaviors: pendingBehaviors
-          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})\n${formatActions(behavior.actions)}`)
+          .map(behavior => `calledWith(${behavior.arguments.map(argument => stringify(argument)).join(', ')})${behavior.actions.length === 0 ? '  ⚠ no actions' : `\n${formatActions(behavior.actions)}`}`)
           .join('\n\n'),
       }
     },
