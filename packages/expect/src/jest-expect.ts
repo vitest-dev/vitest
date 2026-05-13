@@ -1061,7 +1061,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toHaveBeenExhausted', function () {
     const when = this._obj
 
-    const whenState = when['~getDiagnostics']()
+    const whenState = when._getDiagnostics()
 
     this.assert(
       whenState.isExhausted,
