@@ -11,9 +11,9 @@ test('annotation', async ({ annotate, task }) => {
   await annotate('annotation-body', {
     body: 'test-body-content',
     bodyEncoding: 'utf-8',
+    contentType: 'text/plain',
   })
   await annotate('annotation-path', {
-    // TODO: relative to test context file by default?
-    path: `${task.file.filepath}/../resources/test.txt`,
+    path: `./resources/test.txt`,
   })
 })
