@@ -550,9 +550,8 @@ export class TestProject {
       this.vitest,
       {
         ...options,
+        // root-only configs
         coverage: this.vitest.config.coverage,
-        // TODO: doc
-        // root-only attachmentsDir
         attachmentsDir: this.vitest.config.attachmentsDir,
       },
       server.config,
