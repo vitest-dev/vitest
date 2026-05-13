@@ -44,7 +44,7 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 - **Type:** `boolean`
 - **Default:** `false`
 
-Include the `samples` array of per-iteration timings on every benchmark result. Off by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
+Include the `samples` array of per-iteration timings on every benchmark result. Disabled by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
 
 ## benchmark.updateBaselines
 

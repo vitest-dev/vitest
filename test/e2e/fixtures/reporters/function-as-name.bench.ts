@@ -10,7 +10,7 @@ const options = {
 function foo() {}
 class Bar {}
 
-test('benches', async ({ bench, annotate }) => {
+test('benches', async ({ bench }) => {
   await bench.compare(
     bench(foo, () => {}),
     bench(Bar, () => {}),

@@ -56,7 +56,7 @@ With this config, `vitest` runs your regular tests first, then runs the benchmar
 
 ### `vitest bench`
 
-The `bench` subcommand runs benchmarks only and skips regular tests:
+The `bench` subcommand runs only benchmarks only and skips regular tests:
 
 ```bash
 vitest bench
@@ -428,7 +428,7 @@ This only affects Node.js mode. Browser mode uses native ESM imports and does no
 
 #### Browser
 
-- **Timer resolution**: Browsers may reduce `performance.now()` precision (e.g., to 100μs or even 1ms) as a Spectre mitigation. This makes very fast operations difficult to measure accurately, so increase iterations to compensate:
+- **Timer resolution**: Browsers may reduce `performance.now()` precision (e.g., to 100μs or even 1ms) as a security mechanism. This makes very fast operations difficult to measure accurately, so increase iterations to compensate:
 
   ```ts
   test('fast operations', async ({ bench }) => {
