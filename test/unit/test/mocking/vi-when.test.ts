@@ -530,7 +530,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97)  never called  ⚠ unreachable
+          ✗ thenReturn(97)  never called  → unreachable
           ✗ thenReturn(98)  never called"
       `)
 
@@ -541,7 +541,7 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`
         "calledWith("a", 0)
-          ✗ thenReturn(97)  never called  ⚠ unreachable
+          ✗ thenReturn(97)  never called  → unreachable
           ✓ thenReturn(98)  exhausted"
       `)
     })
@@ -614,14 +614,14 @@ describe('vi.when()', () => {
       let d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
-      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  ⚠ no actions"`)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  → no actions"`)
 
       spy(...args)
 
       d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
-      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  ⚠ no actions"`)
+      expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  → no actions"`)
     })
 
     test('throws when not used with a mock', () => {
