@@ -1,5 +1,5 @@
-import type { ModuleGraphData, RunnerTestFile, SerializedRootConfig } from 'vitest'
-import type { HTMLOptions, Reporter, Vitest } from 'vitest/node'
+import type { ModuleGraphData, RunnerTestFile, SerializedError, SerializedRootConfig } from 'vitest'
+import type { HTMLOptions, Reporter, TestModule, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -27,7 +27,6 @@ function getOutputFile(config: PotentialConfig | undefined) {
 }
 
 interface HTMLReportData {
-  paths: string[]
   files: RunnerTestFile[]
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
@@ -64,12 +63,14 @@ export default class HTMLReporter implements Reporter {
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
-  async onTestRunEnd(): Promise<void> {
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): Promise<void> {
     const result: HTMLReportData = {
-      paths: this.ctx.state.getPaths(),
-      files: this.ctx.state.getFiles(),
+      files: testModules.map(m => m.task),
       config: this.ctx.serializedRootConfig,
-      unhandledErrors: this.ctx.state.getUnhandledErrors(),
+      unhandledErrors: [...unhandledErrors],
       moduleGraph: {},
       sources: {},
     }

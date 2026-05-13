@@ -59,10 +59,6 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
       })
       handlers.onSpecsCollected?.(specs, startTime)
     },
-    onPathsCollected(paths) {
-      ctx.state.collectPaths(paths)
-      handlers.onPathsCollected?.(paths)
-    },
     onCollected(files) {
       ctx.state.collectFiles(files)
       handlers.onCollected?.(files)

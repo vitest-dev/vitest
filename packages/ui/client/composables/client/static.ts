@@ -13,7 +13,6 @@ import { reactive } from 'vue'
 import { StateManager } from './state'
 
 interface HTMLReportMetadata {
-  paths: string[]
   files: RunnerTestFile[]
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
@@ -24,6 +23,11 @@ interface HTMLReportMetadata {
 
 const noop: any = () => {}
 const asyncNoop: any = () => Promise.resolve()
+
+type StaticWebSocketHandlers = Omit<
+  WebSocketHandlers,
+  'getResolvedProjectLabels' | 'getPaths'
+>
 
 export function createStaticClient(): VitestClient {
   const ctx = reactive({
@@ -41,9 +45,6 @@ export function createStaticClient(): VitestClient {
   const rpc = {
     getFiles: () => {
       return metadata.files
-    },
-    getPaths: () => {
-      return metadata.paths
     },
     getConfig: () => {
       return metadata.config
@@ -78,7 +79,7 @@ export function createStaticClient(): VitestClient {
     saveTestFile: asyncNoop,
     getProvidedContext: () => ({}),
     getTestFiles: asyncNoop,
-  } as Omit<WebSocketHandlers, 'getResolvedProjectLabels'>
+  } as StaticWebSocketHandlers
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
