@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 6, fail: 0 })
+    await assertTestCounts(page, { pass: 11, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 6, fail: 0 })
+    await assertTestCounts(page, { pass: 11, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
