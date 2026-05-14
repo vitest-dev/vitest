@@ -12,7 +12,7 @@ import { parse } from 'flatted'
 import { reactive } from 'vue'
 import { StateManager } from './state'
 
-interface HTMLReportMetadata {
+export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>

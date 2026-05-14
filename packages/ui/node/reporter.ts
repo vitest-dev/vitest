@@ -1,6 +1,7 @@
-import type { ModuleGraphData, RunnerTestFile, SerializedError, SerializedRootConfig } from 'vitest'
+import type { SerializedError } from 'vitest'
 import type { HTMLOptions, Reporter, TestModule, Vitest } from 'vitest/node'
-import { existsSync, promises as fs } from 'node:fs'
+import type { HTMLReportMetadata } from '../client/composables/client/static'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
@@ -24,15 +25,6 @@ function getOutputFile(config: PotentialConfig | undefined) {
   }
 
   return config.outputFile.html
-}
-
-interface HTMLReportData {
-  files: RunnerTestFile[]
-  config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
-  unhandledErrors: unknown[]
-  // filename -> source
-  sources: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -67,37 +59,50 @@ export default class HTMLReporter implements Reporter {
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
   ): Promise<void> {
-    const result: HTMLReportData = {
-      files: testModules.map(m => m.task),
+    const result: HTMLReportMetadata = {
+      files: [],
       config: this.ctx.serializedRootConfig,
       unhandledErrors: [...unhandledErrors],
       moduleGraph: {},
+      // TODO: new structure
       sources: {},
     }
+
+    // dedupe based on project relative paths since
+    // they can have different absolute paths for different test runs
+    // when merging with platform blob labels and shards.
+    const testModuleCodes: { [projectName: string]: { [relativeModuleId: string]: string } } = {}
     const promises: Promise<void>[] = []
 
-    promises.push(...result.files.map(async (file) => {
-      const projectName = file.projectName || ''
-      const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-        this.ctx,
-        projectName,
-        file.filepath,
-        browser,
-      )
-      if (!result.sources[file.filepath]) {
+    for (const testModule of testModules) {
+      result.files.push(testModule.task)
+
+      const project = testModule.project
+      const projectName = project.name
+
+      testModuleCodes[projectName] ??= {}
+      if (!testModuleCodes[projectName][testModule.relativeModuleId]) {
         try {
-          result.sources[file.filepath] = await fs.readFile(file.filepath, {
-            encoding: 'utf-8',
-          })
+          // TODO: also dedupe the source content by string index encoding
+          // to cover the case when the same test file is included in multiple projects
+          testModuleCodes[projectName][testModule.relativeModuleId] = readFileSync(
+            testModule.moduleId,
+            'utf-8',
+          )
         }
-        catch {
-          // just ignore
-        }
+        catch {}
       }
-    }))
+
+      promises.push((async () => {
+        result.moduleGraph[projectName] ??= {}
+        result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
+          this.ctx,
+          projectName,
+          testModule.moduleId,
+          project.config.browser.enabled,
+        )
+      })())
+    }
 
     await Promise.all(promises)
     await this.writeReport(stringify(result))
