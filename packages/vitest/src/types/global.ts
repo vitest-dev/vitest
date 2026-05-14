@@ -127,7 +127,11 @@ declare module 'vitest' {
     ) => void
 
     /**
-     * Ensures a `vi.when` chain has been exhausted
+     * Ensures a `vi.when` chain has been exhausted.
+     *
+     * A chain is exhausted when at least one `calledWith` with an associated action (`then*`) has been registered
+     * and every registered behavior has been fully consumed. A chain with no registered
+     * behaviors, or with `calledWith` entries that have no associated `then*` actions, is never considered exhausted.
      *
      * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
      *
