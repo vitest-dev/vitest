@@ -1481,6 +1481,10 @@ test('all behaviors were consumed', () => {
 })
 ```
 
+::: warning
+A `When` chain with no registered behaviors is never considered exhausted. `toHaveBeenExhausted` only passes when at least one `calledWith` with an associated action (`then*`) has been registered and every registered behavior has been fully consumed.
+:::
+
 ## called <Version>4.1.0</Version> {#called}
 
 - **Type:** `Assertion` (property, not a method)
