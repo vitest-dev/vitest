@@ -1058,18 +1058,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     })
   })
 
-  def('toHaveBeenExhausted', function () {
-    const when = this._obj
-
-    const whenState = when._getDiagnostics()
-
-    this.assert(
-      whenState.isExhausted,
-      `expected all behaviors to have been exhausted, but some remain:\n\n${whenState.pendingBehaviors}`,
-      'expected at least one behavior to remain unexhausted, but all were consumed',
-    )
-  })
-
   // @ts-expect-error @internal
   def('withContext', function (this: any, context: Record<string, any>) {
     for (const key in context) {
