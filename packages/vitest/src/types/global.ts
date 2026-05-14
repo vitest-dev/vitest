@@ -92,6 +92,22 @@ declare module 'vitest' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
+
+    /**
+     * Ensures a `vi.when` chain has been exhausted
+     *
+     * @see {@link https://vitest.dev/api/expect#tohavebeenexhausted}
+     *
+     * @example
+     * const w = vi.when(spy).calledWith('hello').thenReturnOnce('HELLO')
+     *
+     * expect(w).not.toHaveBeenExhausted()
+     *
+     * expect(spy('hello')).toBe('HELLO')
+     *
+     * expect(w).toHaveBeenExhausted()
+     */
+    toHaveBeenExhausted: () => void
   }
 }
 
