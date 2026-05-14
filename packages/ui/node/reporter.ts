@@ -59,56 +59,13 @@ export default class HTMLReporter implements Reporter {
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
   ): Promise<void> {
-    const result: HTMLReportMetadata = {
-      files: [],
-      config: this.ctx.serializedRootConfig,
-      unhandledErrors: [...unhandledErrors],
-      moduleGraph: {},
-      // TODO: new structure
-      sources: {},
-    }
+    const result = await serializeReportMetadata(
+      this.ctx,
+      testModules,
+      unhandledErrors,
+    )
+    const report = stringify(result)
 
-    // dedupe based on project relative paths since
-    // they can have different absolute paths for different test runs
-    // when merging with platform blob labels and shards.
-    const testModuleCodes: { [projectName: string]: { [relativeModuleId: string]: string } } = {}
-    const promises: Promise<void>[] = []
-
-    for (const testModule of testModules) {
-      result.files.push(testModule.task)
-
-      const project = testModule.project
-      const projectName = project.name
-
-      testModuleCodes[projectName] ??= {}
-      if (!testModuleCodes[projectName][testModule.relativeModuleId]) {
-        try {
-          // TODO: also dedupe the source content by string index encoding
-          // to cover the case when the same test file is included in multiple projects
-          testModuleCodes[projectName][testModule.relativeModuleId] = readFileSync(
-            testModule.moduleId,
-            'utf-8',
-          )
-        }
-        catch {}
-      }
-
-      promises.push((async () => {
-        result.moduleGraph[projectName] ??= {}
-        result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
-          this.ctx,
-          projectName,
-          testModule.moduleId,
-          project.config.browser.enabled,
-        )
-      })())
-    }
-
-    await Promise.all(promises)
-    await this.writeReport(stringify(result))
-  }
-
-  async writeReport(report: string): Promise<void> {
     const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
 
     const promiseGzip = promisify(gzip)
@@ -174,4 +131,60 @@ export default class HTMLReporter implements Reporter {
       await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
     }
   }
+}
+
+async function serializeReportMetadata(
+  ctx: Vitest,
+  testModules: ReadonlyArray<TestModule>,
+  unhandledErrors: ReadonlyArray<SerializedError>,
+) {
+  const result: HTMLReportMetadata = {
+    files: [],
+    config: ctx.serializedRootConfig,
+    unhandledErrors: [...unhandledErrors],
+    moduleGraph: {},
+    // TODO: new structure
+    sources: {},
+  }
+
+  // dedupe based on project relative paths since
+  // they can have different absolute paths for different test runs
+  // when merging with platform blob labels and shards.
+  const testModuleCodes: { [projectName: string]: { [relativeModuleId: string]: string } } = {}
+  const promises: Promise<void>[] = []
+
+  for (const testModule of testModules) {
+    result.files.push(testModule.task)
+
+    const project = testModule.project
+    const projectName = project.name
+
+    testModuleCodes[projectName] ??= {}
+    if (!testModuleCodes[projectName][testModule.relativeModuleId]) {
+      try {
+        // TODO: also dedupe the source content by string index encoding
+        // to cover the case when the same test file is included in multiple projects
+        testModuleCodes[projectName][testModule.relativeModuleId] = readFileSync(
+          testModule.moduleId,
+          'utf-8',
+        )
+      }
+      catch {}
+    }
+
+    // TODO: https://github.com/vitest-dev/vitest/issues/9763
+    promises.push((async () => {
+      result.moduleGraph[projectName] ??= {}
+      result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
+        ctx,
+        projectName,
+        testModule.moduleId,
+        project.config.browser.enabled,
+      )
+    })())
+  }
+
+  await Promise.all(promises)
+
+  return result
 }

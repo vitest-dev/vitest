@@ -19,7 +19,6 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
-  waitForConnection: () => Promise<void>
   reconnect: () => Promise<void>
 }
 
@@ -38,7 +37,6 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   const ctx = reactive({
     ws: new WebSocketConstructor(url),
     state: new StateManager(),
-    waitForConnection,
     reconnect,
   }, 'state') as VitestClient
 
@@ -143,10 +141,6 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   }
 
   registerWS()
-
-  function waitForConnection() {
-    return openPromise
-  }
 
   return ctx
 }
