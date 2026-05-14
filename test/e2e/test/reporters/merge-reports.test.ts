@@ -653,10 +653,17 @@ test("macos only", () => {})
       },
     }
   `)
+  const blobDir = resolve(root, '.vitest/blob')
   const result = await runVitest({
     root,
-    mergeReports: resolve(root, '.vitest/blob'),
+    mergeReports: blobDir,
   })
+  expect(readdirSync(blobDir)).toMatchInlineSnapshot(`
+    [
+      "blob-linux.json",
+      "blob-macos.json",
+    ]
+  `)
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
     "✓  linux  first.test.ts > always good <time>
      ✓  linux  first.test.ts > works on linux <time>
