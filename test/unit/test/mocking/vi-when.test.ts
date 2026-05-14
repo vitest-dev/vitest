@@ -482,6 +482,18 @@ describe('vi.when()', () => {
           ✗ thenReturn(99)  never called"
       `)
 
+      expect(w).not.toHaveBeenExhausted()
+      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
+        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+
+          calledWith("a", 0)
+            ✗ thenReturn(97)                never called
+            ✗ thenReturn(97, { times: 1 })  1 remaining (out of 1)
+
+          calledWith("b", 1)
+            ✗ thenReturn(99)  never called]
+      `)
+
       spy(...entries[0].args)
 
       d = w._getDiagnostics()
@@ -496,6 +508,18 @@ describe('vi.when()', () => {
           ✗ thenReturn(99)  never called"
       `)
 
+      expect(w).not.toHaveBeenExhausted()
+      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
+        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+
+          calledWith("a", 0)
+            ✗ thenReturn(97)                never called
+            ✓ thenReturn(97, { times: 1 })  exhausted (1 of 1)
+
+          calledWith("b", 1)
+            ✗ thenReturn(99)  never called]
+      `)
+
       spy(...entries[0].args)
 
       d = w._getDiagnostics()
@@ -506,12 +530,25 @@ describe('vi.when()', () => {
           ✗ thenReturn(99)  never called"
       `)
 
+      expect(w).not.toHaveBeenExhausted()
+      expect(() => expect(w).toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
+        [AssertionError: expected all behaviors to have been exhausted, but some remain:
+
+          calledWith("b", 1)
+            ✗ thenReturn(99)  never called]
+      `)
+
       spy(...entries[1].args)
 
       d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(true)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`""`)
+
+      expect(() => expect(w).not.toHaveBeenExhausted()).toThrowErrorMatchingInlineSnapshot(`
+        [AssertionError: expected at least one behavior to remain un-exhausted, but all were]
+      `)
+      expect(w).toHaveBeenExhausted()
     })
 
     test('points out unreachable actions', () => {
@@ -602,6 +639,8 @@ describe('vi.when()', () => {
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toBe('')
+
+      expect(w).not.toHaveBeenExhausted()
     })
 
     test('is not exhausted when a behavior with no actions is registered', () => {
@@ -616,12 +655,16 @@ describe('vi.when()', () => {
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  → no actions"`)
 
+      expect(w).not.toHaveBeenExhausted()
+
       spy(...args)
 
       d = w._getDiagnostics()
 
       expect(d.isExhausted).toBe(false)
       expect(d.pendingBehaviors).toMatchInlineSnapshot(`"calledWith("a", 0)  → no actions"`)
+
+      expect(w).not.toHaveBeenExhausted()
     })
 
     test('throws when not used with a mock', () => {
