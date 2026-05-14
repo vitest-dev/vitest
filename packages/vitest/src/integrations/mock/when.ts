@@ -444,10 +444,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
     _getDiagnostics: () => {
       const pendingBehaviors = behaviors
         .filter(behavior =>
-          behavior.actions.length === 0 || behavior.actions.some(action =>
-            /* times-behaviors reached 0 */ action.remaining !== 0
-            /* infinite behaviors called at least once */ && !(action.remaining === Number.POSITIVE_INFINITY && action.called),
-          ),
+          behavior.actions.length === 0 || behavior.actions.some(action => !hasBeenConsumed(action)),
         )
 
       return {
@@ -484,7 +481,7 @@ function formatActions(actions: Behavior<unknown[], unknown>['actions']): string
     const method = getMethodName(action.type)
     const symbol = getSymbol(action)
     const left = `  ${symbol} ${method}(${stringify(action.value)}${action.times === Number.POSITIVE_INFINITY ? '' : `, { times: ${action.times} }`})`
-    const unreachable = !isExhausted(action)
+    const unreachable = !hasBeenConsumed(action)
       && actions.slice(index + 1).some(later => later.times === Number.POSITIVE_INFINITY)
     const remaining = getRemainingLabel(action) + (unreachable ? '  → unreachable action' : '')
 
@@ -520,12 +517,13 @@ function getMethodName(type: BehaviorType): string {
   }
 }
 
-function isExhausted(action: BehaviorAction<unknown>): boolean {
-  return action.remaining === 0 || (action.remaining === Number.POSITIVE_INFINITY && action.called)
+function hasBeenConsumed(action: BehaviorAction<unknown>): boolean {
+  return action.remaining === 0 /* times-actions reached 0 */
+    || (action.remaining === Number.POSITIVE_INFINITY && action.called) /* infinite actions called at least once */
 }
 
 function getRemainingLabel(action: BehaviorAction<unknown>): string {
-  if (isExhausted(action)) {
+  if (hasBeenConsumed(action)) {
     return action.remaining === Number.POSITIVE_INFINITY
       ? 'exhausted'
       : `exhausted (${action.times} of ${action.times})`
@@ -537,7 +535,7 @@ function getRemainingLabel(action: BehaviorAction<unknown>): string {
 }
 
 function getSymbol(action: BehaviorAction<unknown>): string {
-  if (isExhausted(action)) {
+  if (hasBeenConsumed(action)) {
     return '✓'
   }
 
