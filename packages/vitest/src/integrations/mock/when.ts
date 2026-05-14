@@ -23,7 +23,12 @@ const whenSymbol = Symbol.for('$$vitest:when')
  * expect(isWhenChain(spy)).toBe(false)
  */
 export function isWhenChain(input: object): input is When<Procedure> {
-  return Reflect.has(input, whenSymbol)
+  try {
+    return Reflect.has(input, whenSymbol)
+  }
+  catch {
+    return false
+  }
 }
 
 interface BehaviorAction<Value> {
@@ -371,7 +376,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
   }
 
   // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node >= 24
-  const output: When<Fn> = {
+  const output: When<Fn> = markWhenChain({
     // @todo strictlyCalledWith for strict equality?
     calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
@@ -386,7 +391,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
         })
       }
 
-      const calledWithInstance: CalledWithInstance<ScopedReturn, Fn> = ({
+      const calledWithInstance: CalledWithInstance<ScopedReturn, Fn> = markWhenChain({
         ...output,
         thenThrow: (value, options) => {
           validateOptions(options)
@@ -452,7 +457,7 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
           .join('\n\n'),
       }
     },
-  } satisfies Omit<When<Fn>, symbol>
+  } satisfies Omit<When<Fn>, symbol>)
 
   if (Symbol.dispose) {
     output[Symbol.dispose] = () => {
@@ -463,13 +468,15 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
     }
   }
 
-  Reflect.defineProperty(output, whenSymbol, {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  })
-
   return output
+}
+
+const whenChainMarkerOptions: PropertyDescriptor = {}
+
+function markWhenChain<T extends object>(input: T): T {
+  Reflect.defineProperty(input, whenSymbol, whenChainMarkerOptions)
+
+  return input
 }
 
 function formatActions(actions: Behavior<unknown[], unknown>['actions']): string {

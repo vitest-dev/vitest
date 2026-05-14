@@ -645,6 +645,8 @@ describe('vi.when()', () => {
 describe('vi.isWhenChain()', () => {
   test('returns true on objects returned by `vi.when()`', () => {
     expect(vi.isWhenChain(vi.when(vi.fn()))).toBe(true)
+    expect(vi.isWhenChain(vi.when(vi.fn()).calledWith())).toBe(true)
+    expect(vi.isWhenChain(vi.when(vi.fn()).calledWith().thenReturn(undefined))).toBe(true)
   })
 
   test('returns false on other objects', () => {
