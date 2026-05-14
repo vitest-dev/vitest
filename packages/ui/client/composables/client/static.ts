@@ -14,11 +14,26 @@ export interface HTMLReportMetadata {
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
-  // TODO: rework structure to cover platform blob label
-  sources: { [filepath: string]: string }
+  testModules: {
+    projectName: string
+    moduleId: string
+    relativeModuleId: string
+  }[]
+  sourceCode: {
+    codeTable: string[]
+    testModules: { [projectName: string]: { [relativeModuleId: string]: number } }
+  }
 }
 
 function deserializeReportMetadata(metadata: HTMLReportMetadata) {
+  const sourceCodes: { [moduleId: string]: string } = {}
+  for (const testModule of metadata.testModules) {
+    const codeIndex = metadata.sourceCode.testModules[testModule.projectName]?.[testModule.relativeModuleId]
+    if (codeIndex != null) {
+      sourceCodes[testModule.moduleId] = metadata.sourceCode.codeTable[codeIndex]
+    }
+  }
+
   const rpc: VitestClientRpc = {
     getFiles: async () => {
       return metadata.files
@@ -33,7 +48,7 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
       return metadata.unhandledErrors
     },
     readTestFile: async (id) => {
-      return metadata.sources[id]
+      return sourceCodes[id]
     },
     getPaths: async () => [],
     getResolvedProjectLabels: async () => [],
