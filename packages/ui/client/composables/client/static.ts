@@ -14,8 +14,8 @@ export interface HTMLReportMetadata {
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
-  // filename -> source
-  sources: Record<string, string>
+  // TODO: rework structure to cover platform blob label
+  sources: { [filepath: string]: string }
 }
 
 function deserializeReportMetadata(metadata: HTMLReportMetadata) {
