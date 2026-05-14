@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { InlineConfig, PreviewServer } from 'vite'
 import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
@@ -72,6 +72,10 @@ export async function openExplorerFileItem(page: Page, name: string) {
   const item = getExplorerItem(page, name)
   await item.hover()
   await item.getByTestId('btn-open-details').click()
+}
+
+export function getAnnotation(locator: Page | Locator, message: string) {
+  return locator.getByRole('note').filter({ hasText: message })
 }
 
 export async function assertDownloadAttachment(

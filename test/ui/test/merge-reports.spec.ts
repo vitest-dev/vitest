@@ -1,8 +1,8 @@
 import type { PreviewServer } from 'vite'
-import { mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs'
+import { readdirSync, renameSync, rmSync } from 'node:fs'
 import path from 'node:path'
-import { test } from '@playwright/test'
-import { startHtmlReportPreview, startVitestSimple } from './helper'
+import { expect, test } from '@playwright/test'
+import { getAnnotation, getExplorerItem, startHtmlReportPreview, startVitestSimple } from './helper'
 
 test.describe('html reporter', () => {
   let previewServer: PreviewServer
@@ -25,13 +25,14 @@ test.describe('html reporter', () => {
     await startVitestSimple({
       root: linuxRoot,
       reporters: [['blob', { label: 'linux' }]],
+      env: { TEST_LABEL: 'linux' },
     })
     await startVitestSimple({
       root: macosRoot,
       reporters: [['blob', { label: 'macos' }]],
+      env: { TEST_LABEL: 'macos' },
     })
 
-    mkdirSync(linuxBlobDir, { recursive: true })
     for (const filename of readdirSync(macosBlobDir)) {
       renameSync(path.join(macosBlobDir, filename), path.join(linuxBlobDir, filename))
     }
@@ -59,16 +60,21 @@ test.describe('html reporter', () => {
   test('code from different root is available', async ({ page }) => {
     await page.goto(baseURL)
 
-    // const macosFile = page
-    //   .getByTestId('explorer-item')
-    //   .filter({ hasText: 'macos' })
-    //   .filter({ hasText: 'basic.test.ts' })
-    //   .first()
+    const item1 = getExplorerItem(page, 'basic.test.ts').filter({ hasText: 'linux' })
+    const item2 = getExplorerItem(page, 'basic.test.ts').filter({ hasText: 'macos' })
+    const editorButton = page.getByTestId('btn-code')
+    const editor = page.getByTestId('editor')
 
-    // await macosFile.hover()
-    // await macosFile.getByTestId('btn-open-details').click()
-    // await page.getByTestId('btn-code').click()
+    await item1.hover()
+    await item1.getByTestId('btn-open-details').click()
+    await editorButton.click()
+    await expect(editor).toContainText(`test('ok'`)
+    await expect(getAnnotation(editor, 'test-linux')).toBeVisible()
 
-    // await expect(page.getByTestId('editor')).toContainText(sourceSentinel)
+    await item2.hover()
+    await item2.getByTestId('btn-open-details').click()
+    await editorButton.click()
+    await expect(editor).toContainText(`test('ok'`)
+    await expect(getAnnotation(editor, 'test-macos')).toBeVisible()
   })
 })

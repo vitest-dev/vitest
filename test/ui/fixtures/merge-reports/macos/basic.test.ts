@@ -1,3 +1,5 @@
 import { test } from 'vitest'
 
-test('ok', () => {})
+test('ok', async ({ annotate }) => {
+  await annotate(`test-${process.env.TEST_LABEL ?? "unknown"}`)
+})
