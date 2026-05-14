@@ -55,7 +55,7 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
-    /** @internal merge-reports uses the original task id from the test run */
+    // merge-reports forces the original task id from the test run
     taskIdOverride?: string,
   ) {
     const projectName = project.config.name
