@@ -23,9 +23,9 @@ export interface VitestClient {
   ws: WebSocket
   state: StateManager
   rpc: VitestClientRpc
-  reconnect: () => Promise<void>
   // TODO: unused
   waitForConnection: () => Promise<void>
+  reconnect: () => Promise<void>
 }
 
 export function createWsClient(url: string, options: VitestClientOptions = {}): VitestClient {
