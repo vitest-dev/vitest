@@ -2,9 +2,8 @@ import type {
   ModuleGraphData,
   RunnerTestFile,
   SerializedRootConfig,
-  WebSocketHandlers,
 } from 'vitest'
-import type { VitestClient } from './ws'
+import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
@@ -20,24 +19,24 @@ export interface HTMLReportMetadata {
 }
 
 function deserializeReportMetadata(metadata: HTMLReportMetadata) {
-  const rpc: WebSocketHandlers = {
-    getFiles: () => {
+  const rpc: VitestClientRpc = {
+    getFiles: async () => {
       return metadata.files
     },
-    getConfig: () => {
+    getConfig: async () => {
       return metadata.config
     },
     getModuleGraph: async (projectName, id) => {
       return metadata.moduleGraph[projectName]?.[id]
     },
-    getUnhandledErrors: () => {
+    getUnhandledErrors: async () => {
       return metadata.unhandledErrors
     },
     readTestFile: async (id) => {
       return metadata.sources[id]
     },
-    getPaths: () => [],
-    getResolvedProjectLabels: () => [],
+    getPaths: async () => [],
+    getResolvedProjectLabels: async () => [],
     getExternalResult: async () => undefined,
     getTransformResult: async () => undefined,
     rerun: async () => {},
@@ -74,7 +73,7 @@ export function createStaticClient(): VitestClient {
     else {
       metadata = parse(strFromU8(content))
     }
-    ctx.rpc = deserializeReportMetadata(metadata) as any
+    ctx.rpc = deserializeReportMetadata(metadata)
     ctx.ws.dispatchEvent(new Event('open'))
   }
 

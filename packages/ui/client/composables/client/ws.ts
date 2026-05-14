@@ -1,4 +1,4 @@
-import type { BirpcOptions, BirpcReturn } from 'birpc'
+import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -15,10 +15,14 @@ export interface VitestClientOptions {
   WebSocketConstructor?: typeof WebSocket
 }
 
+export type VitestClientRpc = {
+  [K in keyof WebSocketHandlers]: PromisifyFn<WebSocketHandlers[K]>
+}
+
 export interface VitestClient {
   ws: WebSocket
   state: StateManager
-  rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
+  rpc: VitestClientRpc
   reconnect: () => Promise<void>
 }
 
