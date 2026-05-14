@@ -2,7 +2,7 @@ import type { RunVitestConfig } from '#test-utils'
 import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, readdirSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
@@ -652,10 +652,17 @@ test("macos only", () => {})
       },
     }
   `)
+  const blobDir = resolve(root, '.vitest/blob')
   const result = await runVitest({
     root,
-    mergeReports: resolve(root, '.vitest/blob'),
+    mergeReports: blobDir,
   })
+  expect(readdirSync(blobDir)).toMatchInlineSnapshot(`
+    [
+      "blob-linux.json",
+      "blob-macos.json",
+    ]
+  `)
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
     "✓  linux  first.test.ts > always good <time>
      ✓  linux  first.test.ts > works on linux <time>
