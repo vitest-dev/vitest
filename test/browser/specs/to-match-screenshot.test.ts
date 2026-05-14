@@ -264,3 +264,60 @@ describe('--watch', () => {
     },
   )
 })
+
+describe('artifact', () => {
+  test(
+    'exposes the original `__screenshots__` reference path on the visual-regression artifact',
+    async () => {
+      const artifacts: Array<{
+        type: string
+        originalReferencePath?: string
+      }> = []
+
+      await runInlineTests(
+        {
+          [testFilename]: testContent,
+          'utils.ts': utilsContent,
+        },
+        {
+          $cliOptions: {
+            watch: false,
+          },
+          browser: {
+            enabled: true,
+            screenshotFailures: false,
+            provider,
+            headless: true,
+            instances,
+            viewport: {
+              width: 400,
+              height: 200,
+            },
+          },
+          update: 'new',
+          reporters: [
+            'verbose',
+            {
+              onTestCaseArtifactRecord(_testCase, artifact) {
+                if (artifact.type === 'internal:toMatchScreenshot') {
+                  artifacts.push({
+                    type: artifact.type,
+                    originalReferencePath: artifact.originalReferencePath,
+                  })
+                }
+              },
+            },
+          ],
+        },
+      )
+
+      // One artifact per browser instance, all from the missing-reference outcome.
+      expect(artifacts).toHaveLength(instances.length)
+      for (const artifact of artifacts) {
+        expect(artifact.originalReferencePath).toMatch(
+          new RegExp(`__screenshots__[\\\\/]${testFilename.replace(/\./g, '\\\\.')}[\\\\/]${testName}-[\\w-]+\\.png$`),
+        )
+      }
+    },
+  )
+})
