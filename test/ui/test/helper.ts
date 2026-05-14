@@ -8,6 +8,14 @@ import { expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
+export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
+  const stdout = new Writable({ write: (_, __, callback) => callback() })
+  const stderr = new Writable({ write: (_, __, callback) => callback() })
+  const vitest = await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
+  await vitest.close()
+  return vitest
+}
+
 export async function startVitestUi(
   cliOptions: CliOptions,
   viteOverrides: InlineConfig = {},
