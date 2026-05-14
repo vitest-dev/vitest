@@ -86,7 +86,7 @@ export async function assertDownloadAttachment(
     content: string
   },
 ) {
-  const annotation = page.getByRole('note').filter({ hasText: options.name })
+  const annotation = getAnnotation(page, options.name)
   const downloadPromise = page.waitForEvent('download')
   await annotation.getByRole('link').click()
   const download = await downloadPromise
