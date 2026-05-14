@@ -7,22 +7,21 @@ export const MockPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toHaveBeenExhausted',
     wrapAssertion(utils, 'toHaveBeenExhausted', function (this) {
-      const isNot = !!utils.flag(this, 'negate')
-      const w = utils.flag(this, 'object')
+      const chain = utils.flag(this, 'object')
 
-      if (!isWhenChain(w)) {
+      if (!isWhenChain(chain)) {
         throw new TypeError(
-          `${utils.inspect(w)} is not a \`vi.when\` instance`,
+          `${utils.inspect(chain)} is not a \`vi.when\` instance`,
         )
       }
 
-      const diagnostics = w._getDiagnostics()
+      const diagnostics = chain._getDiagnostics()
 
-      if (diagnostics.isExhausted === isNot) {
-        throw new chai.AssertionError(isNot
-          ? 'expected at least one behavior to remain un-exhausted, but all were'
-          : `expected all behaviors to have been exhausted, but some remain:\n\n  ${diagnostics.pendingBehaviors.replaceAll(/\n(?!\n)/g, '\n  ')}`)
-      }
+      this.assert(
+        diagnostics.isExhausted,
+        `expected all behaviors to have been exhausted, but some remain:\n\n  ${diagnostics.pendingBehaviors.replaceAll(/\n(?!\n)/g, '\n  ')}`,
+        'expected at least one behavior to remain un-exhausted, but all were',
+      )
     }),
   )
 }
