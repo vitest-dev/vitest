@@ -45,8 +45,8 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
     ws: new WebSocketConstructor(url),
     state: new StateManager(),
     rpc: undefined!,
-    reconnect,
     waitForConnection: () => openPromise,
+    reconnect,
   }, 'state')
 
   ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
