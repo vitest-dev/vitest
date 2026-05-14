@@ -14,7 +14,7 @@ const MOVE_CURSOR_ONE_ROW_UP = `${ESC}1A`
 const SYNC_START = `${ESC}?2026h`
 const SYNC_END = `${ESC}?2026l`
 
-interface Options {
+export interface Options {
   logger: Vitest['logger']
   interval?: number
   threshold?: number

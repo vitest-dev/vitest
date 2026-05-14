@@ -1,6 +1,7 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
+import type { Options as WindowRendererOptions } from './renderers/windowedRenderer'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
@@ -14,10 +15,10 @@ interface Options {
   verbose?: boolean
 
   /** @internal */
-  interval?: ConstructorParameters<typeof WindowRenderer>[0]['interval']
+  interval?: WindowRendererOptions['interval']
 
   /** @internal */
-  threshold?: ConstructorParameters<typeof WindowRenderer>[0]['threshold']
+  threshold?: WindowRendererOptions['threshold']
 }
 
 interface Counter {
