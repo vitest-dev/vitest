@@ -24,6 +24,8 @@ export interface VitestClient {
   state: StateManager
   rpc: VitestClientRpc
   reconnect: () => Promise<void>
+  // TODO: unused
+  waitForConnection: () => Promise<void>
 }
 
 export function createWsClient(url: string, options: VitestClientOptions = {}): VitestClient {
@@ -38,11 +40,14 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   } = options
 
   let tries = reconnectTries
-  const ctx = reactive({
+  let openPromise: Promise<void>
+  const ctx = reactive<VitestClient>({
     ws: new WebSocketConstructor(url),
     state: new StateManager(),
+    rpc: undefined!,
     reconnect,
-  }, 'state') as VitestClient
+    waitForConnection: () => openPromise,
+  }, 'state')
 
   ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
   ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
@@ -104,9 +109,7 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
     birpcHandlers,
   )
 
-  let openPromise: Promise<void>
-
-  function reconnect(reset = false) {
+  async function reconnect(reset = false) {
     if (reset) {
       tries = reconnectTries
     }
