@@ -103,8 +103,8 @@ export class BlobReporter implements Reporter {
       outputFile = [
         'blob',
         this.ctx.config.mergeReportsLabel,
-        shard ? `-${shard.index}-${shard.count}` : '',
-      ].join('')
+        shard ? `${shard.index}-${shard.count}` : '',
+      ].filter(Boolean).join('-')
 
       outputFile = `${sanitizeFilePath(outputFile)}.json`
 
