@@ -1,18 +1,19 @@
 import type {
-  ModuleGraphData,
   RunnerTestFile,
   SerializedRootConfig,
 } from 'vitest'
+import type { SerializedProjectEnvironmentModules } from '../../../../vitest/src/utils/module-graph-serialization'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
 import { reactive } from 'vue'
+import { deriveModuleGraphData } from '../../../../vitest/src/utils/module-graph-serialization'
 import { StateManager } from './state'
 
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  environmentModules: Record<string, SerializedProjectEnvironmentModules>
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -41,8 +42,12 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
     getConfig: async () => {
       return metadata.config
     },
-    getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+    getModuleGraph: async (projectName, id, browser) => {
+      return deriveModuleGraphData(
+        metadata.environmentModules[projectName],
+        id,
+        browser,
+      )
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors

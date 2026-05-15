@@ -9,7 +9,7 @@ import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { serializeProjectModules } from '../../vitest/src/utils/module-graph-serialization'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
@@ -142,7 +142,7 @@ async function serializeReportMetadata(
     files: [],
     config: ctx.serializedRootConfig,
     unhandledErrors: [...unhandledErrors],
-    moduleGraph: {},
+    environmentModules: {},
     testModules: [],
     sourceCode: {
       codeTable: [],
@@ -168,8 +168,9 @@ async function serializeReportMetadata(
     result.sourceCode.codeTable.push(code)
     return index
   }
-
-  const promises: Promise<void>[] = []
+  ctx.projects.forEach((project) => {
+    result.environmentModules[project.name] = serializeProjectModules(project)
+  })
 
   for (const testModule of testModules) {
     result.files.push(testModule.task)
@@ -193,20 +194,7 @@ async function serializeReportMetadata(
       }
       catch {}
     }
-
-    // TODO: https://github.com/vitest-dev/vitest/issues/9763
-    promises.push((async () => {
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
-        ctx,
-        projectName,
-        testModule.moduleId,
-        project.config.browser.enabled,
-      )
-    })())
   }
-
-  await Promise.all(promises)
 
   return result
 }
