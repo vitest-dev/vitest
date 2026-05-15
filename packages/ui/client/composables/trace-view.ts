@@ -48,6 +48,7 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry
       ...entry,
       startTime: start.startTime,
       duration: entry.startTime - start.startTime,
+      snapshot: entry.snapshot ?? start.snapshot,
     }
   }
 

@@ -89,14 +89,18 @@ export async function recordBrowserTraceEntry(
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
-  const snapshot = await takeSnapshot(options.element)
+  const traceView = getBrowserState().config.browser.traceView
+  const shouldTakeSnapshot
+    = traceView.snapshot === 'always'
+      || (traceView.snapshot === 'on-failure' && options.status === 'fail')
+  const snapshot = shouldTakeSnapshot ? await takeSnapshot(options.element) : undefined
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
     snapshot,
   }
   const { retry, repeats } = attemptInfo
-  const { recordCanvas } = getBrowserState().config.browser.traceView
+  const { recordCanvas } = traceView
 
   // An async lane could defer artifact recording and flush it at test-attempt end,
   // but the synchronous snapshot work is already a comparable cost, and this path
