@@ -14,7 +14,9 @@ interface Options extends VitestWorker {
 }
 
 const __vitest_worker_response__ = true
-const memoryUsage = process.memoryUsage.bind(process)
+const memoryUsage = typeof process !== 'undefined' && typeof process.memoryUsage === 'function'
+  ? process.memoryUsage.bind(process)
+  : () => ({ heapUsed: 0 })
 let reportMemory = false
 
 let traces!: Traces
