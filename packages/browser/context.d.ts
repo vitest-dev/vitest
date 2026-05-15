@@ -279,6 +279,10 @@ export interface UserEvent {
    * Type text on the keyboard. If any input is focused, it will receive the text,
    * otherwise it will be typed on the document. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
+   * For cross-provider tests, prefer printable characters and logical key names
+   * in braces, like `{Shift}`, `{Enter}`, or `{ArrowLeft}`. Physical key code
+   * descriptors in square brackets and left/right-specific modifier descriptors
+   * can produce provider-specific `code` and `location` values.
    * @example
    * await userEvent.keyboard('foo') // translates to: f, o, o
    * await userEvent.keyboard('{{a[[') // translates to: {, a, [

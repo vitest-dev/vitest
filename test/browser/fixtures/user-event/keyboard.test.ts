@@ -69,7 +69,8 @@ test('click with modifier', async () => {
   await expect.poll(() => el.textContent).toContain("[ok]")
 })
 
-// TODO: https://github.com/vitest-dev/vitest/issues/7118
+// Documents the provider-specific behavior described in
+// https://github.com/vitest-dev/vitest/issues/7118
 // https://testing-library.com/docs/user-event/keyboard
 // https://github.com/testing-library/user-event/blob/main/src/keyboard/keyMap.ts
 // https://playwright.dev/docs/api/class-keyboard

@@ -282,6 +282,19 @@ function keyboard(text: string): Promise<void>
 The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
 
 This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+For cross-provider tests, prefer printable characters and logical key names in
+braces, such as `{Shift}`, `{Control}`, `{Alt}`, `{Meta}`, `{Enter}`, `{Tab}`,
+`{Escape}`, `{Backspace}`, or `{ArrowLeft}`. These descriptors are parsed before
+Vitest delegates to the browser provider.
+
+Physical key code descriptors in square brackets, such as `[ShiftLeft]`, and
+left/right-specific modifier descriptors, such as `{ShiftLeft}` and
+`{ShiftRight}`, are provider-dependent. Playwright can distinguish left and
+right modifier keys, WebdriverIO support depends on the driver, and the
+`preview` provider follows `@testing-library/user-event` in the page instead of
+using browser automation APIs. Avoid asserting on `KeyboardEvent.code` or
+`KeyboardEvent.location` for these descriptors unless your test targets a
+specific provider.
 
 ```ts
 import { userEvent } from 'vitest/browser'
