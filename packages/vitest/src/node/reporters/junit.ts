@@ -17,6 +17,11 @@ interface ClassnameTemplateVariables {
   filepath: string
 }
 
+interface FileTemplateVariables {
+  filename: string
+  filepath: string
+}
+
 export interface JUnitOptions {
   outputFile?: string
 
@@ -39,6 +44,10 @@ export interface JUnitOptions {
    * Hostname to use in the report. By default, it uses os.hostname()
    */
   hostname?: string
+  /**
+   * Template for the file attribute and testsuite name. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
+   */
+  fileTemplate?: string | ((fileVariables: FileTemplateVariables) => string)
 }
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
@@ -207,9 +216,9 @@ export class JUnitReporter implements Reporter {
     })
   }
 
-  async writeTasks(tasks: Task[], filename: string): Promise<void> {
+  async writeTasks(tasks: Task[], filename: string, defaultClassname: string): Promise<void> {
     for (const task of tasks) {
-      let classname = filename
+      let classname = defaultClassname
 
       const templateVars: ClassnameTemplateVariables = {
         filename: task.file.name,
@@ -371,7 +380,23 @@ export class JUnitReporter implements Reporter {
 
     await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
       for (const file of transformed) {
-        const filename = relative(this.ctx.config.root, file.filepath)
+        const relativePath = relative(this.ctx.config.root, file.filepath)
+        let filename = relativePath
+
+        const fileVars: FileTemplateVariables = {
+          filename: file.file.name,
+          filepath: file.filepath,
+        }
+
+        if (typeof this.options.fileTemplate === 'function') {
+          filename = this.options.fileTemplate(fileVars)
+        }
+        else if (typeof this.options.fileTemplate === 'string') {
+          filename = this.options.fileTemplate
+            .replace(/\{filename\}/g, fileVars.filename)
+            .replace(/\{filepath\}/g, fileVars.filepath)
+        }
+
         await this.writeElement(
           'testsuite',
           {
@@ -385,7 +410,7 @@ export class JUnitReporter implements Reporter {
             time: getDuration(file),
           },
           async () => {
-            await this.writeTasks(file.tasks, filename)
+            await this.writeTasks(file.tasks, filename, relativePath)
           },
         )
       }

@@ -155,6 +155,48 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
   expect(stabilizeReport(stdout)).matchSnapshot()
 })
 
+test('fileTemplate string replaces testsuite name and file attribute', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { fileTemplate: 'packages/{filename}/src', addFileAttribute: true }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+
+  const xml = stabilizeReport(stdout)
+
+  expect(xml).toContain('<testsuite name="packages/ok.test.ts/src"')
+  expect(xml).toContain('file="packages/ok.test.ts/src"')
+})
+
+test('fileTemplate function replaces testsuite name and file attribute', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { fileTemplate: ({ filepath }) => filepath.replace(/.*fixtures\//, ''), addFileAttribute: true }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+
+  const xml = stabilizeReport(stdout)
+
+  expect(xml).toContain('<testsuite name="reporters/ok.test.ts"')
+  expect(xml).toContain('file="reporters/ok.test.ts"')
+})
+
+test('fileTemplate preserves default classname when classnameTemplate is not set', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { fileTemplate: 'custom-prefix/{filename}', addFileAttribute: true }]],
+    root,
+    include: ['ok.test.ts'],
+  })
+
+  const xml = stabilizeReport(stdout)
+
+  // classname should remain default (relative path) even when fileTemplate changes the file attribute
+  expect(xml).toContain('classname="ok.test.ts"')
+  // but file and testsuite name should use the template
+  expect(xml).toContain('file="custom-prefix/ok.test.ts"')
+  expect(xml).toContain('<testsuite name="custom-prefix/ok.test.ts"')
+})
+
 test('many errors without warning', async () => {
   const { stderr } = await runVitestCli(
     'run',
