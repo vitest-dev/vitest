@@ -66,6 +66,14 @@ export interface BrowserTraceViewOptions {
   enabled?: boolean
 
   /**
+   * Control when DOM snapshots are captured for trace-view entries.
+   *
+   * @default 'always'
+   * @experimental
+   */
+  snapshot?: 'always' | 'on-failure'
+
+  /**
    * Capture canvas pixels in trace view snapshots.
    *
    * This uses rrweb's canvas snapshot support and can increase trace artifact size.

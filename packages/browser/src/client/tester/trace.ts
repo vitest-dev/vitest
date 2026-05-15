@@ -35,7 +35,7 @@ export interface BrowserTraceEntry {
   // resolved server-side from stack in __vitest_recordBrowserTrace command
   location?: { file: string; line: number; column: number }
   element?: SerializedLocator
-  snapshot: TraceSnapshot
+  snapshot?: TraceSnapshot
 }
 
 interface TraceSnapshot {

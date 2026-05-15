@@ -919,11 +919,13 @@ export function resolveConfig(
   resolved.browser.traceView = typeof traceView === 'object'
     ? {
         enabled: traceView.enabled ?? false,
+        snapshot: traceView.snapshot ?? 'always',
         recordCanvas: traceView.recordCanvas ?? false,
         inlineImages: traceView.inlineImages ?? false,
       }
     : {
         enabled: traceView ?? false,
+        snapshot: 'always',
         recordCanvas: false,
         inlineImages: false,
       }
