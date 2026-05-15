@@ -1,6 +1,6 @@
 import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
-import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
+import type { SerializedProjectEnvironmentModules } from '../../utils/module-graph-serialization'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
@@ -11,6 +11,7 @@ import { sanitizeFilePath } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
+import { deserializeEnvironmentModuleGraph, serializeProjectModules } from '../../utils/module-graph-serialization'
 
 export interface BlobOptions {
   outputFile?: string
@@ -50,29 +51,7 @@ export class BlobReporter implements Reporter {
 
     const environmentModules: MergeReportEnvironmentModules = {}
     this.ctx.projects.forEach((project) => {
-      const serializedProject: MergeReportEnvironmentModules[string] = {
-        environments: {},
-        external: [],
-      }
-      Object.entries(project.vite.environments).forEach(([environmentName, environment]) => {
-        serializedProject.environments[environmentName] = serializeEnvironmentModuleGraph(
-          environment,
-        )
-      })
-
-      if (project.browser?.vite.environments.client) {
-        serializedProject.browser = serializeEnvironmentModuleGraph(
-          project.browser.vite.environments.client,
-        )
-      }
-
-      for (const [id, value] of project._resolver.externalizeCache.entries()) {
-        if (typeof value === 'string') {
-          serializedProject.external.push([id, value])
-        }
-      }
-
-      environmentModules[project.name] = serializedProject
+      environmentModules[project.name] = serializeProjectModules(project)
     })
 
     const content = stringify([
@@ -235,107 +214,5 @@ export type MergeReport = [
 ]
 
 interface MergeReportEnvironmentModules {
-  [projectName: string]: {
-    environments: {
-      [environmentName: string]: SerializedEnvironmentModuleGraph
-    }
-    browser?: SerializedEnvironmentModuleGraph
-    external: [id: string, externalized: string][]
-  }
-}
-
-type SerializedEnvironmentModuleNode = [
-  id: number,
-  file: number,
-  url: number,
-  importedIds: number[],
-]
-
-interface SerializedEnvironmentModuleGraph {
-  idTable: string[]
-  modules: SerializedEnvironmentModuleNode[]
-}
-
-function serializeEnvironmentModuleGraph(
-  environment: DevEnvironment,
-): SerializedEnvironmentModuleGraph {
-  const idTable: string[] = []
-  const idMap = new Map<string, number>()
-
-  const getIdIndex = (id: string) => {
-    const existing = idMap.get(id)
-    if (existing != null) {
-      return existing
-    }
-    const next = idTable.length
-    idMap.set(id, next)
-    idTable.push(id)
-    return next
-  }
-
-  const modules: SerializedEnvironmentModuleNode[] = []
-  for (const [id, mod] of environment.moduleGraph.idToModuleMap.entries()) {
-    // Vite can generate module with `file = ""` for module id "#..."
-    // when the actual module doesn't exist (e.g. resolve failure or mocked module)
-    if (mod.file == null) {
-      continue
-    }
-
-    const importedIds: number[] = []
-    for (const importedNode of mod.importedModules) {
-      if (importedNode.id !== null) {
-        importedIds.push(getIdIndex(importedNode.id))
-      }
-    }
-
-    modules.push([
-      getIdIndex(id),
-      getIdIndex(mod.file),
-      getIdIndex(mod.url),
-      importedIds,
-    ])
-  }
-
-  return {
-    idTable,
-    modules,
-  }
-}
-
-function deserializeEnvironmentModuleGraph(
-  environment: DevEnvironment,
-  serialized: SerializedEnvironmentModuleGraph,
-): void {
-  const nodesById = new Map<string, EnvironmentModuleNode>()
-
-  serialized.modules.forEach(([id, file, url]) => {
-    const moduleId = serialized.idTable[id]
-    const filePath = serialized.idTable[file]
-    const urlPath = serialized.idTable[url]
-    // `createFileOnlyEntry('')` normalizes the file to ".". This keeps
-    // the graph usable, but doesn't perfectly round-trip Vite's `file = ""`
-    // nodes for ids like "#...".
-    // We may just do moduleNode.file = filePath in the future.
-    const moduleNode = environment.moduleGraph.createFileOnlyEntry(filePath)
-    moduleNode.url = urlPath
-    moduleNode.id = moduleId
-    moduleNode.transformResult = {
-      // print error checks that transformResult is set
-      code: ' ',
-      map: null,
-    }
-    environment.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
-    nodesById.set(moduleId, moduleNode)
-  })
-
-  serialized.modules.forEach(([id, _file, _url, importedIds]) => {
-    const moduleId = serialized.idTable[id]
-    const moduleNode = nodesById.get(moduleId)!
-    importedIds.forEach((importedIdIndex) => {
-      const importedId = serialized.idTable[importedIdIndex]
-      const importedNode = nodesById.get(importedId)!
-      moduleNode.importedModules.add(importedNode)
-      importedNode.importers.add(moduleNode)
-    })
-  })
+  [projectName: string]: SerializedProjectEnvironmentModules
 }
