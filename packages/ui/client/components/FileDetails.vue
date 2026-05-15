@@ -3,7 +3,6 @@ import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
 import { debouncedWatch } from '@vueuse/core'
-import { toJSON } from 'flatted'
 import { computed, nextTick, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
@@ -118,19 +117,15 @@ async function loadModuleGraph(force = false) {
       )
       // remove node_modules from the graph when enabled
       if (hideNodeModules.value) {
-        // when using static html reporter, we've the meta as global, we need to clone it
-        if (isReport) {
-          moduleGraph
-            = typeof window.structuredClone !== 'undefined'
-              ? window.structuredClone(moduleGraph)
-              : toJSON(moduleGraph)
+        moduleGraph = {
+          ...moduleGraph,
+          inlined: moduleGraph.inlined.filter(
+            n => !nodeModuleRegex.test(n),
+          ),
+          externalized: moduleGraph.externalized.filter(
+            n => !nodeModuleRegex.test(n),
+          ),
         }
-        moduleGraph.inlined = moduleGraph.inlined.filter(
-          n => !nodeModuleRegex.test(n),
-        )
-        moduleGraph.externalized = moduleGraph.externalized.filter(
-          n => !nodeModuleRegex.test(n),
-        )
       }
       graph.value = getModuleGraph(
         moduleGraph,
