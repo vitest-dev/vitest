@@ -89,7 +89,7 @@ export async function recordBrowserTraceEntry(
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
-  const snapshot = takeSnapshot(options.element)
+  const snapshot = await takeSnapshot(options.element)
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
@@ -123,8 +123,8 @@ export async function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
-  const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<TraceSnapshot> {
+  const { snapshot, createMirror } = await getBrowserState().browserTraceDomSnapshot!()
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
