@@ -21,6 +21,15 @@ describe('assertTypes', () => {
     assertTypes(value_bigint, 'value_bigint', ['number', 'bigint'])
     expect(() => assertTypes(value_string, 'value_string', ['number', 'bigint'])).toThrow()
   })
+
+  test('null reports "null" instead of "object" when it fails the check', () => {
+    // null still passes when 'object' is expected (typeof null === 'object')
+    assertTypes(null, 'null_value', ['object'])
+    // but when it fails, the error message should say "null" not "object"
+    expect(() => assertTypes(null, 'null_value', ['string'])).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: null_value value must be string, received "null"]`,
+    )
+  })
 })
 
 describe('deepMerge', () => {

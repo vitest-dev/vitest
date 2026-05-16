@@ -44,8 +44,9 @@ export function assertTypes(
   const receivedType = typeof value
   const pass = types.includes(receivedType)
   if (!pass) {
+    const received = value === null ? 'null' : receivedType
     throw new TypeError(
-      `${name} value must be ${types.join(' or ')}, received "${receivedType}"`,
+      `${name} value must be ${types.join(' or ')}, received "${received}"`,
     )
   }
 }
