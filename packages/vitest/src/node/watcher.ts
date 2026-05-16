@@ -173,7 +173,11 @@ export class VitestWatcher {
       return false
     }
 
-    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers)) {
+    // `dot: true` so `**/...` patterns also match paths under hidden
+    // directories (e.g. `.git/`, `.claude/worktrees/<branch>/...`).
+    // Without it the trigger silently no-ops when the project lives
+    // under a hidden ancestor, since chokidar emits absolute paths.
+    if (pm.isMatch(filepath, this.vitest.config.forceRerunTriggers, { dot: true })) {
       this.vitest.state.getFilepaths().forEach(file => this.changedTests.add(file))
       return true
     }
