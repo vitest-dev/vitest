@@ -4,6 +4,8 @@ import * as esModule from '@vitest/test-dep-cjs/esmodule'
 import * as esModuleFalse from '@vitest/test-dep-cjs/esmodule-false'
 import { expect, test } from 'vitest'
 
+const nodeMajor = Number(process.versions.node.split('.')[0])
+
 test('interop', async ({ task }) => {
   expect(esModule).toMatchInlineSnapshot(`
     {
@@ -11,8 +13,7 @@ test('interop', async ({ task }) => {
       "test": "hello",
     }
   `)
-  if (task.file.projectName === 'vmThreads') {
-    // TODO: vitest vm should align with newer node for "module.exports"?
+  if (task.file.projectName === 'vmThreads' || nodeMajor < 23) {
     expect(esModuleFalse).toMatchInlineSnapshot(`
       {
         "__esModule": false,
