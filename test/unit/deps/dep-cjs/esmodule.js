@@ -1,2 +1,2 @@
 exports.__esModule = true
-exports.test = "hello"
+exports.test = 'hello'
