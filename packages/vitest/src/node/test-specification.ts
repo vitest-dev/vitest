@@ -1,4 +1,3 @@
-import type { TaskMeta } from '@vitest/runner/types'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
@@ -56,14 +55,14 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
-    // merge-reports uses the original `file.meta` from the test run
-    metaOverride?: TaskMeta,
+    // merge-reports forces the original task id from the test run
+    taskIdOverride?: string,
   ) {
     const projectName = project.config.name
-    this.taskId = generateFileHash(
+    this.taskId = taskIdOverride ?? generateFileHash(
       relative(project.config.root, moduleId),
       projectName,
-      metaOverride ?? { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
+      { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
     )
     this.project = project
     this.moduleId = moduleId
