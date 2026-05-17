@@ -283,6 +283,22 @@ The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input ha
 
 This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
 
+Vitest parses the same key descriptor format as Testing Library, but the final
+keyboard event comes from the configured browser provider:
+
+- For portable tests, prefer semantic key names in braces, such as `{Shift}`,
+  `{Enter}`, `{Escape}`, `{Tab}`, `{Backspace}`, `{ArrowLeft}`, and
+  `{selectall}`. Modifier hold and release syntax, such as
+  `{Shift>}{Tab}{/Shift}`, is supported.
+- Physical-code descriptors in square brackets, such as `[ShiftLeft]` or
+  `[KeyA]`, are not normalized the same way by every provider. They can differ
+  in the reported `event.code` or `event.location`, and some WebDriverIO keys
+  may be rejected by the browser driver. Use them only when asserting
+  provider-specific keyboard behavior.
+- The `preview` provider uses simulated Testing Library events instead of the
+  native Playwright or WebDriverIO keyboard APIs, so event metadata can differ
+  from headed browser providers.
+
 ```ts
 import { userEvent } from 'vitest/browser'
 
