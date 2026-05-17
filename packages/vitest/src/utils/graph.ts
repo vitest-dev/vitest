@@ -1,13 +1,16 @@
 import type { EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
-import type { ModuleGraphData } from '../types/general'
+import type { ModuleGraphData, ModuleGraphOptions } from '../types/general'
 import { getTestFileEnvironment } from './environments'
+
+const nodeModuleRegex = /[/\\]node_modules[/\\]/
 
 export async function getModuleGraph(
   ctx: Vitest,
   projectName: string,
   testFilePath: string,
   browser = false,
+  options: ModuleGraphOptions = {},
 ): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
@@ -50,6 +53,9 @@ export async function getModuleGraph(
     if (typeof external === 'string') {
       externalized.add(external)
       return external
+    }
+    if (options.excludeNodeModules && nodeModuleRegex.test(id)) {
+      return
     }
     if (browser && mod.file?.includes(project.browser!.vite.config.cacheDir)) {
       externalized.add(mod.id)

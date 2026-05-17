@@ -25,6 +25,10 @@ export interface ModuleGraphData {
   inlined: string[]
 }
 
+export interface ModuleGraphOptions {
+  excludeNodeModules?: boolean
+}
+
 export interface ProvidedContext {}
 
 export interface ResolveFunctionResult {

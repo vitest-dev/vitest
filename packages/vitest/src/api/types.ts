@@ -3,7 +3,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
 import type { SerializedRootConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { LabelColor, ModuleGraphData, ModuleGraphOptions, UserConsoleLog } from '../types/general'
 import type { ModuleDefinitionDurationsDiagnostic, UntrackedModuleDefinitionDiagnostic } from '../types/module-locations'
 
 interface SourceMap {
@@ -48,6 +48,7 @@ export interface WebSocketHandlers {
     projectName: string,
     id: string,
     browser?: boolean,
+    options?: ModuleGraphOptions,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,

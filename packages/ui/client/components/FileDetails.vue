@@ -115,6 +115,7 @@ async function loadModuleGraph(force = false) {
         gd.projectName,
         gd.filepath,
         !!browserState,
+        { excludeNodeModules: hideNodeModules.value },
       )
       // remove node_modules from the graph when enabled
       if (hideNodeModules.value) {
