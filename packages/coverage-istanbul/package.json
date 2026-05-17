@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@istanbuljs/schema": "^0.1.3",
+    "@istanbuljs/schema": "^0.1.6",
     "@jridgewell/gen-mapping": "^0.3.13",
     "@jridgewell/trace-mapping": "catalog:",
     "istanbul-lib-coverage": "catalog:",
