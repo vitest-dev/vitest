@@ -68,7 +68,7 @@ jobs:
       - id: generate-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
+          app-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
           private-key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
           repositories: |
             vitest
