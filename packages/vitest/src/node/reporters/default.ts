@@ -9,6 +9,9 @@ import { SummaryReporter } from './summary'
 
 export interface DefaultReporterOptions extends BaseOptions {
   summary?: boolean
+
+  /** @internal */
+  summaryOptions?: SummaryReporter['options']
 }
 
 export class DefaultReporter extends BaseReporter {
@@ -87,6 +90,6 @@ export class DefaultReporter extends BaseReporter {
 
   onInit(ctx: Vitest): void {
     super.onInit(ctx)
-    this.summary?.onInit(ctx, { verbose: this.verbose })
+    this.summary?.onInit(ctx, { verbose: this.verbose, ...this.options.summaryOptions })
   }
 }

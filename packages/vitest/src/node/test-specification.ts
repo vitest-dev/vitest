@@ -55,17 +55,14 @@ export class TestSpecification {
     moduleId: string,
     pool: Pool,
     testLinesOrOptions?: number[] | TestSpecificationOptions | undefined,
+    // merge-reports forces the original task id from the test run
+    taskIdOverride?: string,
   ) {
     const projectName = project.config.name
-    const hashName = pool !== 'typescript'
-      ? projectName
-      : projectName
-      // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
-        ? `${projectName}:__typecheck__`
-        : '__typecheck__'
-    this.taskId = generateFileHash(
+    this.taskId = taskIdOverride ?? generateFileHash(
       relative(project.config.root, moduleId),
-      hashName,
+      projectName,
+      { typecheck: pool === 'typescript', __vitest_label__: project.config.mergeReportsLabel },
     )
     this.project = project
     this.moduleId = moduleId

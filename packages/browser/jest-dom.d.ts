@@ -692,6 +692,7 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * // basic usage, auto-generates screenshot name
    * await expect.element(getByTestId('button')).toMatchScreenshot()
+   * await expect(page).toMatchScreenshot()
    *
    * // with custom name
    * await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button')

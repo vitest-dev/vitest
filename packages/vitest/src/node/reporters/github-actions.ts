@@ -1,4 +1,4 @@
-import type { File, TestAnnotation } from '@vitest/runner'
+import type { TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
@@ -9,7 +9,6 @@ import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
-import { capturePrintError } from '../printError'
 import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {
@@ -127,7 +126,6 @@ export class GithubActionsReporter implements Reporter {
       project: TestProject
       title: string
       error: unknown
-      file?: File
     }>()
     for (const error of errors) {
       projectErrors.push({
@@ -150,15 +148,14 @@ export class GithubActionsReporter implements Reporter {
             project,
             title: project.name ? `[${project.name}] ${title}` : title,
             error,
-            file,
           })
         }
       }
     }
 
     // format errors via `printError`
-    for (const { project, title, error, file } of projectErrors) {
-      const result = capturePrintError(error, this.ctx, { project, task: file })
+    for (const { project, title, error } of projectErrors) {
+      const result = this.ctx.logger.formatError(error, { project })
       const stack = result?.nearest
       if (!stack) {
         continue

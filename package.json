@@ -1,12 +1,12 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "5.0.0-beta.1",
+  "version": "5.0.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@10.31.0",
+  "packageManager": "pnpm@11.1.2",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
-    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:ci",
@@ -23,7 +23,7 @@
     "lint:fix": "nr lint --fix",
     "publish-ci": "tsx scripts/publish-ci.ts",
     "release": "tsx scripts/release.ts",
-    "test": "pnpm --filter test-core test:threads",
+    "test": "pnpm --filter test-unit test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:ci:no-bail": "CI=true pnpm -r --no-bail --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:ci:cache": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser --filter '!@vitest/test-integration-dts-*' --filter !test-ui --filter !test-cache run test --experimental.fsModuleCache",
@@ -35,7 +35,7 @@
     "ui:build": "vite build packages/ui",
     "ui:dev": "npm -C packages/ui run dev:client",
     "ui:test": "npm -C packages/ui run test:run",
-    "override-rolldown": "yq -i '.overrides.vite = \"npm:vite@8\"' pnpm-workspace.yaml",
+    "override-vite7": "yq -i '.overrides.vite = \"npm:vite@7\"' pnpm-workspace.yaml",
     "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
@@ -67,7 +67,7 @@
     "typescript": "^5.9.3",
     "unplugin-isolated-decl": "^0.15.7",
     "unplugin-oxc": "^0.6.0",
-    "vite": "7.1.5",
+    "vite": "8.0.11",
     "vitest": "workspace:*",
     "zx": "^8.8.5"
   }

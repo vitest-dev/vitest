@@ -3,7 +3,7 @@ import type { TestProject } from '../project'
 import type { ApiConfig } from '../types/config'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
-import { isAgent } from '../../utils/env'
+import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -119,6 +119,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
           exact: browser.locators.exact,
+          errorFormat: browser.locators.errorFormat,
         },
         providerOptions: provider?.name === 'playwright'
           ? {
@@ -150,10 +151,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     tags: config.tags || [],
     tagsFilter: config.tagsFilter,
     strictTags: config.strictTags ?? true,
+    mergeReportsLabel: config.mergeReportsLabel,
     slowTestThreshold:
       config.slowTestThreshold
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
-    isAgent,
+    disableColors: isAgent && !isForceColor(),
   }
 }

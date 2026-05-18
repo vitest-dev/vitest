@@ -125,10 +125,14 @@ export default defineConfig({
       },
     },
     includeTaskLocation: true,
-    reporters: process.env.GITHUB_ACTIONS
-      ? [['verbose', { renderPassedTests: false }], ['github-actions', { displayAnnotations: false }]]
-      : [['default', { summary: true }], 'hanging-process'],
-    hideSkippedTests: !!process.env.CI,
+    reporters: [
+      ...(process.env.GITHUB_ACTIONS
+        ? [['verbose', { renderPassedTests: false }], ['github-actions', { displayAnnotations: false }] as any]
+        : [['default', { summary: true }], ['hanging-process']]),
+      ...(process.env.VITEST_CI_BLOB_LABEL
+        ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]]
+        : []),
+    ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

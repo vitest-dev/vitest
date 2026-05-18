@@ -152,12 +152,15 @@ export class TestProject {
     locationsOrOptions?: number[] | TestSpecificationOptions | undefined,
     /** @internal */
     pool?: string,
+    /** @internal */
+    taskIdOverride?: string,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this),
       locationsOrOptions,
+      taskIdOverride,
     )
   }
 
@@ -546,11 +549,14 @@ export class TestProject {
       this.vitest,
       {
         ...options,
+        // root-only configs
         coverage: this.vitest.config.coverage,
+        attachmentsDir: this.vitest.config.attachmentsDir,
       },
       server.config,
     )
     this._config.api.token = this.vitest.config.api.token
+    this._config.mergeReportsLabel = this.vitest.config.mergeReportsLabel
     this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
@@ -626,14 +632,12 @@ export class TestProject {
     const url = new URL('/__vitest_test__/', origin)
     url.searchParams.set('sessionId', sessionId)
     const otelCarrier = this.vitest._traces.getContextCarrier()
-    if (otelCarrier) {
-      url.searchParams.set('otelCarrier', JSON.stringify(otelCarrier))
-    }
     this.vitest._browserSessions.sessionIds.add(sessionId)
     const sessionPromise = this.vitest._browserSessions.createSession(
       sessionId,
       this,
       pool,
+      { otelCarrier },
     )
     const pagePromise = this.browser.provider.openPage(
       sessionId,

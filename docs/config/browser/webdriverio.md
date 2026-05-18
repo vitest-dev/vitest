@@ -60,5 +60,23 @@ You can find most available options in the [WebdriverIO documentation](https://w
 ::: tip
 Most useful options are located on `capabilities` object. WebdriverIO allows nested capabilities, but Vitest will ignore those options because we rely on a different mechanism to spawn several browsers.
 
-Note that Vitest will ignore `capabilities.browserName` — use [`test.browser.instances.browser`](/config/browser/instances#browser) instead.
+Note that Vitest will ignore `capabilities.browserName`; use [`test.browser.instances.browser`](/config/browser/instances#browser) instead.
 :::
+
+## Headful Chrome in CI
+
+Vitest enables [`browser.headless`](/config/browser/headless) automatically in CI.
+If you explicitly set `headless: false` for Chrome on a Linux CI runner, Chrome
+still needs a display server. Without one, WebDriverIO or ChromeDriver can fail
+with a misleading error such as `session not created: probably user data
+directory is already in use`.
+
+Run the test command through `xvfb-run` when you need headful Chrome in GitHub
+Actions or another Linux CI environment:
+
+```bash
+xvfb-run npm test
+```
+
+Alternatively, keep `browser.headless` enabled in CI and use headful mode only
+for local debugging.

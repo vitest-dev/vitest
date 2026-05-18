@@ -3,7 +3,6 @@ import type { RunnerTask, RunnerTestCase } from 'vitest'
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
 import { debouncedWatch } from '@vueuse/core'
-import { toJSON } from 'flatted'
 import { computed, nextTick, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
@@ -59,6 +58,8 @@ const failedSnapshot = computed(() => {
 const isTypecheck = computed(() => {
   return !!current.value?.meta?.typecheck
 })
+
+const label = computed(() => current.value?.meta?.__vitest_label__)
 
 function open() {
   const filePath = current.value?.filepath
@@ -116,19 +117,15 @@ async function loadModuleGraph(force = false) {
       )
       // remove node_modules from the graph when enabled
       if (hideNodeModules.value) {
-        // when using static html reporter, we've the meta as global, we need to clone it
-        if (isReport) {
-          moduleGraph
-            = typeof window.structuredClone !== 'undefined'
-              ? window.structuredClone(moduleGraph)
-              : toJSON(moduleGraph)
+        moduleGraph = {
+          ...moduleGraph,
+          inlined: moduleGraph.inlined.filter(
+            n => !nodeModuleRegex.test(n),
+          ),
+          externalized: moduleGraph.externalized.filter(
+            n => !nodeModuleRegex.test(n),
+          ),
         }
-        moduleGraph.inlined = moduleGraph.inlined.filter(
-          n => !nodeModuleRegex.test(n),
-        )
-        moduleGraph.externalized = moduleGraph.externalized.filter(
-          n => !nodeModuleRegex.test(n),
-        )
       }
       graph.value = getModuleGraph(
         moduleGraph,
@@ -206,6 +203,7 @@ const tags = computed(() => {
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
+        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
         <span
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light"

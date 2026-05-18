@@ -60,7 +60,7 @@ Next generation testing framework powered by Vite.
 - Reporting Uncaught Errors
 - Run your tests in the browser natively
 
-> Vitest requires Vite >=v6.0.0 and Node >=v20.0.0
+> Vitest requires Vite >=v6.4.0 and Node >=v22.12.0
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'
@@ -90,30 +90,6 @@ $ npx vitest
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/vitest/sponsors.svg' alt="vitest's sponsors"/>
-  </a>
-</p>
-
-### Vladimir Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg' alt="vladimir's sponsors"/>
-  </a>
-</p>
-
-### Anthony Fu Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg' alt="anthony's sponsors"/>
-  </a>
-</p>
-
-### Patak Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/patak-dev/static/sponsors.svg' alt="patak's sponsors"/>
   </a>
 </p>
 

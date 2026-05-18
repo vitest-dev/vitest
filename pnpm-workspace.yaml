@@ -39,7 +39,7 @@ overrides:
   vite: $vite
   vitest: workspace:*
 patchedDependencies:
-  '@sinonjs/fake-timers@15.0.0': patches/@sinonjs__fake-timers@15.0.0.patch
+  '@sinonjs/fake-timers@15.3.2': patches/@sinonjs__fake-timers@15.3.2.patch
   acorn@8.11.3: patches/acorn@8.11.3.patch
   cac@6.7.14: patches/cac@6.7.14.patch
   istanbul-lib-instrument: patches/istanbul-lib-instrument.patch
@@ -68,6 +68,7 @@ catalog:
   '@vitejs/plugin-vue': ^6.0.4
   '@vueuse/core': ^14.2.1
   acorn-walk: ^8.3.5
+  ansivision: ^0.2.7
   birpc: ^4.0.0
   cac: ^6.7.14
   chai: ^6.2.2
@@ -99,17 +100,16 @@ catalog:
   vue: ^3.5.29
   ws: ^8.19.0
   yauzl: ^3.2.0
-onlyBuiltDependencies:
-  - '@sveltejs/kit'
-  - '@swc/core'
-  - edgedriver
-  - esbuild
-  - geckodriver
-  - msw
-  - rolldown
-  - sharp
-  - svelte-preprocess
-  - vue-demi
 peerDependencyRules:
   ignoreMissing:
     - '@algolia/client-search'
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  edgedriver: true
+  esbuild: true
+  geckodriver: true
+  msw: true
+  protobufjs: true
+  sharp: true
+  vue-demi: true
