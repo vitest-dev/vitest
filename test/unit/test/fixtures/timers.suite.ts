@@ -198,6 +198,27 @@ describe('FakeTimers', () => {
       timers.useFakeTimers()
       expect(global.process.nextTick).toBe(origNextTick)
     })
+
+    it("toFake and toNotFake cannot be used together", () => {
+      const global = {
+        Date: FakeDate,
+        setTimeout,
+        clearTimeout,
+        setInterval,
+        clearInterval,
+      }
+      const timers = new FakeTimers({
+        global,
+        config: {
+          toFake: [],
+          toNotFake: [],
+        },
+      })
+      expect(() => timers.useFakeTimers())
+        .toThrowErrorMatchingInlineSnapshot(
+          `[TypeError: config.toFake and config.toNotFake cannot be used together]`
+        )
+    })
   })
 
   describe('runAllTicks', () => {
