@@ -167,9 +167,7 @@ export class FakeTimers {
       ? { toNotFake: [...this._userConfig.toNotFake, 'nextTick' as const] }
       : {}
 
-    const wouldFakeNextTick = this._userConfig?.toFake?.includes('nextTick') ?? false
-
-    if (wouldFakeNextTick && isChildProcess()) {
+    if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
       throw new Error(
         'process.nextTick cannot be mocked inside child_process',
       )
