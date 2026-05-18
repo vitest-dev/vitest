@@ -147,6 +147,18 @@ export interface TaskPopulated extends TaskBase {
  */
 export interface TaskMeta {}
 
+export type TestAttemptState = 'pass' | 'fail' | 'pending' | 'skip'
+
+export interface TestAttempt {
+  repeatCount: number
+  retryCount: number
+  state: TestAttemptState
+  duration: number
+  startClock: number
+  startTime: number
+  errors?: TestError[]
+}
+
 /**
  * The result of calling a task.
  */
@@ -163,6 +175,8 @@ export interface TaskResult {
    * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
   errors?: TestError[]
+  // TODO: jsdoc
+  attempts?: TestAttempt[]
   /**
    * How long in milliseconds the task took to run.
    */

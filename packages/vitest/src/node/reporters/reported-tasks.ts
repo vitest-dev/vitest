@@ -8,6 +8,7 @@ import type {
   TaskMeta,
   TestAnnotation,
   TestArtifact,
+  TestAttempt,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { DevEnvironment } from 'vite'
@@ -211,6 +212,10 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public artifacts(): ReadonlyArray<TestArtifact> {
     return [...this.task.artifacts]
+  }
+
+  public attempts(): ReadonlyArray<TestAttempt> {
+    return [...this.task.result?.attempts || []]
   }
 
   /**
