@@ -1,0 +1,7 @@
+{
+  "references": [
+    { "path": "./packages/project-a" },
+    { "path": "./packages/project-b" }
+  ],
+  "include": []
+}

@@ -69,6 +69,9 @@ catalogs:
     acorn-walk:
       specifier: ^8.3.5
       version: 8.3.5
+    ansivision:
+      specifier: ^0.2.7
+      version: 0.2.7
     birpc:
       specifier: ^4.0.0
       version: 4.0.0
@@ -1430,6 +1433,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      ansivision:
+        specifier: 'catalog:'
+        version: 0.2.7
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
@@ -1712,6 +1718,9 @@ packages:
 
   '@adobe/css-tools@4.4.0':
     resolution: {integrity: sha512-Ff9+ksdQQB3rMncgqDK78uLznstjyfIf2Arnh22pW8kBpLs6rpKDwgnZT46hin5Hl1WzazzK64DOrhSwYpS7bQ==}
+
+  '@ansi-tools/parser@1.0.15':
+    resolution: {integrity: sha512-Y+PIdkMVu8I27z344G65nni8c7TlPtVv/7Kw/ncS6lbpJKBRT00bTtyAlPL/aVjkCrLoYlUwsgvoGJ/iWhH52w==}
 
   '@antfu/eslint-config@7.6.1':
     resolution: {integrity: sha512-MRiskHFHYPF0R3eWDUkPPiHUM3fWXwAviVv9O8iMH5hVJkgp60oJYBMzbImKdqSGMuuyOMY3GXxWbH60t9rK0g==}
@@ -5799,6 +5808,9 @@ packages:
   ansis@4.2.0:
     resolution: {integrity: sha512-HqZ5rWlFjGiV0tDm3UxxgNRqsOTniqoKZu0pIAfh7TZQMGuZK+hH0drySty0si0QXj1ieop4+SkSfPZBPPkHig==}
     engines: {node: '>=14'}
+
+  ansivision@0.2.7:
+    resolution: {integrity: sha512-D2y8fZ2G+S0Ni/Uw2ki9bGpsBu0WkNRSAARJK/on+xb4AzEkNSM2oUNfiJXqjN2wkjHGklWzol8qYDWy0EMyYg==}
 
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
@@ -10560,6 +10572,8 @@ snapshots:
 
   '@adobe/css-tools@4.4.0': {}
 
+  '@ansi-tools/parser@1.0.15': {}
+
   '@antfu/eslint-config@7.6.1(@typescript-eslint/rule-tester@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.56.1(typescript@5.9.3))(@typescript-eslint/utils@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.29)(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
     dependencies:
       '@antfu/install-pkg': 1.1.0
@@ -14328,6 +14342,10 @@ snapshots:
       entities: 2.2.0
 
   ansis@4.2.0: {}
+
+  ansivision@0.2.7:
+    dependencies:
+      '@ansi-tools/parser': 1.0.15
 
   anymatch@3.1.3:
     dependencies:
