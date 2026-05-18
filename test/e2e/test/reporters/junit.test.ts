@@ -4,6 +4,7 @@ import { runVitest, runVitestCli } from '#test-utils'
 import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { rolldownVersion } from 'vitest/node'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
@@ -122,7 +123,13 @@ test('options.suiteName changes name property', async () => {
 })
 
 function stabilizeReport(report: string) {
-  return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+  let normalized = report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+  // rolldown's source map for the inline async IIFE on error.test.ts:16 anchors
+  // one column later than rollup's; align to rollup so the snapshot stays bundler-agnostic.
+  if (rolldownVersion) {
+    normalized = normalized.replaceAll(' ❯ error.test.ts:16:29', ' ❯ error.test.ts:16:28')
+  }
+  return normalized
 }
 
 function stabilizeReportWOTime(report: string) {
@@ -156,13 +163,17 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
 })
 
 test('many errors without warning', async () => {
-  const { stderr } = await runVitestCli(
+  const result = await runVitestCli(
     'run',
     '--reporter=junit',
     '--root',
-    resolve(import.meta.dirname, '../fixtures/reporters/many-errors'),
+    resolve(import.meta.dirname, '../../fixtures/reporters/many-errors'),
   )
-  expect(stderr).not.toContain('MaxListenersExceededWarning')
+  expect(stabilizeReport(result.stdout).split('\n')[1]).toMatchInlineSnapshot(
+    `"<testsuites name="vitest tests" tests="20" failures="20" errors="0" time="...">"`,
+  )
+  expect(result.stderr).not.toContain('MaxListenersExceededWarning')
+  expect(result.exitCode).not.toBe(0)
 })
 
 test('CLI reporter option preserves config file options', async () => {
@@ -331,6 +342,22 @@ test('stackTrace set to false omits stack trace content from failure', async () 
   // failure elements are present but their text content (stack trace) is absent
   expect(xml).toContain('<failure')
   expect(xml).not.toContain('❯ error.test.ts')
+})
+
+test('emits one <testcase> per unhandled error and titles them by error.type', async () => {
+  const { stdout } = await runVitest({
+    reporters: 'junit',
+    root: './fixtures/reporters/unhandled-errors-multi',
+  })
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
+})
+
+test('resolves unhandled errors to the owning project in a multi-project workspace', async () => {
+  const { stdout } = await runVitest({
+    reporters: [['junit', { addFileAttribute: true }]],
+    root: './fixtures/reporters/unhandled-errors-multi-project',
+  })
+  expect(stabilizeReport(stdout)).toMatchSnapshot()
 })
 
 function executionTime(durationMS: number) {

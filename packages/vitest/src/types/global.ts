@@ -40,7 +40,7 @@ declare module 'vitest' {
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
-      actual: () => T,
+      actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void

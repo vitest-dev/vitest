@@ -19,9 +19,9 @@ import type { Locator as LocatorAPI } from './locators'
 import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
-import { ensureAwaited, getBrowserState, getWorkerState, now } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { isLocator, processTimeoutOptions, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
-import { recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
@@ -368,7 +368,7 @@ export const page: BrowserPage = {
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         let status: BrowserTraceEntryStatus = 'pass'
-        const startTime = now()
+        const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         if (hasActiveTrace) {
           await triggerCommand(
             '__vitest_groupTraceStart',
@@ -379,6 +379,14 @@ export const page: BrowserPage = {
             error,
           )
         }
+        if (hasActiveTraceView) {
+          await recordBrowserTraceEntry(currentTest, {
+            name,
+            kind: 'mark',
+            range: { id: traceRangeId!, phase: 'start' },
+            stack: options?.stack ?? error?.stack,
+          })
+        }
         try {
           return await bodyOrOptions()
         }
@@ -388,13 +396,11 @@ export const page: BrowserPage = {
         }
         finally {
           if (hasActiveTraceView) {
-            // TODO: support nested trace
-            recordBrowserTraceEntry(currentTest, {
+            await recordBrowserTraceEntry(currentTest, {
               name,
-              kind: 'mark',
+              kind: options?.kind ?? 'mark',
+              range: { id: traceRangeId!, phase: 'end' },
               status,
-              startTime,
-              duration: now() - startTime,
               stack: options?.stack ?? error?.stack,
             })
           }
@@ -409,11 +415,11 @@ export const page: BrowserPage = {
       return Promise.resolve()
     }
 
-    return ensureAwaited((error) => {
+    return ensureAwaited(async (error) => {
       if (hasActiveTraceView) {
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
           name,
-          kind: 'mark',
+          kind: bodyOrOptions?.kind ?? 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,
         })
       }
@@ -573,9 +579,27 @@ function prettyDOM(
 }
 
 function getElementError(selector: string | Locator, container: Element): Error {
-  const error = new Error(`Cannot find element with locator: ${typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()}\n\n${prettyDOM(container)}`)
+  const locator = typeof selector === 'string' ? __INTERNAL._asLocator('javascript', selector) : selector.asLocator()
+  const formatted = formatDOM(container)
+  const error = new Error(`Cannot find element with locator: ${locator}\n\n${formatted}`)
   error.name = 'VitestBrowserElementError'
   return error
+}
+
+function formatDOM(container: Element): string {
+  const format = getBrowserState().config.browser.locators.errorFormat
+  if (format === 'aria') {
+    return `ARIA tree:\n${formatAriaTree(container)}`
+  }
+  if (format === 'all') {
+    return `ARIA tree:\n${formatAriaTree(container)}\n\nHTML:\n${prettyDOM(container)}`
+  }
+  return prettyDOM(container)
+}
+
+function formatAriaTree(container: Element): string {
+  const { generateAriaTree, renderAriaTree } = getBrowserState().aria
+  return renderAriaTree(generateAriaTree(container))
 }
 
 function configurePrettyDOM(options: StringifyOptions) {

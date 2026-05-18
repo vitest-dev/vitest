@@ -27,6 +27,8 @@ jobs:
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -66,6 +68,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Get changed files
         id: changed-files
@@ -98,6 +102,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -160,6 +166,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -196,6 +204,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -229,6 +239,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
         with:
@@ -278,6 +290,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -313,5 +327,7 @@ jobs:
 
       - name: Link report viewer
         run: |
-          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }}"
-          echo "[View HTML report](https://viewer.vitest.dev/?url=${{ steps.upload-report.outputs.artifact-url }})" >> $GITHUB_STEP_SUMMARY
+          echo "::notice title=Vitest HTML report::View HTML report: https://viewer.vitest.dev/?url=${STEPS_UPLOAD_REPORT_OUTPUTS_ARTIFACT_URL}"
+          echo "[View HTML report](https://viewer.vitest.dev/?url=${STEPS_UPLOAD_REPORT_OUTPUTS_ARTIFACT_URL})" >> $GITHUB_STEP_SUMMARY
+        env:
+          STEPS_UPLOAD_REPORT_OUTPUTS_ARTIFACT_URL: ${{ steps.upload-report.outputs.artifact-url }}

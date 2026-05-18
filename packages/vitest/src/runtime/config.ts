@@ -1,4 +1,4 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
@@ -34,7 +34,7 @@ export interface SerializedConfig {
   unstubGlobals: boolean
   unstubEnvs: boolean
   // TODO: make optional
-  fakeTimers: FakeTimerInstallOpts
+  fakeTimers: FakeTimersConfig
   maxConcurrency: number
   defines: Record<string, any>
   expect: {
@@ -109,6 +109,7 @@ export interface SerializedConfig {
     locators: {
       testIdAttribute: string
       exact: boolean
+      errorFormat: 'html' | 'aria' | 'all'
     }
     screenshotFailures: boolean
     providerOptions: {
@@ -156,7 +157,7 @@ export interface SerializedConfig {
   strictTags: boolean
   mergeReportsLabel: string | undefined
   slowTestThreshold: number | undefined
-  isAgent: boolean
+  disableColors: boolean
 }
 
 export interface SerializedCoverageConfig {

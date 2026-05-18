@@ -19,6 +19,7 @@
     "test-locators": "vitest --root ./fixtures/locators",
     "test-locators-custom": "vitest --root ./fixtures/locators-custom",
     "test-different-configs": "vitest --root ./fixtures/multiple-different-configs",
+    "test-trace": "vitest --root ./fixtures/trace",
     "test-setup-file": "vitest --root ./fixtures/setup-file",
     "test-snapshots": "vitest --root ./fixtures/update-snapshot",
     "test-broken-iframe": "vitest --root ./fixtures/broken-iframe",

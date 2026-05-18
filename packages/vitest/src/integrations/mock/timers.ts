@@ -6,9 +6,10 @@
  */
 
 import type {
-  FakeTimerInstallOpts,
-  FakeTimerWithContext,
-  InstalledClock,
+  Clock,
+  FakeMethod,
+  Config as FakeTimersConfig,
+  FakeTimers as FakeTimersContext,
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
@@ -16,7 +17,7 @@ import { mockDate, RealDate, resetDate } from './date'
 
 export class FakeTimers {
   private _global: typeof globalThis
-  private _clock!: InstalledClock
+  private _clock!: Clock
   // | _fakingTime | _fakingDate |
   // +-------------+-------------+
   // | false       | falsy       | initial
@@ -25,8 +26,8 @@ export class FakeTimers {
   // | true        | truthy      | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
-  private _fakeTimers: FakeTimerWithContext
-  private _userConfig?: FakeTimerInstallOpts
+  private _fakeTimers: FakeTimersContext
+  private _userConfig?: FakeTimersConfig
   private _now = RealDate.now
 
   constructor({
@@ -34,7 +35,7 @@ export class FakeTimers {
     config,
   }: {
     global: typeof globalThis
-    config: FakeTimerInstallOpts
+    config: FakeTimersConfig
   }) {
     this._userConfig = config
 
@@ -154,22 +155,28 @@ export class FakeTimers {
       this._clock.uninstall()
     }
 
-    const toFake = Object.keys(this._fakeTimers.timers)
-    // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-      .filter(
-        timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
-      ) as (keyof FakeTimerWithContext['timers'])[]
-
-    if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
+    let toFake = this._userConfig?.toFake
+    if (isChildProcess() && toFake?.includes('nextTick')) {
       throw new Error(
         'process.nextTick cannot be mocked inside child_process',
       )
     }
 
+    let toNotFake = this._userConfig?.toNotFake
+    if (toFake === undefined && toNotFake === undefined) {
+      // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+      toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
+        .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
+    }
+    if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
+      toNotFake = [...toNotFake, 'nextTick']
+    }
+
     this._clock = this._fakeTimers.install({
       now: fakeDate,
       ...this._userConfig,
-      toFake: this._userConfig?.toFake || toFake,
+      ...(toFake && { toFake }),
+      ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,
     })
 
@@ -228,7 +235,7 @@ export class FakeTimers {
     }
   }
 
-  configure(config: FakeTimerInstallOpts): void {
+  configure(config: FakeTimersConfig): void {
     this._userConfig = config
   }
 

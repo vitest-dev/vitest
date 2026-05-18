@@ -69,6 +69,9 @@ catalogs:
     acorn-walk:
       specifier: ^8.3.5
       version: 8.3.5
+    ansivision:
+      specifier: ^0.2.7
+      version: 0.2.7
     birpc:
       specifier: ^4.0.0
       version: 4.0.0
@@ -177,9 +180,9 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.0.0':
-    hash: 8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2
-    path: patches/@sinonjs__fake-timers@15.0.0.patch
+  '@sinonjs/fake-timers@15.3.2':
+    hash: 5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0
+    path: patches/@sinonjs__fake-timers@15.3.2.patch
   acorn@8.11.3:
     hash: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
     path: patches/acorn@8.11.3.patch
@@ -935,9 +938,6 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
-      '@vue/test-utils':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@vueuse/core':
         specifier: 'catalog:'
         version: 14.2.1(vue@3.5.29(typescript@5.9.3))
@@ -980,12 +980,9 @@ importers:
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      vite-plugin-pages:
-        specifier: ^0.33.3
-        version: 0.33.3(@vue/compiler-sfc@3.5.29)(vite@8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue-router@5.0.3(@vue/compiler-sfc@3.5.29)(vue@3.5.29(typescript@5.9.3)))
       vitest-browser-vue:
-        specifier: 2.0.2
-        version: 2.0.2(vitest@packages+vitest)(vue@3.5.29(typescript@5.9.3))
+        specifier: 2.1.0
+        version: 2.1.0(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vitest@packages+vitest)(vue@3.5.29(typescript@5.9.3))
       vue:
         specifier: 'catalog:'
         version: 3.5.29(typescript@5.9.3)
@@ -1118,8 +1115,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@sinonjs/fake-timers':
-        specifier: 15.0.0
-        version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
+        specifier: 15.3.2
+        version: 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1141,9 +1138,6 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
-      '@types/sinonjs__fake-timers':
-        specifier: ^15.0.1
-        version: 15.0.1
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
@@ -1357,7 +1351,7 @@ importers:
         version: link:../../packages/web-worker
       '@vue/test-utils':
         specifier: latest
-        version: 2.4.6
+        version: 2.4.10(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       happy-dom:
         specifier: latest
         version: 20.8.7
@@ -1436,9 +1430,15 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      ansivision:
+        specifier: 'catalog:'
+        version: 0.2.7
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
+      jest-image-snapshot:
+        specifier: ^6.5.1
+        version: 6.5.1
       obug:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1522,19 +1522,6 @@ importers:
         version: link:../../../../packages/vitest
 
   test/node-runner: {}
-
-  test/snapshots:
-    dependencies:
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-    devDependencies:
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      jest-image-snapshot:
-        specifier: ^6.5.1
-        version: 6.5.1
 
   test/test-utils:
     devDependencies:
@@ -1728,6 +1715,9 @@ packages:
 
   '@adobe/css-tools@4.4.0':
     resolution: {integrity: sha512-Ff9+ksdQQB3rMncgqDK78uLznstjyfIf2Arnh22pW8kBpLs6rpKDwgnZT46hin5Hl1WzazzK64DOrhSwYpS7bQ==}
+
+  '@ansi-tools/parser@1.0.15':
+    resolution: {integrity: sha512-Y+PIdkMVu8I27z344G65nni8c7TlPtVv/7Kw/ncS6lbpJKBRT00bTtyAlPL/aVjkCrLoYlUwsgvoGJ/iWhH52w==}
 
   '@antfu/eslint-config@7.6.1':
     resolution: {integrity: sha512-MRiskHFHYPF0R3eWDUkPPiHUM3fWXwAviVv9O8iMH5hVJkgp60oJYBMzbImKdqSGMuuyOMY3GXxWbH60t9rK0g==}
@@ -4848,11 +4838,8 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@15.0.0':
-    resolution: {integrity: sha512-dlUB2oL+hDIYkIq/OWFBDhQAuU6kDey3eeMiYpVb7UXHhkMq/r1HloKXAbJwJZpYWkFWsydLjMqDpueMUEOjXQ==}
-
-  '@sinonjs/fake-timers@15.1.1':
-    resolution: {integrity: sha512-cO5W33JgAPbOh07tvZjUOJ7oWhtaqGHiZw+11DPbyqh2kHTBc3eF/CjJDeQ4205RLQsX6rxCuYOroFQwl7JDRw==}
+  '@sinonjs/fake-timers@15.3.2':
+    resolution: {integrity: sha512-mrn35Jl2pCpns+mE3HaZa1yPN5EYCRgiMI+135COjr2hr8Cls9DXqIZ57vZe2cz7y2XVSq92tcs6kGQcT1J8Rw==}
 
   '@sinonjs/samsam@9.0.3':
     resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
@@ -5213,9 +5200,6 @@ packages:
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
-  '@types/sinonjs__fake-timers@15.0.1':
-    resolution: {integrity: sha512-Ko2tjWJq8oozHzHV+reuvS5KYIRAokHnGbDwGh/J64LntgpbuylF74ipEL24HCyRjf9FOlBiBHWBR1RlVKsI1w==}
-
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
 
@@ -5569,8 +5553,15 @@ packages:
   '@vue/shared@3.5.29':
     resolution: {integrity: sha512-w7SR0A5zyRByL9XUkCfdLs7t9XOHUyJ67qPGQjOou3p6GvBeBW+AVjUUmlxtZ4PIYaRvE+1LmK44O4uajlZwcg==}
 
-  '@vue/test-utils@2.4.6':
-    resolution: {integrity: sha512-FMxEjOpYNYiFe0GkaHsnJPXFHxQ6m4t8vI/ElPGpMWxZKpmRvQ33OIrvRXemy6yha03RxhOlQuy+gZMC3CQSow==}
+  '@vue/test-utils@2.4.10':
+    resolution: {integrity: sha512-SmoZ5EA1kYiAFs9NkYdiFFQF+cSnUwnvlYEbY+DogWQZUiqOm/Y29eSbc5T6yi75SgSF9863SBeXniIEoPajCA==}
+    peerDependencies:
+      '@vue/compiler-dom': 3.x
+      '@vue/server-renderer': 3.x
+      vue: 3.x
+    peerDependenciesMeta:
+      '@vue/server-renderer':
+        optional: true
 
   '@vueuse/core@12.8.2':
     resolution: {integrity: sha512-HbvCmZdzAu3VGi/pWYm5Ut+Kd9mn1ZHnn4L5G8kOQTPs/IwIAmJoBrmYk2ckLArgMXZj0AW3n5CAejLUO+PhdQ==}
@@ -5808,6 +5799,9 @@ packages:
   ansis@4.2.0:
     resolution: {integrity: sha512-HqZ5rWlFjGiV0tDm3UxxgNRqsOTniqoKZu0pIAfh7TZQMGuZK+hH0drySty0si0QXj1ieop4+SkSfPZBPPkHig==}
     engines: {node: '>=14'}
+
+  ansivision@0.2.7:
+    resolution: {integrity: sha512-D2y8fZ2G+S0Ni/Uw2ki9bGpsBu0WkNRSAARJK/on+xb4AzEkNSM2oUNfiJXqjN2wkjHGklWzol8qYDWy0EMyYg==}
 
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
@@ -6885,10 +6879,6 @@ packages:
     resolution: {integrity: sha512-7p3DrVEIopW1B1avAGLuCSh1jubc01H2JHc8B4qqGblmg5gI9yumBgACjWo4JlIc04ufug4xJ3SQI8HkS/Rgzw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  esprima-extract-comments@1.1.0:
-    resolution: {integrity: sha512-sBQUnvJwpeE9QnPrxh7dpI/dp67erYG4WXEAreAMoelPRpMR7NWb4YtwRPn9b+H1uLQKl/qS8WYmyaljTpjIsw==}
-    engines: {node: '>=4'}
-
   esprima@4.0.1:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
     engines: {node: '>=4'}
@@ -6955,10 +6945,6 @@ packages:
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
-
-  extract-comments@1.1.0:
-    resolution: {integrity: sha512-dzbZV2AdSSVW/4E7Ti5hZdHWbA+Z80RJsJhr5uiL10oyjl/gy7/o+HI1HwK4/WSZhlq4SNKU3oUzXlM13Qx02Q==}
-    engines: {node: '>=6'}
 
   extract-zip@2.0.1:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
@@ -8630,10 +8616,6 @@ packages:
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
 
-  parse-code-context@1.0.0:
-    resolution: {integrity: sha512-OZQaqKaQnR21iqhlnPfVisFjBWjhnMl5J9MgbP8xC+EwoVqbXrq78lp+9Zb3ahmLzrIX5Us/qbvBnaS3hkH6OA==}
-    engines: {node: '>=6'}
-
   parse-gitignore@2.0.0:
     resolution: {integrity: sha512-RmVuCHWsfu0QPNW+mraxh/xjQVw/lhUCUru8Zni3Ctq3AoMhpDTq0OVdKS6iesd6Kqb7viCV3isAL43dciOSog==}
     engines: {node: '>=14'}
@@ -10119,24 +10101,6 @@ packages:
   vfile@6.0.1:
     resolution: {integrity: sha512-1bYqc7pt6NIADBJ98UiG0Bn/CHIVOoZ/IyEkqIruLg0mE1BKzkOXY2D6CSqQIcKqgadppE5lrxgWXJmXd7zZJw==}
 
-  vite-plugin-pages@0.33.3:
-    resolution: {integrity: sha512-k97CAlVN7VUD5CIkRaose8Ty1xjtpuSeJQngFxsinPyM7PCtAIp23QdnkygNRdoo4gjX21TORYdEAAN/lGtCIA==}
-    peerDependencies:
-      '@solidjs/router': '*'
-      '@vue/compiler-sfc': ^2.7.0 || ^3.0.0
-      react-router: '*'
-      vite: 8.0.11
-      vue-router: '*'
-    peerDependenciesMeta:
-      '@solidjs/router':
-        optional: true
-      '@vue/compiler-sfc':
-        optional: true
-      react-router:
-        optional: true
-      vue-router:
-        optional: true
-
   vite-plugin-pwa@1.2.0:
     resolution: {integrity: sha512-a2xld+SJshT9Lgcv8Ji4+srFJL4k/1bVbd1x06JIkvecpQkwkvCncD1+gSzcdm3s+owWLpMJerG3aN5jupJEVw==}
     engines: {node: '>=16.0.0'}
@@ -10238,8 +10202,8 @@ packages:
       '@types/react-dom':
         optional: true
 
-  vitest-browser-vue@2.0.2:
-    resolution: {integrity: sha512-/IM/+gOBEPL5Ocu/n28NmAvr1XgqGxzJrgwkPx9O+ioB52iuyg25nDQXlDDPSCm5PJFmwNzA6yycWxFAFTqXYA==}
+  vitest-browser-vue@2.1.0:
+    resolution: {integrity: sha512-K3H/oxIOY4EjXx2bxwrLsPg4jTMvzpRW6Jb6T8XZRoxUvmDVwGkd8mua130F8GZezE7H5QYoXd/S8hYijw7j5g==}
     peerDependencies:
       vitest: workspace:*
       vue: ^3.0.0
@@ -10259,8 +10223,8 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
-  vue-component-type-helpers@2.0.17:
-    resolution: {integrity: sha512-2car49m8ciqg/JjgMBkx7o/Fd2A7fHESxNqL/2vJYFLXm4VwYO4yH0rexOi4a35vwNgDyvt17B07Vj126l9rAQ==}
+  vue-component-type-helpers@3.2.8:
+    resolution: {integrity: sha512-9689efAXhN/EV86plgkL/XFiJSXhGtWPG6JDboZ+QnjlUWUUQrQ0ILKQtw4iQsuwIwu5k6Aw+JnehDe7161e7A==}
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -10598,6 +10562,8 @@ snapshots:
   '@acemir/cssom@0.9.29': {}
 
   '@adobe/css-tools@4.4.0': {}
+
+  '@ansi-tools/parser@1.0.15': {}
 
   '@antfu/eslint-config@7.6.1(@typescript-eslint/rule-tester@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.56.1(typescript@5.9.3))(@typescript-eslint/utils@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.29)(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
     dependencies:
@@ -13281,11 +13247,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)':
-    dependencies:
-      '@sinonjs/commons': 3.0.1
-
-  '@sinonjs/fake-timers@15.1.1':
+  '@sinonjs/fake-timers@15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -13628,8 +13590,6 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.2': {}
-
-  '@types/sinonjs__fake-timers@15.0.1': {}
 
   '@types/sinonjs__fake-timers@8.1.5': {}
 
@@ -14172,10 +14132,14 @@ snapshots:
 
   '@vue/shared@3.5.29': {}
 
-  '@vue/test-utils@2.4.6':
+  '@vue/test-utils@2.4.10(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))':
     dependencies:
+      '@vue/compiler-dom': 3.5.29
       js-beautify: 1.15.1
-      vue-component-type-helpers: 2.0.17
+      vue: 3.5.29(typescript@5.9.3)
+      vue-component-type-helpers: 3.2.8
+    optionalDependencies:
+      '@vue/server-renderer': 3.5.29(vue@3.5.29(typescript@5.9.3))
 
   '@vueuse/core@12.8.2(typescript@5.9.3)':
     dependencies:
@@ -14363,6 +14327,10 @@ snapshots:
       entities: 2.2.0
 
   ansis@4.2.0: {}
+
+  ansivision@0.2.7:
+    dependencies:
+      '@ansi-tools/parser': 1.0.15
 
   anymatch@3.1.3:
     dependencies:
@@ -15220,7 +15188,7 @@ snapshots:
       '@one-ini/wasm': 0.1.1
       commander: 10.0.1
       minimatch: 9.0.1
-      semver: 7.7.3
+      semver: 7.7.4
 
   ee-first@1.1.1: {}
 
@@ -15692,10 +15660,6 @@ snapshots:
       acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4))
       eslint-visitor-keys: 5.0.1
 
-  esprima-extract-comments@1.1.0:
-    dependencies:
-      esprima: 4.0.1
-
   esprima@4.0.1: {}
 
   esquery@1.7.0:
@@ -15796,11 +15760,6 @@ snapshots:
       is-extendable: 0.1.1
 
   extend@3.0.2: {}
-
-  extract-comments@1.1.0:
-    dependencies:
-      esprima-extract-comments: 1.1.0
-      parse-code-context: 1.0.0
 
   extract-zip@2.0.1:
     dependencies:
@@ -17387,6 +17346,7 @@ snapshots:
     dependencies:
       braces: 3.0.3
       picomatch: 2.3.1
+    optional: true
 
   millify@6.1.0:
     dependencies:
@@ -17828,8 +17788,6 @@ snapshots:
   package-name-regex@2.0.6: {}
 
   pako@1.0.11: {}
-
-  parse-code-context@1.0.0: {}
 
   parse-gitignore@2.0.0: {}
 
@@ -18728,7 +18686,7 @@ snapshots:
   sinon@21.0.3:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.1.1
+      '@sinonjs/fake-timers': 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
       '@sinonjs/samsam': 9.0.3
       diff: 8.0.3
       supports-color: 7.2.0
@@ -19486,25 +19444,6 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
-  vite-plugin-pages@0.33.3(@vue/compiler-sfc@3.5.29)(vite@8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue-router@5.0.3(@vue/compiler-sfc@3.5.29)(vue@3.5.29(typescript@5.9.3))):
-    dependencies:
-      '@types/debug': 4.1.12
-      debug: 4.4.3
-      dequal: 2.0.3
-      extract-comments: 1.1.0
-      json5: 2.2.3
-      local-pkg: 1.1.2
-      micromatch: 4.0.8
-      picocolors: 1.1.1
-      tinyglobby: 0.2.15
-      vite: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      yaml: 2.8.2
-    optionalDependencies:
-      '@vue/compiler-sfc': 3.5.29
-      vue-router: 5.0.3(@vue/compiler-sfc@3.5.29)(vue@3.5.29(typescript@5.9.3))
-    transitivePeerDependencies:
-      - supports-color
-
   vite-plugin-pwa@1.2.0(@vite-pwa/assets-generator@1.0.2)(vite@8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.4.0):
     dependencies:
       debug: 4.4.3
@@ -19627,11 +19566,14 @@ snapshots:
       '@types/react': 19.2.14
       '@types/react-dom': 18.2.14
 
-  vitest-browser-vue@2.0.2(vitest@packages+vitest)(vue@3.5.29(typescript@5.9.3)):
+  vitest-browser-vue@2.1.0(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vitest@packages+vitest)(vue@3.5.29(typescript@5.9.3)):
     dependencies:
-      '@vue/test-utils': 2.4.6
+      '@vue/test-utils': 2.4.10(@vue/compiler-dom@3.5.29)(@vue/server-renderer@3.5.29(vue@3.5.29(typescript@5.9.3)))(vue@3.5.29(typescript@5.9.3))
       vitest: link:packages/vitest
       vue: 3.5.29(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@vue/compiler-dom'
+      - '@vue/server-renderer'
 
   vitest-environment-custom@file:test/unit/vitest-environment-custom: {}
 
@@ -19646,7 +19588,7 @@ snapshots:
 
   vscode-uri@3.1.0: {}
 
-  vue-component-type-helpers@2.0.17: {}
+  vue-component-type-helpers@3.2.8: {}
 
   vue-demi@0.14.10(vue@3.5.29(typescript@5.9.3)):
     dependencies:

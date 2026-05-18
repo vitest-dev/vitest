@@ -2,6 +2,10 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
 
+/** Minimum time between two renders, no matter how many scheduled renderes were called */
+const DEFAULT_RENDER_THRESHOLD_MS = 100
+
+/** Interval between automatic renders. If no test state changes happened, this will increase just duration field */
 const DEFAULT_RENDER_INTERVAL_MS = 1_000
 
 const ESC = '\x1B['
@@ -10,9 +14,10 @@ const MOVE_CURSOR_ONE_ROW_UP = `${ESC}1A`
 const SYNC_START = `${ESC}?2026h`
 const SYNC_END = `${ESC}?2026l`
 
-interface Options {
+export interface Options {
   logger: Vitest['logger']
   interval?: number
+  threshold?: number
   getWindow: () => string[]
 }
 
@@ -36,10 +41,12 @@ export class WindowRenderer {
 
   constructor(options: Options) {
     this.options = {
-      interval: DEFAULT_RENDER_INTERVAL_MS,
       ...options,
+      threshold: options.threshold ?? DEFAULT_RENDER_THRESHOLD_MS,
+      interval: options.interval ?? DEFAULT_RENDER_INTERVAL_MS,
     }
 
+    // Capture the original write methods early, before intercepting these
     this.streams = {
       output: options.logger.outputStream.write.bind(options.logger.outputStream),
       error: options.logger.errorStream.write.bind(options.logger.errorStream),
@@ -49,6 +56,14 @@ export class WindowRenderer {
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
     )
+
+    // Intercept calls to custom VitestOptions.stdout and stderr streams
+    if (options.logger.outputStream !== process.stdout) {
+      this.cleanups.push(this.interceptStream(options.logger.outputStream, 'output'))
+    }
+    if (options.logger.errorStream !== process.stderr) {
+      this.cleanups.push(this.interceptStream(options.logger.errorStream, 'error'))
+    }
 
     // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
     this.options.logger.onTerminalCleanup(() => {
@@ -86,9 +101,14 @@ export class WindowRenderer {
       this.renderScheduled = true
       this.flushBuffer()
 
-      setTimeout(() => {
+      if (this.options.threshold) {
+        setTimeout(() => {
+          this.renderScheduled = false
+        }, this.options.threshold).unref()
+      }
+      else {
         this.renderScheduled = false
-      }, 100).unref()
+      }
     }
   }
 
@@ -121,9 +141,12 @@ export class WindowRenderer {
   }
 
   private render(message?: string, type: StreamType = 'output') {
+    this.write(SYNC_START)
+
     if (this.finished) {
       this.clearWindow()
-      return this.write(message || '', type)
+      this.write(message || '', type)
+      return this.write(SYNC_END)
     }
 
     const windowContent = this.options.getWindow()
@@ -134,7 +157,6 @@ export class WindowRenderer {
       padding -= getRenderedRowCount([message], this.options.logger.getColumns())
     }
 
-    this.write(SYNC_START)
     this.clearWindow()
 
     if (message) {
@@ -165,7 +187,7 @@ export class WindowRenderer {
     this.windowHeight = 0
   }
 
-  private interceptStream(stream: NodeJS.WriteStream, type: StreamType) {
+  private interceptStream(stream: NodeJS.WriteStream | Writable, type: StreamType) {
     const original = stream.write
 
     // @ts-expect-error -- not sure how 2 overloads should be typed

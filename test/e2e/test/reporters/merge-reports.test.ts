@@ -2,8 +2,9 @@ import type { RunVitestConfig } from '#test-utils'
 import type { File, Test } from '@vitest/runner/types'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
-import { existsSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { createFileTask } from '@vitest/runner/utils'
@@ -276,6 +277,66 @@ test('total and merged execution times are shown', async () => {
 
   expect(stdout).toContain('Duration  4.50s')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
+test('merges reports with a file-less imported module graph entry', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    // TODO: vite 8 crashes when trying to resolve
+    // non existing `imports` subpath in `test/e2e/package.json`.
+    'package.json': '{ "type": "module" }',
+    'repro1.test.ts': `
+test('repro1', async () => {
+  await expect(import('#repro1')).rejects.toThrow()
+})
+`,
+    'repro2.test.ts': `
+import * as repro from "#repro2";
+
+vi.mock("#repro2", () => ({
+  someExport: { mocked: true },
+}));
+
+it("repro2", () => {
+  expect(repro.someExport).toEqual({ mocked: true })
+});
+`,
+  })
+
+  const result1 = await runVitest({
+    root,
+    reporters: ['blob'],
+    globals: true,
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result1.exitCode).toBe(0)
+
+  const result2 = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest/blob'),
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result2.exitCode).toBe(0)
 })
 
 test.for([
@@ -592,10 +653,17 @@ test("macos only", () => {})
       },
     }
   `)
+  const blobDir = resolve(root, '.vitest/blob')
   const result = await runVitest({
     root,
-    mergeReports: resolve(root, '.vitest/blob'),
+    mergeReports: blobDir,
   })
+  expect(readdirSync(blobDir)).toMatchInlineSnapshot(`
+    [
+      "blob-linux.json",
+      "blob-macos.json",
+    ]
+  `)
   expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
     "✓  linux  first.test.ts > always good <time>
      ✓  linux  first.test.ts > works on linux <time>
@@ -954,6 +1022,69 @@ test("top-test", () => {})
           "@META": {},
           "state": "passed",
         },
+      },
+    }
+  `)
+})
+
+test('onTestRunEnd(testModules) are preserved from different test run roots', async () => {
+  const root1 = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const root2 = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root1, {
+    'basic.test.ts': `test("ok", () => {})`,
+  })
+  useFS(root2, {
+    'basic.test.ts': `test("ok", () => {})`,
+  })
+
+  const result1 = await runVitest({
+    root: root1,
+    globals: true,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
+
+  const result2 = await runVitest({
+    root: root2,
+    globals: true,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
+
+  const blobDir1 = path.join(root1, '.vitest/blob')
+  const blobDir2 = path.join(root2, '.vitest/blob')
+  for (const filename of readdirSync(blobDir2)) {
+    cpSync(path.join(blobDir2, filename), path.join(blobDir1, filename))
+  }
+
+  const result = await runVitest({
+    root: root1,
+    mergeReports: blobDir1,
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  // previously this was "1 passed" due to broken onTestRunEnd(testModules)
+  expect(result.stdout).toContain('Test Files  2 passed')
+  expect(result.errorTree({ fileLabel: true })).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts (linux)": {
+        "ok": "passed",
+      },
+      "basic.test.ts (macos)": {
+        "ok": "passed",
       },
     }
   `)

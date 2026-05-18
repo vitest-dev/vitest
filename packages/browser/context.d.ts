@@ -42,12 +42,20 @@ export interface ScreenshotOptions extends SelectorOptions {
   save?: boolean
 }
 
+export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
+
 export interface MarkOptions {
   /**
    * Optional stack string used to resolve marker location.
    * Useful for wrapper libraries that need to forward the end-user callsite.
    */
   stack?: string
+
+  /**
+   * Optional marker kind that's used to categorize the marker in the trace viewer.
+   * @default 'mark'
+   */
+  kind?: BrowserTraceEntryKind
 }
 
 interface StandardScreenshotComparators {

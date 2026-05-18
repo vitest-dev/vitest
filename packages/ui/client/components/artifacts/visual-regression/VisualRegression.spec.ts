@@ -30,7 +30,7 @@ describe('VisualRegression', () => {
   it('renders content with no attachments', async () => {
     const messageContent = faker.lorem.words(5)
 
-    const result = render(VisualRegression, {
+    const result = await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -59,7 +59,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders diff tab', async () => {
-    const result = render(VisualRegression, {
+    const result = await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -88,7 +88,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders reference tab', async () => {
-    render(VisualRegression, {
+    await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -106,7 +106,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders actual tab', async () => {
-    render(VisualRegression, {
+    await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -124,7 +124,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders reference, actual, and slider tabs', async () => {
-    const result = render(VisualRegression, {
+    const result = await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
@@ -176,7 +176,7 @@ describe('VisualRegression', () => {
   })
 
   it('renders diff, reference, actual, and slider tabs', async () => {
-    const result = render(VisualRegression, {
+    const result = await render(VisualRegression, {
       props: {
         regression: {
           type: 'internal:toMatchScreenshot',
