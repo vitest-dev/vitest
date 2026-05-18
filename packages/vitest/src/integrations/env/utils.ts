@@ -84,7 +84,9 @@ export function populateGlobal(
         try {
           win[key] = v
         }
-        catch {}
+        catch {
+          // haven't found a case it throws but just in case
+        }
       },
       configurable: true,
     })
