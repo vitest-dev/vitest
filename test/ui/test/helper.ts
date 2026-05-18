@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { InlineConfig, PreviewServer } from 'vite'
 import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
@@ -7,6 +7,14 @@ import { Writable } from 'node:stream'
 import { expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
+
+export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
+  const stdout = new Writable({ write: (_, __, callback) => callback() })
+  const stderr = new Writable({ write: (_, __, callback) => callback() })
+  const vitest = await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
+  await vitest.close()
+  return vitest
+}
 
 export async function startVitestUi(
   cliOptions: CliOptions,
@@ -66,6 +74,10 @@ export async function openExplorerFileItem(page: Page, name: string) {
   await item.getByTestId('btn-open-details').click()
 }
 
+export function getAnnotation(locator: Page | Locator, message: string) {
+  return locator.getByRole('note').filter({ hasText: message })
+}
+
 export async function assertDownloadAttachment(
   page: Page,
   options: {
@@ -74,7 +86,7 @@ export async function assertDownloadAttachment(
     content: string
   },
 ) {
-  const annotation = page.getByRole('note').filter({ hasText: options.name })
+  const annotation = getAnnotation(page, options.name)
   const downloadPromise = page.waitForEvent('download')
   await annotation.getByRole('link').click()
   const download = await downloadPromise
