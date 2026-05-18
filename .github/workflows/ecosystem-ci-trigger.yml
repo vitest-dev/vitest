@@ -4,9 +4,16 @@ on:
   issue_comment:
     types: [created]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
 jobs:
   trigger:
     runs-on: ubuntu-latest
+    name: Run Ecosystem CI Tests
     if: github.repository == 'vitest-dev/vitest' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/ecosystem-ci run')
     permissions:
       issues: write # to add / delete reactions, post comments

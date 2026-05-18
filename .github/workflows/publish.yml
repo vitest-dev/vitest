@@ -5,17 +5,20 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
-  id-token: write
+permissions: {}
 
 env:
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
   publish:
+    # only run on main, don't trigger in forks
     if: github.repository == 'vitest-dev/vitest'
+    name: Publish Vitest
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # trusted publishing and changelog requirement
+      id-token: write # trusted publishing requirement
     environment: Release
     steps:
       - uses: actions/checkout@v6
@@ -31,6 +34,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+          # disable cache to avoid cache poisoning
           package-manager-cache: false
 
       - name: Install

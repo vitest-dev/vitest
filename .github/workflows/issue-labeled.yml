@@ -9,17 +9,21 @@ on:
   pull_request_target:
     types: [labeled]
 
-# for actions-cool/issues-helper to update issues
-permissions:
-  issues: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  reply-labeled:
-    runs-on: ubuntu-latest
+  reproduction-reply-labeled:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'needs reproduction'
+    name: Minimal Reproduction Label
+    permissions:
+      issues: write # adding a label
     steps:
       - name: needs reproduction
-        if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'needs reproduction'
         uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
         with:
           actions: create-comment
@@ -27,8 +31,15 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           body: |
             Hello @${{ github.event.issue.user.login }}. Please provide a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) using a GitHub repository or [StackBlitz](https://vitest.new) (you can also use [examples](https://github.com/vitest-dev/vitest/tree/main/examples)). Issues marked with `needs reproduction` will be closed if they have no activity within 3 days.
-      - name: maybe automated (issues)
-        if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'issues'
+
+  issue-clanker-comment:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'issues'
+    name: Comment on Bot Issue
+    permissions:
+      issues: write # sending a comment
+    steps:
+      - name: maybe automated
         uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
         with:
           actions: create-comment
@@ -45,8 +56,15 @@ jobs:
             If you believe this was flagged by mistake, leave a comment.
 
             *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contributions policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#ai-contributions) for more context.*
-      - name: maybe automated (pr)
-        if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'pull_request_target'
+
+  issue-pr-comment:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'pull_request_target'
+    name: Comment on Bot PR
+    permissions:
+      pull-requests: write # sending a comment
+    steps:
+      - name: maybe automated
         uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
         with:
           actions: create-comment

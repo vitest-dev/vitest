@@ -4,3 +4,10 @@ rules:
       policies:
         actions/*: ref-pin
         github/*: ref-pin
+  concurrency-limits:
+    ignore:
+      # publish workflow doesn't run concurrently and requires a manual approval
+      - publish.yml
+      # the workflow runs on cron schedule
+      - lock-closed-issues.yml
+      - issue-close-require.yml
