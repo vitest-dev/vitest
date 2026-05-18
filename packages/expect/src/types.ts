@@ -152,7 +152,7 @@ interface CustomMatcher {
    * expect('foo').toBeOneOf([expect.any(String)])
    * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
    */
-  toBeOneOf: <T>(sample: Array<T> | Set<T>) => any
+  toBeOneOf: <T>(sample: ReadonlyArray<T> | ReadonlySet<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
