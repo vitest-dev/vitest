@@ -39,3 +39,10 @@ test('can pass down a simple form data', async () => {
     await req.formData()
   })()).resolves.not.toThrow()
 })
+
+test('innerWidth and matchMedia', () => {
+  expect(window.innerWidth).toBe(1024)
+  expect(window.matchMedia('(max-width: 100px)').matches).toBe(false)
+  window.innerWidth = 50
+  expect(window.matchMedia('(max-width: 100px)').matches).toBe(true)
+})
