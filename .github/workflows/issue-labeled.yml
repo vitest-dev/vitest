@@ -3,6 +3,9 @@ name: Issue Labeled
 on:
   issues:
     types: [labeled]
+  # zizmor: ignore[dangerous-triggers]
+  # We don't use any information from the PR content itself except the login of the user.
+  # The login is used only in the GitHub comment, not passed down as untrusted code.
   pull_request_target:
     types: [labeled]
 

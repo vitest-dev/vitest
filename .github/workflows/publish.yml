@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
@@ -30,7 +31,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Install
         run: pnpm install --frozen-lockfile --prefer-offline
@@ -41,7 +42,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${{ github.ref_name }}"
+        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${GITHUB_REF_NAME}"
 
       - name: Generate Changelog
         run: npx changelogithub

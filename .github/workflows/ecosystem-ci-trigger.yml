@@ -66,11 +66,14 @@ jobs:
               repo: pr.head.repo.full_name
             }
       - id: generate-token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        uses: actions/create-github-app-token@v3
         with:
-          app_id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
-          installation_retrieval_payload: '${{ github.repository_owner }}/vitest-ecosystem-ci'
-          private_key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
+          client-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
+          private-key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
+          repositories: |
+            vitest
+            vitest-ecosystem-ci
+          permission-actions: write
       - uses: actions/github-script@v8
         id: trigger
         env:
