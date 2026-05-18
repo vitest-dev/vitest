@@ -124,7 +124,7 @@ test('button looks correct', async () => {
 
 This captures screenshots and compares them against reference images to detect unintended visual changes. Learn more in the [Visual Regression Testing guide](/guide/browser/visual-regression-testing).
 
-## ARIA Snapshots <Badge type="warning">experimental</Badge> <Version>4.1.4</Version>
+## ARIA Snapshots <Experimental /> <Version>4.1.4</Version> {#aria-snapshots}
 
 ARIA snapshots capture the accessibility tree of a DOM element and compare it against a stored template. Based on [Playwright's ARIA snapshots](https://playwright.dev/docs/aria-snapshots), they provide a semantic alternative to visual regression testing — asserting structure and meaning rather than pixels.
 
@@ -236,7 +236,7 @@ Pretty foo: Object {
 }
 ```
 
-## Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version> {#custom-snapshot-matchers}
+## Custom Snapshot Matchers <Experimental /> <Version>4.1.3</Version> {#custom-snapshot-matchers}
 
 You can build custom snapshot matchers using the composable functions exposed on `Snapshots` from `vitest`. These let you transform values before snapshotting while preserving full snapshot lifecycle support (creation, update, inline rewriting).
 
@@ -335,7 +335,7 @@ declare module 'vitest' {
 See [Extending Matchers](/guide/extending-matchers) for more on `expect.extend` and custom matcher conventions.
 :::
 
-## Custom Snapshot Domain <Badge type="warning">experimental</Badge> <Version>4.1.4</Version> {#custom-snapshot-domain}
+## Custom Snapshot Domain <Experimental /> <Version>4.1.4</Version> {#custom-snapshot-domain}
 
 Custom serializers control how values are _rendered_ into snapshot strings, but comparison is still string equality. A **domain snapshot adapter** goes further: it owns the entire comparison pipeline for a custom matcher, including how to capture a value, render it, parse a stored snapshot, and match them semantically.
 

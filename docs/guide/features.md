@@ -194,7 +194,7 @@ if (import.meta.vitest) {
 
 Learn more at [In-source testing](/guide/in-source).
 
-## Benchmarking <Badge type="warning">Experimental</Badge> {#benchmarking}
+## Benchmarking <Experimental /> {#benchmarking}
 
 You can run benchmark tests with [`bench`](/api/test#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
@@ -221,7 +221,7 @@ describe('sort', () => {
 <img alt="Benchmark report" img-dark src="https://github.com/vitest-dev/vitest/assets/4232207/6f0383ea-38ba-4f14-8a05-ab243afea01d">
 <img alt="Benchmark report" img-light src="https://github.com/vitest-dev/vitest/assets/4232207/efbcb427-ecf1-4882-88de-210cd73415f6">
 
-## Type Testing <Badge type="warning">Experimental</Badge> {#type-testing}
+## Type Testing <Experimental /> {#type-testing}
 
 You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
