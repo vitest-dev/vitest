@@ -155,29 +155,28 @@ export class FakeTimers {
       this._clock.uninstall()
     }
 
-    // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
-    const toFakeOverride: Pick<FakeTimersConfig, 'toFake'> = (this._userConfig?.toFake === undefined && this._userConfig?.toNotFake === undefined)
-      ? { toFake: (Object.keys(this._fakeTimers.timers) as FakeMethod[])
-          .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask') }
-      : {}
-
-    const toNotFakeOverride: Pick<FakeTimersConfig, 'toNotFake'> = this._userConfig?.toNotFake !== undefined
-      && isChildProcess()
-      && !this._userConfig.toNotFake.includes('nextTick')
-      ? { toNotFake: [...this._userConfig.toNotFake, 'nextTick' as const] }
-      : {}
-
-    if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
+    let toFake = this._userConfig?.toFake
+    if (isChildProcess() && toFake?.includes('nextTick')) {
       throw new Error(
         'process.nextTick cannot be mocked inside child_process',
       )
     }
 
+    let toNotFake = this._userConfig?.toNotFake
+    if (toFake === undefined && toNotFake === undefined) {
+      // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
+      toFake = (Object.keys(this._fakeTimers.timers) as FakeMethod[])
+        .filter(timer => timer !== 'nextTick' && timer !== 'queueMicrotask')
+    }
+    if (isChildProcess() && toNotFake && !toNotFake.includes('nextTick')) {
+      toNotFake = [...toNotFake, 'nextTick']
+    }
+
     this._clock = this._fakeTimers.install({
       now: fakeDate,
       ...this._userConfig,
-      ...toFakeOverride,
-      ...toNotFakeOverride,
+      ...(toFake && { toFake }),
+      ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,
     })
 
