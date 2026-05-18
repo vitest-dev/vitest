@@ -48,7 +48,7 @@ jobs:
     steps:
       - name: AgentScan
         id: agentscan
-        uses: MatteoGabriele/agentscan-action@6b02b7903ab24fbd23da0314b1b04dbaad98151b
+        uses: MatteoGabriele/agentscan-action@21f25b07e4dda43e6597ffb71c93f8e4c9fed812 # v1.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           agent-scan-comment: false
