@@ -113,7 +113,6 @@ async function loadModuleGraph(force = false) {
       let moduleGraph = await client.rpc.getModuleGraph(
         gd.projectName,
         gd.filepath,
-        !!browserState,
       )
       // remove node_modules from the graph when enabled
       if (hideNodeModules.value) {

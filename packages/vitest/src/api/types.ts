@@ -47,7 +47,6 @@ export interface WebSocketHandlers {
   getModuleGraph: (
     projectName: string,
     id: string,
-    browser?: boolean,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,
