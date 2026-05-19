@@ -22,11 +22,6 @@ watch(
     hideNodeModules,
   ],
   async ([filepath, projectName, hide]) => {
-    if (!filepath) {
-      graph.value = { nodes: [], links: [] }
-      return
-    }
-
     const request = { filepath, projectName, hide }
     loading.value = true
     try {
