@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { expect, onTestFinished, test, vi } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { editFile } from '../../test-utils'
 import { instances, runBrowserTests } from './utils'
 
@@ -37,8 +37,10 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
 `,
     `\
   // a
-  "hello" + "world";
   // b
+  // c
+  // b
+  // e
 `,
   ))
   await result.vitest.waitForStderr('Failed Tests 1')
@@ -49,7 +51,7 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
       "basic.test.ts": {
         "basic": [
           "boom
-        at basic.test.ts:7:8",
+        at basic.test.ts:9:8",
         ],
       },
     }
