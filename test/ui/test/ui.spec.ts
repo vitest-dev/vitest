@@ -53,6 +53,12 @@ test.describe('ui', () => {
     await testFilter(page, { mode: 'ui' })
   })
 
+  test('filter reveals initially invisible explorer item', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await page.goto(pageUrl)
+    await testFilterInitiallyInvisibleItem(page)
+  })
+
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
     await testTagsFilter(page)
@@ -494,6 +500,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function testFilterInitiallyInvisibleItem(page: Page) {
+  await expect(getExplorerItem(page, 'sample.test.ts')).not.toBeVisible()
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 }
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
