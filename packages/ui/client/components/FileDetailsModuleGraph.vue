@@ -48,8 +48,8 @@ const graph = computed(() => {
     <ViewModuleGraph
       v-else
       v-model="hideNodeModules"
-      :graph="graph"
       data-testid="graph"
+      :graph="graph"
       :project-name="props.projectName"
     />
   </div>
