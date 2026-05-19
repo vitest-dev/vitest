@@ -35,7 +35,10 @@ export default defineConfig({
           },
           typecheck: {
             enabled: true,
-            include: ['./test/reporters/configuration-options.test-d.ts'],
+            include: [
+              './test/config-types.test-d.ts',
+              './test/reporters/configuration-options.test-d.ts',
+            ],
           },
           sequence: {
             groupOrder: 0,
