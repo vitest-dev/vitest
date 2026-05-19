@@ -52,7 +52,6 @@ export interface WebSocketHandlers {
     projectName: string,
     id: string,
     testFileId: string,
-    browser?: boolean,
   ) => Promise<TransformResultWithSource | undefined>
   getExternalResult: (
     id: string,
