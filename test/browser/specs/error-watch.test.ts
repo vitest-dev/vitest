@@ -30,30 +30,26 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
   `)
 
   // modify test file and trigger re-run
+  result.vitest.resetOutput()
   editFile(testFile, content => content.replace(
     `\
   // a
 `,
     `\
   // a
-  1 + 2;
   "hello" + "world";
   // b
 `,
   ))
+  await result.vitest.waitForStderr('Failed Tests 1')
 
   // verify new stack trace
-  const tree = await vi.waitFor(() => {
-    const tree = result.errorTree({ stackTrace: true })
-    expect(tree?.['basic.test.ts']?.basic?.[0]).toContain('basic.test.ts:8:8')
-    return tree
-  })
-  expect(tree).toMatchInlineSnapshot(`
+  expect(result.errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "basic": [
           "boom
-        at basic.test.ts:8:8",
+        at basic.test.ts:7:8",
         ],
       },
     }
