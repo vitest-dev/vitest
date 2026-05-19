@@ -77,6 +77,41 @@ Log from failed file`,
   expect(stdout.match(/stdout/g)).toHaveLength(4)
 })
 
+test('{ silent: "passed-only" } replays failed logs when onUserConsoleLog is shadowed', async () => {
+  const { stderr, stdout } = await runVitest({
+    config: false,
+    include: ['./fixtures/reporters/console-some-failing.test.ts'],
+    silent: 'passed-only',
+    reporters: [new ShadowedLogReporter()],
+  })
+
+  const logs = stdout
+    .split('\n')
+    .filter(line => line.startsWith('stdout |') || line.startsWith('Log from'))
+    .join('\n')
+
+  expect({
+    hasPassedLogs: stdout.includes('Log from passed'),
+    hasReporterError: stderr.includes('Unhandled Reporter Error'),
+    logs,
+    stdoutCount: stdout.match(/stdout/g)?.length,
+  }).toMatchInlineSnapshot(`
+    {
+      "hasPassedLogs": false,
+      "hasReporterError": false,
+      "logs": "stdout | fixtures/reporters/console-some-failing.test.ts > failed test #1
+    Log from failed test
+    stdout | fixtures/reporters/console-some-failing.test.ts > failed suite #1 > failed test #2
+    Log from failed test
+    stdout | fixtures/reporters/console-some-failing.test.ts > failed suite #1
+    Log from failed suite
+    stdout | fixtures/reporters/console-some-failing.test.ts
+    Log from failed file",
+      "stdoutCount": 4,
+    }
+  `)
+})
+
 test('{ silent: "passed-only" } logs are filtered by custom onConsoleLog', async () => {
   const { stdout } = await runVitest({
     config: false,
@@ -105,4 +140,11 @@ Log from failed suite`,
 
 class LogReporter extends DefaultReporter {
   isTTY = true
+}
+
+class ShadowedLogReporter extends LogReporter {
+  constructor() {
+    super()
+    Object.defineProperty(this, 'onUserConsoleLog', { value: undefined })
+  }
 }

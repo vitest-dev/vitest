@@ -123,8 +123,12 @@ export abstract class BaseReporter implements Reporter {
 
   protected logFailedTask(task: Task): void {
     if (this.silent === 'passed-only') {
+      const onUserConsoleLog = typeof this.onUserConsoleLog === 'function'
+        ? this.onUserConsoleLog
+        : BaseReporter.prototype.onUserConsoleLog
+
       for (const log of task.logs || []) {
-        this.onUserConsoleLog(log, 'failed')
+        onUserConsoleLog.call(this, log, 'failed')
       }
     }
   }
