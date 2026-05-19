@@ -1,4 +1,4 @@
-import type { BirpcOptions, BirpcReturn } from 'birpc'
+import type { BirpcOptions, PromisifyFn } from 'birpc'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -15,10 +15,15 @@ export interface VitestClientOptions {
   WebSocketConstructor?: typeof WebSocket
 }
 
+export type VitestClientRpc = {
+  [K in keyof WebSocketHandlers]: PromisifyFn<WebSocketHandlers[K]>
+}
+
 export interface VitestClient {
   ws: WebSocket
   state: StateManager
-  rpc: BirpcReturn<WebSocketHandlers, WebSocketEvents>
+  rpc: VitestClientRpc
+  // TODO: unused
   waitForConnection: () => Promise<void>
   reconnect: () => Promise<void>
 }
@@ -35,12 +40,14 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   } = options
 
   let tries = reconnectTries
-  const ctx = reactive({
+  let openPromise: Promise<void>
+  const ctx = reactive<VitestClient>({
     ws: new WebSocketConstructor(url),
     state: new StateManager(),
-    waitForConnection,
+    rpc: undefined!,
+    waitForConnection: () => openPromise,
     reconnect,
-  }, 'state') as VitestClient
+  }, 'state')
 
   ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
   ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
@@ -58,10 +65,6 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
         ctx.state.clearFiles({ config }, [file])
       })
       handlers.onSpecsCollected?.(specs, startTime)
-    },
-    onPathsCollected(paths) {
-      ctx.state.collectPaths(paths)
-      handlers.onPathsCollected?.(paths)
     },
     onCollected(files) {
       ctx.state.collectFiles(files)
@@ -106,9 +109,7 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
     birpcHandlers,
   )
 
-  let openPromise: Promise<void>
-
-  function reconnect(reset = false) {
+  async function reconnect(reset = false) {
     if (reset) {
       tries = reconnectTries
     }
@@ -147,10 +148,6 @@ export function createWsClient(url: string, options: VitestClientOptions = {}): 
   }
 
   registerWS()
-
-  function waitForConnection() {
-    return openPromise
-  }
 
   return ctx
 }

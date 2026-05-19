@@ -5,9 +5,12 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   close-issues:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    name: Close Marked Issues
     permissions:
       issues: write # for actions-cool/issues-helper to update issues
     steps:
@@ -27,7 +30,8 @@ jobs:
           inactive-day: 3
 
   close-prs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    name: Close Marked PRs
     permissions:
       issues: read # to query PRs by label via the issues API
       pull-requests: write # to close pull requests

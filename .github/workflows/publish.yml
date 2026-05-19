@@ -5,32 +5,37 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
-  id-token: write
+permissions: {}
 
 env:
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
   publish:
+    # only run on main, don't trigger in forks
     if: github.repository == 'vitest-dev/vitest'
+    name: Publish Vitest
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # trusted publishing and changelog requirement
+      id-token: write # trusted publishing requirement
     environment: Release
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
 
-      - name: Set node version to 20
+      - name: Set node version to 24
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org/
-          cache: pnpm
+          # disable cache to avoid cache poisoning
+          package-manager-cache: false
 
       - name: Install
         run: pnpm install --frozen-lockfile --prefer-offline
@@ -41,7 +46,7 @@ jobs:
         run: pnpm build
 
       - name: Publish to npm
-        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${{ github.ref_name }}"
+        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "${GITHUB_REF_NAME}"
 
       - name: Generate Changelog
         run: npx changelogithub
