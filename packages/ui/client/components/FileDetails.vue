@@ -59,9 +59,10 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
+const projectName = computed(() => current.value?.file.projectName || '')
 const projectNameColor = computed(() => {
-  const projectName = current.value?.file.projectName || ''
-  return explorerTree.colors.get(projectName) || getBadgeNameColor(current.value?.file.projectName)
+  const projectNameValue = projectName.value
+  return explorerTree.colors.get(projectNameValue) || getBadgeNameColor(projectNameValue)
 })
 
 const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
@@ -202,6 +203,7 @@ const tags = computed(() => {
         v-if="viewMode === 'graph'"
         :key="`graph:${current.id}`"
         :file="current"
+        :project-name="projectName"
       />
       <ViewEditor
         v-else-if="viewMode === 'editor'"

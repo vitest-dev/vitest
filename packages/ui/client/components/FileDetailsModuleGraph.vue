@@ -1,61 +1,43 @@
 <script setup lang="ts">
-import type { RunnerTestFile } from 'vitest'
-import type { ModuleGraph } from '~/composables/module-graph'
-import { ref, watch } from 'vue'
+import type { ModuleGraphData, RunnerTestFile } from 'vitest'
+import { computed, onMounted, ref } from 'vue'
 import { browserState, client } from '~/composables/client'
 import { getModuleGraph } from '~/composables/module-graph'
 import ViewModuleGraph from './views/ViewModuleGraph.vue'
 
 const props = defineProps<{
   file: RunnerTestFile
+  projectName: string
 }>()
 
-const graph = ref<ModuleGraph>({ nodes: [], links: [] })
-const loading = ref(false)
+const graphData = ref<ModuleGraphData>()
+const loading = ref(true)
 const hideNodeModules = ref(true)
 const NODE_MODULES_RE = /[/\\]node_modules[/\\]/
 
-watch(
-  [
-    () => props.file.filepath,
-    () => props.file.file.projectName || '',
-    hideNodeModules,
-  ],
-  async ([filepath, projectName, hideNodeModules], _old, onCleanup) => {
-    let cancelled = false
-    onCleanup(() => {
-      cancelled = true
-    })
+onMounted(async () => {
+  graphData.value = await client.rpc.getModuleGraph(
+    props.projectName,
+    props.file.filepath,
+    !!browserState,
+  )
+  loading.value = false
+})
 
-    loading.value = true
-    try {
-      let moduleGraph = await client.rpc.getModuleGraph(
-        projectName,
-        filepath,
-        !!browserState,
-      )
-      if (cancelled) {
-        return
-      }
-
-      if (hideNodeModules) {
-        moduleGraph = {
-          ...moduleGraph,
-          inlined: moduleGraph.inlined.filter(n => !NODE_MODULES_RE.test(n)),
-          externalized: moduleGraph.externalized.filter(n => !NODE_MODULES_RE.test(n)),
-        }
-      }
-
-      graph.value = getModuleGraph(moduleGraph, filepath)
+const graph = computed(() => {
+  if (!graphData.value) {
+    return { nodes: [], links: [] }
+  }
+  let moduleGraph = graphData.value
+  if (hideNodeModules.value) {
+    moduleGraph = {
+      ...moduleGraph,
+      inlined: moduleGraph.inlined.filter(n => !NODE_MODULES_RE.test(n)),
+      externalized: moduleGraph.externalized.filter(n => !NODE_MODULES_RE.test(n)),
     }
-    finally {
-      if (!cancelled) {
-        loading.value = false
-      }
-    }
-  },
-  { immediate: true },
-)
+  }
+  return getModuleGraph(moduleGraph, props.file.filepath)
+})
 </script>
 
 <template>
@@ -68,7 +50,7 @@ watch(
       v-model="hideNodeModules"
       :graph="graph"
       data-testid="graph"
-      :project-name="file.file.projectName || ''"
+      :project-name="props.projectName"
     />
   </div>
 </template>
