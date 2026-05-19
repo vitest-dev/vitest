@@ -59,17 +59,6 @@ Selecting a step also opens its source location in the Editor tab when that loca
 
 ## Common Setups
 
-<!--
-TODO: The browser UI / Vitest UI / browser driver combinations are not specific to trace view and might be better documented in the Browser Mode guide.  Something like:
-
-  | top-level --ui | browser.ui | browser.headless | Result |
-  | --- | --- | --- | --- |
-  | off | true | false | browser UI/live iframe in headed browser |
-  | on | false | true | pure Vitest UI, tests in headless browser |
-  | on | false | false | pure Vitest UI, tests in separate headed browser window |
-
--->
-
 `browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them.
 
 | Goal | Configuration | Result |
