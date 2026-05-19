@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 'Lint: node-latest, ubuntu-latest'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -67,7 +67,7 @@ jobs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -101,7 +101,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -130,14 +130,14 @@ jobs:
       - name: Unit Test UI
         run: pnpm -C packages/ui test:ui
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.os }}-node-${{ matrix.node_version }}
           path: test/ui/test-results/
           retention-days: 30
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: vitest-results-${{ matrix.os }}-node-${{ matrix.node_version }}
@@ -165,7 +165,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -203,7 +203,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -238,7 +238,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -273,7 +273,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm run test:browser:playwright
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-vite7
@@ -289,7 +289,7 @@ jobs:
     name: Merge Reports
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -301,7 +301,7 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: vitest-results-*
           merge-multiple: true
@@ -318,7 +318,7 @@ jobs:
           cp -rf test/e2e/html html-all/e2e
           echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         id: upload-report
         with:
           name: vitest-ci-report-${{ steps.merge-html.outputs.short_sha }}
