@@ -15,6 +15,5 @@ This is also required for console log preview on Vitest UI.
 
 However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
 
-::: warning
-This option has no effect on [browser tests](/guide/browser/) since Vitest preserves original logging in browser devtools.
-:::
+In [browser tests](/guide/browser/), this option disables forwarding logs to Vitest reporters and Vitest UI Console tab.
+Native browser devtools logging is preserved.

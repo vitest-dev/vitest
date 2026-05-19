@@ -837,7 +837,8 @@ export interface InlineConfig {
    * This is also required for console log preview on Vitest UI.
    * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
    *
-   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   * In browser pool, this option disables forwarding logs to Vitest reporters and Vitest UI.
+   * Native browser devtools logging is preserved.
    *
    * @default false
    */

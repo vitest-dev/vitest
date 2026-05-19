@@ -208,6 +208,28 @@ error with a stack
   })
 })
 
+describe('console logging tests with disableConsoleIntercept', async () => {
+  let stderr: string
+  let stdout: string
+
+  beforeAll(async () => {
+    ({
+      stderr,
+      stdout,
+    } = await runBrowserTests({
+      root: './fixtures/print-logs',
+      disableConsoleIntercept: true,
+    }))
+  })
+
+  test('logs are not redirected to reporters', () => {
+    expect(stdout).not.toContain('stdout | test/logs.test.ts > logging to stdout')
+    expect(stderr).not.toContain('stderr | test/logs.test.ts > logging to stderr')
+    expect(stdout).not.toContain('hello from console.log')
+    expect(stderr).not.toContain('hello from console.error')
+  })
+})
+
 test(`stack trace points to correct file in every browser when failed`, async () => {
   expect.assertions(30)
   const { stderr } = await runBrowserTests({
