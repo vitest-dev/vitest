@@ -21,7 +21,7 @@ jobs:
       actions: read # to check workflow status
       contents: read # to clone the repo
     steps:
-      - uses: actions/github-script@v8
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const user = context.payload.sender.login
@@ -57,7 +57,7 @@ jobs:
               })
               throw new Error('not allowed')
             }
-      - uses: actions/github-script@v8
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         id: get-pr-data
         with:
           script: |
@@ -73,7 +73,7 @@ jobs:
               repo: pr.head.repo.full_name
             }
       - id: generate-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
           private-key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
@@ -81,7 +81,7 @@ jobs:
             vitest
             vitest-ecosystem-ci
           permission-actions: write
-      - uses: actions/github-script@v8
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         id: trigger
         env:
           COMMENT: ${{ github.event.comment.body }}
