@@ -13,7 +13,7 @@ const props = defineProps<{
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const loading = ref(false)
 const hideNodeModules = ref(true)
-const nodeModuleRegex = /[/\\]node_modules[/\\]/
+const NODE_MODULES_RE = /[/\\]node_modules[/\\]/
 
 watch(
   [
@@ -41,8 +41,8 @@ watch(
       if (hideNodeModules) {
         moduleGraph = {
           ...moduleGraph,
-          inlined: moduleGraph.inlined.filter(n => !nodeModuleRegex.test(n)),
-          externalized: moduleGraph.externalized.filter(n => !nodeModuleRegex.test(n)),
+          inlined: moduleGraph.inlined.filter(n => !NODE_MODULES_RE.test(n)),
+          externalized: moduleGraph.externalized.filter(n => !NODE_MODULES_RE.test(n)),
         }
       }
 
