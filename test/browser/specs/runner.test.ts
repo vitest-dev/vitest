@@ -223,10 +223,19 @@ describe('console logging tests with disableConsoleIntercept', async () => {
   })
 
   test('logs are not redirected to reporters', () => {
-    expect(stdout).not.toContain('stdout | test/logs.test.ts > logging to stdout')
-    expect(stderr).not.toContain('stderr | test/logs.test.ts > logging to stderr')
-    expect(stdout).not.toContain('hello from console.log')
-    expect(stderr).not.toContain('hello from console.error')
+    expect({
+      hasStdoutReporterLog: stdout.includes('stdout | test/logs.test.ts > logging to stdout'),
+      hasStderrReporterLog: stderr.includes('stderr | test/logs.test.ts > logging to stderr'),
+      hasStdoutConsoleLog: stdout.includes('hello from console.log'),
+      hasStderrConsoleError: stderr.includes('hello from console.error'),
+    }).toMatchInlineSnapshot(`
+      {
+        "hasStderrConsoleError": false,
+        "hasStderrReporterLog": false,
+        "hasStdoutConsoleLog": false,
+        "hasStdoutReporterLog": false,
+      }
+    `)
   })
 })
 
