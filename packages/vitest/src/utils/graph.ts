@@ -7,13 +7,13 @@ export async function getModuleGraph(
   ctx: Vitest,
   projectName: string,
   testFilePath: string,
-  browser = false,
 ): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
   const inlined = new Set<string>()
 
   const project = ctx.getProjectByName(projectName)
+  const browser = project.config.browser.enabled
 
   const environment = project.config.experimental.viteModuleRunner === false
     ? project.vite.environments.__vitest__

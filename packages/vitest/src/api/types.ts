@@ -47,13 +47,11 @@ export interface WebSocketHandlers {
   getModuleGraph: (
     projectName: string,
     id: string,
-    browser?: boolean,
   ) => Promise<ModuleGraphData>
   getTransformResult: (
     projectName: string,
     id: string,
     testFileId: string,
-    browser?: boolean,
   ) => Promise<TransformResultWithSource | undefined>
   getExternalResult: (
     id: string,

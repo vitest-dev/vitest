@@ -201,7 +201,6 @@ async function serializeReportMetadata(
         ctx,
         projectName,
         testModule.moduleId,
-        project.config.browser.enabled,
       )
     })())
   }

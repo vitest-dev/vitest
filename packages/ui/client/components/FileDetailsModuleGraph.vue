@@ -2,7 +2,7 @@
 import type { RunnerTestFile } from 'vitest'
 import { useAsyncState } from '@vueuse/core'
 import { computed, ref } from 'vue'
-import { browserState, client } from '~/composables/client'
+import { client } from '~/composables/client'
 import { getModuleGraph } from '~/composables/module-graph'
 import ViewModuleGraph from './views/ViewModuleGraph.vue'
 
@@ -18,7 +18,6 @@ const { state: graphData, isLoading } = useAsyncState(
   () => client.rpc.getModuleGraph(
     props.projectName,
     props.file.filepath,
-    !!browserState,
   ),
   undefined,
 )

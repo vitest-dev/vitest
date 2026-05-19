@@ -25,7 +25,7 @@ runs:
       run: echo "Failed to resolve package versions. See log above." && exit 1
 
     - name: Cache Playwright v${{ steps.resolve-package-versions.outputs.PLAYWRIGHT_VERSION }}
-      uses: actions/cache@v5
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       id: playwright-cache
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}

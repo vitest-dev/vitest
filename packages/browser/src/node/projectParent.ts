@@ -71,7 +71,6 @@ export class ParentBrowserProject {
           return extracted?.map
         }
 
-        this.sourceMapCache.set(id, result?.map)
         return result?.map
       },
       getUrlId: (id) => {
