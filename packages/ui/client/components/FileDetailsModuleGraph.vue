@@ -21,7 +21,7 @@ watch(
     () => props.file.file.projectName || '',
     hideNodeModules,
   ],
-  async ([filepath, projectName, hide], _old, onCleanup) => {
+  async ([filepath, projectName, hideNodeModules], _old, onCleanup) => {
     let cancelled = false
     onCleanup(() => {
       cancelled = true
@@ -34,17 +34,16 @@ watch(
         filepath,
         !!browserState,
       )
+      if (cancelled) {
+        return
+      }
 
-      if (hide) {
+      if (hideNodeModules) {
         moduleGraph = {
           ...moduleGraph,
           inlined: moduleGraph.inlined.filter(n => !nodeModuleRegex.test(n)),
           externalized: moduleGraph.externalized.filter(n => !nodeModuleRegex.test(n)),
         }
-      }
-
-      if (cancelled) {
-        return
       }
 
       graph.value = getModuleGraph(moduleGraph, filepath)
