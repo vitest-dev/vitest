@@ -21,8 +21,12 @@ watch(
     () => props.file.file.projectName || '',
     hideNodeModules,
   ],
-  async ([filepath, projectName, hide]) => {
-    const request = { filepath, projectName, hide }
+  async ([filepath, projectName, hide], _old, onCleanup) => {
+    let cancelled = false
+    onCleanup(() => {
+      cancelled = true
+    })
+
     loading.value = true
     try {
       let moduleGraph = await client.rpc.getModuleGraph(
@@ -39,22 +43,14 @@ watch(
         }
       }
 
-      if (
-        props.file.filepath !== request.filepath
-        || (props.file.file.projectName || '') !== request.projectName
-        || hideNodeModules.value !== request.hide
-      ) {
+      if (cancelled) {
         return
       }
 
       graph.value = getModuleGraph(moduleGraph, filepath)
     }
     finally {
-      if (
-        props.file.filepath === request.filepath
-        && (props.file.file.projectName || '') === request.projectName
-        && hideNodeModules.value === request.hide
-      ) {
+      if (!cancelled) {
         loading.value = false
       }
     }
