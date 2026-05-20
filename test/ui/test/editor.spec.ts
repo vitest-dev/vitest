@@ -36,9 +36,8 @@ test.describe('editor', () => {
     await assertTestCounts(page, { pass: 1, fail: 0 })
 
     const item = getExplorerItem(page, 'test-to-edit')
-    const editor = page.getByTestId('editor')
+    const editor = page.getByTestId('editor').locator('.CodeMirror')
     const editorTabButton = page.getByTestId('btn-code')
-    const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
 
     // initially pass
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
@@ -46,11 +45,10 @@ test.describe('editor', () => {
     // open editor
     await item.click()
     await editorTabButton.click()
-
     await expect(editor).toContainText('.toBe(2)')
 
     // edit to fail test
-    await editorImpl.click()
+    await editor.click()
     await page.waitForTimeout(300) // some unknown lag required
     await evaluateCodeMirror(
       page,
@@ -70,7 +68,7 @@ test.describe('editor', () => {
     expect(fs.readFileSync(testFile, 'utf-8')).toContain('toBe(3)')
 
     // edit to fix test
-    await editorImpl.click()
+    await editor.click()
     await page.waitForTimeout(300)
     await evaluateCodeMirror(
       page,
@@ -96,10 +94,11 @@ async function evaluateCodeMirror<T>(
   fn: (codemirror: any, ...args: any[]) => T,
   ...args: any[]
 ): Promise<T> {
-  const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
-  return editorImpl.evaluate(
+  const editor = page.getByTestId('editor').locator('.CodeMirror')
+  return editor.evaluate(
     (e, [fnStr, args]) => {
       const codemirror = (e as any).CodeMirror
+      // eslint-disable-next-line no-new-func
       const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
       return fn(codemirror, args)
     },
