@@ -3,4 +3,4 @@ export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_api__?token=${(window as any).VITEST_API_TOKEN}`
-export const isReport = !!window.HTML_REPORT_METADATA
+export const isReport = !!(window as any).HTML_REPORT_METADATA
