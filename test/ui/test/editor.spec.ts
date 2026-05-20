@@ -37,7 +37,8 @@ test.describe('editor', () => {
     const item = getExplorerItem(page, 'test-to-edit')
     const editor = page.getByTestId('editor')
     const editorTabButton = page.getByTestId('btn-code')
-    const codeMirror = page.getByTestId('editor').locator('.CodeMirror')
+    const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
+    const editorHasFocus = () => editorImpl.evaluate(e => (e as any).CodeMirror.hasFocus())
 
     // initially pass
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
@@ -48,8 +49,8 @@ test.describe('editor', () => {
     await expect(editor).toContainText('.toBe(2)')
 
     // edit to fail test
-    await codeMirror.click()
-    await expect.poll(() => codeMirror.evaluate(element => (element as any).CodeMirror.hasFocus())).toBe(true)
+    await editorImpl.click()
+    await expect.poll(() => editorHasFocus()).toBe(true)
     await page.keyboard.press('ControlOrMeta+A')
     await page.keyboard.type(testFileContent.replace('toBe(2)', 'toBe(3)'))
     await expect(editorTabButton).toHaveText('* Code')
@@ -62,8 +63,8 @@ test.describe('editor', () => {
     await expect(editorTabButton).toHaveText('Code')
 
     // edit to fix test
-    await codeMirror.click()
-    await expect.poll(() => codeMirror.evaluate(element => (element as any).CodeMirror.hasFocus())).toBe(true)
+    await editorImpl.click()
+    await expect.poll(() => editorHasFocus()).toBe(true)
     await page.keyboard.press('ControlOrMeta+A')
     await page.keyboard.type(testFileContent)
     await expect(editorTabButton).toHaveText('* Code')
