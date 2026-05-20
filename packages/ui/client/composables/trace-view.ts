@@ -11,6 +11,13 @@ export interface TraceSelection {
   selectedStepIndex: number
 }
 
+export interface TraceEditorMarker {
+  file: string
+  line: number
+  stepIndex: number
+  active?: boolean
+}
+
 export const activeTraceView = ref<TraceSelection>()
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
@@ -86,6 +93,44 @@ export function getSelectedTrace(selection: TraceSelection): BrowserTraceData | 
     : Object.values(attempts)[0]
 }
 
+export function getTraceEditorMarkersForFile(
+  selection: TraceSelection,
+  file: string,
+): TraceEditorMarker[] {
+  const trace = getSelectedTrace(selection)
+  return getTraceEditorMarkers(trace?.entries ?? [])
+    .filter(marker => marker.file === file)
+    .map(marker => ({
+      ...marker,
+      active: marker.stepIndex === selection.selectedStepIndex,
+    }))
+}
+
+function getTraceEditorMarkers(entries: BrowserTraceEntry[]): TraceEditorMarker[] {
+  const markers: TraceEditorMarker[] = []
+  const seen = new Set<string>()
+
+  for (const [stepIndex, entry] of entries.entries()) {
+    const location = entry.location
+    if (!location) {
+      continue
+    }
+
+    const key = `${location.file}:${location.line}`
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    markers.push({
+      file: location.file,
+      line: location.line,
+      stepIndex,
+    })
+  }
+
+  return markers
+}
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {
