@@ -166,25 +166,50 @@ export class VitestModuleRunner
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      const mockedModule = mod.meta.mockedModule as MockedModule
+      const cachedMockedModule = mod.meta.mockedModule as MockedModule
+      // the cached `mockedModule` in `mod.meta` reflects the mock registered
+      // by the test file whose fetch first populated this node. With
+      // `isolate: false` the module cache is shared between test files, so a
+      // different file may have replaced that mock with another type or
+      // removed it entirely. Always prefer the currently registered mock to
+      // avoid applying a stale factory across files (#10290).
+      const currentMock = this.mocker.getDependencyMock(mod.id)
+      const mockedModule = (currentMock ?? cachedMockedModule)
       const mockId = this.mocker.getMockPath(mod.id)
-      // bypass mock and force "importActual" behavior when:
-      // - mock was removed by doUnmock (stale mockedModule in meta)
-      // - self-import: mock factory/file is importing the module it's mocking
-      const isStale = !this.mocker.getDependencyMock(mod.id)
+      const isStale = !currentMock
       const isSelfImport = callstack.includes(mockId)
         || callstack.includes(url)
         || ('redirect' in mockedModule && callstack.includes(mockedModule.redirect))
       if (isStale || isSelfImport) {
+        // bypass mock and force "importActual" behavior when:
+        // - mock was removed by doUnmock (stale mockedModule in meta)
+        // - self-import: mock factory/file is importing the module it's mocking
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
-      mocked = await this.mocker.requestWithMockedModule(
-        url,
-        mod,
-        callstack,
-        mockedModule,
-      )
+      // the cached node was populated as a manual/redirect placeholder
+      // (its `code` is empty). When the current mock is an automock/autospy,
+      // it needs the actual source of the original module, so re-fetch it.
+      if (
+        (mockedModule.type === 'automock' || mockedModule.type === 'autospy')
+        && cachedMockedModule.type !== mockedModule.type
+      ) {
+        const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
+        mocked = await this.mocker.requestWithMockedModule(
+          url,
+          node,
+          callstack,
+          mockedModule,
+        )
+      }
+      else {
+        mocked = await this.mocker.requestWithMockedModule(
+          url,
+          mod,
+          callstack,
+          mockedModule,
+        )
+      }
     }
     else {
       mocked = await this.mocker.mockedRequest(url, mod, callstack)
