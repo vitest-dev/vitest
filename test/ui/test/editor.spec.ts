@@ -1,9 +1,8 @@
-import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import path from 'node:path'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
+import { assertTestCounts, evaluateEditor, getExplorerItem, startVitestUi } from './helper'
 
 test.describe('editor', () => {
   let vitest: Vitest | undefined
@@ -50,11 +49,9 @@ test.describe('editor', () => {
     // edit to fail test
     await editor.click()
     await page.waitForTimeout(300) // some unknown lag required
-    await evaluateCodeMirror(
+    await evaluateEditor(
       page,
-      (codemirror, source) => {
-        codemirror.setValue(source)
-      },
+      (editor, source) => editor.setValue(source),
       testFileContent.replace('toBe(2)', 'toBe(3)'),
     )
     await expect(editorTabButton).toHaveText('* Code')
@@ -70,11 +67,9 @@ test.describe('editor', () => {
     // edit to fix test
     await editor.click()
     await page.waitForTimeout(300)
-    await evaluateCodeMirror(
+    await evaluateEditor(
       page,
-      (codemirror, source) => {
-        codemirror.setValue(source)
-      },
+      (editor, source) => editor.setValue(source),
       testFileContent,
     )
     await expect(editorTabButton).toHaveText('* Code')
@@ -88,20 +83,3 @@ test.describe('editor', () => {
     expect(fs.readFileSync(testFile, 'utf-8')).toContain('toBe(2)')
   })
 })
-
-async function evaluateCodeMirror<T>(
-  page: Page,
-  fn: (codemirror: any, ...args: any[]) => T,
-  ...args: any[]
-): Promise<T> {
-  const editor = page.getByTestId('editor').locator('.CodeMirror')
-  return editor.evaluate(
-    (e, [fnStr, args]) => {
-      const codemirror = (e as any).CodeMirror
-      // eslint-disable-next-line no-new-func
-      const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
-      return fn(codemirror, args)
-    },
-    [fn.toString(), args],
-  )
-}

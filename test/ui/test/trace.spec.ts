@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -139,8 +139,7 @@ async function testBasic(page: Page) {
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
   // verify editor cursor position
-  const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
-  const getEditorCursor = () => editorImpl.evaluate(e => (e as any).CodeMirror.getCursor())
+  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
   await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
 
   // verify snapshot replay in iframe
