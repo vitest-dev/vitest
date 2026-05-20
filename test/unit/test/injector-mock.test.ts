@@ -27,6 +27,19 @@ function hoistSimpleCode(code: string) {
   return hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
 }
 
+test('does not hoist mock-like calls in comments and strings', () => {
+  expect(hoistSimple(`
+import { value } from './path'
+/**
+ * This documents \`vi.mock('./path')\` without calling it.
+ */
+// vitest.unmock('./path')
+const message = "vi.doMock('./path')"
+const template = \`vi.hoisted(() => {})\`
+console.log(value, message, template)
+  `)).toBeUndefined()
+})
+
 test('hoists mock, unmock, hoisted', () => {
   expect(hoistSimpleCode(`
   vi.mock('path', () => {})

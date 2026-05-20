@@ -74,6 +74,139 @@ const regexpHoistable
   = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
 const hashbangRE = /^#!.*\n/
 
+function regexpHoistableMatches(code: string, regexp: RegExp): boolean {
+  regexp.lastIndex = 0
+  if (!regexp.test(code)) {
+    return false
+  }
+  regexp.lastIndex = 0
+  const cleanCode = stripCommentsAndStrings(code)
+  const result = regexp.test(cleanCode)
+  regexp.lastIndex = 0
+  return result
+}
+
+function stripCommentsAndStrings(code: string): string {
+  const result = code.split('')
+  const length = code.length
+
+  function mask(start: number, end: number) {
+    for (let i = start; i < end && i < length; i++) {
+      if (code[i] !== '\n' && code[i] !== '\r') {
+        result[i] = ' '
+      }
+    }
+  }
+
+  function skipLineComment(index: number): number {
+    const start = index
+    index += 2
+    while (index < length && code[index] !== '\n' && code[index] !== '\r') {
+      index++
+    }
+    mask(start, index)
+    return index
+  }
+
+  function skipBlockComment(index: number): number {
+    const start = index
+    index += 2
+    while (index < length) {
+      if (code[index - 1] === '*' && code[index] === '/') {
+        index++
+        break
+      }
+      index++
+    }
+    mask(start, index)
+    return index
+  }
+
+  function skipQuotedString(index: number, quote: string): number {
+    const start = index
+    index++
+    while (index < length) {
+      const char = code[index]
+      if (char === '\\') {
+        index = Math.min(index + 2, length)
+        continue
+      }
+      index++
+      if (char === quote) {
+        break
+      }
+    }
+    mask(start, index)
+    return index
+  }
+
+  function skipTemplate(index: number): number {
+    mask(index, index + 1)
+    index++
+    while (index < length) {
+      const char = code[index]
+      if (char === '\\') {
+        mask(index, index + 2)
+        index = Math.min(index + 2, length)
+        continue
+      }
+      if (char === '`') {
+        mask(index, index + 1)
+        return index + 1
+      }
+      if (char === '$' && code[index + 1] === '{') {
+        mask(index, index + 2)
+        index = scanCode(index + 2, true)
+        continue
+      }
+      mask(index, index + 1)
+      index++
+    }
+    return index
+  }
+
+  function scanCode(index: number, stopOnBrace: boolean): number {
+    let braceDepth = 0
+    while (index < length) {
+      const char = code[index]
+      const next = code[index + 1]
+      if (char === '"' || char === '\'') {
+        index = skipQuotedString(index, char)
+        continue
+      }
+      if (char === '`') {
+        index = skipTemplate(index)
+        continue
+      }
+      if (char === '/' && next === '/') {
+        index = skipLineComment(index)
+        continue
+      }
+      if (char === '/' && next === '*') {
+        index = skipBlockComment(index)
+        continue
+      }
+      if (stopOnBrace) {
+        if (char === '{') {
+          braceDepth++
+        }
+        else if (char === '}') {
+          if (braceDepth === 0) {
+            mask(index, index + 1)
+            return index + 1
+          }
+          braceDepth--
+        }
+      }
+      index++
+    }
+    return index
+  }
+
+  scanCode(0, false)
+  return result.join('')
+}
+
 // this is a fork of Vite SSR transform
 export function hoistMocks(
   code: string,
@@ -81,7 +214,10 @@ export function hoistMocks(
   parse: (code: string) => any,
   options: HoistMocksOptions = {},
 ): MagicString | undefined {
-  const needHoisting = (options.regexpHoistable || regexpHoistable).test(code)
+  const needHoisting = regexpHoistableMatches(
+    code,
+    options.regexpHoistable || regexpHoistable,
+  )
 
   if (!needHoisting) {
     return
