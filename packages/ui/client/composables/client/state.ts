@@ -25,12 +25,7 @@ export const tagsDefinitions = computed(() => {
 
 export class StateManager {
   filesMap: Map<string, RunnerTestFile[]> = new Map()
-  pathsSet: Set<string> = new Set()
   idMap: Map<string, RunnerTask> = new Map()
-
-  getPaths(): string[] {
-    return Array.from(this.pathsSet)
-  }
 
   /**
    * Return files that were running or collected.
@@ -53,12 +48,6 @@ export class StateManager {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
-  }
-
-  collectPaths(paths: string[] = []): void {
-    paths.forEach((path) => {
-      this.pathsSet.add(path)
-    })
   }
 
   collectFiles(files: RunnerTestFile[] = []): void {

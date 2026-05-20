@@ -1,5 +1,6 @@
 import type { TestAttachment } from '@vitest/runner'
-import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, Vitest } from 'vitest/node'
+import type { SerializedError } from 'vitest'
+import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -55,42 +56,15 @@ export default class HTMLReporter implements Reporter {
     await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
-  async onTestRunEnd(): Promise<void> {
-    const result: HTMLReportMetadata = {
-      paths: this.ctx.state.getPaths(),
-      files: this.ctx.state.getFiles(),
-      config: this.ctx.serializedRootConfig,
-      unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      moduleGraph: {},
-      sources: {},
-    }
-    const promises: Promise<void>[] = []
-
-    promises.push(...result.files.map(async (file) => {
-      const projectName = file.projectName || ''
-      const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-        this.ctx,
-        projectName,
-        file.filepath,
-        browser,
-      )
-      if (!result.sources[file.filepath]) {
-        try {
-          result.sources[file.filepath] = await fs.readFile(file.filepath, {
-            encoding: 'utf-8',
-          })
-        }
-        catch {
-          // just ignore
-        }
-      }
-    }))
-
-    await Promise.all(promises)
-
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): Promise<void> {
+    const result = await serializeReportMetadata(
+      this.ctx,
+      testModules,
+      unhandledErrors,
+    )
     if (this.options.singleFile) {
       await inlineAttachments(result.files)
     }
@@ -278,4 +252,82 @@ function escapeInlineScript(content: string): string {
 
 function escapeInlineStyle(content: string): string {
   return content.replace(/<\/style/gi, '<\\/style')
+}
+
+async function serializeReportMetadata(
+  ctx: Vitest,
+  testModules: ReadonlyArray<TestModule>,
+  unhandledErrors: ReadonlyArray<SerializedError>,
+) {
+  const result: HTMLReportMetadata = {
+    paths: ctx.state.getPaths(),
+    files: [],
+    config: ctx.serializedRootConfig,
+    unhandledErrors: [...unhandledErrors],
+    moduleGraph: {},
+    testModules: [],
+    sourceCode: {
+      codeTable: [],
+      testModules: {},
+    },
+  }
+
+  // dedupe based on project relative paths since
+  // they can have different absolute paths for different test runs
+  // when merging with platform blob labels and shards.
+  // Source code is stored in a separate table so the same file included
+  // in multiple projects can share the content while keeping distinct
+  // project-relative test module entries.
+  const testModuleCodes = result.sourceCode.testModules
+  const codeIndexes = new Map<string, number>()
+  function getCodeIndex(code: string) {
+    const existing = codeIndexes.get(code)
+    if (existing != null) {
+      return existing
+    }
+    const index = result.sourceCode.codeTable.length
+    codeIndexes.set(code, index)
+    result.sourceCode.codeTable.push(code)
+    return index
+  }
+
+  const promises: Promise<void>[] = []
+
+  for (const testModule of testModules) {
+    result.files.push(testModule.task)
+
+    const project = testModule.project
+    const projectName = project.name
+    result.testModules.push({
+      projectName,
+      moduleId: testModule.moduleId,
+      relativeModuleId: testModule.relativeModuleId,
+    })
+
+    testModuleCodes[projectName] ??= {}
+    if (testModuleCodes[projectName][testModule.relativeModuleId] == null) {
+      try {
+        const code = readFileSync(
+          testModule.moduleId,
+          'utf-8',
+        )
+        testModuleCodes[projectName][testModule.relativeModuleId] = getCodeIndex(code)
+      }
+      catch {}
+    }
+
+    // TODO: https://github.com/vitest-dev/vitest/issues/9763
+    promises.push((async () => {
+      result.moduleGraph[projectName] ??= {}
+      result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
+        ctx,
+        projectName,
+        testModule.moduleId,
+      )
+    })())
+  }
+
+  await Promise.all(promises)
+
+  return result
 }

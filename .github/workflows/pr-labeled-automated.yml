@@ -1,22 +1,88 @@
 name: Label Automated PR
 
 on:
+  # zizmor: ignore[dangerous-triggers]
+  # Information from the PR is used only inside builtin `contains` function, it's not passed down as untrusted code.
   pull_request_target:
-    types: [opened, edited]
+    types: [opened, reopened]
 
-permissions:
-  issues: write
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  label:
-    runs-on: ubuntu-latest
+  prompt-label:
+    runs-on: ubuntu-slim
     if: github.repository == 'vitest-dev/vitest' && contains(github.event.pull_request.body, '<!-- VITEST_AUTOMATED_PR -->')
+    name: Automatic Clanker Alert
+    permissions:
+      pull-requests: write # comment and label on PRs
     steps:
-      - name: maybe automated
+      - name: maybe automated (label)
         uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
         with:
           actions: add-labels
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           labels: maybe automated
+      - uses: ./.github/actions/send-ai-bot-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+          login: ${{ github.event.pull_request.user.login }}
+
+  agentscan:
+    runs-on: ubuntu-slim
+    # run only for our repo and ignore PRs from origin that only maintainers can do
+    # also ignore known bots
+    if: |
+      github.repository == 'vitest-dev/vitest' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      !contains(
+        fromJSON('["dependabot[bot]", "github-actions[bot]"]'),
+        github.event.pull_request.user.login
+      )
+    name: AgentScan Alert
+    permissions:
+      pull-requests: write # comment and label on PRs
+    steps:
+      - name: AgentScan
+        id: agentscan
+        uses: MatteoGabriele/agentscan-action@21f25b07e4dda43e6597ffb71c93f8e4c9fed812 # v1.7.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          agent-scan-comment: false
+
+      # just put a label and send a comment if the account looks suspicious
+      - name: Label flagged PR
+        if: contains(fromJSON('["automation","suspicious"]'), steps.agentscan.outputs.classification) && !contains(steps.agentscan.outputs.community-flagged, 'true')
+        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        with:
+          actions: add-labels
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          labels: maybe automated
+      - name: Comment flagged PR
+        if: contains(fromJSON('["automation","suspicious"]'), steps.agentscan.outputs.classification) && !contains(steps.agentscan.outputs.community-flagged, 'true')
+        uses: ./.github/actions/send-ai-bot-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+          login: ${{ github.event.pull_request.user.login }}
+
+      # if the account is confirmed to be a bot, just close the PR
+      - name: Close community flagged accounts
+        if: steps.agentscan.outputs.community-flagged == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              state: 'closed',
+            });

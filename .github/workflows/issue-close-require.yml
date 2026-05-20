@@ -5,9 +5,12 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   close-issues:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    name: Close Marked Issues
     permissions:
       issues: write # for actions-cool/issues-helper to update issues
     steps:
@@ -27,13 +30,14 @@ jobs:
           inactive-day: 3
 
   close-prs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
+    name: Close Marked PRs
     permissions:
       issues: read # to query PRs by label via the issues API
       pull-requests: write # to close pull requests
     steps:
       - name: maybe automated PRs
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
