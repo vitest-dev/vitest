@@ -314,8 +314,12 @@ jobs:
         id: merge-html
         run: |
           mkdir -p html-all
-          cp -rf test/unit/html html-all/unit
-          cp -rf test/e2e/html html-all/e2e
+          if [ -d test/unit/html ]; then
+            cp -rf test/unit/html html-all/unit
+          fi
+          if [ -d test/e2e/html ]; then
+            cp -rf test/e2e/html html-all/e2e
+          fi
           echo "short_sha=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v7
