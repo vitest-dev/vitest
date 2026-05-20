@@ -1087,8 +1087,12 @@ describe('toHaveBeenCalledAfter', () => {
 
 describe('async expect', () => {
   it('resolves', async () => {
+    const resolvesWrapper = vi.fn(async () => 'true')
+
     await expect((async () => 'true')()).resolves.toBe('true')
     await expect(async () => 'true').resolves.toBe('true')
+    await expect(resolvesWrapper).resolves.toBe('true')
+    expect(resolvesWrapper).toHaveBeenCalledTimes(1)
     await expect((async () => 'true')()).resolves.not.toBe('true22')
     await expect((async () => 'true')()).resolves.not.toThrow()
     await expect((async () => new Error('msg'))()).resolves.not.toThrow() // calls chai assertion
