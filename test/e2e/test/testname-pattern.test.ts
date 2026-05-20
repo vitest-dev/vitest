@@ -1,7 +1,6 @@
 import { join, resolve } from 'pathe'
 import { expect, test } from 'vitest'
-
-import { runVitest } from '../../test-utils'
+import { runVitest, useFS } from '../../test-utils'
 
 test.each([
   { filter: 'example' },
@@ -25,14 +24,19 @@ test('match by full test file name', async () => {
 })
 
 test('match by pattern that also matches current working directory', async () => {
-  const filter = 'config'
-  expect(process.cwd()).toMatch(filter)
-
-  const { stdout } = await runVitest({ root: './fixtures/filters' }, [filter])
-
-  expect(stdout).toMatch('✓ test/config.test.ts > this will pass')
-  expect(stdout).toMatch('Test Files  1 passed (1)')
-  expect(stdout).not.toMatch('test/example.test.ts')
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`, `root`)
+  useFS(root, {
+    'basic.test.ts': `test("ok", () => {})`,
+    'root.test.ts': `test("ok", () => {})`,
+  })
+  const result = await runVitest({ root, globals: true }, ['root'])
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "root.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
 })
 
 test.each([
