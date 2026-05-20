@@ -10,7 +10,6 @@ import { reactive } from 'vue'
 import { StateManager } from './state'
 
 export interface HTMLReportMetadata {
-  paths?: string[]
   files: RunnerTestFile[]
   config: SerializedRootConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
@@ -51,7 +50,7 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
     readTestFile: async (id) => {
       return sourceCodes[id]
     },
-    getPaths: async () => metadata.paths ?? [],
+    getPaths: async () => [],
     getResolvedProjectLabels: async () => [],
     getExternalResult: async () => undefined,
     getTransformResult: async () => undefined,

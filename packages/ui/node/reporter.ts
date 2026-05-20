@@ -260,7 +260,6 @@ async function serializeReportMetadata(
   unhandledErrors: ReadonlyArray<SerializedError>,
 ) {
   const result: HTMLReportMetadata = {
-    paths: ctx.state.getPaths(),
     files: [],
     config: ctx.serializedRootConfig,
     unhandledErrors: [...unhandledErrors],
