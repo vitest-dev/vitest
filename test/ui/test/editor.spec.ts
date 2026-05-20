@@ -8,8 +8,8 @@ test.describe('editor', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
-  const root = './fixtures/editor'
-  const testFile = path.join(import.meta.dirname, '../fixtures/editor/basic.test.ts')
+  const root = path.join(import.meta.dirname, '../fixtures/editor')
+  const testFile = path.join(root, 'basic.test.ts')
   const testFileContent = fs.readFileSync(testFile, 'utf-8')
 
   test.beforeAll(async () => {
