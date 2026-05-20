@@ -36,34 +36,39 @@ test.describe('editor', () => {
 
     const item = getExplorerItem(page, 'test-to-edit')
     const editor = page.getByTestId('editor')
+    const editorTabButton = page.getByTestId('btn-code')
 
     // initially pass
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
 
     // open editor
     await item.click()
-    await page.getByTestId('btn-code').click()
+    await editorTabButton.click()
     await expect(editor).toContainText('.toBe(2)')
 
     // edit to fail test
     const modifier = process.platform === 'darwin' ? 'Meta' : 'Control'
     await page.keyboard.press(`${modifier}+A`)
     await page.keyboard.type(testFileContent.replace('toBe(2)', 'toBe(3)'))
+    await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press(`${modifier}+S`)
 
     // verify failed
     await expect(item.getByTestId('status-icon-fail')).toBeVisible()
     await expect(editor).toContainText('toBe(3)')
     await expect(editor).toContainText('AssertionError: expected 2 to be 3')
+    await expect(editorTabButton).toHaveText('Code')
 
     // edit to fix test
     await page.keyboard.press(`${modifier}+A`)
     await page.keyboard.type(testFileContent)
+    await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press(`${modifier}+S`)
 
     // verify fixed
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
     await expect(editor).toContainText('.toBe(2)')
     await expect(editor).not.toContainText('AssertionError')
+    await expect(editorTabButton).toHaveText('Code')
   })
 })
