@@ -8,6 +8,7 @@ import { selectedTest } from './params'
 export interface TraceSelection {
   test: RunnerTestCase
   attemptKey?: string
+  selectedStepIndex: number
 }
 
 export const activeTraceView = ref<TraceSelection>()
@@ -90,11 +91,19 @@ export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   activeTraceView.value = {
     test,
     attemptKey: getTraceAttemptKey(trace),
+    selectedStepIndex: 0,
   }
 }
 
 export function closeTrace() {
   activeTraceView.value = undefined
+}
+
+export function selectActiveTraceStep(index: number) {
+  const selection = activeTraceView.value
+  if (selection) {
+    selection.selectedStepIndex = index
+  }
 }
 
 // Open/close only on selected-test navigation so the close button can clear the
@@ -104,7 +113,7 @@ watch(selectedTest, (testId) => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && isTraceViewEnabled(test)) {
       // Auto-open trace view when selecting a trace-enabled test.
-      activeTraceView.value = { test }
+      activeTraceView.value = { test, selectedStepIndex: 0 }
       return
     }
   }
@@ -122,7 +131,7 @@ watchEffect(() => {
     const test = client.state.idMap.get(testId)
     if (test?.type === 'test' && active.test !== test) {
       // Rerun produced a fresh test object; reset attempt selection.
-      activeTraceView.value = { test }
+      activeTraceView.value = { test, selectedStepIndex: 0 }
     }
   }
 })
