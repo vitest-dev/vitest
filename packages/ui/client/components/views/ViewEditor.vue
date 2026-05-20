@@ -128,9 +128,6 @@ const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
 
 const hasBeenEdited = ref(false)
 
-let traceMarkerLines: number[] = []
-const TRACE_GUTTER_ID = 'trace-step-gutter'
-
 function clearListeners() {
   listeners.forEach(([el, l, t]) => {
     el.removeEventListener('click', l)
@@ -147,6 +144,9 @@ function codemirrorChanges() {
   draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
+const TRACE_GUTTER_ID = 'trace-step-gutter'
+let traceGutterLines: number[] = []
+
 const traceEditorMarkersForFile = computed(() => {
   const selection = activeTraceView.value
   const file = props.file?.filepath
@@ -159,14 +159,14 @@ const traceEditorMarkersForFile = computed(() => {
 function syncTraceMarkers() {
   const cmValue = codemirrorRef.value
   if (!cmValue) {
-    traceMarkerLines = []
+    traceGutterLines = []
     return
   }
 
-  for (const line of traceMarkerLines) {
+  for (const line of traceGutterLines) {
     cmValue.setGutterMarker(line, TRACE_GUTTER_ID, null)
   }
-  traceMarkerLines = []
+  traceGutterLines = []
 
   for (const marker of traceEditorMarkersForFile.value) {
     const lineIndex = marker.line - 1
@@ -184,17 +184,9 @@ function syncTraceMarkers() {
       selectActiveTraceStep(marker.stepIndex)
     })
     cmValue.setGutterMarker(lineIndex, TRACE_GUTTER_ID, el)
-    traceMarkerLines.push(lineIndex)
+    traceGutterLines.push(lineIndex)
   }
 }
-
-watch(
-  draft,
-  (d) => {
-    emit('draft', d)
-  },
-  { immediate: true },
-)
 
 watch(
   [codemirrorRef, traceEditorMarkersForFile],
@@ -202,6 +194,14 @@ watch(
     syncTraceMarkers()
   },
   { flush: 'post', immediate: true },
+)
+
+watch(
+  draft,
+  (d) => {
+    emit('draft', d)
+  },
+  { immediate: true },
 )
 
 function createErrorElement(e: TestError) {
