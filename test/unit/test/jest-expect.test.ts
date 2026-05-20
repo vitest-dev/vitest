@@ -1088,9 +1088,11 @@ describe('toHaveBeenCalledAfter', () => {
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')
+    await expect(async () => 'true').resolves.toBe('true')
     await expect((async () => 'true')()).resolves.not.toBe('true22')
     await expect((async () => 'true')()).resolves.not.toThrow()
     await expect((async () => new Error('msg'))()).resolves.not.toThrow() // calls chai assertion
+    await expect(async () => new Error('msg')).resolves.not.toThrow() // calls chai assertion
     await expect((async () => new Error('msg'))()).resolves.not.toThrow(Error) // calls our assertion
     await expect((async () => () => {
       throw new Error('msg')
@@ -1120,12 +1122,20 @@ describe('async expect', () => {
   })
 
   it('throws an error on .resolves when the argument is not a promise', () => {
-    expect.assertions(2)
+    expect.assertions(4)
 
     const expectedError = new TypeError('You must provide a Promise to expect() when using .resolves, not \'number\'.')
 
     try {
       expect(1).resolves.toEqual(2)
+      expect.unreachable()
+    }
+    catch (error) {
+      expect(error).toEqual(expectedError)
+    }
+
+    try {
+      expect(() => 1).resolves.toEqual(2)
       expect.unreachable()
     }
     catch (error) {
