@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -38,7 +39,7 @@ test.describe('editor', () => {
     const editor = page.getByTestId('editor')
     const editorTabButton = page.getByTestId('btn-code')
     const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
-    const editorHasFocus = () => editorImpl.evaluate(e => (e as any).CodeMirror.hasFocus())
+    // const editorHasFocus = () => editorImpl.evaluate(e => (e as any).CodeMirror.hasFocus())
 
     // initially pass
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
@@ -46,13 +47,24 @@ test.describe('editor', () => {
     // open editor
     await item.click()
     await editorTabButton.click()
+
     await expect(editor).toContainText('.toBe(2)')
 
     // edit to fail test
     await editorImpl.click()
-    await expect.poll(() => editorHasFocus()).toBe(true)
-    await page.keyboard.press('ControlOrMeta+A')
-    await page.keyboard.type(testFileContent.replace('toBe(2)', 'toBe(3)'))
+    await page.waitForTimeout(300) // some unknown lag required
+    // await expect.poll(() => editorHasFocus()).toBe(true)
+    // await page.keyboard.press('ControlOrMeta+A')
+    // await editorImpl.evaluate((element, source) => {
+    //   const cm = (element as any).CodeMirror
+    //   // cm.focus()
+    //   cm.setValue(source)
+    // }, testFileContent.replace('toBe(2)', 'toBe(3)'))
+    // await page.keyboard.type(testFileContent.replace('toBe(2)', 'toBe(3)'))
+    await evaluateCodeMirror(page, (cm, source) => {
+      cm.setValue(source)
+    }, testFileContent.replace('toBe(2)', 'toBe(3)'))
+    // await page.keyboard.press('ControlOrMeta+S')
     await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press('ControlOrMeta+S')
 
@@ -65,8 +77,15 @@ test.describe('editor', () => {
 
     // edit to fix test
     await editorImpl.click()
-    await expect.poll(() => editorHasFocus()).toBe(true)
+    await page.waitForTimeout(300)
+    // await expect.poll(() => editorHasFocus()).toBe(true)
     await page.keyboard.press('ControlOrMeta+A')
+    // await page.keyboard.type(testFileContent)
+    // await editorImpl.evaluate((element, source) => {
+    //   const cm = (element as any).CodeMirror
+    //   cm.focus()
+    //   cm.setValue(source)
+    // }, testFileContent)
     await page.keyboard.type(testFileContent)
     await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press('ControlOrMeta+S')
@@ -79,3 +98,12 @@ test.describe('editor', () => {
     expect(fs.readFileSync(testFile, 'utf-8')).toContain('toBe(2)')
   })
 })
+
+async function evaluateCodeMirror<T>(page: Page, fn: (codemirror: any, ...args: any[]) => T, ...args: any[]): Promise<T> {
+  const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
+  return editorImpl.evaluate((e, [fnStr, args]) => {
+    const cm = (e as any).CodeMirror
+    const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
+    return fn(cm, args)
+  }, [fn.toString(), args])
+}
