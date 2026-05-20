@@ -138,12 +138,22 @@ async function testBasic(page: Page) {
   await traceSteps.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
+  // verify editor cursor position
+  const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
+  const getEditorCursor = () => editorImpl.evaluate(e => (e as any).CodeMirror.getCursor())
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
+
   // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // selecting 2nd trace step and verify again
+  await traceSteps.getByText('Render another').click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
