@@ -61,6 +61,7 @@ test.describe('editor', () => {
     await expect(editor).toContainText('toBe(3)')
     await expect(editor).toContainText('AssertionError: expected 2 to be 3')
     await expect(editorTabButton).toHaveText('Code')
+    expect(fs.readFileSync(testFile, 'utf-8')).toContain('toBe(3)')
 
     // edit to fix test
     await editorImpl.click()
@@ -75,5 +76,6 @@ test.describe('editor', () => {
     await expect(editor).toContainText('.toBe(2)')
     await expect(editor).not.toContainText('AssertionError')
     await expect(editorTabButton).toHaveText('Code')
+    expect(fs.readFileSync(testFile, 'utf-8')).toContain('toBe(2)')
   })
 })
