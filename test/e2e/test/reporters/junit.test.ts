@@ -163,13 +163,17 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
 })
 
 test('many errors without warning', async () => {
-  const { stderr } = await runVitestCli(
+  const result = await runVitestCli(
     'run',
     '--reporter=junit',
     '--root',
-    resolve(import.meta.dirname, '../fixtures/reporters/many-errors'),
+    resolve(import.meta.dirname, '../../fixtures/reporters/many-errors'),
   )
-  expect(stderr).not.toContain('MaxListenersExceededWarning')
+  expect(stabilizeReport(result.stdout).split('\n')[1]).toMatchInlineSnapshot(
+    `"<testsuites name="vitest tests" tests="20" failures="20" errors="0" time="...">"`,
+  )
+  expect(result.stderr).not.toContain('MaxListenersExceededWarning')
+  expect(result.exitCode).not.toBe(0)
 })
 
 test('CLI reporter option preserves config file options', async () => {

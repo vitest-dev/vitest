@@ -26,6 +26,7 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "ansivision": "catalog:",
     "flatted": "catalog:",
     "jest-image-snapshot": "^6.5.1",
     "obug": "^2.1.1",

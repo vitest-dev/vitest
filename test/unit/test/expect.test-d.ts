@@ -119,4 +119,24 @@ test('expect.* allows asymmetrict mattchers with different types', () => {
     expect(value).toMatchObject(value)
   }
   expectMany({ enabled: true, data: 'ok' })
+
+  // toBeOneOf accepts readonly arrays and sets
+  // https://github.com/vitest-dev/vitest/issues/10264
+  {
+    const allowed = ['A', 'B'] as const
+    expect('A').toBeOneOf(allowed)
+    expect('A').toEqual(expect.toBeOneOf(allowed))
+
+    const readonlyArray: ReadonlyArray<string> = ['A', 'B']
+    expect('A').toBeOneOf(readonlyArray)
+    expect('A').toEqual(expect.toBeOneOf(readonlyArray))
+
+    const readonlySet: ReadonlySet<string> = new Set(['A', 'B'])
+    expect('A').toBeOneOf(readonlySet)
+    expect('A').toEqual(expect.toBeOneOf(readonlySet))
+
+    // mutable arrays and sets still work
+    expect('A').toBeOneOf(['A', 'B'])
+    expect('A').toBeOneOf(new Set(['A', 'B']))
+  }
 })

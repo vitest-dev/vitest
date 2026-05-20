@@ -5,6 +5,12 @@ import { expect, test } from 'vitest'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests } from './utils'
 
+// update snapshots by
+//   TEST_BROWSER=chromium pnpm -C test/browser/ test:playwright specs/trace.test.ts -u --run
+//   TEST_BROWSER=chrome pnpm -C test/browser/ test:webdriverio specs/trace.test.ts -u --run
+// run fixture directly by
+//   TEST_BROWSER=chromium pnpm -C test/browser/ test-fixtures --root fixtures/trace
+
 test('trace view artifacts', async () => {
   const result = await runBrowserTests({
     root: './fixtures/trace',
@@ -22,6 +28,7 @@ test('trace view artifacts', async () => {
     // other integration features need to be tested separately
     const result = {
       ...raw,
+      range: raw.range ? { phase: raw.range.phase } : undefined,
       location: raw.location ? formatLocation(raw.location) : undefined,
       stack: undefined,
       startTime: undefined,
@@ -99,10 +106,14 @@ test('trace view artifacts', async () => {
           ],
         },
         "mark.test.ts": {
+          "custom command": "passed",
           "helper": "passed",
           "kind": "passed",
           "locator.mark": "passed",
           "mark function": "passed",
+          "mark function fail": [
+            "Mark failure",
+          ],
           "page.mark": "passed",
           "stack": "passed",
         },
@@ -153,6 +164,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:51",
@@ -179,6 +194,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:11",
@@ -205,6 +224,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:32",
@@ -231,6 +254,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:20",
@@ -255,11 +282,38 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "vitest:click",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button[name="Hello"i]",
+                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "selector": "html > body > button",
+                    },
+                    "kind": "action",
+                    "location": "expect.test.ts:25",
+                    "name": "vitest:click",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:23",
@@ -294,12 +348,39 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
+                    "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button",
+                      "locator": "getByRole('button')",
+                      "selector": "html > body > button",
+                    },
+                    "kind": "expect",
+                    "location": "expect.test.ts:15",
                     "name": "toHaveTextContent [ERROR]",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "fail",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:15",
@@ -322,11 +403,38 @@ test('trace view artifacts', async () => {
                     "kind": "expect",
                     "location": "expect.test.ts:10",
                     "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button",
+                      "locator": "getByRole('button')",
+                      "selector": "html > body > button",
+                    },
+                    "kind": "expect",
+                    "location": "expect.test.ts:10",
+                    "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:8",
@@ -352,6 +460,28 @@ test('trace view artifacts', async () => {
             ],
           },
           "mark.test.ts": {
+            "custom command": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "name": "from server command",
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:48",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
             "helper": [
               {
                 "entries": [
@@ -368,6 +498,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:23",
@@ -387,24 +521,40 @@ test('trace view artifacts', async () => {
                     "name": "action marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "expect",
                     "location": "mark.test.ts:43",
                     "name": "expect marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:44",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "mark",
                     "location": "mark.test.ts:45",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:39",
@@ -431,6 +581,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:8",
@@ -448,15 +602,75 @@ test('trace view artifacts', async () => {
                     "kind": "mark",
                     "location": "mark.test.ts:34",
                     "name": "render group",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:34",
+                    "name": "render group",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {},
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:33",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "mark function fail": [
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:57",
+                    "name": "failed render group",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:57",
+                    "name": "failed render group",
+                    "range": {
+                      "phase": "end",
+                    },
+                    "snapshot": {},
+                    "status": "fail",
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:59",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -470,6 +684,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered - page",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:13",
@@ -496,6 +714,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:27",
@@ -524,6 +746,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "resources.test.ts:17",
@@ -550,6 +776,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "resources.test.ts:9",
@@ -578,6 +808,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:31",
@@ -602,6 +836,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:31",
@@ -627,6 +866,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -652,6 +896,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -677,6 +926,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -704,6 +958,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -728,6 +986,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -753,6 +1016,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -780,6 +1048,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -804,6 +1076,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:38",
@@ -829,6 +1106,12 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -855,6 +1138,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -882,6 +1170,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:24",
@@ -906,6 +1198,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:24",
@@ -931,6 +1228,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:21",
@@ -953,6 +1255,10 @@ test('trace view artifacts', async () => {
                     "name": "element rendered with css url resource",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:45",
@@ -972,6 +1278,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with external stylesheet",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:55",
@@ -991,6 +1301,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with font-face url",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:66",
@@ -1010,6 +1324,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:9",
@@ -1029,6 +1347,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with same-origin linked css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:32",
@@ -1051,11 +1373,38 @@ test('trace view artifacts', async () => {
                     "kind": "expect",
                     "location": "styles.test.ts:101",
                     "name": "toHaveStyle",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "html > body > button:nth-child(1)",
+                    },
+                    "kind": "expect",
+                    "location": "styles.test.ts:101",
+                    "name": "toHaveStyle",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "_pwSelector": "internal:role=button[name="First pseudo state"i]",
@@ -1065,11 +1414,38 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:104",
                     "name": "vitest:hover",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "html > body > button:nth-child(1)",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:104",
+                    "name": "vitest:hover",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "_pwSelector": "internal:role=button[name="Second pseudo state"i]",
@@ -1079,11 +1455,38 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:105",
                     "name": "vitest:click",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:role=button[name="Second pseudo state"i]",
+                      "locator": "getByRole('button', { name: 'Second pseudo state' })",
+                      "selector": "html > body > button:nth-child(2)",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:105",
+                    "name": "vitest:click",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "_pwSelector": "internal:label="Focused pseudo state"i",
@@ -1093,11 +1496,38 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:106",
                     "name": "vitest:fill",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:label="Focused pseudo state"i",
+                      "locator": "getByLabel('Focused pseudo state')",
+                      "selector": "html > body > input",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:106",
+                    "name": "vitest:fill",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "_pwSelector": "internal:label="Focus within pseudo state"i",
@@ -1107,11 +1537,38 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:107",
                     "name": "vitest:fill",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "_pwSelector": "internal:label="Focus within pseudo state"i",
+                      "locator": "getByLabel('Focus within pseudo state')",
+                      "selector": "html > body > label > input",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:107",
+                    "name": "vitest:fill",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:83",
@@ -1131,6 +1588,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with style tag css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:14",
@@ -1159,6 +1620,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:24",
@@ -1185,6 +1650,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:34",
@@ -1204,6 +1673,10 @@ test('trace view artifacts', async () => {
                     "name": "viewport sensitive layout rendered",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:10",
@@ -1237,6 +1710,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:51",
@@ -1262,6 +1739,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:11",
@@ -1287,6 +1768,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:32",
@@ -1312,6 +1797,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "exotic.test.ts:20",
@@ -1335,11 +1824,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "expect.test.ts:25",
                     "name": "vitest:click",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
+                    "kind": "action",
+                    "location": "expect.test.ts:25",
+                    "name": "vitest:click",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:23",
@@ -1361,11 +1876,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "expect.test.ts:33",
                     "name": "vitest:click",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "missing",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Missing' })",
+                      "selector": "internal:role=button[name="Missing"i]",
+                    },
+                    "kind": "action",
+                    "location": "expect.test.ts:33",
+                    "name": "vitest:click",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "missing",
                     },
                     "status": "fail",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:33",
@@ -1386,12 +1927,38 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
+                    "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
+                    "kind": "expect",
+                    "location": "expect.test.ts:15",
                     "name": "toHaveTextContent [ERROR]",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "fail",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:15",
@@ -1413,11 +1980,37 @@ test('trace view artifacts', async () => {
                     "kind": "expect",
                     "location": "expect.test.ts:10",
                     "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
+                    "kind": "expect",
+                    "location": "expect.test.ts:10",
+                    "name": "toHaveTextContent",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "expect.test.ts:8",
@@ -1443,6 +2036,28 @@ test('trace view artifacts', async () => {
             ],
           },
           "mark.test.ts": {
+            "custom command": [
+              {
+                "entries": [
+                  {
+                    "kind": "action",
+                    "name": "from server command",
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:48",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+            ],
             "helper": [
               {
                 "entries": [
@@ -1458,6 +2073,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:23",
@@ -1477,24 +2096,40 @@ test('trace view artifacts', async () => {
                     "name": "action marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "expect",
                     "location": "mark.test.ts:43",
                     "name": "expect marker",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:44",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "mark",
                     "location": "mark.test.ts:45",
                     "name": "lifecycle group",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:39",
@@ -1520,6 +2155,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:8",
@@ -1537,15 +2176,75 @@ test('trace view artifacts', async () => {
                     "kind": "mark",
                     "location": "mark.test.ts:34",
                     "name": "render group",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:34",
+                    "name": "render group",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {},
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:33",
                     "name": "vitest:onAfterRetryTask",
                     "snapshot": {},
                     "status": "pass",
+                  },
+                ],
+              },
+            ],
+            "mark function fail": [
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:57",
+                    "name": "failed render group",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "mark.test.ts:57",
+                    "name": "failed render group",
+                    "range": {
+                      "phase": "end",
+                    },
+                    "snapshot": {},
+                    "status": "fail",
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "mark.test.ts:59",
+                    "name": "vitest:onAfterRetryTask",
+                    "snapshot": {},
+                    "status": "fail",
                   },
                 ],
               },
@@ -1559,6 +2258,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered - page",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:13",
@@ -1584,6 +2287,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "mark.test.ts:27",
@@ -1611,6 +2318,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "resources.test.ts:17",
@@ -1636,6 +2347,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "resources.test.ts:9",
@@ -1663,6 +2378,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:31",
@@ -1686,6 +2405,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:31",
@@ -1710,6 +2434,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -1734,6 +2463,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -1758,6 +2492,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:28",
@@ -1784,6 +2523,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -1807,6 +2550,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -1831,6 +2579,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:17",
@@ -1857,6 +2610,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -1880,6 +2637,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:38",
@@ -1904,6 +2666,12 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 1,
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -1929,6 +2697,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "repeats": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:35",
@@ -1955,6 +2728,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:24",
@@ -1978,6 +2755,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 1,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:24",
@@ -2002,6 +2784,11 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+                "retry": 2,
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "retry.test.ts:21",
@@ -2024,6 +2811,10 @@ test('trace view artifacts', async () => {
                     "name": "element rendered with css url resource",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:45",
@@ -2043,6 +2834,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with external stylesheet",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:55",
@@ -2062,6 +2857,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with font-face url",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:66",
@@ -2081,6 +2880,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:9",
@@ -2100,6 +2903,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with same-origin linked css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:32",
@@ -2121,11 +2928,37 @@ test('trace view artifacts', async () => {
                     "kind": "expect",
                     "location": "styles.test.ts:101",
                     "name": "toHaveStyle",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "internal:role=button[name="First pseudo state"i]",
+                    },
+                    "kind": "expect",
+                    "location": "styles.test.ts:101",
+                    "name": "toHaveStyle",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
@@ -2134,11 +2967,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:104",
                     "name": "vitest:hover",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'First pseudo state' })",
+                      "selector": "internal:role=button[name="First pseudo state"i]",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:104",
+                    "name": "vitest:hover",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
@@ -2147,11 +3006,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:105",
                     "name": "vitest:click",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button', { name: 'Second pseudo state' })",
+                      "selector": "internal:role=button[name="Second pseudo state"i]",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:105",
+                    "name": "vitest:click",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
@@ -2160,11 +3045,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:106",
                     "name": "vitest:fill",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
+                      "selector": "internal:role=textbox[name="Focused pseudo state"i]",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:106",
+                    "name": "vitest:fill",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
@@ -2173,11 +3084,37 @@ test('trace view artifacts', async () => {
                     "kind": "action",
                     "location": "styles.test.ts:107",
                     "name": "vitest:fill",
+                    "range": {
+                      "phase": "start",
+                    },
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
+                      "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
+                    },
+                    "kind": "action",
+                    "location": "styles.test.ts:107",
+                    "name": "vitest:fill",
+                    "range": {
+                      "phase": "end",
+                    },
                     "snapshot": {
                       "selectorResolution": "matched",
                     },
                     "status": "pass",
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:83",
@@ -2197,6 +3134,10 @@ test('trace view artifacts', async () => {
                     "name": "button rendered with style tag css",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "styles.test.ts:14",
@@ -2224,6 +3165,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:24",
@@ -2249,6 +3194,10 @@ test('trace view artifacts', async () => {
                       "selectorResolution": "matched",
                     },
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:34",
@@ -2268,6 +3217,10 @@ test('trace view artifacts', async () => {
                     "name": "viewport sensitive layout rendered",
                     "snapshot": {},
                   },
+                ],
+              },
+              {
+                "entries": [
                   {
                     "kind": "lifecycle",
                     "location": "viewport.test.ts:10",

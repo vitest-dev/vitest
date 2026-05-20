@@ -1,4 +1,4 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
@@ -617,7 +617,7 @@ export interface InlineConfig {
   /**
    * Options for @sinon/fake-timers
    */
-  fakeTimers?: FakeTimerInstallOpts
+  fakeTimers?: FakeTimersConfig
 
   /**
    * Custom handler for console.log in tests.
@@ -1014,6 +1014,10 @@ export interface TypecheckConfig {
    * Do not fail, if Vitest found errors outside the test files.
    */
   ignoreSourceErrors?: boolean
+  /**
+   * Use TypeScript build mode.
+   */
+  build?: boolean
   /**
    * Path to tsconfig, relative to the project root.
    */

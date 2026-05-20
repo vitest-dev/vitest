@@ -293,6 +293,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
               provider,
               contextId: sessionId,
               sessionId,
+              mark: async (name: string, options?: any) => {
+                const tester = (project.browser!.state as BrowserServerState).testers.get(rpcId)
+                await tester?.pageMark(name, options)
+              },
               triggerCommand: (name: string, ...args: any[]) => {
                 return project.browser!.triggerCommand(
                   name as any,

@@ -69,6 +69,9 @@ catalogs:
     acorn-walk:
       specifier: ^8.3.5
       version: 8.3.5
+    ansivision:
+      specifier: ^0.2.7
+      version: 0.2.7
     birpc:
       specifier: ^4.0.0
       version: 4.0.0
@@ -177,9 +180,9 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@15.0.0':
-    hash: 8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2
-    path: patches/@sinonjs__fake-timers@15.0.0.patch
+  '@sinonjs/fake-timers@15.3.2':
+    hash: 5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0
+    path: patches/@sinonjs__fake-timers@15.3.2.patch
   acorn@8.11.3:
     hash: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
     path: patches/acorn@8.11.3.patch
@@ -1112,8 +1115,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0
       '@sinonjs/fake-timers':
-        specifier: 15.0.0
-        version: 15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)
+        specifier: 15.3.2
+        version: 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
@@ -1135,9 +1138,6 @@ importers:
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
-      '@types/sinonjs__fake-timers':
-        specifier: ^15.0.1
-        version: 15.0.1
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
@@ -1430,6 +1430,9 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      ansivision:
+        specifier: 'catalog:'
+        version: 0.2.7
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
@@ -1712,6 +1715,9 @@ packages:
 
   '@adobe/css-tools@4.4.0':
     resolution: {integrity: sha512-Ff9+ksdQQB3rMncgqDK78uLznstjyfIf2Arnh22pW8kBpLs6rpKDwgnZT46hin5Hl1WzazzK64DOrhSwYpS7bQ==}
+
+  '@ansi-tools/parser@1.0.15':
+    resolution: {integrity: sha512-Y+PIdkMVu8I27z344G65nni8c7TlPtVv/7Kw/ncS6lbpJKBRT00bTtyAlPL/aVjkCrLoYlUwsgvoGJ/iWhH52w==}
 
   '@antfu/eslint-config@7.6.1':
     resolution: {integrity: sha512-MRiskHFHYPF0R3eWDUkPPiHUM3fWXwAviVv9O8iMH5hVJkgp60oJYBMzbImKdqSGMuuyOMY3GXxWbH60t9rK0g==}
@@ -4832,11 +4838,8 @@ packages:
   '@sinonjs/commons@3.0.1':
     resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@15.0.0':
-    resolution: {integrity: sha512-dlUB2oL+hDIYkIq/OWFBDhQAuU6kDey3eeMiYpVb7UXHhkMq/r1HloKXAbJwJZpYWkFWsydLjMqDpueMUEOjXQ==}
-
-  '@sinonjs/fake-timers@15.1.1':
-    resolution: {integrity: sha512-cO5W33JgAPbOh07tvZjUOJ7oWhtaqGHiZw+11DPbyqh2kHTBc3eF/CjJDeQ4205RLQsX6rxCuYOroFQwl7JDRw==}
+  '@sinonjs/fake-timers@15.3.2':
+    resolution: {integrity: sha512-mrn35Jl2pCpns+mE3HaZa1yPN5EYCRgiMI+135COjr2hr8Cls9DXqIZ57vZe2cz7y2XVSq92tcs6kGQcT1J8Rw==}
 
   '@sinonjs/samsam@9.0.3':
     resolution: {integrity: sha512-ZgYY7Dc2RW+OUdnZ1DEHg00lhRt+9BjymPKHog4PRFzr1U3MbK57+djmscWyKxzO1qfunHqs4N45WWyKIFKpiQ==}
@@ -5196,9 +5199,6 @@ packages:
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
-
-  '@types/sinonjs__fake-timers@15.0.1':
-    resolution: {integrity: sha512-Ko2tjWJq8oozHzHV+reuvS5KYIRAokHnGbDwGh/J64LntgpbuylF74ipEL24HCyRjf9FOlBiBHWBR1RlVKsI1w==}
 
   '@types/sinonjs__fake-timers@8.1.5':
     resolution: {integrity: sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==}
@@ -5799,6 +5799,9 @@ packages:
   ansis@4.2.0:
     resolution: {integrity: sha512-HqZ5rWlFjGiV0tDm3UxxgNRqsOTniqoKZu0pIAfh7TZQMGuZK+hH0drySty0si0QXj1ieop4+SkSfPZBPPkHig==}
     engines: {node: '>=14'}
+
+  ansivision@0.2.7:
+    resolution: {integrity: sha512-D2y8fZ2G+S0Ni/Uw2ki9bGpsBu0WkNRSAARJK/on+xb4AzEkNSM2oUNfiJXqjN2wkjHGklWzol8qYDWy0EMyYg==}
 
   anymatch@3.1.3:
     resolution: {integrity: sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==}
@@ -10560,6 +10563,8 @@ snapshots:
 
   '@adobe/css-tools@4.4.0': {}
 
+  '@ansi-tools/parser@1.0.15': {}
+
   '@antfu/eslint-config@7.6.1(@typescript-eslint/rule-tester@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/typescript-estree@8.56.1(typescript@5.9.3))(@typescript-eslint/utils@8.56.1(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.29)(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)(vitest@packages+vitest)':
     dependencies:
       '@antfu/install-pkg': 1.1.0
@@ -13242,11 +13247,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.0.0(patch_hash=8f3309cba0158608885141fb640e96b064570f7399136966ff13523bdaf678b2)':
-    dependencies:
-      '@sinonjs/commons': 3.0.1
-
-  '@sinonjs/fake-timers@15.1.1':
+  '@sinonjs/fake-timers@15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -13589,8 +13590,6 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.2': {}
-
-  '@types/sinonjs__fake-timers@15.0.1': {}
 
   '@types/sinonjs__fake-timers@8.1.5': {}
 
@@ -14328,6 +14327,10 @@ snapshots:
       entities: 2.2.0
 
   ansis@4.2.0: {}
+
+  ansivision@0.2.7:
+    dependencies:
+      '@ansi-tools/parser': 1.0.15
 
   anymatch@3.1.3:
     dependencies:
@@ -18683,7 +18686,7 @@ snapshots:
   sinon@21.0.3:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.1.1
+      '@sinonjs/fake-timers': 15.3.2(patch_hash=5513cab538aec68ba021f971d90c859c11658db640ba76d316c8df0d2915b0b0)
       '@sinonjs/samsam': 9.0.3
       diff: 8.0.3
       supports-color: 7.2.0

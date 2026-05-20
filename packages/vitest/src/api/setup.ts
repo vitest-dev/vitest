@@ -122,13 +122,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
 
           return result
         },
-        async getTransformResult(projectName: string, moduleId, testFileTaskId, browser = false) {
+        async getTransformResult(projectName: string, moduleId, testFileTaskId) {
           const project = ctx.getProjectByName(projectName)
           const testModule = ctx.state.getReportedEntityById(testFileTaskId) as TestModule | undefined
           if (!testModule || !isFileServingAllowed(project.vite.config, moduleId)) {
             return
           }
 
+          const browser = !!project.config.browser.enabled
           const environment = getTestFileEnvironment(project, testModule.moduleId, browser)
 
           const moduleNode = environment?.moduleGraph.getModuleById(moduleId)
@@ -155,8 +156,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           catch {}
           return result
         },
-        async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
-          return getModuleGraph(ctx, project, id, browser)
+        async getModuleGraph(project, id): Promise<ModuleGraphData> {
+          return getModuleGraph(ctx, project, id)
         },
         async updateSnapshot(file?: File) {
           // silently ignore exec/write attempts if not allowed
