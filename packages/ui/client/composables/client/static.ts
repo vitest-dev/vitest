@@ -76,7 +76,7 @@ export function createStaticClient(): VitestClient {
   ctx.state.idMap = reactive(ctx.state.idMap)
 
   async function registerMetadata() {
-    const content = await (window as any).HTML_REPORT_METADATA
+    const content = await window.HTML_REPORT_METADATA!
     let metadata: HTMLReportMetadata
     // Check for gzip magic numbers (0x1f 0x8b) to determine if content is compressed.
     // This handles cases where a static server incorrectly sets Content-Encoding: gzip
