@@ -12,22 +12,44 @@ jobs:
     runs-on: ubuntu-slim
     name: Close Marked Issues
     permissions:
-      issues: write # for actions-cool/issues-helper to update issues
+      issues: write # to query and close inactive labeled issues
     steps:
-      - name: needs reproduction
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+      - name: Close inactive labeled issues
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
-          actions: close-issues
-          token: ${{ secrets.GITHUB_TOKEN }}
-          labels: needs reproduction
-          inactive-day: 3
-      - name: maybe automated
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
-        with:
-          actions: close-issues
-          token: ${{ secrets.GITHUB_TOKEN }}
-          labels: maybe automated
-          inactive-day: 3
+          script: |
+            const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+
+            async function closeIssuesByLabel(label) {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: label,
+                per_page: 100,
+              })
+
+              const staleIssues = issues.filter(issue =>
+                !issue.pull_request && new Date(issue.updated_at) <= cutoff
+              )
+
+              for (const issue of staleIssues) {
+                console.log(`Closing issue #${issue.number} labeled ${label}, last updated at ${issue.updated_at}`)
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                })
+              }
+
+              if (staleIssues.length === 0) {
+                console.log(`No inactive ${label} issues found`)
+              }
+            }
+
+            await closeIssuesByLabel('needs reproduction')
+            await closeIssuesByLabel('maybe automated')
 
   close-prs:
     runs-on: ubuntu-slim
