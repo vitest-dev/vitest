@@ -40,6 +40,19 @@ test('hoists mock, unmock, hoisted', () => {
   `)
 })
 
+test('does not hoist mock-like calls in comments and strings', () => {
+  expect(hoistSimple(`
+import { value } from './path'
+/**
+ * This documents \`vi.mock('./path')\` without calling it.
+ */
+// vitest.unmock('./path')
+const message = "vi.doMock('./path')"
+const template = \`vi.hoisted(() => {})\`
+console.log(value, message, template)
+  `)).toBeUndefined()
+})
+
 test('always hoists import from vitest', () => {
   expect(hoistSimpleCode(`
 import { vi } from 'vitest'
