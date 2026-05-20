@@ -33,3 +33,15 @@ describe.for([
     expect(a + b).matchSnapshot()
   })
 })
+
+describe.skipIf(true).for(['skipped'])('%s describe.for suite', () => {
+  test('does not run skipped describe.for cases', () => {
+    throw new Error('skipped describe.for case should not run')
+  })
+})
+
+describe.runIf(false).for(['skipped'])('%s runIf describe.for suite', () => {
+  test('does not run false runIf describe.for cases', () => {
+    throw new Error('runIf(false) describe.for case should not run')
+  })
+})
