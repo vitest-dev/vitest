@@ -39,7 +39,6 @@ test.describe('editor', () => {
     const editor = page.getByTestId('editor')
     const editorTabButton = page.getByTestId('btn-code')
     const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
-    // const editorHasFocus = () => editorImpl.evaluate(e => (e as any).CodeMirror.hasFocus())
 
     // initially pass
     await expect(item.getByTestId('status-icon-pass')).toBeVisible()
@@ -53,18 +52,13 @@ test.describe('editor', () => {
     // edit to fail test
     await editorImpl.click()
     await page.waitForTimeout(300) // some unknown lag required
-    // await expect.poll(() => editorHasFocus()).toBe(true)
-    // await page.keyboard.press('ControlOrMeta+A')
-    // await editorImpl.evaluate((element, source) => {
-    //   const cm = (element as any).CodeMirror
-    //   // cm.focus()
-    //   cm.setValue(source)
-    // }, testFileContent.replace('toBe(2)', 'toBe(3)'))
-    // await page.keyboard.type(testFileContent.replace('toBe(2)', 'toBe(3)'))
-    await evaluateCodeMirror(page, (cm, source) => {
-      cm.setValue(source)
-    }, testFileContent.replace('toBe(2)', 'toBe(3)'))
-    // await page.keyboard.press('ControlOrMeta+S')
+    await evaluateCodeMirror(
+      page,
+      (codemirror, source) => {
+        codemirror.setValue(source)
+      },
+      testFileContent.replace('toBe(2)', 'toBe(3)'),
+    )
     await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press('ControlOrMeta+S')
 
@@ -78,15 +72,13 @@ test.describe('editor', () => {
     // edit to fix test
     await editorImpl.click()
     await page.waitForTimeout(300)
-    // await expect.poll(() => editorHasFocus()).toBe(true)
-    await page.keyboard.press('ControlOrMeta+A')
-    // await page.keyboard.type(testFileContent)
-    // await editorImpl.evaluate((element, source) => {
-    //   const cm = (element as any).CodeMirror
-    //   cm.focus()
-    //   cm.setValue(source)
-    // }, testFileContent)
-    await page.keyboard.type(testFileContent)
+    await evaluateCodeMirror(
+      page,
+      (codemirror, source) => {
+        codemirror.setValue(source)
+      },
+      testFileContent,
+    )
     await expect(editorTabButton).toHaveText('* Code')
     await page.keyboard.press('ControlOrMeta+S')
 
@@ -99,11 +91,18 @@ test.describe('editor', () => {
   })
 })
 
-async function evaluateCodeMirror<T>(page: Page, fn: (codemirror: any, ...args: any[]) => T, ...args: any[]): Promise<T> {
+async function evaluateCodeMirror<T>(
+  page: Page,
+  fn: (codemirror: any, ...args: any[]) => T,
+  ...args: any[]
+): Promise<T> {
   const editorImpl = page.getByTestId('editor').locator('.CodeMirror')
-  return editorImpl.evaluate((e, [fnStr, args]) => {
-    const cm = (e as any).CodeMirror
-    const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
-    return fn(cm, args)
-  }, [fn.toString(), args])
+  return editorImpl.evaluate(
+    (e, [fnStr, args]) => {
+      const codemirror = (e as any).CodeMirror
+      const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
+      return fn(codemirror, args)
+    },
+    [fn.toString(), args],
+  )
 }
