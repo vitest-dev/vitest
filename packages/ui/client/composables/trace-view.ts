@@ -15,6 +15,7 @@ export interface TraceEditorMarker {
   file: string
   line: number
   stepIndex: number
+  entry: BrowserTraceEntry
   active?: boolean
 }
 
@@ -126,11 +127,44 @@ function getTraceEditorMarkers(entries: BrowserTraceEntry[]): TraceEditorMarker[
       file: location.file,
       line: location.line,
       stepIndex,
+      entry,
     })
   }
 
   return markers
 }
+
+export function getTraceMarkerClass(marker: TraceEditorMarker) {
+  if (marker.entry.range?.phase === 'start') {
+    return marker.active
+      ? 'border-yellow-500 bg-yellow-500/80'
+      : 'border-yellow-500'
+  }
+  if (marker.entry.status === 'fail') {
+    return marker.active
+      ? 'border-red-500 bg-red-500/80'
+      : 'border-red-500'
+  }
+  if (marker.entry.kind === 'action') {
+    return marker.active
+      ? 'border-blue-500 bg-blue-500/80'
+      : 'border-blue-500'
+  }
+  if (marker.entry.kind === 'expect') {
+    return marker.active
+      ? 'border-green-500 bg-green-500/80'
+      : 'border-green-500'
+  }
+  if (marker.entry.kind === 'mark') {
+    return marker.active
+      ? 'border-amber-500 bg-amber-500/80'
+      : 'border-amber-500'
+  }
+  return marker.active
+    ? 'border-gray-400 bg-gray-400/80 dark:border-gray-500 dark:bg-gray-500/80'
+    : 'border-gray-400 dark:border-gray-500'
+}
+
 export function openTrace(trace: BrowserTraceData, test: RunnerTestCase) {
   detailsPosition.value = 'bottom'
   activeTraceView.value = {

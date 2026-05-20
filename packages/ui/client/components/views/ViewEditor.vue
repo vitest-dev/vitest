@@ -2,6 +2,9 @@
 import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
 import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
+import type {
+  TraceEditorMarker,
+} from '~/composables/trace-view'
 import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
@@ -175,17 +178,34 @@ function syncTraceMarkers() {
     }
     const el = document.createElement('button')
     el.type = 'button'
-    el.className = 'trace-step-marker'
+    el.className = `trace-step-marker rounded-full ${getTraceMarkerClass(marker)} ${marker.active ? '' : 'opacity-75 scale-90'}`
     el.title = 'Trace step'
-    if (marker.active) {
-      el.classList.add('trace-step-marker-active')
-    }
     el.addEventListener('click', () => {
       selectActiveTraceStep(marker.stepIndex)
     })
     cmValue.setGutterMarker(lineIndex, TRACE_GUTTER_ID, el)
     traceGutterLines.push(lineIndex)
   }
+}
+
+// TODO: share color utils
+function getTraceMarkerClass(marker: TraceEditorMarker) {
+  if (marker.entry.range?.phase === 'start') {
+    return 'bg-yellow-500'
+  }
+  if (marker.entry.status === 'fail') {
+    return 'bg-red-500'
+  }
+  if (marker.entry.kind === 'action') {
+    return 'bg-blue-500'
+  }
+  if (marker.entry.kind === 'expect') {
+    return 'bg-green-500'
+  }
+  if (marker.entry.kind === 'mark') {
+    return 'bg-amber-500'
+  }
+  return 'bg-gray-400 dark:bg-gray-500'
 }
 
 watch(
@@ -456,20 +476,13 @@ onBeforeUnmount(clearListeners)
 
 <style scoped>
 :deep(.trace-step-marker) {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   margin: 0 auto;
-  border: 1px solid rgb(59 130 246 / 0.55);
-  border-radius: 9999px;
-  background: transparent;
   cursor: pointer;
 }
 
-:deep(.trace-step-marker-active) {
-  background: rgb(59 130 246 / 0.8);
-}
-
 :deep(.CodeMirror-gutters .CodeMirror-gutter.trace-step-gutter) {
-  width: 12px;
+  width: 13px;
 }
 </style>
