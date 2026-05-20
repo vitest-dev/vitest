@@ -53,6 +53,12 @@ test.describe('ui', () => {
     await testFilter(page, { mode: 'ui' })
   })
 
+  test('filter reveals initially invisible explorer item', async ({ page }) => {
+    await page.setViewportSize({ width: 1000, height: 500 })
+    await page.goto(pageUrl)
+    await testFilterInitiallyInvisibleItem(page)
+  })
+
   test('tags filter', async ({ page }) => {
     await page.goto(pageUrl)
     await testTagsFilter(page)
@@ -86,6 +92,11 @@ test.describe('ui', () => {
   test('can execute', async ({ page }) => {
     await page.goto(pageUrl)
     await testExecute(page, { mode: 'ui' })
+  })
+
+  test('module graph', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testModuleGraph(page)
   })
 })
 
@@ -175,7 +186,20 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     await testExecute(page, { mode: 'static' })
   })
+
+  test('module graph', async ({ page }) => {
+    await page.goto(pageUrl)
+    await testModuleGraph(page)
+  })
 })
+
+const TEST_COUNTS = {
+  pass: 18,
+  fail: 3,
+  files: {
+    pass: 7,
+  },
+}
 
 async function testBasic(page: Page, pageUrl: string) {
   const pageErrors: unknown[] = []
@@ -184,7 +208,7 @@ async function testBasic(page: Page, pageUrl: string) {
   await page.goto(pageUrl)
 
   // dashboard
-  await assertTestCounts(page, { pass: 17, fail: 3 })
+  await assertTestCounts(page, { pass: TEST_COUNTS.pass, fail: TEST_COUNTS.fail })
 
   // unhandled errors
   await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -208,6 +232,18 @@ async function testBasic(page: Page, pageUrl: string) {
   await expect(page.getByTestId('console')).toContainText('log test')
 
   expect(pageErrors).toEqual([])
+}
+
+async function testModuleGraph(page: Page) {
+  await openExplorerFileItem(page, 'sample.test.ts')
+  await page.getByTestId('btn-graph').click()
+  await expect(page.locator('[data-testid=graph] text')).toBeVisible()
+  await expect(page.locator('[data-testid=graph] text')).toHaveText('sample.test.ts')
+
+  await openExplorerFileItem(page, 'sample-browser.test.ts')
+  await page.getByTestId('btn-graph').click()
+  await expect(page.locator('[data-testid=graph] text')).toBeVisible()
+  await expect(page.locator('[data-testid=graph] text')).toHaveText('sample-browser.test.ts')
 }
 
 async function testCoverage(page: Page) {
@@ -414,7 +450,7 @@ async function testDashboardFilter(page: Page) {
 async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   // match all files when no filter
   await page.getByPlaceholder('Search...').fill('')
-  await page.getByText('PASS (6)').click()
+  await page.getByText(`PASS (${TEST_COUNTS.files.pass})`).click()
   await expect(page.getByTestId('results-panel').getByText('sample.test.ts', { exact: true })).toBeVisible()
 
   // match nothing
@@ -464,6 +500,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     await testItem.getByLabel('Run current test').click()
     await expect(page.getByText('The test has passed without any errors')).toBeVisible()
   }
+}
+
+async function testFilterInitiallyInvisibleItem(page: Page) {
+  await expect(getExplorerItem(page, 'sample.test.ts')).not.toBeVisible()
+  await page.getByPlaceholder('Search...').fill('sample.test.ts')
+  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
 }
 
 async function testCrossOriginAccess(page: Page, pageUrl: string) {
@@ -527,7 +569,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeEnabled()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).toBeVisible()
@@ -539,7 +580,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeDisabled()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
@@ -551,7 +591,6 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).not.toBeVisible()
 
-    await page.getByPlaceholder('Search...').fill('snapshot')
     const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()

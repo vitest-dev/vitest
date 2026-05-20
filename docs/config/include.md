@@ -25,7 +25,7 @@ export default defineConfig({
   test: {
     include: [
       './test',
-      './**/*.{test,spec}.tsx?',
+      './**/*.{test,spec}.ts(x)?',
     ],
   },
 })
@@ -67,7 +67,7 @@ export default defineConfig({
     include: [
       ...configDefaults.include,
       './test',
-      './**/*.{test,spec}.tsx?',
+      './**/*.{test,spec}.ts(x)?',
     ],
   },
 })
