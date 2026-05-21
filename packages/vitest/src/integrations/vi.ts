@@ -613,9 +613,9 @@ function createVitest(): VitestUtils {
     waitUntil,
     defineHelper: (fn) => {
       return function __VITEST_HELPER__(this: any, ...args: any[]): any {
-        const stackTraceError = new Error('STACK_TRACE_ERROR')
         const result = fn.apply(this, args)
         if (result && typeof result === 'object' && typeof result.then === 'function') {
+          const stackTraceError = new Error('STACK_TRACE_ERROR')
           return (async function __VITEST_HELPER__() {
             try {
               return await result
