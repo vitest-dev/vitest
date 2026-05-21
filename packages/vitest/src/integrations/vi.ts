@@ -840,13 +840,6 @@ function createVitest(): VitestUtils {
 export const vitest: VitestUtils = createVitest()
 export const vi: VitestUtils = vitest
 
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
-}
-
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
   return typeof __vitest_mocker__ !== 'undefined'
@@ -874,4 +867,11 @@ function getImporter(name: string) {
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
   return stack?.file || ''
+}
+
+function copyStackTrace(target: Error, source: Error) {
+  if (source.stack !== undefined) {
+    target.stack = source.stack.replace(source.message, target.message)
+  }
+  return target
 }
