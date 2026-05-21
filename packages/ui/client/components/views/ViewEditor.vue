@@ -147,11 +147,9 @@ function codemirrorChanges() {
 }
 
 const TRACE_GUTTER_ID = 'trace-step-gutter'
-const gutters = [
-  'CodeMirror-linenumbers',
-  isTraceViewEnabled(props.file) && { className: TRACE_GUTTER_ID, style: 'width: 14px' },
-].filter(Boolean)
-
+const traceGutterConfigs = isTraceViewEnabled(props.file)
+  ? [{ className: TRACE_GUTTER_ID, style: 'width: 14px' }]
+  : []
 let traceGutterLines: number[] = []
 
 const traceEditorMarkersForFile = computed(() => {
@@ -456,7 +454,7 @@ onBeforeUnmount(clearListeners)
       lineNumbers: true,
       readOnly: isReport || !config.api?.allowWrite,
       saving,
-      gutters,
+      gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
     }"
     :mode="ext"
     data-testid="code-mirror"
