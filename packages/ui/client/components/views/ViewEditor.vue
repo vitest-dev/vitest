@@ -146,12 +146,13 @@ function codemirrorChanges() {
   draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
-let traceGutterLines: number[] = []
 const TRACE_GUTTER_ID = 'trace-step-gutter'
 const gutters = [
   'CodeMirror-linenumbers',
   isTraceViewEnabled(props.file) && { className: TRACE_GUTTER_ID, style: 'width: 14px' },
 ].filter(Boolean)
+
+let traceGutterLines: number[] = []
 
 const traceEditorMarkersForFile = computed(() => {
   const selection = activeTraceView.value
@@ -161,8 +162,6 @@ const traceEditorMarkersForFile = computed(() => {
   }
   return []
 })
-
-// const code
 
 // TODO: doesn't show up when clicking trace viewer step first time
 function syncTraceMarkers() {
