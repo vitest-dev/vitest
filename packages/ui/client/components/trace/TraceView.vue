@@ -6,7 +6,7 @@ import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-import { selectActiveTraceStep } from '~/composables/trace-view'
+import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
   trace: BrowserTraceData
@@ -133,19 +133,6 @@ function formatStepName(step: BrowserTraceEntry) {
   return step.name
 }
 
-function getStepMarkerClass(step: BrowserTraceEntry) {
-  if (step.kind === 'action') {
-    return 'bg-blue-500/80'
-  }
-  if (step.kind === 'expect') {
-    return 'bg-green-500/80'
-  }
-  if (step.kind === 'mark') {
-    return 'bg-amber-500/80'
-  }
-  return 'bg-gray-400/80 dark:bg-gray-500/80'
-}
-
 function isTraceStepInProgress(step: BrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
@@ -172,12 +159,13 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
               <span
                 v-if="isTraceStepInProgress(step)"
-                class="h-3 w-3 animate-spin rounded-full border border-yellow-500 border-t-transparent"
+                class="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"
+                :class="getTraceEntryClass(step)"
               />
               <span
                 v-else
-                class="h-2 w-2 rounded-full"
-                :class="getStepMarkerClass(step)"
+                class="h-2 w-2 rounded-full bg-current opacity-80"
+                :class="getTraceEntryClass(step)"
               />
             </span>
             <div class="min-w-0 flex-1">
