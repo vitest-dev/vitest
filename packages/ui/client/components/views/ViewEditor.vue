@@ -163,7 +163,6 @@ const traceEditorMarkersForFile = computed(() => {
   return []
 })
 
-// TODO: doesn't show up when clicking trace viewer step first time
 function syncTraceMarkers() {
   const cmValue = codemirrorRef.value
   if (!cmValue) {
@@ -200,7 +199,7 @@ function syncTraceMarkers() {
 }
 
 watch(
-  [codemirrorRef, traceEditorMarkersForFile],
+  [codemirrorRef, traceEditorMarkersForFile, loading],
   () => {
     syncTraceMarkers()
   },
