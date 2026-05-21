@@ -391,6 +391,25 @@ async function testError(page: Page) {
 
   await getExplorerItem(page, 'colored error message').click()
   await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
+
+  // switch to Code tab and verify ANSI is rendered as HTML in the editor line widget
+  await page.getByTestId('btn-code').click()
+  const errorPre = page.locator('.CodeMirror-linewidget pre')
+  await expect(errorPre).toBeVisible()
+  const spanData = await Promise.all(
+    (await errorPre.locator('span[style]').all()).map(async span => ({
+      style: await span.getAttribute('style'),
+      text: await span.textContent(),
+    })),
+  )
+  expect(spanData).toMatchInlineSnapshot(`
+    [
+      {
+        "style": "color:#00A",
+        "text": "this-is-blue",
+      },
+    ]
+  `)
 }
 
 async function testTagsFilter(page: Page) {
