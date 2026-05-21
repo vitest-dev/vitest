@@ -4,6 +4,68 @@ import path from 'node:path'
 import { expect, test } from '@playwright/test'
 import { assertTestCounts, evaluateEditor, getExplorerItem, startVitestUi } from './helper'
 
+test.describe('editor ansi', () => {
+  let vitest: Vitest | undefined
+  let baseURL: string
+
+  const root = path.join(import.meta.dirname, '../fixtures/editor-ansi')
+
+  test.beforeAll(async () => {
+    const server = await startVitestUi({
+      root,
+      watch: true,
+      ui: true,
+      open: false,
+      reporters: [],
+    })
+    vitest = server.vitest
+    baseURL = `${server.url}/__vitest__/`
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('ansi error message is rendered as html in editor', async ({ page }) => {
+    await page.goto(baseURL)
+
+    await assertTestCounts(page, { pass: 0, fail: 1 })
+
+    const item = getExplorerItem(page, 'test-with-ansi-message')
+    await expect(item.getByTestId('status-icon-fail')).toBeVisible()
+
+    // open editor
+    await item.click()
+    const editorTabButton = page.getByTestId('btn-code')
+    await editorTabButton.click()
+
+    // wait for the inline error widget to appear
+    const errorPre = page.locator('.CodeMirror-linewidget pre')
+    await expect(errorPre).toBeVisible()
+
+    // ANSI should be rendered as HTML color spans with correct colors — not raw escape sequences
+    const spans = await errorPre.locator('span[style]').all()
+    const spanData = await Promise.all(
+      spans.map(async span => ({
+        style: await span.getAttribute('style'),
+        text: await span.textContent(),
+      })),
+    )
+    expect(spanData).toMatchInlineSnapshot(`
+      [
+        {
+          "style": "color:#0A0",
+          "text": "Expected value",
+        },
+        {
+          "style": "color:#A00",
+          "text": "actual value",
+        },
+      ]
+    `)
+  })
+})
+
 test.describe('editor', () => {
   let vitest: Vitest | undefined
   let baseURL: string
