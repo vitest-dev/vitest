@@ -1119,6 +1119,12 @@ describe('async expect', () => {
     await expect(assertion).rejects.toThrow('expected promise to throw an error, but it didn\'t')
   })
 
+  it('resolves with async function (jest compat)', async () => {
+    await expect(async () => 'true').resolves.toBe('true')
+    await expect(async () => 'true').resolves.not.toBe('true22')
+    await expect(async () => 'true').resolves.not.toThrow()
+  })
+
   it('throws an error on .resolves when the argument is not a promise', () => {
     expect.assertions(2)
 
