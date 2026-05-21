@@ -20,6 +20,14 @@ export default defineConfig({
     Vue(),
     Unocss({
       presets: [presetWind3(), presetAttributify(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [
+            // by default .ts is excluded
+            /\/client\/.*\.(ts|vue)($|\?)/,
+          ],
+        },
+      },
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',

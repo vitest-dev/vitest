@@ -2,9 +2,6 @@
 import type { Task } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
 import type { RunnerTestFile, TestAnnotation, TestError } from 'vitest'
-import type {
-  TraceEditorMarker,
-} from '~/composables/trace-view'
 import { until, useResizeObserver, watchDebounced } from '@vueuse/core'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
@@ -17,6 +14,7 @@ import { columnNumber, lineNumber } from '~/composables/params'
 import {
   activeTraceView,
   getTraceEditorMarkersForFile,
+  getTraceEntryClass,
   selectActiveTraceStep,
 } from '~/composables/trace-view'
 import CodeMirrorContainer from '../CodeMirrorContainer.vue'
@@ -181,7 +179,7 @@ function syncTraceMarkers() {
     el.type = 'button'
     el.className = [
       'h-2 w-2 mx-auto cursor-pointer rounded-full bg-current',
-      getTraceMarkerClass(marker),
+      getTraceEntryClass(marker.entry),
       marker.active
         ? 'ring-2 ring-current ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
         : 'opacity-75 scale-120',
@@ -193,26 +191,6 @@ function syncTraceMarkers() {
     cmValue.setGutterMarker(lineIndex, TRACE_GUTTER_ID, el)
     traceGutterLines.push(lineIndex)
   }
-}
-
-// TODO: share color utils
-function getTraceMarkerClass(marker: TraceEditorMarker) {
-  if (marker.entry.range?.phase === 'start') {
-    return 'text-yellow-500'
-  }
-  if (marker.entry.status === 'fail') {
-    return 'text-red-500'
-  }
-  if (marker.entry.kind === 'action') {
-    return 'text-blue-500'
-  }
-  if (marker.entry.kind === 'expect') {
-    return 'text-green-500'
-  }
-  if (marker.entry.kind === 'mark') {
-    return 'text-amber-500'
-  }
-  return 'text-gray-400 dark:text-gray-500'
 }
 
 watch(

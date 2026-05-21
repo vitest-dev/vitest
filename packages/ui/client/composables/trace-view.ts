@@ -107,6 +107,25 @@ export function getTraceEditorMarkersForFile(
     }))
 }
 
+export function getTraceEntryClass(entry: BrowserTraceEntry) {
+  if (entry.range?.phase === 'start') {
+    return 'text-yellow-500'
+  }
+  if (entry.status === 'fail') {
+    return 'text-red-500'
+  }
+  if (entry.kind === 'action') {
+    return 'text-blue-500'
+  }
+  if (entry.kind === 'expect') {
+    return 'text-green-500'
+  }
+  if (entry.kind === 'mark') {
+    return 'text-amber-500'
+  }
+  return 'text-gray-400 dark:text-gray-500'
+}
+
 function getTraceEditorMarkers(entries: BrowserTraceEntry[]): TraceEditorMarker[] {
   const markers: TraceEditorMarker[] = []
   const seen = new Set<string>()
