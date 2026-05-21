@@ -46,7 +46,7 @@ jobs:
       github.repository == 'vitest-dev/vitest' &&
       github.event.pull_request.head.repo.full_name != github.repository &&
       !contains(
-        fromJSON('["dependabot[bot]", "github-actions[bot]"]'),
+        fromJSON('["dependabot[bot]","github-actions[bot]","sheremet-va","hi-ogawa","AriPerkkio","macarie","antfu","userquin","patak-cat"]'),
         github.event.pull_request.user.login
       )
     name: AgentScan Alert
