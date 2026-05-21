@@ -178,6 +178,7 @@ function syncTraceMarkers() {
     }
     const el = document.createElement('button')
     el.type = 'button'
+    // TODO: improve active indicator differentiation
     el.className = `trace-step-marker rounded-full ${getTraceMarkerClass(marker)} ${marker.active ? '' : 'opacity-75 scale-90'}`
     el.title = 'Trace step'
     el.addEventListener('click', () => {
@@ -463,6 +464,7 @@ onBeforeUnmount(clearListeners)
     v-model="code"
     h-full
     v-bind="{
+      // TODO: only when non empty traceEditorMarkersForFile
       gutters: ['CodeMirror-linenumbers', TRACE_GUTTER_ID],
       lineNumbers: true,
       readOnly: isReport || !config.api?.allowWrite,
@@ -474,6 +476,7 @@ onBeforeUnmount(clearListeners)
   />
 </template>
 
+<!-- TODO: move to class style -->
 <style scoped>
 :deep(.trace-step-marker) {
   width: 10px;
