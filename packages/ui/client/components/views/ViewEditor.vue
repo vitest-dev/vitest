@@ -179,8 +179,13 @@ function syncTraceMarkers() {
     }
     const el = document.createElement('button')
     el.type = 'button'
-    // TODO: improve active indicator differentiation
-    el.className = `trace-step-marker rounded-full ${getTraceMarkerClass(marker)} ${marker.active ? '' : 'opacity-75 scale-90'}`
+    el.className = [
+      'h-2 w-2 mx-auto cursor-pointer rounded-full bg-current',
+      getTraceMarkerClass(marker),
+      marker.active
+        ? 'ring-2 ring-current ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
+        : 'opacity-75 scale-120',
+    ].filter(Boolean).join(' ')
     el.title = 'Trace step'
     el.addEventListener('click', () => {
       selectActiveTraceStep(marker.stepIndex)
@@ -193,21 +198,21 @@ function syncTraceMarkers() {
 // TODO: share color utils
 function getTraceMarkerClass(marker: TraceEditorMarker) {
   if (marker.entry.range?.phase === 'start') {
-    return 'bg-yellow-500'
+    return 'text-yellow-500'
   }
   if (marker.entry.status === 'fail') {
-    return 'bg-red-500'
+    return 'text-red-500'
   }
   if (marker.entry.kind === 'action') {
-    return 'bg-blue-500'
+    return 'text-blue-500'
   }
   if (marker.entry.kind === 'expect') {
-    return 'bg-green-500'
+    return 'text-green-500'
   }
   if (marker.entry.kind === 'mark') {
-    return 'bg-amber-500'
+    return 'text-amber-500'
   }
-  return 'bg-gray-400 dark:bg-gray-500'
+  return 'text-gray-400 dark:text-gray-500'
 }
 
 watch(
@@ -477,16 +482,8 @@ onBeforeUnmount(clearListeners)
   />
 </template>
 
-<!-- TODO: move to class style -->
 <style scoped>
-:deep(.trace-step-marker) {
-  width: 10px;
-  height: 10px;
-  margin: 0 auto;
-  cursor: pointer;
-}
-
 :deep(.CodeMirror-gutters .CodeMirror-gutter.trace-step-gutter) {
-  width: 13px;
+  width: 14px;
 }
 </style>
