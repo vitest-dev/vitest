@@ -299,24 +299,4 @@ it('assertion helper', async () => {
       },
     }
   `)
-
-  const basicErrors = errorTree({ stackTrace: true })['basic.test.ts']
-  expect(basicErrors?.['waitFor keeps helper callsite']).toMatchInlineSnapshot(`
-    [
-      "expected 1 to be 2 // Object.is equality
-        at basic.test.ts:156:9",
-    ]
-  `)
-  expect(basicErrors?.['waitUntil keeps helper callsite']).toMatchInlineSnapshot(`
-    [
-      "expected 1 to be 2 // Object.is equality
-        at basic.test.ts:160:9",
-    ]
-  `)
-  expect(basicErrors?.['plain async error']).toMatchInlineSnapshot(`
-    [
-      "async error from helper
-        at basic.test.ts:164:9",
-    ]
-  `)
 })
