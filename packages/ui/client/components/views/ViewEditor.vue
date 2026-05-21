@@ -15,12 +15,13 @@ import {
   activeTraceView,
   getTraceEditorMarkersForFile,
   getTraceEntryClass,
+  isTraceViewEnabled,
   selectActiveTraceStep,
 } from '~/composables/trace-view'
 import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
-  file?: RunnerTestFile
+  file: RunnerTestFile
 }>()
 
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
@@ -145,8 +146,12 @@ function codemirrorChanges() {
   draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
-const TRACE_GUTTER_ID = 'trace-step-gutter'
 let traceGutterLines: number[] = []
+const TRACE_GUTTER_ID = 'trace-step-gutter'
+const gutters = [
+  'CodeMirror-linenumbers',
+  isTraceViewEnabled(props.file) && { className: TRACE_GUTTER_ID, style: 'width: 14px' },
+].filter(Boolean)
 
 const traceEditorMarkersForFile = computed(() => {
   const selection = activeTraceView.value
@@ -450,14 +455,10 @@ onBeforeUnmount(clearListeners)
     v-model="code"
     h-full
     v-bind="{
-      // TODO: only when non empty traceEditorMarkersForFile
-      gutters: [
-        'CodeMirror-linenumbers',
-        { className: TRACE_GUTTER_ID, style: 'width: 14px' },
-      ],
       lineNumbers: true,
       readOnly: isReport || !config.api?.allowWrite,
       saving,
+      gutters,
     }"
     :mode="ext"
     data-testid="code-mirror"

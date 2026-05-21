@@ -1,4 +1,4 @@
-import type { RunnerTestCase, TestArtifact } from 'vitest'
+import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { ref, watch, watchEffect } from 'vue'
 import { browserState, client, config } from './client'
@@ -178,7 +178,7 @@ export function selectActiveTraceStep(index: number) {
 watch(selectedTest, (testId) => {
   if (testId) {
     const test = client.state.idMap.get(testId)
-    if (test?.type === 'test' && isTraceViewEnabled(test)) {
+    if (test?.type === 'test' && isTraceViewEnabled(test.file)) {
       // Auto-open trace view when selecting a trace-enabled test.
       activeTraceView.value = { test, selectedStepIndex: 0 }
       return
@@ -203,7 +203,7 @@ watchEffect(() => {
   }
 })
 
-export function isTraceViewEnabled(test: RunnerTestCase): boolean {
+export function isTraceViewEnabled(test: RunnerTestFile): boolean {
   const project = getProjectConfigByTest(test)
   const traceView
     = browserState?.config.browser?.traceView
@@ -212,7 +212,7 @@ export function isTraceViewEnabled(test: RunnerTestCase): boolean {
   return traceView?.enabled ?? false
 }
 
-function getProjectConfigByTest(test: RunnerTestCase) {
+function getProjectConfigByTest(test: RunnerTestFile) {
   const projectName = test.file.projectName || ''
   return config.value.projects?.find(project => project.name === projectName)
 }
