@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          ref: main
       - name: maybe automated (label)
         uses: ./.github/actions/issues-helper
         with:
@@ -56,6 +57,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          ref: main
       - name: AgentScan
         id: agentscan
         uses: MatteoGabriele/agentscan-action@21f25b07e4dda43e6597ffb71c93f8e4c9fed812 # v1.7.0
