@@ -13,7 +13,7 @@ test.describe('ui', () => {
     // silence Vitest logs
     const stdout = new Writable({ write: (_, __, callback) => callback() })
     const stderr = new Writable({ write: (_, __, callback) => callback() })
-    vitest = await startVitest('test', [], {
+    vitest = await startVitest([], {
       watch: true,
       ui: true,
       open: false,
