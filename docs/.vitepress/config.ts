@@ -994,6 +994,7 @@ export default ({ mode }: { mode: string }) => {
           // rather than by API name.
           {
             text: 'Recipes',
+            link: '/guide/recipes/',
             collapsed: false,
             items: [
               {
