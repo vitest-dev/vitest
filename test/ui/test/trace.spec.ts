@@ -132,8 +132,9 @@ async function testBasic(page: Page) {
   await openExplorerItem(page, 'simple')
   await expect(traceView).toBeVisible()
 
-  const traceSteps = traceView.getByTestId('trace-step-name')
-  await expect.poll(() => traceSteps.allInnerTexts()).toEqual([
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
     'Render simple',
     'Render another',
     'test finished',
@@ -141,7 +142,7 @@ async function testBasic(page: Page) {
 
   // selecting steps should open source code view
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceSteps.getByText('Render simple').click()
+  await traceStepNames.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
   // verify editor cursor position
@@ -162,9 +163,10 @@ async function testBasic(page: Page) {
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
 
   // selecting 2nd trace step and verify again
-  await traceSteps.getByText('Render another').click()
+  await traceStepNames.getByText('Render another').click()
   await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
   await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
 
@@ -173,7 +175,7 @@ async function testBasic(page: Page) {
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
   await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
-  await expect(traceView.getByTestId('trace-step').nth(0)).toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
