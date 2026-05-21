@@ -119,10 +119,11 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       return !!htmlDir && env.command === 'serve' && env.mode !== 'test'
     },
     async transformIndexHtml() {
+      const metadataCode = `window.HTML_REPORT_METADATA=fetch(new URL("./${REPORT_FILE}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
       return [
         {
           tag: 'script',
-          children: `window.METADATA_PATH="${REPORT_FILE}"`,
+          children: metadataCode,
         },
       ]
     },
