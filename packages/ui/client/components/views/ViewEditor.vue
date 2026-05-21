@@ -157,6 +157,8 @@ const traceEditorMarkersForFile = computed(() => {
   return []
 })
 
+// const code
+
 // TODO: doesn't show up when clicking trace viewer step first time
 function syncTraceMarkers() {
   const cmValue = codemirrorRef.value
@@ -178,7 +180,7 @@ function syncTraceMarkers() {
     const el = document.createElement('button')
     el.type = 'button'
     el.className = [
-      'h-2 w-2 mx-auto cursor-pointer rounded-full bg-current',
+      'h-2 w-2 ml-0.5 cursor-pointer rounded-full bg-current',
       getTraceEntryClass(marker.entry),
       marker.active
         ? 'ring-2 ring-current ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
@@ -449,7 +451,10 @@ onBeforeUnmount(clearListeners)
     h-full
     v-bind="{
       // TODO: only when non empty traceEditorMarkersForFile
-      gutters: ['CodeMirror-linenumbers', TRACE_GUTTER_ID],
+      gutters: [
+        'CodeMirror-linenumbers',
+        { className: TRACE_GUTTER_ID, style: 'width: 14px' },
+      ],
       lineNumbers: true,
       readOnly: isReport || !config.api?.allowWrite,
       saving,
@@ -459,9 +464,3 @@ onBeforeUnmount(clearListeners)
     @save="onSave"
   />
 </template>
-
-<style scoped>
-:deep(.CodeMirror-gutters .CodeMirror-gutter.trace-step-gutter) {
-  width: 14px;
-}
-</style>

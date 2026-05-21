@@ -203,7 +203,7 @@ watchEffect(() => {
   }
 })
 
-function isTraceViewEnabled(test: RunnerTestCase): boolean {
+export function isTraceViewEnabled(test: RunnerTestCase): boolean {
   const project = getProjectConfigByTest(test)
   const traceView
     = browserState?.config.browser?.traceView
