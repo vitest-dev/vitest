@@ -187,7 +187,11 @@ function syncTraceMarkers() {
         ? 'ring-2 ring-current ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
         : 'opacity-75 scale-120',
     ].filter(Boolean).join(' ')
-    el.title = 'Trace step'
+    el.dataset.testid = 'trace-editor-marker'
+    el.ariaLabel = `Select trace step: ${marker.entry.name}`
+    if (marker.active) {
+      el.ariaCurrent = 'step'
+    }
     el.addEventListener('click', () => {
       selectActiveTraceStep(marker.stepIndex)
     })
