@@ -9,8 +9,10 @@ import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
-import { openInEditor } from '~/composables/error'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter, openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
+import { escapeHtml } from '~/utils/escape'
 import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
@@ -159,9 +161,10 @@ function createErrorElement(e: TestError) {
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
   pre.className = 'c-red-700 dark:c-red-400'
-  pre.textContent = `${' '.repeat(stack.column)}^ ${e.name}: ${
-    e?.message || ''
-  }`
+  const filter = createAnsiToHtmlFilter(isDark.value)
+  const prefix = escapeHtml(`${' '.repeat(stack.column)}^ ${e.name}: `)
+  const msg = filter.toHtml(escapeHtml(e?.message || ''))
+  pre.innerHTML = `${prefix}${msg}`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className
