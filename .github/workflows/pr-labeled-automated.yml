@@ -18,10 +18,15 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && contains(github.event.pull_request.body, '<!-- VITEST_AUTOMATED_PR -->')
     name: Automatic Clanker Alert
     permissions:
+      contents: read # to check out the repo for local actions
       pull-requests: write # comment and label on PRs
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: main
       - name: maybe automated (label)
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        uses: ./.github/actions/issues-helper
         with:
           actions: add-labels
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,8 +51,15 @@ jobs:
       )
     name: AgentScan Alert
     permissions:
+      contents: read # to check out the repo for local actions
       pull-requests: write # comment and label on PRs
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          # we checkout just to read ./issue-helper
+          # we do not care about user code
+          ref: main
       - name: AgentScan
         id: agentscan
         uses: MatteoGabriele/agentscan-action@21f25b07e4dda43e6597ffb71c93f8e4c9fed812 # v1.7.0
@@ -57,15 +69,15 @@ jobs:
 
       # just put a label and send a comment if the account looks suspicious
       - name: Label flagged PR
-        if: contains(fromJSON('["automation","suspicious"]'), steps.agentscan.outputs.classification) && !contains(steps.agentscan.outputs.community-flagged, 'true')
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        if: steps.agentscan.outputs.classification != 'organic' && steps.agentscan.outputs.community-flagged != 'true'
+        uses: ./.github/actions/issues-helper
         with:
           actions: add-labels
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           labels: maybe automated
       - name: Comment flagged PR
-        if: contains(fromJSON('["automation","suspicious"]'), steps.agentscan.outputs.classification) && !contains(steps.agentscan.outputs.community-flagged, 'true')
+        if: steps.agentscan.outputs.classification != 'organic' && steps.agentscan.outputs.community-flagged != 'true'
         uses: ./.github/actions/send-ai-bot-comment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { expect, test } from '@playwright/test'
-import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -138,12 +138,21 @@ async function testBasic(page: Page) {
   await traceSteps.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
 
+  // verify editor cursor position
+  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
+
   // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // selecting 2nd trace step and verify again
+  await traceSteps.getByText('Render another').click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
 
   // verify selecting another test switches trace viewer
   await openExplorerItem(page, 'switch-target')
