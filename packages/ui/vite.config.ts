@@ -20,6 +20,14 @@ export default defineConfig({
     Vue(),
     Unocss({
       presets: [presetWind3(), presetAttributify(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [
+            // by default .ts is excluded
+            /\/client\/.*\.(ts|vue)($|\?)/,
+          ],
+        },
+      },
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -119,10 +127,11 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       return !!htmlDir && env.command === 'serve' && env.mode !== 'test'
     },
     async transformIndexHtml() {
+      const metadataCode = `window.HTML_REPORT_METADATA=fetch(new URL("./${REPORT_FILE}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
       return [
         {
           tag: 'script',
-          children: `window.METADATA_PATH="${REPORT_FILE}"`,
+          children: metadataCode,
         },
       ]
     },

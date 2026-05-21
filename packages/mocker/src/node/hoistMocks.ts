@@ -248,6 +248,7 @@ export function hoistMocks(
 
   const usedUtilityExports = new Set<string>()
   let hasImportMetaVitest = false
+  let hasMockApiCall = false
 
   esmWalker(ast, {
     onImportMeta(node) {
@@ -310,6 +311,7 @@ export function hoistMocks(
         usedUtilityExports.add(node.callee.object.name)
 
         if (hoistableMockMethodNames.includes(methodName)) {
+          hasMockApiCall = true
           const method = `${node.callee.object.name}.${methodName}`
           assertNotDefaultExport(
             node,
@@ -356,6 +358,7 @@ export function hoistMocks(
         // vi.doMock(import('./path')) -> vi.doMock('./path')
         // vi.doMock(await import('./path')) -> vi.doMock('./path')
         else if (dynamicImportMockMethodNames.includes(methodName)) {
+          hasMockApiCall = true
           const moduleInfo = node.arguments[0] as Positioned<Expression>
           let source: Positioned<Expression> | null = null
           if (moduleInfo.type === 'ImportExpression') {
@@ -377,6 +380,7 @@ export function hoistMocks(
         }
 
         if (hoistedMethodNames.includes(methodName)) {
+          hasMockApiCall = true
           assertNotDefaultExport(
             node,
             'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.',
@@ -405,6 +409,10 @@ export function hoistMocks(
       }
     },
   })
+
+  if (!hasMockApiCall) {
+    return
+  }
 
   function getNodeName(node: CallExpression) {
     const callee = node.callee || {}

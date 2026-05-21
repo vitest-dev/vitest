@@ -10,7 +10,6 @@ const props = defineProps<{
 }>()
 
 const trace = computed(() => getSelectedTrace(props.selection))
-const test = computed(() => props.selection.test)
 const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.value) : '')
 </script>
 
@@ -36,7 +35,7 @@ const attemptLabel = computed(() => trace.value ? getTraceAttemptLabel(trace.val
     <TraceView
       v-if="trace"
       :trace="trace"
-      :test="test"
+      :selection="selection"
     />
     <div v-else class="text-sm opacity-50 p-4">
       No trace found

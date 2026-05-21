@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 declare interface Window {
-  METADATA_PATH?: string
+  HTML_REPORT_METADATA?: Promise<Uint8Array>
 }
 
 declare interface Error {

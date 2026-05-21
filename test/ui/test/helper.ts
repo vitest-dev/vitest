@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test'
+import type { EditorFromTextArea } from 'codemirror'
 import type { InlineConfig, PreviewServer } from 'vite'
 import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
@@ -104,4 +105,21 @@ export async function assertImageAttachment(
   const annotation = page.getByRole('note').filter({ hasText: options.name })
   await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
   await expect(annotation.getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+}
+
+export async function evaluateEditor<T>(
+  page: Page,
+  fn: (editor: EditorFromTextArea, ...args: any[]) => T,
+  ...args: any[]
+): Promise<T> {
+  const editor = page.getByTestId('editor').locator('.CodeMirror')
+  return editor.evaluate(
+    (e, [fnStr, args]) => {
+      const codemirror = (e as any).CodeMirror
+      // eslint-disable-next-line no-new-func
+      const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
+      return fn(codemirror, args)
+    },
+    [fn.toString(), args],
+  )
 }
