@@ -164,20 +164,20 @@ const traceEditorMarkersForFile = computed(() => {
 })
 
 function syncTraceMarkers() {
-  const cmValue = codemirrorRef.value
-  if (!cmValue) {
-    traceGutterLines = []
+  const editor = codemirrorRef.value
+  if (!editor) {
     return
   }
 
   for (const line of traceGutterLines) {
-    cmValue.setGutterMarker(line, TRACE_GUTTER_ID, null)
+    editor.setGutterMarker(line, TRACE_GUTTER_ID, null)
   }
   traceGutterLines = []
 
+  const lineCount = editor.lineCount()
   for (const marker of traceEditorMarkersForFile.value) {
-    const lineIndex = marker.line - 1
-    if (lineIndex < 0 || lineIndex >= cmValue.lineCount()) {
+    const line = marker.line - 1
+    if (!(line >= 0 && line < lineCount)) {
       continue
     }
     const el = document.createElement('button')
@@ -193,8 +193,8 @@ function syncTraceMarkers() {
     el.addEventListener('click', () => {
       selectActiveTraceStep(marker.stepIndex)
     })
-    cmValue.setGutterMarker(lineIndex, TRACE_GUTTER_ID, el)
-    traceGutterLines.push(lineIndex)
+    editor.setGutterMarker(line, TRACE_GUTTER_ID, el)
+    traceGutterLines.push(line)
   }
 }
 
