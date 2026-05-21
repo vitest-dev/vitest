@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import { expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 it('assertion helper', async () => {
   const { stderr, errorTree } = await runVitest({
@@ -236,6 +236,49 @@ it('assertion helper', async () => {
         ],
         "sync": [
           "expected 'sync' to deeply equal 'x'",
+        ],
+      },
+    }
+  `)
+})
+
+it('assertion helper keeps callsite from wait helpers', async () => {
+  const { errorTree } = await runInlineTests({
+    'repro.test.ts': `
+import { expect, test, vi } from 'vitest'
+
+const checkWithWaitFor = vi.defineHelper(async () => {
+  await vi.waitFor(() => {
+    expect(1).toBe(2)
+  }, { timeout: 20, interval: 10 })
+})
+
+const checkWithWaitUntil = vi.defineHelper(async () => {
+  await vi.waitUntil(() => {
+    expect(1).toBe(2)
+  }, { timeout: 20, interval: 10 })
+})
+
+test('waitFor keeps helper callsite', async () => {
+  await checkWithWaitFor()
+})
+
+test('waitUntil keeps helper callsite', async () => {
+  await checkWithWaitUntil()
+})
+`.trimStart(),
+  })
+
+  expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+    {
+      "repro.test.ts": {
+        "waitFor keeps helper callsite": [
+          "expected 1 to be 2 // Object.is equality
+        at repro.test.ts:16:9",
+        ],
+        "waitUntil keeps helper callsite": [
+          "expected 1 to be 2 // Object.is equality
+        at repro.test.ts:20:9",
         ],
       },
     }

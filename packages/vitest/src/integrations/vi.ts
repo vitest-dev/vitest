@@ -613,10 +613,19 @@ function createVitest(): VitestUtils {
     waitUntil,
     defineHelper: (fn) => {
       return function __VITEST_HELPER__(this: any, ...args: any[]): any {
+        const stackTraceError = new Error('STACK_TRACE_ERROR')
         const result = fn.apply(this, args)
         if (result && typeof result === 'object' && typeof result.then === 'function') {
           return (async function __VITEST_HELPER__() {
-            return await result
+            try {
+              return await result
+            }
+            catch (error) {
+              if (error instanceof Error && !error.stack?.includes('__VITEST_HELPER__')) {
+                copyStackTrace(error, stackTraceError)
+              }
+              throw error
+            }
           })()
         }
         return result
@@ -830,6 +839,13 @@ function createVitest(): VitestUtils {
 
 export const vitest: VitestUtils = createVitest()
 export const vi: VitestUtils = vitest
+
+function copyStackTrace(target: Error, source: Error) {
+  if (source.stack !== undefined) {
+    target.stack = source.stack.replace(source.message, target.message)
+  }
+  return target
+}
 
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
