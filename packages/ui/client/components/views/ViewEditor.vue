@@ -205,7 +205,7 @@ watch(
   () => {
     syncTraceMarkers()
   },
-  { flush: 'post', immediate: true },
+  { immediate: true },
 )
 
 watch(
