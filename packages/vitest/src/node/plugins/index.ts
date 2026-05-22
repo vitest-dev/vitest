@@ -16,6 +16,7 @@ import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestOptimizer } from './optimizer'
 import { ModuleRunnerTransform } from './runnerTransform'
+import { TsconfigPathsReferencesPlugin } from './tsconfigPathsReferences'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
@@ -283,6 +284,7 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(vitest),
     CoverageTransform(vitest),
     VitestCoreResolver(vitest),
+    TsconfigPathsReferencesPlugin(),
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
