@@ -1,4 +1,3 @@
-import type { TaskMeta } from '@vitest/runner/types'
 import type { GlobOptions } from 'tinyglobby'
 import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
@@ -154,14 +153,14 @@ export class TestProject {
     /** @internal */
     pool?: string,
     /** @internal */
-    metaOverride?: TaskMeta,
+    taskIdOverride?: string,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this),
       locationsOrOptions,
-      metaOverride,
+      taskIdOverride,
     )
   }
 
@@ -550,7 +549,9 @@ export class TestProject {
       this.vitest,
       {
         ...options,
+        // root-only configs
         coverage: this.vitest.config.coverage,
+        attachmentsDir: this.vitest.config.attachmentsDir,
       },
       server.config,
     )

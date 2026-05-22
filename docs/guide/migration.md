@@ -509,7 +509,7 @@ export default defineConfig({
 ```
 :::
 
-See [Recipes](/guide/recipes) for more examples.
+See [Per-File Isolation Settings](/guide/recipes/disable-isolation) and [Parallel and Sequential Test Files](/guide/recipes/parallel-sequential) for more examples.
 
 ### Reporter Updates
 
@@ -742,7 +742,7 @@ export default defineConfig({
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
 
-### Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
+### Custom Snapshot Matchers <Experimental /> <Version>4.1.3</Version> {#custom-snapshot-matcher}
 
 Jest imports snapshot composables from `jest-snapshot`. In Vitest, use `Snapshots` from `vitest` instead:
 

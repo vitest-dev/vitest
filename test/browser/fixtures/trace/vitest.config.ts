@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import type { MarkOptions } from 'vitest/browser';
 import { instances, provider } from '../../settings'
 
 // TEST_BROWSER=chromium pnpm -C test/browser test-fixtures --root fixtures/trace
@@ -18,6 +19,11 @@ export default defineConfig({
         recordCanvas: true,
       },
       screenshotFailures: false,
+      commands: {
+        async markFromServer(context, name: string, kind?: MarkOptions["kind"]) {
+          await context.mark(name, { kind });
+        },
+      },
     },
   },
 })

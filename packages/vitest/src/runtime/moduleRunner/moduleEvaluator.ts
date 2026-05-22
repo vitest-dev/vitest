@@ -545,7 +545,7 @@ function interopModule(mod: any) {
 
   let defaultExport = 'default' in mod ? mod.default : mod
 
-  if (!isPrimitive(defaultExport) && '__esModule' in defaultExport) {
+  if (!isPrimitive(defaultExport) && defaultExport.__esModule) {
     mod = defaultExport
     if ('default' in defaultExport) {
       defaultExport = defaultExport.default

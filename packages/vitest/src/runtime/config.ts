@@ -1,4 +1,4 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, VitestRunnerConfig } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
@@ -25,7 +25,7 @@ export interface SerializedConfig extends VitestRunnerConfig {
   unstubGlobals: boolean
   unstubEnvs: boolean
   // TODO: make optional
-  fakeTimers: FakeTimerInstallOpts
+  fakeTimers: FakeTimersConfig
   defines: Record<string, any>
   expect: {
     requireAssertions?: boolean

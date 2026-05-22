@@ -3,13 +3,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "GITHUB_ACTIONS=false playwright test",
-    "test-e2e": "GITHUB_ACTIONS=false playwright test",
-    "test-e2e-ui": "GITHUB_ACTIONS=false playwright test --ui",
+    "test": "playwright test",
     "test-fixtures": "vitest"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
+    "@types/codemirror": "^5.60.17",
     "@vitest/browser-playwright": "workspace:*",
     "happy-dom": "latest",
     "vitest": "workspace:*"

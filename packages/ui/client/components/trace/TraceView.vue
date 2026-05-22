@@ -1,41 +1,33 @@
 <script setup lang="ts">
-import type { BrowserTraceArtifact } from '@vitest/runner'
-import type { RunnerTestCase } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
+import type { TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'
 import { openLocation } from '~/composables/location'
-
-// TODO: component test to demo trace view inside trace view
+import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
-  trace: BrowserTraceArtifact
-  test: RunnerTestCase
+  trace: BrowserTraceData
+  selection: TraceSelection
 }>()
 
-const traceData = computed(() => props.trace.data as BrowserTraceData)
-const entries = computed(() => traceData.value.entries)
-
-const selectedStepIndex = ref(0)
-const selectedStep = computed(() => entries.value[selectedStepIndex.value])
-watch(() => props.trace, () => {
-  selectedStepIndex.value = 0
-})
+const entries = computed(() => props.trace.entries)
+const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
 const iframeEl = ref<HTMLIFrameElement>()
 const iframeSandbox = computed(() => {
   // Canvas replay needs scripts for rrweb's image.onload -> drawImage path,
   // but allow-same-origin + allow-scripts gives replayed app HTML more capability.
-  return traceData.value.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
+  return props.trace.recordCanvas ? 'allow-same-origin allow-scripts' : 'allow-same-origin'
 })
 
 function onSelectStep(index: number) {
-  selectedStepIndex.value = index
+  selectActiveTraceStep(index)
   const step = entries.value[index]
   if (step?.location) {
-    openLocation(props.test, step.location)
+    openLocation(props.selection.test, step.location)
   }
 }
 
@@ -99,7 +91,13 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
 }, { immediate: true })
 
 function getStepButtonClass(step: BrowserTraceEntry, index: number) {
-  const selected = selectedStepIndex.value === index
+  const selected = props.selection.selectedStepIndex === index
+  // TODO: move trace step state colors to shared semantic UI shortcuts.
+  if (isTraceStepInProgress(step)) {
+    return selected
+      ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
+      : 'text-yellow-700 hover:bg-yellow-500/10 dark:text-yellow-400'
+  }
   if (step.status === 'fail') {
     return selected
       ? 'bg-red-500/20 text-red-600 dark:text-red-400'
@@ -115,6 +113,10 @@ function formatTraceTime(ms: number) {
 }
 
 function formatTraceTiming(step: BrowserTraceEntry) {
+  if (isTraceStepInProgress(step)) {
+    return 'running'
+  }
+
   const startTime = `+${formatTraceTime(step.startTime)}`
   return step.duration == null
     ? startTime
@@ -131,17 +133,8 @@ function formatStepName(step: BrowserTraceEntry) {
   return step.name
 }
 
-function getStepMarkerClass(step: BrowserTraceEntry) {
-  if (step.kind === 'action') {
-    return 'bg-blue-500/80'
-  }
-  if (step.kind === 'expect') {
-    return 'bg-green-500/80'
-  }
-  if (step.kind === 'mark') {
-    return 'bg-amber-500/80'
-  }
-  return 'bg-gray-400/80 dark:bg-gray-500/80'
+function isTraceStepInProgress(step: BrowserTraceEntry) {
+  return step.range?.phase === 'start'
 }
 </script>
 
@@ -155,15 +148,26 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           v-for="(step, index) of entries"
           :key="index"
           type="button"
+          data-testid="trace-step"
+          :data-test-range="step.range?.phase"
           class="w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
+          :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
           <div class="flex items-start gap-2">
-            <span
-              class="mt-1.5 h-2 w-2 rounded-full flex-shrink-0"
-              :class="getStepMarkerClass(step)"
-            />
+            <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
+              <span
+                v-if="isTraceStepInProgress(step)"
+                class="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"
+                :class="getTraceEntryClass(step)"
+              />
+              <span
+                v-else
+                class="h-2 w-2 rounded-full bg-current opacity-80"
+                :class="getTraceEntryClass(step)"
+              />
+            </span>
             <div class="min-w-0 flex-1">
               <div truncate data-testid="trace-step-name">
                 {{ formatStepName(step) }}
@@ -192,7 +196,7 @@ function getStepMarkerClass(step: BrowserTraceEntry) {
           style="background: white; border: none; color-scheme: normal; flex: none"
         />
         <div v-else class="text-sm opacity-50 p-4">
-          No trace step selected.
+          No trace step found
         </div>
       </div>
     </Pane>

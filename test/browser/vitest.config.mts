@@ -109,5 +109,26 @@ export default defineConfig({
         await server.ssrLoadModule('/package.json')
       },
     },
+    {
+      name: 'my-ssr',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const url = new URL(req.url || '', 'http://localhost')
+          if (url.pathname.startsWith('/api/')) {
+            try {
+              const mod = await server.ssrLoadModule('./test/server/entry.ts')
+              const result = await mod.default(url)
+              res.end(JSON.stringify(result))
+              return
+            }
+            catch (e) {
+              next(e)
+              return
+            }
+          }
+          next()
+        })
+      },
+    },
   ],
 })

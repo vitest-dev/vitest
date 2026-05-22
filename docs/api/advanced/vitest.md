@@ -21,7 +21,7 @@ This is Vitest config, it doesn't extend _Vite_ config. It only has resolved val
 
 This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver).
 
-## state <Badge type="warning">experimental</Badge>
+## state <Experimental /> {#state}
 
 ::: warning
 Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.

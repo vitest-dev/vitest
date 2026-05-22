@@ -12,6 +12,7 @@ import type {
   TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
+import type { MarkOptions } from 'vitest/browser'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
@@ -79,6 +80,7 @@ export interface WebSocketBrowserEvents {
   createTesters: (options: BrowserTesterOptions) => Promise<void>
   cleanupTesters: () => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
+  pageMark: (name: string, options?: MarkOptions) => Promise<void>
   resolveManualMock: (url: string) => Promise<{
     url: string
     keys: string[]

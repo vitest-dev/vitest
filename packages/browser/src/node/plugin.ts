@@ -364,7 +364,10 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
-      filter(id) {
+      filter(id, environment) {
+        if (environment.name !== 'client') {
+          return false
+        }
         if (id.includes(distRoot)) {
           return false
         }
