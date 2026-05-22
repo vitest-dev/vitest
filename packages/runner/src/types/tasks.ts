@@ -1263,13 +1263,13 @@ export type WriteableTestContext = {
 /**
  * Represents a file or data attachment associated with a test artifact.
  *
- * Attachments can be either file-based (via `path`) or inline content (via `body`).
+ * Attachments can be either path-based (via `path`) or inline content (via `body`).
  * The `contentType` helps consumers understand how to interpret the attachment data.
  */
 export interface TestAttachment {
   /** MIME type of the attachment (e.g., 'image/png', 'text/plain') */
   contentType?: string
-  /** File system path to the attachment */
+  /** Local file path or external HTTP(S) URL to the attachment. Relative paths are resolved from the project root. */
   path?: string
   /** Inline attachment content as a string or raw binary data */
   body?: string | Uint8Array | undefined
