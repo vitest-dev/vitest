@@ -131,10 +131,6 @@ function isValidVitestVersion(version: string) {
         Important fixes and security patches are backported to
         <span v-html="versionsToText(supportInfo.importantFixes)" />.
       </li>
-      <li v-if="supportInfo.securityPatches.length">
-        Security patches are also backported to
-        <span v-html="versionsToText(supportInfo.securityPatches)" />.
-      </li>
       <li>
         All versions before these are no longer supported. Users should upgrade
         to receive updates.
