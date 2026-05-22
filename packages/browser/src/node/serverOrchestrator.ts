@@ -61,7 +61,7 @@ export async function resolveOrchestrator(
       for (const attr in script.attrs || {}) {
         html += `${attr}="${script.attrs![attr]}" `
       }
-      html += `>${script.children}</script>`
+      html += `>${escapeInlineScript(typeof script.children === 'string' ? script.children : '')}</script>`
       return html
     }).join('\n')
   }
@@ -96,8 +96,14 @@ export async function resolveOrchestrator(
     __VITEST_FAVICON__: globalServer.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: globalServer.orchestratorScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_INJECTOR__: `<script type="module">${escapeInlineScript(injector)}</script>`,
     __VITEST_ERROR_CATCHER__: `<script type="module" src="${globalServer.errorCatcherUrl}"></script>`,
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
+}
+
+function escapeInlineScript(content: string): string {
+  return content
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<\/(script)/gi, '</\\$1')
 }

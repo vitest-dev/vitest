@@ -774,7 +774,7 @@ add(4);
         del = () => __vi_import_0__.del()
         call = __vi_import_0__.call(4)
       }
-      
+
       __vi_import_0__.remove(2);
       __vi_import_0__.add(4);"
     `)
@@ -1741,4 +1741,19 @@ if (import.meta.vitest) {
     `)
     expect(warn).not.toHaveBeenCalled()
   })
+})
+
+test('does not transform when hoistable API only appears in comments', () => {
+  expect(hoistSimpleCode(`
+import { lib } from 'lib'
+// vi.mock('lib')
+console.log(lib)
+  `)).toMatchInlineSnapshot(`undefined`)
+})
+
+test('does not transform when hoistable API only appears in strings', () => {
+  expect(hoistSimpleCode(`
+import { lib } from 'lib'
+console.log("vi.mock('lib')", lib)
+  `)).toMatchInlineSnapshot(`undefined`)
 })
