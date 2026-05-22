@@ -228,6 +228,7 @@ function createErrorElement(e: TestError) {
   }
   const div = document.createElement('div')
   div.className = 'op80 flex gap-x-2 items-center'
+  div.dataset.testid = 'error-line'
   const pre = document.createElement('pre')
   pre.className = 'c-red-700 dark:c-red-400'
   const filter = createAnsiToHtmlFilter(isDark.value)
