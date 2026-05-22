@@ -62,21 +62,16 @@ jobs:
           ref: main
       - name: AgentScan
         id: agentscan
-        uses: MatteoGabriele/agentscan-action@21f25b07e4dda43e6597ffb71c93f8e4c9fed812 # v1.7.0
+        uses: MatteoGabriele/agentscan-action@f41545309db947a68e22ed2643f182e754f4d41a # v1.8.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           agent-scan-comment: false
           skip-comment-on-organic: true
+          label-automation: maybe automated
+          label-mixed: maybe automated
+          label-community-flagged: bot
 
-      # just put a label and send a comment if the account looks suspicious
-      - name: Label flagged PR
-        if: steps.agentscan.outputs.classification != 'organic' && steps.agentscan.outputs.community-flagged != 'true'
-        uses: ./.github/actions/issues-helper
-        with:
-          actions: add-labels
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          labels: maybe automated
+      # agentscan-action puts a label automatically and we send a comment if the account looks suspicious
       - name: Comment flagged PR
         if: steps.agentscan.outputs.classification != 'organic' && steps.agentscan.outputs.community-flagged != 'true'
         uses: ./.github/actions/send-ai-bot-comment
