@@ -859,7 +859,7 @@ export function resolveConfig(
 
   resolved.browser.locators ??= {} as any
   resolved.browser.locators.testIdAttribute ??= 'data-testid'
-  resolved.browser.locators.exact ??= false
+  resolved.browser.locators.exact ??= true
   resolved.browser.locators.errorFormat ??= 'all'
 
   if (typeof resolved.browser.provider === 'string') {
