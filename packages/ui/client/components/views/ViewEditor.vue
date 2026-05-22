@@ -232,9 +232,7 @@ function createErrorElement(e: TestError) {
   const pre = document.createElement('pre')
   pre.className = 'c-red-700 dark:c-red-400'
   const filter = createAnsiToHtmlFilter(isDark.value)
-  const prefix = escapeHtml(`${' '.repeat(stack.column)}^ ${e.name}: `)
-  const msg = filter.toHtml(escapeHtml(e?.message || ''))
-  pre.innerHTML = `${prefix}${msg}`
+  pre.innerHTML = `${' '.repeat(stack.column)}^ ${filter.toHtml(escapeHtml(`${e.name}: ${e.message}`))}`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className
