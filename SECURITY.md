@@ -18,7 +18,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 1. **Network data and untrusted clients**
    The dev server and preview server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet. Vitest requires the dev server only with `--ui`, `--api` or `--browser` flags.
 
-### What Vite Trusts
+### What Vitest Trusts
 
 1. **Developers and their infrastructure**
    The people who invoke Vitest and the environments they use (local workstations, CI runners, containers, the operating system, and the Node.js runtime) are all assumed to be under the developer's control and properly secured.
@@ -56,7 +56,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 - Security Issues in the Application's Own Output: Flaws such as XSS, CSRF, or CSP misconfigurations in the bundled application are the responsibility of the application author. Vitest transforms code but does not guarantee the security properties of the output beyond the code it injects itself.
 - Reading Files Within Configured Paths (CWE-427): Vitest is expected to read any file the project's configuration makes reachable. Pointing Vitest at a directory that contains sensitive material is a configuration choice, not a Vitest vulnerability.
 - Attacker With Control Over Configuration (CWE-15): An attacker who can modify environment variables, CLI flags, or `vite.config.*`/`vitest.config.*` already controls a trusted input. Any consequences of that control are out of scope.
-- Bugs in the Runtime or Operating System: Vulnerabilities in Node.js, the OS kernel, or other platform-level components are not considered a vulnerability in Vite.
+- Bugs in the Runtime or Operating System: Vulnerabilities in Node.js, the OS kernel, or other platform-level components are not considered a vulnerability in Vitest.
 
 ## Reporting a Vulnerability
 
