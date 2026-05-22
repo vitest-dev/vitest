@@ -246,6 +246,10 @@ test('parse', async ({ bench }) => {
 - If the function throws, the file is not written.
 - Commit these files alongside your code so reviewers and CI share the same reference points.
 
+::: warning
+If you commit these files, keep in mind that benchmark results vary significantly between environments (developer machines, CI runners, different OSes). Designate a single environment (typically CI) to generate the file, and avoid regenerating it locally.
+:::
+
 ### `bench.from()`
 
 `bench.from(name, source)` is a registration that doesn't execute a function. It reads a previously stored result and feeds it into `bench.compare()` (or returns it directly when you call `.run()`).
@@ -287,6 +291,23 @@ test('compare parser versions', async ({ bench }) => {
 ```
 
 To produce a new historical artifact, point a fresh `bench()` at that version's implementation, set `writeResult` to a versioned path (`./benchmarks/parse.v3.json`), run it once, then replace the call with `bench.from('v3', './benchmarks/parse.v3.json')`.
+
+To regenerate the baseline on demand, gate the write behind an environment variable so the same test either refreshes the artifact or compares against it:
+
+```ts
+test('compare parser versions', async ({ bench }) => {
+  if (import.meta.env.VITE_WRITE_BENCH) {
+    const baseline = bench('baseline', { writeResult: './my-bench.json' }, () => fn())
+    await baseline.run()
+  }
+  else {
+    const baseline = bench.from('baseline', './my-bench.json')
+    await bench.compare(bench('current', () => fn()), baseline)
+  }
+})
+```
+
+Run `WRITE_BENCH=1 vitest bench` to refresh the stored result, and `vitest bench` to compare the current implementation against it.
 
 ### Per-project artifacts
 
