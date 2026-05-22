@@ -39,6 +39,9 @@ Then attach an _action_ by calling a `then*` method. The action determines what 
 Multiple behaviors can be chained on the same spy:
 
 ```ts
+import { test, vi } from 'vitest'
+import { getUserById } from './user.ts'
+
 test('returns user data', async () => {
   const db = { findById: vi.fn<FindById>() }
 
@@ -69,6 +72,7 @@ A single behavior can have multiple actions attached to it. When the behavior ma
 Because actions are evaluated in reverse registration order, indefinite actions should be registered first so that later finite actions can temporarily override them.
 
 ```ts
+import { test, vi } from 'vitest'
 import { readConfig } from './config.ts'
 
 test('retries after an initial failure', async () => {
@@ -145,9 +149,13 @@ expect(getRole('user@example.com')).toBe('user')
 
 ## Handling unmatched calls
 
-By default, when the spy is called with arguments that match no registered behavior, it falls back to the spy's original implementation. Since `db.findById` above has no original implementation, `db.findById(3)` returns `undefined`.
+By default, when the spy is called with arguments that match no registered behavior, it falls back to the spy's original implementation. If the spy has no original implementation, it returns `undefined`.
 
-There are three ways to change this.
+There are three ways to handle this differently:
+
+1. [throwing an error](#onunmatched-throw);
+1. [running a custom function](#onunmatched-fn);
+1. [using asymmetric matchers as catch-all behaviors](#asymmetric-matcher-as-catch-all).
 
 ### `onUnmatched: 'throw'`
 
