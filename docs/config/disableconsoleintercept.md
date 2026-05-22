@@ -9,11 +9,8 @@ outline: deep
 - **CLI:** `--disableConsoleIntercept`
 - **Default:** `false`
 
-By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc.
+By default, Vitest intercepts console output during tests to add context such as the test file and test title.
 
-This is also required for console log preview on Vitest UI.
+In [browser mode](/guide/browser), this interception is required to forward logs from the browser DevTools to the terminal. It is also required for console log previews in the Vitest UI.
 
-However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
-
-In [browser tests](/guide/browser/), this option disables forwarding logs to Vitest reporters and Vitest UI Console tab.
-Native browser devtools logging is preserved.
+Disabling console interception can be useful when you want to debug code with normal synchronous terminal logging.
