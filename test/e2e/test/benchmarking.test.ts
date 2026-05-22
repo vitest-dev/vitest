@@ -98,9 +98,9 @@ test('bench accepts options as second argument and rejects them as third', async
   const { stderr, results } = await runInlineTests(
     {
       'sig.bench.ts': /* ts */`
-        import { test, expect } from 'vitest'
+        import { test, expect, inject } from 'vitest'
 
-        test('bench signatures', ({ bench }) => {
+        test('bench signatures', async ({ bench }) => {
           const fn = () => 1
           const opts = { async: false }
 
@@ -117,10 +117,13 @@ test('bench accepts options as second argument and rejects them as third', async
 
           // legacy (fn, options) form must throw
           expect(() => bench('legacy', fn, opts)).toThrow(/third argument/)
+
+          // consume the registrations so the unrun-bench warning stays silent
+          await bench.compare(withOpts, noOpts, inject('options'))
         })
 `,
     },
-    { benchmark: { enabled: true } },
+    { benchmark: { enabled: true }, provide: { options: fastBenchOptions } },
   )
 
   expect(stderr).toBe('')
@@ -1162,6 +1165,81 @@ test('benchmark export getter warning can be suppressed', async () => {
   )
 
   expect(stderr).toBe('')
+})
+
+test('warns when `bench()` is registered but never run', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'unrun.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('forgot to run', ({ bench }) => {
+          bench('a', () => {})
+        })
+`,
+    },
+    { benchmark: { enabled: true } },
+  )
+  expect(stderr).toContain('Benchmark Warning')
+  expect(stderr).toContain('forgot to run')
+  expect(stderr).toContain('"a"')
+})
+
+test('warns about every unrun registration in the message, including `bench.from()`', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'out/seed.json': JSON.stringify(fakeBaseline(0.5)),
+      'multi.bench.ts': /* ts */`
+        import { test } from 'vitest'
+        test('multi unrun', ({ bench }) => {
+          bench('a', () => {})
+          bench('b', () => {})
+          bench.from('seed', './out/seed.json')
+        })
+`,
+    },
+    { benchmark: { enabled: true } },
+  )
+  expect(stderr).toContain('Benchmark Warning')
+  // every name appears in a single warning line
+  expect(stderr).toMatch(/"a".+"b".+"seed"/)
+})
+
+test('does NOT warn when every registration is consumed by `.run()` or `bench.compare()`', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'consumed.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('all consumed', async ({ bench }) => {
+          await bench('lone', () => {}).run(inject('options'))
+          await bench.compare(
+            bench('x', () => {}),
+            bench('y', () => {}),
+            inject('options'),
+          )
+        })
+`,
+    },
+    { benchmark: { enabled: true }, provide: { options: fastBenchOptions } },
+  )
+  expect(stderr).toBe('')
+})
+
+test('warns only about the unrun registration when others are consumed', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'partial.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('partial', async ({ bench }) => {
+          await bench('used', () => {}).run(inject('options'))
+          bench('forgotten', () => {})
+        })
+`,
+    },
+    { benchmark: { enabled: true }, provide: { options: fastBenchOptions } },
+  )
+  expect(stderr).toContain('Benchmark Warning')
+  expect(stderr).toContain('"forgotten"')
+  expect(stderr).not.toContain('"used"')
 })
 
 test('`BenchStorage.get("missing")` throws a descriptive error', async () => {

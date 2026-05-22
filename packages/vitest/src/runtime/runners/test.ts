@@ -32,7 +32,7 @@ import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { createBench } from '../benchmark'
+import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
 import { getWorkerState } from '../utils'
 
@@ -43,6 +43,7 @@ export class TestRunner implements VitestTestRunner {
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
+  private benchInstances = new WeakMap<Readonly<Task>, Bench>()
 
   public pool: string = this.workerState.ctx.pool
   /**
@@ -191,6 +192,7 @@ export class TestRunner implements VitestTestRunner {
   }
 
   onAfterTryTask(test: Test): void {
+    this.benchInstances.get(test)?.[kFinalize]()
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -239,10 +241,12 @@ export class TestRunner implements VitestTestRunner {
     })
     let _bench: Bench | undefined
     const runnerConfig = this.config
+    const benchInstances = this.benchInstances
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
           _bench = createBench(context.task, runnerConfig)
+          benchInstances.set(context.task, _bench)
         }
         return _bench
       },

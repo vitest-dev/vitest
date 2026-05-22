@@ -24,6 +24,7 @@ const kRegistration: unique symbol = Symbol('registration')
 const kFromSource: unique symbol = Symbol('fromSource')
 const kPerProject: unique symbol = Symbol('perProject')
 const kWriteResult: unique symbol = Symbol('writeResult')
+export const kFinalize: unique symbol = Symbol('finalize')
 
 type ExtractBenchNames<T extends BenchRegistration<any>[]> = Exclude<{
   [K in keyof T]: T[K] extends BenchRegistration<infer N> ? N : never
@@ -98,6 +99,8 @@ interface BenchFrom {
 export interface Bench extends BenchFactory {
   compare: BenchCompare
   from: BenchFrom
+  /** @internal */
+  [kFinalize]: () => void
 }
 
 interface RunnableRegistration<Name extends string> extends BenchRegistration<Name> {
@@ -121,6 +124,7 @@ function substitutePath(template: string, projectName: string | undefined): stri
 
 export function createBench(test: Test, config: SerializedConfig): Bench {
   let benchIdx = 0
+  const pending = new Set<BenchRegistration<any>>()
   const createTinybench = (options?: BenchCompareOptions) => {
     const currentIndex = ++benchIdx
     return new Tinybench({
@@ -315,14 +319,10 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       name,
       fn,
       fnOpts,
-      run: (options?: BenchCompareOptions) => runSingle(
-        name,
-        fn,
-        fnOpts,
-        options,
-        meta,
-        writeResult,
-      ),
+      run: (options?: BenchCompareOptions) => {
+        pending.delete(registration)
+        return runSingle(name, fn, fnOpts, options, meta, writeResult)
+      },
     }
     if (perProject) {
       registration[kPerProject] = true
@@ -330,6 +330,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     if (writeResult) {
       registration[kWriteResult] = writeResult
     }
+    pending.add(registration)
     return registration
   }) as Bench
 
@@ -345,8 +346,12 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
       [kRegistration]: true,
       [kFromSource]: source,
       name,
-      run: () => runFrom(name, source),
+      run: () => {
+        pending.delete(registration)
+        return runFrom(name, source)
+      },
     }
+    pending.add(registration)
     return registration
   }
 
@@ -358,6 +363,15 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     const isOptions = lastArg != null && typeof lastArg === 'object' && !(kRegistration in lastArg)
     const benchOptions = isOptions ? args.pop() as BenchCompareOptions : undefined
     const registrations = args as BenchRegistration<any>[]
+
+    // Mark every passed-in registration as consumed before validation so a
+    // throwing `bench.compare()` (wrong arity, wrong shape) doesn't also
+    // trigger the unrun-bench warning — the user's intent was to consume them.
+    for (const reg of registrations) {
+      if (reg != null && typeof reg === 'object' && kRegistration in reg) {
+        pending.delete(reg)
+      }
+    }
 
     if (registrations.length < 2) {
       throw new SyntaxError(`\`bench.compare()\` requires at least 2 benchmarks, received ${registrations.length} instead. ${registrations.length === 1 ? 'Consider calling `bench().run()`. ' : 'Define benchmarks by calling `bench()`. '}See https://vitest.dev/guide/benchmarking#comparing-benchmarks`)
@@ -432,6 +446,23 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     )
 
     return createCompareStorage(tinybench, fromResults)
+  }
+
+  bench[kFinalize] = () => {
+    if (pending.size === 0) {
+      return
+    }
+    const names = [...pending].map(reg => `"${reg.name}"`).join(', ')
+    pending.clear()
+    console.warn(
+      [
+        c.yellow(c.bold('Benchmark Warning')),
+        `Test ${c.bold(`"${test.fullTestName}"`)} registered benchmarks that never ran: ${names}.`,
+        '',
+        'Call `.run()` on the registration, or pass it to `bench.compare()`.',
+        'See https://vitest.dev/guide/benchmarking#defining-a-benchmark',
+      ].join('\n'),
+    )
   }
 
   return bench
