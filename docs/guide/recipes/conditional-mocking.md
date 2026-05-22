@@ -58,7 +58,7 @@ The same approach works across all mock outcome types. Here is the full set of a
 | Action | Returns | Equivalent to |
 |---|---|---|
 | `thenReturn(value)` | `value` | `mockReturnValue(value)` |
-| `thenThrow(error)` | throws `error` | `mockImplementation(() => { throw error })` |
+| `thenThrow(error)` | `throw error` | `mockThrow(error)` |
 | `thenResolve(value)` | `Promise.resolve(value)` | `mockResolvedValue(value)` |
 | `thenReject(error)` | `Promise.reject(error)` | `mockRejectedValue(error)` |
 
@@ -263,4 +263,4 @@ This is particularly handy when you need to override a shared spy for just one b
 - [`vi.when`](/api/vi#vi-when)
 - [`toHaveBeenExhausted`](/api/expect#tohavebeenexhausted)
 - [`vi.isWhenChain`](/api/vi#vi-iswhenchain)
-- [Auto-Cleanup with `using`](/guide/recipes/explicit-resources) — `vi.when` also supports `using` for automatic spy restoration
+- [Auto-Cleanup with `using`](/guide/recipes/explicit-resources)
