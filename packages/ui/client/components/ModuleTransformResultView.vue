@@ -6,7 +6,7 @@ import { asyncComputed, onKeyStroke } from '@vueuse/core'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { join, relative } from 'pathe'
 import { computed } from 'vue'
-import { browserState, client, config } from '~/composables/client'
+import { client, config } from '~/composables/client'
 import { currentModule } from '~/composables/navigation'
 import { formatPreciseTime, formatTime, getDurationClass, getImportDurationType } from '~/utils/task'
 import Badge from './Badge.vue'
@@ -31,7 +31,7 @@ const result = asyncComputed<TransformResultWithSource | ExternalResult | undefi
     return undefined
   }
   if (props.type === 'inline') {
-    return client.rpc.getTransformResult(props.projectName, props.id, currentModule.value.id, !!browserState)
+    return client.rpc.getTransformResult(props.projectName, props.id, currentModule.value.id)
   }
   if (props.type === 'external') {
     return client.rpc.getExternalResult(props.id, currentModule.value.id)

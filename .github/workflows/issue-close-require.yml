@@ -12,17 +12,21 @@ jobs:
     runs-on: ubuntu-slim
     name: Close Marked Issues
     permissions:
-      issues: write # for actions-cool/issues-helper to update issues
+      contents: read # to check out the repo for local actions
+      issues: write # to close issues
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: needs reproduction
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        uses: ./.github/actions/issues-helper
         with:
           actions: close-issues
           token: ${{ secrets.GITHUB_TOKEN }}
           labels: needs reproduction
           inactive-day: 3
       - name: maybe automated
-        uses: actions-cool/issues-helper@71b62d7da76e59ff7b193904feb6e77d4dbb2777 # v3.7.6
+        uses: ./.github/actions/issues-helper
         with:
           actions: close-issues
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -37,7 +41,7 @@ jobs:
       pull-requests: write # to close pull requests
     steps:
       - name: maybe automated PRs
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
