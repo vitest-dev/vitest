@@ -16,7 +16,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 ### What Vitest Does Not Trust
 
 1. **Network data and untrusted clients**
-   The dev server and preview server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet.
+   The integration built on top of Vite's dev server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet.
 
 ### What Vitest Trusts
 
@@ -24,7 +24,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
    The people who invoke Vitest and the environments they use (local workstations, CI runners, containers, the operating system, and the Node.js runtime) are all assumed to be under the developer's control and properly secured.
 
 2. **Configuration and plugins**
-   Everything in `vite.config.*` or `vitest.config.*`, the code they imports, CLI flags, and all plugins together with their transitive dependencies are treated as developer-authored and therefore trusted.
+   Everything in `vite.config.*` or `vitest.config.*`, the code they import, CLI flags, and all plugins as well as their transitive dependencies are treated as developer-authored and therefore trusted.
 
 3. **Project files and dependencies**
    All source files, assets, and installed packages (including everything in `node_modules`) that the project references are trusted.
@@ -41,12 +41,14 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 
 ### Preview Server and Build
 
-- Vitest does not use Vite's preview server or builds files using Vite's `build` API. Any such vulnerabilities should be reported to Vite.
+- Vitest does not use Vite's preview server and does not build files using Vite's `build` API. Any such vulnerabilities should be reported to Vite.
 
 ### Examples of Vulnerabilities (in scope)
 
 - A crafted URL causes the dev server to return file contents outside the `server.fs` boundary.
   - `server.fs.deny` bypassed with a crafted HTTP request ([GHSA-8gvc-j273-4wm5](https://github.com/vitest-dev/vitest/security/advisories/GHSA-8gvc-j273-4wm5))
+- A crafted URL causes Vitest WebSocket API to run arbitrary code when opened.
+  - `?otelCarrier` search query XSS [GHSA-2h32-95rg-cppp](https://github.com/vitest-dev/vitest/security/advisories/GHSA-2h32-95rg-cppp)
 - Missing or bypassable origin / host validation allows a cross-origin page to access dev-server endpoints that can cause confidentiality or integrity issues.
 - An unauthenticated WebSocket client injects HMR messages that execute arbitrary JavaScript on the developer's machine or bypasses built-in Commands API's protective layer.
 
