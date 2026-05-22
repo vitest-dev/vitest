@@ -24,7 +24,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
    The people who invoke Vitest and the environments they use (local workstations, CI runners, containers, the operating system, and the Node.js runtime) are all assumed to be under the developer's control and properly secured.
 
 2. **Configuration and plugins**
-   Everything in `vite.config.*` or `vitest.config.*`, the code it imports, CLI flags, and all plugins together with their transitive dependencies are treated as developer-authored and therefore trusted.
+   Everything in `vite.config.*` or `vitest.config.*`, the code they imports, CLI flags, and all plugins together with their transitive dependencies are treated as developer-authored and therefore trusted.
 
 3. **Project files and dependencies**
    All source files, assets, and installed packages (including everything in `node_modules`) that the project references are trusted.
