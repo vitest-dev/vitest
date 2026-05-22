@@ -56,7 +56,7 @@ With this config, `vitest` runs your regular tests first, then runs the benchmar
 
 ### `vitest bench`
 
-The `bench` subcommand runs only benchmarks only and skips regular tests:
+The `bench` subcommand runs only benchmarks and skips regular tests:
 
 ```bash
 vitest bench
