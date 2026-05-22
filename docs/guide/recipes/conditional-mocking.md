@@ -58,12 +58,12 @@ test('returns user data', async () => {
 
 The same approach works across all mock outcome types. Here is the full set of actions and their equivalents:
 
-| Action | Returns | Equivalent to |
+| Action | Equivalent to | Equivalent code |
 |---|---|---|
-| `thenReturn(value)` | `value` | `mockReturnValue(value)` |
-| `thenThrow(error)` | `throw error` | `mockThrow(error)` |
-| `thenResolve(value)` | `Promise.resolve(value)` | `mockResolvedValue(value)` |
-| `thenReject(error)` | `Promise.reject(error)` | `mockRejectedValue(error)` |
+| `thenReturn(value)` | `mockReturnValue(value)` | `return value` |
+| `thenThrow(error)` | `mockThrow(error)` | `throw error` |
+| `thenResolve(value)` | `mockResolvedValue(value)` | `return Promise.resolve(value)` |
+| `thenReject(error)` | `mockRejectedValue(error)` | `return Promise.reject(error)` |
 
 ## Stacking actions
 
