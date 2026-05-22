@@ -16,7 +16,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 ### What Vitest Does Not Trust
 
 1. **Network data and untrusted clients**
-   The dev server and preview server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet. Vitest requires the dev server only with `--ui`, `--api` or `--browser` flags.
+   The dev server and preview server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet.
 
 ### What Vitest Trusts
 
