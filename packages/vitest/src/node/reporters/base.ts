@@ -893,6 +893,17 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
+    let hasComparable = false
+    for (const projectMap of this._perProjectBenchmarks.values()) {
+      if (projectMap.size > 1) {
+        hasComparable = true
+        break
+      }
+    }
+    if (!hasComparable) {
+      return
+    }
+
     this.log('')
     this.log(divider(c.bold(c.bgBlue(` Cross-Project Benchmark Comparison `)), null, null, c.blue))
 
@@ -900,6 +911,10 @@ export abstract class BaseReporter implements Reporter {
       const tasks = [...projectMap.entries()]
         .sort((a, b) => a[1].latency.mean - b[1].latency.mean)
         .map(([projectName, task], index) => ({ ...task, name: projectName, rank: index + 1 }))
+
+      if (tasks.length <= 1) {
+        continue
+      }
 
       this.log('')
       this.log(`  ${c.dim(benchName)}`)

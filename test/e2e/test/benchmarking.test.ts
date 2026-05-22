@@ -189,9 +189,9 @@ test('bench exposes plain and perProject compositions and prints a table', async
          plain       d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
   `)
 
-  // the perProject registration is also emitted in the cross-project section
-  expect(stdout).toContain('Cross-Project Benchmark Comparison')
-  expect(stdout).toContain(`> perProject`)
+  // Only one project ran, so the cross-project section is skipped — a
+  // single-row comparison has nothing to compare against.
+  expect(stdout).not.toContain('Cross-Project Benchmark Comparison')
 })
 
 // Rebuilds a benchmark table with every numeric cell replaced by `d+`, padded
@@ -305,7 +305,7 @@ test('plain `bench()` records a task with no flags', async () => {
   `)
 })
 
-test('`bench(..., { perProject: true }, fn)` records a perProject task in BOTH inline and cross-project tables', async () => {
+test('`bench(..., { perProject: true }, fn)` records a perProject task in the inline table; cross-project section is omitted with only one project', async () => {
   const { tasks, inlineTable, crossProjectSection } = await runComposition(
     `bench('perProject', { perProject: true }, () => {})`,
   )
@@ -315,13 +315,7 @@ test('`bench(..., { perProject: true }, fn)` records a perProject task in BOTH i
     "     name        hz  min  max  mean  p75  p99  p995  p999   rme  samples
          perProject  d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
   `)
-  expect(crossProjectSection).toMatchInlineSnapshot(`
-    "Cross-Project Benchmark Comparison 
-
-      composition.bench.ts > composition > perProject
-       project  hz  min  max  mean  p75  p99  p995  p999   rme  samples
-       bench    d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
-  `)
+  expect(crossProjectSection).toBeNull()
 })
 
 test('junit reporter embeds the benchmark table inside <system-out>', async () => {
@@ -984,6 +978,33 @@ test('multi-project run aggregates perProject tasks into a single cross-project 
        one (bench)  d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+
        two (bench)  d+   d+   d+    d+   d+   d+    d+    d+  ±d+%       d+"
   `)
+})
+
+test('cross-project section is skipped when every perProject benchmark ran in only one project', async () => {
+  // Even when several perProject benchmarks are recorded, the cross-project
+  // table is useless if each one ran in exactly one project — every sub-table
+  // would be a single row with nothing to compare against.
+  const { stderr, stdout } = await runInlineTests(
+    {
+      'solo.bench.ts': /* ts */`
+        import { test, inject } from 'vitest'
+        test('solo', async ({ bench }) => {
+          await bench.compare(
+            bench('a', { perProject: true }, () => {}),
+            bench('b', { perProject: true }, () => {}),
+            inject('options'),
+          )
+        })
+`,
+    },
+    {
+      benchmark: { enabled: true },
+      reporters: ['default'],
+      provide: { options: fastBenchOptions },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(stdout).not.toContain('Cross-Project Benchmark Comparison')
 })
 
 test('cross-project section is absent when no benchmark is perProject', async () => {
