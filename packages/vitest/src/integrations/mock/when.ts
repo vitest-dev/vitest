@@ -377,7 +377,6 @@ export function when<Fn extends Procedure>(spy: Fn | Mock<Fn>, options?: WhenOpt
 
   // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node >= 24
   const output: When<Fn> = markWhenChain({
-    // @todo strictlyCalledWith for strict equality?
     calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
