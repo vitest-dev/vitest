@@ -11,5 +11,5 @@ test.runIf(server.provider === 'playwright')('locates an iframe', async () => {
   )
 
   await frame.getByText('Hello World').click()
-  await expect.element(frame.getByText('Hello World')).toHaveTextContent('Hello World')
+  await expect.element(frame.getByText('Hello World!')).toHaveTextContent('Hello World!')
 })
