@@ -66,6 +66,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           agent-scan-comment: false
+          skip-comment-on-organic: true
 
       # just put a label and send a comment if the account looks suspicious
       - name: Label flagged PR
