@@ -76,10 +76,7 @@ describe('VisualRegressionSlider', () => {
 
     const container = page.getByLabelText(containerLabel)
     const input = page.getByLabelText(inputLabel)
-    const status = page.getByRole(
-      'status',
-      { hasText: 'Showing 50% reference, 50% actual' },
-    )
+    const status = page.getByRole('status').filter({ hasText: 'Showing 50% reference, 50% actual' })
 
     // container with accessible label should exist and contain input and status
     await expect.element(container).toBeInTheDocument()

@@ -453,7 +453,12 @@ export interface LocatorOptions {
   hasNot?: Locator
 }
 
-export interface LocatorByRoleOptions extends LocatorOptions {
+export interface LocatorByRoleOptions {
+  /**
+   * Whether to find an exact accessible name match: case-sensitive and whole-string. Default to false. Ignored when locating by a
+   * regular expression. Note that exact match still trims whitespace.
+   */
+  exact?: boolean
   /**
    * Should checked elements (set by `aria-checked` or `<input type="checkbox"/>`) be included or not. By default, the filter is not applied.
    *

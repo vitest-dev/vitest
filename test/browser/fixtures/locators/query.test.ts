@@ -15,14 +15,6 @@ test('can find elements inside the body', () => {
   expect(screen.getByText('hello').element()).toBe(document.querySelector('span'));
 })
 
-test('can find a role with matching text', () => {
-  document.body.innerHTML = `
-    <button>A</button>
-    <button>B</button>
-  `
-  expect(page.getByRole('button', { hasText: 'A' }).element()).toBe(document.querySelector('button'))
-})
-
 describe('locator.and', () => {
   test('can find a button matching multiple criteria', () => {
     document.body.innerHTML = `

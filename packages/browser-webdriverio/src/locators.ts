@@ -177,10 +177,7 @@ page.extend({
     return new WebdriverIOLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    const locator = new WebdriverIOLocator(getByRoleSelector(role, options))
-    return options?.hasText || options?.hasNotText || options?.has || options?.hasNot
-      ? locator.filter(options)
-      : locator
+    return new WebdriverIOLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
     return new WebdriverIOLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
