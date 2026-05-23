@@ -19,45 +19,89 @@ export interface TraceEditorMarker {
   active?: boolean
 }
 
+export interface TraceViewEntry extends BrowserTraceEntry {
+  traceDepth?: number
+  traceHasChildren?: boolean
+}
+
 export const activeTraceView = ref<TraceSelection>()
 
 function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): BrowserTraceEntry[] {
-  const merged: BrowserTraceEntry[] = []
-  const startMap = new Map<string, number>()
+function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] {
+  const merged: TraceViewEntry[] = []
+  const startMap = new Map<string, { index: number; depth: number }>()
+  const stack: string[] = []
+
+  function markParentHasChildren() {
+    const parentId = stack[stack.length - 1]
+    if (!parentId) {
+      return
+    }
+
+    const parent = startMap.get(parentId)
+    if (parent) {
+      merged[parent.index].traceHasChildren = true
+    }
+  }
+
+  function closeRange(id: string) {
+    const index = stack.lastIndexOf(id)
+    if (index !== -1) {
+      stack.splice(index)
+    }
+  }
 
   for (const entry of entries) {
     const range = entry.range
     if (!range) {
-      merged.push(entry)
+      markParentHasChildren()
+      merged.push({
+        ...entry,
+        traceDepth: stack.length,
+      })
       continue
     }
 
     if (range.phase === 'start') {
-      startMap.set(range.id, merged.length)
-      merged.push(entry)
+      markParentHasChildren()
+      startMap.set(range.id, {
+        index: merged.length,
+        depth: stack.length,
+      })
+      merged.push({
+        ...entry,
+        traceDepth: stack.length,
+      })
+      stack.push(range.id)
       continue
     }
 
-    const index = startMap.get(range.id)
-    if (index == null) {
+    const start = startMap.get(range.id)
+    if (!start) {
       // unpaired range shouldn't happen but just leave it there
-      merged.push(entry)
+      markParentHasChildren()
+      merged.push({
+        ...entry,
+        traceDepth: stack.length,
+      })
       continue
     }
 
     // Keep the start timestamp for positioning, but derive display duration
     // from the end event timestamp.
-    const start = merged[index]
-    merged[index] = {
-      ...start,
+    const startEntry = merged[start.index]
+    merged[start.index] = {
+      ...startEntry,
       ...entry,
-      startTime: start.startTime,
-      duration: entry.startTime - start.startTime,
+      startTime: startEntry.startTime,
+      duration: entry.startTime - startEntry.startTime,
+      traceDepth: start.depth,
+      traceHasChildren: startEntry.traceHasChildren,
     }
+    closeRange(range.id)
   }
 
   return merged

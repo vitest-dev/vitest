@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { BrowserTraceData, BrowserTraceEntry } from '../../../../browser/src/client/tester/trace'
-import type { TraceSelection } from '~/composables/trace-view'
+import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
+import type { TraceSelection, TraceViewEntry } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
@@ -13,7 +13,7 @@ const props = defineProps<{
   selection: TraceSelection
 }>()
 
-const entries = computed(() => props.trace.entries)
+const entries = computed(() => props.trace.entries as TraceViewEntry[])
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
 const iframeEl = ref<HTMLIFrameElement>()
@@ -90,7 +90,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   }
 }, { immediate: true })
 
-function getStepButtonClass(step: BrowserTraceEntry, index: number) {
+function getStepButtonClass(step: TraceViewEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
   // TODO: move trace step state colors to shared semantic UI shortcuts.
   if (isTraceStepInProgress(step)) {
@@ -106,13 +106,31 @@ function getStepButtonClass(step: BrowserTraceEntry, index: number) {
   return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
 }
 
+function getStepButtonStyle(step: TraceViewEntry) {
+  const depth = step.traceDepth ?? 0
+  return {
+    paddingInlineStart: `${0.5 + depth}rem`,
+  }
+}
+
+function getStepGuideStyle(step: TraceViewEntry) {
+  const depth = step.traceDepth ?? 0
+  return {
+    insetInlineStart: `${0.75 + Math.max(0, depth - 1)}rem`,
+  }
+}
+
+function hasTraceDepth(step: TraceViewEntry) {
+  return (step.traceDepth ?? 0) > 0
+}
+
 function formatTraceTime(ms: number) {
   return ms < 1000
     ? `${Math.round(ms)}ms`
     : `${(ms / 1000).toFixed(1)}s`
 }
 
-function formatTraceTiming(step: BrowserTraceEntry) {
+function formatTraceTiming(step: TraceViewEntry) {
   if (isTraceStepInProgress(step)) {
     return 'running'
   }
@@ -123,7 +141,7 @@ function formatTraceTiming(step: BrowserTraceEntry) {
     : `${startTime} · ${formatTraceTime(step.duration)}`
 }
 
-function formatStepName(step: BrowserTraceEntry) {
+function formatStepName(step: TraceViewEntry) {
   if (step.name === 'vitest:onAfterRetryTask') {
     return 'test finished'
   }
@@ -133,7 +151,7 @@ function formatStepName(step: BrowserTraceEntry) {
   return step.name
 }
 
-function isTraceStepInProgress(step: BrowserTraceEntry) {
+function isTraceStepInProgress(step: TraceViewEntry) {
   return step.range?.phase === 'start'
 }
 </script>
@@ -150,11 +168,17 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
           type="button"
           data-testid="trace-step"
           :data-test-range="step.range?.phase"
-          class="w-full text-left px-2 py-1 rounded text-sm"
+          class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
+          :style="getStepButtonStyle(step)"
           :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
+          <span
+            v-if="hasTraceDepth(step)"
+            class="absolute bottom-1 top-1 border-l border-gray/20 dark:border-gray/30"
+            :style="getStepGuideStyle(step)"
+          />
           <div class="flex items-start gap-2">
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
               <span
@@ -169,7 +193,11 @@ function isTraceStepInProgress(step: BrowserTraceEntry) {
               />
             </span>
             <div class="min-w-0 flex-1">
-              <div truncate data-testid="trace-step-name">
+              <div
+                truncate
+                data-testid="trace-step-name"
+                :class="{ 'font-medium': step.traceHasChildren }"
+              >
                 {{ formatStepName(step) }}
               </div>
               <div class="text-xs opacity-60 truncate">
