@@ -567,8 +567,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.2
       ivya:
-        specifier: ^1.8.1
-        version: 1.8.1
+        specifier: ^1.8.2
+        version: 1.8.2
       mime:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1254,57 +1254,6 @@ importers:
         specifier: 'catalog:'
         version: 3.2.0
 
-  test/config:
-    devDependencies:
-      '@test/test-dep-config':
-        specifier: link:./deps/test-dep-config
-        version: link:deps/test-dep-config
-      '@vitejs/test-dep-virtual':
-        specifier: file:./deps/test-dep-virtual
-        version: file:test/config/deps/test-dep-virtual
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../../packages/browser-playwright
-      '@vitest/browser-preview':
-        specifier: workspace:*
-        version: link:../../packages/browser-preview
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../../packages/browser-webdriverio
-      '@vitest/test-dep-optimizer-external':
-        specifier: file:./deps/optimizer/external
-        version: file:test/config/deps/optimizer/external
-      '@vitest/test-dep-optimizer-optimized':
-        specifier: file:./deps/optimizer/optimized
-        version: file:test/config/deps/optimizer/optimized
-      inline-dep:
-        specifier: file:./deps/vite-ssr-resolve/inline-dep
-        version: file:test/config/deps/vite-ssr-resolve/inline-dep
-      other-dep:
-        specifier: file:./deps/vite-ssr-resolve/other-dep
-        version: file:test/config/deps/vite-ssr-resolve/other-dep
-      ssr-no-external-dep:
-        specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
-        version: file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep
-      test-dep-conditions:
-        specifier: file:./deps/test-dep-conditions
-        version: file:test/config/deps/test-dep-conditions
-      tinyexec:
-        specifier: ^1.0.2
-        version: 1.0.2
-      vite:
-        specifier: 8.0.11
-        version: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
-  test/config/fixtures/conditions-pkg:
-    dependencies:
-      subpackage:
-        specifier: file:../conditions-subpackage
-        version: file:test/config/fixtures/conditions-subpackage
-
   test/coverage-test:
     devDependencies:
       '@jridgewell/remapping':
@@ -1385,6 +1334,9 @@ importers:
       '@test/pkg-reporter':
         specifier: link:./deps/pkg-reporter
         version: link:deps/pkg-reporter
+      '@test/test-dep-config':
+        specifier: link:./deps/test-dep-config
+        version: link:deps/test-dep-config
       '@test/test-dep-error':
         specifier: file:./deps/error
         version: file:test/e2e/deps/error
@@ -1400,6 +1352,9 @@ importers:
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.1.4
         version: 2.1.4(vite@8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
+      '@vitejs/test-dep-virtual':
+        specifier: file:./deps/test-dep-virtual
+        version: file:test/e2e/deps/test-dep-virtual
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
@@ -1415,6 +1370,12 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
+      '@vitest/test-dep-optimizer-external':
+        specifier: file:./deps/optimizer/external
+        version: file:test/e2e/deps/optimizer/external
+      '@vitest/test-dep-optimizer-optimized':
+        specifier: file:./deps/optimizer/optimized
+        version: file:test/e2e/deps/optimizer/optimized
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -1424,21 +1385,36 @@ importers:
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
+      inline-dep:
+        specifier: file:./deps/vite-ssr-resolve/inline-dep
+        version: file:test/e2e/deps/vite-ssr-resolve/inline-dep
       jest-image-snapshot:
         specifier: ^6.5.1
         version: 6.5.1
       obug:
         specifier: ^2.1.1
         version: 2.1.1
+      other-dep:
+        specifier: file:./deps/vite-ssr-resolve/other-dep
+        version: file:test/e2e/deps/vite-ssr-resolve/other-dep
       playwright:
         specifier: 'catalog:'
         version: 1.59.0
+      ssr-no-external-dep:
+        specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
+        version: file:test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep
+      test-dep-conditions:
+        specifier: file:./deps/test-dep-conditions
+        version: file:test/e2e/deps/test-dep-conditions
       test-dep-invalid:
         specifier: link:./deps/dep-invalid
         version: link:deps/dep-invalid
       test-dep-simple:
         specifier: file:./deps/dep-simple
         version: file:test/e2e/deps/dep-simple
+      tinyexec:
+        specifier: ^1.0.2
+        version: 1.0.2
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4
@@ -1508,6 +1484,12 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../../../packages/vitest
+
+  test/e2e/fixtures/conditions-pkg:
+    dependencies:
+      subpackage:
+        specifier: file:../conditions-subpackage
+        version: file:test/e2e/fixtures/conditions-subpackage
 
   test/node-runner: {}
 
@@ -5425,8 +5407,8 @@ packages:
       vite: 8.0.11
       vue: ^3.2.25
 
-  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual':
-    resolution: {directory: test/config/deps/test-dep-virtual, type: directory}
+  '@vitejs/test-dep-virtual@file:test/e2e/deps/test-dep-virtual':
+    resolution: {directory: test/e2e/deps/test-dep-virtual, type: directory}
 
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
@@ -5450,11 +5432,11 @@ packages:
   '@vitest/test-dep-nested-cjs@file:test/unit/deps/dep-nested-cjs':
     resolution: {directory: test/unit/deps/dep-nested-cjs, type: directory}
 
-  '@vitest/test-dep-optimizer-external@file:test/config/deps/optimizer/external':
-    resolution: {directory: test/config/deps/optimizer/external, type: directory}
+  '@vitest/test-dep-optimizer-external@file:test/e2e/deps/optimizer/external':
+    resolution: {directory: test/e2e/deps/optimizer/external, type: directory}
 
-  '@vitest/test-dep-optimizer-optimized@file:test/config/deps/optimizer/optimized':
-    resolution: {directory: test/config/deps/optimizer/optimized, type: directory}
+  '@vitest/test-dep-optimizer-optimized@file:test/e2e/deps/optimizer/optimized':
+    resolution: {directory: test/e2e/deps/optimizer/optimized, type: directory}
 
   '@vitest/test-dep1@file:test/unit/deps/dep1':
     resolution: {directory: test/unit/deps/dep1, type: directory}
@@ -7451,8 +7433,8 @@ packages:
   ini@1.3.8:
     resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
 
-  inline-dep@file:test/config/deps/vite-ssr-resolve/inline-dep:
-    resolution: {directory: test/config/deps/vite-ssr-resolve/inline-dep, type: directory}
+  inline-dep@file:test/e2e/deps/vite-ssr-resolve/inline-dep:
+    resolution: {directory: test/e2e/deps/vite-ssr-resolve/inline-dep, type: directory}
 
   internal-slot@1.1.0:
     resolution: {integrity: sha512-4gd7VpWNQNB4UKKCFFVcp1AVv+FMOgs9NKzjHKusc8jTMhd5eL1NqQqOpE0KzMds804/yHlglp3uxgluOqAPLw==}
@@ -7680,8 +7662,8 @@ packages:
     resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
     engines: {node: '>=8'}
 
-  ivya@1.8.1:
-    resolution: {integrity: sha512-/0JJuIGSfzsNxIyoFQEPsZ/pGl5Chso3s0LHGdzcR2xD2CexQFjxYWaMrzs7LOYnNO2GONvDvEMadJcBxznGSg==}
+  ivya@1.8.2:
+    resolution: {integrity: sha512-9pGI1dtJbK2U+fpUoV95SL9slfrF2EM4p0Sf6EddYJwmMttBKijGOxCXibSCg8UKhmVwMx5CaDZ2PXinrcGfbA==}
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -8554,8 +8536,8 @@ packages:
     resolution: {integrity: sha512-JjCoypp+jKn1ttEFExxhetCKeJt9zhAgAve5FXHixTvFDW/5aEktX9bufBKLRRMdU7bNtpLfcGu94B3cdEJgjg==}
     engines: {node: '>= 0.8.0'}
 
-  other-dep@file:test/config/deps/vite-ssr-resolve/other-dep:
-    resolution: {directory: test/config/deps/vite-ssr-resolve/other-dep, type: directory}
+  other-dep@file:test/e2e/deps/vite-ssr-resolve/other-dep:
+    resolution: {directory: test/e2e/deps/vite-ssr-resolve/other-dep, type: directory}
 
   outvariant@1.4.3:
     resolution: {integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==}
@@ -9512,8 +9494,8 @@ packages:
   ssim.js@3.5.0:
     resolution: {integrity: sha512-Aj6Jl2z6oDmgYFFbQqK7fght19bXdOxY7Tj03nF+03M9gCBAjeIiO8/PlEGMfKDwYpw4q6iBqVq2YuREorGg/g==}
 
-  ssr-no-external-dep@file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep:
-    resolution: {directory: test/config/deps/vite-ssr-resolve/ssr-no-external-dep, type: directory}
+  ssr-no-external-dep@file:test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep:
+    resolution: {directory: test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep, type: directory}
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
@@ -9617,8 +9599,8 @@ packages:
   strnum@2.1.1:
     resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
 
-  subpackage@file:test/config/fixtures/conditions-subpackage:
-    resolution: {directory: test/config/fixtures/conditions-subpackage, type: directory}
+  subpackage@file:test/e2e/fixtures/conditions-subpackage:
+    resolution: {directory: test/e2e/fixtures/conditions-subpackage, type: directory}
 
   superagent@10.3.0:
     resolution: {integrity: sha512-B+4Ik7ROgVKrQsXTV0Jwp2u+PXYLSlqtDAhYnkkD+zn3yg8s/zjA2MeGayPoY/KICrbitwneDHrjSotxKL+0XQ==}
@@ -9703,11 +9685,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect:
-    resolution: {directory: test/config/deps/test-dep-conditions-indirect, type: directory}
+  test-dep-conditions-indirect@file:test/e2e/deps/test-dep-conditions-indirect:
+    resolution: {directory: test/e2e/deps/test-dep-conditions-indirect, type: directory}
 
-  test-dep-conditions@file:test/config/deps/test-dep-conditions:
-    resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+  test-dep-conditions@file:test/e2e/deps/test-dep-conditions:
+    resolution: {directory: test/e2e/deps/test-dep-conditions, type: directory}
 
   test-dep-error@file:test/browser/deps/test-dep-error:
     resolution: {directory: test/browser/deps/test-dep-error, type: directory}
@@ -13920,7 +13902,7 @@ snapshots:
       vite: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       vue: 3.5.29(typescript@5.9.3)
 
-  '@vitejs/test-dep-virtual@file:test/config/deps/test-dep-virtual': {}
+  '@vitejs/test-dep-virtual@file:test/e2e/deps/test-dep-virtual': {}
 
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
@@ -13939,9 +13921,9 @@ snapshots:
 
   '@vitest/test-dep-nested-cjs@file:test/unit/deps/dep-nested-cjs': {}
 
-  '@vitest/test-dep-optimizer-external@file:test/config/deps/optimizer/external': {}
+  '@vitest/test-dep-optimizer-external@file:test/e2e/deps/optimizer/external': {}
 
-  '@vitest/test-dep-optimizer-optimized@file:test/config/deps/optimizer/optimized': {}
+  '@vitest/test-dep-optimizer-optimized@file:test/e2e/deps/optimizer/optimized': {}
 
   '@vitest/test-dep1@file:test/unit/deps/dep1': {}
 
@@ -16334,7 +16316,7 @@ snapshots:
 
   ini@1.3.8: {}
 
-  inline-dep@file:test/config/deps/vite-ssr-resolve/inline-dep: {}
+  inline-dep@file:test/e2e/deps/vite-ssr-resolve/inline-dep: {}
 
   internal-slot@1.1.0:
     dependencies:
@@ -16548,7 +16530,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@1.8.1: {}
+  ivya@1.8.2: {}
 
   jackspeak@3.4.0:
     dependencies:
@@ -17598,7 +17580,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  other-dep@file:test/config/deps/vite-ssr-resolve/other-dep: {}
+  other-dep@file:test/e2e/deps/vite-ssr-resolve/other-dep: {}
 
   outvariant@1.4.3: {}
 
@@ -18810,7 +18792,7 @@ snapshots:
 
   ssim.js@3.5.0: {}
 
-  ssr-no-external-dep@file:test/config/deps/vite-ssr-resolve/ssr-no-external-dep: {}
+  ssr-no-external-dep@file:test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep: {}
 
   stackback@0.0.2: {}
 
@@ -18935,7 +18917,7 @@ snapshots:
 
   strnum@2.1.1: {}
 
-  subpackage@file:test/config/fixtures/conditions-subpackage: {}
+  subpackage@file:test/e2e/fixtures/conditions-subpackage: {}
 
   superagent@10.3.0:
     dependencies:
@@ -19038,11 +19020,11 @@ snapshots:
       commander: 2.20.3
       source-map-support: 0.5.21
 
-  test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect: {}
+  test-dep-conditions-indirect@file:test/e2e/deps/test-dep-conditions-indirect: {}
 
-  test-dep-conditions@file:test/config/deps/test-dep-conditions:
+  test-dep-conditions@file:test/e2e/deps/test-dep-conditions:
     dependencies:
-      test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
+      test-dep-conditions-indirect: file:test/e2e/deps/test-dep-conditions-indirect
 
   test-dep-error@file:test/browser/deps/test-dep-error: {}
 
