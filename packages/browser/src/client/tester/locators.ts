@@ -246,7 +246,8 @@ export abstract class Locator {
   protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return this.locator(getByRoleSelector(role, options))
+    const locator = this.locator(getByRoleSelector(role, options))
+    return hasFilterOptions(options) ? locator.filter(options) : locator
   }
 
   public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
@@ -434,6 +435,10 @@ export interface SerializedLocator {
    * @internal
    */
   _pwSelector?: string
+}
+
+function hasFilterOptions(options: LocatorOptions | undefined): options is LocatorOptions {
+  return !!(options?.hasText || options?.hasNotText || options?.has || options?.hasNot)
 }
 
 function createStrictModeViolationError(
