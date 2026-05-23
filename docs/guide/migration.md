@@ -56,6 +56,17 @@ export async function customClick(
 }
 ```
 
+### Locators are Strict by Default
+
+Browser locators now match the text exactly by default, requiring a full, case-sensitive match. To keep the previous behaviour, you can set [`browser.locators.exact`](/config/browser/locators#browser-locators-exact) to `false`.
+
+```ts
+// With exact: true (default), this only matches the string "Hello, World" exactly.
+// With exact: false, this matches "Hello, World!", "Say Hello, World", etc.
+const locator = page.getByText('Hello, World', { exact: true })
+await locator.click()
+```
+
 ### Removed Deprecated Entrypoints
 
 Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
