@@ -1,11 +1,12 @@
 diff --git a/dist/rrweb-snapshot.js b/dist/rrweb-snapshot.js
-index 3a3b67808308f4b50ad906dccfaaf577b4264742..3cf40a7d3c7d847e34850b32c424e2b0bb9331ac 100644
+index 3a3b67808308f4b50ad906dccfaaf577b4264742..8338aede2a2d3362aa241d7a260d60bbc6a14907 100644
 --- a/dist/rrweb-snapshot.js
 +++ b/dist/rrweb-snapshot.js
-@@ -1513,6 +1513,18 @@ const pseudoClassPlugin = {
+@@ -1512,6 +1512,18 @@ const pseudoClassPlugin = {
+         rule2.selectors.forEach(function(selector) {
            if (selector.includes(":hover")) {
              rule2.selector += ",\n" + selector.replace(/:hover/g, ".\\:hover");
-           }
++          }
 +          if (selector.includes(":active")) {
 +            rule2.selector += ",\n" + selector.replace(/:active/g, ".\\:active");
 +          }
@@ -17,7 +18,27 @@ index 3a3b67808308f4b50ad906dccfaaf577b4264742..3cf40a7d3c7d847e34850b32c424e2b0
 +          }
 +          if (/:focus(?![-\w])/.test(selector)) {
 +            rule2.selector += ",\n" + selector.replace(/:focus(?![-\w])/g, ".\\:focus");
-+          }
+           }
          });
        }
-     };
+@@ -5375,9 +5387,9 @@ function buildNodeWithSN(n, options) {
+     mirror.replace(n.rootId, doc);
+   }
+   if (n.type === NodeType.Document) {
+-    doc.close();
+-    doc.open();
+     if (n.compatMode === "BackCompat" && n.childNodes && n.childNodes[0].type !== NodeType.DocumentType) {
++      doc.close();
++      doc.open();
+       if (n.childNodes[0].type === NodeType.Element && "xmlns" in n.childNodes[0].attributes && n.childNodes[0].attributes.xmlns === "http://www.w3.org/1999/xhtml") {
+         doc.write(
+           '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "">'
+@@ -5387,6 +5399,8 @@ function buildNodeWithSN(n, options) {
+           '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "">'
+         );
+       }
++    } else {
++      doc.replaceChildren();
+     }
+     node2 = doc;
+   }

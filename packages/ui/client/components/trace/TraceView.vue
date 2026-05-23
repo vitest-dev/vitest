@@ -38,14 +38,11 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   const { serialized, selectorId, viewport, scroll, pseudoClassIds } = step.snapshot
   iframe.style.width = `${viewport.width}px`
   iframe.style.height = `${viewport.height}px`
-  // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
-  // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
-  // doc.open/close resets the iframe document to a blank state before rebuild.
+  // Rebuild snapshot into iframe contentDocument.
   // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
   // but external resources (images, stylesheets) won't load without a server.
+  // rrweb-snapshot's rebuild() resets the document internally; no local doc.open/close needed.
   const doc = iframe.contentDocument!
-  doc.open()
-  doc.close()
   const mirror = createMirror()
   rebuild(serialized, {
     doc,
