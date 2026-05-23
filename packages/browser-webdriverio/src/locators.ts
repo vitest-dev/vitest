@@ -32,8 +32,11 @@ class WebdriverIOLocator extends Locator {
   }
 
   // This exists to avoid calling `this.elements` in `this.selector`'s getter in interactive actions
-  private withElement(element: Element, error: Error | undefined) {
-    const pwSelector = selectorEngine.generateSelectorSimple(element)
+  private withElement(
+    element: Element,
+    error: Error | undefined,
+    pwSelector: string,
+  ) {
     const cssSelector = convertElementToCssSelector(element)
     return new ElementWebdriverIOLocator(cssSelector, error, pwSelector, element)
   }
@@ -57,21 +60,21 @@ class WebdriverIOLocator extends Locator {
   public override click(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).click(processClickOptions(options))
+      return this.withElement(element, error, this._pwSelector).click(processClickOptions(options))
     })
   }
 
   public override dblClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).dblClick(processClickOptions(options))
+      return this.withElement(element, error, this._pwSelector).dblClick(processClickOptions(options))
     })
   }
 
   public override tripleClick(options?: UserEventClickOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).tripleClick(processClickOptions(options))
+      return this.withElement(element, error, this._pwSelector).tripleClick(processClickOptions(options))
     })
   }
 
@@ -95,7 +98,7 @@ class WebdriverIOLocator extends Locator {
   public override hover(options?: UserEventHoverOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).hover(processHoverOptions(options))
+      return this.withElement(element, error, this._pwSelector).hover(processHoverOptions(options))
     })
   }
 
@@ -108,28 +111,28 @@ class WebdriverIOLocator extends Locator {
   public override wheel(options: UserEventWheelOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).wheel(options)
+      return this.withElement(element, error, this._pwSelector).wheel(options)
     })
   }
 
   public override clear(options?: UserEventClearOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).clear(options)
+      return this.withElement(element, error, this._pwSelector).clear(options)
     })
   }
 
   public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).fill(text, options)
+      return this.withElement(element, error, this._pwSelector).fill(text, options)
     })
   }
 
   public override screenshot(options?: LocatorScreenshotOptions): Promise<any> {
     return ensureAwaited(async (error) => {
       const element = await this.findElement(options)
-      return this.withElement(element, error).screenshot(options)
+      return this.withElement(element, error, this._pwSelector).screenshot(options)
     })
   }
 
