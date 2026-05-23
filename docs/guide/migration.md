@@ -5,7 +5,7 @@ outline: deep
 
 # Migration Guide
 
-[Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
+[Migrating to Vitest 4.0](https://v4.vitest.dev/guide/migration) | [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration)
 
 ## Migrating to Vitest 5.0 {#vitest-5}
 
