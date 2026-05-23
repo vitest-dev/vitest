@@ -35,7 +35,7 @@ class WebdriverIOLocator extends Locator {
   private withElement(
     element: Element,
     error: Error | undefined,
-    pwSelector = selectorEngine.generateSelectorSimple(element),
+    pwSelector: string,
   ) {
     const cssSelector = convertElementToCssSelector(element)
     return new ElementWebdriverIOLocator(cssSelector, error, pwSelector, element)
