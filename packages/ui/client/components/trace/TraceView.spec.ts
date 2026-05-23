@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createCache, createMirror, rebuild, snapshot } from 'rrweb-snapshot'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 // Verifies that rebuilding an rrweb snapshot into a sandboxed iframe does not
 // change the iframe document's URL. The bug: document.open() — called either
