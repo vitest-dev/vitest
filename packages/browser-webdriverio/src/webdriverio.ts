@@ -190,20 +190,20 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     const options = this.project.config.browser
     const browser = this.browserName
     if (browser !== 'safari' && options.headless) {
-      const [key, args] = headlessMap[browser]
+      const [key, defaultArgs] = headlessMap[browser]
       const currentValues = (this.options?.capabilities as any)?.[key] || {}
-      const currentArgs = currentValues.args || []
+      const currentArgs: string[] = currentValues.args || []
 
-      const hasEnableGpu = browser === 'chrome' && currentArgs.some((arg: string) =>
-        arg === '--enable-gpu' || arg === 'enable-gpu',
-      )
+      let argsToAdd = [...defaultArgs]
 
-      const newArgs = [
-        ...currentArgs,
-        ...args.filter(
-          arg => !(browser === 'chrome' && hasEnableGpu && arg === 'disable-gpu'),
-        ),
-      ]
+      if (browser === 'chrome') {
+        const hasEnableGpu = currentArgs.includes('--enable-gpu') || currentArgs.includes('enable-gpu')
+        if (hasEnableGpu) {
+          argsToAdd = argsToAdd.filter(arg => arg !== 'disable-gpu')
+        }
+      }
+
+      const newArgs = [...currentArgs, ...argsToAdd]
 
       capabilities[key] = { ...currentValues, args: newArgs as any }
     }
