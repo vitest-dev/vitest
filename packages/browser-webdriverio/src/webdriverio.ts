@@ -194,14 +194,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const currentValues = (this.options?.capabilities as any)?.[key] || {}
       const currentArgs: string[] = currentValues.args || []
 
-      let argsToAdd = [...defaultArgs]
+      const hasEnableGpu = browser === 'chrome' && (currentArgs.includes('--enable-gpu') || currentArgs.includes('enable-gpu'))
 
-      if (browser === 'chrome') {
-        const hasEnableGpu = currentArgs.includes('--enable-gpu') || currentArgs.includes('enable-gpu')
-        if (hasEnableGpu) {
-          argsToAdd = argsToAdd.filter(arg => arg !== 'disable-gpu')
-        }
-      }
+      const argsToAdd = hasEnableGpu
+        ? defaultArgs.filter(arg => arg !== 'disable-gpu')
+        : defaultArgs
 
       const newArgs = [...currentArgs, ...argsToAdd]
 
