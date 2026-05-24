@@ -45,8 +45,6 @@ export function render(
 
 The `render` function records a `vue.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
 
-Always `await` the result before using returned locators or helpers.
-
 ### Options
 
 The `render` function supports all [`mount` options](https://test-utils.vuejs.org/api/#mount) from `@vue/test-utils` (except `attachTo` - use `container` instead). In addition to them, there are also `container` and `baseElement`.

@@ -44,8 +44,6 @@ export function render<C extends Component>(
 
 The `render` function records a `svelte.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
 
-Always `await` the result before using returned locators or helpers.
-
 ### Options
 
 The `render` function supports either options that you can pass down to [`mount`](https://svelte.dev/docs/svelte/imperative-component-api#mount) or props directly:
