@@ -27,7 +27,7 @@ runs:
           - Make sure it follows our [contribution guidelines](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md) and uses the correct [GitHub template](https://github.com/vitest-dev/vitest/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
           - Disclose any AI tools you used (e.g. Claude, Copilot, Codex)
 
-          Please, do not generate or format the response with AI. If you do not speak English, reply in your native language or use translation software like [Google Translate](https://translate.google.com/) or [Deepl](https://www.deepl.com/en/translator). If the response was generated, the PR will be closed automatically.
+          Please, do not generate or format the response with AI. If you do not speak English, reply in your native language or use translation software like [Google Translate](https://translate.google.com/) or [Deepl](https://www.deepl.com/en/translator). If the response is generated, the PR will be closed automatically.
 
           *These measures help us reduce maintenance burden and keep the team's work efficient. See our [AI contributions policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#ai-contributions) for more context.*
       with:
