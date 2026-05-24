@@ -40,19 +40,12 @@ The package exposes two entry points: `vitest-browser-vue` and `vitest-browser-v
 export function render(
   component: Component,
   options?: ComponentRenderOptions,
-): RenderResult & PromiseLike<RenderResult>
+): Promise<RenderResult>
 ```
 
 The `render` function records a `vue.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
 
-::: warning
-Synchronous usage of `render` is deprecated and will be removed in the next major version. Please always `await` the result:
-
-```ts
-const screen = render(Component) // [!code --]
-const screen = await render(Component) // [!code ++]
-```
-:::
+Always `await` the result before using returned locators or helpers.
 
 ### Options
 
@@ -136,16 +129,12 @@ This method is a shortcut for `console.log(prettyDOM(baseElement))`. It will pri
 #### rerender
 
 ```ts
-function rerender(props: Partial<Props>): void & PromiseLike<void>
+function rerender(props: Partial<Props>): Promise<void>
 ```
 
 Also records a `vue.rerender` trace mark in the [Trace View](/guide/browser/trace-view).
 
 It is better if you test the component that's doing the prop updating to ensure that the props are being updated correctly to avoid relying on implementation details in your tests. That said, if you'd prefer to update the props of a rendered component in your test, this function can be used to update props of the rendered component.
-
-::: warning
-Synchronous usage of `rerender` is deprecated and will be removed in the next major version. Please always `await` the result.
-:::
 
 ```js
 import { render } from 'vitest-browser-vue'
@@ -159,14 +148,10 @@ await rerender({ number: 2 })
 #### unmount
 
 ```ts
-function unmount(): void & PromiseLike<void>
+function unmount(): Promise<void>
 ```
 
 This will cause the rendered component to be unmounted. Also records a `vue.unmount` trace mark in the [Trace View](/guide/browser/trace-view). This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
-
-::: warning
-Synchronous usage of `unmount` is deprecated and will be removed in the next major version. Please always `await` the result.
-:::
 
 #### emitted
 
