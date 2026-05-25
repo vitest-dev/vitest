@@ -49,6 +49,16 @@ interface LocalCallDefinition {
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
 
+const INTERMEDIATE_CALL_PROPERTIES = new Set([
+  'each',
+  'for',
+  'skipIf',
+  'runIf',
+  'extend',
+  'scoped',
+  'override',
+])
+
 function isTestFunctionName(name: string) {
   return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
 }
@@ -153,7 +163,7 @@ function astParseFile(filepath: string, code: string) {
       const properties = getProperties(callee)
       const property = callee?.property?.name
       // intermediate calls like .each(), .for() will be picked up in the next iteration
-      if (property && ['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(property)) {
+      if (property && INTERMEDIATE_CALL_PROPERTIES.has(property)) {
         return
       }
       // skip properties on return values of calls - e.g., test('name', fn).skip()
