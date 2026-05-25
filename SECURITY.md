@@ -54,7 +54,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 
 ### Examples of Non-Vulnerabilities (out of scope)
 
-- Malicious Plugins or Dependencies (CWE-1357): Plugins, config files, and their dependency trees run with full trust during development. A compromised plugin that exfiltrates data or executes arbitrary code is a supply-chain concern for the project, not a Vitest vulnerability.
+- Malicious Plugins, Custom Commands, or Dependencies (CWE-1357): Plugins, config files, custom browser commands configured through `browser.commands`, and their dependency trees run with full trust during development. A compromised plugin or custom command that exfiltrates data, exposes privileged access without validating browser-provided input, or executes arbitrary code is a supply-chain or project-code concern, not a Vitest vulnerability.
 - Security Issues in the Application's Own Output: Flaws such as XSS, CSRF, or CSP misconfigurations in the bundled application are the responsibility of the application author. Vitest transforms code but does not guarantee the security properties of the output beyond the code it injects itself.
 - Reading Files Within Configured Paths (CWE-427): Vitest is expected to read any file the project's configuration makes reachable. Pointing Vitest at a directory that contains sensitive material is a configuration choice, not a Vitest vulnerability.
 - Attacker With Control Over Configuration (CWE-15): An attacker who can modify environment variables, CLI flags, or `vite.config.*`/`vitest.config.*` already controls a trusted input. Any consequences of that control are out of scope.
