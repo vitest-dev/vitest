@@ -317,6 +317,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
                   ...args,
                 )
               },
+              __ensureCDPHandler: () => globalServer.ensureCDPHandler(sessionId, rpcId),
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
