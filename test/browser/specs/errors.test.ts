@@ -11,7 +11,7 @@ test('prints correct unhandled error stack', async () => {
 
   expect(stderr).toContain('throw-unhandled-error.test.ts:9:10')
   expect(stderr).toContain('This error originated in "throw-unhandled-error.test.ts" test file.')
-  expect(stderr).toContain('The latest test that might\'ve caused the error is "unhandled exception".')
+  expect(stderr).toContain('The last test to run before this error was "unhandled exception".')
 
   if (instances.some(({ browser }) => browser === 'webkit')) {
     expect(stderr).toContain('throw-unhandled-error.test.ts:9:20')

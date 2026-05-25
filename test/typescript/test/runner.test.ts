@@ -124,7 +124,7 @@ describe('when the title is dynamic', () => {
 
     expect(vitest.stdout).toContain('✓ for: %s')
     expect(vitest.stdout).toContain('✓ each: %s')
-    expect(vitest.stdout).toContain('✓ dynamic skip')
+    expect(vitest.stdout).toContain('↓ dynamic skip')
     expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
     expect(vitest.stdout).toContain('✓ template string')
     // eslint-disable-next-line no-template-curly-in-string

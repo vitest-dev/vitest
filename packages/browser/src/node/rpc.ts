@@ -433,13 +433,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 function cloneByOwnProperties(value: any) {
   // Clones the value's properties into a new Object. The simpler approach of
   // Object.assign() won't work in the case that properties are not enumerable.
-  return Object.getOwnPropertyNames(value).reduce(
-    (clone, prop) => ({
-      ...clone,
-      [prop]: value[prop],
-    }),
-    {},
-  )
+  const clone: Record<string, unknown> = {}
+  for (const prop of Object.getOwnPropertyNames(value)) {
+    clone[prop] = value[prop]
+  }
+  return clone
 }
 
 /**
