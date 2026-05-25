@@ -537,18 +537,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
-      send(method, params) {
-        return cdp.send(method as any, params)
-      },
-      on(event, listener) {
-        return cdp.on(event as any, listener)
-      },
-      off(event, listener) {
-        return cdp.off(event as any, listener)
-      },
-      once(event, listener) {
-        return cdp.once(event as any, listener)
-      },
+      send: cdp.send.bind(cdp),
+      on: cdp.on.bind(cdp),
+      off: cdp.off.bind(cdp),
+      once: cdp.once.bind(cdp),
     }
   }
 
