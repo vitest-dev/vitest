@@ -360,6 +360,7 @@ export interface BrowserCommandContext {
   ) => ReturnType<BrowserCommands[K]>
   /**
    * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
    *
    * Unlike `provider.getCDPSession`, this preserves CDP session state across
    * multiple command calls from the same browser tester. This matters for
