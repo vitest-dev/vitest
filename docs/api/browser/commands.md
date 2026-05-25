@@ -127,9 +127,9 @@ Custom functions will override built-in ones if they have the same name.
 ::: warning Security
 Custom commands run in the Vitest Node process and are callable from browser test code through Vitest's browser RPC connection. They can access local files, environment variables, network services, databases, shell commands, and other Node APIs.
 
-Vitest's built-in file commands validate paths against Vite's `server.fs` restrictions and separately check whether writes are allowed. Custom commands do not automatically inherit these protections. If a custom command accepts browser-provided input and uses it to read, write, delete, execute, or expose local resources, validate that input before using it.
+Vitest's built-in file commands validate paths against Vite's [`server.fs`](https://vite.dev/config/server-options#server-fs-allow) restrictions and separately check whether writes are allowed. Custom commands do not automatically inherit these protections. If a custom command accepts browser-provided input and uses it to read, write, delete, execute, or expose local resources, validate that input before using it.
 
-For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as `browser.api.allowWrite`, `api.allowWrite`, and a command-specific allowed directory.
+For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as [`browser.api.allowWrite`](/config/browser/api#api-allowwrite), [`api.allowWrite`](/config/api#api-allowwrite), and a command-specific allowed directory. For commands that execute code, shell commands, or project scripts, also check [`browser.api.allowExec`](/config/browser/api#api-allowexec) and [`api.allowExec`](/config/api#api-allowexec).
 
 For example, if you create your own file-writing command instead of using Vitest's built-in `writeFile`, apply the same checks:
 
