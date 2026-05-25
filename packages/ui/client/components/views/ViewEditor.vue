@@ -4,7 +4,7 @@ import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
-import { client, isReport } from '~/composables/client'
+import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
 import { openInEditor } from '~/composables/error'
@@ -382,7 +382,7 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{ lineNumbers: true, readOnly: isReport, saving }"
+    v-bind="{ lineNumbers: true, readOnly: isReport || !config.api?.allowWrite, saving }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"

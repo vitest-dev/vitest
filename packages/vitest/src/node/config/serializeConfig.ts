@@ -1,5 +1,5 @@
 import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { ApiConfig, ResolvedConfig, SerializedConfig } from '../types/config'
 
 export function serializeConfig(
   config: ResolvedConfig,
@@ -37,6 +37,12 @@ export function serializeConfig(
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    api: ((api: ApiConfig | undefined) => {
+      return {
+        allowExec: api?.allowExec,
+        allowWrite: api?.allowWrite,
+      }
+    })(config.browser.enabled ? config.browser.api : config.api),
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,

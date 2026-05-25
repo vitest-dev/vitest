@@ -5,6 +5,12 @@ import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'
 import { isFileServingAllowed } from 'vitest/node'
 
+function assertWrite(path: string, project: TestProject) {
+  if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    throw new Error(`Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`)
+  }
+}
+
 function assertFileAccess(path: string, project: TestProject) {
   if (
     !isFileServingAllowed(path, project.vite)
@@ -34,6 +40,7 @@ export const writeFile: BrowserCommand<
   const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
   const dir = dirname(filepath)
+  assertWrite(path, project)
   if (!fs.existsSync(dir)) {
     await fsp.mkdir(dir, { recursive: true })
   }
@@ -45,6 +52,7 @@ export const removeFile: BrowserCommand<
 > = async ({ project }, path) => {
   const filepath = resolve(project.config.root, path)
   assertFileAccess(filepath, project)
+  assertWrite(path, project)
   await fsp.rm(filepath)
 }
 
