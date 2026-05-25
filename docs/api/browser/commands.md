@@ -132,7 +132,7 @@ Vitest's built-in file commands validate paths against Vite's `server.fs` restri
 For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as `browser.api.allowWrite`, `api.allowWrite`, and a command-specific allowed directory.
 :::
 
-For example, a command that writes a fixture can combine Vitest's write access setting with Vite's `server.fs` check:
+For example, if you create your own file-writing command instead of using Vitest's built-in `writeFile`, apply the same checks:
 
 ```ts
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -156,14 +156,14 @@ function assertWrite(project: any) {
   }
 }
 
-export const writeFixture: BrowserCommand<[name: string, content: string]> = async (
+export const myWriteFileCommand: BrowserCommand<[path: string, content: string]> = async (
   { project },
-  name,
+  path,
   content,
 ) => {
   assertWrite(project)
 
-  const file = resolve(project.config.root, name)
+  const file = resolve(project.config.root, path)
   assertFileAccess(normalizePath(file), project)
 
   await mkdir(dirname(file), { recursive: true })
@@ -171,7 +171,7 @@ export const writeFixture: BrowserCommand<[name: string, content: string]> = asy
 }
 ```
 
-If a command should only touch a narrower area, such as a fixtures directory, add a command-specific allowlist on top of the `server.fs` check.
+This mirrors the protection used by Vitest's built-in file commands. Prefer the built-in commands when they fit your use case; custom commands that read, write, delete, execute, or expose local resources need equivalent checks. If a command should only touch a narrower area, such as a fixtures directory, add a command-specific allowlist on top of the `server.fs` check.
 
 ### Recording trace markers
 
