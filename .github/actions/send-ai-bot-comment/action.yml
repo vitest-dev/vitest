@@ -23,8 +23,8 @@ runs:
 
           To keep your PR open, please follow these steps:
           - Confirm that you are a real human. If you are an automated agent, disclose that
-          - Make sure you have read the full issue, including comments and linked issues
           - Confirm you've read, reviewed and stand behind its content
+          - Confirm you've read the full issue along with all of its comments, as well as any linked issues and their comments
           - Make sure it follows our [contribution guidelines](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md) and uses the correct [GitHub template](https://github.com/vitest-dev/vitest/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
           - Disclose any AI tools you used (e.g. Claude, Copilot, Codex)
 
