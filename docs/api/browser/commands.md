@@ -130,7 +130,6 @@ Custom commands run in the Vitest Node process and are callable from browser tes
 Vitest's built-in file commands validate paths against Vite's `server.fs` restrictions and separately check whether writes are allowed. Custom commands do not automatically inherit these protections. If a custom command accepts browser-provided input and uses it to read, write, delete, execute, or expose local resources, validate that input before using it.
 
 For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as `browser.api.allowWrite`, `api.allowWrite`, and a command-specific allowed directory.
-:::
 
 For example, if you create your own file-writing command instead of using Vitest's built-in `writeFile`, apply the same checks:
 
@@ -171,7 +170,7 @@ export const myWriteFileCommand: BrowserCommand<[path: string, content: string]>
 }
 ```
 
-This mirrors the protection used by Vitest's built-in file commands. Prefer the built-in commands when they fit your use case; custom commands that read, write, delete, execute, or expose local resources need equivalent checks. If a command should only touch a narrower area, such as a fixtures directory, add a command-specific allowlist on top of the `server.fs` check.
+:::
 
 ### Recording trace markers
 
