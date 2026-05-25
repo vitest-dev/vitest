@@ -369,7 +369,7 @@ export interface BrowserCommandContext {
    *
    * @internal
    */
-  __ensureCDPHandler: () => Promise<any>
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
