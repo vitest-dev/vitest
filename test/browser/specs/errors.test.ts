@@ -2,7 +2,7 @@ import path from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
-import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('prints correct unhandled error stack', async () => {
   const { stderr } = await runBrowserTests({
@@ -217,4 +217,37 @@ test('prints source-mapped stack for optimized dependency', async () => {
       `)
     }
   }
+})
+
+test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is disabled', async () => {
+  const result = await runInlineBrowserTests({
+    'cdp.test.ts': `
+      import { expect, test } from 'vitest'
+      import { cdp, server } from 'vitest/browser'
+
+      test('cdp throws an error', async () => {
+        await cdp().send('Runtime.evaluate', { expression: '1 + 1' })
+      })
+    `,
+  }, {
+    browser: {
+      instances: [{ browser: 'chromium' }],
+      screenshotFailures: false,
+      api: {
+        allowExec: false,
+        allowWrite: false,
+      },
+    },
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "chromium": {
+        "cdp.test.ts": {
+          "cdp throws an error": [
+            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.",
+          ],
+        },
+      },
+    }
+  `)
 })
