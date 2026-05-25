@@ -47,7 +47,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 
 - A crafted URL causes the dev server to return file contents outside the `server.fs` boundary.
   - `server.fs.deny` bypassed with a crafted HTTP request ([GHSA-8gvc-j273-4wm5](https://github.com/vitest-dev/vitest/security/advisories/GHSA-8gvc-j273-4wm5))
-- A crafted URL causes Vitest WebSocket API to run arbitrary code when opened.
+- A crafted URL causes Vitest to run arbitrary code in the browser.
   - `?otelCarrier` search query XSS [GHSA-2h32-95rg-cppp](https://github.com/vitest-dev/vitest/security/advisories/GHSA-2h32-95rg-cppp)
 - Missing or bypassable origin / host validation allows a cross-origin page to access dev-server endpoints that can cause confidentiality or integrity issues.
 - An unauthenticated WebSocket client injects HMR messages that execute arbitrary JavaScript on the developer's machine or bypasses built-in Commands API's protective layer.
