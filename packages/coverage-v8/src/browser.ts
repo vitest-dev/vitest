@@ -7,7 +7,7 @@ let enabled = false
 
 type ScriptCoverage = Profiler.TakePreciseCoverageReturnType
 
-function triggerCommand<T>(command: string, args: any[] = []): Promise<T> {
+function triggerCommand(command: string, args: any[] = []): Promise<any> {
   return (globalThis as any).__vitest_browser_runner__.commands.triggerCommand(command, args)
 }
 
@@ -23,7 +23,7 @@ const mod: CoverageProviderModule = {
   },
 
   async takeCoverage(): Promise<{ result: any[] }> {
-    const coverage = await triggerCommand<ScriptCoverage>('__vitest_takeV8Coverage')
+    const coverage: ScriptCoverage = await triggerCommand('__vitest_takeV8Coverage')
     const result: typeof coverage.result = []
 
     // Reduce amount of data sent over rpc by doing some early result filtering
