@@ -9,6 +9,15 @@ export default defineConfig({
       (process.env.VITEST_CI_BLOB_LABEL
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
         : {}),
+      (process.env.VITEST_CI_MERGE_REPORTS
+        ? [
+            'html',
+            {
+              outputFile: '.vitest/html/index.html',
+              singleFile: true,
+            },
+          ]
+        : {}),
     ],
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {
@@ -35,7 +44,10 @@ export default defineConfig({
           },
           typecheck: {
             enabled: true,
-            include: ['./test/reporters/configuration-options.test-d.ts'],
+            include: [
+              './test/config-types.test-d.ts',
+              './test/reporters/configuration-options.test-d.ts',
+            ],
           },
           sequence: {
             groupOrder: 0,

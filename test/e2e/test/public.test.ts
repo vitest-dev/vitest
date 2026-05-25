@@ -8,7 +8,9 @@ test('resolves the test config', async () => {
   const { viteConfig, vitestConfig } = await resolveConfig()
   expect(viteConfig.mode).toBe('test')
   expect(vitestConfig.mode).toBe('test')
-  expect(vitestConfig.reporters).toEqual([['verbose', {}]]) // inherits the root config
+  // inherits the root config
+  // TODO: test cwd loading behavior without relying on test/e2e/vitest.config.ts
+  expect(vitestConfig.reporters.slice(0, 1)).toEqual([['verbose', {}]])
   expect(viteConfig.plugins.find(p => p.name === 'vitest')).toBeDefined()
 })
 

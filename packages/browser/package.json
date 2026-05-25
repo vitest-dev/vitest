@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "5.0.0-beta.2",
+  "version": "5.0.0-beta.3",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -94,7 +94,7 @@
     "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.8.1",
+    "ivya": "^1.8.2",
     "mime": "^4.1.0",
     "pathe": "catalog:",
     "rrweb-snapshot": "2.0.0-alpha.20",

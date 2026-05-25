@@ -25,7 +25,7 @@ packages:
   - examples/*
   - test/*
   - test/e2e/dts/*
-  - test/config/fixtures/conditions-pkg
+  - test/e2e/fixtures/conditions-pkg
 overrides:
   '@types/node': $@types/node
   '@vitest/browser': workspace:*

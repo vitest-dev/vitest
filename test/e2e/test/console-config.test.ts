@@ -3,14 +3,14 @@ import { runVitest } from '../../test-utils'
 
 test('default intercept', async () => {
   const { stderr } = await runVitest({
-    root: './fixtures/console',
+    root: './fixtures/console-config',
   })
   expect(stderr).toBe('stderr | basic.test.ts > basic\n__test_console__\n\n')
 })
 
 test.each(['threads', 'vmThreads'] as const)(`disable intercept pool=%s`, async (pool) => {
   const { stderr } = await runVitest({
-    root: './fixtures/console',
+    root: './fixtures/console-config',
     disableConsoleIntercept: true,
     pool,
   })

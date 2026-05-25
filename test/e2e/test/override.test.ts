@@ -7,7 +7,7 @@ import { createVitest, parseCLI } from 'vitest/node'
 type VitestOptions = Parameters<typeof createVitest>[3]
 
 async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  const vitest = await createVitest('test', { ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
 }

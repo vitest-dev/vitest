@@ -142,7 +142,9 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
-  setupConsoleLogSpy()
+  if (!config.disableConsoleIntercept) {
+    setupConsoleLogSpy()
+  }
   setupDialogsSpy()
 
   const runner = await initiateRunner(state, mocker, config)
