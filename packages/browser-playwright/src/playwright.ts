@@ -541,7 +541,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       on: cdp.on.bind(cdp),
       off: cdp.off.bind(cdp),
       once: cdp.once.bind(cdp),
-    }
+    } as any // overloaded CDPSession type is too tricky in monorepo
   }
 
   async close(): Promise<void> {
