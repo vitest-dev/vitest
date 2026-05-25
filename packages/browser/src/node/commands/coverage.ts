@@ -1,8 +1,8 @@
-import type { CDPSession } from '@vitest/browser-playwright'
 import type { BrowserCommand } from 'vitest/node'
+import type { BrowserServerCDPHandler } from '../cdp'
 
 export const _startV8Coverage: BrowserCommand<[]> = async (context) => {
-  const session: CDPSession = await context.__ensureCDPHandler()
+  const session: BrowserServerCDPHandler = await context.__ensureCDPHandler()
   await session.send('Profiler.enable')
   await session.send('Profiler.startPreciseCoverage', {
     callCount: true,
@@ -11,6 +11,6 @@ export const _startV8Coverage: BrowserCommand<[]> = async (context) => {
 }
 
 export const _takeV8Coverage: BrowserCommand<[]> = async (context) => {
-  const session: CDPSession = await context.__ensureCDPHandler()
+  const session: BrowserServerCDPHandler = await context.__ensureCDPHandler()
   return session.send('Profiler.takePreciseCoverage')
 }
