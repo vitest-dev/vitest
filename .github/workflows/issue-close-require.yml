@@ -33,7 +33,7 @@ jobs:
       pull-requests: write # to close pull requests
     steps:
       - name: maybe automated PRs
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
