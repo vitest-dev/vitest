@@ -16,7 +16,8 @@ try {
     tag: true,
   })
 
-  if (!result.newVersion.includes('beta')) {
+  const currentBranch = (await $`git branch --show-current`).stdout.trim()
+  if (!result.newVersion.includes('beta') && currentBranch === 'main') {
     console.log('Pushing to release branch')
     await $`git update-ref refs/heads/release refs/heads/main`
     await $`git push origin release`

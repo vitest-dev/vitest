@@ -153,6 +153,14 @@ No backport is made to `v3` unless the support policy changes or maintainers dec
 
 Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Branch names never include patch versions.
 
+#### Documentation Branches
+
+The release branches are also linked with the documentation site releases:
+
+- `main` is the source for unreleased documentation at <https://main.vitest.dev/>.
+- `release` points to the latest stable release line used for <https://vitest.dev/>. It is updated only for non-beta releases from `main`, not for older-line backports.
+- `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
+
 ### Issue Triaging Workflow
 
 ```mermaid
