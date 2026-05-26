@@ -134,7 +134,7 @@ Current branch alignment notes for maintainers:
 - `vN` is the latest maintained minor line for non-main major version `N`.
 - `vN.M` is an older minor line for major version `N`, kept when that exact minor still needs releases or backports.
 
-For example, if `v5.1.2` is the latest Vitest release, and the latest releases for older majors are `v4.1.7` and `v3.2.4`, the branch shape can be:
+As a hypothetical example, if `v5.1.2` is the latest Vitest release, and the latest releases for older majors are `v4.1.7` and `v3.2.4`, the branch shape can be:
 
 - `main` is the active development branch for `5.1.x`.
 - `v5.0` is an older minor line for Vitest 5.
@@ -143,15 +143,15 @@ For example, if `v5.1.2` is the latest Vitest release, and the latest releases f
 - `v3` is the latest maintained minor line for Vitest 3, so it is the `3.2.x` line.
 - `v3.1` and `v3.0` are older minor lines for Vitest 3.
 
-`v5` branch doesn't exist yet and it will be created from the latest v5 minor only after `main` moves on to a newer release line `6.0.0` (or often as `6.0.0-beta.x`).
+The `v5` branch does not exist yet. It will be created from the latest v5 minor only after `main` moves on to a newer release line, such as `6.0.0` or often `6.0.0-beta.x`.
 
 For backports, first use the public support policy to decide which version ranges are supported, then map them to branches:
 
-- first the changes can land as usual on `main` branch.
+- Changes can land as usual on the `main` branch first.
 - If the fix targets the latest maintained minor of major version `N`, target `vN`. This is the default backport target for a supported non-main major.
 - If the fix also needs an older maintained minor `N.M`, target `vN.M`.
 
-For example, with `v5.1.2` as the latest release, the public support policy covers regular fixes for `5.1.x` and important fixes or security patches for `5.0.x` and `4.1.x`:
+For example, using the hypothetical `v5.1.2` release above, the public support policy covers regular fixes for `5.1.x` and important fixes or security patches for `5.0.x` and `4.1.x`:
 
 - fixes for `5.1.x` target `main`
 - backports to `5.0.x` target `v5.0`
