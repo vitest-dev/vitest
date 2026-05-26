@@ -495,9 +495,10 @@ export function hoistMocks(
     }
 
     if (hoistedNodes.size) {
+      // TODO: location is not source map proof
       const locations = createIndexLocationsMap(code)
       const message = [
-        `${hoistedNodes.size} call${hoistedNodes.size > 1 ? 's' : ''} were defined outside of the module's top level scope:`,
+        `${hoistedNodes.size} call${hoistedNodes.size > 1 ? 's were' : 'was'} defined outside of the module's top level scope:`,
         ...[...hoistedNodes].map(invalidNode => `- ${getNodeName(getNodeCall(invalidNode))} at ${relative(options.root || process.cwd(), id)}:${locations.get(invalidNode.start)}`),
         '',
         'Although they appear nested, they will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.',
