@@ -118,6 +118,49 @@ These measures help reduce maintenance burden and keep the team's work efficient
 
 > The following section is mostly for maintainers who have commit access, but it's helpful to go through if you intend to make non-trivial contributions to the codebase.
 
+### Release Branches
+
+Public support ranges are documented in [Releases](./docs/releases.md). This section describes how maintainers map those ranges to Git branches for releases and backports. These names refer to branches, not release tags; release tags always include the full version, for example `v4.1.8`.
+
+- `main` is the active development branch for the next release line.
+- `vN` is the latest maintained minor line for non-main major version `N`.
+- `vN.M` is an older minor line for major version `N`, kept when that exact minor still needs releases or backports.
+
+As a hypothetical example, if `v5.1.2` is the latest Vitest release, and the latest releases for older majors are `v4.1.7` and `v3.2.4`, the branch shape can be:
+
+- `main` is the active development branch for `5.1.x`.
+- `v5.0` is an older minor line for Vitest 5.
+- `v4` is the latest maintained minor line for Vitest 4, so it is the `4.1.x` line.
+- `v4.0` is an older minor line for Vitest 4.
+- `v3` is the latest maintained minor line for Vitest 3, so it is the `3.2.x` line.
+- `v3.1` and `v3.0` are older minor lines for Vitest 3.
+
+The `v5` branch does not exist yet. It will be created from the latest v5 minor only after `main` moves on to a newer release line, such as `6.0.0` or often `6.0.0-beta.x`.
+
+For backports, first use the public support policy to decide which version ranges are supported, then map them to branches:
+
+- Changes can land as usual on the `main` branch first.
+- If the fix targets the latest maintained minor of major version `N`, target `vN`. This is the default backport target for a supported non-main major.
+- If the fix also needs an older maintained minor `N.M`, target `vN.M`.
+
+For example, using the hypothetical `v5.1.2` release above, the public support policy covers regular fixes for `5.1.x` and important fixes or security patches for `5.0.x` and `4.1.x`:
+
+- fixes for `5.1.x` target `main`
+- backports to `5.0.x` target `v5.0`
+- backports to `4.1.x` target `v4`
+
+No backport is made to `v3` unless the support policy changes or maintainers decide on an explicit exception.
+
+Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Branch names never include patch versions.
+
+#### Documentation Branches
+
+The release branches are also linked with the documentation site releases:
+
+- `main` is the source for unreleased documentation at <https://main.vitest.dev/>.
+- `release` points to the latest stable release line used for <https://vitest.dev/>. Release managers update it manually for non-beta releases from `main`; it is not moved for older-line backports.
+- `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
+
 ### Issue Triaging Workflow
 
 ```mermaid
