@@ -6,12 +6,6 @@ import mime from 'mime/lite'
 import { isFileServingAllowed } from 'vitest/node'
 import { slash } from '../utils'
 
-function assertWrite(path: string, project: TestProject) {
-  if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
-    throw new Error(`Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`)
-  }
-}
-
 function assertFileAccess(path: string, project: TestProject) {
   if (
     !isFileServingAllowed(path, project.vite)
@@ -20,6 +14,12 @@ function assertFileAccess(path: string, project: TestProject) {
     throw new Error(
       `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
     )
+  }
+}
+
+function assertWrite(path: string, project: TestProject) {
+  if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
+    throw new Error(`Cannot modify file "${path}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`)
   }
 }
 
