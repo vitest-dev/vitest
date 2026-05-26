@@ -122,14 +122,6 @@ These measures help reduce maintenance burden and keep the team's work efficient
 
 Public support ranges are documented in [Releases](./docs/releases.md). This section describes how maintainers map those ranges to Git branches for releases and backports. These names refer to branches, not release tags; release tags always include the full version, for example `v4.1.8`.
 
-<!--
-Current branch alignment notes for maintainers:
-- Create `v4` from the current `v4.1` branch. Under this convention, `v4` is the latest maintained v4 minor line, currently `4.1.x`.
-- Create `v4.0` from the current `v4.0.x` branch. Under this convention, older maintained minor lines use `vN.M`, not `vN.M.x`.
-- The existing `v3` branch already fits the convention if it is the latest maintained v3 minor line, currently `3.2.x`.
-- The existing `v3.1` branch already fits the convention as an older v3 minor line.
--->
-
 - `main` is the active development branch for the next release line.
 - `vN` is the latest maintained minor line for non-main major version `N`.
 - `vN.M` is an older minor line for major version `N`, kept when that exact minor still needs releases or backports.
