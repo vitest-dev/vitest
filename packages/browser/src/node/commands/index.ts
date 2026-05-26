@@ -1,3 +1,4 @@
+import { _startV8Coverage, _takeV8Coverage } from './coverage'
 import { clear } from './clear'
 import { click, dblClick, tripleClick } from './click'
 import { dragAndDrop } from './dragAndDrop'
@@ -22,6 +23,8 @@ export default {
   removeFile: removeFile as typeof removeFile,
   writeFile: writeFile as typeof writeFile,
   __vitest_fileInfo: _fileInfo as typeof _fileInfo,
+  __vitest_startV8Coverage: _startV8Coverage as typeof _startV8Coverage,
+  __vitest_takeV8Coverage: _takeV8Coverage as typeof _takeV8Coverage,
   __vitest_upload: upload as typeof upload,
   __vitest_click: click as typeof click,
   __vitest_dblClick: dblClick as typeof dblClick,

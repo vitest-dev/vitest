@@ -245,6 +245,12 @@ export interface BrowserCommandContext {
   /** @deprecated use `sessionId` instead */
   contextId: string
   sessionId: string
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any>
 }
 
 export interface BrowserServerStateSession {
