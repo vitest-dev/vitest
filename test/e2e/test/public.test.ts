@@ -10,7 +10,7 @@ test('resolves the test config', async () => {
   expect(vitestConfig.mode).toBe('test')
   // inherits the root config
   // TODO: test cwd loading behavior without relying on test/e2e/vitest.config.ts
-  expect(vitestConfig.reporters.slice(0, 1)).toEqual([['verbose', {}]])
+  expect(vitestConfig.reporters.slice(0, 1)).toEqual([[process.env.CI ? 'minimal' : 'verbose', {}]])
   expect(viteConfig.plugins.find(p => p.name === 'vitest')).toBeDefined()
 })
 

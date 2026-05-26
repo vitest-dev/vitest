@@ -443,7 +443,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           testIdAttribute: null,
           exact: {
-            description: 'Should locators match the text exactly by default (default: `false`)',
+            description: 'Should locators match the text exactly by default (default: `true`)',
           },
           errorFormat: null,
         },

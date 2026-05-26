@@ -88,6 +88,9 @@ export default ({ mode }: { mode: string }) => {
         }),
         llmstxt(),
       ],
+      define: {
+        __VITEST_VERSION__: JSON.stringify(version),
+      },
     },
     markdown: {
       config(md) {
@@ -227,6 +230,10 @@ export default ({ mode }: { mode: string }) => {
                 {
                   text: 'Team',
                   link: '/team',
+                },
+                {
+                  text: 'Releases',
+                  link: '/releases',
                 },
               ],
             },

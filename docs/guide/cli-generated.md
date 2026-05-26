@@ -462,7 +462,7 @@ Inline loaded image pixels in trace-view snapshots (default: `false`)
 - **CLI:** `--browser.locators.exact`
 - **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
 
-Should locators match the text exactly by default (default: `false`)
+Should locators match the text exactly by default (default: `true`)
 
 ### pool
 

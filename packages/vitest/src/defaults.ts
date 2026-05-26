@@ -116,7 +116,7 @@ export const configDefaults: Readonly<{
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
-  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
+  forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'],
   update: false,
   reporters: [
     isAgent ? 'minimal' : 'default',

@@ -702,10 +702,21 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    const dangerImports = allImports.filter(imp => imp.totalTime >= thresholds.danger)
-    const warnImports = allImports.filter(imp => imp.totalTime >= thresholds.warn)
-    const hasDangerImports = dangerImports.length > 0
-    const hasWarnImports = warnImports.length > 0
+    let dangerImportsCount = 0
+    let hasWarnImports = false
+    let totalSelfTime = 0
+    let totalTotalTime = 0
+    for (const imp of allImports) {
+      if (imp.totalTime >= thresholds.danger) {
+        dangerImportsCount++
+      }
+      if (imp.totalTime >= thresholds.warn) {
+        hasWarnImports = true
+      }
+      totalSelfTime += imp.selfTime
+      totalTotalTime += imp.totalTime
+    }
+    const hasDangerImports = dangerImportsCount > 0
 
     // Determine if we should print
     const shouldFail = failOnDanger && hasDangerImports
@@ -718,9 +729,6 @@ export abstract class BaseReporter implements Reporter {
     const maxTotalTime = sortedImports[0].totalTime
     const limit = this.ctx.config.experimental.importDurations.limit
     const topImports = sortedImports.slice(0, limit)
-
-    const totalSelfTime = allImports.reduce((sum, imp) => sum + imp.selfTime, 0)
-    const totalTotalTime = allImports.reduce((sum, imp) => sum + imp.totalTime, 0)
     const slowestImport = sortedImports[0]
 
     this.log()
@@ -773,7 +781,7 @@ export abstract class BaseReporter implements Reporter {
     if (shouldFail) {
       this.log()
       this.ctx.logger.error(
-        `ERROR: ${dangerImports.length} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
+        `ERROR: ${dangerImportsCount} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
       )
       process.exitCode = 1
     }
@@ -1073,7 +1081,7 @@ function deepEqual(a: any, b: any): boolean {
   }
 
   for (const key of keysA) {
-    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+    if (!Object.prototype.hasOwnProperty.call(b, key) || !deepEqual(a[key], b[key])) {
       return false
     }
   }
