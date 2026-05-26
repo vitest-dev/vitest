@@ -8,7 +8,9 @@ import type {
   ImportDeclaration,
   VariableDeclaration,
 } from 'estree'
+import type { Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { findNodeAround } from 'acorn-walk'
 import MagicString from 'magic-string'
 import { relative } from 'pathe'
@@ -45,6 +47,7 @@ export interface HoistMocksOptions {
    * @default process.cwd()
    */
   root?: string
+  map?: Rollup.SourceMap
 }
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
@@ -495,13 +498,22 @@ export function hoistMocks(
     }
 
     if (hoistedNodes.size) {
-      // TODO: location is not source map proof
       const locations = createIndexLocationsMap(code)
+      const map = options.map && new TraceMap(options.map as any)
+      const plural = hoistedNodes.size > 1
       const message = [
-        `${hoistedNodes.size} call${hoistedNodes.size > 1 ? 's were' : 'was'} defined outside of the module's top level scope:`,
-        ...[...hoistedNodes].map(invalidNode => `- ${getNodeName(getNodeCall(invalidNode))} at ${relative(options.root || process.cwd(), id)}:${locations.get(invalidNode.start)}`),
+        `${hoistedNodes.size} call${plural ? 's' : ''} in "${relative(options.root || process.cwd(), id)}" ${plural ? 'were' : 'was'} defined outside of the module's top level scope:`,
         '',
-        'Although they appear nested, they will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.',
+        ...[...hoistedNodes].map((invalidNode) => {
+          const currentLocation = locations.get(invalidNode.start)
+          const originalLocation = map && currentLocation && originalPositionFor(map, currentLocation)
+          const location = originalLocation?.column && originalLocation?.line
+            ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column}`
+            : ''
+          return `- ${getNodeName(getNodeCall(invalidNode))}${location}`
+        }),
+        '',
+        `Although ${plural ? 'they appear nested, they' : 'it appears nested, it'} will be hoisted and executed before anything in this file. Move ${plural ? 'them' : 'it'} to the top level to reflect ${plural ? 'their' : 'its'} actual execution order.`,
         'See: https://vitest.dev/guide/mocking/modules#how-it-works',
       ].join('\n')
       throw new Error(message)
@@ -574,13 +586,13 @@ interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
 }
 
-function createIndexLocationsMap(source: string): Map<number, string> {
-  const map = new Map<number, string>()
+function createIndexLocationsMap(source: string): Map<number, { line: number; column: number }> {
+  const map = new Map<number, { line: number; column: number }>()
   let index = 0
   let line = 1
   let column = 1
   for (const char of source) {
-    map.set(index++, `${line}:${column}`)
+    map.set(index++, { line, column })
     if (char === '\n' || char === '\r\n') {
       line++
       column = 0
