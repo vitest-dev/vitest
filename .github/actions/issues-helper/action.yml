@@ -18,7 +18,7 @@ inputs:
     description: Comment body. Required for `create-comment`.
   inactive-day:
     required: false
-    description: Close issues with no activity for at least this many days. Required for `close-issues`.
+    description: Close issues whose matching label was added at least this many days ago. Required for `close-issues`.
 
 runs:
   using: composite
@@ -68,6 +68,7 @@ runs:
           const labels = process.env.INPUT_LABELS
           const inactiveDay = Number(process.env.INPUT_INACTIVE_DAY)
           const cutoff = new Date(Date.now() - inactiveDay * 24 * 60 * 60 * 1000)
+          const labelSet = new Set(labels.split(',').map(l => l.trim()))
 
           const issues = await github.paginate(github.rest.issues.listForRepo, {
             owner: context.repo.owner,
@@ -77,20 +78,30 @@ runs:
             per_page: 100,
           })
 
-          const stale = issues.filter(issue =>
-            !issue.pull_request && new Date(issue.updated_at) <= cutoff
-          )
+          let closed = 0
+          for (const issue of issues) {
+            const events = await github.paginate(github.rest.issues.listEvents, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              per_page: 100,
+            })
+            const labeledAt = events
+              .filter(e => e.event === 'labeled' && labelSet.has(e.label?.name))
+              .at(-1)?.created_at
 
-          for (const issue of stale) {
-            console.log(`Closing issue #${issue.number}, last updated at ${issue.updated_at}`)
+            if (!labeledAt || new Date(labeledAt) > cutoff) continue
+
+            console.log(`Closing #${issue.number}, labeled at ${labeledAt}`)
             await github.rest.issues.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
               state: 'closed',
             })
+            closed++
           }
 
-          if (stale.length === 0) {
-            console.log(`No inactive issues with label "${labels}" found`)
+          if (closed === 0) {
+            console.log(`No stale items with label "${labels}" found`)
           }
