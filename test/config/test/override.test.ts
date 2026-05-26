@@ -249,6 +249,8 @@ describe('correctly defines api flag', () => {
     })
     expect(c.server.config.server.middlewareMode).toBe(true)
     expect(c.config.api).toEqual({
+      allowExec: true,
+      allowWrite: true,
       middlewareMode: true,
       token: expect.any(String),
     })
@@ -263,6 +265,8 @@ describe('correctly defines api flag', () => {
     })
     expect(c.server.config.server.port).toBe(4321)
     expect(c.config.api).toEqual({
+      allowExec: true,
+      allowWrite: true,
       port: 4321,
       token: expect.any(String),
     })
