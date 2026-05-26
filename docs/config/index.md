@@ -1806,11 +1806,25 @@ Open Vitest UI (WIP)
 
 ### api
 
-- **Type:** `boolean | number`
+- **Type:** `boolean | number | { port?, strictPort?, host?, allowWrite?, allowExec? }`
 - **Default:** `false`
-- **CLI:** `--api`, `--api.port`, `--api.host`, `--api.strictPort`
+- **CLI:** `--api`, `--api.port`, `--api.host`, `--api.strictPort`, `--api.allowWrite`, `--api.allowExec`
 
 Listen to port and serve API. When set to true, the default port is 51204
+
+#### api.allowWrite {#api-allowwrite}
+
+- **Type:** `boolean`
+- **Default:** `true` if API is not exposed to the network, `false` otherwise
+
+Allows API clients to write files, including updating test files from the UI. If `api.host` is set to anything other than `localhost` or `127.0.0.1`, Vitest disables write operations by default.
+
+#### api.allowExec {#api-allowexec}
+
+- **Type:** `boolean`
+- **Default:** `true` if API is not exposed to the network, `false` otherwise
+
+Allows API clients to run tests. If `api.host` is exposed to the network and write/exec operations are enabled, anyone who can reach the API server can run arbitrary code on your machine.
 
 ### browser <Badge type="warning">experimental</Badge> {#browser}
 
