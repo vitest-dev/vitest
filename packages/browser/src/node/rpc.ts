@@ -15,6 +15,7 @@ import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
 
