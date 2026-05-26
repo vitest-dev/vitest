@@ -319,9 +319,12 @@ test('show a warning if host is exposed', async () => {
         },
       },
     ],
-    browser: {
-      api: {
-        host: 'custom-host',
+  }, [], 'test', {
+    test: {
+      browser: {
+        api: {
+          host: 'custom-host',
+        },
       },
     },
   })
