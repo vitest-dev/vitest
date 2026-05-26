@@ -11,6 +11,7 @@ import type {
 import type { Node, Positioned } from './esmWalker'
 import { findNodeAround } from 'acorn-walk'
 import MagicString from 'magic-string'
+import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
 export interface HoistMocksOptions {
@@ -39,6 +40,11 @@ export interface HoistMocksOptions {
   regexpHoistable?: RegExp
   codeFrameGenerator?: CodeFrameGenerator
   magicString?: () => MagicString
+  /**
+   * Root of the project
+   * @default process.cwd()
+   */
+  root?: string
 }
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
@@ -488,13 +494,16 @@ export function hoistMocks(
       }
     }
 
-    for (const invalidNode of hoistedNodes) {
-      console.warn(
-        `Warning: A ${getNodeName(getNodeCall(invalidNode))} call in "${id}" is not at the top level of the module. `
-        + `Although it appears nested, it will be hoisted and executed before any tests run. `
-        + `Move it to the top level to reflect its actual execution order. This will become an error in a future version.\n`
-        + `See: https://vitest.dev/guide/mocking/modules#how-it-works`,
-      )
+    if (hoistedNodes.size) {
+      const locations = createIndexLocationsMap(code)
+      const message = [
+        `${hoistedNodes.size} call${hoistedNodes.size > 1 ? 's' : ''} were defined outside of the module's top level scope:`,
+        ...[...hoistedNodes].map(invalidNode => `- ${getNodeName(getNodeCall(invalidNode))} at ${relative(options.root || process.cwd(), id)}:${locations.get(invalidNode.start)}`),
+        '',
+        'Although they appear nested, they will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.',
+        'See: https://vitest.dev/guide/mocking/modules#how-it-works',
+      ].join('\n')
+      throw new Error(message)
     }
   }
 
@@ -562,4 +571,22 @@ export function hoistMocks(
 
 interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
+}
+
+function createIndexLocationsMap(source: string): Map<number, string> {
+  const map = new Map<number, string>()
+  let index = 0
+  let line = 1
+  let column = 1
+  for (const char of source) {
+    map.set(index++, `${line}:${column}`)
+    if (char === '\n' || char === '\r\n') {
+      line++
+      column = 0
+    }
+    else {
+      column++
+    }
+  }
+  return map
 }

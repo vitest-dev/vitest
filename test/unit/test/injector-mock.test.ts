@@ -17,9 +17,10 @@ const hoistMocksOptions: HoistMocksPluginOptions = {
       node.start + 1,
     )
   },
+  root: '/',
 }
 
-function hoistSimple(code: string, url = '') {
+function hoistSimple(code: string, url = '/test.js') {
   return hoistMockAndResolve(code, url, parse, hoistMocksOptions)
 }
 
@@ -527,10 +528,10 @@ vi.mock('./mock.js', () => {
       (hoistSimple(
         `vi.mock(any);
       export const a = 1`,
-        'input.js',
+        '/input.js',
       ))?.map
     )
-    expect(map?.sources).toStrictEqual(['input.js'])
+    expect(map?.sources).toStrictEqual(['/input.js'])
   })
 
   test('overwrite bindings', () => {
@@ -1599,10 +1600,8 @@ export const mocked = vi.unmock('./mocked')
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
   })
 
-  it('shows an error when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    onTestFinished(() => warn.mockRestore())
-    const result = hoistSimpleCode(`
+  it('shows an error when hoisted methods are used outside the top level scope', () => {
+    expect(() => hoistSimpleCode(`
 // correct
 vi.mock('./hello-world-1')
 
@@ -1628,100 +1627,19 @@ describe('some suite', () => {
     vi.mock('./hello-world-6')
   }
 })
+      `)).toThrowErrorMatchingInlineSnapshot(`
+        [Error: 7 calls were defined outside of the module's top level scope:
+        - vi.mock('./hello-world-2') at test.js:6:2
+        - vi.mock('./hello-world-3') at test.js:10:2
+        - vi.mock('./hello-world-4') at test.js:15:4
+        - vi.hoisted() at test.js:16:4
+        - vi.mock(import('./hello-world-5')) at test.js:17:4
+        - vi.hoisted() at test.js:18:4
+        - vi.mock('./hello-world-6') at test.js:24:4
+
+        Although they appear nested, they will be hoisted and executed before anything in this file. Move it to the top level to reflect its actual execution order.
+        See: https://vitest.dev/guide/mocking/modules#how-it-works]
       `)
-    expect(result).toMatchInlineSnapshot(`
-      "import { vi } from "vitest"
-      vi.mock('./hello-world-1')
-      vi.mock('./hello-world-2')
-      vi.mock('./hello-world-3')
-      vi.mock('./hello-world-4')
-      vi.hoisted(() => {})
-      vi.mock('./hello-world-5')
-      const variable = vi.hoisted(() => {})
-      vi.mock('./hello-world-6')
-
-      // correct
-
-      if (condition) {
-        }
-
-      test('some test', () => {
-        })
-
-      test('some test', () => {
-        if (condition) {
-                        }
-      })
-
-      describe('some suite', () => {
-        if (condition) {
-            }
-      })"
-    `)
-    expect(warn).toMatchInlineSnapshot(`
-      [MockFunction warn] {
-        "calls": [
-          [
-            "Warning: A vi.mock('./hello-world-2') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-3') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-4') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock(import('./hello-world-5')) call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-6') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-        ],
-        "results": [
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-        ],
-      }
-    `)
   })
 
   it('ignores vi.mock position if import.meta.vitest is present', ({ onTestFinished }) => {

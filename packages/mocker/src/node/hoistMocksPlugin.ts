@@ -34,9 +34,14 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
     `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\s*\\(`,
   )
 
+  let root: string
+
   return {
     name: 'vitest:mocks',
     enforce: 'post',
+    configResolved(config) {
+      root = config.root
+    },
     transform(code, id) {
       if (!filter(id)) {
         return
@@ -47,6 +52,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         hoistedMethodNames,
         utilsObjectNames,
         dynamicImportMockMethodNames,
+        root,
         ...options,
       })
       if (s) {
