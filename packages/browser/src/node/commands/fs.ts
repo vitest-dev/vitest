@@ -4,6 +4,7 @@ import fs, { promises as fsp } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'
 import { isFileServingAllowed } from 'vitest/node'
+import { slash } from '../utils'
 
 function assertWrite(path: string, project: TestProject) {
   if (!project.config.browser.api.allowWrite || !project.vitest.config.api.allowWrite) {
@@ -26,7 +27,7 @@ export const readFile: BrowserCommand<
   Parameters<BrowserCommands['readFile']>
 > = async ({ project }, path, options = {}) => {
   const filepath = resolve(project.config.root, path)
-  assertFileAccess(filepath, project)
+  assertFileAccess(slash(filepath), project)
   // never return a Buffer
   if (typeof options === 'object' && !options.encoding) {
     options.encoding = 'utf-8'
@@ -37,10 +38,10 @@ export const readFile: BrowserCommand<
 export const writeFile: BrowserCommand<
   Parameters<BrowserCommands['writeFile']>
 > = async ({ project }, path, data, options) => {
-  const filepath = resolve(project.config.root, path)
-  assertFileAccess(filepath, project)
-  const dir = dirname(filepath)
   assertWrite(path, project)
+  const filepath = resolve(project.config.root, path)
+  assertFileAccess(slash(filepath), project)
+  const dir = dirname(filepath)
   if (!fs.existsSync(dir)) {
     await fsp.mkdir(dir, { recursive: true })
   }
@@ -50,15 +51,15 @@ export const writeFile: BrowserCommand<
 export const removeFile: BrowserCommand<
   Parameters<BrowserCommands['removeFile']>
 > = async ({ project }, path) => {
-  const filepath = resolve(project.config.root, path)
-  assertFileAccess(filepath, project)
   assertWrite(path, project)
+  const filepath = resolve(project.config.root, path)
+  assertFileAccess(slash(filepath), project)
   await fsp.rm(filepath)
 }
 
 export const _fileInfo: BrowserCommand<[path: string, encoding: BufferEncoding]> = async ({ project }, path, encoding) => {
   const filepath = resolve(project.config.root, path)
-  assertFileAccess(filepath, project)
+  assertFileAccess(slash(filepath), project)
   const content = await fsp.readFile(filepath, encoding || 'base64')
   return {
     content,

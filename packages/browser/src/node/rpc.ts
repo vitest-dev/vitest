@@ -111,7 +111,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileServingAllowed(slash(path), vite)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
