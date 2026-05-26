@@ -120,7 +120,7 @@ These measures help reduce maintenance burden and keep the team's work efficient
 
 ### Release Branches
 
-Vitest follows Vite's maintenance branch convention. Public support ranges are documented in [Releases](./docs/releases.md); this section describes how maintainers map those ranges to Git branches.
+Public support ranges are documented in [Releases](./docs/releases.md). This section describes how maintainers map those ranges to Git branches for releases and backports. These names refer to branches, not release tags; release tags always include the full version, for example `v4.1.8`.
 
 <!--
 Current branch alignment notes for maintainers:
@@ -131,25 +131,23 @@ Current branch alignment notes for maintainers:
 -->
 
 - `main` is the active development branch for the next release line.
-- `vN` is the latest maintained minor line for major version `N`.
+- `vN` is the latest maintained minor line for non-main major version `N`.
 - `vN.M` is an older minor line for major version `N`, kept when that exact minor still needs releases or backports.
 
 For example, if `v5.1.2` is the latest Vitest release, and the latest releases for older majors are `v4.1.7` and `v3.2.4`, the branch shape can be:
 
-- `main` is the active development branch after `v5.1.2`.
-- `v5` is the latest maintained minor line for Vitest 5, so it is the `5.1.x` line.
+- `main` is the active development branch for `5.1.x`.
 - `v5.0` is an older minor line for Vitest 5.
 - `v4` is the latest maintained minor line for Vitest 4, so it is the `4.1.x` line.
 - `v4.0` is an older minor line for Vitest 4.
 - `v3` is the latest maintained minor line for Vitest 3, so it is the `3.2.x` line.
 - `v3.1` and `v3.0` are older minor lines for Vitest 3.
 
-The existence of an older branch does not mean that version is supported. Always use the public support policy to decide which branches should receive backports.
-
-When releasing a new major, create `vN` from the commit that produces the first stable `vN.0.0` tag. When releasing a new minor on an existing major, create `vN.M` from the previous minor line before moving `vN` to the new latest minor.
+`v5` branch doesn't exist yet and it will be created from the latest v5 minor only after `main` moves on to a newer release line `6.0.0` (or often as `6.0.0-beta.x`).
 
 For backports, first use the public support policy to decide which version ranges are supported, then map them to branches:
 
+- first the changes can land as usual on `main` branch.
 - If the fix targets the latest maintained minor of major version `N`, target `vN`. This is the default backport target for a supported non-main major.
 - If the fix also needs an older maintained minor `N.M`, target `vN.M`.
 
@@ -159,11 +157,9 @@ For example, with `v5.1.2` as the latest release, the public support policy cove
 - backports to `5.0.x` target `v5.0`
 - backports to `4.1.x` target `v4`
 
-The `v5` branch is used for the latest maintained v5 minor after `main` moves on to a newer release line.
-
 No backport is made to `v3` unless the support policy changes or maintainers decide on an explicit exception.
 
-Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Release tags remain full semver tags such as `v4.1.8`; branch names never include patch versions.
+Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Branch names never include patch versions.
 
 ### Issue Triaging Workflow
 
