@@ -15,7 +15,10 @@ export function injectQuery(url: string, queryToInject: string): string {
 }
 
 export function removeQuery(url: string, queryToRemove: string): string {
-  return url
+  const result = url
     .replace(new RegExp(`[?&]${queryToRemove}(?=[&#]|$)`), '')
     .replace(/\?$/, '')
+
+  // If stripping the leading '?' but kept subsequent '&' params, convert the first '&' to '?'
+  return (!result.includes('?') && result.includes('&')) ? result.replace('&', '?') : result
 }
