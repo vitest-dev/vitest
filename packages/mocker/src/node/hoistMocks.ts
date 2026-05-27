@@ -588,11 +588,11 @@ interface CodeFrameGenerator {
 
 function createIndexLocationsMap(source: string): Map<number, { line: number; column: number }> {
   const map = new Map<number, { line: number; column: number }>()
-  let index = 0
+  let offset = 0
   let line = 1
   let column = 1
   for (const char of source) {
-    map.set(index++, { line, column })
+    map.set(offset++, { line, column })
     if (char === '\n' || char === '\r\n') {
       line++
       column = 0
