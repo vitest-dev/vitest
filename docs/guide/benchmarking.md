@@ -307,7 +307,7 @@ test('compare parser versions', async ({ bench }) => {
 })
 ```
 
-Run `WRITE_BENCH=1 vitest bench` to refresh the stored result, and `vitest bench` to compare the current implementation against it.
+Run `VITE_WRITE_BENCH=1 vitest bench` to refresh the stored result, and `vitest bench` to compare the current implementation against it.
 
 ### Per-project artifacts
 
@@ -365,7 +365,7 @@ This applies to all engines (V8, JavaScriptCore, SpiderMonkey) but is especially
 
 By default, Vitest runs tests in Node.js using Vite's module runner (configured by [`experimental.viteModuleRunner`](/config/experimental#experimental-vitemodulerunner)). This transforms all module exports into getters, so every access to an imported binding goes through something like `__vite_ssr_module__.value`. In regular tests this overhead is negligible, but in benchmarks where a function is called millions of times, the getter call itself can dominate the measurement.
 
-Vitest will print a warning if it detects excessive getter calls, but you should be aware of this when benchmarking imported functions:
+Vitest will print a warning if it detects excessive getter calls (which you can silence via [`benchmark.suppressExportGetterWarnings`](/config/benchmark#benchmark-suppressexportgetterwarnings)), but you should be aware of this when benchmarking imported functions:
 
 ```ts
 import { parse } from './parser.js'

@@ -46,3 +46,11 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 Include the `samples` array of per-iteration timings on every benchmark result. Disabled by default to reduce memory usage; enable when a custom reporter or API consumer needs the raw samples.
 
+
+## benchmark.suppressExportGetterWarnings
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Suppress the warning printed when a benchmark accesses module export getters too many times. Vitest tracks getter access during benchmark runs because Vite's module runner wraps every export in a getter, and excessive access can dominate the measurement (see [Module Runner Overhead](/guide/benchmarking#module-runner-overhead)). Enable this when you've intentionally accepted the overhead, or when the warning is noisy for benchmarks where the getter cost is negligible.
+
