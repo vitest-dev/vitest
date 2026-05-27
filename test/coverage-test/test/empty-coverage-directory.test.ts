@@ -1,4 +1,4 @@
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { beforeEach, expect } from 'vitest'
 import { sum } from '../fixtures/src/math'
 import { captureStdout, coverageTest, normalizeURL, runVitest, test } from '../utils'
@@ -8,8 +8,6 @@ beforeEach(() => {
 })
 
 test('empty coverage directory is cleaned after tests', async () => {
-  rmSync('./coverage', { recursive: true, force: true })
-
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     testNamePattern: 'passing test',
@@ -20,8 +18,6 @@ test('empty coverage directory is cleaned after tests', async () => {
 })
 
 test('empty coverage directory is cleaned after failing test run', async () => {
-  rmSync('./coverage', { recursive: true, force: true })
-
   const { exitCode } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     testNamePattern: 'failing test',

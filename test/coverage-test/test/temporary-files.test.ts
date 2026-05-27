@@ -1,11 +1,9 @@
-import { readdirSync, rmSync } from 'node:fs'
+import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect } from 'vitest'
 import { runVitest, test } from '../utils'
 
 test('temporary files are removed after test', async () => {
-  rmSync(resolve('./coverage'), { recursive: true, force: true })
-
   await runVitest({
     include: ['fixtures/test/math.test.ts'],
     coverage: { reporter: 'json' },

@@ -1,8 +1,33 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { spawn } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 import { BaseCoverageProvider } from 'vitest/node'
+
+const cleanups: Array<() => void> = []
+
+afterEach(() => {
+  while (cleanups.length) {
+    cleanups.pop()!()
+  }
+})
+
+function createProvider() {
+  const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-reports-'))
+  const provider = new BaseCoverageProvider()
+  provider.coverageFilesDirectory = join(reportsDirectory, '.tmp')
+  provider.options = { reportsDirectory } as any
+
+  const lockFile = (provider as any).reportsDirectoryLockFile as string
+
+  cleanups.push(() => {
+    rmSync(reportsDirectory, { recursive: true, force: true })
+    rmSync(lockFile, { force: true })
+  })
+
+  return { provider, reportsDirectory, lockFile }
+}
 
 test('missing coverage temp directory throws an actionable error', async () => {
   const provider = new BaseCoverageProvider()
@@ -20,52 +45,56 @@ test('missing coverage temp directory throws an actionable error', async () => {
   )
 })
 
-test('cleanAfterRun resolves without error when temp directory is already absent', async () => {
-  const provider = new BaseCoverageProvider()
-  provider.coverageFilesDirectory = resolve('non-existent-coverage-directory', '.tmp-already-gone')
-  provider.options = { reportsDirectory: resolve('non-existent-coverage-directory') } as any
-
-  await expect(provider.cleanAfterRun()).resolves.toBeUndefined()
-})
-
-test('clean() preserves a concurrent run\'s temp directory while removing stale reports', async () => {
-  const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-'))
-  const siblingTmp = join(reportsDirectory, '.tmp-sibling-run')
-  const staleReport = join(reportsDirectory, 'coverage-final.json')
-  mkdirSync(siblingTmp, { recursive: true })
-  writeFileSync(join(siblingTmp, 'coverage-0.json'), '{}')
-  writeFileSync(staleReport, '{}')
-
-  const provider = new BaseCoverageProvider()
-  provider.coverageFilesDirectory = join(reportsDirectory, '.tmp-mine')
-  provider.options = { reportsDirectory } as any
+test('clean() acquires the reportsDirectory lock and cleanAfterRun() releases it', async () => {
+  const { provider, lockFile } = createProvider()
 
   await provider.clean(true)
 
-  expect(existsSync(siblingTmp)).toBe(true)
-  expect(existsSync(join(siblingTmp, 'coverage-0.json'))).toBe(true)
-  expect(existsSync(staleReport)).toBe(false)
   expect(existsSync(provider.coverageFilesDirectory)).toBe(true)
-
-  rmSync(reportsDirectory, { recursive: true, force: true })
-})
-
-test('cleanAfterRun() does not delete a concurrent run\'s temp directory', async () => {
-  const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-'))
-  const siblingTmp = join(reportsDirectory, '.tmp-sibling-run')
-  const ownTmp = join(reportsDirectory, '.tmp-mine')
-  mkdirSync(siblingTmp, { recursive: true })
-  mkdirSync(ownTmp, { recursive: true })
-
-  const provider = new BaseCoverageProvider()
-  provider.coverageFilesDirectory = ownTmp
-  provider.options = { reportsDirectory } as any
+  expect(existsSync(lockFile)).toBe(true)
+  expect(JSON.parse(readFileSync(lockFile, 'utf-8')).pid).toBe(process.pid)
 
   await provider.cleanAfterRun()
 
-  expect(existsSync(ownTmp)).toBe(false)
-  expect(existsSync(siblingTmp)).toBe(true)
-  expect(existsSync(reportsDirectory)).toBe(true)
+  expect(existsSync(lockFile)).toBe(false)
+})
 
-  rmSync(reportsDirectory, { recursive: true, force: true })
+test('clean() is re-entrant for the same process (e.g. watch mode reruns)', async () => {
+  const { provider } = createProvider()
+
+  await provider.clean(true)
+
+  await expect(provider.clean(true)).resolves.toBeUndefined()
+
+  await provider.cleanAfterRun()
+})
+
+test('clean() throws an actionable error when another live process holds the lock', async () => {
+  const { provider, reportsDirectory, lockFile } = createProvider()
+
+  const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
+  await new Promise(resolve => child.once('spawn', resolve))
+  cleanups.push(() => child.kill())
+
+  writeFileSync(lockFile, JSON.stringify({ pid: child.pid, reportsDirectory, timestamp: Date.now() }))
+
+  await expect(provider.clean(true)).rejects.toThrow('is already in use by another Vitest process')
+
+  expect(JSON.parse(readFileSync(lockFile, 'utf-8')).pid).toBe(child.pid)
+})
+
+test('clean() reclaims a stale lock left by a process that no longer exists', async () => {
+  const { provider, reportsDirectory, lockFile } = createProvider()
+
+  const child = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' })
+  await new Promise(resolve => child.once('exit', resolve))
+  const deadPid = child.pid!
+
+  writeFileSync(lockFile, JSON.stringify({ pid: deadPid, reportsDirectory, timestamp: Date.now() }))
+
+  await expect(provider.clean(true)).resolves.toBeUndefined()
+
+  expect(JSON.parse(readFileSync(lockFile, 'utf-8')).pid).toBe(process.pid)
+
+  await provider.cleanAfterRun()
 })

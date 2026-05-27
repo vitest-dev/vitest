@@ -12,8 +12,6 @@ test('{ shard: 1/3 }', async () => {
 coverageTest('temporary directory is postfixed with --shard value', () => {
   const files = readdirSync('./coverage')
 
-  expect(files.some(f => f.startsWith('.tmp-1-3'))).toBe(true)
+  expect(files).toContain('.tmp-1-3')
   expect(files).not.toContain('.tmp')
-
-  expect(files.some(f => /^\.tmp(?:-1-3)?-[\w-]+$/.test(f))).toBe(true)
 })

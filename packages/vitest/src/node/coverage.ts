@@ -5,11 +5,13 @@ import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportCon
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
+import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cleanUrl, nanoid, slash } from '@vitest/utils/helpers'
+import { cleanUrl, slash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -74,15 +76,13 @@ export async function getCoverageProvider(
   return null
 }
 
-function safeReaddir(dir: string): string[] {
+function isProcessAlive(pid: number): boolean {
   try {
-    return readdirSync(dir)
+    process.kill(pid, 0)
+    return true
   }
   catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return []
-    }
-    throw error
+    return (error as NodeJS.ErrnoException).code === 'EPERM'
   }
 }
 
@@ -142,7 +142,7 @@ export class BaseCoverageProvider {
     const shard = this.ctx.config.shard
     const tempDirectory = `.tmp${
       shard ? `-${shard.index}-${shard.count}` : ''
-    }-${nanoid()}`
+    }`
 
     this.coverageFilesDirectory = resolve(
       this.options.reportsDirectory,
@@ -252,14 +252,14 @@ export class BaseCoverageProvider {
   }
 
   async clean(clean = true): Promise<void> {
-    if (clean) {
-      await Promise.all(safeReaddir(this.options.reportsDirectory)
-        .filter(entry => !entry.startsWith('.tmp'))
-        .map(entry => fs.rm(resolve(this.options.reportsDirectory, entry), {
-          recursive: true,
-          force: true,
-          maxRetries: 10,
-        })))
+    await this.acquireReportsDirectoryLock()
+
+    if (clean && existsSync(this.options.reportsDirectory)) {
+      await fs.rm(this.options.reportsDirectory, {
+        recursive: true,
+        force: true,
+        maxRetries: 10,
+      })
     }
 
     if (existsSync(this.coverageFilesDirectory)) {
@@ -274,6 +274,84 @@ export class BaseCoverageProvider {
 
     this.coverageFiles = new Map()
     this.pendingPromises = []
+  }
+
+  private get reportsDirectoryLockFile(): string {
+    const hash = createHash('sha256')
+      .update(resolve(this.options.reportsDirectory))
+      .digest('hex')
+      .slice(0, 16)
+
+    return resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  private async acquireReportsDirectoryLock(): Promise<void> {
+    const lockFile = this.reportsDirectoryLockFile
+    const payload = JSON.stringify({
+      pid: process.pid,
+      reportsDirectory: resolve(this.options.reportsDirectory),
+      timestamp: Date.now(),
+    })
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      try {
+        await fs.writeFile(lockFile, payload, { flag: 'wx' })
+        return
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+          throw error
+        }
+      }
+
+      const owner = await this.readReportsDirectoryLockOwner(lockFile)
+
+      if (owner?.pid === process.pid) {
+        return
+      }
+
+      if (owner == null || !isProcessAlive(owner.pid)) {
+        await fs.rm(lockFile, { force: true })
+        continue
+      }
+
+      throw new Error(
+        `The coverage report directory "${this.options.reportsDirectory}" is already in use by `
+        + `another Vitest process (pid ${owner.pid}). Running coverage for multiple Vitest processes `
+        + `in the same directory at the same time is not supported, because they would delete each `
+        + `other's reports.\nGive each run its own "coverage.reportsDirectory" `
+        + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+      )
+    }
+
+    throw new Error(
+      `Could not acquire the coverage report directory lock for "${this.options.reportsDirectory}". `
+      + `Give each run its own "coverage.reportsDirectory" or run them sequentially.`,
+    )
+  }
+
+  private async readReportsDirectoryLockOwner(
+    lockFile: string,
+  ): Promise<{ pid: number } | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(lockFile, 'utf-8'))
+
+      if (typeof owner?.pid === 'number') {
+        return owner
+      }
+    }
+    catch {}
+
+    return null
+  }
+
+  private async releaseReportsDirectoryLock(): Promise<void> {
+    const lockFile = this.reportsDirectoryLockFile
+    const owner = await this.readReportsDirectoryLockOwner(lockFile)
+
+    if (owner == null || owner.pid === process.pid) {
+      await fs.rm(lockFile, { force: true })
+    }
   }
 
   private normalizeCoverageFileError(error: unknown): unknown {
@@ -363,12 +441,17 @@ export class BaseCoverageProvider {
   }
 
   async cleanAfterRun(): Promise<void> {
-    this.coverageFiles = new Map()
-    await fs.rm(this.coverageFilesDirectory, { recursive: true, force: true })
+    try {
+      this.coverageFiles = new Map()
+      await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
-    if (safeReaddir(this.options.reportsDirectory).length === 0) {
-      await fs.rmdir(this.options.reportsDirectory).catch(() => {})
+      // Remove empty reports directory, e.g. when only text-reporter is used
+      if (readdirSync(this.options.reportsDirectory).length === 0) {
+        await fs.rm(this.options.reportsDirectory, { recursive: true })
+      }
+    }
+    finally {
+      await this.releaseReportsDirectoryLock()
     }
   }
 
