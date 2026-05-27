@@ -185,8 +185,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           return vitest._testRun.recordBenchmark(testId, benchmark)
         },
         async readBenchmarkResult(relativePath) {
-          const path = project.benchmark.resolve(relativePath)
-          checkFileAccess(path)
+          checkFileAccess(project.benchmark.resolve(relativePath))
           return project.benchmark.readResult(relativePath)
         },
         async writeBenchmarkResult(relativePath, data) {
@@ -196,6 +195,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
             )
             return
           }
+          checkFileAccess(project.benchmark.resolve(relativePath))
           return project.benchmark.writeResult(relativePath, data)
         },
         async onTaskUpdate(method, packs, events) {
