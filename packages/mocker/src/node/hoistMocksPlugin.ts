@@ -46,7 +46,6 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
       if (!filter(id)) {
         return
       }
-      const map = this.getCombinedSourcemap()
       const s = hoistMocks(code, id, this.parse, {
         regexpHoistable,
         hoistableMockMethodNames,
@@ -54,7 +53,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         utilsObjectNames,
         dynamicImportMockMethodNames,
         root,
-        map,
+        getMap: () => this.getCombinedSourcemap(),
         ...options,
       })
       if (s) {

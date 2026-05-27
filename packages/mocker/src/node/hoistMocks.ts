@@ -47,7 +47,7 @@ export interface HoistMocksOptions {
    * @default process.cwd()
    */
   root?: string
-  map?: Rollup.SourceMap
+  getMap?: () => Rollup.SourceMap
 }
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
@@ -499,7 +499,7 @@ export function hoistMocks(
 
     if (hoistedNodes.size) {
       const locations = createIndexLocationsMap(code)
-      const map = options.map && new TraceMap(options.map as any)
+      const map = options.getMap && new TraceMap(options.getMap() as any)
       const plural = hoistedNodes.size > 1
       const message = [
         `${hoistedNodes.size} call${plural ? 's' : ''} in "${relative(options.root || process.cwd(), id)}" ${plural ? 'were' : 'was'} defined outside of the module's top level scope:`,
@@ -507,8 +507,8 @@ export function hoistMocks(
         ...[...hoistedNodes].map((invalidNode) => {
           const currentLocation = locations.get(invalidNode.start)
           const originalLocation = map && currentLocation && originalPositionFor(map, currentLocation)
-          const location = originalLocation?.column && originalLocation?.line
-            ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column}`
+          const location = originalLocation?.column != null && originalLocation?.line != null
+            ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column + 1}`
             : ''
           return `- ${getNodeName(getNodeCall(invalidNode))}${location}`
         }),

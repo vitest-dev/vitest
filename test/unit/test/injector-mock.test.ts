@@ -1665,16 +1665,16 @@ describe("some suite", () => {
         + '})\n',
       ],
     }
-    expect(() => hoistSimpleCode(code, { map })).toThrowErrorMatchingInlineSnapshot(`
+    expect(() => hoistSimpleCode(code, { getMap: () => map })).toThrowErrorMatchingInlineSnapshot(`
       [Error: 7 calls in "test.js" were defined outside of the module's top level scope:
 
-      - vi.mock("./hello-world-2") at test.js:7:2
-      - vi.mock("./hello-world-3") at test.js:11:2
-      - vi.mock("./hello-world-4") at test.js:16:4
-      - vi.hoisted() at test.js:17:4
-      - vi.mock(import("./hello-world-5")) at test.js:18:4
-      - vi.hoisted() at test.js:19:4
-      - vi.mock("./hello-world-6") at test.js:25:4
+      - vi.mock("./hello-world-2") at test.js:7:3
+      - vi.mock("./hello-world-3") at test.js:11:3
+      - vi.mock("./hello-world-4") at test.js:16:5
+      - vi.hoisted() at test.js:17:5
+      - vi.mock(import("./hello-world-5")) at test.js:18:5
+      - vi.hoisted() at test.js:19:5
+      - vi.mock("./hello-world-6") at test.js:25:5
 
       Although they appear nested, they will be hoisted and executed before anything in this file. Move them to the top level to reflect their actual execution order.
       See: https://vitest.dev/guide/mocking/modules#how-it-works]
