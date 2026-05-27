@@ -125,10 +125,10 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
       return vitest._testRun.recordBenchmark(testId, benchmark)
     },
     async readBenchmarkResult(relativePath) {
-      return vitest.benchmark.readResult(vitest.benchmark.resolve(relativePath))
+      return project.benchmark.readResult(relativePath)
     },
     async writeBenchmarkResult(relativePath, data) {
-      return vitest.benchmark.writeResult(relativePath, data)
+      return project.benchmark.writeResult(relativePath, data)
     },
     async onTaskArtifactRecord(testId, artifact) {
       return vitest._testRun.recordArtifact(testId, artifact)

@@ -1,18 +1,18 @@
 import type { BaselineData } from '@vitest/runner'
-import type { Vitest } from './core'
+import type { TestProject } from './project'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, resolve } from 'pathe'
 
 export class BenchmarkManager {
-  constructor(private vitest: Vitest) {}
+  constructor(private project: TestProject) {}
 
   // Resolve a user-supplied path against the project root. Reject paths that
   // escape the project root: `bench.from()` accepts arbitrary input, and we
   // never want a benchmark file to be able to read or clobber files outside
   // the workspace.
   public resolve(relativePath: string): string {
-    const root = this.vitest.config.root
+    const root = this.project.config.root
     const absolute = isAbsolute(relativePath)
       ? resolve(relativePath)
       : resolve(root, relativePath)
@@ -26,7 +26,8 @@ export class BenchmarkManager {
     return absolute
   }
 
-  async readResult(path: string): Promise<BaselineData | null> {
+  async readResult(relativePath: string): Promise<BaselineData | null> {
+    const path = this.resolve(relativePath)
     if (!existsSync(path)) {
       return null
     }

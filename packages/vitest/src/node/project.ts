@@ -28,6 +28,7 @@ import { isRunnableDevEnvironment } from 'vite'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
+import { BenchmarkManager } from './benchmark'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -62,6 +63,8 @@ export class TestProject {
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
   public readonly tmpDir: string
+
+  public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
