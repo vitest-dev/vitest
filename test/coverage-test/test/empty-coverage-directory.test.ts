@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { beforeEach, expect } from 'vitest'
 import { sum } from '../fixtures/src/math'
 import { captureStdout, coverageTest, normalizeURL, runVitest, test } from '../utils'
@@ -8,6 +8,10 @@ beforeEach(() => {
 })
 
 test('empty coverage directory is cleaned after tests', async () => {
+  // `clean()` no longer sweeps other runs' `.tmp*` dirs, so clear any orphan left
+  // by an earlier watch-mode test in this shared cwd before asserting removal.
+  rmSync('./coverage', { recursive: true, force: true })
+
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     testNamePattern: 'passing test',
@@ -18,6 +22,8 @@ test('empty coverage directory is cleaned after tests', async () => {
 })
 
 test('empty coverage directory is cleaned after failing test run', async () => {
+  rmSync('./coverage', { recursive: true, force: true })
+
   const { exitCode } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     testNamePattern: 'failing test',
