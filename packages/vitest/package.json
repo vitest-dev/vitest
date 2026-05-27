@@ -134,15 +134,6 @@
     "@types/node": {
       "optional": true
     },
-    "@vitest/browser-playwright": {
-      "optional": true
-    },
-    "@vitest/browser-preview": {
-      "optional": true
-    },
-    "@vitest/browser-webdriverio": {
-      "optional": true
-    },
     "@vitest/coverage-istanbul": {
       "optional": true
     },
