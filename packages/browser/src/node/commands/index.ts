@@ -1,6 +1,6 @@
-import { _startV8Coverage, _takeV8Coverage } from './coverage'
 import { clear } from './clear'
 import { click, dblClick, tripleClick } from './click'
+import { _startV8Coverage, _takeV8Coverage } from './coverage'
 import { dragAndDrop } from './dragAndDrop'
 import { fill } from './fill'
 import {
