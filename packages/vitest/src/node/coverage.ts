@@ -241,11 +241,16 @@ export class BaseCoverageProvider {
 
   async clean(clean = true): Promise<void> {
     if (clean && existsSync(this.options.reportsDirectory)) {
-      await fs.rm(this.options.reportsDirectory, {
-        recursive: true,
-        force: true,
-        maxRetries: 10,
-      })
+      // Remove previous reports, but keep `.tmp*` directories untouched: they
+      // belong to other coverage runs that may be sharing this reportsDirectory
+      // concurrently, and deleting them would crash those runs with ENOENT.
+      await Promise.all(readdirSync(this.options.reportsDirectory)
+        .filter(entry => !entry.startsWith('.tmp'))
+        .map(entry => fs.rm(resolve(this.options.reportsDirectory, entry), {
+          recursive: true,
+          force: true,
+          maxRetries: 10,
+        })))
     }
 
     if (existsSync(this.coverageFilesDirectory)) {
@@ -352,9 +357,11 @@ export class BaseCoverageProvider {
     this.coverageFiles = new Map()
     await fs.rm(this.coverageFilesDirectory, { recursive: true, force: true })
 
-    // Remove empty reports directory, e.g. when only text-reporter is used
+    // Remove empty reports directory, e.g. when only text-reporter is used.
+    // Use a non-recursive rmdir and ignore failures so a concurrent run's temp
+    // directory created in the meantime is never deleted.
     if (existsSync(this.options.reportsDirectory) && readdirSync(this.options.reportsDirectory).length === 0) {
-      await fs.rm(this.options.reportsDirectory, { recursive: true })
+      await fs.rmdir(this.options.reportsDirectory).catch(() => {})
     }
   }
 
