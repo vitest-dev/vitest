@@ -12,6 +12,10 @@ test('{ shard: 1/3 }', async () => {
 coverageTest('temporary directory is postfixed with --shard value', () => {
   const files = readdirSync('./coverage')
 
-  expect(files).toContain('.tmp-1-3')
+  // T-01: temp dir is now named '.tmp-<shard-index>-<shard-count>-<nanoid>'
+  expect(files.some(f => f.startsWith('.tmp-1-3'))).toBe(true)
   expect(files).not.toContain('.tmp')
+
+  // AC-3: assert that the temp dir carries a unique per-run segment
+  expect(files.some(f => /^\.tmp(?:-1-3)?-[\w-]+$/.test(f))).toBe(true)
 })
