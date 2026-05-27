@@ -8,8 +8,6 @@ beforeEach(() => {
 })
 
 test('empty coverage directory is cleaned after tests', async () => {
-  // `clean()` no longer sweeps other runs' `.tmp*` dirs, so clear any orphan left
-  // by an earlier watch-mode test in this shared cwd before asserting removal.
   rmSync('./coverage', { recursive: true, force: true })
 
   await runVitest({

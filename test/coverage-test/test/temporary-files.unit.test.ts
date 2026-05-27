@@ -25,7 +25,6 @@ test('cleanAfterRun resolves without error when temp directory is already absent
   provider.coverageFilesDirectory = resolve('non-existent-coverage-directory', '.tmp-already-gone')
   provider.options = { reportsDirectory: resolve('non-existent-coverage-directory') } as any
 
-  // AC-1: with force:true, cleanAfterRun must not throw a raw ENOENT
   await expect(provider.cleanAfterRun()).resolves.toBeUndefined()
 })
 
