@@ -134,10 +134,10 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,
     benchmark: {
-      enabled: config.benchmark?.enabled ?? false,
-      retainSamples: config.benchmark?.retainSamples ?? false,
-      suppressExportGetterWarnings: config.benchmark?.suppressExportGetterWarnings ?? false,
-      projectName: config.benchmark?.projectName ?? '',
+      enabled: config.benchmark.enabled,
+      retainSamples: config.benchmark.retainSamples,
+      suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
+      projectName: config.benchmark.projectName,
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled
