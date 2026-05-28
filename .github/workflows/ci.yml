@@ -113,6 +113,7 @@ jobs:
         id: setup-chrome
         with:
           chrome-version: 148.0.7778.178
+          install-dependencies: true
           install-chromedriver: true
 
       - name: Use setup-chrome binaries for WebDriverIO
@@ -190,6 +191,7 @@ jobs:
         id: setup-chrome
         with:
           chrome-version: 148.0.7778.178
+          install-dependencies: true
           install-chromedriver: true
 
       - name: Use setup-chrome binaries for WebDriverIO
@@ -238,6 +240,7 @@ jobs:
         id: setup-chrome
         with:
           chrome-version: 148.0.7778.178
+          install-dependencies: true
           install-chromedriver: true
 
       - name: Use setup-chrome binaries for WebDriverIO
@@ -289,6 +292,7 @@ jobs:
         id: setup-chrome
         with:
           chrome-version: 148.0.7778.178
+          install-dependencies: true
           install-chromedriver: true
 
       - name: Use setup-chrome binaries for WebDriverIO
