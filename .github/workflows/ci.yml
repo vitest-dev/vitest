@@ -109,52 +109,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-        id: setup-chrome
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
         with:
-          chrome-version: 148.0.7778.178
-          install-chromedriver: true
-
-      - name: Use setup-chrome binaries for WebDriverIO
-        shell: bash
-        run: |
-          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
-          echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-
-      - name: Allow setup-chrome sandbox
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          # Chrome for Testing is not covered by Ubuntu's AppArmor sandbox policy on CI.
-          # https://pptr.dev/troubleshooting#issues-with-apparmor-on-ubuntu
-          # https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
-          # https://github.com/browser-actions/setup-chrome/issues/639
-          cat <<EOF | sudo tee /etc/apparmor.d/chrome-for-testing
-          abi <abi/4.0>,
-          include <tunables/global>
-
-          profile chrome-for-testing "$CHROME_BIN" flags=(unconfined) {
-            userns,
-            include if exists <local/chrome>
-          }
-          EOF
-          sudo apparmor_parser -r /etc/apparmor.d/chrome-for-testing
-
-      - name: Diagnose setup-chrome binaries
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -x
-          "$CHROME_BIN" --version
-          "$CHROMEDRIVER_PATH" --version
-          ls -la "$CHROME_BIN" "$CHROMEDRIVER_PATH"
-          ldd "$CHROME_BIN" | grep 'not found' || true
-
-          set +e
-          timeout 20s "$CHROME_BIN" --headless --disable-gpu --dump-dom about:blank
-          echo "chrome_headless_exit=$?"
-          timeout 20s "$CHROME_BIN" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --dump-dom about:blank
-          echo "chrome_headless_no_sandbox_exit=$?"
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -221,17 +179,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-        id: setup-chrome
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
         with:
-          chrome-version: 148.0.7778.178
-          install-chromedriver: true
-
-      - name: Use setup-chrome binaries for WebDriverIO
-        shell: bash
-        run: |
-          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
-          echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -269,24 +220,8 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-        id: setup-chrome
-        with:
-          chrome-version: 148.0.7778.178
-          install-chromedriver: true
-
-      - name: Use setup-chrome binaries for WebDriverIO
-        shell: bash
-        run: |
-          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
-          echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-
-      - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
-        id: setup-firefox
-
-      - name: Use setup-firefox binary for WebDriverIO
-        shell: bash
-        run: echo "FIREFOX_BIN=${{ steps.setup-firefox.outputs.firefox-path }}" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
 
       - name: Install
         run: pnpm i
@@ -320,17 +255,10 @@ jobs:
         with:
           node-version: 24
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-        id: setup-chrome
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
         with:
-          chrome-version: 148.0.7778.178
-          install-chromedriver: true
-
-      - name: Use setup-chrome binaries for WebDriverIO
-        shell: bash
-        run: |
-          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
-          echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
+          firefox-version: false
 
       - name: Install
         run: |
