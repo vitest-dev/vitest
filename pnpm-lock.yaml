@@ -1014,15 +1014,6 @@ importers:
       '@types/chai':
         specifier: 'catalog:'
         version: 5.2.2
-      '@vitest/browser-playwright':
-        specifier: workspace:*
-        version: link:../browser-playwright
-      '@vitest/browser-preview':
-        specifier: workspace:*
-        version: link:../browser-preview
-      '@vitest/browser-webdriverio':
-        specifier: workspace:*
-        version: link:../browser-webdriverio
       '@vitest/coverage-istanbul':
         specifier: workspace:*
         version: link:../coverage-istanbul
