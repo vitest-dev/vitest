@@ -170,7 +170,20 @@ function modeToConfig(mode: string): RunVitestConfig {
     return {
       browser: {
         enabled: true,
-        provider: webdriverio(),
+        provider: webdriverio({
+          ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
+            ? {
+                'wdio:chromedriverOptions': {
+                  binary: process.env.CHROMEDRIVER_PATH,
+                },
+                capabilities: {
+                  'goog:chromeOptions': {
+                    binary: process.env.CHROME_BIN,
+                  },
+                },
+              }
+            : {}),
+        }),
         instances: [{ browser: 'chrome' }],
         headless: true,
       },

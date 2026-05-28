@@ -32,7 +32,23 @@ const playwrightInstances: BrowserInstanceOption[] = [
 ]
 
 const webdriverioInstances: BrowserInstanceOption[] = [
-  { browser: 'chrome' },
+  {
+    browser: 'chrome',
+    provider: webdriverio({
+      ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
+        ? {
+            'wdio:chromedriverOptions': {
+              binary: process.env.CHROMEDRIVER_PATH,
+            },
+            capabilities: {
+              'goog:chromeOptions': {
+                binary: process.env.CHROME_BIN,
+              },
+            },
+          }
+        : {}),
+    }),
+  },
   { browser: 'firefox' },
 ]
 
@@ -43,6 +59,9 @@ export const instances: BrowserInstanceOption[] = testBrowser
   ? [
       {
         browser: testBrowser as any,
+        provider: provider.name === 'webdriverio' && testBrowser === 'chrome'
+          ? webdriverioInstances[0].provider
+          : undefined,
         headless:
           wsEndpoint
             ? true

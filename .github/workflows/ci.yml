@@ -117,12 +117,8 @@ jobs:
       - name: Use setup-chrome binaries for WebDriverIO
         shell: bash
         run: |
+          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            mkdir -p "$RUNNER_TEMP/setup-chrome-bin"
-            ln -sf "${{ steps.setup-chrome.outputs.chrome-path }}" "$RUNNER_TEMP/setup-chrome-bin/google-chrome"
-            echo "$RUNNER_TEMP/setup-chrome-bin" >> "$GITHUB_PATH"
-          fi
 
       - name: Install
         run: pnpm i
@@ -197,12 +193,8 @@ jobs:
       - name: Use setup-chrome binaries for WebDriverIO
         shell: bash
         run: |
+          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            mkdir -p "$RUNNER_TEMP/setup-chrome-bin"
-            ln -sf "${{ steps.setup-chrome.outputs.chrome-path }}" "$RUNNER_TEMP/setup-chrome-bin/google-chrome"
-            echo "$RUNNER_TEMP/setup-chrome-bin" >> "$GITHUB_PATH"
-          fi
 
       - name: Install
         run: pnpm i
@@ -248,12 +240,8 @@ jobs:
       - name: Use setup-chrome binaries for WebDriverIO
         shell: bash
         run: |
+          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            mkdir -p "$RUNNER_TEMP/setup-chrome-bin"
-            ln -sf "${{ steps.setup-chrome.outputs.chrome-path }}" "$RUNNER_TEMP/setup-chrome-bin/google-chrome"
-            echo "$RUNNER_TEMP/setup-chrome-bin" >> "$GITHUB_PATH"
-          fi
 
       - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
 
@@ -297,12 +285,8 @@ jobs:
       - name: Use setup-chrome binaries for WebDriverIO
         shell: bash
         run: |
+          echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            mkdir -p "$RUNNER_TEMP/setup-chrome-bin"
-            ln -sf "${{ steps.setup-chrome.outputs.chrome-path }}" "$RUNNER_TEMP/setup-chrome-bin/google-chrome"
-            echo "$RUNNER_TEMP/setup-chrome-bin" >> "$GITHUB_PATH"
-          fi
 
       - name: Install
         run: |
