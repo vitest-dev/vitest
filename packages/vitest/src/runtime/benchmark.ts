@@ -93,7 +93,7 @@ export interface BenchFromSource {
 }
 
 interface BenchFrom {
-  <Name extends string>(name: Name, source: string | BenchFromSource): BenchRegistration<Name>
+  <Name extends string>(name: Name | Function, source: string | BenchFromSource): BenchRegistration<Name>
 }
 
 export interface Bench extends BenchFactory {
@@ -309,7 +309,7 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     return data as BenchResult
   }
 
-  const bench = ((nameOrFunction: string | Function, a: Fn | BenchFnOptions, b?: Fn | BenchFnOptions) => {
+  const bench: Bench = (nameOrFunction: string | Function, a: Fn | BenchFnOptions, b?: Fn | BenchFnOptions) => {
     validateBenchmarkProject(config)
     const { fn, fnOpts, writeResult, perProject } = normalizeBenchArgs(a, b)
     const name = typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction
@@ -332,16 +332,17 @@ export function createBench(test: Test, config: SerializedConfig): Bench {
     }
     pending.add(registration)
     return registration
-  }) as Bench
+  }
 
-  bench.from = <Name extends string>(name: Name, source: string | BenchFromSource): BenchRegistration<Name> => {
+  bench.from = <Name extends string>(nameOrFunction: Name | Function, source: string | BenchFromSource): BenchRegistration<Name> => {
     validateBenchmarkProject(config)
-    if (typeof name !== 'string' || name.length === 0) {
-      throw new TypeError('`bench.from()` requires a name as its first argument.')
+    if (typeof nameOrFunction !== 'string' && typeof nameOrFunction !== 'function') {
+      throw new TypeError('`bench.from()` requires a name (string or named function) as its first argument.')
     }
     if (typeof source !== 'string' && typeof source !== 'function') {
       throw new TypeError('`bench.from()` expects a string path or a function returning the result data as its second argument.')
     }
+    const name = (typeof nameOrFunction === 'function' ? nameOrFunction.name || '<anonymous>' : nameOrFunction) as Name
     const registration: FromRegistration<Name> = {
       [kRegistration]: true,
       [kFromSource]: source,
