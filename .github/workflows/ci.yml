@@ -121,6 +121,22 @@ jobs:
           echo "CHROME_BIN=${{ steps.setup-chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
 
+      - name: Diagnose setup-chrome binaries
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -x
+          "$CHROME_BIN" --version
+          "$CHROMEDRIVER_PATH" --version
+          ls -la "$CHROME_BIN" "$CHROMEDRIVER_PATH"
+          ldd "$CHROME_BIN" | grep 'not found' || true
+
+          set +e
+          timeout 20s "$CHROME_BIN" --headless --disable-gpu --dump-dom about:blank
+          echo "chrome_headless_exit=$?"
+          timeout 20s "$CHROME_BIN" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --dump-dom about:blank
+          echo "chrome_headless_no_sandbox_exit=$?"
+
       - name: Install
         run: pnpm i
 
