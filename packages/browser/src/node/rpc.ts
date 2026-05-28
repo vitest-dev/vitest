@@ -130,6 +130,27 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     )
   }
 
+  function isCdpAllowed(project: TestProject) {
+    return (
+      project.config.api.allowExec
+      && project.config.browser.api.allowExec
+      && project.vitest.config.api.allowExec
+      && project.vitest.config.browser.api.allowExec
+      && project.config.api.allowWrite
+      && project.config.browser.api.allowWrite
+      && project.vitest.config.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+    )
+  }
+
+  function assertCdpAllowed(project: TestProject) {
+    if (!isCdpAllowed(project)) {
+      throw new Error(
+        `Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.`,
+      )
+    }
+  }
+
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config?.deps?.moduleDirectories,
@@ -304,6 +325,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
                   ...args,
                 )
               },
+              __ensureCDPHandler: () => globalServer.ensureCDPHandler(sessionId, rpcId),
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
@@ -381,10 +403,12 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
         // CDP
         async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
+          assertCdpAllowed(project)
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
         async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+          assertCdpAllowed(project)
           const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },
