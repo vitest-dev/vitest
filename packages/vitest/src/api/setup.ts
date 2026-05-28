@@ -77,12 +77,21 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
               `Test file "${id}" was not registered, so it cannot be updated using the API.`,
             )
           }
+          if (!ctx.config.api.allowWrite) {
+            return
+          }
           return fs.writeFile(id, content, 'utf-8')
         },
         async rerun(files, resetTestNamePattern) {
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
         },
         async rerunTask(id) {
+          if (!ctx.config.api.allowExec) {
+            return
+          }
           await ctx.rerunTask(id)
         },
         getConfig() {
@@ -111,6 +120,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return getModuleGraph(ctx, project, id, browser)
         },
         async updateSnapshot(file?: File) {
+          if (!ctx.config.api.allowExec || !ctx.config.api.allowWrite) {
+            return
+          }
           if (!file) {
             await ctx.updateSnapshot()
           }

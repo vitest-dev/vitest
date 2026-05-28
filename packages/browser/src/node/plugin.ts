@@ -354,6 +354,8 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
           defaultPort,
+          parentServer.vitest.config.api,
+          parentServer.vitest.logger,
         )
 
         viteConfig.server = {

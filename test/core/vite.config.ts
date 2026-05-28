@@ -55,6 +55,8 @@ export default defineConfig({
   test: {
     api: {
       port: 3023,
+      allowExec: false,
+      allowWrite: false,
     },
     name: 'core',
     includeSource: [

@@ -15,6 +15,7 @@ import { parse, stringify } from 'flatted'
 import { dirname, join } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -111,11 +112,20 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
   }
 
   function checkFileAccess(path: string) {
-    if (!isFileServingAllowed(path, vite)) {
+    if (!isFileServingAllowed(slash(path), vite)) {
       throw new Error(
         `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,
       )
     }
+  }
+
+  function canWrite(project: TestProject) {
+    return (
+      project.config.browser.api.allowWrite
+      && project.vitest.config.browser.api.allowWrite
+      && project.config.api.allowWrite
+      && project.vitest.config.api.allowWrite
+    )
   }
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
@@ -191,11 +201,23 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
         },
         async saveSnapshotFile(id, content) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot save snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           await fs.mkdir(dirname(id), { recursive: true })
           return fs.writeFile(id, content, 'utf-8')
         },
         async removeSnapshotFile(id) {
           checkFileAccess(id)
+          if (!canWrite(project)) {
+            vitest.logger.error(
+              `[vitest] Cannot remove snapshot file "${id}". File writing is disabled because server is exposed to the internet, see https://vitest.dev/config/browser/api.`,
+            )
+            return
+          }
           if (!existsSync(id)) {
             throw new Error(`Snapshot file "${id}" does not exist.`)
           }

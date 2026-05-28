@@ -99,6 +99,10 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
+  api: {
+    allowExec: boolean | undefined
+    allowWrite: boolean | undefined
+  }
   diff: string | SerializedDiffOptions | undefined
   retry: number
   includeTaskLocation: boolean | undefined

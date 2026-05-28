@@ -144,11 +144,25 @@ A path to the HTML entry point. Can be relative to the root of the project. This
 
 ## browser.api
 
-- **Type:** `number | { port?, strictPort?, host? }`
+- **Type:** `number | { port?, strictPort?, host?, allowWrite?, allowExec? }`
 - **Default:** `63315`
-- **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
+- **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`, `--browser.api.allowWrite`, `--browser.api.allowExec`
 
 Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
+
+### browser.api.allowWrite {#browser-api-allowwrite}
+
+- **Type:** `boolean`
+- **Default:** inherited from [`api.allowWrite`](/config/#api-allowwrite)
+
+Allows browser API clients to write files, including snapshots and browser command writes. If `browser.api.host` is set to anything other than `localhost` or `127.0.0.1`, Vitest disables write operations by default unless this option or [`api.allowWrite`](/config/#api-allowwrite) is explicitly enabled.
+
+### browser.api.allowExec {#browser-api-allowexec}
+
+- **Type:** `boolean`
+- **Default:** inherited from [`api.allowExec`](/config/#api-allowexec)
+
+Allows browser API clients to run tests from the UI. If `browser.api.host` is exposed to the network and write/exec operations are enabled, anyone who can reach the browser API server can run arbitrary code on your machine.
 
 ## browser.provider {#browser-provider}
 

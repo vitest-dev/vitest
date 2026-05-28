@@ -52,6 +52,12 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description:
       'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
+  allowExec: {
+    description: 'Allow API to execute code. (Be careful when enabling this option in untrusted environments)',
+  },
+  allowWrite: {
+    description: 'Allow API to edit files. (Be careful when enabling this option in untrusted environments)',
+  },
   middlewareMode: null,
 })
 

@@ -45,7 +45,20 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 export type ApiConfig = Pick<
   ServerOptions,
   'port' | 'strictPort' | 'host' | 'middlewareMode'
->
+> & {
+  /**
+   * Allow any write operations from the API server.
+   *
+   * @default true if API is not exposed to the network, false otherwise
+   */
+  allowWrite?: boolean
+  /**
+   * Allow running test files via the API.
+   *
+   * @default true if API is not exposed to the network, false otherwise
+   */
+  allowExec?: boolean
+}
 
 export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 

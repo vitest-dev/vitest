@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
-import { runVitestCli, useFS } from '../../test-utils'
+import { runVitest, runVitestCli, useFS } from '../../test-utils'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
@@ -306,6 +306,31 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   // browser config
   expect(projects[1].config.browser.enabled).toBe(true)
   expect(projects[1].config.browser.headless).toBe(true)
+})
+
+test('show a warning if host is exposed', async () => {
+  const { stderr } = await runVitest({
+    config: false,
+    root: './fixtures/fixture-no-async',
+    reporters: [
+      {
+        onInit() {
+          throw new Error('stop')
+        },
+      },
+    ],
+  }, [], 'test', {
+    test: {
+      browser: {
+        api: {
+          host: 'custom-host',
+        },
+      },
+    },
+  })
+  expect(stderr).toContain(
+    'API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.',
+  )
 })
 
 function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {

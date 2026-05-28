@@ -1,5 +1,6 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Vitest } from '../core'
+import type { Logger } from '../logger'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
@@ -59,6 +60,8 @@ function parseInspector(inspect: string | undefined | boolean | number) {
 export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   options: Options,
   defaultPort: number,
+  parentApi?: ApiConfig,
+  logger?: Logger,
 ): ApiConfig | undefined {
   let api: ApiConfig | undefined
 
@@ -96,6 +99,22 @@ export function resolveApiServerConfig<Options extends ApiConfig & UserConfig>(
   }
   else {
     api = { middlewareMode: true }
+  }
+
+  if (!api.middlewareMode && api.host && api.host !== 'localhost' && api.host !== '127.0.0.1') {
+    if (parentApi && api.allowWrite == null && api.allowExec == null) {
+      logger?.error(
+        c.yellow(
+          `${c.yellowBright(' WARNING ')} API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set \`browser.api.allowExec\` manually to hide this warning. See https://vitest.dev/config/browser/api for more details.`,
+        ),
+      )
+    }
+    api.allowWrite ??= parentApi?.allowWrite ?? false
+    api.allowExec ??= parentApi?.allowExec ?? false
+  }
+  else {
+    api.allowWrite ??= parentApi?.allowWrite ?? true
+    api.allowExec ??= parentApi?.allowExec ?? true
   }
 
   return api
@@ -838,6 +857,8 @@ export function resolveConfig(
   resolved.browser.api = resolveApiServerConfig(
     resolved.browser,
     defaultBrowserPort,
+    resolved.api,
+    logger,
   ) || {
     port: defaultBrowserPort,
   }
