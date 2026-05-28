@@ -59,6 +59,8 @@ expect(input).toHaveValue('a')
 
 ::: warning
 CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+
+CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`browser.api.allowWrite`](/guide/browser/config#browser-api-allowwrite), [`browser.api.allowExec`](/guide/browser/config#browser-api-allowexec), [`api.allowWrite`](/config/#api-allowwrite), and [`api.allowExec`](/config/#api-allowexec).
 :::
 
 ## Custom Commands

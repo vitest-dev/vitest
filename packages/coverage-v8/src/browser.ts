@@ -1,12 +1,15 @@
+import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
-import { cdp } from '@vitest/browser/context'
 import { loadProvider } from './load-provider'
 
-const session = cdp()
 let enabled = false
 
-type ScriptCoverage = Awaited<ReturnType<typeof session.send<'Profiler.takePreciseCoverage'>>>
+type ScriptCoverage = Profiler.TakePreciseCoverageReturnType
+
+function triggerCommand(command: string, args: any[] = []): Promise<any> {
+  return (globalThis as any).__vitest_browser_runner__.commands.triggerCommand(command, args)
+}
 
 const mod: CoverageProviderModule = {
   async startCoverage() {
@@ -16,15 +19,11 @@ const mod: CoverageProviderModule = {
 
     enabled = true
 
-    await session.send('Profiler.enable')
-    await session.send('Profiler.startPreciseCoverage', {
-      callCount: true,
-      detailed: true,
-    })
+    await triggerCommand('__vitest_startV8Coverage')
   },
 
   async takeCoverage(): Promise<{ result: any[] }> {
-    const coverage = await session.send('Profiler.takePreciseCoverage')
+    const coverage: ScriptCoverage = await triggerCommand('__vitest_takeV8Coverage')
     const result: typeof coverage.result = []
 
     // Reduce amount of data sent over rpc by doing some early result filtering

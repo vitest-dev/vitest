@@ -155,14 +155,14 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **Type:** `boolean`
 - **Default:** inherited from [`api.allowWrite`](/config/#api-allowwrite)
 
-Allows browser API clients to write files, including snapshots and browser command writes. If `browser.api.host` is set to anything other than `localhost` or `127.0.0.1`, Vitest disables write operations by default unless this option or [`api.allowWrite`](/config/#api-allowwrite) is explicitly enabled.
+Allows browser API clients to write files, including snapshots and browser command writes. If `browser.api.host` is set to anything other than `localhost` or `127.0.0.1`, Vitest disables write operations by default unless this option or [`api.allowWrite`](/config/#api-allowwrite) is explicitly enabled. This option also gates privileged browser APIs that can write files indirectly, such as raw Chrome DevTools Protocol access through [`cdp()`](/guide/browser/context#cdp).
 
 ### browser.api.allowExec {#browser-api-allowexec}
 
 - **Type:** `boolean`
 - **Default:** inherited from [`api.allowExec`](/config/#api-allowexec)
 
-Allows browser API clients to run tests from the UI. If `browser.api.host` is exposed to the network and write/exec operations are enabled, anyone who can reach the browser API server can run arbitrary code on your machine.
+Allows browser API clients to run tests from the UI. If `browser.api.host` is exposed to the network and write/exec operations are enabled, anyone who can reach the browser API server can run arbitrary code on your machine. This option also gates privileged browser APIs that can execute code indirectly, such as raw Chrome DevTools Protocol access through [`cdp()`](/guide/browser/context#cdp).
 
 ## browser.provider {#browser-provider}
 
