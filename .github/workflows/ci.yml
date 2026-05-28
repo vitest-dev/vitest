@@ -104,7 +104,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -153,7 +156,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -189,8 +195,8 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-      - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
 
       - name: Install
         run: pnpm i
@@ -222,7 +228,10 @@ jobs:
         with:
           node-version: 22
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: |
