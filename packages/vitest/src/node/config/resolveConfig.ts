@@ -146,6 +146,10 @@ function resolveInlineWorkerOption(value: string | number): number {
   }
 }
 
+// warn only once, check one PER PROCESS, not per instance,
+// that's why it's on a module-level
+let warnedTypeCheck = false
+
 export function resolveConfig(
   vitest: Vitest,
   options: UserConfig,
@@ -820,7 +824,8 @@ export function resolveConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled) {
+  if (resolved.typecheck.enabled && !warnedTypeCheck) {
+    warnedTypeCheck = true
     logger.console.warn(
       c.yellow(
         'Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.',

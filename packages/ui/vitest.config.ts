@@ -49,7 +49,20 @@ const testConfig = defineConfig({
         providerName === 'preview'
           ? preview()
           : providerName === 'webdriverio'
-            ? webdriverio()
+            ? webdriverio({
+                ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
+                  ? {
+                      'wdio:chromedriverOptions': {
+                        binary: process.env.CHROMEDRIVER_PATH,
+                      },
+                      'capabilities': {
+                        'goog:chromeOptions': {
+                          binary: process.env.CHROME_BIN,
+                        },
+                      },
+                    }
+                  : {}),
+              })
             : playwright({
                 actionTimeout: 5000,
               }),
