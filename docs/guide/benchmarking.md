@@ -20,7 +20,7 @@ test('parsing performance', async ({ bench }) => {
 })
 ```
 
-The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. Vitest will print the benchmark output (ops/sec, mean time, etc.) after the test completes.
+The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. After the test completes, Vitest prints a single-row version of the [comparison table](#comparing-benchmarks) (ops/sec, mean time, percentiles, etc.), so you get the same output for a one-off benchmark as you do for `bench.compare()`.
 
 ::: warning
 The `bench` fixture is only available in files matched by [`benchmark.include`](/config/#benchmark-include) (default: `**/*.{bench,benchmark}.?(c|m)[jt]s?(x)`). Using `{ bench }` inside a regular test file will throw an error.
