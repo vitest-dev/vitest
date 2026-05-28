@@ -13,6 +13,7 @@ jobs:
     name: Lock Closed Issues
     permissions:
       issues: write # to lock issue
+      pull-requests: write # to lock prs
     steps:
       - uses: dessant/lock-threads@7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7 # v6.0.0
         with:

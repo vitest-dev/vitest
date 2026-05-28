@@ -391,6 +391,13 @@ async function testError(page: Page) {
 
   await getExplorerItem(page, 'colored error message').click()
   await expect(page.getByTestId('report')).toHaveText('Error: this-is-blue - /node/error.test.ts:12:17')
+
+  // switch to Code tab and verify ANSI is rendered as HTML in the editor line widget
+  await page.getByTestId('btn-code').click()
+  await expect(page.getByTestId('editor').getByTestId('error-line-gadget')).toHaveText([
+    /AssertionError: expected/,
+    /Error: this-is-blue/,
+  ])
 }
 
 async function testTagsFilter(page: Page) {

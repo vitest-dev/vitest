@@ -3,19 +3,19 @@ import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vite
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { ChildProcess } from 'node:child_process'
 import type { Result } from 'tinyexec'
+import type { FileInformation } from '../node/ast-collect'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
-import type { FileInformation } from './collect'
 import type { TscErrorInfo } from './types'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { eachMapping, generatedPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { basename, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { astCollectFileInformation } from '../node/ast-collect'
 import { distDir } from '../paths'
 import { createLocationsIndexMap } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
-import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile } from './parse'
 
 export class TypeCheckError extends Error {
@@ -74,7 +74,7 @@ export class Typechecker {
   protected async collectFileTests(
     filepath: string,
   ): Promise<FileInformation | null> {
-    return collectTests(this.project, filepath)
+    return astCollectFileInformation(this.project, filepath, { pool: 'typescript' })
   }
 
   protected getFiles(): string[] {

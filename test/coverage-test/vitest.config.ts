@@ -12,7 +12,7 @@ const FIXTURES = '**/fixtures/**'
 
 export default defineConfig({
   test: {
-    reporters: 'verbose',
+    reporters: process.env.CI ? 'minimal' : 'verbose',
     isolate: false,
     setupFiles: ['./setup.ts'],
     projects: [

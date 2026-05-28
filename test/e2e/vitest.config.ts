@@ -5,7 +5,7 @@ import { defaultExclude } from 'vitest/config'
 export default defineConfig({
   test: {
     reporters: [
-      'verbose',
+      process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
         : {}),
@@ -44,7 +44,10 @@ export default defineConfig({
           },
           typecheck: {
             enabled: true,
-            include: ['./test/reporters/configuration-options.test-d.ts'],
+            include: [
+              './test/config-types.test-d.ts',
+              './test/reporters/configuration-options.test-d.ts',
+            ],
           },
           sequence: {
             groupOrder: 0,

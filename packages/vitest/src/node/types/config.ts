@@ -833,11 +833,10 @@ export interface InlineConfig {
   expandSnapshotDiff?: boolean
 
   /**
-   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
-   * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
-   *
-   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   * By default, Vitest intercepts console output during tests to add context such as the test file and test title.
+   * In browser mode, this interception is required to forward logs from the browser DevTools to the terminal.
+   * It is also required for console log previews in the Vitest UI.
+   * Disabling console interception can be useful when you want to debug code with normal synchronous terminal logging.
    *
    * @default false
    */

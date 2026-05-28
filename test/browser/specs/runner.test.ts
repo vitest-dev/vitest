@@ -208,6 +208,17 @@ error with a stack
   })
 })
 
+test('disableConsoleIntercept', async () => {
+  const result = await runBrowserTests({
+    root: './fixtures/print-logs',
+    project: [instances[0].browser],
+    disableConsoleIntercept: true,
+  })
+  expect(result.stderr).toBe('')
+  expect(result.stdout).not.toContain('logging to stdout')
+  expect(result.stdout).not.toContain('hello from console.log')
+})
+
 test(`stack trace points to correct file in every browser when failed`, async () => {
   expect.assertions(30)
   const { stderr } = await runBrowserTests({

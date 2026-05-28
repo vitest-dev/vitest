@@ -39,19 +39,10 @@ export function render<C extends Component>(
   Component: ComponentImport<C>,
   options?: ComponentOptions<C>,
   renderOptions?: SetupOptions
-): RenderResult<C> & PromiseLike<RenderResult<C>>
+): Promise<RenderResult<C>>
 ```
 
 The `render` function records a `svelte.render` trace mark, visible in the [Trace View](/guide/browser/trace-view).
-
-::: warning
-Synchronous usage of `render` is deprecated and will be removed in the next major version. Please always `await` the result:
-
-```ts
-const screen = render(Component) // [!code --]
-const screen = await render(Component) // [!code ++]
-```
-:::
 
 ### Options
 
@@ -173,10 +164,6 @@ function unmount(): Promise<void>
 ```
 
 Unmount and destroy the Svelte component. Also records a `svelte.unmount` trace mark in the [Trace View](/guide/browser/trace-view). This is useful for testing what happens when your component is removed from the page (like testing that you don't leave event handlers hanging around causing memory leaks).
-
-::: warning
-Synchronous usage of `unmount` is deprecated and will be removed in the next major version. Please always `await` the result.
-:::
 
 ```ts
 import { render } from 'vitest-browser-svelte'
