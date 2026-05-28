@@ -114,6 +114,11 @@ getBrowserState().iframeId = iframeId
 
 registerPageMarkHandler((name, options) => page.mark(name, options))
 
+channel.postMessage({
+  event: 'ready',
+  iframeId,
+})
+
 let contextSwitched = false
 
 async function prepareTestEnvironment(options: PrepareOptions) {
