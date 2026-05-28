@@ -40,7 +40,7 @@ const webdriverioInstances: BrowserInstanceOption[] = [
             'wdio:chromedriverOptions': {
               binary: process.env.CHROMEDRIVER_PATH,
             },
-            capabilities: {
+            'capabilities': {
               'goog:chromeOptions': {
                 binary: process.env.CHROME_BIN,
               },
