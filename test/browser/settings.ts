@@ -49,7 +49,20 @@ const webdriverioInstances: BrowserInstanceOption[] = [
         : {}),
     }),
   },
-  { browser: 'firefox' },
+  {
+    browser: 'firefox',
+    provider: webdriverio({
+      ...(process.env.FIREFOX_BIN
+        ? {
+            capabilities: {
+              'moz:firefoxOptions': {
+                binary: process.env.FIREFOX_BIN,
+              },
+            },
+          }
+        : {}),
+    }),
+  },
 ]
 
 // use TEST_BROWSER to avoid BROWSER being selected for UI --open
@@ -59,9 +72,6 @@ export const instances: BrowserInstanceOption[] = testBrowser
   ? [
       {
         browser: testBrowser as any,
-        provider: provider.name === 'webdriverio' && testBrowser === 'chrome'
-          ? webdriverioInstances[0].provider
-          : undefined,
         headless:
           wsEndpoint
             ? true

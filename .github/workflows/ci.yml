@@ -244,6 +244,11 @@ jobs:
           echo "CHROMEDRIVER_PATH=${{ steps.setup-chrome.outputs.chromedriver-path }}" >> "$GITHUB_ENV"
 
       - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
+        id: setup-firefox
+
+      - name: Use setup-firefox binary for WebDriverIO
+        shell: bash
+        run: echo "FIREFOX_BIN=${{ steps.setup-firefox.outputs.firefox-path }}" >> "$GITHUB_ENV"
 
       - name: Install
         run: pnpm i
