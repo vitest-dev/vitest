@@ -1,3 +1,4 @@
+import { _startV8Coverage, _takeV8Coverage } from './coverage'
 import {
   _fileInfo,
   readFile,
@@ -13,6 +14,8 @@ export default {
   removeFile: removeFile as typeof removeFile,
   writeFile: writeFile as typeof writeFile,
   // private commands
+  __vitest_startV8Coverage: _startV8Coverage as typeof _startV8Coverage,
+  __vitest_takeV8Coverage: _takeV8Coverage as typeof _takeV8Coverage,
   __vitest_markTrace: _markTrace as typeof _markTrace,
   __vitest_groupTraceStart: _groupTraceStart as typeof _groupTraceStart,
   __vitest_groupTraceEnd: _groupTraceEnd as typeof _groupTraceEnd,

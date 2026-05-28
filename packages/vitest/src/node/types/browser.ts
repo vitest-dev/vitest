@@ -306,6 +306,18 @@ export interface BrowserCommandContext {
     name: K,
     ...args: Parameters<BrowserCommands[K]>
   ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
