@@ -58,6 +58,13 @@ const testConfig = defineConfig({
                       'capabilities': {
                         'goog:chromeOptions': {
                           binary: process.env.CHROME_BIN,
+                          // Chrome for Testing is not covered by Ubuntu's AppArmor sandbox policy on CI.
+                          // https://pptr.dev/troubleshooting#issues-with-apparmor-on-ubuntu
+                          // https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
+                          // https://github.com/browser-actions/setup-chrome/issues/639
+                          ...(process.env.CI && process.platform === 'linux'
+                            ? { args: ['no-sandbox', 'disable-dev-shm-usage'] }
+                            : {}),
                         },
                       },
                     }
