@@ -312,6 +312,7 @@ jobs:
       - name: Merge reports
         continue-on-error: true
         run: |
+          set +e
           pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
           cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
           pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
