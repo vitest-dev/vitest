@@ -1,6 +1,8 @@
 import type {
+  BaselineData,
   Bench,
   BenchFnOptions,
+  BenchFromSource,
   BenchRegistration,
   BenchResult,
   BenchStorage,
@@ -59,4 +61,43 @@ test('`expect(result).toBeFasterThan` and `.toBeSlowerThan` are callable on Benc
 test('`TestContext.bench` is typed as the `Bench` factory', () => {
   type CtxBench = TestContext['bench']
   expectTypeOf<CtxBench>().toEqualTypeOf<Bench>()
+})
+
+test('`bench.from(name, path)` returns BenchRegistration with the name literal narrowed', ({ bench }) => {
+  const reg = bench.from('baseline', 'results/baseline.json')
+  expectTypeOf(reg).toEqualTypeOf<BenchRegistration<'baseline'>>()
+  expectTypeOf(reg.name).toEqualTypeOf<'baseline'>()
+})
+
+test('`bench.from(name, source)` accepts a function returning BaselineData', ({ bench }) => {
+  const sync: BenchFromSource = () => ({} as BaselineData)
+  const async: BenchFromSource = async () => ({} as BaselineData)
+  expectTypeOf(bench.from('s', sync)).toEqualTypeOf<BenchRegistration<'s'>>()
+  expectTypeOf(bench.from('a', async)).toEqualTypeOf<BenchRegistration<'a'>>()
+})
+
+test('`bench.from(...).fn` is optional — `bench.from` registrations carry no benchmark function', ({ bench }) => {
+  const reg = bench.from('baseline', 'results.json')
+  expectTypeOf(reg.fn).toEqualTypeOf<BenchRegistration<'baseline'>['fn']>()
+  expectTypeOf(reg.fn).toBeNullable()
+})
+
+test('`bench.from` registrations contribute to the name union in `bench.compare`', async ({ bench }) => {
+  const storage = await bench.compare(
+    bench('live', () => {}),
+    bench.from('baseline', 'results.json'),
+  )
+  expectTypeOf(storage).toEqualTypeOf<BenchStorage<'live' | 'baseline'>>()
+  expectTypeOf(storage.get('baseline')).toEqualTypeOf<BenchResult>()
+})
+
+test('`bench.from(fn, source)` accepts a function and uses its name as the benchmark name', ({ bench }) => {
+  function myBench() {}
+  const reg = bench.from(myBench, 'results.json')
+  expectTypeOf(reg).toEqualTypeOf<BenchRegistration<string>>()
+})
+
+test('`bench.from(name)` without a source is a type error', ({ bench }) => {
+  // @ts-expect-error second argument (source) is required
+  bench.from('baseline')
 })
