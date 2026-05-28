@@ -25,12 +25,16 @@ export const providers = {
       ...options,
       capabilities: {
         ...capabilities,
+        // Explicit browser/driver binaries keep WebDriverIO from auto-downloading mismatched versions.
+        // https://webdriver.io/docs/driverbinaries
+        // https://webdriver.io/docs/capabilities#webdriverio-capabilities-to-manage-browser-driver-options
         ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
           ? {
               'wdio:chromedriverOptions': {
                 ...(capabilities as any)['wdio:chromedriverOptions'],
                 binary: process.env.CHROMEDRIVER_PATH,
               },
+              // https://developer.chrome.com/docs/chromedriver/capabilities#chromeoptions-object
               'goog:chromeOptions': {
                 ...(capabilities as any)['goog:chromeOptions'],
                 binary: process.env.CHROME_BIN,
@@ -39,6 +43,7 @@ export const providers = {
           : {}),
         ...(process.env.FIREFOX_BIN
           ? {
+              // https://developer.mozilla.org/en-US/docs/Web/WebDriver/Reference/Capabilities/firefoxOptions
               'moz:firefoxOptions': {
                 ...(capabilities as any)['moz:firefoxOptions'],
                 binary: process.env.FIREFOX_BIN,
