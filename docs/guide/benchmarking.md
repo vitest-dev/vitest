@@ -4,7 +4,7 @@ title: Benchmarking | Guide
 
 # Benchmarking
 
-Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context). It is not a top-level import from `vitest`. Benchmarks are powered by [Tinybench](https://github.com/tinylibs/tinybench) and are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner: retries, lifecycle hooks, filtering, and assertions.
+Vitest lets you write benchmarks alongside your tests using the `bench` fixture from the [test context](/guide/test-context). Benchmarks are powered by [Tinybench](https://github.com/tinylibs/tinybench) and are defined inside regular `test()` calls, giving you access to the full power of Vitest's test runner: retries, lifecycle hooks, filtering, and assertions.
 
 ## Defining a Benchmark
 
@@ -23,7 +23,7 @@ test('parsing performance', async ({ bench }) => {
 The `bench()` function registers a benchmark without executing it. Calling `.run()` runs the benchmark and returns the result. Vitest will print the benchmark output (ops/sec, mean time, etc.) after the test completes.
 
 ::: warning
-The `bench` fixture is only available in files matched by [`benchmark.include`](/config/#benchmark-include) (default: `**/*.{bench,benchmark}.?(c|m)[jt]s?(x)`). Using `{ bench }` inside a regular test file will throw an error, and `bench` is not exported from `vitest` as a top-level import.
+The `bench` fixture is only available in files matched by [`benchmark.include`](/config/#benchmark-include) (default: `**/*.{bench,benchmark}.?(c|m)[jt]s?(x)`). Using `{ bench }` inside a regular test file will throw an error.
 
 Whether a file participates in the benchmark run is decided by the filename, not by whether the test uses the `bench` fixture. Renaming `parser.test.ts` to `parser.bench.ts` (or adjusting `benchmark.include`) is what moves it into the benchmark project.
 :::
@@ -330,7 +330,7 @@ Use the same template in `bench.from()` so each project reads its own artifact.
 
 Benchmarks are inherently flaky: CPU load, thermal throttling, GC pressure, and background processes all affect results. Vitest takes several steps to minimize this noise:
 
-- **Separate project**: Benchmark files are grouped into their own project based on the [`benchmark.include`](/config/#benchmark-include) pattern. The `bench` fixture is only exposed in files matched by that pattern. Using it inside a regular test file will throw an error, and `bench` is not available as a top-level import from `vitest`.
+- **Separate project**: Benchmark files are grouped into their own project based on the [`benchmark.include`](/config/#benchmark-include) pattern. The `bench` fixture is only exposed in files matched by that pattern. Using it inside a regular test file will throw an error.
 - **No concurrency**: Tests within a benchmark file always run sequentially. Benchmark files themselves also run one at a time, never in parallel. This prevents benchmarks from interfering with each other.
 
 To further improve stability:
