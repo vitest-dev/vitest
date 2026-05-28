@@ -18,7 +18,36 @@ export const providers = {
       }
     : options),
   preview,
-  webdriverio,
+  webdriverio: (options?: Parameters<typeof webdriverio>[0]) => {
+    const capabilities = options?.capabilities || {}
+
+    return webdriverio({
+      ...options,
+      capabilities: {
+        ...capabilities,
+        ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
+          ? {
+              'wdio:chromedriverOptions': {
+                ...(capabilities as any)['wdio:chromedriverOptions'],
+                binary: process.env.CHROMEDRIVER_PATH,
+              },
+              'goog:chromeOptions': {
+                ...(capabilities as any)['goog:chromeOptions'],
+                binary: process.env.CHROME_BIN,
+              },
+            }
+          : {}),
+        ...(process.env.FIREFOX_BIN
+          ? {
+              'moz:firefoxOptions': {
+                ...(capabilities as any)['moz:firefoxOptions'],
+                binary: process.env.FIREFOX_BIN,
+              },
+            }
+          : {}),
+      },
+    })
+  },
 }
 
 export const provider = providers[providerName]()
@@ -32,37 +61,8 @@ const playwrightInstances: BrowserInstanceOption[] = [
 ]
 
 const webdriverioInstances: BrowserInstanceOption[] = [
-  {
-    browser: 'chrome',
-    provider: webdriverio({
-      ...(process.env.CHROMEDRIVER_PATH && process.env.CHROME_BIN
-        ? {
-            'wdio:chromedriverOptions': {
-              binary: process.env.CHROMEDRIVER_PATH,
-            },
-            'capabilities': {
-              'goog:chromeOptions': {
-                binary: process.env.CHROME_BIN,
-              },
-            },
-          }
-        : {}),
-    }),
-  },
-  {
-    browser: 'firefox',
-    provider: webdriverio({
-      ...(process.env.FIREFOX_BIN
-        ? {
-            capabilities: {
-              'moz:firefoxOptions': {
-                binary: process.env.FIREFOX_BIN,
-              },
-            },
-          }
-        : {}),
-    }),
-  },
+  { browser: 'chrome' },
+  { browser: 'firefox' },
 ]
 
 // use TEST_BROWSER to avoid BROWSER being selected for UI --open
