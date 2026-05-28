@@ -112,7 +112,7 @@ jobs:
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
         id: setup-chrome
         with:
-          chrome-version: 148.0.7778.178
+          chrome-version: 147.0.7727.117
           install-dependencies: true
           install-chromedriver: true
 
@@ -190,7 +190,7 @@ jobs:
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
         id: setup-chrome
         with:
-          chrome-version: 148.0.7778.178
+          chrome-version: 147.0.7727.117
           install-dependencies: true
           install-chromedriver: true
 
@@ -239,7 +239,7 @@ jobs:
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
         id: setup-chrome
         with:
-          chrome-version: 148.0.7778.178
+          chrome-version: 147.0.7727.117
           install-dependencies: true
           install-chromedriver: true
 
@@ -291,7 +291,7 @@ jobs:
       - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
         id: setup-chrome
         with:
-          chrome-version: 148.0.7778.178
+          chrome-version: 147.0.7727.117
           install-dependencies: true
           install-chromedriver: true
 
