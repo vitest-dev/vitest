@@ -38,13 +38,13 @@ export default function toMatchTextContent(
       return getMessage(
         this,
         this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveTextContent`,
+          `${this.isNot ? '.not' : ''}.toMatchTextContent`,
           'element',
           '',
         ),
         checkingWithEmptyString
           ? `Checking with empty string will always match, use .toBeEmptyDOMElement() instead`
-          : `Expected element ${to} have text content`,
+          : `Expected element ${to} match text content`,
         matcher,
         'Received',
         textContent,
