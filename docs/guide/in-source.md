@@ -152,6 +152,41 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 
 Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
 
+### Assertion Functions
+
+Vitest exposes its whole API through `import.meta.vitest`, including [`assert`](/api/assert). Because `assert` is a TypeScript [assertion function](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions), calling it through a destructured variable triggers a compiler error:
+
+```ts
+if (import.meta.vitest) {
+  const { assert, test } = import.meta.vitest
+
+  test('add', () => {
+    // TS2775: Assertions require every name in the call target
+    // to be declared with an explicit type annotation.
+    assert(add(1, 2) === 3) // [!code error]
+  })
+}
+```
+
+This is a constraint of the TypeScript language: an assertion function can only be called through a name that carries an explicit type annotation, which a destructured variable does not have. To work around it, either annotate the variable with `Chai.Assert`, or call `import.meta.vitest.assert` directly without destructuring it:
+
+```ts
+if (import.meta.vitest) {
+  const { test } = import.meta.vitest
+  // either annotate the variable explicitly...
+  const assert: Chai.Assert = import.meta.vitest.assert
+
+  test('add', () => {
+    const value = add(1, 2)
+    assert(value === 3)
+    // ...or call it without destructuring
+    import.meta.vitest!.assert(value === 3)
+  })
+}
+```
+
+The same applies to any other function whose type is an `asserts` predicate.
+
 ## Notes
 
 This feature could be useful for:
