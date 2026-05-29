@@ -15,6 +15,7 @@ import type {
   TaskState,
   TaskUpdateEvent,
   Test,
+  TestAttempt,
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
@@ -119,6 +120,7 @@ function getSuiteHooks(
 async function callTestHooks(
   runner: VitestRunner,
   test: Test,
+  attempt: TestAttempt,
   hooks: ((context: TestContext) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
@@ -146,7 +148,7 @@ async function callTestHooks(
       await Promise.all(hooks.map(fn => limitMaxConcurrency(() => fn(test.context))))
     }
     catch (e) {
-      failTask(test.result!, e, runner.config.diffOptions)
+      failTask(test.result!, e, runner.config.diffOptions, attempt)
     }
   }
   else {
@@ -155,7 +157,7 @@ async function callTestHooks(
         await limitMaxConcurrency(() => fn(test.context))
       }
       catch (e) {
-        failTask(test.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config.diffOptions, attempt)
       }
     }
   }
@@ -604,6 +606,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     state: 'run',
     startTime: unixNow(),
     retryCount: 0,
+    attempts: [],
   }
   updateTask('test-prepare', test, runner)
 
@@ -617,6 +620,15 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      const attempt: TestAttempt = {
+        duration: 0,
+        startClock: now(),
+        startTime: unixNow(),
+        repeatCount,
+        retryCount,
+        state: 'pending',
+      }
+
       let beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
@@ -662,14 +674,14 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           }
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config.diffOptions, attempt)
         }
 
         try {
           await runner.onTaskFinished?.(test)
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config.diffOptions, attempt)
         }
 
         try {
@@ -685,17 +697,18 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
         }
         catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
+          failTask(test.result!, e, runner.config.diffOptions, attempt)
         }
 
         if (test.onFinished?.length) {
-          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+          await $('test.onFinished', () => callTestHooks(runner, test, attempt, test.onFinished!, 'stack'))
         }
 
         if (test.result!.state === 'fail' && test.onFailed?.length) {
           await $('test.onFailed', () => callTestHooks(
             runner,
             test,
+            attempt,
             test.onFailed!,
             runner.config.sequence.hooks,
           ))
@@ -709,7 +722,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           repeats: repeatCount,
         })
       }).catch((error) => {
-        failTask(test.result!, error, runner.config.diffOptions)
+        failTask(test.result!, error, runner.config.diffOptions, attempt)
       })
 
       // Clean up fixtures that were created for aroundEach (before the checkpoint)
@@ -718,7 +731,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         await callFixtureCleanup(test.context)
       }
       catch (e) {
-        failTask(test.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config.diffOptions, attempt)
       }
 
       // skipped with new PendingError
@@ -784,21 +797,30 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   updateTask('test-finished', test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined) {
+function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined, attempt?: TestAttempt) {
   if (err instanceof PendingError) {
+    if (attempt) {
+      attempt.state = 'skip'
+    }
     result.state = 'skip'
     result.note = err.note
     result.pending = true
-    return
+    return []
   }
 
   if (err instanceof TestRunAbortError) {
+    if (attempt) {
+      attempt.state = 'skip'
+    }
     result.state = 'skip'
     result.note = err.message
-    return
+    return []
   }
 
   result.state = 'fail'
+  if (attempt) {
+    attempt.state = 'fail'
+  }
   const errors = Array.isArray(err) ? err : [err]
   for (const e of errors) {
     const errors = e instanceof AggregateError
@@ -806,6 +828,10 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
       : [processError(e, diffOptions)]
     result.errors ??= []
     result.errors.push(...errors)
+    if (attempt) {
+      attempt.errors ??= []
+      attempt.errors.push(...errors)
+    }
   }
 }
 

@@ -58,6 +58,8 @@ export type {
   TestArtifactLocation,
   TestArtifactRegistry,
   TestAttachment,
+  TestAttempt,
+  TestAttemptState,
   TestContext,
   TestFunction,
   TestOptions,
