@@ -32,6 +32,7 @@ export class TestFixtures {
     'onTestFinished',
     'skip',
     'annotate',
+    'bench',
   ] satisfies (keyof TestContext)[]
 
   private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']

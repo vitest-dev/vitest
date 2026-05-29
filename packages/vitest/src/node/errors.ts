@@ -1,8 +1,8 @@
 export class FilesNotFoundError extends Error {
   code = 'VITEST_FILES_NOT_FOUND'
 
-  constructor(mode: 'test' | 'benchmark') {
-    super(`No ${mode} files found`)
+  constructor() {
+    super(`No test files found`)
   }
 }
 

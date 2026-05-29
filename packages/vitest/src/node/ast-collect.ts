@@ -487,6 +487,7 @@ function createFileTask(
         timeout: 0,
         annotations: [],
         artifacts: [],
+        benchmarks: [],
         tags: taskTags,
       }
       definition.task = task

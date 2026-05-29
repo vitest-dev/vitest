@@ -72,6 +72,9 @@ export default defineConfig({
       { name: 'test', priority: 5 },
       { name: 'browser', priority: 1 },
     ],
+    benchmark: {
+      enabled: true,
+    },
     alias: {
       '#src': resolve(dir, './src'),
     },

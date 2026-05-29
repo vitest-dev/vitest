@@ -1,5 +1,5 @@
 import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
-import type { TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
+import type { BaselineData, TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
@@ -8,6 +8,7 @@ import type {
   RunnerTestFile,
   SerializedTestSpecification,
   SnapshotResult,
+  TestBenchmark,
   TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
@@ -21,6 +22,9 @@ export interface WebSocketBrowserHandlers {
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
   onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
+  readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
+  writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
