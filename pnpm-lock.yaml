@@ -28,8 +28,8 @@ catalogs:
       specifier: 0.3.31
       version: 0.3.31
     '@playwright/test':
-      specifier: ^1.59.0
-      version: 1.59.0
+      specifier: ^1.60.0
+      version: 1.60.0
     '@rolldown/plugin-babel':
       specifier: ^0.2.1
       version: 0.2.1
@@ -115,8 +115,8 @@ catalogs:
       specifier: ^2.0.3
       version: 2.0.3
     playwright:
-      specifier: ^1.59.0
-      version: 1.59.0
+      specifier: ^1.60.0
+      version: 1.60.0
     sinon:
       specifier: ^21.0.3
       version: 21.0.3
@@ -202,7 +202,7 @@ importers:
         version: 28.3.0
       '@playwright/test':
         specifier: 'catalog:'
-        version: 1.59.0
+        version: 1.60.0
       '@rollup/plugin-commonjs':
         specifier: ^29.0.2
         version: 29.0.2(rollup@4.59.0)
@@ -410,8 +410,8 @@ importers:
         specifier: latest
         version: 29.1.1(@noble/hashes@1.8.0)
       playwright:
-        specifier: ^1.59.0
-        version: 1.59.0
+        specifier: ^1.60.0
+        version: 1.60.0
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
@@ -599,7 +599,7 @@ importers:
     devDependencies:
       playwright:
         specifier: 'catalog:'
-        version: 1.59.0
+        version: 1.60.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -1231,7 +1231,7 @@ importers:
         version: link:cjs-lib
       playwright:
         specifier: 'catalog:'
-        version: 1.59.0
+        version: 1.60.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -1405,7 +1405,7 @@ importers:
         version: file:test/e2e/deps/vite-ssr-resolve/other-dep
       playwright:
         specifier: 'catalog:'
-        version: 1.59.0
+        version: 1.60.0
       ssr-no-external-dep:
         specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
         version: file:test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep
@@ -4366,8 +4366,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.59.0':
-    resolution: {integrity: sha512-TOA5sTLd49rTDaZpYpvCQ9hGefHQq/OYOyCVnGqS2mjMfX+lGZv2iddIJd0I48cfxqSPttS9S3OuLKyylHcO1w==}
+  '@playwright/test@1.60.0':
+    resolution: {integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -8727,13 +8727,13 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.59.0:
-    resolution: {integrity: sha512-PW/X/IoZ6BMUUy8rpwHEZ8Kc0IiLIkgKYGNFaMs5KmQhcfLILNx9yCQD0rnWeWfz1PNeqcFP1BsihQhDOBCwZw==}
+  playwright-core@1.60.0:
+    resolution: {integrity: sha512-9bW6zvX/m0lEbgTKJ6YppOKx8H3VOPBMOCFh2irXFOT4BbHgrx5hPjwJYLT40Lu+4qtD36qKc/Hn56StUW57IA==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.59.0:
-    resolution: {integrity: sha512-wihGScriusvATUxmhfENxg0tj1vHEFeIwxlnPFKQTOQVd7aG08mUfvvniRP/PtQOC+2Bs52kBOC/Up1jTXeIbw==}
+  playwright@1.60.0:
+    resolution: {integrity: sha512-hheHdokM8cdqCb0lcE3s+zT4t4W+vvjpGxsZlDnikarzx8tSzMebh3UiFtgqwFwnTnjYQcsyMF8ei2mCO/tpeA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -12863,9 +12863,9 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@playwright/test@1.59.0':
+  '@playwright/test@1.60.0':
     dependencies:
-      playwright: 1.59.0
+      playwright: 1.60.0
 
   '@polka/url@1.0.0-next.24': {}
 
@@ -17888,11 +17888,11 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playwright-core@1.59.0: {}
+  playwright-core@1.60.0: {}
 
-  playwright@1.59.0:
+  playwright@1.60.0:
     dependencies:
-      playwright-core: 1.59.0
+      playwright-core: 1.60.0
     optionalDependencies:
       fsevents: 2.3.2
 
