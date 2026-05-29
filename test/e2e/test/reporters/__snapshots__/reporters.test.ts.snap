@@ -130,6 +130,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -158,6 +159,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -170,6 +172,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -181,6 +184,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -193,6 +197,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -205,6 +210,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -217,6 +223,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -229,6 +236,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -241,6 +249,7 @@ exports[`json reporter (no outputFile entry) 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},
@@ -283,6 +292,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -311,6 +321,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -323,6 +334,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -334,6 +346,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -346,6 +359,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -358,6 +372,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -370,6 +385,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -382,6 +398,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -394,6 +411,7 @@ exports[`json reporter 1`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},
@@ -441,6 +459,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -469,6 +488,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -481,6 +501,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -492,6 +513,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -504,6 +526,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -516,6 +539,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -528,6 +552,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -540,6 +565,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -552,6 +578,7 @@ exports[`json reporter with outputFile 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},
@@ -599,6 +626,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -627,6 +655,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -639,6 +668,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -650,6 +680,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -662,6 +693,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -674,6 +706,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -686,6 +719,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -698,6 +732,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -710,6 +745,7 @@ exports[`json reporter with outputFile in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},
@@ -757,6 +793,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -785,6 +822,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -797,6 +835,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -808,6 +847,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -820,6 +860,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -832,6 +873,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -844,6 +886,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -856,6 +899,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -868,6 +912,7 @@ exports[`json reporter with outputFile object 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},
@@ -915,6 +960,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.4422860145568848,
           "failureMessages": [
             "AssertionError: expected 2.23606797749979 to equal 2
@@ -943,6 +989,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 1.0237109661102295,
           "failureMessages": [],
           "fullName": "suite JSON",
@@ -955,6 +1002,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite async with timeout",
           "meta": {},
@@ -966,6 +1014,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 100.50598406791687,
           "failureMessages": [],
           "fullName": "suite timeout",
@@ -978,6 +1027,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 20.184875011444092,
           "failureMessages": [],
           "fullName": "suite callback setup success ",
@@ -990,6 +1040,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.33245420455932617,
           "failureMessages": [],
           "fullName": "suite callback test success ",
@@ -1002,6 +1053,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 19.738605976104736,
           "failureMessages": [],
           "fullName": "suite callback setup success done(false)",
@@ -1014,6 +1066,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "duration": 0.1923508644104004,
           "failureMessages": [],
           "fullName": "suite callback test success done(false)",
@@ -1026,6 +1079,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
           "ancestorTitles": [
             "suite",
           ],
+          "benchmarks": [],
           "failureMessages": [],
           "fullName": "suite todo test",
           "meta": {},

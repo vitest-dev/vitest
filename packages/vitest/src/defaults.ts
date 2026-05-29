@@ -14,14 +14,16 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<
-  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-> = {
+export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
-  includeSamples: false,
+  retainSamples: false,
+  suppressExportGetterWarnings: false,
+  // Populated automatically when Vitest clones the parent project; the default
+  // here applies to the (unused) raw config that's never run as a benchmark.
+  projectName: '',
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.

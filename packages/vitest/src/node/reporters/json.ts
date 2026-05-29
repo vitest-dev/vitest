@@ -1,4 +1,4 @@
-import type { Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { Suite, TaskMeta, TaskState, TestBenchmark } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Vitest } from '../core'
@@ -40,6 +40,7 @@ export interface JsonAssertionResult {
   failureMessages: Array<string> | null
   location?: Callsite | null
   tags: string[]
+  benchmarks: TestBenchmark[]
 }
 
 export interface JsonTestResult {
@@ -177,6 +178,7 @@ export class JsonReporter implements Reporter {
               })()
             : t.meta,
           tags: t.tags || [],
+          benchmarks: t.benchmarks,
         } satisfies JsonAssertionResult
       })
 

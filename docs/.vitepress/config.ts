@@ -902,6 +902,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/testing-types',
               },
               {
+                text: 'Benchmarking',
+                link: '/guide/benchmarking',
+              },
+              {
                 text: 'In-Source Testing',
                 link: '/guide/in-source',
               },

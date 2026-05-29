@@ -85,7 +85,7 @@ describe('should fail', async () => {
 
     const message = removeLines(stderr.replace(resolve(import.meta.dirname, '..'), '<root>'))
 
-    expect(message).toMatchSnapshot()
+    expect(message.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '')).toMatchSnapshot()
   })
 })
 

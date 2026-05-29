@@ -17,7 +17,6 @@ it('exports snapshot', async ({ skip, task }) => {
   expect(manifest.exports).toMatchInlineSnapshot(`
     {
       ".": {
-        "BenchmarkRunner": "function",
         "EvaluatedModules": "function",
         "Snapshots": "object",
         "TestRunner": "function",
@@ -29,7 +28,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "assertType": "function",
         "beforeAll": "function",
         "beforeEach": "function",
-        "bench": "function",
         "chai": "object",
         "createExpect": "function",
         "describe": "function",
@@ -84,8 +82,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "AgentReporter": "function",
         "BaseCoverageProvider": "function",
         "BaseSequencer": "function",
-        "BenchmarkReporter": "function",
-        "BenchmarkReportsMap": "object",
         "DefaultReporter": "function",
         "DotReporter": "function",
         "ForksPoolWorker": "function",
@@ -101,7 +97,6 @@ it('exports snapshot', async ({ skip, task }) => {
         "TestsNotFoundError": "function",
         "ThreadsPoolWorker": "function",
         "TypecheckPoolWorker": "function",
-        "VerboseBenchmarkReporter": "function",
         "VerboseReporter": "function",
         "VitestPackageInstaller": "function",
         "VitestPlugin": "function",

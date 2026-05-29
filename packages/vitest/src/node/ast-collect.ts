@@ -410,13 +410,13 @@ function createFileTask(
             `Found location for`,
             definition.type,
             definition.name,
-            `${processedLocation.line}:${processedLocation.column}`,
+            `${processedLocation.line}:${processedLocation.column + 1}`,
             '->',
-            `${originalLocation.line}:${originalLocation.column}`,
+            `${originalLocation.line}:${originalLocation.column + 1}`,
           )
           location = {
             line: originalLocation.line,
-            column: originalLocation.column,
+            column: originalLocation.column + 1,
           }
         }
         else {
@@ -487,6 +487,7 @@ function createFileTask(
         timeout: 0,
         annotations: [],
         artifacts: [],
+        benchmarks: [],
         tags: taskTags,
       }
       definition.task = task
