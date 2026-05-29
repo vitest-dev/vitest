@@ -150,6 +150,31 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 }
 ```
 
+::: warning
+Assertion functions such as `assert` cannot be called from a binding destructured off `import.meta.vitest`. TypeScript requires the call target of an assertion function to be declared with an explicit type annotation (error `TS2775`), and a plain destructured binding does not carry one:
+
+```ts
+if (import.meta.vitest) {
+  const { assert, test } = import.meta.vitest
+  test('add', () => {
+    assert(add(1, 2) === 3) // TS2775: Assertions require every name in the call target to be declared with an explicit type annotation.
+  })
+}
+```
+
+To work around this, give the binding an explicit `Chai.Assert` type annotation:
+
+```ts
+if (import.meta.vitest) {
+  const assert: Chai.Assert = import.meta.vitest.assert // [!code ++]
+  const { test } = import.meta.vitest
+  test('add', () => {
+    assert(add(1, 2) === 3)
+  })
+}
+```
+:::
+
 Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
 
 ## Notes
