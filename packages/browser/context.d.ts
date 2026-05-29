@@ -279,10 +279,15 @@ export interface UserEvent {
    * Type text on the keyboard. If any input is focused, it will receive the text,
    * otherwise it will be typed on the document. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
+   * Common key names such as `{Shift}`, `{Control}`, `{Alt}`, `{Meta}`, `{Enter}`,
+   * `{Tab}`, `{Escape}`, and arrow keys are the most portable across providers.
+   * Provider support can differ for physical-code syntax such as `[ShiftLeft]` or
+   * provider-specific key names such as `{ShiftRight}`.
    * @example
    * await userEvent.keyboard('foo') // translates to: f, o, o
    * await userEvent.keyboard('{{a[[') // translates to: {, a, [
    * await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
+   * await userEvent.keyboard('{selectall}{Backspace}') // select all text, then delete it
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
    * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/keyboard} testing-library API

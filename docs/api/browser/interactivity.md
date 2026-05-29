@@ -282,6 +282,8 @@ function keyboard(text: string): Promise<void>
 The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
 
 This API supports [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard).
+Use `{key}` for common named keys, modifiers, and built-in user-event helpers such as
+`{selectall}`. Use printable text for characters that should be typed.
 
 ```ts
 import { userEvent } from 'vitest/browser'
@@ -290,10 +292,25 @@ test('trigger keystrokes', async () => {
   await userEvent.keyboard('foo') // translates to: f, o, o
   await userEvent.keyboard('{{a[[') // translates to: {, a, [
   await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
+  await userEvent.keyboard('{Control>}{a}{/Control}') // hold Control while pressing a
+  await userEvent.keyboard('{selectall}{Backspace}') // select all text, then delete it
   await userEvent.keyboard('{a>5}') // press a without releasing it and trigger 5 keydown
   await userEvent.keyboard('{a>5/}') // press a for 5 keydown and then release it
 })
 ```
+
+::: warning Provider differences
+
+Vitest parses the user-event keyboard syntax before forwarding actions to the configured
+browser provider. Common key names such as `{Shift}`, `{Control}`, `{Alt}`, `{Meta}`,
+`{Enter}`, `{Tab}`, `{Escape}`, and arrow keys are the most portable across providers.
+
+Provider support can differ for physical-code syntax such as `[ShiftLeft]` or
+provider-specific key names such as `{ShiftRight}`. Prefer the common `{key}` names
+when your test does not need to distinguish physical left/right keys, and verify provider
+behavior before asserting on `KeyboardEvent.code` or `KeyboardEvent.location`.
+
+:::
 
 References:
 
