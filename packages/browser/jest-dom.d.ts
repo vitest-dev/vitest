@@ -379,6 +379,25 @@ export interface TestingLibraryMatchers<E, R> {
   toHaveStyle(css: string | Partial<CSSStyleDeclaration>): R
   /**
    * @description
+   * Validate that the given element's text content matches the provided string exactly.
+   *
+   * Supports elements, but also text nodes and fragments.
+   *
+   * If you wish to perform a partial check or use a RegExp, use `toMatchTextContent` instead.
+   * @example
+   * <span data-testid="text-content">Text Content</span>
+   *
+   * const element = page.getByTestId('text-content')
+   * await expect.element(element).toHaveTextContent('Text Content')
+   * await expect.element(element).not.toHaveTextContent('Content')
+   * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
+   */
+  toHaveTextContent(
+    text: string | number,
+    options?: {normalizeWhitespace: boolean},
+  ): R
+  /**
+   * @description
    * Check whether the given element has a text content or not.
    *
    * When a string argument is passed through, it will perform a partial case-sensitive match to the element
@@ -391,15 +410,15 @@ export interface TestingLibraryMatchers<E, R> {
    * <span data-testid="text-content">Text Content</span>
    *
    * const element = page.getByTestId('text-content')
-   * await expect.element(element).toHaveTextContent('Content')
+   * await expect.element(element).toMatchTextContent('Content')
    * // to match the whole content
-   * await expect.element(element).toHaveTextContent(/^Text Content$/)
+   * await expect.element(element).toMatchTextContent(/^Text Content$/)
    * // to use case-insensitive match
-   * await expect.element(element).toHaveTextContent(/content$/i)
-   * await expect.element(element).not.toHaveTextContent('content')
-   * @see https://vitest.dev/api/browser/assertions#tohavetextcontent
+   * await expect.element(element).toMatchTextContent(/content$/i)
+   * await expect.element(element).not.toMatchTextContent('content')
+   * @see https://vitest.dev/api/browser/assertions#tomatchtextcontent
    */
-  toHaveTextContent(
+  toMatchTextContent(
     text: string | number | RegExp,
     options?: {normalizeWhitespace: boolean},
   ): R
