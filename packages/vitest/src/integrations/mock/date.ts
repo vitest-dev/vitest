@@ -1,3 +1,6 @@
+import type { Clock, FakeMethod } from '@sinonjs/fake-timers'
+import { withGlobal } from '@sinonjs/fake-timers'
+
 /* Ported from https://github.com/boblauer/MockDate/blob/master/src/mockdate.ts */
 /*
 The MIT License (MIT)
@@ -26,6 +29,7 @@ SOFTWARE.
 export const RealDate: DateConstructor = Date
 
 let now: null | number = null
+let temporalClock: Clock | null = null
 
 class MockDate extends RealDate {
   constructor()
@@ -99,6 +103,13 @@ export function mockDate(date: string | number | Date): void {
     throw new TypeError(`mockdate: The time set is an invalid date: ${date}`)
   }
 
+  temporalClock?.uninstall()
+  temporalClock = withGlobal(globalThis).install({
+    now: dateObj.valueOf(),
+    toFake: ['Temporal'] as FakeMethod[],
+    ignoreMissingTimers: true,
+  })
+
   // @ts-expect-error global
   globalThis.Date = MockDate
 
@@ -106,5 +117,8 @@ export function mockDate(date: string | number | Date): void {
 }
 
 export function resetDate(): void {
+  temporalClock?.uninstall()
+  temporalClock = null
+  now = null
   globalThis.Date = RealDate
 }
