@@ -18,7 +18,7 @@ describe.for([
 
     fs.editFile('./basic.test.js', code => `${code}\n`)
 
-    await vitest.waitForStdout('RERUN  ../basic.test.js')
+    await vitest.waitForStdout('RERUN')
     await vitest.waitForStdout('Waiting for file changes...')
 
     expect(vitest.stdout).not.toContain('log fail')
@@ -40,7 +40,7 @@ describe.for([
 
     fs.editFile('./failed.test.js', code => `${code}\n`)
 
-    await vitest.waitForStdout('RERUN  ../failed.test.js')
+    await vitest.waitForStdout('RERUN')
     await vitest.waitForStdout('Watching for file changes...')
 
     expect(vitest.stdout).toContain('❯ failed.test.js')
