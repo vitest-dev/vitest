@@ -183,6 +183,7 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
+  '@sinonjs/fake-timers@15.3.2': eac51316ff00e7429be16f81335a9147288b7e243a18bb906f451b4bbfd9cd42
   '@sinonjs/fake-timers@15.4.0': b2e13a1f539f3cf4104d7e8ae67622029bea4a1c289e263f962fb262a36a6c8b
   acorn@8.11.3: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
   cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
@@ -13259,7 +13260,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@15.3.2':
+  '@sinonjs/fake-timers@15.3.2(patch_hash=eac51316ff00e7429be16f81335a9147288b7e243a18bb906f451b4bbfd9cd42)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -18689,7 +18690,7 @@ snapshots:
   sinon@21.0.3:
     dependencies:
       '@sinonjs/commons': 3.0.1
-      '@sinonjs/fake-timers': 15.3.2
+      '@sinonjs/fake-timers': 15.3.2(patch_hash=eac51316ff00e7429be16f81335a9147288b7e243a18bb906f451b4bbfd9cd42)
       '@sinonjs/samsam': 9.0.3
       diff: 8.0.3
       supports-color: 7.2.0

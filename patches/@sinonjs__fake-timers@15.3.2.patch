@@ -1,0 +1,16 @@
+diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
+index 7d4cfa1b6b8aebc8575e08bd432f8f8ca43d3c4f..09d12bec356aa1048f09771e915075fdecb065b9 100644
+--- a/src/fake-timers-src.js
++++ b/src/fake-timers-src.js
+@@ -5 +5 @@
+-if (typeof require === "function" && typeof module === "object") {
++if (typeof __vitest_required__ !== 'undefined') {
+@@ -7 +7 @@
+-        timersModule = require("timers");
++        timersModule = __vitest_required__.timers;
+@@ -12 +12 @@
+-        timersPromisesModule = require("timers/promises");
++        timersPromisesModule = __vitest_required__.timersPromises;
+@@ -513 +513 @@
+-    const utilPromisify = _global.process && require("util").promisify;
++    const utilPromisify = _global.process && _global.__vitest_required__ && _global.__vitest_required__.util.promisify;
