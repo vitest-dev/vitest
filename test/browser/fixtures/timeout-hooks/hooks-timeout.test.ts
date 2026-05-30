@@ -13,7 +13,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
   describe('beforeEach', () => {
     beforeEach(async () => {
       await page.getByTestId('non-existing').click()
-    }, 500)
+    }, 1000)
 
     it('skipped', () => {})
   })
@@ -21,7 +21,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
   describe('afterEach', () => {
     afterEach(async () => {
       await page.getByTestId('non-existing').click()
-    }, 500)
+    }, 1000)
 
     it('skipped', () => {})
   })
@@ -29,7 +29,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
   describe('beforeAll', () => {
     beforeAll(async () => {
       await page.getByTestId('non-existing').click()
-    }, 500)
+    }, 1000)
 
     it('skipped', () => {})
   })
@@ -37,7 +37,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
   describe('afterAll', () => {
     afterAll(async () => {
       await page.getByTestId('non-existing').click()
-    }, 500)
+    }, 1000)
 
     it('skipped', () => {})
   })
@@ -46,13 +46,13 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
     it('fails', ({ onTestFinished }) => {
       onTestFinished(async () => {
         await page.getByTestId('non-existing').click()
-      }, 500)
+      }, 1000)
     })
 
     it('fails global', () => {
       onTestFinished(async () => {
         await page.getByTestId('non-existing').click()
-      }, 500)
+      }, 1000)
     })
   })
 
@@ -60,7 +60,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
     it('fails', ({ onTestFailed }) => {
       onTestFailed(async () => {
         await page.getByTestId('non-existing').click()
-      }, 500)
+      }, 1000)
 
       expect.unreachable()
     })
@@ -68,7 +68,7 @@ describe.runIf(server.provider === 'playwright')('timeouts are failing correctly
     it('fails global', () => {
       onTestFailed(async () => {
         await page.getByTestId('non-existing').click()
-      }, 500)
+      }, 1000)
 
       expect.unreachable()
     })

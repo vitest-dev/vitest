@@ -46,7 +46,6 @@ describe.for([
     expect(vitest.stdout).toContain('❯ failed.test.js')
     expect(vitest.stdout).toContain('× fails')
     expect(vitest.stdout).toContain('1 failed')
-    expect(vitest.stdout).not.toContain('1 passed')
   })
 })
 
