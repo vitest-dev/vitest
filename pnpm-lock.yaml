@@ -526,6 +526,9 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../mocker
+      '@vitest/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils

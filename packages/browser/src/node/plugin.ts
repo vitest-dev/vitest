@@ -16,7 +16,7 @@ import {
   rolldownVersion,
   distDir as vitestDist,
 } from 'vitest/node'
-import { distRoot } from './constants'
+import { distRoot, uiClientRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
@@ -345,7 +345,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       configureServer(server) {
         server.middlewares.use(
           '/__vitest__',
-          sirv(resolve(distRoot, 'client/__vitest__')),
+          sirv(uiClientRoot),
         )
       },
       resolveId(id) {

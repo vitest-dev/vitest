@@ -17,7 +17,7 @@ import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
-import { distRoot } from './constants'
+import { distRoot, uiClientRoot } from './constants'
 import { ProjectBrowser } from './project'
 import { slash } from './utils'
 
@@ -119,7 +119,7 @@ export class ParentBrowserProject {
     })().then(manifest => (this.manifest = manifest))
 
     this.orchestratorHtml = (project.config.browser.ui
-      ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
+      ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
       .then(html => (this.orchestratorHtml = html))
     this.injectorJs = readFile(
