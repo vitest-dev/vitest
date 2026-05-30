@@ -4,6 +4,7 @@ import type { ParentBrowserProject } from './projectParent'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { dirname, join, resolve } from 'pathe'
@@ -16,7 +17,7 @@ import {
   rolldownVersion,
   distDir as vitestDist,
 } from 'vitest/node'
-import { distRoot, uiClientRoot } from './constants'
+import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
