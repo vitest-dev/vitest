@@ -152,6 +152,22 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 
 Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
 
+When using assertion functions like `assert`, TypeScript requires the call target to have an explicit type annotation. If you destructure `assert` from `import.meta.vitest`, annotate it before use:
+
+```ts [src/index.ts]
+if (import.meta.vitest) {
+  const { test } = import.meta.vitest
+  const assert: Chai.Assert = import.meta.vitest.assert
+
+  test('add', () => {
+    const value = add(1, 2)
+
+    import.meta.vitest!.assert(value === 3)
+    assert(value === 3)
+  })
+}
+```
+
 ## Notes
 
 This feature could be useful for:
