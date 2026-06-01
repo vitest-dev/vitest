@@ -329,7 +329,7 @@ interface Thresholds {
    *
    * @default false
    */
-  perFile?: boolean | PerFileThresholds
+  perFile?: boolean | Pick<Thresholds, 100 | 'statements' | 'functions' | 'branches' | 'lines'>
 
   /**
    * Update threshold values automatically when current coverage is higher than earlier thresholds
@@ -349,23 +349,6 @@ interface Thresholds {
   branches?: number
 
   /** Thresholds for lines */
-  lines?: number
-}
-
-interface PerFileThresholds {
-  /** Set per-file thresholds to `100` */
-  100?: boolean
-
-  /** Per-file minimum for statements */
-  statements?: number
-
-  /** Per-file minimum for functions */
-  functions?: number
-
-  /** Per-file minimum for branches */
-  branches?: number
-
-  /** Per-file minimum for lines */
   lines?: number
 }
 
