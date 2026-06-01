@@ -11,6 +11,8 @@ export default defineConfig({
     browser: {
       enabled: true,
       traceView: true,
+      headless: false,
+      ui: true,
       provider: preview(),
       instances: [{ browser: "chromium" }],
     },

@@ -13,7 +13,6 @@ test.describe('orchestrator UI on preview provider', () => {
       {
         root: './fixtures/browser-preview',
         watch: true,
-        reporters: [],
       },
       undefined,
       {
