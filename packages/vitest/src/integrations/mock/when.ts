@@ -250,6 +250,7 @@ interface WhenOptions<Fn extends Procedure = Procedure> {
  *
  * @since 5.0.0
  * @see {@link https://vitest.dev/api/vi#vi-when}
+ * @see {@link https://vitest.dev/guide/recipes/conditional-mocking}
  *
  * @example
  * // Basic usage
