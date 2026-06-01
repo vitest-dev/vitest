@@ -69,7 +69,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     if (type === 'orchestrator') {
       const session = sessions.getSession(sessionId)
-      // it's possible the session was already resolved by the preview provider
+      // it's possible the session was already resolved by the preview provider,
+      // but we still mark the websocket connection when the page reconnects
       session?.connected()
     }
 
@@ -84,7 +85,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const { rpc, offCancel } = setupClient(project, rpcId, ws)
+      const { rpc, offCancel } = setupClient(project, rpcId, ws, { sessionId })
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -151,7 +152,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
+  function setupClient(
+    project: TestProject,
+    rpcId: string,
+    ws: WebSocket,
+    options: {
+      sessionId: string
+    },
+  ) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config?.deps?.moduleDirectories,
     })
@@ -159,6 +167,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
+        onOrchestratorReady() {
+          const sessions = vitest._browserSessions
+          sessions.getSession(options.sessionId)?.ready()
+        },
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
             const _error = error as TestError
