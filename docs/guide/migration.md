@@ -110,6 +110,21 @@ Several entry points were marked as deprecated in Vitest 4.1. This release remov
 - `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
 - `vitest/internal/module-runner` is removed
 
+### `toHaveTextContent` Now Performs Strict Equality
+
+The browser-mode [`toHaveTextContent`](/api/browser/assertions#tohavetextcontent) matcher now validates that an element's text content is exactly equal to the expected string instead of performing a partial, case-sensitive match. Regular expressions are no longer accepted. The previous behaviour, including `RegExp` support, has moved to the new [`toMatchTextContent`](/api/browser/assertions#tomatchtextcontent) matcher.
+
+```ts
+// Partial or regex matches:
+await expect.element(banner).toHaveTextContent('Error') // [!code --]
+await expect.element(banner).toHaveTextContent(/error/i) // [!code --]
+await expect.element(banner).toMatchTextContent('Error') // [!code ++]
+await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
+
+// Exact matches stay on `toHaveTextContent`:
+await expect.element(banner).toHaveTextContent('Error!')
+```
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
