@@ -4,8 +4,6 @@ title: Conditional Mocking with vi.when | Recipes
 
 # Conditional Mocking with `vi.when`
 
-<Version>5.0.0</Version>
-
 ::: tip Prerequisites
 This recipe assumes you already have some familiarity with [mocking](/guide/mocking) in Vitest.
 :::
@@ -26,7 +24,7 @@ db.findById.mockImplementation((id) => {
 })
 ```
 
-This works, but it becomes tedious because you have to write the argument-matching logic yourself. This is something that Vitest can handle for you when using the [`vi.when`](/api/vi#vi-when) API.
+This works, but it becomes tedious because you have to write the argument-matching logic yourself. This is something that Vitest can handle for you when using the [`vi.when`](/api/vi#vi-when) <Version>5.0.0</Version> API.
 
 ## Pattern
 
