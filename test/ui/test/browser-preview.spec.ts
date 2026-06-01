@@ -8,8 +8,6 @@ test.describe('browser preview provider', () => {
     globalThis.__hackOpenBrowser = async (url: string) => {
       await page.goto(url)
     }
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
     const vitest = await startVitest(
       undefined,
       {
@@ -17,11 +15,17 @@ test.describe('browser preview provider', () => {
         watch: true,
         reporters: [],
       },
-      {},
-      { stdout, stderr },
+      undefined,
+      {
+        stdout: new Writable({ write: (_, __, callback) => callback() }),
+        stderr: new Writable({ write: (_, __, callback) => callback() }),
+      },
     )
+
+    // results in dashboard
     await assertTestCounts(page, { pass: 1, fail: 0 })
 
+    // test code runs in tester iframe
     const testerFrame = page.frameLocator('iframe[data-vitest="true"]')
     await expect(testerFrame.getByRole('button')).toHaveText('hello')
 
