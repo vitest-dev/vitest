@@ -78,7 +78,7 @@
     "@vitest/browser": "workspace:*",
     "pathe": "catalog:",
     "v8-to-istanbul": "^9.3.0",
-    "vite-node": "workspace:*",
+    "vite-node": "3.2.4",
     "vitest": "workspace:*"
   }
 }
