@@ -220,7 +220,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
           perFile: {
             description:
               'Check thresholds per file. See `--coverage.thresholds.lines`, `--coverage.thresholds.functions`, `--coverage.thresholds.branches` and `--coverage.thresholds.statements` for the actual thresholds (default: `false`). Object form is available in config files only.',
-          } as CLIOption<boolean> as never,
+            subcommands: null,
+            argument: '<boolean>',
+          },
           autoUpdate: {
             description:
               'Update threshold values: "lines", "functions", "branches" and "statements" to configuration file when current coverage is above the configured thresholds (default: `false`)',
