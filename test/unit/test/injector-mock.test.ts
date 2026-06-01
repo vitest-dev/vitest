@@ -60,6 +60,21 @@ import { test } from 'vitest'
   `)
 })
 
+test('recognizes the vite-plus/test redistribution as the hoisted module', () => {
+  expect(hoistSimpleCode(`
+import { vi } from 'vite-plus/test'
+vi.mock('path', () => {})
+vi.unmock('path')
+vi.hoisted(() => {})
+  `)).toMatchInlineSnapshot(`
+    "vi.mock('path', () => {})
+    vi.unmock('path')
+    vi.hoisted(() => {})
+
+    import { vi } from 'vite-plus/test'"
+  `)
+})
+
 test('always hoists all imports but they are under mocks', () => {
   expect(hoistSimpleCode(`
   import { vi } from 'vitest'

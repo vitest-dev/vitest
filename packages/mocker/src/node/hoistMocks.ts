@@ -83,6 +83,12 @@ const regexpHoistable
   = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
 const hashbangRE = /^#!.*\n/
 
+// Public redistributions of Vitest that re-export its mocking API (`vi`)
+// verbatim under their own specifier. Imports from these are treated as the
+// hoisted module so `vi.mock()` is hoisted for e.g.
+// `import { vi } from 'vite-plus/test'`, exactly as it is for `vitest`.
+const REDISTRIBUTED_HOISTED_MODULES = ['vite-plus/test']
+
 // this is a fork of Vite SSR transform
 export function hoistMocks(
   code: string,
@@ -141,8 +147,9 @@ export function hoistMocks(
   ) {
     const source = importNode.source.value as string
     // always hoist vitest import to top of the file, so
-    // "vi" helpers can access it
-    if (hoistedModule === source) {
+    // "vi" helpers can access it. Vitest redistributions that re-export the
+    // mocking API under their own specifier are recognized the same way.
+    if (hoistedModule === source || REDISTRIBUTED_HOISTED_MODULES.includes(source)) {
       hoistedModuleImported = true
       return
     }
