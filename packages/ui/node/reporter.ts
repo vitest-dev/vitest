@@ -1,6 +1,6 @@
 import type { TestAttachment } from '@vitest/runner'
 import type { SerializedError } from 'vitest'
-import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+import type { HTMLOptions, Reporter, ResolvedConfig, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
@@ -11,12 +11,8 @@ import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
-interface PotentialConfig {
-  outputFile?: string | Partial<Record<string, string>>
-}
-
-function getOutputFile(config: PotentialConfig | undefined) {
-  if (!config?.outputFile) {
+function getOutputFile(config: ResolvedConfig) {
+  if (!config.outputFile) {
     return
   }
 
