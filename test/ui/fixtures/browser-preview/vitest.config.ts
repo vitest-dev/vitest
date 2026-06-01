@@ -4,11 +4,13 @@ import type { Vitest } from "vitest/node";
 
 // run preview provider on headless playwright
 // PREVIEW_PLAYWRIGHT=true pnpm -C test/ui test-fixtures --root fixtures/browser-preview
+// PREVIEW_PLAYWRIGHT=headless pnpm -C test/ui test-fixtures --root fixtures/browser-preview
 
 export default defineConfig({
   test: {
     browser: {
       enabled: true,
+      traceView: true,
       provider: preview(),
       instances: [{ browser: "chromium" }],
     },
@@ -26,7 +28,9 @@ declare global {
 function customPreviewPlugin(): Plugin {
   async function handlePreviewPlaywright(url: string) {
     const { chromium } = await import("@playwright/test");
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({
+      headless: process.env.PREVIEW_PLAYWRIGHT === 'headless',
+    });
     globalThis.__hackVitest.onClose(async () => {
       await browser.close();
     })
