@@ -4,6 +4,7 @@ import type { ParentBrowserProject } from './projectParent'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { dirname, join, resolve } from 'pathe'
@@ -168,7 +169,27 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         // this plugin can be used in different projects, but all of them
         // have the same `include` pattern, so it doesn't matter which project we use
         const project = parentServer.project
-        const { testFiles: browserTestFiles } = await project.globTestFiles()
+        // only glob benchmarks when a browser-enabled bench project exists in
+        // the workspace — keeps the optimizeDeps entries symmetrical across
+        // the test/bench project clones so the optimizer doesn't re-scan when
+        // the user switches modes
+        const hasBrowserBenchProject = parentServer.vitest.projects.some(p =>
+          p.config.browser.enabled && p.config.benchmark.enabled,
+        )
+        const benchInclude = hasBrowserBenchProject
+          ? project.config.benchmark.include
+          : []
+        const dir = project.config.dir || project.config.root
+        const [{ testFiles: browserTestFiles }, browserBenchFiles] = await Promise.all([
+          project.globTestFiles(),
+          benchInclude.length > 0
+            ? project.globFiles(
+                benchInclude,
+                project.config.benchmark.exclude ?? project.config.exclude,
+                dir,
+              )
+            : [],
+        ])
         const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
@@ -179,7 +200,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         const entries: string[] = [
-          ...browserTestFiles,
+          ...new Set([...browserTestFiles, ...browserBenchFiles]),
           ...setupFiles,
           resolve(vitestDist, 'index.js'),
           resolve(vitestDist, 'browser.js'),
@@ -325,7 +346,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       configureServer(server) {
         server.middlewares.use(
           '/__vitest__',
-          sirv(resolve(distRoot, 'client/__vitest__')),
+          sirv(uiClientRoot),
         )
       },
       resolveId(id) {
@@ -344,7 +365,10 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
-      filter(id) {
+      filter(id, environment) {
+        if (environment.name !== 'client') {
+          return false
+        }
         if (id.includes(distRoot)) {
           return false
         }

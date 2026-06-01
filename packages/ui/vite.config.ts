@@ -1,39 +1,33 @@
 import type { Plugin } from 'vite'
+import fs from 'node:fs'
+import path from 'node:path'
 import Vue from '@vitejs/plugin-vue'
 import { resolve } from 'pathe'
-import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
+import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
-import Pages from 'vite-plugin-pages'
-
-// for debug:
-// open a static file serve to share the report json
-// and ui using the link to load the report json data
-// const debugLink = 'http://127.0.0.1:4173/__vitest__'
 
 export default defineConfig({
-  root: import.meta.dirname,
   base: './',
   resolve: {
-    dedupe: ['vue'],
+    // TODO: keep manual alias for vite 7 CI
+    // tsconfigPaths: true,
     alias: {
       '~/': `${resolve(import.meta.dirname, 'client')}/`,
     },
   },
-  define: {
-    __BASE_PATH__: '"/__vitest__/"',
-  },
   plugins: [
-    Vue({
-      features: {
-        propsDestructure: true,
-      },
-      script: {
-        defineModel: true,
-      },
-    }),
+    Vue(),
     Unocss({
-      presets: [presetUno(), presetAttributify(), presetIcons()] as any,
+      presets: [presetWind3(), presetAttributify(), presetIcons()],
+      content: {
+        pipeline: {
+          include: [
+            // by default .ts is excluded
+            /\/client\/.*\.(ts|vue)($|\?)/,
+          ],
+        },
+      },
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -48,22 +42,13 @@ export default defineConfig({
         'tab-button-active': 'op100 bg-gray-500:10',
       },
       transformers: [
-        transformerDirectives() as any,
+        transformerDirectives(),
       ],
       safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
-    Pages({
-      dirs: ['client/pages'],
-    }),
-    devUiScriptPlugin(),
-    // uncomment to see the HTML reporter preview
-    // {
-    //   name: 'debug-html-report',
-    //   apply: 'serve',
-    //   transformIndexHtml(html) {
-    //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
-    //   },
-    // },
+    process.env.HTML_REPORT_DIR
+      ? devHtmlReportPlugin({ htmlDir: process.env.HTML_REPORT_DIR })
+      : devUiScriptPlugin(),
     {
       // workaround `crossorigin` issues on some browsers
       // https://github.com/vitejs/vite/issues/6648
@@ -130,6 +115,36 @@ function devUiScriptPlugin(): Plugin {
           injectTo: 'head-prepend',
         },
       ]
+    },
+  }
+}
+
+function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
+  const REPORT_FILE = 'html.meta.json.gz'
+  return {
+    name: 'dev-html-report',
+    apply(_config, env) {
+      return !!htmlDir && env.command === 'serve' && env.mode !== 'test'
+    },
+    async transformIndexHtml() {
+      const metadataCode = `window.HTML_REPORT_METADATA=fetch(new URL("./${REPORT_FILE}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+      return [
+        {
+          tag: 'script',
+          children: metadataCode,
+        },
+      ]
+    },
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = new URL(req.url || '', `http://localhost`)
+        if (url.pathname === `/${REPORT_FILE}`) {
+          const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
+          res.end(data)
+          return
+        }
+        next()
+      })
     },
   }
 }

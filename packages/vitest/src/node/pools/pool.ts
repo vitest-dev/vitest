@@ -346,7 +346,7 @@ function deepEqual(obj1: any, obj2: any): boolean {
   }
 
   for (const key of keys1) {
-    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+    if (!Object.prototype.hasOwnProperty.call(obj2, key) || !deepEqual(obj1[key], obj2[key])) {
       return false
     }
   }

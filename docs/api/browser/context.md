@@ -82,11 +82,11 @@ export const page: {
   /**
    * Add a trace marker when browser tracing is enabled.
    */
-  mark(name: string, options?: { stack?: string }): Promise<void>
+  mark(name: string, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<void>
   /**
    * Group multiple operations under a trace marker when browser tracing is enabled.
    */
-  mark<T>(name: string, body: () => T | Promise<T>, options?: { stack?: string }): Promise<T>
+  mark<T>(name: string, body: () => T | Promise<T>, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<T>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -127,17 +127,19 @@ The `path` is also ignored in that case.
 ### mark
 
 ```ts
-function mark(name: string, options?: { stack?: string }): Promise<void>
+function mark(name: string, options?: { stack?: string; kind?: BrowserTraceEntryKind }): Promise<void>
 function mark<T>(
   name: string,
   body: () => T | Promise<T>,
-  options?: { stack?: string },
+  options?: { stack?: string; kind?: BrowserTraceEntryKind },
 ): Promise<T>
 ```
 
 Adds a named marker to the trace timeline for the current test.
 
 Pass `options.stack` to override the callsite location in trace metadata. This is useful for wrapper libraries that need to preserve the end-user source location.
+
+Pass `options.kind` to categorize your marker as specific type, for example as `'action'`.
 
 If you pass a callback, Vitest creates a trace group with this name, runs the callback, and closes the group automatically.
 
@@ -151,11 +153,13 @@ await page.mark('after submit')
 await page.mark('submit flow', async () => {
   await page.getByRole('textbox', { name: 'Email' }).fill('john@example.com')
   await page.getByRole('button', { name: 'Submit' }).click()
-})
+}, { kind: 'action' })
 ```
 
 ::: tip
 This method is useful only when [`browser.trace`](/config/browser/trace) is enabled.
+
+A server-side equivalent is available on the [`BrowserCommandContext`](/api/browser/commands#recording-trace-markers) so [custom commands](/api/browser/commands#custom-commands) can record markers attributed to the test that triggered them.
 :::
 
 ### frameLocator
@@ -207,6 +211,8 @@ The `cdp` export returns the current Chrome DevTools Protocol session. It is mos
 
 ::: warning
 CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+
+CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`browser.api.allowWrite`](/config/browser/api#api-allowwrite), [`browser.api.allowExec`](/config/browser/api#api-allowexec), [`api.allowWrite`](/config/api#api-allowwrite), and [`api.allowExec`](/config/api#api-allowexec).
 :::
 
 ```ts

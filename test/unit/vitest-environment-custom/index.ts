@@ -21,6 +21,7 @@ export default <Environment>{
       Event,
       TextDecoder,
       TextEncoder,
+      performance,
     })
     return {
       getVmContext() {

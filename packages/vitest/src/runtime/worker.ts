@@ -2,6 +2,7 @@ import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
+import { GetterTracker } from './getter-tracker'
 import { setupInspect } from './inspector'
 import * as listeners from './listeners'
 import { VitestEvaluatedModules } from './moduleRunner/evaluatedModules'
@@ -47,6 +48,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC, worker: Vites
         return createStackString(parseStacktrace(stack))
       },
       metaEnv: createImportMetaEnvProxy(),
+      getterTracker: ctx.config.benchmark.enabled && !ctx.config.benchmark.suppressExportGetterWarnings
+        ? new GetterTracker()
+        : undefined,
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'

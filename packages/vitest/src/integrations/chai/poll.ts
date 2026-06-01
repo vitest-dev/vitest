@@ -110,7 +110,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
 
+            const onStart = chai.util.flag(assertion, '_poll.onStart') as Function | undefined
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+            await onStart?.({ assertion })
 
             // We use `matcher.__vitest_poll_takeover__` flag
             // to let domain snapshot matchers take over polling logic.

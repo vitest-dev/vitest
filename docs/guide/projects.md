@@ -289,6 +289,7 @@ Some of the configuration options are not allowed in a project config. Most nota
 - `coverage`: coverage is done for the whole process
 - `reporters`: only root-level reporters can be supported
 - `resolveSnapshotPath`: only root-level resolver is respected
+- `attachmentsDir`: attachments are stored in one root-level directory shared by all projects
 - all other options that don't affect test runners
 
 All configuration options that are not supported inside a project configuration are marked with a <CRoot /> icon next to their name. They can only be defined once in the root config file.

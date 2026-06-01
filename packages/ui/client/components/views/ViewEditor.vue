@@ -9,12 +9,21 @@ import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
 import { client, config, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
-import { openInEditor } from '~/composables/error'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter, openInEditor } from '~/composables/error'
 import { columnNumber, lineNumber } from '~/composables/params'
+import {
+  activeTraceView,
+  getTraceEditorMarkersForFile,
+  getTraceEntryClass,
+  isTraceViewEnabled,
+  selectActiveTraceStep,
+} from '~/composables/trace-view'
+import { escapeHtml } from '~/utils/escape'
 import CodeMirrorContainer from '../CodeMirrorContainer.vue'
 
 const props = defineProps<{
-  file?: RunnerTestFile
+  file: RunnerTestFile
 }>()
 
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
@@ -139,6 +148,68 @@ function codemirrorChanges() {
   draft.value = serverCode.value !== codemirrorRef.value!.getValue()
 }
 
+const TRACE_GUTTER_ID = 'trace-step-gutter'
+const traceGutterConfigs = isTraceViewEnabled(props.file)
+  ? [{ className: TRACE_GUTTER_ID, style: 'width: 14px' }]
+  : []
+let traceGutterLines: number[] = []
+
+const traceEditorMarkersForFile = computed(() => {
+  const selection = activeTraceView.value
+  const file = props.file?.filepath
+  if (selection && file) {
+    return getTraceEditorMarkersForFile(selection, file)
+  }
+  return []
+})
+
+function syncTraceMarkers() {
+  const editor = codemirrorRef.value
+  if (!editor) {
+    return
+  }
+
+  for (const line of traceGutterLines) {
+    editor.setGutterMarker(line, TRACE_GUTTER_ID, null)
+  }
+  traceGutterLines = []
+
+  const lineCount = editor.lineCount()
+  for (const marker of traceEditorMarkersForFile.value) {
+    const line = marker.line - 1
+    if (!(line >= 0 && line < lineCount)) {
+      continue
+    }
+    const el = document.createElement('button')
+    el.type = 'button'
+    el.className = [
+      'h-2 w-2 ml-0.5 cursor-pointer rounded-full bg-current',
+      getTraceEntryClass(marker.entry),
+      marker.active
+        ? 'ring-2 ring-current ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
+        : 'opacity-75 scale-120',
+    ].filter(Boolean).join(' ')
+    el.dataset.testid = 'trace-editor-marker'
+    el.ariaLabel = `Select trace step: ${marker.entry.name}`
+    if (marker.active) {
+      el.ariaCurrent = 'step'
+    }
+    el.addEventListener('click', () => {
+      selectActiveTraceStep(marker.stepIndex)
+    })
+    editor.setGutterMarker(line, TRACE_GUTTER_ID, el)
+    traceGutterLines.push(line)
+  }
+}
+
+watch(
+  [codemirrorRef, traceEditorMarkersForFile, loading],
+  () => {
+    syncTraceMarkers()
+  },
+  { immediate: true },
+)
+
 watch(
   draft,
   (d) => {
@@ -156,12 +227,12 @@ function createErrorElement(e: TestError) {
     return
   }
   const div = document.createElement('div')
+  div.dataset.testid = 'error-line-gadget'
   div.className = 'op80 flex gap-x-2 items-center'
   const pre = document.createElement('pre')
   pre.className = 'c-red-700 dark:c-red-400'
-  pre.textContent = `${' '.repeat(stack.column)}^ ${e.name}: ${
-    e?.message || ''
-  }`
+  const filter = createAnsiToHtmlFilter(isDark.value)
+  pre.innerHTML = `${' '.repeat(stack.column)}^ ${filter.toHtml(escapeHtml(`${e.name}: ${e.message}`))}`
   div.appendChild(pre)
   const span = document.createElement('span')
   span.className
@@ -385,7 +456,12 @@ onBeforeUnmount(clearListeners)
     ref="editor"
     v-model="code"
     h-full
-    v-bind="{ lineNumbers: true, readOnly: isReport || !config.api?.allowWrite, saving }"
+    v-bind="{
+      lineNumbers: true,
+      readOnly: isReport || !config.api?.allowWrite,
+      saving,
+      gutters: ['CodeMirror-linenumbers', ...traceGutterConfigs],
+    }"
     :mode="ext"
     data-testid="code-mirror"
     @save="onSave"

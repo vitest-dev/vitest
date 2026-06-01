@@ -311,7 +311,7 @@ Track coverage of the `node:child_process` and `node:worker_threads` spawned dur
 - **CLI:** `--mode <name>`
 - **Config:** [mode](/config/mode)
 
-Override Vite mode (default: `test` or `benchmark`)
+Override Vite mode (default: `test`)
 
 ### isolate
 
@@ -462,7 +462,7 @@ Inline loaded image pixels in trace-view snapshots (default: `false`)
 - **CLI:** `--browser.locators.exact`
 - **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
 
-Should locators match the text exactly by default (default: `false`)
+Should locators match the text exactly by default (default: `true`)
 
 ### pool
 
@@ -790,6 +790,13 @@ Allow JavaScript files to be typechecked. By default takes the value from tsconf
 - **Config:** [typecheck.ignoreSourceErrors](/config/typecheck#typecheck-ignoresourceerrors)
 
 Ignore type errors from source files
+
+### typecheck.build
+
+- **CLI:** `--typecheck.build`
+- **Config:** [typecheck.build](/config/typecheck#typecheck-build)
+
+Use TypeScript build mode
 
 ### typecheck.tsconfig
 
