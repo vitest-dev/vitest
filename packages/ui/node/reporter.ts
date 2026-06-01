@@ -28,7 +28,6 @@ function getOutputFile(config: PotentialConfig | undefined) {
 }
 
 export default class HTMLReporter implements Reporter {
-  start = 0
   ctx!: Vitest
   options: HTMLOptions
 
@@ -40,7 +39,6 @@ export default class HTMLReporter implements Reporter {
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
-    this.start = Date.now()
     const htmlFile
       = this.options.outputFile
         || getOutputFile(this.ctx.config)
