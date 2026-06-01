@@ -200,12 +200,12 @@ async function handleIndexHtml(options: {
 
   if (options.singleFile) {
     html = await inlineHtmlAssets(indexHtmlFilePath, html)
-    const base64 = Buffer.from(options.data).toString('base64')
+    const base64 = options.data.toString('base64')
     metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
   }
   else {
-    const dataFile = `html.meta.json.gz`
-    await fs.writeFile(resolve(options.dstDir, dataFile), options.data, 'base64')
+    const dataFile = 'html.meta.json.gz'
+    await fs.writeFile(resolve(options.dstDir, dataFile), options.data)
     metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
   }
 
