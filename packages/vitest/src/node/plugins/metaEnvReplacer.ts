@@ -3,6 +3,39 @@ import { cleanUrl } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { stripLiteral } from 'strip-literal'
 
+const metaEnvAccessor = `Object.assign(/* istanbul ignore next */ globalThis.__vitest_worker__?.metaEnv ?? import.meta.env)`
+
+const ASSIGNMENT_OPERATORS = [
+  '>>>=',
+  '<<=',
+  '>>=',
+  '**=',
+  '&&=',
+  '||=',
+  '??=',
+  '+=',
+  '-=',
+  '*=',
+  '/=',
+  '%=',
+  '&=',
+  '^=',
+  '|=',
+]
+
+function isAssignmentTarget(code: string, endIndex: number): boolean {
+  let index = endIndex
+  while (/\s/.test(code[index])) {
+    index += 1
+  }
+
+  if (code[index] === '=') {
+    return code[index + 1] !== '=' && code[index + 1] !== '>'
+  }
+
+  return ASSIGNMENT_OPERATORS.some(operator => code.startsWith(operator, index))
+}
+
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
 export function MetaEnvReplacerPlugin(): Plugin {
@@ -19,15 +52,18 @@ export function MetaEnvReplacerPlugin(): Plugin {
       const envs = cleanCode.matchAll(/\bimport\.meta\.env\b/g)
 
       for (const env of envs) {
-        s ||= new MagicString(code)
-
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
+        if (isAssignmentTarget(cleanCode, endIndex)) {
+          continue
+        }
+
+        s ||= new MagicString(code)
         s.overwrite(
           startIndex,
           endIndex,
-          `Object.assign(/* istanbul ignore next */ globalThis.__vitest_worker__?.metaEnv ?? import.meta.env)`,
+          metaEnvAccessor,
         )
       }
 
