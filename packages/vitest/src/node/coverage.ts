@@ -511,7 +511,7 @@ export class BaseCoverageProvider {
 
       // Construct list of coverage summaries where thresholds are compared against
       const summaries = perFileOption === true
-        ? [...coverageMap.files()].sort().map((file: string) => ({
+        ? coverageMap.files().map((file: string) => ({
             file,
             summary: coverageMap.fileCoverageFor(file).toSummary(),
           }))

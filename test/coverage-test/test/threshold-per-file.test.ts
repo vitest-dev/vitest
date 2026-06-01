@@ -1,32 +1,16 @@
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { expect, vi } from 'vitest'
+import { expect } from 'vitest'
 import { branch } from '../fixtures/src/branch'
 import { isEven, isOdd } from '../fixtures/src/even'
 import { sum } from '../fixtures/src/math'
 import { coverageTest, normalizeURL, runVitest, test } from '../utils'
 
-// Each test spawns a child Vitest via `runVitest`. With several outer
-// coverage projects (v8/istanbul/native) running in parallel, those child
-// processes can take a few seconds each. The default 5s test timeout is
-// enough on CI (which runs the projects sequentially) but tight locally.
-vi.setConfig({ testTimeout: 15_000 })
-
 // math.ts: 1/4 functions covered (25%). even.ts: 2/2 (100%). branch.ts: only the
 // true branch of the `if` is taken, so branches are 1/2 (50%).
-
-// Each test also gets its own `reportsDirectory` so that the inner Vitest
-// runs do not race on a shared `coverage/.tmp` directory.
-function uniqueReportsDirectory(): string {
-  return mkdtempSync(join(tmpdir(), 'vitest-threshold-per-file-'))
-}
 
 test('per-file object thresholds fail while global thresholds pass', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -51,7 +35,6 @@ test('global thresholds fail while per-file object thresholds pass', async () =>
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -76,7 +59,6 @@ test('both global and per-file object thresholds pass', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -98,7 +80,6 @@ test('per-file object thresholds with { 100: true }', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -125,7 +106,6 @@ test('per-file object thresholds with negative threshold', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -150,7 +130,6 @@ test('per-file object thresholds with empty object are a no-op', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -173,7 +152,6 @@ test('per-file object thresholds only check the keys that are set', async () => 
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
@@ -198,7 +176,6 @@ test('per-file object thresholds work for branches', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/branch.ts',
       ],
@@ -224,7 +201,6 @@ test('per-file object thresholds report violations for every failing file', asyn
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      reportsDirectory: uniqueReportsDirectory(),
       include: [
         '**/fixtures/src/branch.ts',
         '**/fixtures/src/even.ts',
