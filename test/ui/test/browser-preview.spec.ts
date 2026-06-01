@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { startVitest } from 'vitest/node'
 import { assertTestCounts } from './helper'
 
-test.describe('browser preview provider', () => {
+test.describe('orchestrator UI on preview provider', () => {
   test('basic', async ({ page }) => {
     globalThis.__hackOpenBrowser = async (url: string) => {
       await page.goto(url)
