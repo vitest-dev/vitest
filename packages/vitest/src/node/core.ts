@@ -1668,10 +1668,29 @@ export class Vitest {
     if (!projects || !projects.length) {
       return true
     }
-    return toArray(projects).some((project) => {
-      const regexp = wildcardPatternToRegExp(project)
+    const filters = toArray(projects)
+    const negated = filters.filter(f => f.startsWith('!'))
+    const positive = filters.filter(f => !f.startsWith('!'))
+
+    // All negated filters must be satisfied (name must not match any negated pattern)
+    // e.g. --project=!client --project=!server means name must not be client AND not be server
+    if (negated.length && negated.some((project) => {
+      const regexp = wildcardPatternToRegExp(project.slice(1))
       return regexp.test(name)
-    })
+    })) {
+      return false
+    }
+
+    // If there are positive filters, at least one must match
+    if (positive.length) {
+      return positive.some((project) => {
+        const regexp = wildcardPatternToRegExp(project)
+        return regexp.test(name)
+      })
+    }
+
+    // Only negated filters and none excluded this name = included
+    return true
   }
 
   /** @internal */
