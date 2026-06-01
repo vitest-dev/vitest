@@ -376,6 +376,7 @@ export interface BrowserServerStateSession {
   project: TestProject
   otelCarrier?: OTELCarrier
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 

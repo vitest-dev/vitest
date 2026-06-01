@@ -26,6 +26,7 @@ export interface WebSocketBrowserHandlers {
   readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
   writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
+  onOrchestratorReady: () => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
