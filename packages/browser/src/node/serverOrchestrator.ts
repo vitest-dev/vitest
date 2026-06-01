@@ -45,7 +45,7 @@ export async function resolveOrchestrator(
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
-    __VITEST_OTEL_CARRIER__: url.searchParams.get('otelCarrier') ?? 'null',
+    __VITEST_OTEL_CARRIER__: JSON.stringify(session?.otelCarrier ?? null),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(browserProject.project.getProvidedContext())),
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
@@ -61,7 +61,7 @@ export async function resolveOrchestrator(
       for (const attr in script.attrs || {}) {
         html += `${attr}="${script.attrs![attr]}" `
       }
-      html += `>${script.children}</script>`
+      html += `>${escapeInlineScript(typeof script.children === 'string' ? script.children : '')}</script>`
       return html
     }).join('\n')
   }
@@ -96,8 +96,14 @@ export async function resolveOrchestrator(
     __VITEST_FAVICON__: globalServer.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: globalServer.orchestratorScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_INJECTOR__: `<script type="module">${escapeInlineScript(injector)}</script>`,
     __VITEST_ERROR_CATCHER__: `<script type="module" src="${globalServer.errorCatcherUrl}"></script>`,
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
+}
+
+function escapeInlineScript(content: string): string {
+  return content
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<\/(script)/gi, '</\\$1')
 }

@@ -7,7 +7,7 @@ import { getBrowserState, getWorkerState, now } from '../utils'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './tester-utils'
-import { recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
@@ -16,7 +16,9 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }
 
-  const expectElement = expect.poll<HTMLElement | SVGElement | null>(function element(this: object) {
+  const pollOptions = processTimeoutOptions(options)
+  const deadline = pollOptions?.timeout ? now() + pollOptions.timeout : undefined
+  const expectElement = expect.poll(async function element(this: object): Promise<HTMLElement | SVGElement | null> {
     if (elementOrLocator instanceof Element || elementOrLocator == null) {
       return elementOrLocator
     }
@@ -33,28 +35,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
       return elementOrLocator.elements() as unknown as HTMLElement
     }
 
-    if (name === 'toMatchScreenshot' && !chai.util.flag(this, '_poll.assert_once')) {
-      // `toMatchScreenshot` should only run once after the element resolves
-      chai.util.flag(this, '_poll.assert_once', true)
-    }
-
-    // element selector uses prettyDOM under the hood, which is an expensive call
-    // that should not be called on each failed locator attempt to avoid memory leak:
-    // https://github.com/vitest-dev/vitest/issues/7139
-    const isLastPollAttempt = chai.util.flag(this, '_isLastPollAttempt')
-
-    if (isLastPollAttempt) {
-      return elementOrLocator.element()
-    }
-
-    const result = elementOrLocator.query()
-
-    if (!result) {
-      throw new Error(`Cannot find element with locator: ${JSON.stringify(elementOrLocator)}`)
-    }
-
-    return result
-  }, processTimeoutOptions(options))
+    return elementOrLocator.findElement({
+      ...pollOptions,
+      timeout: deadline ? Math.max(deadline - now(), 0) : undefined,
+    })
+  }, pollOptions)
 
   chai.util.flag(expectElement, '_poll.element', true)
 
@@ -64,23 +49,36 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
   const hasActiveTraceView = !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
   if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
-    const startTime = now()
-    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
-      const isNot = chai.util.flag(meta.assertion, 'negate')
-      const name = chai.util.flag(meta.assertion, '_name') || '<unknown>'
-      const baseName = `expect.element().${isNot ? 'not.' : ''}${name}`
-      const traceName = meta.status === 'fail' ? `${baseName} [ERROR]` : baseName
-      const selector = !elementOrLocator || elementOrLocator instanceof Element
-        ? undefined
-        : elementOrLocator.selector
+    const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+    const getSelector = () => !elementOrLocator || elementOrLocator instanceof Element
+      ? undefined
+      : elementOrLocator.serialize()
+    const getTraceName = (assertion: Assertion, status?: BrowserTraceEntryStatus) => {
+      const isNot = chai.util.flag(assertion, 'negate')
+      const name = chai.util.flag(assertion, '_name') || '<unknown>'
+      const baseName = `${isNot ? 'not.' : ''}${name}`
+      return status === 'fail' ? `${baseName} [ERROR]` : baseName
+    }
+    chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
       if (hasActiveTraceView) {
-        recordBrowserTraceEntry(currentTest, {
+        await recordBrowserTraceEntry(currentTest, {
+          name: getTraceName(meta.assertion),
+          kind: 'expect',
+          range: { id: traceRangeId!, phase: 'start' },
+          element: getSelector(),
+          stack: sourceError.stack,
+        })
+      }
+    })
+    chai.util.flag(expectElement, '_poll.onSettled', async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
+      const traceName = getTraceName(meta.assertion, meta.status)
+      if (hasActiveTraceView) {
+        await recordBrowserTraceEntry(currentTest, {
           name: traceName,
           kind: 'expect',
+          range: { id: traceRangeId!, phase: 'end' },
           status: meta.status,
-          startTime,
-          duration: now() - startTime,
-          selector,
+          element: getSelector(),
           stack: sourceError.stack,
         })
       }
@@ -89,7 +87,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrL
           '__vitest_markTrace',
           [{
             name: traceName,
-            selector,
+            element: getSelector(),
             stack: sourceError.stack,
           }],
           sourceError,

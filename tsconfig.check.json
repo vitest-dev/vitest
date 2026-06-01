@@ -15,7 +15,7 @@
     "./packages/*/*.d.cts",
     "./examples/**/*.*",
     "./bench/**",
-    "./test/cli/**",
+    "./test/e2e/**",
     "./test/typescript/**",
     "./test/browser/**",
     "**/coverage/fixtures/**",

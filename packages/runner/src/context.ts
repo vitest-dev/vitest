@@ -50,7 +50,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
-  // this function name is used to filter error in test/cli/test/fails.test.ts
+  // this function name is used to filter error in test/e2e/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     const startTime = now()
     const runner = getRunner()
@@ -117,19 +117,33 @@ export function withCancel<T extends (...args: any[]) => any>(
 ): T {
   return (function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
     return new Promise((resolve, reject) => {
-      signal.addEventListener('abort', () => reject(signal.reason))
+      const onAbort = () => reject(signal.reason)
+      signal.addEventListener('abort', onAbort, { once: true })
+
+      const cleanup = () => signal.removeEventListener('abort', onAbort)
 
       try {
         const result = fn(...args) as PromiseLike<unknown>
 
         if (typeof result === 'object' && result != null && typeof result.then === 'function') {
-          result.then(resolve, reject)
+          result.then(
+            (value) => {
+              cleanup()
+              resolve(value)
+            },
+            (error) => {
+              cleanup()
+              reject(error)
+            },
+          )
         }
         else {
+          cleanup()
           resolve(result)
         }
       }
       catch (error) {
+        cleanup()
         reject(error)
       }
     })

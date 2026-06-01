@@ -1,5 +1,7 @@
 import type { Task } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
+import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
@@ -7,23 +9,101 @@ import { existsSync, promises as fs } from 'node:fs'
 import { hostname } from 'node:os'
 import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
-import { dirname, relative, resolve } from 'pathe'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../printError'
+import { renderBenchmarkTableText } from './renderers/benchmark-table'
 import { IndentedLogger } from './renderers/indented-logger'
 
-interface ClassnameTemplateVariables {
+export interface ClassnameTemplateVariables {
+  /** Relative path from the root (e.g. `src/foo.test.ts`) */
   filename: string
+  /** Absolute file path */
   filepath: string
+  /** File basename without directory (e.g. `foo.test.ts`) */
+  basename: string
+  /** Ancestor describe block names joined by {@link JUnitOptions.ancestorSeparator} */
+  classname: string
+  /** Leaf test title (the string passed to `it`/`test`) */
+  title: string
+  /** Top-level describe block name, or empty string when the test has no enclosing describe */
+  suitename: string
+  /** Vitest project name */
+  displayName: string
+}
+
+export interface SuiteNameTemplateVariables {
+  /** Absolute file path */
+  filepath: string
+  /** Relative path from the root (e.g. `src/foo.test.ts`) */
+  filename: string
+  /** File basename without directory (e.g. `foo.test.ts`) */
+  basename: string
+  /** Vitest project name */
+  displayName: string
+  /**
+   * The name of the first top-level `describe` block in the file.
+   * Falls back to the file basename when the file has no top-level describe.
+   */
+  title: string
 }
 
 export interface JUnitOptions {
   outputFile?: string
 
   /**
-   * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
+   * Template for the `classname` attribute of `<testcase>`.
+   *
+   * Can be a template string or a function.
+   *
+   * Supported placeholders:
+   * - `{filename}` – relative path from root (e.g. `src/foo.test.ts`)
+   * - `{filepath}` – absolute file path
+   * - `{basename}` – file name without directory (e.g. `foo.test.ts`)
+   * - `{classname}` – ancestor describe names joined by {@link ancestorSeparator}
+   * - `{title}` – leaf test title
+   * - `{suitename}` – top-level describe block name
+   * - `{displayName}` – Vitest project name
+   *
+   * @default relative file path from root
    */
   classnameTemplate?: string | ((classnameVariables: ClassnameTemplateVariables) => string)
+
+  /**
+   * Template for the `name` attribute of `<testcase>`.
+   *
+   * Can be a template string or a function. Supports the same placeholders as
+   * {@link classnameTemplate}.
+   *
+   * When not set the full test title including ancestor describe hierarchy is used
+   * (current default behaviour, e.g. `outer > inner > test name`).
+   */
+  titleTemplate?: string | ((titleVariables: ClassnameTemplateVariables) => string)
+
+  /**
+   * Template for the `name` attribute of `<testsuite>`.
+   *
+   * Can be a template string or a function.
+   *
+   * Supported placeholders:
+   * - `{title}` – first top-level describe name (falls back to file basename)
+   * - `{filename}` – relative path from root
+   * - `{filepath}` – absolute file path
+   * - `{basename}` – file basename
+   * - `{displayName}` – Vitest project name
+   *
+   * When not set the relative file path from root is used (current default behaviour).
+   */
+  suiteNameTemplate?: string | ((suiteNameVariables: SuiteNameTemplateVariables) => string)
+
+  /**
+   * Separator used to join ancestor describe block names when building the
+   * `{classname}` template variable (and the default testcase name when
+   * {@link titleTemplate} is not set).
+   *
+   * @default ' > '
+   */
+  ancestorSeparator?: string
+
   suiteName?: string
   /**
    * Write <system-out> and <system-err> for console output
@@ -39,23 +119,55 @@ export interface JUnitOptions {
    * Hostname to use in the report. By default, it uses os.hostname()
    */
   hostname?: string
+  /**
+   * Include stack traces in test failure reports.
+   * @default true
+   */
+  stackTrace?: boolean
 }
 
-function flattenTasks(task: Task, baseName = ''): Task[] {
-  const base = baseName ? `${baseName} > ` : ''
+/**
+ * Internal task type that carries pre-computed template metadata.
+ * The three underscore-prefixed fields are set by {@link flattenTasks} and
+ * consumed only within the reporter. They are deliberately not part of the
+ * public `Task` interface.
+ */
+type TaskWithMeta = Task & {
+  /** Original leaf test title before hierarchy prefix was prepended */
+  _leafName?: string
+  /** Ancestor describe names joined by the active separator */
+  _classname?: string
+  /** Top-level describe block name */
+  _suitename?: string
+}
 
+/**
+ * Runtime additions on top of {@link SerializedError}: `type` is set by
+ * {@link state.catchError}, `VITEST_TEST_PATH` by the runtime error catcher.
+ */
+type UnhandledError = SerializedError & {
+  type?: string
+  VITEST_TEST_PATH?: string
+}
+
+function flattenTasks(task: Task, baseName = '', suiteName = '', ancestorSeparator = ' > '): TaskWithMeta[] {
   if (task.type === 'suite') {
+    const newBase = baseName ? `${baseName}${ancestorSeparator}${task.name}` : task.name
+    const newSuiteName = suiteName || task.name
     return task.tasks.flatMap(child =>
-      flattenTasks(child, `${base}${task.name}`),
+      flattenTasks(child, newBase, newSuiteName, ancestorSeparator),
     )
   }
   else {
-    return [
-      {
-        ...task,
-        name: `${base}${task.name}`,
-      },
-    ]
+    const fullName = baseName ? `${baseName}${ancestorSeparator}${task.name}` : task.name
+    const result: TaskWithMeta = {
+      ...task,
+      name: fullName,
+      _leafName: task.name,
+      _classname: baseName,
+      _suitename: suiteName,
+    }
+    return [result]
   }
 }
 
@@ -128,6 +240,7 @@ export class JUnitReporter implements Reporter {
   constructor(options: JUnitOptions) {
     this.options = { ...options }
     this.options.includeConsoleOutput ??= true
+    this.options.stackTrace ??= true
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -207,35 +320,81 @@ export class JUnitReporter implements Reporter {
     })
   }
 
-  async writeTasks(tasks: Task[], filename: string): Promise<void> {
+  async writeSystemOut(task: Task): Promise<void> {
+    const logs
+      = this.options.includeConsoleOutput && task.logs
+        ? task.logs.filter(log => log.type === 'stdout')
+        : []
+    const benchmarks = task.type === 'test' ? task.benchmarks : []
+
+    if (logs.length === 0 && benchmarks.length === 0) {
+      return
+    }
+
+    await this.writeElement('system-out', {}, async () => {
+      for (const log of logs) {
+        await this.baseLog(escapeXML(log.content))
+      }
+      if (benchmarks.length > 0) {
+        if (logs.length > 0) {
+          await this.baseLog('')
+        }
+        await this.baseLog(escapeXML(renderBenchmarkTableText(benchmarks)))
+      }
+    })
+  }
+
+  private applyTemplate(
+    template: string | ((vars: ClassnameTemplateVariables) => string),
+    vars: ClassnameTemplateVariables,
+  ): string {
+    if (typeof template === 'function') {
+      return template(vars)
+    }
+    return template
+      .replace(/\{filename\}/g, () => vars.filename)
+      .replace(/\{filepath\}/g, () => vars.filepath)
+      .replace(/\{basename\}/g, () => vars.basename)
+      .replace(/\{classname\}/g, () => vars.classname)
+      .replace(/\{title\}/g, () => vars.title)
+      .replace(/\{suitename\}/g, () => vars.suitename)
+      .replace(/\{displayName\}/g, () => vars.displayName)
+  }
+
+  async writeTasks(tasks: TaskWithMeta[], filename: string, fileAbsPath: string): Promise<void> {
     for (const task of tasks) {
-      let classname = filename
+      const fileBasename = task.file ? basename(task.file.filepath) : basename(fileAbsPath)
 
       const templateVars: ClassnameTemplateVariables = {
-        filename: task.file.name,
-        filepath: task.file.filepath,
+        filename: task.file?.name ?? filename,
+        filepath: task.file?.filepath ?? fileAbsPath,
+        basename: fileBasename,
+        classname: task._classname ?? '',
+        title: task._leafName ?? task.name,
+        suitename: task._suitename ?? '',
+        displayName: task.file?.projectName ?? '',
       }
 
-      if (typeof this.options.classnameTemplate === 'function') {
-        classname = this.options.classnameTemplate(templateVars)
+      let classname = filename
+      if (this.options.classnameTemplate) {
+        classname = this.applyTemplate(this.options.classnameTemplate, templateVars)
       }
-      else if (typeof this.options.classnameTemplate === 'string') {
-        classname = this.options.classnameTemplate
-          .replace(/\{filename\}/g, templateVars.filename)
-          .replace(/\{filepath\}/g, templateVars.filepath)
-      }
+
+      const testcaseName = this.options.titleTemplate
+        ? this.applyTemplate(this.options.titleTemplate, templateVars)
+        : task.name
 
       await this.writeElement(
         'testcase',
         {
           classname,
           file: this.options.addFileAttribute ? filename : undefined,
-          name: task.name,
+          name: testcaseName,
           time: getDuration(task),
         },
         async () => {
+          await this.writeSystemOut(task)
           if (this.options.includeConsoleOutput) {
-            await this.writeLogs(task, 'out')
             await this.writeLogs(task, 'err')
           }
 
@@ -261,27 +420,9 @@ export class JUnitReporter implements Reporter {
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {
-              await this.writeElement(
-                'failure',
-                {
-                  message: error?.message,
-                  type: error?.name,
-                },
-                async () => {
-                  if (!error) {
-                    return
-                  }
-
-                  const result = capturePrintError(
-                    error,
-                    this.ctx,
-                    { project: this.ctx.getProjectByName(task.file.projectName || ''), task },
-                  )
-                  await this.baseLog(
-                    escapeXML(stripVTControlCharacters(result.output.trim())),
-                  )
-                },
-              )
+              await this.writeErrorElement('failure', error, {
+                project: this.ctx.getProjectByName(task.file?.projectName ?? ''),
+              })
             }
           }
         },
@@ -289,13 +430,123 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onTestRunEnd(testModules: ReadonlyArray<TestModule>): Promise<void> {
+  private resolveSuiteNameTemplate(
+    file: { filepath: string; name: string; projectName?: string; tasks: Task[] },
+    filename: string,
+  ): string {
+    if (!this.options.suiteNameTemplate) {
+      return filename
+    }
+
+    const fileBasename = basename(file.filepath)
+    const firstSuiteName = file.tasks.find(t => t.type === 'suite')?.name ?? fileBasename
+
+    const vars: SuiteNameTemplateVariables = {
+      filepath: file.filepath,
+      filename,
+      basename: fileBasename,
+      displayName: file.projectName ?? '',
+      title: firstSuiteName,
+    }
+
+    if (typeof this.options.suiteNameTemplate === 'function') {
+      return this.options.suiteNameTemplate(vars)
+    }
+    return this.options.suiteNameTemplate
+      .replace(/\{filepath\}/g, () => vars.filepath)
+      .replace(/\{filename\}/g, () => vars.filename)
+      .replace(/\{basename\}/g, () => vars.basename)
+      .replace(/\{displayName\}/g, () => vars.displayName)
+      .replace(/\{title\}/g, () => vars.title)
+  }
+
+  private async writeErrorElement(
+    elementName: 'failure' | 'error',
+    error: SerializedError | undefined,
+    errorOptions: ErrorOptions,
+  ): Promise<void> {
+    await this.writeElement(
+      elementName,
+      {
+        message: error?.message,
+        type: error?.name,
+      },
+      async () => {
+        if (!error || !this.options.stackTrace) {
+          return
+        }
+        const result = this.ctx.logger.formatError(error, errorOptions)
+        await this.baseLog(
+          escapeXML(stripVTControlCharacters(result.output.trim())),
+        )
+      },
+    )
+  }
+
+  private async writeUnhandledErrorsTestsuite(
+    unhandledErrors: ReadonlyArray<UnhandledError>,
+    testModules: ReadonlyArray<TestModule>,
+  ): Promise<void> {
+    await this.writeElement(
+      'testsuite',
+      {
+        name: 'vitest unhandled errors',
+        timestamp: new Date().toISOString(),
+        hostname: this.options.hostname || hostname(),
+        tests: unhandledErrors.length,
+        failures: 0,
+        errors: unhandledErrors.length,
+        skipped: 0,
+        time: '0',
+      },
+      async () => {
+        // Stable order across runs — workers/projects report errors concurrently.
+        const sortedErrors = [...unhandledErrors].sort((a, b) => {
+          const ka = `${a.VITEST_TEST_PATH ?? ''}\0${a.type ?? ''}\0${a.name ?? ''}\0${a.message ?? ''}`
+          const kb = `${b.VITEST_TEST_PATH ?? ''}\0${b.type ?? ''}\0${b.name ?? ''}\0${b.message ?? ''}`
+          return ka < kb ? -1 : ka > kb ? 1 : 0
+        })
+        for (const error of sortedErrors) {
+          const errorTitle = error.type || error.name || 'Unhandled Error'
+          // Only attribute when the path resolves to exactly one module — when
+          // multiple projects share a file, errors lack a project identifier and
+          // we can't disambiguate without one (tracked for follow-up).
+          const matches = error.VITEST_TEST_PATH
+            ? testModules.filter(m => m.task.filepath === error.VITEST_TEST_PATH)
+            : []
+          const owningModule = matches.length === 1 ? matches[0] : undefined
+          await this.writeElement(
+            'testcase',
+            {
+              classname: 'vitest unhandled errors',
+              file: this.options.addFileAttribute && error.VITEST_TEST_PATH
+                ? relative(this.ctx.config.root, error.VITEST_TEST_PATH)
+                : undefined,
+              name: error.message ? `${errorTitle}: ${error.message}` : errorTitle,
+              time: '0',
+            },
+            async () => {
+              await this.writeErrorElement('error', error, {
+                project: owningModule?.project,
+              })
+            },
+          )
+        }
+      },
+    )
+  }
+
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<UnhandledError> = [],
+  ): Promise<void> {
     const files = testModules.map(testModule => testModule.task)
+    const separator = this.options.ancestorSeparator ?? ' > '
 
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
-      const tasks = file.tasks.flatMap(task => flattenTasks(task))
+      const tasks: TaskWithMeta[] = file.tasks.flatMap(task => flattenTasks(task, '', '', separator))
 
       const stats = tasks.reduce(
         (stats, task) => {
@@ -343,6 +594,7 @@ export class JUnitReporter implements Reporter {
           file: null as any,
           annotations: [],
           artifacts: [],
+          benchmarks: [],
         } satisfies Task)
       }
 
@@ -364,18 +616,29 @@ export class JUnitReporter implements Reporter {
         name: this.options.suiteName || 'vitest tests',
         tests: 0,
         failures: 0,
-        errors: 0, // we cannot detect those
+        errors: unhandledErrors.length,
         time: 0,
       },
     )
+    stats.tests += unhandledErrors.length
+
+    // Plain byte compare (not localeCompare) so output is identical across machines and ICU versions.
+    const orderedSuites = transformed
+      .map((file, i) => {
+        const filename = relative(this.ctx.config.root, file.filepath)
+        // resolveSuiteNameTemplate needs the original file (before task flattening) to
+        // search for top-level describe blocks, so pass files[i] directly.
+        const suiteName = this.resolveSuiteNameTemplate(files[i], filename)
+        return { file, filename, suiteName }
+      })
+      .sort((a, b) => a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0)
 
     await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
-      for (const file of transformed) {
-        const filename = relative(this.ctx.config.root, file.filepath)
+      for (const { file, filename, suiteName } of orderedSuites) {
         await this.writeElement(
           'testsuite',
           {
-            name: filename,
+            name: suiteName,
             timestamp: new Date().toISOString(),
             hostname: this.options.hostname || hostname(),
             tests: file.tasks.length,
@@ -385,9 +648,13 @@ export class JUnitReporter implements Reporter {
             time: getDuration(file),
           },
           async () => {
-            await this.writeTasks(file.tasks, filename)
+            await this.writeTasks(file.tasks, filename, file.filepath)
           },
         )
+      }
+
+      if (unhandledErrors.length) {
+        await this.writeUnhandledErrorsTestsuite(unhandledErrors, testModules)
       }
     })
 

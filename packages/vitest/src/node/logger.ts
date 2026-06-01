@@ -1,13 +1,13 @@
-import type { Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
+import type { CapturePrintErrorResult } from './printError'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './printError'
+import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
@@ -17,7 +17,6 @@ export interface ErrorOptions {
   project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
-  task?: Task
   showCodeFrame?: boolean
 }
 
@@ -109,6 +108,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  formatError(err: unknown, options: ErrorOptions = {}): CapturePrintErrorResult {
+    return capturePrintError(err, this.ctx, options)
+  }
+
   deprecate(message: string): void {
     this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
   }
@@ -166,20 +169,20 @@ export class Logger {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
+      this.log(`No affected test files found\n`)
     }
     else if (config.watch) {
       this.log(
-        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
       )
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No test files found, exiting with code 0\n`)
       }
       else {
         this.error(
-          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+          c.red(`No test files found, exiting with code 1\n`),
         )
       }
     }

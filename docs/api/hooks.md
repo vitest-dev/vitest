@@ -34,7 +34,7 @@ beforeEach(async () => {
 
 Here, the `beforeEach` ensures that user is added for each test.
 
-`beforeEach` can also return an optional cleanup function (equivalent to [`afterEach`](#aftereach)):
+`beforeEach` can also return an optional cleanup function. It's similar to [`afterEach`](#aftereach). The only difference is that it's executed after all other `afterEach` hooks:
 
 ```ts
 import { beforeEach } from 'vitest'
@@ -43,7 +43,7 @@ beforeEach(async () => {
   // called once before each test run
   await prepareSomething()
 
-  // clean up function, called once after each test run
+  // clean up function, called once after each test run, after afterEach hooks
   return async () => {
     await resetSomething()
   }
@@ -102,7 +102,7 @@ beforeAll(async () => {
 
 Here the `beforeAll` ensures that the mock data is set up before tests run.
 
-`beforeAll` can also return an optional cleanup function (equivalent to [`afterAll`](#afterall)):
+`beforeAll` can also return an optional cleanup function. It's similar to [`afterAll`](#afterall). The only difference is that it's executed after all other `afterAll` hooks:
 
 ```ts
 import { beforeAll } from 'vitest'
@@ -111,7 +111,7 @@ beforeAll(async () => {
   // called once before all tests run
   await startMocking()
 
-  // clean up function, called once after all tests run
+  // clean up function, called once after all tests run, after afterAll hooks
   return async () => {
     await stopMocking()
   }

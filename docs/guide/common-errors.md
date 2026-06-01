@@ -165,3 +165,55 @@ test('rejects for missing user', async () => {
   await expect(fetchUser(123)).rejects.toThrow('User 123 not found')
 })
 ```
+
+## Package fails to load in Vitest but works in your app
+
+Some packages work in an app build but fail in Vitest because they are only valid after a bundler has rewritten or resolved them. When Vitest externalizes a dependency, Node.js loads it directly, so Node's ESM and package rules apply. See Node.js documentation on [ECMAScript modules](https://nodejs.org/docs/latest/api/esm.html) and [packages](https://nodejs.org/docs/latest/api/packages.html) for the precise rules.
+
+Common examples include packages that:
+
+- ship ESM syntax in `.js` files without `"type": "module"`
+- use extensionless relative imports in ESM files
+- have incorrect `exports`, `imports`, `main`, or `module` entries
+- mix CommonJS and ESM entry points in a way that only works after bundling
+- import CSS or other non-JavaScript files that are expected to be handled by a bundler
+
+You might see errors such as:
+
+- `Cannot find module './relative-path' imported from ...`
+- `Unexpected token 'export'`
+- `Cannot use import statement outside a module`
+- `Module ... seems to be an ES Module but shipped in a CommonJS package.`
+- `Unknown file extension ".css"`
+
+When possible, fix the package so Node.js can load it directly: add `"type": "module"` for ESM `.js` files, use `.mjs`, include explicit file extensions in ESM imports, and make sure `exports` points to files Node.js can load.
+
+If you cannot fix the package itself, inline it so Vite handles it instead of passing it to Node.js as an external dependency. Inline the whole dependency chain that leads to the invalid package. If your source imports `wrapper-package`, and `wrapper-package` imports `broken-package`, inline both packages:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    server: {
+      deps: {
+        inline: ['wrapper-package', 'broken-package'],
+      },
+    },
+  },
+})
+```
+
+You can also use Vite's [`ssr.resolve.noExternal`](https://vite.dev/config/ssr-options#ssr-resolve-noexternal) for the same purpose. Vitest merges `ssr.resolve.noExternal` into [`server.deps.inline`](/config/server#server-deps-inline), so this is useful when the dependency also needs to be bundled by Vite in SSR builds:
+
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  ssr: {
+    resolve: {
+      noExternal: ['wrapper-package', 'broken-package'],
+    },
+  },
+})
+```

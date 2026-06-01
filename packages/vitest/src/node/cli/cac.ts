@@ -1,14 +1,13 @@
 import type { CAC, Command } from 'cac'
-import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils/helpers'
 import cac from 'cac'
 import { normalize } from 'pathe'
-import c, { disableDefaultColors } from 'tinyrainbow'
+import { disableDefaultColors } from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
-import { isAgent } from '../../utils/env'
-import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { isAgent, isForceColor } from '../../utils/env'
+import { cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 import { setupTabCompletions } from './completions'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -75,7 +74,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
 }
 
 export function createCLI(options: CliParseOptions = {}): CAC {
-  if (isAgent) {
+  if (isAgent && !isForceColor()) {
     disableDefaultColors()
   }
 
@@ -179,12 +178,9 @@ export function createCLI(options: CliParseOptions = {}): CAC {
     .command('dev [...filters]', undefined, options)
     .action(watch)
 
-  addCliOptions(
-    cli
-      .command('bench [...filters]', undefined, options)
-      .action(benchmark),
-    benchCliOptionsConfig,
-  )
+  cli
+    .command('bench [...filters]', undefined, options)
+    .action(benchmark)
 
   cli
     .command('init <project>', undefined, options)
@@ -193,13 +189,13 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   addCliOptions(
     cli
       .command('list [...filters]', undefined, options)
-      .action((filters, options) => collect('test', filters, options)),
+      .action((filters, options) => collect(filters, options)),
     collectCliOptionsConfig,
   )
 
   cli
     .command('[...filters]', undefined, options)
-    .action((filters, options) => start('test', filters, options))
+    .action((filters, options) => start(filters, options))
 
   setupTabCompletions(cli)
   return cli
@@ -263,24 +259,26 @@ export function parseCLI(argv: string | string[], config: CliParseOptions = {}):
 async function runRelated(relatedFiles: string[] | string, argv: CliOptions): Promise<void> {
   argv.related = relatedFiles
   argv.passWithNoTests ??= true
-  await start('test', [], argv)
+  await start([], argv)
 }
 
 async function watch(cliFilters: string[], options: CliOptions): Promise<void> {
   options.watch = true
-  await start('test', cliFilters, options)
+  await start(cliFilters, options)
 }
 
 async function run(cliFilters: string[], options: CliOptions): Promise<void> {
   // "vitest run --watch" should still be watch mode
   options.run = !options.watch
 
-  await start('test', cliFilters, options)
+  await start(cliFilters, options)
 }
 
 async function benchmark(cliFilters: string[], options: CliOptions): Promise<void> {
-  console.warn(c.yellow('Benchmarking is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.'))
-  await start('benchmark', cliFilters, options)
+  options.benchmarkOnly = true
+  options.coverage ??= {}
+  options.coverage.enabled = false
+  await start(cliFilters, options)
 }
 
 function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
@@ -303,10 +301,10 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   return argv
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+async function start(cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    const ctx = await startVitest(cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
     }
@@ -335,10 +333,10 @@ async function init(project: string) {
   await create()
 }
 
-async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+async function collect(cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
-    const ctx = await prepareVitest(mode, {
+    const ctx = await prepareVitest({
       ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,

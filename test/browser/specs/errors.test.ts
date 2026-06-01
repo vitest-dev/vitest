@@ -2,7 +2,7 @@ import path from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
-import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('prints correct unhandled error stack', async () => {
   const { stderr } = await runBrowserTests({
@@ -11,7 +11,7 @@ test('prints correct unhandled error stack', async () => {
 
   expect(stderr).toContain('throw-unhandled-error.test.ts:9:10')
   expect(stderr).toContain('This error originated in "throw-unhandled-error.test.ts" test file.')
-  expect(stderr).toContain('The latest test that might\'ve caused the error is "unhandled exception".')
+  expect(stderr).toContain('The last test to run before this error was "unhandled exception".')
 
   if (instances.some(({ browser }) => browser === 'webkit')) {
     expect(stderr).toContain('throw-unhandled-error.test.ts:9:20')
@@ -217,4 +217,37 @@ test('prints source-mapped stack for optimized dependency', async () => {
       `)
     }
   }
+})
+
+test.runIf(provider.name === 'playwright')('cannot use cdp if write or exec is disabled', async () => {
+  const result = await runInlineBrowserTests({
+    'cdp.test.ts': `
+      import { expect, test } from 'vitest'
+      import { cdp, server } from 'vitest/browser'
+
+      test('cdp throws an error', async () => {
+        await cdp().send('Runtime.evaluate', { expression: '1 + 1' })
+      })
+    `,
+  }, {
+    browser: {
+      instances: [{ browser: 'chromium' }],
+      screenshotFailures: false,
+      api: {
+        allowExec: false,
+        allowWrite: false,
+      },
+    },
+  })
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "chromium": {
+        "cdp.test.ts": {
+          "cdp throws an error": [
+            "Cannot use CDP because browser API write or exec operations are disabled. See https://vitest.dev/config/browser/api.",
+          ],
+        },
+      },
+    }
+  `)
 })

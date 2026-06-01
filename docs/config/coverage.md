@@ -286,7 +286,7 @@ When `true`, each file is checked against the top-level thresholds instead of th
 Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is better than the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
-You can also pass a function for formatting the updated threshold values:
+You can also pass a function for formatting the updated threshold values. The function receives the new threshold as the first argument and the previous threshold as the second:
 
 <!-- eslint-skip -->
 ```ts
@@ -295,6 +295,12 @@ You can also pass a function for formatting the updated threshold values:
     thresholds: {
       // Update thresholds without decimals
       autoUpdate: (newThreshold) => Math.floor(newThreshold),
+
+      // Log the change and update without decimals
+      autoUpdate: (newThreshold, previousThreshold) => {
+        console.log(`Updated threshold from ${previousThreshold} to ${newThreshold}`)
+        return Math.floor(newThreshold)
+      },
 
       // 95.85 -> 95
       functions: 95,
@@ -494,3 +500,14 @@ Note that setting this option does not change where coverage HTML report is gene
 - **CLI:** `--coverage.changed`, `--coverage.changed=<commit/branch>`
 
 Collect coverage only for files changed since a specified commit or branch. When set to `true`, it uses staged and unstaged changes.
+
+## coverage.autoAttachSubprocess <Version>5.0.0</Version> {#coverage-autoattachsubprocess}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.autoAttachSubprocess`
+
+Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run.
+
+Note that this option has some performance overhead as its using [`NODE_V8_COVERAGE`](https://nodejs.org/api/cli.html#node-v8-coveragedir) internally. This triggers Node to write lots of unnecessary files on file system.

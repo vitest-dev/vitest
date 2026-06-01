@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { RunnerTask, RunnerTestCase } from 'vitest'
-import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
-import { debouncedWatch } from '@vueuse/core'
-import { toJSON } from 'flatted'
-import { computed, nextTick, ref } from 'vue'
+import { computed, ref } from 'vue'
 import DetailsHeaderButtons from '~/components/DetailsHeaderButtons.vue'
 import {
   browserState,
@@ -16,40 +13,22 @@ import {
 import { tagsDefinitions } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
-import { getModuleGraph } from '~/composables/module-graph'
 import { selectedTest, viewMode } from '~/composables/params'
 import { getBadgeNameColor, getBadgeTextColor } from '~/utils/task'
+import FileDetailsModuleGraph from './FileDetailsModuleGraph.vue'
 import IconButton from './IconButton.vue'
 import StatusIcon from './StatusIcon.vue'
 import ViewConsoleOutput from './views/ViewConsoleOutput.vue'
 import ViewEditor from './views/ViewEditor.vue'
-import ViewModuleGraph from './views/ViewModuleGraph.vue'
 import ViewReport from './views/ViewReport.vue'
 import ViewTestReport from './views/ViewTestReport.vue'
 
-const graph = ref<ModuleGraph>({ nodes: [], links: [] })
 const draft = ref(false)
-const hasGraphBeenDisplayed = ref(false)
-const loadingModuleGraph = ref(false)
-const currentFilepath = ref<string | undefined>(undefined)
-const hideNodeModules = ref(true)
 
 const test = computed(() => {
   return selectedTest.value
     ? client.state.idMap.get(selectedTest.value) as RunnerTestCase
     : undefined
-})
-
-const graphData = computed(() => {
-  const c = current.value
-  if (!c || !c.filepath) {
-    return
-  }
-
-  return {
-    filepath: c.filepath,
-    projectName: c.file.projectName || '',
-  }
 })
 
 const failedSnapshot = computed(() => {
@@ -60,6 +39,8 @@ const isTypecheck = computed(() => {
   return !!current.value?.meta?.typecheck
 })
 
+const label = computed(() => current.value?.meta?.__vitest_label__)
+
 function open() {
   const filePath = current.value?.filepath
   if (filePath) {
@@ -68,10 +49,6 @@ function open() {
 }
 
 function changeViewMode(view: Params['view']) {
-  if (view === 'graph') {
-    hasGraphBeenDisplayed.value = true
-  }
-
   viewMode.value = view
 }
 const consoleCount = computed(() => {
@@ -82,82 +59,10 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
-const nodeModuleRegex = /[/\\]node_modules[/\\]/
-
-async function loadModuleGraph(force = false) {
-  if (
-    loadingModuleGraph.value
-    || (graphData.value?.filepath === currentFilepath.value && !force)
-  ) {
-    return
-  }
-
-  loadingModuleGraph.value = true
-
-  await nextTick()
-
-  try {
-    const gd = graphData.value
-    if (!gd) {
-      loadingModuleGraph.value = false
-      return
-    }
-
-    if (
-      force
-      || !currentFilepath.value
-      || gd.filepath !== currentFilepath.value
-      || (!graph.value.nodes.length && !graph.value.links.length)
-    ) {
-      let moduleGraph = await client.rpc.getModuleGraph(
-        gd.projectName,
-        gd.filepath,
-        !!browserState,
-      )
-      // remove node_modules from the graph when enabled
-      if (hideNodeModules.value) {
-        // when using static html reporter, we've the meta as global, we need to clone it
-        if (isReport) {
-          moduleGraph
-            = typeof window.structuredClone !== 'undefined'
-              ? window.structuredClone(moduleGraph)
-              : toJSON(moduleGraph)
-        }
-        moduleGraph.inlined = moduleGraph.inlined.filter(
-          n => !nodeModuleRegex.test(n),
-        )
-        moduleGraph.externalized = moduleGraph.externalized.filter(
-          n => !nodeModuleRegex.test(n),
-        )
-      }
-      graph.value = getModuleGraph(
-        moduleGraph,
-        gd.filepath,
-      )
-      currentFilepath.value = gd.filepath
-    }
-    changeViewMode('graph')
-  }
-  finally {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    loadingModuleGraph.value = false
-  }
-}
-
-debouncedWatch(
-  () => [graphData.value, viewMode.value, hideNodeModules.value] as const,
-  ([, vm, hide], old) => {
-    if (vm === 'graph') {
-      // only force reload when hide is changed
-      loadModuleGraph(old && hide !== old[2])
-    }
-  },
-  { debounce: 100, immediate: true },
-)
-
+const projectName = computed(() => current.value?.file.projectName || '')
 const projectNameColor = computed(() => {
-  const projectName = current.value?.file.projectName || ''
-  return explorerTree.colors.get(projectName) || getBadgeNameColor(current.value?.file.projectName)
+  const projectNameValue = projectName.value
+  return explorerTree.colors.get(projectNameValue) || getBadgeNameColor(projectNameValue)
 })
 
 const projectNameTextColor = computed(() => getBadgeTextColor(projectNameColor.value))
@@ -206,6 +111,7 @@ const tags = computed(() => {
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
+        <span v-if="label" class="rounded-sm px-1 text-xs font-light bg-cyan-500/20 text-cyan-700 dark:text-cyan-300" flex-shrink-0>{{ label }}</span>
         <span
           v-if="current?.file.projectName"
           class="rounded-full py-0.5 px-2 text-xs font-light"
@@ -263,14 +169,7 @@ const tags = computed(() => {
           :class="{ 'tab-button-active': viewMode === 'graph' }"
           @click="changeViewMode('graph')"
         >
-          <span
-            v-if="loadingModuleGraph"
-            class="block w-1.4em h-1.4em i-carbon:circle-dash animate-spin animate-2s"
-          />
-          <span
-            v-else
-            class="block w-1.4em h-1.4em i-carbon:chart-relationship"
-          />
+          <span class="block w-1.4em h-1.4em i-carbon:chart-relationship" />
           Module Graph
         </button>
         <button
@@ -300,18 +199,15 @@ const tags = computed(() => {
     </div>
 
     <div flex flex-col flex-1 overflow="hidden">
-      <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
-        <ViewModuleGraph
-          v-show="viewMode === 'graph' && !loadingModuleGraph"
-          v-model="hideNodeModules"
-          :graph="graph"
-          data-testid="graph"
-          :project-name="current.file.projectName || ''"
-        />
-      </div>
+      <FileDetailsModuleGraph
+        v-if="viewMode === 'graph'"
+        :key="`graph:${current.id}`"
+        :file="current"
+        :project-name="projectName"
+      />
       <ViewEditor
-        v-if="viewMode === 'editor'"
-        :key="current.id"
+        v-else-if="viewMode === 'editor'"
+        :key="`editor:${current.id}`"
         :file="current"
         data-testid="editor"
         @draft="onDraft"

@@ -10,6 +10,6 @@ export function multiply(a: number, b: number) {
   return a * b
 }
 
-export function remainder(a: number, b:number) {
+export function remainder(a: number, b: number) {
   return a % b
 }

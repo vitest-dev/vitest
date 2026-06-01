@@ -1,4 +1,4 @@
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
@@ -44,7 +44,7 @@ export default function toHaveStyle(
   this: MatcherState,
   actual: Element | Locator,
   css: string | Record<string, unknown>,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveStyle, this)
   const { getComputedStyle } = htmlElement.ownerDocument.defaultView!
 

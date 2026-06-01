@@ -1,4 +1,4 @@
-import type { ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from '../../../context'
+import type { ScreenshotComparatorRegistry, ScreenshotMatcherOptions, SerializedLocator } from '../../../context'
 
 export type ScreenshotMatcherArguments<
   ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry,
@@ -7,8 +7,9 @@ export type ScreenshotMatcherArguments<
   testName: string,
   options: ScreenshotMatcherOptions<ComparatorName>
     & {
-      element: string
-      screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly string[] }
+      element?: SerializedLocator
+      target?: 'element' | 'page'
+      screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly SerializedLocator[] }
     },
 ]
 

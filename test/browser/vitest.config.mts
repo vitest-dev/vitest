@@ -72,6 +72,9 @@ export default defineConfig({
       { name: 'test', priority: 5 },
       { name: 'browser', priority: 1 },
     ],
+    benchmark: {
+      enabled: true,
+    },
     alias: {
       '#src': resolve(dir, './src'),
     },
@@ -104,6 +107,27 @@ export default defineConfig({
       name: 'test-early-transform',
       async configureServer(server) {
         await server.ssrLoadModule('/package.json')
+      },
+    },
+    {
+      name: 'my-ssr',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const url = new URL(req.url || '', 'http://localhost')
+          if (url.pathname.startsWith('/api/')) {
+            try {
+              const mod = await server.ssrLoadModule('./test/server/entry.ts')
+              const result = await mod.default(url)
+              res.end(JSON.stringify(result))
+              return
+            }
+            catch (e) {
+              next(e)
+              return
+            }
+          }
+          next()
+        })
       },
     },
   ],

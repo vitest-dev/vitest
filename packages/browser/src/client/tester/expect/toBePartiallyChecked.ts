@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getAriaChecked as ivyaGetAriaChecked } from 'ivya/utils'
 import { getElementFromUserInput, isInputElement } from './utils'
@@ -21,7 +21,7 @@ import { getElementFromUserInput, isInputElement } from './utils'
 export default function toBePartiallyChecked(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBePartiallyChecked, this)
 
   const isValidInput = () => {

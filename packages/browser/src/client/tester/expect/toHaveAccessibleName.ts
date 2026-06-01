@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementAccessibleName } from 'ivya/utils'
 import { getElementFromUserInput, getMessage } from './utils'
@@ -22,7 +22,7 @@ export default function toHaveAccessibleName(
   this: MatcherState,
   actual: Element | Locator,
   expectedAccessibleName?: string | RegExp,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleName, this)
   const actualAccessibleName = getElementAccessibleName(htmlElement, false)
   const missingExpectedValue = arguments.length === 1

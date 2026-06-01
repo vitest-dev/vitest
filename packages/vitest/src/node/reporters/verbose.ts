@@ -44,5 +44,11 @@ export class VerboseReporter extends DefaultReporter {
       this.printAnnotations(test, 'log', 3)
       this.log()
     }
+
+    const benchmarks = test.benchmarks()
+    const inlineBenchmarks = benchmarks.filter(b => b.tasks.length > 0)
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, '')
+    }
   }
 }

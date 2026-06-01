@@ -1,35 +1,23 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
-import assert from 'node:assert'
-import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { preview } from 'vite'
-import { startVitest } from 'vitest/node'
+import { assertTestCounts, evaluateEditor, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
   let baseURL: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    vitest = await startVitest(
-      'test',
-      undefined,
-      {
-        root: './fixtures-trace',
-        watch: true,
-        ui: true,
-        open: false,
-      },
-      {},
-      { stdout, stderr },
-    )
-    const address = vitest.vite.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    baseURL = `http://localhost:${address.port}/__vitest__/`
+    const root = './fixtures/trace'
+    const server = await startVitestUi({
+      root,
+      watch: true,
+      ui: true,
+      open: false,
+    })
+    vitest = server.vitest
+    baseURL = `${server.url}/__vitest__/`
   })
 
   test.afterAll(async () => {
@@ -38,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await testReady(page)
+    await assertTestCounts(page, { pass: 11, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -64,6 +52,10 @@ test.describe('ui', () => {
   test('scroll', async ({ page }) => {
     await testScroll(page)
   })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -71,14 +63,10 @@ test.describe('html reporter', () => {
   let baseURL: string
 
   test.beforeAll(async () => {
-    // silence Vitest logs
-    const stdout = new Writable({ write: (_, __, callback) => callback() })
-    const stderr = new Writable({ write: (_, __, callback) => callback() })
-    await startVitest(
-      'test',
-      undefined,
+    const root = './fixtures/trace'
+    const server = await startHtmlReportPreview(
       {
-        root: './fixtures-trace',
+        root,
         run: true,
         ui: false,
         reporters: 'html',
@@ -89,16 +77,13 @@ test.describe('html reporter', () => {
           },
         },
       },
-      {},
-      { stdout, stderr },
+      {
+        root,
+        build: { outDir: 'html' },
+      },
     )
-    previewServer = await preview({
-      root: './fixtures-trace',
-      build: { outDir: 'html' },
-    })
-    const address = previewServer.httpServer?.address()
-    assert(address && typeof address === 'object', 'Invalid server address')
-    baseURL = `http://localhost:${address.port}/`
+    previewServer = server.previewServer
+    baseURL = `${server.url}/`
   })
 
   test.afterAll(async () => {
@@ -107,11 +92,10 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await testReady(page)
+    await assertTestCounts(page, { pass: 11, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
-    await page.goto(baseURL)
     await testBasic(page)
   })
 
@@ -134,17 +118,11 @@ test.describe('html reporter', () => {
   test('scroll', async ({ page }) => {
     await testScroll(page)
   })
+
+  test('attempts', async ({ page }) => {
+    await testAttempts(page)
+  })
 })
-
-async function testReady(page: Page) {
-  const count = 6
-  await expect.soft(page.getByTestId('tests-entry'))
-    .toContainText(`${count} Pass 0 Fail ${count} Total`)
-}
-
-async function openExplorerItem(page: Page, name: string) {
-  await page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true })).click()
-}
 
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer
@@ -153,11 +131,28 @@ async function testBasic(page: Page) {
   await openExplorerItem(page, 'simple')
   await expect(traceView).toBeVisible()
 
+  const traceSteps = traceView.getByTestId('trace-step')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+    'Render simple',
+    'Render another',
+    'test finished',
+  ])
+
   // selecting steps should open source code view
-  const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(page.getByTestId('btn-report')).toContainClass('tab-button-active')
-  await traceSteps.getByText('Render simple').click()
+  await traceStepNames.getByText('Render simple').click()
   await expect(page.getByTestId('btn-code')).toContainClass('tab-button-active')
+
+  // verify editor cursor position
+  const getEditorCursor = () => evaluateEditor(page, editor => editor.getCursor())
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 9, ch: 32 })
+
+  // markers ordered by 'test finished' > 'Render simple' > 'Render another'
+  const traceEditorMarkers = page.getByTestId('editor').getByTestId('trace-editor-marker')
+  await expect(traceEditorMarkers).toHaveCount(3)
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
 
   // verify snapshot replay in iframe
   const traceFrame = traceView.frameLocator('iframe')
@@ -165,6 +160,30 @@ async function testBasic(page: Page) {
 
   // verify selector highlight
   await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+
+  // selecting 2nd trace step and verify again
+  await traceStepNames.getByText('Render another').click()
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect.poll(() => getEditorCursor()).toEqual({ line: 12, ch: 32 })
+  await expect(traceSteps.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(1)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).toHaveAttribute('aria-current', 'step')
+
+  // selecting 1st trace step from editor and verify again
+  await traceEditorMarkers.nth(1).click()
+  await expect(traceFrame.getByRole('button', { name: 'Simple' })).toBeVisible()
+  await expect(traceEditorMarkers.nth(1)).toHaveAttribute('aria-current', 'step')
+  await expect(traceEditorMarkers.nth(2)).not.toHaveAttribute('aria-current', 'step')
+  await expect(traceSteps.nth(0)).toHaveAttribute('aria-current', 'step')
+
+  // verify selecting another test switches trace viewer
+  await openExplorerItem(page, 'switch-target')
+  await expect(traceView).toBeVisible()
+  await expect(traceFrame.getByRole('button', { name: 'Switch Target' })).toBeVisible()
+
+  // verify closing trace viewer doesn't immediately auto-open it again
+  await traceView.getByRole('button', { name: 'Close Trace Viewer' }).click()
+  await expect(traceView).toBeHidden()
 }
 
 async function testViewport(page: Page) {
@@ -253,4 +272,32 @@ async function testScroll(page: Page) {
   await expect(traceView).toBeVisible()
   await expect(traceFrame.getByText('(0, 0)')).not.toBeInViewport()
   await expect(traceFrame.getByText('(300, 300)')).toBeInViewport()
+}
+
+async function testAttempts(page: Page) {
+  await openExplorerItem(page, 'retried test')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceFrame = traceView.frameLocator('iframe')
+
+  await expect(traceView).toBeVisible()
+
+  const traceOpenButtons = page.getByTestId('trace-open-button')
+  await expect(traceOpenButtons).toHaveText([
+    'Open trace viewer',
+    'Open trace viewer Retry 1',
+    'Open trace viewer Retry 2',
+  ])
+
+  await traceOpenButtons.nth(0).click()
+  await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(1).click()
+  await expect(traceFrame.getByText('retryCount: 1')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+
+  await traceOpenButtons.nth(2).click()
+  await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
+  await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
 }

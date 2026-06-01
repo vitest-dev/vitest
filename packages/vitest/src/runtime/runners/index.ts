@@ -6,7 +6,6 @@ import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
-import { NodeBenchmarkRunner } from './benchmark'
 import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
@@ -14,9 +13,7 @@ async function getTestRunnerConstructor(
   moduleRunner: TestModuleRunner,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
-    return (
-      config.mode === 'test' ? TestRunner : NodeBenchmarkRunner
-    ) as any as VitestRunnerConstructor
+    return TestRunner as any as VitestRunnerConstructor
   }
   const mod = await moduleRunner.import(config.runner)
   if (!mod.default && typeof mod.default !== 'function') {
@@ -60,7 +57,7 @@ export async function resolveTestRunner(
     loadDiffConfig(config, moduleRunner),
     loadSnapshotSerializers(config, moduleRunner),
   ])
-  testRunner.config.diffOptions = diffOptions
+  testRunner.config._diffOptions = diffOptions
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate

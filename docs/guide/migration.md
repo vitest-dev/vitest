@@ -5,7 +5,125 @@ outline: deep
 
 # Migration Guide
 
-[Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
+[Migrating to Vitest 4.0](https://v4.vitest.dev/guide/migration) | [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration)
+
+## Migrating to Vitest 5.0 {#vitest-5}
+
+::: warning Work in progress
+Vitest 5.0 is currently in beta. This section tracks breaking changes as they are merged and may change before the stable release.
+:::
+
+### Benchmarking API Rewrite
+
+The benchmarking API has been rewritten. `bench` is no longer a top-level import from `vitest`; it is a [test-context fixture](/guide/test-context#bench) accessed from inside a regular `test()`. See the [Benchmarking guide](/guide/benchmarking) for the new API.
+
+Removed, with replacements where applicable:
+
+- **`bench(name, fn)` at module scope**: destructure `bench` from the test context instead.
+
+```ts
+// v4
+import { bench } from 'vitest' // [!code --]
+
+bench('sort', () => { // [!code --]
+  [3, 1, 2].sort() // [!code --]
+}) // [!code --]
+
+// v5
+import { test } from 'vitest' // [!code ++]
+
+test('sort', async ({ bench }) => { // [!code ++]
+  await bench('sort', () => { [3, 1, 2].sort() }).run() // [!code ++]
+}) // [!code ++]
+```
+
+- **`bench.skip`, `bench.only`, `bench.todo`** are removed. Use the regular `test.skip`, `test.only`, `test.todo` on the surrounding `test()` instead.
+- **`benchmark.reporters` / `benchmark.outputFile`** are removed. Benchmark output is now part of the default reporter and the `json` reporter; configure those at the top level via `test.reporters` instead.
+- **`benchmark.compare` config and the `--compare` CLI flag** are removed. Pass [`writeResult`](/guide/benchmarking#storing-and-replaying-results) as a per-bench option to persist a result, and read it back with [`bench.from()`](/guide/benchmarking#bench-from) inside `bench.compare()`.
+- **`benchmark.outputJson` config and the `--outputJson` CLI flag** are removed. Use `--reporter=json --outputFile=<path>` to capture benchmark results; the JSON reporter now includes a `benchmarks` field on each test case.
+- **`Vitest` instance `mode` property** is now always `'test'`. The previous `'benchmark'` value is no longer used; benchmarks run inside a dedicated project of the same `Vitest` instance.
+
+### Removed `test.sequential`, `describe.sequential`, and `sequential` Options
+
+Vitest 5.0 removes the deprecated `test.sequential`, `describe.sequential`, and `sequential` test options. Use `concurrent: false` when you need a test or suite to opt out of inherited or globally configured concurrency.
+
+```ts
+test.sequential('example', async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
+
+```ts
+describe.sequential('suite', () => { /* ... */ }) // [!code --]
+describe('suite', { concurrent: false }, () => { /* ... */ }) // [!code ++]
+```
+
+The same replacement applies to option objects:
+
+```ts
+test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
+test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
+```
+
+### Locators in Commands are Serialized as Objects
+
+Locators forwarded to [browser commands](/api/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:
+
+- `selector`: the provider-specific selector string (the same value commands previously received).
+- `locator`: a human-readable representation of the locator (e.g. `getByRole('button')`), used for error messages and tracing.
+
+Update any custom commands that accept a locator to destructure `selector` from the new object:
+
+```ts
+import type { SerializedLocator } from '@vitest/browser'
+import type { BrowserCommandContext } from 'vitest/node'
+
+export async function customClick(
+  context: BrowserCommandContext,
+  selector: string, // [!code --]
+  { selector }: SerializedLocator, // [!code ++]
+) {
+  await context.page.locator(selector).click()
+}
+```
+
+### Locators are Strict by Default
+
+Browser locators now match the text exactly by default, requiring a full, case-sensitive match. To keep the previous behaviour, you can set [`browser.locators.exact`](/config/browser/locators#browser-locators-exact) to `false`.
+
+```ts
+// With exact: true (default), this only matches the string "Hello, World" exactly.
+// With exact: false, this matches "Hello, World!", "Say Hello, World", etc.
+const locator = page.getByText('Hello, World', { exact: true })
+await locator.click()
+```
+
+### Removed Deprecated Entrypoints
+
+Several entry points were marked as deprecated in Vitest 4.1. This release removes them entirely.
+
+- `vitest/coverage`: use `vitest/node` instead
+- `vitest/reporters`: use `vitest/node` instead
+- `vitest/environments`: use `vitest/runtime` instead
+- `vitest/snapshot`: use `vitest/runtime` instead
+- `vitest/runners`: use `TestRunner` from `vitest` instead
+- `vitest/suite`: use static methods on `TestRunner` from vitest instead (for example, `TestRunner.getCurrentTest()`)
+- `vitest/mocker` is removed completely, use `@vitest/mocker` package directly (this was published by accident at one point and never removed)
+- `vitest/internal/module-runner` is removed
+
+### `toHaveTextContent` Now Performs Strict Equality
+
+The browser-mode [`toHaveTextContent`](/api/browser/assertions#tohavetextcontent) matcher now validates that an element's text content is exactly equal to the expected string instead of performing a partial, case-sensitive match. Regular expressions are no longer accepted. The previous behaviour, including `RegExp` support, has moved to the new [`toMatchTextContent`](/api/browser/assertions#tomatchtextcontent) matcher.
+
+```ts
+// Partial or regex matches:
+await expect.element(banner).toHaveTextContent('Error') // [!code --]
+await expect.element(banner).toHaveTextContent(/error/i) // [!code --]
+await expect.element(banner).toMatchTextContent('Error') // [!code ++]
+await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
+
+// Exact matches stay on `toHaveTextContent`:
+await expect.element(banner).toHaveTextContent('Error!')
+```
 
 ## Migrating to Vitest 4.0 {#vitest-4}
 
@@ -417,7 +535,7 @@ export default defineConfig({
 ```
 :::
 
-See [Recipes](/guide/recipes) for more examples.
+See [Per-File Isolation Settings](/guide/recipes/disable-isolation) and [Parallel and Sequential Test Files](/guide/recipes/parallel-sequential) for more examples.
 
 ### Reporter Updates
 
@@ -650,7 +768,7 @@ export default defineConfig({
 
 Otherwise your snapshots will have a lot of escaped `"` characters.
 
-### Custom Snapshot Matchers <Badge type="warning">experimental</Badge> <Version>4.1.3</Version>
+### Custom Snapshot Matchers <Experimental /> <Version>4.1.3</Version> {#custom-snapshot-matcher}
 
 Jest imports snapshot composables from `jest-snapshot`. In Vitest, use `Snapshots` from `vitest` instead:
 

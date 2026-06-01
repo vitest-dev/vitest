@@ -1,22 +1,22 @@
-import type { AsyncExpectationResult, MatcherState } from '@vitest/expect'
 import type { VisualRegressionArtifact } from '@vitest/runner'
-import type { ScreenshotMatcherOptions } from '../../../../context'
+import type { AsyncMatcherResult, MatcherState } from 'vitest'
+import type { BrowserPage, ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments, ScreenshotMatcherOutput } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { recordArtifact } from 'vitest'
 import { getBrowserState } from '../../utils'
-import { convertToSelector } from '../tester-utils'
+import { serializeElement } from '../tester-utils'
 
 const counters = new Map<string, { current: number }>([])
 
 export default async function toMatchScreenshot(
   this: MatcherState,
-  actual: Element | Locator,
+  actual: BrowserPage | Element | Locator,
   nameOrOptions?: ScreenshotMatcherOptions | string,
   options: ScreenshotMatcherOptions = typeof nameOrOptions === 'object'
     ? nameOrOptions
     : {},
-): AsyncExpectationResult {
+): AsyncMatcherResult {
   if (this.isNot) {
     throw new Error('\'toMatchScreenshot\' cannot be used with "not"')
   }
@@ -40,11 +40,13 @@ export default async function toMatchScreenshot(
     ? nameOrOptions
     : `${this.currentTestName} ${counter.current}`
 
+  const isPageTarget = isBrowserPage(actual)
+
   const [element, ...mask] = await Promise.all([
-    convertToSelector(actual, options),
+    isPageTarget ? undefined : serializeElement(actual, options),
     ...options.screenshotOptions && 'mask' in options.screenshotOptions
       ? (options.screenshotOptions.mask as Array<Element | Locator>)
-          .map(m => convertToSelector(m, options))
+          .map(m => serializeElement(m, options))
       : [],
   ])
 
@@ -68,6 +70,7 @@ export default async function toMatchScreenshot(
       this.currentTestName,
       {
         element,
+        target: isPageTarget ? 'page' : 'element',
         ...normalizedOptions,
       },
     ] satisfies ScreenshotMatcherArguments,
@@ -104,7 +107,7 @@ export default async function toMatchScreenshot(
       result.pass
         ? ''
         : [
-            this.utils.matcherHint('toMatchScreenshot', 'element', ''),
+            this.utils.matcherHint('toMatchScreenshot', isPageTarget ? 'page' : 'element', ''),
             '',
             result.message,
             result.reference
@@ -124,4 +127,9 @@ export default async function toMatchScreenshot(
       outcome: result.outcome,
     },
   }
+}
+
+function isBrowserPage(value: unknown): value is BrowserPage {
+  return !!value && typeof value === 'object' && 'viewport' in value
+    && typeof value.viewport === 'function'
 }

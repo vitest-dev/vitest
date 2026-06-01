@@ -299,12 +299,19 @@ Apply exclusions again after coverage has been remapped to original sources. (de
 
 Directory of HTML coverage output to be served in UI mode and HTML reporter.
 
+### coverage.autoAttachSubprocess
+
+- **CLI:** `--coverage.autoAttachSubprocess`
+- **Config:** [coverage.autoAttachSubprocess](/config/coverage#coverage-autoattachsubprocess)
+
+Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)
+
 ### mode
 
 - **CLI:** `--mode <name>`
 - **Config:** [mode](/config/mode)
 
-Override Vite mode (default: `test` or `benchmark`)
+Override Vite mode (default: `test`)
 
 ### isolate
 
@@ -455,7 +462,7 @@ Inline loaded image pixels in trace-view snapshots (default: `false`)
 - **CLI:** `--browser.locators.exact`
 - **Config:** [browser.locators.exact](/config/browser/locators#locators-exact)
 
-Should locators match the text exactly by default (default: `false`)
+Should locators match the text exactly by default (default: `true`)
 
 ### pool
 
@@ -784,6 +791,13 @@ Allow JavaScript files to be typechecked. By default takes the value from tsconf
 
 Ignore type errors from source files
 
+### typecheck.build
+
+- **CLI:** `--typecheck.build`
+- **Config:** [typecheck.build](/config/typecheck#typecheck-build)
+
+Use TypeScript build mode
+
 ### typecheck.tsconfig
 
 - **CLI:** `--typecheck.tsconfig <path>`
@@ -865,7 +879,7 @@ Collect test and suite locations in the `location` property
 - **CLI:** `--attachmentsDir <dir>`
 - **Config:** [attachmentsDir](/config/attachmentsdir)
 
-The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)
+The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)
 
 ### run
 

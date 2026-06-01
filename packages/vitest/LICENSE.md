@@ -500,6 +500,13 @@ Repository: unjs/mlly
 
 ---------------------------------------
 
+## natural-compare
+License: MIT
+By: Lauri Rooden
+Repository: git://github.com/litejs/natural-compare-lite.git
+
+---------------------------------------
+
 ## package-manager-detector
 License: MIT
 By: Anthony Fu

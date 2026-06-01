@@ -35,12 +35,6 @@ export {
 }
 export type { BaseReporter, Reporter, TestRunEndReason }
 
-export type { BenchmarkBuiltinReporters } from './benchmark'
-export {
-  BenchmarkReporter,
-  BenchmarkReportsMap,
-  VerboseBenchmarkReporter,
-} from './benchmark'
 export type {
   JsonAssertionResult,
   JsonTestResult,

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "5.0.0-beta.1",
+  "version": "5.0.0-beta.4",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -23,10 +23,11 @@
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

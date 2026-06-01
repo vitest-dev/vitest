@@ -1,18 +1,22 @@
-import type { ComponentRenderOptions } from 'vitest-browser-vue'
+import type { ComponentRenderOptions, RenderResult } from 'vitest-browser-vue'
 import { vTooltip } from 'floating-vue'
+import { vi } from 'vitest'
 import {
   render as _render,
 } from 'vitest-browser-vue'
 
 export { page } from 'vitest/browser'
 
-export function render<C>(component: C, options?: ComponentRenderOptions<C, any>) {
-  return _render(component, {
+export const render = vi.defineHelper(<C>(
+  component: C,
+  options?: ComponentRenderOptions<C, any>,
+): Promise<RenderResult<any>> => {
+  return Promise.resolve(_render(component, {
     ...options,
     global: {
       directives: {
         tooltip: vTooltip,
       },
     },
-  })
-}
+  }))
+})

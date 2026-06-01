@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["DOM"],
-    "isolatedDeclarations": true
-  },
-  "exclude": ["./dist"]
-}
