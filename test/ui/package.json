@@ -10,6 +10,7 @@
     "@testing-library/dom": "^10.4.1",
     "@types/codemirror": "^5.60.17",
     "@vitest/browser-playwright": "workspace:*",
+    "@vitest/browser-preview": "workspace:*",
     "happy-dom": "latest",
     "vitest": "workspace:*"
   }
