@@ -1,5 +1,7 @@
 import type { TestArtifact } from '@vitest/runner'
 import type { TestAnnotation } from 'vitest'
+import { readdirSync } from 'node:fs'
+import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
@@ -664,4 +666,53 @@ describe('reporters', () => {
       `)
     })
   })
+})
+
+test('attachmentsDir is root only', async () => {
+  const result = await runInlineTests(
+    {
+      'packages/client/basic.test.ts': `
+import { test } from 'vitest'
+test("hello", ({ annotate }) => {
+  annotate("hello annotation", { path: "./hello.txt" })
+})
+`,
+      'packages/client/hello.txt': `HELLO`,
+      'packages/server/basic.test.ts': `
+import { test } from 'vitest'
+test("world", ({ annotate }) => {
+  annotate("world annotation", { path: "./world.txt" })
+})
+`,
+      'packages/server/world.txt': `WORLD`,
+    },
+    {
+      projects: ['./packages/*'],
+    },
+  )
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "client": {
+        "basic.test.ts": {
+          "hello": "passed",
+        },
+      },
+      "server": {
+        "basic.test.ts": {
+          "world": "passed",
+        },
+      },
+    }
+  `)
+  const files = readdirSync(path.join(result.root, '.vitest/attachments'))
+  const contents = files.sort().map(file =>
+    result.fs.readFile(path.join('.vitest/attachments', file)),
+  )
+  expect(contents).toMatchInlineSnapshot(`
+    [
+      "HELLO",
+      "WORLD",
+    ]
+  `)
 })

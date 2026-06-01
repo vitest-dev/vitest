@@ -5,6 +5,7 @@ import type {
   ModuleRunnerContext,
   ModuleRunnerImportMeta,
 } from 'vite/module-runner'
+import type { GetterTracker } from '../getter-tracker'
 import type { VitestEvaluatedModules } from './evaluatedModules'
 import type { ModuleExecutionInfo } from './moduleDebug'
 import type { VitestVmOptions } from './moduleRunner'
@@ -30,6 +31,7 @@ export interface VitestModuleEvaluatorOptions {
   getCurrentTestFilepath?: () => string | undefined
   compiledFunctionArgumentsNames?: string[]
   compiledFunctionArgumentsValues?: unknown[]
+  getterTracker?: GetterTracker
   /**
    * @internal
    */
@@ -43,6 +45,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
   private compiledFunctionArgumentsNames?: string[]
   private compiledFunctionArgumentsValues: unknown[] = []
+  private getterTracker: GetterTracker | undefined
+
+  static EXPORTS_MAX_INVOCATIONS = 1_000_000
 
   private primitives: {
     Object: typeof Object
@@ -81,6 +86,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         Reflect,
       }
     }
+    this.getterTracker = options.getterTracker
   }
 
   private convertIdToImportUrl(id: string) {
@@ -296,6 +302,7 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     argumentsList.push(
       // TODO@discuss deprecate in Vitest 5, remove in Vitest 6(?)
       // backwards compat for vite-node
+      // https://github.com/vitest-dev/vitest/issues/10292
       '__filename',
       '__dirname',
       'module',
@@ -333,19 +340,26 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
         ? vm.runInContext(wrappedCode, this.vm.context, options)
         : vm.runInThisContext(wrappedCode, options)
 
+      const __vite_ssr_exportName__ = context.__vite_ssr_exportName__
+        || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
+          enumerable: true,
+          configurable: true,
+          get: getter,
+        }))
+
+      let __vite_track_exportName__: ((name: string, getter: () => unknown) => void) | undefined
+      const getterTracker = this.getterTracker
+      if (getterTracker) {
+        __vite_track_exportName__ = getterTracker.createTracker(module.id, __vite_ssr_exportName__)
+      }
+
       await initModule(
         context[ssrModuleExportsKey],
         context[ssrImportMetaKey],
         context[ssrImportKey],
         context[ssrDynamicImportKey],
         context[ssrExportAllKey],
-        // vite 7 support, remove when vite 7+ is supported
-        context.__vite_ssr_exportName__
-        || ((name: string, getter: () => unknown) => Object.defineProperty(context[ssrModuleExportsKey], name, {
-          enumerable: true,
-          configurable: true,
-          get: getter,
-        })),
+        __vite_track_exportName__ || __vite_ssr_exportName__,
 
         cjsGlobals.__filename,
         cjsGlobals.__dirname,
@@ -531,7 +545,7 @@ function interopModule(mod: any) {
 
   let defaultExport = 'default' in mod ? mod.default : mod
 
-  if (!isPrimitive(defaultExport) && '__esModule' in defaultExport) {
+  if (!isPrimitive(defaultExport) && defaultExport.__esModule) {
     mod = defaultExport
     if ('default' in defaultExport) {
       defaultExport = defaultExport.default

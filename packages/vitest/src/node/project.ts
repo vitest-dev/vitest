@@ -1,4 +1,3 @@
-import type { TaskMeta } from '@vitest/runner/types'
 import type { GlobOptions } from 'tinyglobby'
 import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
@@ -29,6 +28,7 @@ import { isRunnableDevEnvironment } from 'vite'
 import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
+import { BenchmarkManager } from './benchmark'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
@@ -63,6 +63,8 @@ export class TestProject {
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
   public readonly tmpDir: string
+
+  public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
@@ -154,14 +156,14 @@ export class TestProject {
     /** @internal */
     pool?: string,
     /** @internal */
-    metaOverride?: TaskMeta,
+    taskIdOverride?: string,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this),
       locationsOrOptions,
-      metaOverride,
+      taskIdOverride,
     )
   }
 
@@ -550,7 +552,9 @@ export class TestProject {
       this.vitest,
       {
         ...options,
+        // root-only configs
         coverage: this.vitest.config.coverage,
+        attachmentsDir: this.vitest.config.attachmentsDir,
       },
       server.config,
     )
@@ -730,7 +734,7 @@ export class TestProject {
   }
 
   /** @internal */
-  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
+  static _cloneTestProject(parent: TestProject, config: ResolvedConfig): TestProject {
     const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
     clone.runner = parent.runner
     clone._vite = parent._vite

@@ -18,6 +18,10 @@ export function interpretTaskModes(
   allowOnly?: boolean,
 ): void {
   const matchedLocations: number[] = []
+  const testLocationsSet = testLocations !== undefined && testLocations.length !== 0
+    ? new Set(testLocations)
+    : undefined
+  const testIdsSet = testIds ? new Set(testIds) : undefined
 
   const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
@@ -54,8 +58,8 @@ export function interpretTaskModes(
       // Match test location against provided locations, only run if present
       // in `testLocations`. Note: if `includeTaskLocation` is not enabled,
       // all test will be skipped.
-      if (testLocations !== undefined && testLocations.length !== 0) {
-        if (t.location && testLocations?.includes(t.location.line)) {
+      if (testLocationsSet !== undefined) {
+        if (t.location && testLocationsSet.has(t.location.line)) {
           t.mode = 'run'
           matchedLocations.push(t.location.line)
           hasLocationMatch = true
@@ -72,7 +76,7 @@ export function interpretTaskModes(
         if (namePattern && !getTaskFullName(t).match(namePattern)) {
           t.mode = 'skip'
         }
-        if (testIds && !testIds.includes(t.id)) {
+        if (testIdsSet && !testIdsSet.has(t.id)) {
           t.mode = 'skip'
         }
         if (testTagsFilter && !testTagsFilter(t.tags || [])) {

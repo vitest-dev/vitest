@@ -1,5 +1,5 @@
 import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
-import type { TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
+import type { BaselineData, TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
@@ -8,9 +8,11 @@ import type {
   RunnerTestFile,
   SerializedTestSpecification,
   SnapshotResult,
+  TestBenchmark,
   TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
+import type { MarkOptions } from 'vitest/browser'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
@@ -20,7 +22,11 @@ export interface WebSocketBrowserHandlers {
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
   onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onTestBenchmark: (testId: string, benchmark: TestBenchmark) => void
+  readBenchmarkResult: (relativePath: string) => Promise<BaselineData | null>
+  writeBenchmarkResult: (relativePath: string, data: BaselineData) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
+  onOrchestratorReady: () => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
@@ -75,6 +81,7 @@ export interface WebSocketBrowserEvents {
   createTesters: (options: BrowserTesterOptions) => Promise<void>
   cleanupTesters: () => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
+  pageMark: (name: string, options?: MarkOptions) => Promise<void>
   resolveManualMock: (url: string) => Promise<{
     url: string
     keys: string[]

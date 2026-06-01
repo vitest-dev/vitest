@@ -121,6 +121,15 @@ export function createMethodsRPC(project: TestProject, methodsOptions: MethodsOp
     onAfterSuiteRun(meta) {
       vitest.coverageProvider?.onAfterSuiteRun(meta)
     },
+    async onTestBenchmark(testId, benchmark) {
+      return vitest._testRun.recordBenchmark(testId, benchmark)
+    },
+    async readBenchmarkResult(relativePath) {
+      return project.benchmark.readResult(relativePath)
+    },
+    async writeBenchmarkResult(relativePath, data) {
+      return project.benchmark.writeResult(relativePath, data)
+    },
     async onTaskArtifactRecord(testId, artifact) {
       return vitest._testRun.recordArtifact(testId, artifact)
     },
