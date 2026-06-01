@@ -7,7 +7,6 @@ import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
-import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
@@ -34,7 +33,6 @@ export default class HTMLReporter implements Reporter {
   options: HTMLOptions
 
   private reporterDir!: string
-  private htmlFilePath!: string
 
   constructor(options: HTMLOptions) {
     this.options = options
@@ -49,9 +47,6 @@ export default class HTMLReporter implements Reporter {
         || 'html/index.html'
     const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
     this.reporterDir = dirname(htmlFilePath)
-    this.htmlFilePath = htmlFilePath
-
-    await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
   async onTestRunEnd(
@@ -73,12 +68,7 @@ export default class HTMLReporter implements Reporter {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
     // copy ui assets
-    const files = globSync(['**/*'], { cwd: distClientRoot, expandDirectories: false })
-    await Promise.all(
-      files.map(async (f) => {
-        await fs.copyFile(resolve(distClientRoot, f), resolve(this.reporterDir, f))
-      }),
-    )
+    await fs.cp(distClientRoot, this.reporterDir, { recursive: true })
     await handleIndexHtml({
       srcDir: distClientRoot,
       dstDir: this.reporterDir,
