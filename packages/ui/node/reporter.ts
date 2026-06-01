@@ -11,6 +11,8 @@ import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 import { distClientRoot } from './paths'
 
+const gzipAsync = promisify(gzip)
+
 function getOutputFile(config: ResolvedConfig) {
   if (!config.outputFile) {
     return
@@ -56,13 +58,14 @@ export default class HTMLReporter implements Reporter {
       await inlineAttachments(result.files)
     }
 
-    const report = stringify(result)
-    const promiseGzip = promisify(gzip)
-    const data = await promiseGzip(report, {
-      level: zlibConstants.Z_BEST_COMPRESSION,
-    })
     // copy ui assets
     await fs.cp(distClientRoot, this.reporterDir, { recursive: true })
+
+    // create index.html and metadata
+    const rawData = stringify(result)
+    const data = await gzipAsync(rawData, {
+      level: zlibConstants.Z_BEST_COMPRESSION,
+    })
     await handleIndexHtml({
       srcDir: distClientRoot,
       dstDir: this.reporterDir,
