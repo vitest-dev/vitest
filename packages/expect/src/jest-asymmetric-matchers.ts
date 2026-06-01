@@ -174,6 +174,16 @@ export class ObjectContaining extends AsymmetricMatcher<
         otherValue,
         customTesters,
       )) {
+        // When match fails, copy properties from  that are not in 
+        // into  so the diff only shows actual differences, not the
+        // entire object. Matches Jest behavior (jestjs/jest#15038).
+        // Mutation only affects diff output since result is already false.
+        const otherProps = other ? this.getProperties(other) : []
+        for (const prop of otherProps) {
+          if (!this.hasProperty(this.sample, prop)) {
+            this.sample[prop] = other[prop]
+          }
+        }
         result = false
         break
       }
