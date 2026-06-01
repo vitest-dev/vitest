@@ -3,7 +3,6 @@ import type { SerializedError } from 'vitest'
 import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
@@ -11,6 +10,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { distClientRoot } from './paths'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
@@ -27,8 +27,6 @@ function getOutputFile(config: PotentialConfig | undefined) {
 
   return config.outputFile.html
 }
-
-const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 
 export default class HTMLReporter implements Reporter {
   start = 0
@@ -74,24 +72,19 @@ export default class HTMLReporter implements Reporter {
     const data = await promiseGzip(report, {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
-    const ui = resolve(distDir, 'client')
-    // copy ui
-    const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
+    // copy ui assets
+    const files = globSync(['**/*'], { cwd: distClientRoot, expandDirectories: false })
     await Promise.all(
       files.map(async (f) => {
-        if (f === 'index.html') {
-          await handleIndexHtml({
-            srcDir: ui,
-            dstDir: this.reporterDir,
-            data,
-            singleFile: this.options.singleFile,
-          })
-        }
-        else {
-          await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
-        }
+        await fs.copyFile(resolve(distClientRoot, f), resolve(this.reporterDir, f))
       }),
     )
+    await handleIndexHtml({
+      srcDir: distClientRoot,
+      dstDir: this.reporterDir,
+      data,
+      singleFile: this.options.singleFile,
+    })
 
     // copy attachments
     // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
