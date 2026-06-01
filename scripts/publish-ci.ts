@@ -39,5 +39,5 @@ if (releaseTag) {
   await $`pnpm -r publish --access public --no-git-checks --tag ${releaseTag}`
 }
 else {
-  await $`pnpm -r publish --access public --no-git-checks`
+  await $`pnpm -r publish --access public --no-git-checks --filter="!vite-node" --filter="!@vitest/ws-client"`
 }
