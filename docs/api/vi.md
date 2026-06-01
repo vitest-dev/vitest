@@ -797,7 +797,7 @@ globalThis.IntersectionObserver === undefined
 IntersectionObserver === undefined
 ```
 
-### vi.when <Version>5.0</Version> {#vi-when}
+### vi.when <Version>5.0.0</Version> {#vi-when}
 
 ```ts
 interface WhenOptions {
@@ -909,7 +909,7 @@ expect(spy('hello')).toBe('original')
 ```
 :::
 
-### vi.isWhenChain <Version>5.0</Version> {#vi-iswhenchain}
+### vi.isWhenChain <Version>5.0.0</Version> {#vi-iswhenchain}
 
 ```ts
 function isWhenChain(input: object): input is When
