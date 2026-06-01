@@ -156,11 +156,7 @@ export class BaseCoverageProvider {
       return cacheHit
     }
 
-    const normalizedRoots = roots.map(root => slash(root))
-    const matchingRoot = normalizedRoots.find((root) => {
-      const rootWithSeparator = root.endsWith('/') ? root : `${root}/`
-      return filename === root || filename.startsWith(rootWithSeparator)
-    })
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
 
     // File outside project root with default allowExternal
     if (this.options.allowExternal === false && !matchingRoot) {

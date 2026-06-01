@@ -144,10 +144,23 @@ test('files outside project when allowExternal: true', async () => {
   expect(isIncluded(resolve(process.cwd(), '../../package-b/src/two.ts'))).toBe(false)
 })
 
-async function init(options: Partial<CoverageOptions> & { testInclude?: string[] }) {
+test('files with almost matching name, outside project when allowExternal: false', async () => {
+  const isIncluded = await init({
+    include: ['**/*.ts'],
+    root: './something/',
+    allowExternal: false,
+  })
+
+  expect(isIncluded(resolve(process.cwd(), './something/src/one.ts'))).toBe(true)
+  expect(isIncluded(resolve(process.cwd(), './not-something/src/two.ts'))).toBe(false)
+  expect(isIncluded(resolve(process.cwd(), './something-else/src/three.ts'))).toBe(false)
+})
+
+async function init(options: Partial<CoverageOptions> & { testInclude?: string[]; root?: string }) {
   const vitest = await createVitest('test', {
     config: false,
     include: ['dont-match-anything', ...(options.testInclude || [])],
+    root: options.root,
     coverage: {
       ...options,
       enabled: true,
