@@ -4,6 +4,7 @@ import type { ParentBrowserProject } from './projectParent'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { dirname, join, resolve } from 'pathe'
@@ -345,7 +346,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       configureServer(server) {
         server.middlewares.use(
           '/__vitest__',
-          sirv(resolve(distRoot, 'client/__vitest__')),
+          sirv(uiClientRoot),
         )
       },
       resolveId(id) {
