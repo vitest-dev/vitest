@@ -15,35 +15,37 @@
 
 import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
-import { getMessage, getNodeFromUserInput, normalize } from './utils'
+import { getMessage, getNodeFromUserInput, matches, normalize } from './utils'
 
-export default function toHaveTextContent(
+export default function toMatchTextContent(
   this: MatcherState,
   actual: Element | Locator,
-  matcher: string | number,
+  matcher: string | RegExp,
   options: { normalizeWhitespace?: boolean } = { normalizeWhitespace: true },
 ): MatcherResult {
-  const node = getNodeFromUserInput(actual, toHaveTextContent, this)
+  const node = getNodeFromUserInput(actual, toMatchTextContent, this)
 
   const textContent = options.normalizeWhitespace
     ? normalize(node.textContent || '')
     : (node.textContent || '').replace(/\u00A0/g, ' ') // Replace &nbsp; with normal spaces
 
-  const expectedText = String(matcher)
+  const checkingWithEmptyString = textContent !== '' && matcher === ''
 
   return {
-    pass: textContent === expectedText,
+    pass: !checkingWithEmptyString && matches(textContent, matcher),
     message: () => {
       const to = this.isNot ? 'not to' : 'to'
       return getMessage(
         this,
         this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toHaveTextContent`,
+          `${this.isNot ? '.not' : ''}.toMatchTextContent`,
           'element',
           '',
         ),
-        `Expected element ${to} have text content`,
-        expectedText,
+        checkingWithEmptyString
+          ? `Checking with empty string will always match, use .toBeEmptyDOMElement() instead`
+          : `Expected element ${to} match text content`,
+        matcher,
         'Received',
         textContent,
       )

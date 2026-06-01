@@ -259,7 +259,7 @@ importers:
         version: 6.3.0(rollup@4.59.0)(typescript@5.9.3)
       rollup-plugin-license:
         specifier: ^3.7.0
-        version: 3.7.0(picomatch@4.0.3)(rollup@4.59.0)
+        version: 3.7.0(picomatch@4.0.4)(rollup@4.59.0)
       tinyglobby:
         specifier: 'catalog:'
         version: 0.2.15
@@ -1544,6 +1544,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: workspace:*
         version: link:../../packages/browser-playwright
+      '@vitest/browser-preview':
+        specifier: workspace:*
+        version: link:../../packages/browser-preview
       happy-dom:
         specifier: latest
         version: 20.9.0
@@ -18303,10 +18306,10 @@ snapshots:
     optionalDependencies:
       '@babel/code-frame': 7.27.1
 
-  rollup-plugin-license@3.7.0(picomatch@4.0.3)(rollup@4.59.0):
+  rollup-plugin-license@3.7.0(picomatch@4.0.4)(rollup@4.59.0):
     dependencies:
       commenting: 1.1.0
-      fdir: 6.5.0(picomatch@4.0.3)
+      fdir: 6.5.0(picomatch@4.0.4)
       lodash: 4.17.21
       magic-string: 0.30.21
       moment: 2.30.1
