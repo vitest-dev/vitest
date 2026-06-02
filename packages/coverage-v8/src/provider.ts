@@ -44,21 +44,37 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let merged: RawCoverage = { result: [] }
+    let coverages: RawCoverage[] = []
+
+    // `mergeProcessCovs` drops `startOffset` (e.g. in vue), so remember the
+    // originals per-url and restore them after the merge.
+    const startOffsets = new Map<string, number>()
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
-        merged = mergeProcessCovs([merged, coverage])
+        coverages.push(coverage)
 
-        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
-        merged.result.forEach((result) => {
-          if (!result.startOffset) {
-            const original = coverage.result.find(r => r.url === result.url)
-            result.startOffset = original?.startOffset || 0
+        for (const result of coverage.result) {
+          if (result.startOffset && !startOffsets.has(result.url)) {
+            startOffsets.set(result.url, result.startOffset)
           }
-        })
+        }
       },
       onFinished: async (project, environment) => {
+        // Merge every process coverage in a single pass. `mergeProcessCovs` is
+        // associative, so folding it per-file (`[merged, next]`) is O(n^2) on
+        // large suites - merging the whole batch at once is O(n).
+        const merged: RawCoverage = coverages.length
+          ? mergeProcessCovs(coverages)
+          : { result: [] }
+
+        // Restore the startOffset dropped by the merge in one pass.
+        for (const result of merged.result) {
+          if (!result.startOffset) {
+            result.startOffset = startOffsets.get(result.url) || 0
+          }
+        }
+
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
@@ -69,7 +85,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
         coverageMap.merge(converted)
 
-        merged = { result: [] }
+        coverages = []
+        startOffsets.clear()
       },
       onDebug: debug,
     })
