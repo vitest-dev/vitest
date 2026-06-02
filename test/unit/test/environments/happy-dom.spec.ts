@@ -46,3 +46,11 @@ test('innerWidth and matchMedia', () => {
   window.innerWidth = 50
   expect(window.matchMedia('(max-width: 100px)').matches).toBe(true)
 })
+
+test('readonly window assignment throws', () => {
+  expect(() => {
+    Object.assign(window, { navigator: {} })
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Cannot set property navigator of #<GlobalWindow> which has only a getter]`,
+  )
+})

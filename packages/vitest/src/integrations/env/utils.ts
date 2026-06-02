@@ -81,12 +81,7 @@ export function populateGlobal(
         // propagate changes to underlying window implementation,
         // which can affect other window API behavior internally, e.g.
         // updating `innerWidth` affects `matchMedia("(max-width: *)")` on happy-dom.
-        try {
-          win[key] = v
-        }
-        catch {
-          // haven't found a case it throws but just in case
-        }
+        win[key] = v
       },
       configurable: true,
     })
