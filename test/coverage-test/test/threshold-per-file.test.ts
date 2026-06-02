@@ -223,6 +223,52 @@ test('per-file object thresholds report violations for every failing file', asyn
   `)
 })
 
+test('top-level perFile does not cascade to glob thresholds', async () => {
+  const { exitCode, stderr } = await runVitest({
+    include: [normalizeURL(import.meta.url)],
+    coverage: {
+      include: [
+        '**/fixtures/src/even.ts',
+        '**/fixtures/src/math.ts',
+      ],
+      thresholds: {
+        'perFile': true,
+        '**/fixtures/src/*.ts': {
+          functions: 40,
+        },
+      },
+    },
+  }, { throwOnError: false })
+
+  expect(exitCode).toBe(0)
+  expect(stderr).toMatchInlineSnapshot(`""`)
+})
+
+test('top-level perFile applies globally but not to a glob without its own perFile', async () => {
+  const { exitCode, stderr } = await runVitest({
+    include: [normalizeURL(import.meta.url)],
+    coverage: {
+      include: [
+        '**/fixtures/src/even.ts',
+        '**/fixtures/src/math.ts',
+      ],
+      thresholds: {
+        'functions': 30,
+        'perFile': true,
+        '**/fixtures/src/even.ts': {
+          functions: 40,
+        },
+      },
+    },
+  }, { throwOnError: false })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatchInlineSnapshot(`
+    "ERROR: Coverage for functions (25%) does not meet global threshold (30%) for fixtures/src/math.ts
+    "
+  `)
+})
+
 coverageTest('cover some lines, but not too much', async () => {
   expect(sum(1, 2)).toBe(3)
   expect(isEven(4)).toBe(true)

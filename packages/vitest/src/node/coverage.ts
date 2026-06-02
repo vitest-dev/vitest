@@ -24,6 +24,10 @@ interface ResolvedThreshold {
   coverageMap: CoverageMap
   name: string
   thresholds: Partial<Record<Threshold, number | undefined>>
+  /** When `true`, check `thresholds` against each file instead of the aggregate. */
+  perFile: boolean
+  /** Additional per-file-only minimums (object form of `perFile`), or `null`. */
+  perFileThresholds: Partial<Record<Threshold, number | undefined>> | null
 }
 
 /**
@@ -450,7 +454,8 @@ export class BaseCoverageProvider {
       }
 
       const glob = key
-      const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
+      const globEntry = this.options.thresholds![glob]
+      const globThresholds = resolveGlobThresholds(globEntry)
       const globCoverageMap = this.createCoverageMap()
 
       const matcher = pm(glob)
@@ -467,6 +472,7 @@ export class BaseCoverageProvider {
         name: glob,
         coverageMap: globCoverageMap,
         thresholds: globThresholds,
+        ...resolvePerFile((globEntry as { perFile?: unknown }).perFile),
       })
     }
 
@@ -485,6 +491,7 @@ export class BaseCoverageProvider {
         lines: this.options.thresholds?.lines,
         statements: this.options.thresholds?.statements,
       },
+      ...resolvePerFile(this.options.thresholds?.perFile),
     })
 
     return resolvedThresholds
@@ -494,46 +501,36 @@ export class BaseCoverageProvider {
    * Check collected coverage against configured thresholds. Sets exit code to 1 when thresholds not reached.
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
-    const perFileOption = this.options.thresholds?.perFile
-    const perFileThresholds = typeof perFileOption === 'object' && perFileOption !== null
-      ? resolveGlobThresholds(perFileOption)
-      : null
-
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      if (
-        thresholds.branches === undefined
-        && thresholds.functions === undefined
-        && thresholds.lines === undefined
-        && thresholds.statements === undefined
-      ) {
-        continue
-      }
-
-      // Construct list of coverage summaries where thresholds are compared against
-      const summaries = perFileOption === true
-        ? coverageMap.files().map((file: string) => ({
-            file,
-            summary: coverageMap.fileCoverageFor(file).toSummary(),
-          }))
-        : [{ file: null, summary: coverageMap.getCoverageSummary() }]
-
+    for (const { coverageMap, thresholds, perFile, perFileThresholds, name } of allThresholds) {
       const label = name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
 
-      for (const { summary, file } of summaries) {
-        this.reportThresholdViolations(thresholds, summary, file, label)
+      if (
+        thresholds.branches !== undefined
+        || thresholds.functions !== undefined
+        || thresholds.lines !== undefined
+        || thresholds.statements !== undefined
+      ) {
+        // Sort so that per-file error output stays stable across providers and runs.
+        const summaries = perFile
+          ? [...coverageMap.files()].sort().map((file: string) => ({
+              file,
+              summary: coverageMap.fileCoverageFor(file).toSummary(),
+            }))
+          : [{ file: null, summary: coverageMap.getCoverageSummary() }]
+
+        for (const { summary, file } of summaries) {
+          this.reportThresholdViolations(thresholds, summary, file, label)
+        }
       }
-    }
 
-    // Object form of `perFile`: every file must meet these minimums on top of
-    // the aggregate checks above.
-    if (perFileThresholds && THRESHOLD_KEYS.some(key => perFileThresholds[key] !== undefined)) {
-      const globalEntry = allThresholds.find(t => t.name === GLOBAL_THRESHOLDS_KEY)
-
-      if (globalEntry) {
+      if (
+        perFileThresholds
+        && THRESHOLD_KEYS.some(key => perFileThresholds[key] !== undefined)
+      ) {
         // Sort so that error output stays stable across providers and runs.
-        const files = [...globalEntry.coverageMap.files()].sort()
+        const files = [...coverageMap.files()].sort()
         for (const file of files) {
-          const summary = globalEntry.coverageMap.fileCoverageFor(file).toSummary()
+          const summary = coverageMap.fileCoverageFor(file).toSummary()
           this.reportThresholdViolations(perFileThresholds, summary, file, 'per-file')
         }
       }
@@ -604,14 +601,20 @@ export class BaseCoverageProvider {
     const config = resolveConfig(configurationFile)
     assertConfigurationModule(config)
 
-    for (const { coverageMap, thresholds, name } of allThresholds) {
-      const summaries = this.options.thresholds?.perFile === true
+    for (const { coverageMap, thresholds, name, perFile } of allThresholds) {
+      const summaries = perFile
         ? coverageMap
             .files()
             .map((file: string) =>
               coverageMap.fileCoverageFor(file).toSummary(),
             )
         : [coverageMap.getCoverageSummary()]
+
+      // A `perFile` glob may match no files; skip it instead of writing
+      // Infinity thresholds from `Math.min(...[])`.
+      if (summaries.length === 0) {
+        continue
+      }
 
       const thresholdsToUpdate: [Threshold, number][] = []
 
@@ -782,6 +785,21 @@ export class BaseCoverageProvider {
       throw lastError
     }
   }
+}
+
+function resolvePerFile(value: unknown): {
+  perFile: boolean
+  perFileThresholds: ResolvedThreshold['thresholds'] | null
+} {
+  if (value === true) {
+    return { perFile: true, perFileThresholds: null }
+  }
+
+  if (value && typeof value === 'object') {
+    return { perFile: false, perFileThresholds: resolveGlobThresholds(value) }
+  }
+
+  return { perFile: false, perFileThresholds: null }
 }
 
 /**

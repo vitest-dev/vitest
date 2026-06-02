@@ -43,6 +43,7 @@ test('provider options, generic', () => {
         branches: 12,
         functions: 12,
         statements: 12,
+        perFile: true,
       },
     },
   })
@@ -83,6 +84,38 @@ test('provider options, generic', () => {
         functions: 50,
         branches: 50,
         statements: 50,
+      },
+    },
+  })
+
+  // Glob patterns accept their own `perFile` (boolean or object).
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: true,
+      },
+      '**/other-file.ts': {
+        perFile: {
+          lines: 50,
+        },
+      },
+      '**/strict.ts': {
+        perFile: {
+          100: true,
+        },
+      },
+    },
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    thresholds: {
+      '**/some-file.ts': {
+        perFile: {
+          // @ts-expect-error -- per-file threshold values must be numbers
+          lines: '50',
+        },
       },
     },
   })

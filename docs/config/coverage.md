@@ -276,6 +276,25 @@ When `true`, each file is checked against the top-level thresholds instead of th
 }
 ```
 
+`perFile` can also be set on an individual glob-pattern threshold (documented below). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      perFile: true,
+      lines: 80,
+
+      'src/utils/**': {
+        lines: 90,
+        perFile: true,
+      },
+    }
+  }
+}
+```
+
 ### coverage.thresholds.autoUpdate
 
 - **Type:** `boolean | function`
@@ -315,11 +334,13 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 ### coverage.thresholds[glob-pattern]
 
-- **Type:** `{ statements?: number functions?: number branches?: number lines?: number }`
+- **Type:** `{ statements?: number, functions?: number, branches?: number, lines?: number, perFile?: boolean | object }`
 - **Default:** `undefined`
 - **Available for providers:** `'v8' | 'istanbul'`
 
 Sets thresholds for files matching the glob pattern.
+
+Each glob pattern can set its own `perFile` (`boolean | object`), checked exactly like the top-level `perFile` but scoped to the matched files. Glob patterns do not inherit the top-level `perFile` — set it per glob.
 
 ::: tip NOTE
 Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
@@ -341,6 +362,8 @@ This is different from Jest behavior.
         functions: 90,
         branches: 85,
         lines: 80,
+        // each matching file must individually hit the thresholds above
+        perFile: true,
       },
 
       // Files matching this pattern will only have lines thresholds set.

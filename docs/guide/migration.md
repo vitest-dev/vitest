@@ -7,6 +7,29 @@ outline: deep
 
 [Migrating to Vitest 3.0](https://v3.vitest.dev/guide/migration) | [Migrating to Vitest 2.0](https://v2.vitest.dev/guide/migration)
 
+## Migrating to Vitest 5.0 {#vitest-5}
+
+### Glob Coverage Thresholds No Longer Inherit `perFile`
+
+`coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: {
+        'perFile': true,
+
+        'src/utils/**': {
+          lines: 80,
+          perFile: true, // [!code ++]
+        },
+      },
+    },
+  },
+})
+```
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
