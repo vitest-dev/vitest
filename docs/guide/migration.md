@@ -146,6 +146,15 @@ export default defineConfig({
 })
 ```
 
+### Config Files Are Not Looked Up From Parent Directories
+
+Vitest no longer searches parent directories for config files. If you previously relied on running `vitest` from a subdirectory while using a config file from a parent directory, pass the config explicitly and scope test discovery with `--dir`. For example,
+
+```bash
+$ cd subdir && vitest # [!code --]
+$ cd subdir && vitest --config ../vitest.config.ts # [!code ++]
+```
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites

@@ -9,6 +9,7 @@ import type {
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import crypto from 'node:crypto'
+import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
@@ -43,6 +44,15 @@ function resolvePath(path: string, root: string) {
     /* @__PURE__ */ resolveModule(path, { paths: [join(root, '/')] })
     ?? resolve(root, path),
   )
+}
+
+export function findConfigFile(root: string): string | undefined {
+  for (const configFile of configFiles) {
+    const configPath = resolve(root, configFile)
+    if (existsSync(configPath)) {
+      return configPath
+    }
+  }
 }
 
 function parseInspector(inspect: string | undefined | boolean | number) {
@@ -177,6 +187,11 @@ export function resolveConfig(
     ...options,
     root: viteConfig.root,
   } as any as ResolvedConfig
+
+  const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
+  if (!rootStats?.isDirectory()) {
+    throw new Error(`Root path does not exist or is not a directory: ${resolved.root}`)
+  }
 
   resolved.mode ??= viteConfig.mode ?? 'test'
 

@@ -1,23 +1,20 @@
 import type { TestAttachment } from '@vitest/runner'
 import type { SerializedError } from 'vitest'
-import type { HTMLOptions, Reporter, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+import type { HTMLOptions, Reporter, ResolvedConfig, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
 import { dirname, relative, resolve } from 'pathe'
-import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { distClientRoot } from './paths'
 
-interface PotentialConfig {
-  outputFile?: string | Partial<Record<string, string>>
-}
+const gzipAsync = promisify(gzip)
 
-function getOutputFile(config: PotentialConfig | undefined) {
-  if (!config?.outputFile) {
+function getOutputFile(config: ResolvedConfig) {
+  if (!config.outputFile) {
     return
   }
 
@@ -28,15 +25,11 @@ function getOutputFile(config: PotentialConfig | undefined) {
   return config.outputFile.html
 }
 
-const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
-
 export default class HTMLReporter implements Reporter {
-  start = 0
   ctx!: Vitest
   options: HTMLOptions
 
   private reporterDir!: string
-  private htmlFilePath!: string
 
   constructor(options: HTMLOptions) {
     this.options = options
@@ -44,16 +37,12 @@ export default class HTMLReporter implements Reporter {
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
-    this.start = Date.now()
     const htmlFile
       = this.options.outputFile
         || getOutputFile(this.ctx.config)
         || 'html/index.html'
     const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
     this.reporterDir = dirname(htmlFilePath)
-    this.htmlFilePath = htmlFilePath
-
-    await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
   async onTestRunEnd(
@@ -69,29 +58,20 @@ export default class HTMLReporter implements Reporter {
       await inlineAttachments(result.files)
     }
 
-    const report = stringify(result)
-    const promiseGzip = promisify(gzip)
-    const data = await promiseGzip(report, {
+    // copy ui assets
+    await fs.cp(distClientRoot, this.reporterDir, { recursive: true })
+
+    // create index.html and metadata
+    const rawData = stringify(result)
+    const data = await gzipAsync(rawData, {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
-    const ui = resolve(distDir, 'client')
-    // copy ui
-    const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
-    await Promise.all(
-      files.map(async (f) => {
-        if (f === 'index.html') {
-          await handleIndexHtml({
-            srcDir: ui,
-            dstDir: this.reporterDir,
-            data,
-            singleFile: this.options.singleFile,
-          })
-        }
-        else {
-          await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
-        }
-      }),
-    )
+    await handleIndexHtml({
+      srcDir: distClientRoot,
+      dstDir: this.reporterDir,
+      data,
+      singleFile: this.options.singleFile,
+    })
 
     // copy attachments
     // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
@@ -220,12 +200,12 @@ async function handleIndexHtml(options: {
 
   if (options.singleFile) {
     html = await inlineHtmlAssets(indexHtmlFilePath, html)
-    const base64 = Buffer.from(options.data).toString('base64')
+    const base64 = options.data.toString('base64')
     metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
   }
   else {
-    const dataFile = `html.meta.json.gz`
-    await fs.writeFile(resolve(options.dstDir, dataFile), options.data, 'base64')
+    const dataFile = 'html.meta.json.gz'
+    await fs.writeFile(resolve(options.dstDir, dataFile), options.data)
     metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
   }
 
