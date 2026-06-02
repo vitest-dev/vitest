@@ -59,31 +59,48 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let merged: RawCoverage = { result: [] }
+    let coverages: RawCoverage[] = []
+
+    // `mergeProcessCovs` drops `startOffset` (e.g. in vue) and `isExtendedContext`,
+    // so remember the originals per-url and restore them after the merge.
+    const startOffsets = new Map<string, number>()
+    const extendedContexts = new Set<string>()
 
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
-        merged = mergeProcessCovs([merged, coverage])
+        coverages.push(coverage)
 
-        // mergeProcessCovs sometimes loses autoAttachSubprocess
-        const fromExtendedContext = autoAttachSubprocess ? coverage.result.filter(r => r.isExtendedContext) : []
-
-        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
-        merged.result.forEach((result) => {
-          if (!result.startOffset) {
-            const original = coverage.result.find(r => r.url === result.url)
-            result.startOffset = original?.startOffset || 0
+        for (const result of coverage.result) {
+          if (result.startOffset && !startOffsets.has(result.url)) {
+            startOffsets.set(result.url, result.startOffset)
           }
 
-          if (autoAttachSubprocess && !result.isExtendedContext) {
-            const actual = fromExtendedContext.find(r => r.url === result.url)
-            result.isExtendedContext = actual?.isExtendedContext
+          if (autoAttachSubprocess && result.isExtendedContext) {
+            extendedContexts.add(result.url)
           }
-        })
+        }
       },
       onFinished: async (project, environment) => {
+        // Merge every process coverage in a single pass. `mergeProcessCovs` is
+        // associative, so folding it per-file (`[merged, next]`) is O(n^2) on
+        // large suites - merging the whole batch at once is O(n).
+        const merged: RawCoverage = coverages.length
+          ? mergeProcessCovs(coverages)
+          : { result: [] }
+
+        // Restore values dropped by the merge in one pass over the result.
+        for (const result of merged.result) {
+          if (!result.startOffset) {
+            result.startOffset = startOffsets.get(result.url) || 0
+          }
+
+          if (autoAttachSubprocess && !result.isExtendedContext && extendedContexts.has(result.url)) {
+            result.isExtendedContext = true
+          }
+        }
+
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
         const converted = await this.convertCoverage(
@@ -94,7 +111,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
         coverageMap.merge(converted)
 
-        merged = { result: [] }
+        coverages = []
+        startOffsets.clear()
+        extendedContexts.clear()
       },
       onDebug: debug,
     })
