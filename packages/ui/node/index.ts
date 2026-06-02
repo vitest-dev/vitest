@@ -1,13 +1,13 @@
 import type { Vite, Vitest } from 'vitest/node'
 import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { version } from '../package.json'
+import { distClientRoot } from './paths'
 
-export const distClientRoot: string = resolve(fileURLToPath(import.meta.url), '../client')
+export { distClientRoot }
 
 export default (ctx: Vitest): Vite.Plugin => {
   if (ctx.version !== version) {
