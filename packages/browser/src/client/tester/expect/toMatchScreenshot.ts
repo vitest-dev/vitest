@@ -97,6 +97,7 @@ export default async function toMatchScreenshot(
         kind: 'visual-regression',
         message: result.message,
         attachments,
+        originalReferencePath: result.reference?.path,
       })
     }
   }

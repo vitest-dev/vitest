@@ -1403,6 +1403,12 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
   kind: 'visual-regression'
   message: string
   attachments: VisualRegressionArtifactAttachment[]
+  /**
+   * Original file system path to the reference screenshot, before attachment resolution.
+   * Absent when the matcher could not determine a reference (e.g. an `unstable-screenshot`
+   * outcome without a stored reference).
+   */
+  originalReferencePath?: string
 }
 
 /**
