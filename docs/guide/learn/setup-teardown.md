@@ -46,7 +46,7 @@ test('can add an item', () => {
 })
 ```
 
-Without these hooks, the second test's `push` would affect any test that runs after it, which is a classic source of flaky tests. The hooks guarantee clean state for every test.
+Without these hooks, mutations like `pop` or `push` from earlier tests would affect subsequent ones, which is a classic source of flaky tests, while the hooks guarantee clean state for every test.
 
 ## One-Time Setup
 
