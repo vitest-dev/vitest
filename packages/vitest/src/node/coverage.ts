@@ -80,6 +80,7 @@ export class BaseCoverageProvider {
   version!: string
   options!: ResolvedCoverageOptions
   globCache: Map<string, boolean> = new Map()
+  private _globMatcher?: (file: string) => boolean
   autoUpdateMarker = '\n// __VITEST_COVERAGE_MARKER__'
 
   coverageFiles: CoverageFiles = new Map()
@@ -163,14 +164,17 @@ export class BaseCoverageProvider {
       return false
     }
 
-    // By default `coverage.include` matches all files, except "coverage.exclude"
-    const glob = this.options.include || '**'
+    // By default `coverage.include` matches all files, except "coverage.exclude".
+    // Compile the matcher once - `pm.isMatch` recompiles the globs on every call.
+    if (!this._globMatcher) {
+      this._globMatcher = pm(this.options.include || '**', {
+        contains: true,
+        dot: true,
+        ignore: this.options.exclude,
+      })
+    }
 
-    let included = pm.isMatch(filename, glob, {
-      contains: true,
-      dot: true,
-      ignore: this.options.exclude,
-    })
+    let included = this._globMatcher(filename)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
