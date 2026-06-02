@@ -72,6 +72,7 @@ export default defineConfig({
   server: {
     watch: {
       ignored: [
+        '**/vitest-test-*/**',
         '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
         '**/package.json',

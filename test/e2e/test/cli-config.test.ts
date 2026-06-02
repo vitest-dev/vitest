@@ -1,8 +1,7 @@
 import { resolve } from 'pathe'
 import { expect, it, test } from 'vitest'
 import { createVitest } from 'vitest/node'
-
-import { runVitest } from '../../test-utils'
+import { runVitest, useFS } from '../../test-utils'
 
 test('can pass down the config as a module', async () => {
   const vitest = await createVitest('test', {
@@ -61,4 +60,40 @@ it('correctly inherit from the cli', async () => {
     },
   })
   expect(config.testNamePattern?.test('math')).toBe(true)
+})
+
+it('fails when resolved root directory does not exist', async () => {
+  const parent = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(parent, {
+    'vitest.config.ts': `
+      throw new Error("parent config file should not be loaded")
+    `,
+  })
+  const root = resolve(parent, 'missing-dir')
+  const result = await runVitest({ root }, undefined, { fails: true })
+  expect(result.stderr).toContain('Error: Root path does not exist or is not a directory')
+  expect(result.stderr).not.toContain('parent config file should not be loaded')
+  expect(result.thrown).toBe(true)
+})
+
+it('does not lookup config from parent directory', async () => {
+  const parent = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(parent, {
+    'vitest.config.ts': `
+      throw new Error("parent config file should not be loaded")
+    `,
+    'good-dir/basic.test.ts': `
+      test('ok', () => {})
+    `,
+  })
+  const root = resolve(parent, 'good-dir')
+  const result = await runVitest({ root, globals: true })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
 })
