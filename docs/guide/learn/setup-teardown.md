@@ -33,11 +33,16 @@ test('items starts with 3 fruits', () => {
   expect(items).toHaveLength(3)
 })
 
+test('can remove an item', () => {
+  items.pop()
+  expect(items).toHaveLength(2)
+})
+
 test('can add an item', () => {
   items.push('date')
   expect(items).toHaveLength(4)
-  // afterEach will reset items for the next test,
-  // so this mutation won't leak into other tests
+  // beforeEach reset the array to 3 items before this test ran,
+  // proving that mutations from the previous test do not leak.
 })
 ```
 
