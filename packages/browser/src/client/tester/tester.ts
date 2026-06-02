@@ -1,6 +1,6 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import type { FileSpecification } from '@vitest/runner'
-import { channel, client, onCancel } from '@vitest/browser/client'
+import { channel, client, onCancel, registerPageMarkHandler } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
 import {
@@ -10,8 +10,8 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
-  Traces,
 } from 'vitest/internal/browser'
+import { Traces } from 'vitest/internal/traces'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
@@ -112,6 +112,8 @@ getBrowserState().activeTraceTaskIds = new Set()
 getBrowserState().browserTraceAttempts = new Map()
 getBrowserState().iframeId = iframeId
 
+registerPageMarkHandler((name, options) => page.mark(name, options))
+
 let contextSwitched = false
 
 async function prepareTestEnvironment(options: PrepareOptions) {
@@ -140,7 +142,9 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
-  setupConsoleLogSpy()
+  if (!config.disableConsoleIntercept) {
+    setupConsoleLogSpy()
+  }
   setupDialogsSpy()
 
   const runner = await initiateRunner(state, mocker, config)

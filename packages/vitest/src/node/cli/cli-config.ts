@@ -328,10 +328,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Directory of HTML coverage output to be served in UI mode and HTML reporter.',
         argument: '<path>',
       },
+      autoAttachSubprocess: {
+        description: 'Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run. Supported only by `v8` provider. (default: false)',
+      },
     },
   },
   mode: {
-    description: 'Override Vite mode (default: `test` or `benchmark`)',
+    description: 'Override Vite mode (default: `test`)',
     argument: '<name>',
   },
   isolate: {
@@ -442,8 +445,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           testIdAttribute: null,
           exact: {
-            description: 'Should locators match the text exactly by default (default: `false`)',
+            description: 'Should locators match the text exactly by default (default: `true`)',
           },
+          errorFormat: null,
         },
         transform(val) {
           if (typeof val !== 'object' || val == null) {
@@ -724,6 +728,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ignoreSourceErrors: {
         description: 'Ignore type errors from source files',
       },
+      build: {
+        description: 'Use TypeScript build mode',
+      },
       tsconfig: {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',
@@ -823,7 +830,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Collect test and suite locations in the `location` property',
   },
   attachmentsDir: {
-    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest-attachments`)',
+    description: 'The directory where attachments from `context.annotate` are stored in (default: `.vitest/attachments`)',
     argument: '<dir>',
   },
 
@@ -854,7 +861,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
-        return '.vitest-reports'
+        return '.vitest/blob'
       }
       return value
     },
@@ -971,8 +978,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   snapshotEnvironment: null,
-  compare: null,
-  outputJson: null,
   json: null,
   provide: null,
   filesOnly: null,
@@ -981,21 +986,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  benchmarkOnly: null,
   taskTitleValueFormatTruncate: null,
-}
-
-export const benchCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'compare' | 'outputJson'
-> = {
-  compare: {
-    description: 'Benchmark output file to compare against',
-    argument: '<filename>',
-  },
-  outputJson: {
-    description: 'Benchmark output file',
-    argument: '<filename>',
-  },
 }
 
 export const collectCliOptionsConfig: VitestCLIOptions = {

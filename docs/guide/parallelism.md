@@ -80,6 +80,19 @@ describe.concurrent('user API', () => {
 
 If you want *all* tests in your project to run concurrently by default, set [`sequence.concurrent`](/config/sequence#sequence-concurrent) to `true` in your config.
 
+You can opt individual tests or suites out of inherited concurrency with `concurrent: false`:
+
+```ts
+test('uses a shared resource', { concurrent: false }, async () => {
+  // ...
+})
+
+describe('shared resource suite', { concurrent: false }, () => {
+  test('step 1', async () => { /* ... */ })
+  test('step 2', async () => { /* ... */ })
+})
+```
+
 ### Hooks with Concurrent Tests
 
 When tests run concurrently, lifecycle hooks behave differently. `beforeAll` and `afterAll` still run once for the group, but `beforeEach` and `afterEach` run for each test — potentially at the same time, since the tests themselves overlap.

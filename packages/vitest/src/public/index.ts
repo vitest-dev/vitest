@@ -34,7 +34,15 @@ export { Snapshots } from '../integrations/snapshot/chai'
 
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
-export { bench } from '../runtime/benchmark'
+export type {
+  Bench,
+  BenchCompareOptions,
+  BenchFnOptions,
+  BenchFromSource,
+  BenchRegistration,
+  BenchResult,
+  BenchStorage,
+} from '../runtime/benchmark'
 
 export type {
   RuntimeConfig,
@@ -45,18 +53,7 @@ export type {
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 
-export { NodeBenchmarkRunner as BenchmarkRunner } from '../runtime/runners/benchmark'
 export { TestRunner } from '../runtime/runners/test'
-export type {
-  BenchFactory,
-  BenchFunction,
-  Benchmark,
-  BenchmarkAPI,
-  BenchmarkResult,
-  BenchOptions,
-  BenchTask,
-  BenchTaskResult,
-} from '../runtime/types/benchmark'
 export { assertType } from '../typecheck/assertType'
 
 export type { AssertType } from '../typecheck/assertType'
@@ -90,14 +87,16 @@ export type {
 export type {
   Assertion,
   AsymmetricMatchersContaining,
+  AsyncExpectationResult as AsyncMatcherResult,
   DeeplyAllowMatchers,
-  ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
   RawMatcherFn as Matcher,
   ExpectationResult as MatcherResult,
   Matchers,
+  MatchersObject,
   MatcherState,
+  SyncExpectationResult as SyncMatcherResult,
 } from '@vitest/expect'
 export {
   afterAll,
@@ -115,6 +114,7 @@ export {
   test,
 } from '@vitest/runner'
 export type {
+  BaselineData,
   ImportDuration,
   OnTestFailedHandler,
   OnTestFinishedHandler,
@@ -142,10 +142,13 @@ export type {
   TestArtifactLocation,
   TestArtifactRegistry,
   TestAttachment,
+  TestBenchmark,
+  TestBenchmarkTask,
   TestContext,
   TestFunction,
   TestOptions,
   VitestRunnerConfig as TestRunnerConfig,
+  TestTagDefinition,
 
   TestTags,
   VitestRunner as VitestTestRunner,
@@ -154,6 +157,8 @@ export type {
 export type { CancelReason } from '@vitest/runner'
 
 export type {
+  DomainMatchResult,
+  DomainSnapshotAdapter,
   SnapshotData,
   SnapshotMatchOptions,
   SnapshotResult,

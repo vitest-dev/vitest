@@ -11,6 +11,11 @@ import { setupBrowserRpc } from './rpc'
 
 export type { CustomComparatorsRegistry } from './commands/screenshotMatcher/types'
 
+export interface SerializedLocator {
+  selector: string
+  locator: string
+}
+
 export function defineBrowserCommand<T extends unknown[]>(
   fn: BrowserCommand<T>,
 ): BrowserCommand<T> {
@@ -19,8 +24,6 @@ export function defineBrowserCommand<T extends unknown[]>(
 
 // export type { ProjectBrowser } from './project'
 export { parseKeyDef, resolveScreenshotPath } from './utils'
-
-export { asLocator } from 'ivya'
 
 export const createBrowserServer: BrowserServerFactory = async (options) => {
   const project = options.project

@@ -580,7 +580,7 @@ export default class SnapshotState {
       key: expectedSnapshot.key,
       count: expectedSnapshot.count,
       pass: matchResult?.pass ?? false,
-      hasSnapshot: !!expectedSnapshot.data,
+      hasSnapshot: expectedSnapshot.data !== undefined,
       snapshotIsPersisted: isInline ? true : this._fileExists,
       addValue: actualResolved,
       actualDisplay: removeExtraLineBreaks(actualResolved),

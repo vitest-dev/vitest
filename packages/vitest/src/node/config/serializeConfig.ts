@@ -1,8 +1,9 @@
 import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
 import type { ApiConfig } from '../types/config'
+import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
-import { isAgent } from '../../utils/env'
+import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
@@ -12,7 +13,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
-    mode: config.mode,
     isolate: config.isolate,
     maxWorkers: config.maxWorkers,
     base: config.base,
@@ -54,13 +54,14 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
       return {
-        reportsDirectory: coverage.reportsDirectory,
+        reportsDirectory: resolve(globalConfig.root, coverage.reportsDirectory),
         provider: coverage.provider,
         enabled: coverage.enabled,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
         htmlDir: coverage.htmlDir,
+        autoAttachSubprocess: coverage.autoAttachSubprocess ?? false,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
@@ -117,6 +118,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
           exact: browser.locators.exact,
+          errorFormat: browser.locators.errorFormat,
         },
         providerOptions: provider?.name === 'playwright'
           ? {
@@ -131,8 +133,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,
-    benchmark: config.benchmark && {
-      includeSamples: config.benchmark.includeSamples,
+    benchmark: {
+      enabled: config.benchmark.enabled,
+      retainSamples: config.benchmark.retainSamples,
+      suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
+      projectName: config.benchmark.projectName,
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled
@@ -148,10 +153,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     tags: config.tags || [],
     tagsFilter: config.tagsFilter,
     strictTags: config.strictTags ?? true,
+    mergeReportsLabel: config.mergeReportsLabel,
     slowTestThreshold:
       config.slowTestThreshold
       ?? globalConfig.slowTestThreshold
       ?? configDefaults.slowTestThreshold,
-    isAgent,
+    disableColors: isAgent && !isForceColor(),
   }
 }

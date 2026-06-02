@@ -14,14 +14,16 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<
-  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-> = {
+export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
-  includeSamples: false,
+  retainSamples: false,
+  suppressExportGetterWarnings: false,
+  // Populated automatically when Vitest clones the parent project; the default
+  // here applies to the (unused) raw config that's never run as a benchmark.
+  projectName: '',
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
@@ -53,6 +55,7 @@ export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDe
     branches: [50, 80],
     lines: [50, 80],
   },
+  autoAttachSubprocess: false,
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
@@ -76,7 +79,7 @@ export const configDefaults: Readonly<{
   teardownTimeout: number
   forceRerunTriggers: string[]
   update: boolean
-  reporters: never[]
+  reporters: string[]
   silent: boolean
   hideSkippedTests: boolean
   api: boolean
@@ -87,7 +90,7 @@ export const configDefaults: Readonly<{
     include: never[]
   }
   coverage: CoverageOptions
-  fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
+  fakeTimers: import('@sinonjs/fake-timers').Config
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
   typecheck: {
@@ -113,9 +116,12 @@ export const configDefaults: Readonly<{
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
-  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
+  forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'],
   update: false,
-  reporters: [],
+  reporters: [
+    isAgent ? 'minimal' : 'default',
+    ...(process.env.GITHUB_ACTIONS === 'true' ? ['github-actions'] : []),
+  ],
   silent: false,
   hideSkippedTests: false,
   api: false,

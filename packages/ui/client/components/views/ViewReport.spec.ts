@@ -62,8 +62,8 @@ fileWithTextStacks.file = fileWithTextStacks
 
 describe.todo('ViewReport', () => {
   describe('RunnerTestFile where stacks are in text', () => {
-    beforeEach(() => {
-      render(ViewReport, {
+    beforeEach(async () => {
+      await render(ViewReport, {
         props: {
           file: fileWithTextStacks,
         },
@@ -92,7 +92,7 @@ describe.todo('ViewReport', () => {
     })
   })
 
-  it('test html stack trace without html message', () => {
+  it('test html stack trace without html message', async () => {
     const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
@@ -118,7 +118,7 @@ describe.todo('ViewReport', () => {
       file: null!,
     }
     file.file = file
-    const container = render(ViewReport, {
+    const container = await render(ViewReport, {
       props: { file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
@@ -152,7 +152,7 @@ describe.todo('ViewReport', () => {
     ).toBe('color:#A50')
   })
 
-  it('test html stack trace and message', () => {
+  it('test html stack trace and message', async () => {
     const file: RunnerTestFile = {
       id: 'f-1',
       name: 'test/plain-stack-trace.ts',
@@ -178,7 +178,7 @@ describe.todo('ViewReport', () => {
       file: null!,
     }
     file.file = file
-    const container = render(ViewReport, {
+    const container = await render(ViewReport, {
       props: { file },
     })
     const taskError = container.getByTestId(taskErrorTestId)
@@ -220,8 +220,8 @@ describe.todo('ViewReport', () => {
     ).toBe('color:#A50')
   })
 
-  it('test diff display', () => {
-    const component = render(ViewReport, {
+  it('test diff display', async () => {
+    const component = await render(ViewReport, {
       props: {
         file: fileWithTextStacks,
       },

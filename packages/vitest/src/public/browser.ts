@@ -8,7 +8,6 @@ export {
   loadSnapshotSerializers,
   setupCommonEnv,
 } from '../runtime/setup-common'
-export { type OTELCarrier, Traces } from '../utils/traces'
 export { collectTests, startTests } from '@vitest/runner'
 export * as SpyModule from '@vitest/spy'
 export type { ParsedStack, StringifyOptions } from '@vitest/utils'

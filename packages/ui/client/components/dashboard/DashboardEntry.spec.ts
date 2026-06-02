@@ -13,7 +13,7 @@ function div(o: { testId: string; body: string }) {
 
 describe('DashboardEntry', () => {
   it('renders the body and header slots', async () => {
-    render(DashboardEntry, {
+    await render(DashboardEntry, {
       slots: {
         body: div({ testId: bodyTestId, body: faker.lorem.words(2) }),
         header: div({ testId: headerTestId, body: faker.hacker.phrase() }),

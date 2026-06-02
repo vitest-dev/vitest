@@ -111,6 +111,7 @@ export type FieldsWithDefaultValues
     | 'ignoreClassMethods'
     | 'skipFull'
     | 'watermarks'
+    | 'autoAttachSubprocess'
 
 export type ResolvedCoverageOptions
   = CoverageOptions
@@ -265,6 +266,14 @@ export interface CoverageOptions {
   processingConcurrency?: number
 
   /**
+   * Track coverage of the `node:child_process` and `node:worker_threads` spawned during test run.
+   * Supported only by `v8` provider.
+   *
+   * @default false
+   */
+  autoAttachSubprocess?: boolean
+
+  /**
    * Set to array of class method names to ignore for coverage
    *
    * @default []
@@ -341,7 +350,7 @@ interface Thresholds {
    *
    * @default false
    */
-  autoUpdate?: boolean | ((newThreshold: number) => number)
+  autoUpdate?: boolean | ((newThreshold: number, previousThreshold: number) => number)
 
   /** Thresholds for statements */
   statements?: number

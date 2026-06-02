@@ -1,6 +1,7 @@
+import type { SerializedLocator } from '@vitest/browser'
+
 // Note: this augments `screenshotOptions` types
 import type {} from '@vitest/browser-playwright'
-
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
@@ -143,6 +144,7 @@ export function resolveOptions(
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
     browserName: context.project.config.browser.name,
+    project: context.project,
   } satisfies Parameters<GlobalOptions['resolveDiffPath']>[0]
 
   return {
@@ -231,25 +233,41 @@ function sanitizeArg(input: string): string {
  *
  * @returns `Promise` resolving to the decoded screenshot data
  */
-export function takeDecodedScreenshot({
-  codec,
+export function takeScreenshotBuffer({
   context,
   element,
   name,
   screenshotOptions,
+  target,
 }: {
-  codec: AnyCodec
   context: BrowserCommandContext
-  element: string
+  element?: SerializedLocator
   name: string
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
-}): ReturnType<AnyCodec['decode']> {
+  target?: ScreenshotMatcherArguments[2]['target']
+}): Promise<Buffer<ArrayBufferLike>> {
   return context.triggerCommand(
     '__vitest_takeScreenshot',
     name,
-    { ...screenshotOptions, save: false, element },
+    { ...screenshotOptions, save: false, element, target },
   ).then(
-    ({ buffer }) => codec.decode(buffer, {}),
+    ({ buffer }) => buffer,
+  )
+}
+
+export function takeDecodedScreenshot({
+  codec,
+  ...options
+}: {
+  codec: AnyCodec
+  context: BrowserCommandContext
+  element?: SerializedLocator
+  name: string
+  screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
+  target?: ScreenshotMatcherArguments[2]['target']
+}): ReturnType<AnyCodec['decode']> {
+  return takeScreenshotBuffer(options).then(
+    buffer => codec.decode(buffer, {}),
   )
 }
 

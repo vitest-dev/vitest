@@ -2,7 +2,7 @@ import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { BenchmarkResult } from '../runtime/types/benchmark'
+import type { Bench, BenchResult } from '../runtime/benchmark'
 import type { UserConsoleLog } from './general'
 
 interface SnapshotMatcher<T> {
@@ -22,7 +22,7 @@ interface InlineSnapshotMatcher<T> {
   (hint?: string): void
 }
 
-declare module '@vitest/expect' {
+declare module 'vitest' {
   interface MatcherState {
     environment: string
     snapshotState: SnapshotState
@@ -40,7 +40,7 @@ declare module '@vitest/expect' {
     unreachable: (message?: string) => never
     soft: <T>(actual: T, message?: string) => Assertion<T>
     poll: <T>(
-      actual: () => T,
+      actual: (options: { signal: AbortSignal }) => T,
       options?: ExpectPollOptions,
     ) => PromisifyAssertion<Awaited<T>>
     addEqualityTesters: (testers: Array<Tester>) => void
@@ -92,6 +92,40 @@ declare module '@vitest/expect' {
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
+
+    /**
+     * Asserts that a benchmark result is faster than another benchmark result.
+     * Compares mean latency — lower is faster.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'))
+     * expect(result.get('lib1')).toBeFasterThan(result.get('lib2'), { delta: 0.1 })
+     */
+    toBeFasterThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
+
+    /**
+     * Asserts that a benchmark result is slower than another benchmark result.
+     * Compares mean latency — higher is slower.
+     *
+     * @example
+     * const result = await bench.compare(
+     *   bench('lib1', () => { lib1() }),
+     *   bench('lib2', () => { lib2() }),
+     * )
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'))
+     * expect(result.get('lib2')).toBeSlowerThan(result.get('lib1'), { delta: 0.2 })
+     */
+    toBeSlowerThan: (
+      expected: BenchResult,
+      options?: { delta?: number },
+    ) => void
   }
 }
 
@@ -103,6 +137,11 @@ declare module '@vitest/runner' {
      * This API is useful for running snapshot tests concurrently because global expect cannot track them.
      */
     readonly expect: ExpectStatic
+    /**
+     * Create a benchmark to run. It will be reported after the test is finished.
+     * @see {@link https://vitest.dev/guide/benchmarking}
+     */
+    readonly bench: Bench
     /** @internal */
     _local: boolean
   }
@@ -110,6 +149,7 @@ declare module '@vitest/runner' {
   interface TaskMeta {
     typecheck?: boolean
     benchmark?: boolean
+    __vitest_label__?: string
   }
 
   interface File {
@@ -119,9 +159,5 @@ declare module '@vitest/runner' {
 
   interface TaskBase {
     logs?: UserConsoleLog[]
-  }
-
-  interface TaskResult {
-    benchmark?: BenchmarkResult
   }
 }

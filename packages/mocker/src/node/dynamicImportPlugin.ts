@@ -1,5 +1,5 @@
 import type { SourceMap } from 'magic-string'
-import type { Plugin, Rollup } from 'vite'
+import type { Environment, Plugin, Rollup } from 'vite'
 import type { Expression, Positioned } from './esmWalker'
 import MagicString from 'magic-string'
 import { esmWalker } from './esmWalker'
@@ -11,7 +11,7 @@ export interface DynamicImportPluginOptions {
    * @default `"__vitest_mocker__"`
    */
   globalThisAccessor?: string
-  filter?: (id: string) => boolean
+  filter?: (id: string, environment: Environment) => boolean
 }
 
 export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): Plugin {
@@ -23,7 +23,7 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
       if (!regexDynamicImport.test(source)) {
         return
       }
-      if (options.filter && !options.filter(id)) {
+      if (options.filter && !options.filter(id, this.environment)) {
         return
       }
       return injectDynamicImport(source, id, this.parse, options)

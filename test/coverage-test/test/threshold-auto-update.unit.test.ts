@@ -157,6 +157,8 @@ test('formats values with custom formatter', async () => {
 })
 
 test('per-file autoUpdate uses the lowest file and skips globs with no matched files', async () => {
+  // '**/src/*.ts' has files at 80% and 30% -> bumps to the per-file minimum (30).
+  // '**/empty/*.ts' matched no files -> must stay untouched, not become Infinity.
   const config = parseModule(`export default ${JSON.stringify(defineConfig({
     test: {
       coverage: {
@@ -235,6 +237,22 @@ test('per-file autoUpdate uses the lowest file and skips globs with no matched f
       }
     }"
   `)
+})
+
+test('passes previous threshold as second argument to custom formatter', async () => {
+  const config = parseModule(`export default ${initialConfig}`)
+
+  const autoUpdate = vi.fn().mockImplementation(value => value)
+  await updateThresholds(config, { thresholds: { autoUpdate } })
+
+  const previousValues = autoUpdate.mock.calls.map(call => [call[0], call[1]])
+
+  expect(previousValues.sort((a, b) => a[0] - b[0])).toEqual([
+    [coveredThresholds.lines, initialThresholds.lines],
+    [coveredThresholds.branches, initialThresholds.branches],
+    [coveredThresholds.functions, initialThresholds.functions],
+    [coveredThresholds.statements, initialThresholds.statements],
+  ].sort((a, b) => a[0] - b[0]))
 })
 
 async function updateThresholds(configurationFile: ReturnType<typeof parseModule>, _coverageOptions: Partial<(InstanceType<typeof BaseCoverageProvider>)['options']> = {}) {

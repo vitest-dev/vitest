@@ -5,35 +5,9 @@ title: Vitest API
 
 # Vitest
 
-Vitest instance requires the current test mode. It can be either:
+## mode <Deprecated /> {#mode}
 
-- `test` when running runtime tests
-- `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
-
-::: details New in Vitest 4
-Vitest 4 added several new APIs (they are marked with a "4.0.0+" badge) and removed deprecated APIs:
-
-- `invalidates`
-- `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
-- `server` (use [`vite`](#vite) instead)
-- `getProjectsByTestFile` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getFileWorkspaceSpecs` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
-- `getModuleProjects` (filter by [`this.projects`](#projects) yourself)
-- `updateLastChanged` (renamed to [`invalidateFile`](#invalidatefile))
-- `globTestSpecs` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `globTestFiles` (use [`globTestSpecifications`](#globtestspecifications) instead)
-- `listFile` (use [`getRelevantTestSpecifications`](#getrelevanttestspecifications) instead)
-:::
-
-## mode
-
-### test
-
-Test mode will only call functions inside `test` or `it`, and throws an error when `bench` is encountered. This mode uses `include` and `exclude` options in the config to find test files.
-
-### benchmark <Badge type="warning">experimental</Badge>
-
-Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
+Since Vitest 5, this property is always `'test'`.
 
 ## config
 
@@ -47,7 +21,7 @@ This is Vitest config, it doesn't extend _Vite_ config. It only has resolved val
 
 This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver).
 
-## state <Badge type="warning">experimental</Badge>
+## state <Experimental /> {#state}
 
 ::: warning
 Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.
@@ -202,7 +176,7 @@ This method can be slow because it needs to filter `--changed` flags. Do not use
 function mergeReports(directory?: string): Promise<TestRunResult>
 ```
 
-Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified). This value can also be set on `config.mergeReports` (by default, it will read `.vitest-reports` folder).
+Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified). This value can also be set on `config.mergeReports` (by default, it will read `.vitest/blob/` folder).
 
 Note that the `directory` will always be resolved relative to the working directory.
 

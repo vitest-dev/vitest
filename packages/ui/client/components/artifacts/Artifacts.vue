@@ -3,7 +3,7 @@ import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 import { getLocationString, openLocation } from '~/composables/location'
-import TraceArtifactLauncher from '../trace/TraceArtifactLauncher.vue'
+import TraceArtifacts from '../trace/TraceArtifacts.vue'
 import VisualRegression from './visual-regression/VisualRegression.vue'
 
 const { test } = defineProps<{ test: RunnerTestCase }>()
@@ -20,11 +20,7 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
   for (const artifact of test.artifacts) {
     switch (artifact.type) {
       case 'internal:browserTrace': {
-        handledArtifacts.push({
-          artifact,
-          component: TraceArtifactLauncher,
-          props: { trace: artifact, test } satisfies ComponentProps<typeof TraceArtifactLauncher>,
-        })
+        // handled by <TraceArtifacts />
         continue
       }
       case 'internal:toMatchScreenshot': {
@@ -46,6 +42,8 @@ const handledArtifacts = computed<readonly HandledArtifact[]>(() => {
 </script>
 
 <template>
+  <TraceArtifacts :test="test" />
+
   <template v-if="handledArtifacts.length">
     <h1 m-2>
       Test Artifacts

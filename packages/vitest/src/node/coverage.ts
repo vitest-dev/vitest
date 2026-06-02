@@ -160,14 +160,15 @@ export class BaseCoverageProvider {
       return cacheHit
     }
 
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
+
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+    if (this.options.allowExternal === false && !matchingRoot) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
     if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
@@ -616,7 +617,7 @@ export class BaseCoverageProvider {
         continue
       }
 
-      const thresholdsToUpdate: [Threshold, number][] = []
+      const thresholdsToUpdate: [Threshold, number, number][] = []
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
@@ -630,7 +631,7 @@ export class BaseCoverageProvider {
           )
 
           if (actual > threshold) {
-            thresholdsToUpdate.push([key, actual])
+            thresholdsToUpdate.push([key, actual, threshold])
           }
         }
         else {
@@ -642,7 +643,7 @@ export class BaseCoverageProvider {
           if (actual < absoluteThreshold) {
             // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
             const updatedThreshold = actual === 0 ? 100 : actual * -1
-            thresholdsToUpdate.push([key, updatedThreshold])
+            thresholdsToUpdate.push([key, updatedThreshold, threshold])
           }
         }
       }
@@ -655,8 +656,8 @@ export class BaseCoverageProvider {
 
       const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number) => value
 
-      for (const [threshold, newValue] of thresholdsToUpdate) {
-        const formattedValue = thresholdFormatter(newValue)
+      for (const [threshold, newValue, previousValue] of thresholdsToUpdate) {
+        const formattedValue = thresholdFormatter(newValue, previousValue)
         if (name === GLOBAL_THRESHOLDS_KEY) {
           config.test.coverage.thresholds[threshold] = formattedValue
         }
@@ -713,11 +714,11 @@ export class BaseCoverageProvider {
   // TODO: should this be abstracted in `project`/`vitest` instead?
   // if we decide to keep `viteModuleRunner: false`, we will need to abstract transformation in both main thread and tests
   // custom --import=module.registerHooks need to be transformed as well somehow
-  async transformFile(url: string, project: TestProject, viteEnvironment: string): Promise<TransformResult | null | undefined> {
+  async transformFile(url: string, project: TestProject, viteEnvironment: string, isTransformedByVite = true): Promise<TransformResult | null | undefined> {
     const config = project.config
 
     // vite is disabled, should transform manually if possible
-    if (config.experimental.viteModuleRunner === false) {
+    if (config.experimental.viteModuleRunner === false || !isTransformedByVite) {
       const pathname = url.split('?')[0]
       const filename = pathname.startsWith('file://') ? fileURLToPath(pathname) : pathname
       const extension = path.extname(filename)

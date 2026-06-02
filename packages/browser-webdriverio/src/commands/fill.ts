@@ -3,7 +3,7 @@ import type { UserEventCommand } from './utils'
 
 export const fill: UserEventCommand<UserEvent['fill']> = async (
   context,
-  selector,
+  { selector },
   text,
   _options = {},
 ) => {

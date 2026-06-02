@@ -3,9 +3,10 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
-import type { BrowserCommands, CDPSession } from 'vitest/browser'
+import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
 import type { BrowserTesterOptions } from '../../types/browser'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
@@ -239,6 +240,12 @@ export interface BrowserConfigOptions {
      * @default false
      */
     exact?: boolean
+    /**
+     * Format used for locator "Cannot find element" error details.
+     *
+     * @default 'all'
+     */
+    errorFormat?: 'html' | 'aria' | 'all'
   }
 
   /**
@@ -346,15 +353,30 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  mark: (name: string, options?: MarkOptions) => Promise<void>
   triggerCommand: <K extends keyof BrowserCommands>(
     name: K,
     ...args: Parameters<BrowserCommands[K]>
   ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
   project: TestProject
+  otelCarrier?: OTELCarrier
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 
@@ -445,6 +467,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   locators: {
     testIdAttribute: string
     exact: boolean
+    errorFormat: 'html' | 'aria' | 'all'
   }
   trace: {
     mode: BrowserTraceViewMode
@@ -524,6 +547,12 @@ type ToMatchScreenshotResolvePath = (data: {
    * if none is provided, its default value.
    */
   attachmentsDir: string
+  /**
+   * The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to.
+   *
+   * @experimental
+   */
+  project: TestProject
 }) => string
 
 export interface ToMatchScreenshotOptions {

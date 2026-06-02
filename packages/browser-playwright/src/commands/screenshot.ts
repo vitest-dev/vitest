@@ -1,3 +1,4 @@
+import type { SerializedLocator } from '@vitest/browser'
 import type { ScreenshotOptions } from 'vitest/browser'
 import type { BrowserCommandContext } from 'vitest/node'
 import { mkdir } from 'node:fs/promises'
@@ -6,8 +7,9 @@ import { dirname, normalize } from 'pathe'
 import { getDescribedLocator } from './utils'
 
 interface ScreenshotCommandOptions extends Omit<ScreenshotOptions, 'element' | 'mask'> {
-  element?: string
-  mask?: readonly string[]
+  element?: SerializedLocator
+  mask?: readonly SerializedLocator[]
+  target?: 'element' | 'page'
 }
 
 const SCREENSHOT_STYLES = /* css */`
@@ -60,7 +62,7 @@ export async function takeScreenshot(
     : options.style
 
   if (options.element) {
-    const { element: selector, ...config } = options
+    const { element: selector, target: _target, ...config } = options
     const element = getDescribedLocator(context, selector)
     const buffer = await element.screenshot({
       ...config,
@@ -71,11 +73,19 @@ export async function takeScreenshot(
     return { buffer, path }
   }
 
-  const buffer = await getDescribedLocator(context, 'body').screenshot({
-    ...options,
-    mask,
-    path: savePath,
-    style,
-  })
+  const { target, ...config } = options
+  const buffer = target === 'page'
+    ? await context.page.screenshot({
+        ...config,
+        mask,
+        path: savePath,
+        style,
+      })
+    : await getDescribedLocator(context, { selector: 'body', locator: 'locator(\'body\')' }).screenshot({
+        ...config,
+        mask,
+        path: savePath,
+        style,
+      })
   return { buffer, path }
 }

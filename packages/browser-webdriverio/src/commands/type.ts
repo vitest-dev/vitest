@@ -4,7 +4,7 @@ import { keyboardImplementation } from './keyboard'
 
 export const type: UserEventCommand<UserEvent['type']> = async (
   context,
-  selector,
+  { selector },
   text,
   options = {},
 ) => {

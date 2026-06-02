@@ -4,10 +4,10 @@ import { render } from '~/test'
 import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 describe('ViewConsoleOutputEntry', () => {
-  it('test html entry', () => {
+  it('test html entry', async () => {
     const now = new Date().toISOString()
     const content = new Filter().toHtml(`\x1B[33m${now}\x1B[0m`)
-    const { container } = render(ViewConsoleOutputEntry, {
+    const { container } = await render(ViewConsoleOutputEntry, {
       props: {
         taskName: 'test/html',
         type: 'stderr',

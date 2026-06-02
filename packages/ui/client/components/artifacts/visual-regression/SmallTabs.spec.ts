@@ -25,7 +25,7 @@ function createSmallTabs(children: number) {
 
 describe('SmallTabs', () => {
   it('has accessible elements', async () => {
-    const result = render(createSmallTabs(2))
+    const result = await render(createSmallTabs(2))
 
     // a tablist with two elements inside
     const tablist = page.getByRole('tablist')
@@ -78,7 +78,7 @@ describe('SmallTabs', () => {
   it('opens one panel at a time', async () => {
     const tabsLimit = 5
 
-    const result = render(createSmallTabs(tabsLimit))
+    const result = await render(createSmallTabs(tabsLimit))
 
     const tabs = page.getByRole('tablist').getByRole('tab')
     const panels = page.getByRole('tabpanel', { includeHidden: true })

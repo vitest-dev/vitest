@@ -2,8 +2,6 @@
 import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { computed } from 'vue'
 import { config } from '~/composables/client'
-import { isDark } from '~/composables/dark'
-import { mapLeveledTaskStacks } from '~/composables/error'
 import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
 
@@ -53,9 +51,7 @@ const failed = computed(() => {
     }
     failedFlatMap.unshift(fileErrorTask)
   }
-  return failedFlatMap.length > 0
-    ? mapLeveledTaskStacks(isDark.value, failedFlatMap)
-    : failedFlatMap
+  return failedFlatMap
 })
 </script>
 
@@ -70,23 +66,14 @@ const failed = computed(() => {
           m-2
           rounded
           :style="{
-            'margin-left': `${
-              task.result?.htmlError ? 0.5 : 2 * (task as LeveledTask).level + 0.5
-            }rem`,
+            'margin-left': `${2 * (task as LeveledTask).level + 0.5}rem`,
           }"
         >
           <div flex="~ gap-2 items-center">
             <span>{{ task.name }}</span>
             <FailureScreenshot :task="task" />
           </div>
-          <div
-            v-if="task.result?.htmlError"
-            class="scrolls scrolls-rounded task-error"
-            data-testid="task-error"
-          >
-            <pre v-html="task.result.htmlError" />
-          </div>
-          <template v-else-if="task.result?.errors && config.root">
+          <template v-if="task.result?.errors && config.root">
             <ViewReportError
               v-for="(error, idx) of task.result.errors"
               :key="idx"

@@ -58,7 +58,7 @@ interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
 }
 
 interface AssertDomainPollOptions extends Omit<AssertDomainOptions, 'received'> {
-  poll: () => Promise<unknown> | unknown
+  poll: (options: { signal: AbortSignal }) => Promise<unknown> | unknown
   timeout?: number
   interval?: number
 }
@@ -241,7 +241,7 @@ export class SnapshotClient {
       inlineSnapshot,
     })
     expectedSnapshot.markAsChecked()
-    const matchResult = expectedSnapshot.data
+    const matchResult = expectedSnapshot.data !== undefined
       ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
@@ -291,15 +291,19 @@ export class SnapshotClient {
       inlineSnapshot,
     })
 
-    const reference = expectedSnapshot.data && snapshotState.snapshotUpdateState !== 'all'
+    const reference = expectedSnapshot.data !== undefined && snapshotState.snapshotUpdateState !== 'all'
       ? adapter.parseExpected(expectedSnapshot.data)
       : undefined
+    const timeoutController = new AbortController()
     const timedOut = timeout > 0
-      ? new Promise<void>(r => setTimeout(r, timeout))
+      ? new Promise<void>(r => setTimeout(() => {
+          timeoutController.abort()
+          r()
+        }, timeout))
       : undefined
     const stableResult = await getStableSnapshot({
       adapter,
-      poll,
+      poll: () => poll({ signal: timeoutController.signal }),
       interval,
       timedOut,
       match: reference
@@ -309,7 +313,7 @@ export class SnapshotClient {
 
     expectedSnapshot.markAsChecked()
 
-    if (!stableResult?.rendered) {
+    if (stableResult?.rendered === undefined) {
       // the original caller `expect.poll` later manipulates error via `throwWithCause`,
       // so here we can directly throw `lastPollError` if exists.
       if (stableResult?.lastPollError) {
@@ -324,7 +328,7 @@ export class SnapshotClient {
     // TODO: should `all` mode ignore parse error?
     // Sielently hiding the error and creating snaphsot full scratch isn't good either.
     // Users can fix or purge the broken snapshot manually and that decision affects how domain snapshot gets updated.
-    const matchResult = expectedSnapshot.data
+    const matchResult = expectedSnapshot.data !== undefined
       ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
       : undefined
     const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
