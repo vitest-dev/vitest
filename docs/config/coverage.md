@@ -312,9 +312,6 @@ You can also pass a function for formatting the updated threshold values. The fu
 {
   coverage: {
     thresholds: {
-      // Update thresholds without decimals
-      autoUpdate: (newThreshold) => Math.floor(newThreshold),
-
       // Log the change and update without decimals
       autoUpdate: (newThreshold, previousThreshold) => {
         console.log(`Updated threshold from ${previousThreshold} to ${newThreshold}`)

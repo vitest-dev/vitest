@@ -157,8 +157,6 @@ test('formats values with custom formatter', async () => {
 })
 
 test('per-file autoUpdate uses the lowest file and skips globs with no matched files', async () => {
-  // '**/src/*.ts' has files at 80% and 30% -> bumps to the per-file minimum (30).
-  // '**/empty/*.ts' matched no files -> must stay untouched, not become Infinity.
   const config = parseModule(`export default ${JSON.stringify(defineConfig({
     test: {
       coverage: {
