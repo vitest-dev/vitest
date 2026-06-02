@@ -1,7 +1,7 @@
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
-import type { FileSpecification } from './runner'
+import type { FileSpecification } from './runner/types'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'

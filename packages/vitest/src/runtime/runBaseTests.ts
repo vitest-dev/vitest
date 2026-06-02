@@ -2,7 +2,7 @@ import type { Environment } from '../types/environment'
 import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
-import type { FileSpecification } from './runner'
+import type { FileSpecification } from './runner/types'
 import { performance } from 'node:perf_hooks'
 import {
   startCoverageInsideWorker,
