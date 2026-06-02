@@ -97,3 +97,34 @@ it('does not lookup config from parent directory', async () => {
     }
   `)
 })
+
+it('loads explicit config from parent directory', async () => {
+  const parent = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(parent, {
+    'vitest.config.ts': `
+      export default {
+        test: {
+          globals: true,
+        },
+      }
+    `,
+    'dir1/file1.test.ts': `
+      test('ok', () => {})
+    `,
+    'dir2/file2.test.ts': `
+      test('ok', () => {})
+    `,
+  })
+  const result = await runVitest({
+    root: resolve(parent, 'dir1'),
+    config: resolve(parent, 'vitest.config.ts'),
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "file1.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
+})

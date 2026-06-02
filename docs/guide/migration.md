@@ -131,7 +131,7 @@ Vitest no longer searches parent directories for config files. If you previously
 
 ```bash
 $ cd subdir && vitest # [!code --]
-$ cd subdir && vitest --config ../vitest.config.ts --dir ./ # [!code ++]
+$ cd subdir && vitest --config ../vitest.config.ts # [!code ++]
 ```
 
 ## Migrating to Vitest 4.0 {#vitest-4}
