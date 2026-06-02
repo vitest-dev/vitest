@@ -9,7 +9,7 @@ import { resolve } from 'node:path'
 import { deepClone, slash } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { mergeConfig } from 'vite'
-import { findLocalConfig } from './config/findConfig'
+import { findConfigFile } from './config/resolveConfig'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
@@ -55,7 +55,7 @@ export async function createVitest(
       ? false
       : options.config
         ? (resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config))
-        : findLocalConfig(root)
+        : findConfigFile(root)
 
   options.config = configPath
 
