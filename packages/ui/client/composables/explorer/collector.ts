@@ -22,7 +22,6 @@ import {
   isSlowTestTask,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
-import { isTestCase } from '../../../../vitest/src/runtime/runner/utils'
 import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
 
 export { hasFailedSnapshot }
@@ -502,7 +501,7 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
-    if (isTestCase(s)) {
+    if (s.type === 'test') {
       yield s
     }
     else {

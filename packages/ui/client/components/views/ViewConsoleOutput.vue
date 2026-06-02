@@ -4,7 +4,7 @@ import { client, currentLogs as logs } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
-import { getNames } from '../../../../vitest/src/runtime/runner/utils'
+import { getNames } from '../../../../vitest/src/runtime/runner/utils/tasks.ts'
 import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 const formattedLogs = computed(() => {

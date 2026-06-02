@@ -188,6 +188,7 @@ export function generateHash(str: string): string {
   return `${hash}`
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function calculateSuiteHash(parent: Suite): void {
   parent.tasks.forEach((t, idx) => {
     t.id = `${parent.id}_${idx}`
@@ -202,6 +203,7 @@ interface HashMeta {
   __vitest_label__?: string
 }
 
+/* @__NO_SIDE_EFFECTS__ */
 export function createFileTask(
   filepath: string,
   root: string,
