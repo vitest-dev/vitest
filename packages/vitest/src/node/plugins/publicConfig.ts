@@ -4,11 +4,9 @@ import type {
 } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import { deepClone, slash } from '@vitest/utils/helpers'
-import * as find from 'empathic/find'
 import { resolve } from 'pathe'
 import { mergeConfig, resolveConfig as resolveViteConfig } from 'vite'
-import { configFiles } from '../../constants'
-import { resolveConfig as resolveVitestConfig } from '../config/resolveConfig'
+import { findConfigFile, resolveConfig as resolveVitestConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { VitestPlugin } from './index'
 
@@ -24,7 +22,7 @@ export async function resolveConfig(
       ? false
       : options.config
         ? resolve(root, options.config)
-        : find.any(configFiles, { cwd: root })
+        : findConfigFile(root)
   options.config = configPath
 
   const vitest = new Vitest(deepClone(options))
