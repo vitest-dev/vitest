@@ -22,19 +22,32 @@ export class BrowserSessions {
     pool: { reject: (error: Error) => void },
     options?: { otelCarrier?: OTELCarrier },
   ): Promise<void> {
-    // this promise only waits for the WS connection with the orchestrator to be established
+    // this promise waits until the orchestrator is ready to accept RPC calls
     const defer = createDefer<void>()
-
+    let isConnected = false
+    let isReady = false
     const timeout = setTimeout(() => {
       defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" [${project.name}] within the timeout.`))
     }, project.vitest.config.browser.connectTimeout ?? 60_000).unref()
+
+    const resolveIfReady = () => {
+      if (!isConnected || !isReady) {
+        return
+      }
+      defer.resolve()
+      clearTimeout(timeout)
+    }
 
     this.sessions.set(sessionId, {
       project,
       otelCarrier: options?.otelCarrier,
       connected: () => {
-        defer.resolve()
-        clearTimeout(timeout)
+        isConnected = true
+        resolveIfReady()
+      },
+      ready: () => {
+        isReady = true
+        resolveIfReady()
       },
       // this fails the whole test run and cancels the pool
       fail: (error: Error) => {

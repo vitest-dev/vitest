@@ -1,4 +1,4 @@
-import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
@@ -27,7 +27,7 @@ export interface VitestUtils {
   /**
    * This method wraps all further calls to timers until [`vi.useRealTimers()`](https://vitest.dev/api/vi#vi-userealtimers) is called.
    */
-  useFakeTimers: (config?: FakeTimerInstallOpts) => VitestUtils
+  useFakeTimers: (config?: FakeTimersConfig) => VitestUtils
   /**
    * Restores mocked timers to their original implementations. All timers that were scheduled before will be discarded.
    */
@@ -496,7 +496,7 @@ function createVitest(): VitestUtils {
   const _envBooleans = ['PROD', 'DEV', 'SSR']
 
   const utils: VitestUtils = {
-    useFakeTimers(config?: FakeTimerInstallOpts) {
+    useFakeTimers(config?: FakeTimersConfig) {
       if (isChildProcess()) {
         if (
           config?.toFake?.includes('nextTick')
@@ -615,8 +615,17 @@ function createVitest(): VitestUtils {
       return function __VITEST_HELPER__(this: any, ...args: any[]): any {
         const result = fn.apply(this, args)
         if (result && typeof result === 'object' && typeof result.then === 'function') {
+          const stackTraceError = new Error('STACK_TRACE_ERROR')
           return (async function __VITEST_HELPER__() {
-            return await result
+            try {
+              return await result
+            }
+            catch (error) {
+              if (error instanceof Error && !error.stack?.includes('__VITEST_HELPER__')) {
+                copyStackTrace(error, stackTraceError)
+              }
+              throw error
+            }
           })()
         }
         return result
@@ -858,4 +867,11 @@ function getImporter(name: string) {
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
   return stack?.file || ''
+}
+
+function copyStackTrace(target: Error, source: Error) {
+  if (source.stack !== undefined) {
+    target.stack = source.stack.replace(source.message, target.message)
+  }
+  return target
 }

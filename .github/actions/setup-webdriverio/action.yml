@@ -1,0 +1,65 @@
+name: Setup WebDriverIO Browsers
+description: Setup Chrome, ChromeDriver, and optional Firefox for WebDriverIO tests
+
+inputs:
+  chrome-version:
+    description: Chrome for Testing version to install, or false to skip
+    # Pin to Chrome 148 while Chrome for Testing 149 Linux downloads/install are broken.
+    default: '148'
+  firefox-version:
+    description: Firefox version to install, or false to skip
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      if: inputs.chrome-version != 'false'
+      id: setup-chrome
+      with:
+        chrome-version: ${{ inputs.chrome-version }}
+        install-chromedriver: true
+
+    - name: Export Chrome binaries
+      if: inputs.chrome-version != 'false'
+      shell: bash
+      env:
+        CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        CHROMEDRIVER_PATH_VALUE: ${{ steps.setup-chrome.outputs.chromedriver-path }}
+      run: | # zizmor: ignore[github-env] values come from pinned browser-actions/setup-chrome outputs.
+        echo "CHROME_BIN=$CHROME_PATH" >> "$GITHUB_ENV"
+        echo "CHROMEDRIVER_PATH=$CHROMEDRIVER_PATH_VALUE" >> "$GITHUB_ENV"
+
+    - name: Allow setup-chrome sandbox
+      if: inputs.chrome-version != 'false' && runner.os == 'Linux'
+      shell: bash
+      env:
+        CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+      run: |
+        # Chrome for Testing is not covered by Ubuntu's AppArmor sandbox policy on CI.
+        # https://pptr.dev/troubleshooting#issues-with-apparmor-on-ubuntu
+        # https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
+        # https://github.com/browser-actions/setup-chrome/issues/639
+        cat <<EOF | sudo tee /etc/apparmor.d/chrome-for-testing
+        abi <abi/4.0>,
+        include <tunables/global>
+
+        profile chrome-for-testing "$CHROME_PATH" flags=(unconfined) {
+          userns,
+          include if exists <local/chrome>
+        }
+        EOF
+        sudo apparmor_parser -r /etc/apparmor.d/chrome-for-testing
+
+    - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
+      if: inputs.firefox-version != 'false'
+      id: setup-firefox
+      with:
+        firefox-version: ${{ inputs.firefox-version }}
+
+    - name: Export Firefox binary
+      if: inputs.firefox-version != 'false'
+      shell: bash
+      env:
+        FIREFOX_PATH: ${{ steps.setup-firefox.outputs.firefox-path }}
+      run: echo "FIREFOX_BIN=$FIREFOX_PATH" >> "$GITHUB_ENV" # zizmor: ignore[github-env] value comes from pinned browser-actions/setup-firefox output.

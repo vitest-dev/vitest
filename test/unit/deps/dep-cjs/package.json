@@ -2,6 +2,8 @@
   "name": "@vitest/test-dep-cjs",
   "type": "commonjs",
   "exports": {
+    "./esmodule": "./esmodule.js",
+    "./esmodule-false": "./esmodule-false.js",
     "./esm-comment": "./esm-comment.js",
     "./esm-string": "./esm-string.js"
   }

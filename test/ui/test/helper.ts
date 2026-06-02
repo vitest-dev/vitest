@@ -1,4 +1,5 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
+import type { EditorFromTextArea } from 'codemirror'
 import type { InlineConfig, PreviewServer } from 'vite'
 import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
@@ -8,6 +9,14 @@ import { expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
+export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
+  const stdout = new Writable({ write: (_, __, callback) => callback() })
+  const stderr = new Writable({ write: (_, __, callback) => callback() })
+  const vitest = await startVitest(undefined, cliOptions, {}, { stdout, stderr })
+  await vitest.close()
+  return vitest
+}
+
 export async function startVitestUi(
   cliOptions: CliOptions,
   viteOverrides: InlineConfig = {},
@@ -15,7 +24,7 @@ export async function startVitestUi(
   // silence Vitest logs
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest('test', undefined, cliOptions, viteOverrides, { stdout, stderr })
+  const vitest = await startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr })
 
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
@@ -66,6 +75,10 @@ export async function openExplorerFileItem(page: Page, name: string) {
   await item.getByTestId('btn-open-details').click()
 }
 
+export function getAnnotation(locator: Page | Locator, message: string) {
+  return locator.getByRole('note').filter({ hasText: message })
+}
+
 export async function assertDownloadAttachment(
   page: Page,
   options: {
@@ -74,7 +87,7 @@ export async function assertDownloadAttachment(
     content: string
   },
 ) {
-  const annotation = page.getByRole('note').filter({ hasText: options.name })
+  const annotation = getAnnotation(page, options.name)
   const downloadPromise = page.waitForEvent('download')
   await annotation.getByRole('link').click()
   const download = await downloadPromise
@@ -92,4 +105,21 @@ export async function assertImageAttachment(
   const annotation = page.getByRole('note').filter({ hasText: options.name })
   await expect(annotation.getByRole('link')).toHaveAttribute('href', /.+/)
   await expect(annotation.getByRole('img')).not.toHaveJSProperty('naturalWidth', 0)
+}
+
+export async function evaluateEditor<T>(
+  page: Page,
+  fn: (editor: EditorFromTextArea, ...args: any[]) => T,
+  ...args: any[]
+): Promise<T> {
+  const editor = page.getByTestId('editor').locator('.CodeMirror')
+  return editor.evaluate(
+    (e, [fnStr, args]) => {
+      const codemirror = (e as any).CodeMirror
+      // eslint-disable-next-line no-new-func
+      const fn = new Function('codemirror', 'args', `return (${fnStr})(codemirror, ...args)`)
+      return fn(codemirror, args)
+    },
+    [fn.toString(), args],
+  )
 }
