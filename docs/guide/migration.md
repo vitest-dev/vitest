@@ -64,6 +64,25 @@ test('example', { sequential: true }, async () => { /* ... */ }) // [!code --]
 test('example', { concurrent: false }, async () => { /* ... */ }) // [!code ++]
 ```
 
+### Narrower Inference for `test.for` and `describe.for`
+
+`test.for` and `describe.for` now preserve literal types by default for array cases.
+This means callback parameters can be inferred as literal unions (for example `1 | 2`) instead of widened types (for example `number`) without needing `as const`.
+
+`test.each` and `describe.each` are compatibility aliases and follow the same typing behavior.
+
+If your tests were using `as const` only to preserve literal unions, you can remove it.
+
+```ts
+test.for([1, 2] as const)('retry %s', (retry) => { // [!code --]
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
+})
+
+test.for([1, 2])('retry %s', (retry) => { // [!code ++]
+  expectTypeOf(retry).toEqualTypeOf<1 | 2>()
+})
+```
+
 ### Locators in Commands are Serialized as Objects
 
 Locators forwarded to [browser commands](/api/browser/commands) are now serialized as a `SerializedLocator` object instead of a bare selector string. The object exposes two fields:

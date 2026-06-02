@@ -435,11 +435,11 @@ interface EachFunctionReturn<T extends any[]> {
 }
 
 interface TestEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
+  <const T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
+  <const T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
     ExtractEachCallbackArgs<T>
   >
-  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
+  <const T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
@@ -458,7 +458,7 @@ interface TestForFunctionReturn<Arg, Context> {
 interface TestForFunction<ExtraContext> {
   // test.for([1, 2, 3])
   // test.for([[1, 2], [3, 4, 5]])
-  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
+  <const T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
     T,
     TestContext & ExtraContext
   >
@@ -475,7 +475,7 @@ interface TestForFunction<ExtraContext> {
 }
 
 interface SuiteForFunction {
-  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
+  <const T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
   (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
 }
 
