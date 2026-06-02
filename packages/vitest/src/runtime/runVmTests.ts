@@ -17,7 +17,7 @@ import { resolveSnapshotEnvironment } from '../integrations/snapshot/environment
 import * as VitestIndex from '../public/index'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
-import { collectTests, startTests } from './runner'
+import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'

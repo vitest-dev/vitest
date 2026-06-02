@@ -12,7 +12,7 @@ import { resolveSnapshotEnvironment } from '../integrations/snapshot/environment
 import { vi } from '../integrations/vi'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
-import { collectTests, startTests } from './runner'
+import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'

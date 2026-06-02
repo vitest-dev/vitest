@@ -7,7 +7,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { TestSyntaxError } from '../../runtime/runner'
+import { TestSyntaxError } from '../../runtime/runner/errors'
 import { getNames } from '../../runtime/runner/utils'
 import { getWorkerState } from '../../runtime/utils'
 

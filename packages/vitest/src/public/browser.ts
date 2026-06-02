@@ -3,7 +3,7 @@ export {
   stopCoverageInsideWorker,
   takeCoverageInsideWorker,
 } from '../integrations/coverage'
-export { collectTests, startTests } from '../runtime/runner'
+export { collectTests, startTests } from '../runtime/runner/run'
 export type { FileSpecification } from '../runtime/runner/types'
 export {
   loadDiffConfig,

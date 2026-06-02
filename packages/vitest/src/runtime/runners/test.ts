@@ -26,13 +26,9 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
-import {
-  createTaskCollector,
-  getCurrentSuite,
-  getCurrentTest,
-  getFn,
-  getHooks,
-} from '../runner'
+import { getFn, getHooks } from '../runner/map'
+import { createTaskCollector, getCurrentSuite } from '../runner/suite'
+import { getCurrentTest } from '../runner/test-state'
 import { createChainable, createFileTask, getNames, getTestName, getTests } from '../runner/utils'
 import { matchesTags } from '../runner/utils/tags'
 import { getWorkerState } from '../utils'

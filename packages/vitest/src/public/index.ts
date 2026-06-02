@@ -57,6 +57,7 @@ export type TestRunnerConfig = SerializedConfig
 
 export { VitestEvaluatedModules as EvaluatedModules } from '../runtime/moduleRunner/evaluatedModules'
 
+export { recordArtifact } from '../runtime/runner/artifact'
 export {
   afterAll,
   afterEach,
@@ -64,14 +65,15 @@ export {
   aroundEach,
   beforeAll,
   beforeEach,
-  describe,
-  it,
   onTestFailed,
   onTestFinished,
-  recordArtifact,
+} from '../runtime/runner/hooks'
+export {
+  describe,
+  it,
   suite,
   test,
-} from '../runtime/runner'
+} from '../runtime/runner/suite'
 export type {
   BaselineData,
   BrowserTraceArtifact,
