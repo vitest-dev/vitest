@@ -170,6 +170,8 @@ export type { WatcherTriggerPattern } from '../node/watcher'
 
 export { distDir, rootDir } from '../paths'
 
+export { generateFileHash } from '../runtime/runner/utils'
+
 export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,
   CollectLines as TypeCheckCollectLines,
@@ -178,7 +180,6 @@ export type {
   RawErrsMap as TypeCheckRawErrorsMap,
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
-
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
 export type {
@@ -189,7 +190,6 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
 
 export {

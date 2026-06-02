@@ -1,5 +1,4 @@
-import type { FileSpecification, VitestRunner } from './types/runner'
-import type { File, SuiteHooks } from './types/tasks'
+import type { File, FileSpecification, SuiteHooks, VitestRunner } from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { toArray } from '@vitest/utils/helpers'
 import { collectorContext } from './context'

@@ -1,5 +1,5 @@
 import type { ParsedStack } from '@vitest/utils'
-import type { File, Suite, TaskBase } from '../types/tasks'
+import type { File, Suite, TaskBase } from '../types'
 import { processError } from '@vitest/utils/error'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { relative } from 'pathe'

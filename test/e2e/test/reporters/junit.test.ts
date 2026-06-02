@@ -1,10 +1,9 @@
-import type { Task } from '@vitest/runner'
-import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite } from 'vitest'
+import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
 import { runVitest, runVitestCli } from '#test-utils'
-import { createFileTask } from '@vitest/runner/utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
+import { createFileTask } from '../../../../packages/vitest/src/runtime/runner/utils'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
@@ -40,6 +39,7 @@ test('calc the duration used by junit', () => {
     context: null as any,
     suite,
     meta: {},
+    benchmarks: [],
   }
   file.tasks = [suite]
   suite.tasks = [task]

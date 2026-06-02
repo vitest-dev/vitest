@@ -1,4 +1,4 @@
-import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { VisualRegressionArtifact } from '../../../../../vitest/src/runtime/runner/types'
 import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'

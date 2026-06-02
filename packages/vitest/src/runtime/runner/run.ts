@@ -1,9 +1,9 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   AroundEachListener,
   File,
+  FileSpecification,
   RegisteredAroundAllListener,
   SequenceHooks,
   Suite,
@@ -16,8 +16,9 @@ import type {
   TaskUpdateEvent,
   Test,
   TestContext,
+  VitestRunner,
   WriteableTestContext,
-} from './types/tasks'
+} from './types'
 import type { ConcurrencyLimiter } from './utils/limit-concurrency'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'

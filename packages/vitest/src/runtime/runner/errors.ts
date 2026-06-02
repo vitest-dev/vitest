@@ -1,5 +1,4 @@
-import type { CancelReason } from './types/runner'
-import type { TaskBase } from './types/tasks'
+import type { CancelReason, TaskBase } from './types'
 
 export class PendingError extends Error {
   public code = 'VITEST_PENDING'
@@ -52,7 +51,7 @@ export class TestSyntaxError extends Error {
     super(message)
     // use custom property so this survives when the error
     // is serialized on `packages/expect` side (e.g. for `expect.soft`)
-    // and `packages/runner` can still detect it during `test.fails` handling
+    // and the runner can still detect it during `test.fails` handling
     Object.defineProperty(this, '__vitest_test_syntax_error__', {
       value: true,
       enumerable: false,

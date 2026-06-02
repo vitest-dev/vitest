@@ -1,7 +1,7 @@
-import type { File, Suite, Task, TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import { getTests } from '@vitest/runner/utils'
+import type { File, Suite, Task, TaskEventPack, TaskResultPack } from '../runtime/runner/types'
 import { toArray } from '@vitest/utils/helpers'
+import { getTests } from '../runtime/runner/utils'
 
 export function hasBenchmark(suite: Arrayable<Suite>): boolean {
   return toArray(suite).some(s =>

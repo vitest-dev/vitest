@@ -1,4 +1,5 @@
-import type { TestTagDefinition, VitestRunnerConfig } from '../types/runner'
+import type { SerializedConfig } from '../../config'
+import type { TestTagDefinition } from '../types'
 import { getRunner } from '../suite'
 
 const filterMap = new WeakMap<string[], (testTags: string[]) => boolean>()
@@ -20,7 +21,7 @@ export function matchesTags(testTags: string[]): boolean {
   return tagsFilterPredicate(testTags)
 }
 
-export function validateTags(config: VitestRunnerConfig, tags: string[]): void {
+export function validateTags(config: SerializedConfig, tags: string[]): void {
   if (!config.strictTags) {
     return
   }

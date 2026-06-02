@@ -1,14 +1,14 @@
 import type { AsyncExpectationResult, ChaiPlugin, ExpectationResult, MatcherState, SyncExpectationResult } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
 import type { DomainSnapshotAdapter } from '@vitest/snapshot'
+import type { Test } from '../../runtime/runner/types'
 import { chai, createAssertionMessage, equals, iterableEquality, recordAsyncExpect, subsetEquality, wrapAssertion } from '@vitest/expect'
-import { TestSyntaxError } from '@vitest/runner'
-import { getNames } from '@vitest/runner/utils'
 import {
   addSerializer,
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
+import { TestSyntaxError } from '../../runtime/runner'
+import { getNames } from '../../runtime/runner/utils'
 import { getWorkerState } from '../../runtime/utils'
 
 let _client: SnapshotClient

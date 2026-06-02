@@ -1,7 +1,6 @@
-import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
+import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
@@ -23,6 +22,7 @@ import {
   isSlowTestTask,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
+import { isTestCase } from '../../../../vitest/src/runtime/runner/utils'
 import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
 
 export { hasFailedSnapshot }

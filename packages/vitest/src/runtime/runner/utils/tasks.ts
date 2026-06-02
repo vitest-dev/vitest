@@ -1,5 +1,5 @@
 import type { Arrayable } from '@vitest/utils'
-import type { Suite, Task, Test } from '../types/tasks'
+import type { Suite, Task, Test } from '../types'
 import { toArray } from '@vitest/utils/helpers'
 
 export function isTestCase(s: Task): s is Test {

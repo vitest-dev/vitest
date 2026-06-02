@@ -1,18 +1,18 @@
-import type { File, Suite, Task, Test } from '@vitest/runner'
+import type { File, Suite, Task, Test } from '../runtime/runner/types'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
 import { promises as fs } from 'node:fs'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
-import {
-  calculateSuiteHash,
-  createFileTask as createFileTaskOriginal,
-  createTaskName,
-  validateTags,
-} from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
+import {
+  calculateSuiteHash,
+  createFileTask as createFileTaskOriginal,
+  createTaskName,
+} from '../runtime/runner/utils'
+import { validateTags } from '../runtime/runner/utils/tags'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
 import { detectCodeBlock } from '../utils/test-helpers'

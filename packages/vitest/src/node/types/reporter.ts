@@ -1,5 +1,5 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact, TestBenchmark } from '@vitest/runner'
 import type { Awaitable, SerializedError } from '@vitest/utils'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact, TestBenchmark } from '../../runtime/runner/types'
 import type { UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'

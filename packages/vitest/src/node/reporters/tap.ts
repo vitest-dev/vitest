@@ -1,5 +1,5 @@
-import type { Task } from '@vitest/runner'
 import type { ParsedStack, TestError } from '@vitest/utils'
+import type { Task } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'

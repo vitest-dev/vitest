@@ -1,5 +1,10 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
+import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
+import type { ModuleRunner } from 'vite/module-runner'
+import type { Traces } from '../../utils/traces'
+import type { Bench } from '../benchmark'
+import type { SerializedConfig } from '../config'
 import type {
   CancelReason,
   File,
@@ -11,21 +16,8 @@ import type {
   TestTryOptions,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
-} from '@vitest/runner'
-import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
-import type { ModuleRunner } from 'vite/module-runner'
-import type { Traces } from '../../utils/traces'
-import type { Bench } from '../benchmark'
-import type { SerializedConfig } from '../config'
+} from '../runner/types'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import {
-  createTaskCollector,
-  getCurrentSuite,
-  getCurrentTest,
-  getFn,
-  getHooks,
-} from '@vitest/runner'
-import { createChainable, getNames, getTestName, getTests, matchesTags } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
@@ -34,6 +26,15 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
+import {
+  createTaskCollector,
+  getCurrentSuite,
+  getCurrentTest,
+  getFn,
+  getHooks,
+} from '../runner'
+import { createChainable, createFileTask, getNames, getTestName, getTests } from '../runner/utils'
+import { matchesTags } from '../runner/utils/tags'
 import { getWorkerState } from '../utils'
 
 export class TestRunner implements VitestTestRunner {
@@ -299,6 +300,7 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
+  static createFileTask: typeof createFileTask = createFileTask
 
   /**
    * @experimental

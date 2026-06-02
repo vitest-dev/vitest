@@ -1,5 +1,4 @@
-import type { FixtureFn, Suite, VitestRunner } from './types'
-import type { File, FixtureOptions, TestContext } from './types/tasks'
+import type { File, FixtureFn, FixtureOptions, Suite, TestContext, VitestRunner } from './types'
 import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'

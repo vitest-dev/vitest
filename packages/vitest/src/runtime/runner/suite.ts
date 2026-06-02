@@ -1,6 +1,5 @@
 import type { InspectOptions } from '@vitest/utils/display'
 import type { UserFixtures } from './fixture'
-import type { VitestRunner } from './types/runner'
 import type {
   File,
   InternalTestContext,
@@ -18,7 +17,8 @@ import type {
   TestAPI,
   TestFunction,
   TestOptions,
-} from './types/tasks'
+  VitestRunner,
+} from './types'
 import { format, formatRegExp, inspect, truncateString } from '@vitest/utils/display'
 import {
   isNegativeNaN,
