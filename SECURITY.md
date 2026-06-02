@@ -16,7 +16,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 ### What Vitest Does Not Trust
 
 1. **Network data and untrusted clients**
-   The integration built on top of Vite's dev server must treat all inbound network requests as potentially hostile. This includes malformed requests. Clients may be outside the developer's intended environment because of port-forwarding, shared networks, or accidental exposure to the internet.
+   The integration built on top of Vite's dev server must treat inbound requests from untrusted clients as potentially hostile. This includes malformed requests.
 
 ### What Vitest Trusts
 
@@ -57,6 +57,7 @@ Vitest threat model is largely based on [Vite's](https://github.com/vitejs/vite/
 - Malicious Plugins, Custom Commands, or Dependencies (CWE-1357): Plugins, config files, custom browser commands configured through `browser.commands`, and their dependency trees run with full trust during development. A compromised plugin or custom command that exfiltrates data, exposes privileged access without validating browser-provided input, or executes arbitrary code is a supply-chain or project-code concern, not a Vitest vulnerability.
 - Security Issues in the Application's Own Output: Flaws such as XSS, CSRF, or CSP misconfigurations in the bundled application are the responsibility of the application author. Vitest transforms code but does not guarantee the security properties of the output beyond the code it injects itself.
 - Reading Files Within Configured Paths (CWE-427): Vitest is expected to read any file the project's configuration makes reachable. Pointing Vitest at a directory that contains sensitive material is a configuration choice, not a Vitest vulnerability.
+- Reachability Through Developer-Initiated Network Exposure: If the dev server becomes reachable to other machines only because the developer port-forwarded it, bound it to a public interface (e.g., `--host`), or placed it on a shared network, that exposure is a developer-managed infrastructure choice. Any access or privileged dev-server behavior this reachability enables is out of scope. Browser-originated requests, which reach a localhost-bound server without such exposure, remain in scope when origin/host validation is missing or bypassable (see the in-scope examples above).
 - Attacker With Control Over Configuration (CWE-15): An attacker who can modify environment variables, CLI flags, or `vite.config.*`/`vitest.config.*` already controls a trusted input. Any consequences of that control are out of scope.
 - Bugs in the Runtime or Operating System: Vulnerabilities in Node.js, the OS kernel, or other platform-level components are not considered a vulnerability in Vitest.
 
