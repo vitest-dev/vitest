@@ -7,10 +7,9 @@ import type { VitestOptions } from './core'
 import type { VitestRunMode } from './types/config'
 import { resolve } from 'node:path'
 import { deepClone, slash } from '@vitest/utils/helpers'
-import * as find from 'empathic/find'
 import { resolveModule } from 'local-pkg'
 import { mergeConfig } from 'vite'
-import { configFiles } from '../constants'
+import { findConfigFile } from './config/resolveConfig'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
@@ -56,7 +55,7 @@ export async function createVitest(
       ? false
       : options.config
         ? (resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config))
-        : find.any(configFiles, { cwd: root })
+        : findConfigFile(root)
 
   options.config = configPath
 
