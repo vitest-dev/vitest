@@ -637,6 +637,13 @@ Delay in milliseconds between retry attempts (default: `0`)
 
 Regex pattern to match error messages that should trigger a retry. Only errors matching this pattern will cause a retry (default: retry on all errors)
 
+### repeats
+
+- **CLI:** `--repeats <number>`
+- **Config:** [repeats](/config/repeats)
+
+Repeat every test a specific number of times regardless of the result (default: `0`)
+
 ### diff.aAnnotation
 
 - **CLI:** `--diff.aAnnotation <annotation>`

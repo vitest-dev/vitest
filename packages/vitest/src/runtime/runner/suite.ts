@@ -387,7 +387,7 @@ function createSuiteCollector(
       file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
-      repeats: options.repeats,
+      repeats: options.repeats ?? runner.config.repeats,
       mode: options.only
         ? 'only'
         : options.skip
