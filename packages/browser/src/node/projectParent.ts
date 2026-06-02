@@ -12,6 +12,7 @@ import type {
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
@@ -119,7 +120,7 @@ export class ParentBrowserProject {
     })().then(manifest => (this.manifest = manifest))
 
     this.orchestratorHtml = (project.config.browser.ui
-      ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
+      ? readFile(resolve(uiClientRoot, 'index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
       .then(html => (this.orchestratorHtml = html))
     this.injectorJs = readFile(

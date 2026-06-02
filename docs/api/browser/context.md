@@ -211,6 +211,8 @@ The `cdp` export returns the current Chrome DevTools Protocol session. It is mos
 
 ::: warning
 CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+
+CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`browser.api.allowWrite`](/config/browser/api#api-allowwrite), [`browser.api.allowExec`](/config/browser/api#api-allowexec), [`api.allowWrite`](/config/api#api-allowwrite), and [`api.allowExec`](/config/api#api-allowexec).
 :::
 
 ```ts

@@ -109,7 +109,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -176,7 +179,10 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: pnpm i
@@ -214,8 +220,8 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
-      - uses: browser-actions/setup-firefox@fcf821c621167805dd63a29662bd7cb5676c81a8 # v1.7.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
 
       - name: Install
         run: pnpm i
@@ -249,7 +255,10 @@ jobs:
         with:
           node-version: 24
 
-      - uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded # v2.1.1
+      - uses: ./.github/actions/setup-webdriverio
+        id: setup-webdriverio
+        with:
+          firefox-version: false
 
       - name: Install
         run: |
@@ -312,6 +321,7 @@ jobs:
       - name: Merge reports
         continue-on-error: true
         run: |
+          set +e
           pnpm --filter=./packages/ui --no-bail test:ui --merge-reports
           cp ./packages/ui/.vitest/html/index.html ./packages/ui/.vitest/html/test-ui.html
           pnpm --filter=./test/unit --filter=./test/e2e --no-bail --sequential test --merge-reports
@@ -346,6 +356,10 @@ jobs:
 
       - name: Link CI reports
         run: |
-          echo "::notice title=CI reports::test/unit: ${{ steps.upload-unit-report.outputs.artifact-url }}"
-          echo "::notice title=CI reports::test/e2e: ${{ steps.upload-e2e-report.outputs.artifact-url }}"
-          echo "::notice title=CI reports::packages/ui: ${{ steps.upload-ui-report.outputs.artifact-url }}"
+          echo "::notice title=CI reports::test/unit: ${STEPS_UPLOAD_UNIT_REPORT_OUTPUTS_ARTIFACT_URL}"
+          echo "::notice title=CI reports::test/e2e: ${STEPS_UPLOAD_E2E_REPORT_OUTPUTS_ARTIFACT_URL}"
+          echo "::notice title=CI reports::packages/ui: ${STEPS_UPLOAD_UI_REPORT_OUTPUTS_ARTIFACT_URL}"
+        env:
+          STEPS_UPLOAD_UNIT_REPORT_OUTPUTS_ARTIFACT_URL: ${{ steps.upload-unit-report.outputs.artifact-url }}
+          STEPS_UPLOAD_E2E_REPORT_OUTPUTS_ARTIFACT_URL: ${{ steps.upload-e2e-report.outputs.artifact-url }}
+          STEPS_UPLOAD_UI_REPORT_OUTPUTS_ARTIFACT_URL: ${{ steps.upload-ui-report.outputs.artifact-url }}

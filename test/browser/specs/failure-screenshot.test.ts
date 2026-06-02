@@ -2,7 +2,6 @@ import type { TestFsStructure } from '../../test-utils'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
-import { instances, provider } from '../settings'
 
 const testFilename = 'basic.test.ts'
 
@@ -12,16 +11,17 @@ async function runBrowserTests(
   return runInlineTests({
     ...structure,
     'vitest.config.js': `
-      import { ${provider.name} } from '@vitest/browser-${provider.name}'
+      import { instances, provider } from '../settings.ts'
+
       export default {
         test: {
           browser: {
             enabled: true,
             screenshotFailures: true,
-            provider: ${provider.name}(),
+            provider,
             ui: false,
             headless: true,
-            instances: ${JSON.stringify(instances.slice(0, 1) /* logic not bound to browser instance */)},
+            instances: instances.slice(0, 1), // logic not bound to browser instance
           },
           reporters: ['verbose'],
           update: 'new',

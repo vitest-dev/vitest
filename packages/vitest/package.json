@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.0-beta.3",
+  "version": "5.0.0-beta.4",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -180,7 +180,7 @@
     "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
-    "tinybench": "^2.9.0",
+    "tinybench": "catalog:",
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",

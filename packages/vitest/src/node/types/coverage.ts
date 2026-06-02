@@ -340,7 +340,7 @@ interface Thresholds {
    *
    * @default false
    */
-  autoUpdate?: boolean | ((newThreshold: number) => number)
+  autoUpdate?: boolean | ((newThreshold: number, previousThreshold: number) => number)
 
   /** Thresholds for statements */
   statements?: number

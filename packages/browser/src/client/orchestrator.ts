@@ -36,6 +36,13 @@ export class IframeOrchestrator {
       'message',
       e => this.onGlobalChannelEvent(e),
     )
+
+    // Notify the server once the websocket is ready without blocking orchestrator creation.
+    void client.waitForConnection()
+      .then(() => client.rpc.onOrchestratorReady())
+      .catch((error) => {
+        debug('failed to notify orchestrator readiness', error)
+      })
   }
 
   public async createTesters(options: BrowserTesterOptions): Promise<void> {

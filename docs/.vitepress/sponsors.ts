@@ -44,11 +44,6 @@ export const sponsors: SponsorTier[] = [
         img: '/vital.svg',
       },
       {
-        name: 'OOMOL',
-        url: 'https://oomol.com/',
-        img: '/oomol.svg',
-      },
-      {
         name: 'Mailmeteor',
         url: 'https://mailmeteor.com/',
         img: '/mailmeteor.svg',
@@ -57,6 +52,11 @@ export const sponsors: SponsorTier[] = [
         name: 'Liminity',
         url: 'https://www.liminity.se/',
         img: '/liminity.svg',
+      },
+      {
+        name: 'Kraken Tech',
+        url: 'https://kraken.tech/',
+        img: '/kraken.svg',
       },
       {
         name: 'Aerius Ventilation',
