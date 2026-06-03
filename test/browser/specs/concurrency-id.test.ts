@@ -1,4 +1,4 @@
-import type { ModuleDiagnostic } from 'vitest/node'
+import type { TestModule } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { instances, runInlineBrowserTests } from './utils'
 
@@ -22,9 +22,9 @@ test('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
     `
   }
 
-  const diagnostics: ModuleDiagnostic[] = []
+  const testModules: TestModule[] = []
 
-  const { stderr } = await runInlineBrowserTests(files, {
+  const { stderr, stdout } = await runInlineBrowserTests(files, {
     maxWorkers,
     browser: {
       fileParallelism: true,
@@ -34,20 +34,25 @@ test('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
       'default',
       {
         onTestModuleEnd(module) {
-          diagnostics.push(module.diagnostic())
+          testModules.push(module)
         },
       },
     ],
   })
 
   expect(stderr).toBe('')
-  expect(diagnostics).toHaveLength(fileCount)
+  expect(testModules).toHaveLength(fileCount)
 
   const used = new Set<number>()
-  for (const diagnostic of diagnostics) {
+  for (const module of testModules) {
+    const diagnostic = module.diagnostic()
+
+    expect(stdout).toReportPassedTest(module.relativeModuleId, firstInstance.browser)
+
     expect(diagnostic.workerId).toBe(diagnostic.concurrencyId)
     expect(diagnostic.concurrencyId).toBeGreaterThanOrEqual(1)
     expect(diagnostic.concurrencyId).toBeLessThanOrEqual(maxWorkers)
+
     used.add(diagnostic.concurrencyId)
   }
 
