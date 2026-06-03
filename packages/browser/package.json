@@ -92,7 +92,6 @@
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
-    "@vitest/runner": "workspace:*",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.8.2",

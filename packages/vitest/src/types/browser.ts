@@ -1,4 +1,4 @@
-import type { FileSpecification } from '@vitest/runner'
+import type { FileSpecification } from '../runtime/runner/types'
 import type { OTELCarrier } from '../utils/traces'
 import type { TestExecutionMethod } from './worker'
 

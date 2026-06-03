@@ -1,6 +1,6 @@
 import type { TestCase, TestModule } from './reported-tasks'
-import { getTestName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
+import { getTestName } from '../../utils/tasks'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
 import { separator } from './renderers/utils'

@@ -219,7 +219,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           '@vitest/browser/client',
           '@vitest/utils',
           '@vitest/utils/source-map',
-          '@vitest/runner',
           '@vitest/spy',
           '@vitest/utils/error',
           'std-env',

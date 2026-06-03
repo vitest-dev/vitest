@@ -24,6 +24,7 @@
   "sideEffects": false,
   "imports": {
     "#module-evaluator": {
+      "__vitest_source__": "./src/runtime/moduleRunner/moduleEvaluator.ts",
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
     },
@@ -169,7 +170,6 @@
     "@types/chai": "catalog:",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:*",
-    "@vitest/runner": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "chai": "catalog:",

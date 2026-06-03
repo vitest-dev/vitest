@@ -1,6 +1,6 @@
 import type { Context, Span } from '@opentelemetry/api'
-import type { FileSpecification } from '@vitest/runner'
 import type { DeferPromise } from '@vitest/utils/helpers'
+import type { FileSpecification } from '../../runtime/runner/types'
 import type { Traces } from '../../utils/traces'
 import type { Vitest } from '../core'
 import type { ProcessPool } from '../pool'

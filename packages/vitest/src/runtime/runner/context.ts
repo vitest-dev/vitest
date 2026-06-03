@@ -1,13 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import type { VitestRunner } from './types/runner'
-import type {
-  RuntimeContext,
-  SuiteCollector,
-  Test,
-  TestAnnotation,
-  TestContext,
-  WriteableTestContext,
-} from './types/tasks'
+import type { RuntimeContext, SuiteCollector, Test, TestAnnotation, TestContext, VitestRunner, WriteableTestContext } from './types'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { PendingError } from './errors'

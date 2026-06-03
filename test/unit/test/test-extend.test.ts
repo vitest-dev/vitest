@@ -1,7 +1,7 @@
 /* eslint-disable prefer-rest-params */
 
-import type { InferFixturesTypes } from '@vitest/runner'
 import type { TestAPI } from 'vitest'
+import type { InferFixturesTypes } from '../../../packages/vitest/src/runtime/runner/types'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
 interface Fixtures {

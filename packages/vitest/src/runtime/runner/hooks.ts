@@ -15,7 +15,7 @@ import type {
   TaskHook,
   TaskPopulated,
   TestContext,
-} from './types/tasks'
+} from './types'
 import { assertTypes } from '@vitest/utils/helpers'
 import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
 import { configureProps, withFixtures } from './fixture'

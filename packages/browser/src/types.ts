@@ -1,13 +1,16 @@
 import type { MockedModuleSerialized, ServerIdResolution, ServerMockResolution } from '@vitest/mocker'
-import type { BaselineData, TaskEventPack, TaskResultPack, TestArtifact } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type {
   AfterSuiteRunMeta,
+  BaselineData,
   BrowserTesterOptions,
   CancelReason,
   RunnerTestFile,
   SerializedTestSpecification,
   SnapshotResult,
+  RunnerTaskEventPack as TaskEventPack,
+  RunnerTaskResultPack as TaskResultPack,
+  TestArtifact,
   TestBenchmark,
   TestExecutionMethod,
   UserConsoleLog,

@@ -1,9 +1,8 @@
-import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
+import type { File, Task } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -41,7 +40,7 @@ ${keys
 }
 
 function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
-  if (isTestCase(t)) {
+  if (t.type === 'test') {
     if (t.name.match(filter)) {
       const displayName = `${parentName} > ${t.name}`
       yield { key: t.name, toString: () => displayName }

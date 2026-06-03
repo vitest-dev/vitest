@@ -1,5 +1,4 @@
-import type { TestArtifact } from '@vitest/runner'
-import type { TestAnnotation } from 'vitest'
+import type { TestAnnotation, TestArtifact } from 'vitest'
 import { readdirSync } from 'node:fs'
 import path from 'node:path'
 import { playwright } from '@vitest/browser-playwright'
