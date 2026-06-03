@@ -1156,9 +1156,6 @@ importers:
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
-      empathic:
-        specifier: ^2.0.0
-        version: 2.0.0
       flatted:
         specifier: 'catalog:'
         version: 3.4.2
