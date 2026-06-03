@@ -29,6 +29,12 @@ interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 const FILE_PROTOCOL = 'file://'
 
+// Flush the buffered raw coverages into the running merge once they grow past this
+// many bytes, so the amount of raw coverage held in memory at once stays bounded on
+// very large suites (#4476). The threshold is high enough that typical runs still
+// merge everything in a single pass. See `generateCoverage`.
+const MAX_BATCH_BYTES = 16 * 1024 * 1024
+
 const debug = createDebug('vitest:coverage')
 
 export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
@@ -59,18 +65,42 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const start = debug.enabled ? performance.now() : 0
 
     const coverageMap = this.createCoverageMap()
-    let coverages: RawCoverage[] = []
+
+    // `mergeProcessCovs` is the expensive part of coverage generation: every call
+    // rebuilds the full range-tree forest, so its cost (in both time and peak memory)
+    // scales with the number of calls. Merging the whole run in a single pass is
+    // therefore the fastest and lightest option - but it would hold every raw coverage
+    // in memory at once, which can OOM very large suites (#4476).
+    //
+    // So we accumulate raw coverages and merge them in as few passes as possible:
+    // a single merge for the common case, flushing early only once the buffered raw
+    // coverage grows past `MAX_BATCH_BYTES`. This keeps resident raw coverage bounded
+    // while keeping the merge count (and thus the overhead) minimal.
+    let merged: RawCoverage = { result: [] }
+    let batch: RawCoverage[] = []
+    let batchBytes = 0
 
     // `mergeProcessCovs` drops `startOffset` (e.g. in vue) and `isExtendedContext`,
-    // so remember the originals per-url and restore them after the merge.
+    // so remember the originals per-url and restore them after merging.
     const startOffsets = new Map<string, number>()
     const extendedContexts = new Set<string>()
 
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
+    const mergeBatch = () => {
+      if (batch.length === 0) {
+        return
+      }
+
+      merged = mergeProcessCovs([merged, ...batch])
+      batch = []
+      batchBytes = 0
+    }
+
     await this.readCoverageFiles<RawCoverage>({
-      onFileRead(coverage) {
-        coverages.push(coverage)
+      onFileRead(coverage, size) {
+        batch.push(coverage)
+        batchBytes += size
 
         for (const result of coverage.result) {
           if (result.startOffset && !startOffsets.has(result.url)) {
@@ -81,14 +111,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
             extendedContexts.add(result.url)
           }
         }
+
+        if (batchBytes >= MAX_BATCH_BYTES) {
+          mergeBatch()
+        }
       },
       onFinished: async (project, environment) => {
-        // Merge every process coverage in a single pass. `mergeProcessCovs` is
-        // associative, so folding it per-file (`[merged, next]`) is O(n^2) on
-        // large suites - merging the whole batch at once is O(n).
-        const merged: RawCoverage = coverages.length
-          ? mergeProcessCovs(coverages)
-          : { result: [] }
+        mergeBatch()
 
         // Restore values dropped by the merge in one pass over the result.
         for (const result of merged.result) {
@@ -111,7 +140,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
         coverageMap.merge(converted)
 
-        coverages = []
+        merged = { result: [] }
+        batch = []
+        batchBytes = 0
         startOffsets.clear()
         extendedContexts.clear()
       },
