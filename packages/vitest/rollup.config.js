@@ -29,6 +29,9 @@ const entries = {
   'nodejs-worker-loader': 'src/runtime/nodejsWorkerLoader.ts',
   'traces': 'src/utils/traces.ts',
 
+  // just so that we have a separate chunk, this is not a public api
+  'task-utils': 'src/utils/tasks.ts',
+
   // for performance reasons we bundle them separately so we don't import everything at once
   // 'worker': 'src/runtime/worker.ts',
   'workers/forks': 'src/runtime/workers/forks.ts',

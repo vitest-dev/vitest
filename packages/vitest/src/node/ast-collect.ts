@@ -7,8 +7,6 @@ import { unique } from '@vitest/utils/helpers'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
-import {
-} from '../runtime/runner/utils/collect'
 import { validateTags } from '../runtime/runner/utils/tags'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
