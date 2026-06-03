@@ -525,8 +525,10 @@ export class BaseCoverageProvider {
       }
 
       if (
-        perFileThresholds
-        && THRESHOLD_KEYS.some(key => perFileThresholds[key] !== undefined)
+        perFileThresholds?.branches !== undefined
+        || perFileThresholds?.functions !== undefined
+        || perFileThresholds?.lines !== undefined
+        || perFileThresholds?.statements !== undefined
       ) {
         // Sort so that error output stays stable across providers and runs.
         const files = [...coverageMap.files()].sort()
