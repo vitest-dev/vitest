@@ -291,6 +291,33 @@ class BrowserPool {
     })
   }
 
+  // stable slot id (1..maxWorkers) assigned to each session/orchestrator on its
+  // first run, exposed to the test runner as both `concurrencyId` and `workerId`.
+  // the id lives on the session, so it is freed when the session disconnects, and
+  // the used set is derived from the live orchestrators, so it stays within maxWorkers
+  private getConcurrencyId(sessionId: string): number {
+    const sessions = this.project.vitest._browserSessions
+    const session = sessions.getSession(sessionId)
+    if (session?.concurrencyId) {
+      return session.concurrencyId
+    }
+    const used = new Set<number>()
+    for (const id of this.orchestrators.keys()) {
+      const concurrencyId = sessions.getSession(id)?.concurrencyId
+      if (concurrencyId) {
+        used.add(concurrencyId)
+      }
+    }
+    let concurrencyId = 1
+    while (used.has(concurrencyId)) {
+      concurrencyId++
+    }
+    if (session) {
+      session.concurrencyId = concurrencyId
+    }
+    return concurrencyId
+  }
+
   private getOrchestrator(sessionId: string) {
     const orchestrator = this.orchestrators.get(sessionId)
     if (!orchestrator) {
@@ -358,6 +385,7 @@ class BrowserPool {
           },
         },
         async () => {
+          const concurrencyId = this.getConcurrencyId(sessionId)
           return orchestrator.createTesters(
             {
               method,
@@ -366,6 +394,10 @@ class BrowserPool {
               // so we need to stringify it first to avoid double serialization
               providedContext: this._providedContext || '[{}]',
               otelCarrier: this._traces.getContextCarrier(),
+              concurrencyId,
+              // in the browser there is a single tab per orchestrator,
+              // so the worker id matches the concurrency slot
+              workerId: concurrencyId,
             },
           )
         },

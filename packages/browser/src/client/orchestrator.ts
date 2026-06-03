@@ -170,6 +170,8 @@ export class IframeOrchestrator {
       files: options.files,
       method: options.method,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     debug('finished running tests', options.files.join(', '))
     // we don't cleanup here because in non-isolated mode
@@ -207,6 +209,8 @@ export class IframeOrchestrator {
       method: options.method,
       iframeId: file,
       context: options.providedContext,
+      concurrencyId: options.concurrencyId,
+      workerId: options.workerId,
     })
     // perform "cleanup" to cleanup resources and calculate the coverage
     await this.sendEventToIframe({
