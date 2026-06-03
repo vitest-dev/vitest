@@ -1,3 +1,7 @@
+// this file is imported by the runner (that runs in a separate threads), by the ast collector,
+// by the state manager, and by other APIs that rely on the structure,
+// so it is important to keep it small and not rely on any Node APIs
+
 import type { Arrayable } from '@vitest/utils'
 import type { File, Suite, Task, TaskBase, TaskEventPack, TaskResultPack, Test } from '../runtime/runner/types'
 import { toArray } from '@vitest/utils/helpers'
