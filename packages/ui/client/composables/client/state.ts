@@ -10,7 +10,7 @@ import type { Ref } from 'vue'
 import type { RunState } from '../../../types'
 import { computed, ref } from 'vue'
 import { config } from '.'
-import { createFileTask } from '../../../../vitest/src/runtime/runner/utils'
+import { createFileTask } from '../../../../vitest/src/runtime/runner/utils/collect'
 
 export const testRunState: Ref<RunState> = ref('idle')
 export const finished = computed(() => testRunState.value === 'idle')

@@ -14,7 +14,7 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { limitConcurrency } from '../../runtime/runner/utils'
+import { limitConcurrency } from '../../utils/limit-concurrency'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 

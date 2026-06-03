@@ -5,7 +5,7 @@ import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
 import { relative } from 'pathe'
 import { defaultBrowserPort } from '../constants'
-import { createFileTask, generateFileHash } from '../runtime/runner/utils'
+import { createFileTask, generateFileHash } from '../runtime/runner/utils/collect'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {

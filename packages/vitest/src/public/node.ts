@@ -170,7 +170,7 @@ export type { WatcherTriggerPattern } from '../node/watcher'
 
 export { distDir, rootDir } from '../paths'
 
-export { generateFileHash } from '../runtime/runner/utils'
+export { generateFileHash } from '../runtime/runner/utils/collect'
 
 export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,

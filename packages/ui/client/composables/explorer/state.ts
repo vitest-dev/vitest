@@ -5,7 +5,7 @@ import { computed, reactive, ref, shallowRef } from 'vue'
 import { availableProjects } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 // importing from the source because we need to bundle it
-import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils'
+import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/tags'
 import { config } from '../client'
 import { explorerTree } from './index'
 

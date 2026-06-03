@@ -29,8 +29,10 @@ import { rpc } from '../rpc'
 import { getFn, getHooks } from '../runner/map'
 import { createTaskCollector, getCurrentSuite } from '../runner/suite'
 import { getCurrentTest } from '../runner/test-state'
-import { createChainable, createFileTask, getNames, getTestName, getTests } from '../runner/utils'
+import { createChainable } from '../runner/utils/chain'
+import { createFileTask } from '../runner/utils/collect'
 import { matchesTags } from '../runner/utils/tags'
+import { getNames, getTestName, getTests } from '../runner/utils/tasks'
 import { getWorkerState } from '../utils'
 
 export class TestRunner implements VitestTestRunner {

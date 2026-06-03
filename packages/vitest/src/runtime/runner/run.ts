@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
+import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
 import type {
   AroundEachListener,
   File,
@@ -19,10 +20,10 @@ import type {
   VitestRunner,
   WriteableTestContext,
 } from './types'
-import type { ConcurrencyLimiter } from './utils/limit-concurrency'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { limitConcurrency } from '../../utils/limit-concurrency'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -30,7 +31,6 @@ import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, Tes
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
-import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
 import { hasFailed, hasTests } from './utils/tasks'
 

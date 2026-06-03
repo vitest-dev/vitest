@@ -7,7 +7,7 @@ import type { TestRunEndReason } from '../../types/reporter'
 import type { PoolOptions, PoolWorker, WorkerRequest, WorkerResponse } from '../types'
 import EventEmitter from 'node:events'
 import { createDefer } from '@vitest/utils/helpers'
-import { hasFailed } from '../../../runtime/runner/utils'
+import { hasFailed } from '../../../runtime/runner/utils/tasks'
 import { Typechecker } from '../../../typecheck/typechecker'
 
 /** @experimental */

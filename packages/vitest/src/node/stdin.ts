@@ -6,7 +6,6 @@ import readline from 'node:readline'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
-import { isTestCase } from '../runtime/runner/utils'
 import { stdout } from '../utils/base'
 import { isWindows } from '../utils/env'
 import { WatchFilter } from './watch-filter'
@@ -41,7 +40,7 @@ ${keys
 }
 
 function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterObject> {
-  if (isTestCase(t)) {
+  if (t.type === 'test') {
     if (t.name.match(filter)) {
       const displayName = `${parentName} > ${t.name}`
       yield { key: t.name, toString: () => displayName }

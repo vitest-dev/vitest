@@ -3,7 +3,7 @@ import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { createFileTask } from '../../../../packages/vitest/src/runtime/runner/utils'
+import { createFileTask } from '../../../../packages/vitest/src/runtime/runner/utils/collect'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
