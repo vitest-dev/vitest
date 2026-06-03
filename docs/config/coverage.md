@@ -276,7 +276,7 @@ When `true`, each file is checked against the top-level thresholds instead of th
 }
 ```
 
-`perFile` can also be set on an individual glob-pattern threshold (documented below). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
+`perFile` can also be set on an individual [glob-pattern threshold](/config/coverage#coverage-thresholds-glob-pattern). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
 
 <!-- eslint-skip -->
 ```ts
