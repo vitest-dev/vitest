@@ -4,7 +4,7 @@ import { importMetaUrl } from '@test/test-dep-url'
 
 vi.mock('@test/test-dep-url', async (importOriginal) => ({
   ...(await importOriginal()),
-  testFn: vi.fn()
+  testFn: vi.fn(),
 }))
 
 /* This reproduces the bug from https://github.com/vitest-dev/vitest/issues/9887
