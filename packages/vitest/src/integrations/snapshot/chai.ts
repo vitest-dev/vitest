@@ -8,8 +8,8 @@ import {
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
 import { TestSyntaxError } from '../../runtime/runner/errors'
-import { getNames } from '../../runtime/runner/utils/tasks'
 import { getWorkerState } from '../../runtime/utils'
+import { getNames } from '../../utils/tasks'
 
 let _client: SnapshotClient
 

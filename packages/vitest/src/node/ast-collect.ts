@@ -8,13 +8,11 @@ import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
 import {
-  calculateSuiteHash,
-  createFileTask as createFileTaskOriginal,
 } from '../runtime/runner/utils/collect'
 import { validateTags } from '../runtime/runner/utils/tags'
-import { createTaskName } from '../runtime/runner/utils/tasks'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
+import { calculateSuiteHash, createFileTask as createFileTaskOriginal, createTaskName } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
 
 interface ParsedFile extends File {

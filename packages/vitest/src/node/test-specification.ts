@@ -3,7 +3,7 @@ import type { TestProject } from './project'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/config'
 import { relative } from 'pathe'
-import { generateFileHash } from '../runtime/runner/utils/collect'
+import { generateFileHash } from '../utils/tasks'
 
 export interface TestSpecificationOptions {
   testNamePattern?: RegExp

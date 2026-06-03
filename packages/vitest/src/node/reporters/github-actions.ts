@@ -8,7 +8,7 @@ import { writeFileSync } from 'node:fs'
 import { stripVTControlCharacters } from 'node:util'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
-import { getFullName, getTasks } from '../../runtime/runner/utils/tasks'
+import { getFullName, getTasks } from '../../utils/tasks'
 import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {

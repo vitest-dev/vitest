@@ -170,8 +170,6 @@ export type { WatcherTriggerPattern } from '../node/watcher'
 
 export { distDir, rootDir } from '../paths'
 
-export { generateFileHash } from '../runtime/runner/utils/collect'
-
 export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,
   CollectLines as TypeCheckCollectLines,
@@ -182,6 +180,7 @@ export type {
 } from '../typecheck/types'
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
+export { generateFileHash } from '../utils/tasks'
 export type {
   RunnerTask,
   RunnerTaskResult,

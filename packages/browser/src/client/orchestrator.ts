@@ -6,7 +6,7 @@ import { channel, client, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
 import { Traces } from 'vitest/internal/traces'
 // This needs to be tree shaken properly to not include the whole runner by accident
-import { generateFileHash } from '../../../vitest/src/runtime/runner/utils/collect.js'
+import { generateFileHash } from '../../../vitest/src/utils/tasks.js'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 

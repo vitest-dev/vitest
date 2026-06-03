@@ -6,8 +6,8 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
-import { getSuites, getTests } from '../../runtime/runner/utils/tasks'
 import { getOutputFile } from '../../utils/config-helpers'
+import { getSuites, getTests } from '../../utils/tasks'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)

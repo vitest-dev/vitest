@@ -24,6 +24,7 @@
   "sideEffects": false,
   "imports": {
     "#module-evaluator": {
+      "__vitest_source__": "./src/runtime/moduleRunner/moduleEvaluator.ts",
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
     },

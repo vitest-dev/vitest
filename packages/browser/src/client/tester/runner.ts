@@ -27,7 +27,7 @@ import {
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { getTestName } from '../../../../vitest/src/runtime/runner/utils/tasks'
+import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'

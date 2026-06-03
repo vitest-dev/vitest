@@ -27,6 +27,7 @@ import {
   toArray,
   unique,
 } from '@vitest/utils/helpers'
+import { createTaskName } from '../../utils/tasks'
 import {
   abortIfTimeout,
   collectorContext,
@@ -43,7 +44,6 @@ import { getCurrentTest } from './test-state'
 import { createChainable, getChainableContext } from './utils/chain'
 import { findTestFileStackTrace } from './utils/collect'
 import { createNoTagsError, validateTags } from './utils/tags'
-import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
