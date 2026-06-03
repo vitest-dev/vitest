@@ -16,8 +16,8 @@ test('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
         const ctx = globalThis.__vitest_worker__.ctx
         expect(ctx.concurrencyId).toBeGreaterThanOrEqual(1)
         expect(ctx.workerId).toBe(ctx.concurrencyId)
-        expect(ctx.workerId).toBe(import.meta.env.VITEST_WORKER_ID)
-        expect(ctx.concurrencyId).toBe(import.meta.env.VITEST_POOL_ID)
+        expect(String(ctx.workerId)).toBe(import.meta.env.VITEST_WORKER_ID)
+        expect(String(ctx.concurrencyId)).toBe(import.meta.env.VITEST_POOL_ID)
       })
     `
   }
@@ -31,6 +31,7 @@ test('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
       instances: [firstInstance],
     },
     reporters: [
+      'default',
       {
         onTestModuleEnd(module) {
           diagnostics.push(module.diagnostic())
