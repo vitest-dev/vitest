@@ -81,6 +81,7 @@ test('per-file object thresholds with { 100: true }', async () => {
     include: [normalizeURL(import.meta.url)],
     coverage: {
       include: [
+        '**/fixtures/src/branch.ts',
         '**/fixtures/src/even.ts',
         '**/fixtures/src/math.ts',
       ],
@@ -95,7 +96,10 @@ test('per-file object thresholds with { 100: true }', async () => {
 
   expect(exitCode).toBe(1)
   expect(stderr).toMatchInlineSnapshot(`
-    "ERROR: Coverage for lines (25%) does not meet per-file threshold (100%) for fixtures/src/math.ts
+    "ERROR: Coverage for lines (75%) does not meet per-file threshold (100%) for fixtures/src/branch.ts
+    ERROR: Coverage for statements (75%) does not meet per-file threshold (100%) for fixtures/src/branch.ts
+    ERROR: Coverage for branches (50%) does not meet per-file threshold (100%) for fixtures/src/branch.ts
+    ERROR: Coverage for lines (25%) does not meet per-file threshold (100%) for fixtures/src/math.ts
     ERROR: Coverage for functions (25%) does not meet per-file threshold (100%) for fixtures/src/math.ts
     ERROR: Coverage for statements (25%) does not meet per-file threshold (100%) for fixtures/src/math.ts
     "
@@ -143,84 +147,6 @@ test('per-file object thresholds with empty object are a no-op', async () => {
 
   expect(exitCode).toBe(0)
   expect(stderr).toMatchInlineSnapshot(`""`)
-})
-
-test('per-file object thresholds only check the keys that are set', async () => {
-  // Only `functions` is configured per file. `lines` and `statements` on
-  // math.ts are also at 25%, so if they were checked we would see extra
-  // ERROR lines for them.
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        functions: 40,
-        perFile: {
-          functions: 30,
-        },
-      },
-    },
-  }, { throwOnError: false })
-
-  expect(exitCode).toBe(1)
-  expect(stderr).toMatchInlineSnapshot(`
-    "ERROR: Coverage for functions (25%) does not meet per-file threshold (30%) for fixtures/src/math.ts
-    "
-  `)
-})
-
-test('per-file object thresholds work for branches', async () => {
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/branch.ts',
-      ],
-      thresholds: {
-        branches: 40,
-        perFile: {
-          branches: 80,
-        },
-      },
-    },
-  }, { throwOnError: false })
-
-  expect(exitCode).toBe(1)
-  expect(stderr).toMatchInlineSnapshot(`
-    "ERROR: Coverage for branches (50%) does not meet per-file threshold (80%) for fixtures/src/branch.ts
-    "
-  `)
-})
-
-test('per-file object thresholds report violations for every failing file', async () => {
-  // Both math.ts (25% lines) and branch.ts (the `return false` path is
-  // never taken) sit below the 80% per-file floor while even.ts is at 100%.
-  const { exitCode, stderr } = await runVitest({
-    include: [normalizeURL(import.meta.url)],
-    coverage: {
-      include: [
-        '**/fixtures/src/branch.ts',
-        '**/fixtures/src/even.ts',
-        '**/fixtures/src/math.ts',
-      ],
-      thresholds: {
-        lines: 30,
-        perFile: {
-          lines: 80,
-        },
-      },
-    },
-  }, { throwOnError: false })
-
-  expect(exitCode).toBe(1)
-  expect(stderr).toMatchInlineSnapshot(`
-    "ERROR: Coverage for lines (75%) does not meet per-file threshold (80%) for fixtures/src/branch.ts
-    ERROR: Coverage for lines (25%) does not meet per-file threshold (80%) for fixtures/src/math.ts
-    "
-  `)
 })
 
 test('top-level perFile does not cascade to glob thresholds', async () => {

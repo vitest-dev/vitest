@@ -473,7 +473,7 @@ export class BaseCoverageProvider {
         name: glob,
         coverageMap: globCoverageMap,
         thresholds: globThresholds,
-        ...resolvePerFile((globEntry as { perFile?: unknown }).perFile),
+        ...resolvePerFile(globEntry),
       })
     }
 
@@ -492,7 +492,7 @@ export class BaseCoverageProvider {
         lines: this.options.thresholds?.lines,
         statements: this.options.thresholds?.statements,
       },
-      ...resolvePerFile(this.options.thresholds?.perFile),
+      ...resolvePerFile(this.options.thresholds),
     })
 
     return resolvedThresholds
@@ -503,39 +503,55 @@ export class BaseCoverageProvider {
    */
   private checkThresholds(allThresholds: ResolvedThreshold[]) {
     for (const { coverageMap, thresholds, perFile, perFileThresholds, name } of allThresholds) {
-      const label = name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+      const groups: {
+        file: string | null
+        thresholds: ResolvedThreshold['thresholds']
+        summary: CoverageSummary
+        name: string
+      }[] = []
 
-      if (
-        thresholds.branches !== undefined
-        || thresholds.functions !== undefined
-        || thresholds.lines !== undefined
-        || thresholds.statements !== undefined
-      ) {
-        // Sort so that per-file error output stays stable across providers and runs.
-        const summaries = perFile
-          ? [...coverageMap.files()].sort().map((file: string) => ({
-              file,
-              summary: coverageMap.fileCoverageFor(file).toSummary(),
-            }))
-          : [{ file: null, summary: coverageMap.getCoverageSummary() }]
+      if (!perFile) {
+        groups.push({
+          file: null,
+          thresholds,
+          summary: coverageMap.getCoverageSummary(),
+          name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+        })
+      }
 
-        for (const { summary, file } of summaries) {
-          this.reportThresholdViolations(thresholds, summary, file, label)
+      if (perFile) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`,
+          })
         }
       }
 
-      if (
-        perFileThresholds?.branches !== undefined
-        || perFileThresholds?.functions !== undefined
-        || perFileThresholds?.lines !== undefined
-        || perFileThresholds?.statements !== undefined
-      ) {
-        // Sort so that error output stays stable across providers and runs.
-        const files = [...coverageMap.files()].sort()
-        for (const file of files) {
-          const summary = coverageMap.fileCoverageFor(file).toSummary()
-          this.reportThresholdViolations(perFileThresholds, summary, file, 'per-file')
+      if (perFileThresholds) {
+        for (const file of coverageMap.files().sort()) {
+          groups.push({
+            file,
+            thresholds: perFileThresholds,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+            name: 'per-file',
+          })
         }
+      }
+
+      for (const group of groups) {
+        if (
+          group.thresholds.branches === undefined
+          && group.thresholds.functions === undefined
+          && group.thresholds.lines === undefined
+          && group.thresholds.statements === undefined
+        ) {
+          continue
+        }
+
+        this.reportThresholdViolations(group.thresholds, group.summary, group.file, group.name)
       }
     }
   }
@@ -790,16 +806,22 @@ export class BaseCoverageProvider {
   }
 }
 
-function resolvePerFile(value: unknown): {
+function resolvePerFile(thresholds: unknown): {
   perFile: boolean
   perFileThresholds: ResolvedThreshold['thresholds'] | null
 } {
-  if (value === true) {
+  if (!thresholds || typeof thresholds !== 'object' || !('perFile' in thresholds)) {
+    return { perFile: false, perFileThresholds: null }
+  }
+
+  const { perFile } = thresholds
+
+  if (perFile === true) {
     return { perFile: true, perFileThresholds: null }
   }
 
-  if (value && typeof value === 'object') {
-    return { perFile: false, perFileThresholds: resolveGlobThresholds(value) }
+  if (perFile && typeof perFile === 'object') {
+    return { perFile: false, perFileThresholds: resolveGlobThresholds(perFile) }
   }
 
   return { perFile: false, perFileThresholds: null }
