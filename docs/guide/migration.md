@@ -125,6 +125,10 @@ await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
 await expect.element(banner).toHaveTextContent('Error!')
 ```
 
+### DOM Environment Global Assignments Now Update the Underlying Window
+
+In Vitest 5, assigning browser globals through `globalThis` or `window` in `jsdom` and `happy-dom` is propagated to the environment's real `window` object. Mutable properties such as `innerWidth` can now affect APIs implemented by the DOM environment, for example `happy-dom`'s `matchMedia`.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
