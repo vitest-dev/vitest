@@ -32,6 +32,8 @@ export interface IframeExecuteEvent {
   files: FileSpecification[]
   iframeId: string
   context: string
+  concurrencyId: number
+  workerId: number
 }
 
 export interface IframeCleanupEvent {

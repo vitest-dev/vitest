@@ -578,6 +578,8 @@ export class TestModule extends SuiteImplementation {
       duration,
       heap,
       importDurations,
+      concurrencyId: this.task.concurrencyId,
+      workerId: this.task.workerId,
     }
   }
 }
@@ -741,6 +743,16 @@ export interface ModuleDiagnostic {
    * The time spent importing every non-externalized dependency that Vitest has processed.
    */
   readonly importDurations: Record<string, ImportDuration>
+  /**
+   * The id of the worker that ran this file. This value cannot be higher than `maxWorkers`.
+   * If file did not run yet, this will be 0.
+   */
+  readonly concurrencyId: number
+  /**
+   * Incremental number of the worker that ran this file. This number increases with each worker.
+   * If file did not run yet, this will be 0.
+   */
+  readonly workerId: number
 }
 
 function storeTask(

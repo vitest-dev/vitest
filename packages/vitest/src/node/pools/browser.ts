@@ -264,7 +264,7 @@ class BrowserPool {
       this.project.vitest._browserSessions.sessionIds.add(sessionId)
       const project = this.project.name
       debug?.('[%s] creating session for %s', sessionId, project)
-      let page = this._traces.$(
+      const page = this._traces.$(
         `vitest.browser.open`,
         {
           context: this._otel.context,
@@ -273,8 +273,7 @@ class BrowserPool {
           },
         },
         () => this.openPage(sessionId, { parallel: workerCount > 1 }),
-      )
-      page = page.then(() => {
+      ).then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
       })

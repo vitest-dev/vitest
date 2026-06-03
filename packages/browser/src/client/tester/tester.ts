@@ -53,10 +53,12 @@ channel.addEventListener('message', async (e) => {
 
   switch (data.event) {
     case 'execute': {
-      const { method, files, context } = data
+      const { method, files, context, concurrencyId, workerId } = data
       const state = getWorkerState()
       const parsedContext = parse(context)
 
+      state.ctx.concurrencyId = concurrencyId
+      state.ctx.workerId = workerId
       state.ctx.providedContext = parsedContext
       state.providedContext = parsedContext
 
