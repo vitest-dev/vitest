@@ -195,11 +195,11 @@ export class BaseCoverageProvider {
   private getGlobMatchers(): { matchExclude: (file: string) => boolean; matchInclude: (file: string) => boolean } {
     if (!this._globMatchers) {
       const exclude = this.options.exclude
-      const include = this.options.include || '**'
+      const include = this.options.include
 
       this._globMatchers = {
         matchExclude: exclude.length ? pm(exclude, { dot: true }) : () => false,
-        matchInclude: pm(include, { dot: true, ignore: exclude }),
+        matchInclude: include ? pm(include, { dot: true, ignore: exclude }) : () => true,
       }
     }
 
