@@ -1,6 +1,6 @@
 import type { ModuleMocker } from '@vitest/mocker/browser'
-import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
+import type { CancelReason } from 'vitest'
 import type { MarkOptions } from 'vitest/browser'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../types'
 import type { IframeOrchestrator } from './orchestrator'

@@ -1,3 +1,5 @@
+import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type {
   ImportDuration,
   Task as RunnerTask,
@@ -9,9 +11,7 @@ import type {
   TestAnnotation,
   TestArtifact,
   TestBenchmark,
-} from '@vitest/runner'
-import type { SerializedError, TestError } from '@vitest/utils'
-import type { DevEnvironment } from 'vite'
+} from '../../runtime/runner/types'
 import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'

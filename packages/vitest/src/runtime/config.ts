@@ -1,14 +1,44 @@
 import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, VitestRunnerConfig } from '@vitest/runner'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
-import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { DiffOptions, SerializedDiffOptions } from '@vitest/utils/diff'
 import type { LabelColor } from '../types/general'
+import type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  SerializableRetry,
+  TestTagDefinition,
+} from './runner/types'
 
 /**
  * Config that tests have access to.
  */
-export interface SerializedConfig extends VitestRunnerConfig {
+export interface SerializedConfig {
+  root: string
+  setupFiles: string[]
+  name: string | undefined
+  passWithNoTests: boolean
+  testNamePattern: RegExp | undefined
+  allowOnly: boolean
+  sequence: {
+    shuffle?: boolean
+    concurrent?: boolean
+    seed: number
+    hooks: SequenceHooks
+    setupFiles: SequenceSetupFiles
+  }
+  maxConcurrency: number
+  testTimeout: number
+  hookTimeout: number
+  retry: SerializableRetry
+  includeTaskLocation: boolean | undefined
+  tags: TestTagDefinition[]
+  tagsFilter: string[] | undefined
+  strictTags: boolean
+  /**
+   * @internal
+   */
+  _diffOptions?: DiffOptions
   color?: LabelColor
   globals: boolean
   base: string | undefined

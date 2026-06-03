@@ -9,12 +9,12 @@ import type {
 } from '../types/config'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import os from 'node:os'
-import { limitConcurrency } from '@vitest/runner/utils'
 import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { limitConcurrency } from '../../utils/limit-concurrency'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 

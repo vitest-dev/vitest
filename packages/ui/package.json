@@ -74,7 +74,6 @@
     "@vitest/browser-playwright": "workspace:*",
     "@vitest/browser-preview": "workspace:*",
     "@vitest/browser-webdriverio": "workspace:*",
-    "@vitest/runner": "workspace:*",
     "@vueuse/core": "catalog:",
     "ansi-to-html": "^0.7.2",
     "birpc": "catalog:",

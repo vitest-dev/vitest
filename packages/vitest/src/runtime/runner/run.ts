@@ -1,9 +1,10 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { FileSpecification, VitestRunner } from './types/runner'
+import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
 import type {
   AroundEachListener,
   File,
+  FileSpecification,
   RegisteredAroundAllListener,
   SequenceHooks,
   Suite,
@@ -16,12 +17,14 @@ import type {
   TaskUpdateEvent,
   Test,
   TestContext,
+  VitestRunner,
   WriteableTestContext,
-} from './types/tasks'
-import type { ConcurrencyLimiter } from './utils/limit-concurrency'
+} from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { limitConcurrency } from '../../utils/limit-concurrency'
+import { hasFailed, hasTests } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import { AroundHookMultipleCallsError, AroundHookSetupError, AroundHookTeardownError, PendingError, TestRunAbortError } from './errors'
@@ -29,9 +32,7 @@ import { callFixtureCleanup, callFixtureCleanupFrom, getFixtureCleanupCount, Tes
 import { getAroundHookStackTrace, getAroundHookTimeout, getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
-import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
-import { hasFailed, hasTests } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now

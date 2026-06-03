@@ -1,4 +1,4 @@
-import type { TestAttachment } from '@vitest/runner'
+import type { TestAttachment } from 'vitest'
 import mime from 'mime/lite'
 import { basename } from 'pathe'
 import { isReport } from '~/constants'

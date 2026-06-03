@@ -1,21 +1,22 @@
 import type {
   CancelReason,
-  File,
-  Suite,
-  Task,
-  TaskEventPack,
-  TaskResultPack,
-  Test,
+  RunnerTestFile as File,
+  SerializedConfig,
+  RunnerTestSuite as Suite,
+  RunnerTask as Task,
+  RunnerTaskEventPack as TaskEventPack,
+  RunnerTaskResultPack as TaskResultPack,
+  RunnerTestCase as Test,
   TestAnnotation,
   TestArtifact,
+  TestExecutionMethod,
   TestTryOptions,
-  VitestRunner,
-} from '@vitest/runner'
-import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
+  VitestTestRunner as VitestRunner,
+  WorkerGlobalState,
+} from 'vitest'
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
-import { getTestName } from '@vitest/runner/utils'
 import { recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
@@ -26,6 +27,7 @@ import {
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
+import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'

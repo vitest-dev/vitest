@@ -1,5 +1,5 @@
 import type { RunVitestConfig } from '#test-utils'
-import type { File, Test } from '@vitest/runner/types'
+import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
 import type { TestUserConfig, Vitest } from 'vitest/node'
 import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
 import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
@@ -7,10 +7,9 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { buildTestTree, runVitest, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
-import { createFileTask } from '@vitest/runner/utils'
 import { stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
+import { beforeEach, expect, test, TestRunner } from 'vitest'
 import { version } from 'vitest/package.json'
 import { getModuleGraph } from 'vitest/src/utils/graph.js'
 
@@ -258,7 +257,7 @@ test('merge reports', async () => {
 test('total and merged execution times are shown', async () => {
   for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
     const index = 1 + _index
-    const file = createFileTask(
+    const file = TestRunner.createFileTask(
       resolve('./fixtures/reporters/merge-reports', name),
       resolve('./fixtures/reporters/merge-reports'),
       '',
@@ -499,12 +498,10 @@ async function getSerializedModuleGraph(ctx: Vitest) {
     await Promise.all(
       files.map(async (file) => {
         const projectName = file.projectName || ''
-        const project = ctx.getProjectByName(projectName)
         const graph = await getModuleGraph(
           ctx,
           projectName,
           file.filepath,
-          project.config.browser.enabled,
         )
         return [file.filepath, graph] as const
       }),

@@ -1,6 +1,5 @@
 import type { InspectOptions } from '@vitest/utils/display'
 import type { UserFixtures } from './fixture'
-import type { VitestRunner } from './types/runner'
 import type {
   File,
   InternalTestContext,
@@ -18,7 +17,8 @@ import type {
   TestAPI,
   TestFunction,
   TestOptions,
-} from './types/tasks'
+  VitestRunner,
+} from './types'
 import { format, formatRegExp, inspect, truncateString } from '@vitest/utils/display'
 import {
   isNegativeNaN,
@@ -27,6 +27,7 @@ import {
   toArray,
   unique,
 } from '@vitest/utils/helpers'
+import { createTaskName } from '../../utils/tasks'
 import {
   abortIfTimeout,
   collectorContext,
@@ -40,10 +41,9 @@ import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
-import { findTestFileStackTrace } from './utils'
 import { createChainable, getChainableContext } from './utils/chain'
+import { findTestFileStackTrace } from './utils/collect'
 import { createNoTagsError, validateTags } from './utils/tags'
-import { createTaskName } from './utils/tasks'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.

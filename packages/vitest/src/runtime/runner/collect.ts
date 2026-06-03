@@ -1,7 +1,12 @@
-import type { FileSpecification, VitestRunner } from './types/runner'
-import type { File, SuiteHooks } from './types/tasks'
+import type { File, FileSpecification, SuiteHooks, VitestRunner } from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { toArray } from '@vitest/utils/helpers'
+import {
+  calculateSuiteHash,
+  createFileTask,
+  interpretTaskModes,
+  someTasksAreOnly,
+} from '../../utils/tasks'
 import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
 import { runSetupFiles } from './setup'
@@ -10,12 +15,6 @@ import {
   createSuiteHooks,
   getDefaultSuite,
 } from './suite'
-import {
-  calculateSuiteHash,
-  createFileTask,
-  interpretTaskModes,
-  someTasksAreOnly,
-} from './utils/collect'
 import { createTagsFilter, validateTags } from './utils/tags'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now

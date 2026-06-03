@@ -1,7 +1,7 @@
-import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
+import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
