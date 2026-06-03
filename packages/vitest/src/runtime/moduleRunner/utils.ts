@@ -1,4 +1,6 @@
-// copied from vite/src/shared/utils.ts
+// copied from vite
+// https://github.com/vitejs/vite/blob/4417b4f305623b2850bd6ae6553834c017694672/packages/vite/src/shared/utils.ts
+// https://github.com/vitejs/vite/blob/4417b4f305623b2850bd6ae6553834c017694672/packages/vite/src/node/utils.ts
 const postfixRE = /[?#].*$/
 const trailingSeparatorRE = /[?&]$/
 
