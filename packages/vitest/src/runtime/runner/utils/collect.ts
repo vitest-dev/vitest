@@ -188,7 +188,6 @@ export function generateHash(str: string): string {
   return `${hash}`
 }
 
-/* @__NO_SIDE_EFFECTS__ */
 export function calculateSuiteHash(parent: Suite): void {
   parent.tasks.forEach((t, idx) => {
     t.id = `${parent.id}_${idx}`
