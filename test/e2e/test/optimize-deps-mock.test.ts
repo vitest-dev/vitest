@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test.for(['forks', 'threads', 'vmThreads', 'vmForks'])(
-  'optimize deps importOriginal mock resolves optimized modules - %s',
+  'optimize deps and mock - %s',
   async (pool) => {
     const { errorTree, stderr } = await runVitest({
       root: './fixtures/optimize-deps-mock',
@@ -11,11 +11,11 @@ test.for(['forks', 'threads', 'vmThreads', 'vmForks'])(
 
     expect(stderr).toBe('')
     expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "import-original.test.ts": {
-        "importOriginal": "passed",
-      },
-    }
-  `)
+      {
+        "basic.test.ts": {
+          "basic": "passed",
+        },
+      }
+    `)
   },
 )

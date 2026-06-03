@@ -1421,6 +1421,9 @@ importers:
       test-dep-simple:
         specifier: file:./deps/dep-simple
         version: file:test/e2e/deps/dep-simple
+      test-dep-simple2:
+        specifier: file:./deps/dep-simple2
+        version: file:test/e2e/deps/dep-simple2
       tinyexec:
         specifier: ^1.0.2
         version: 1.0.2
@@ -9705,6 +9708,9 @@ packages:
 
   test-dep-error@file:test/browser/deps/test-dep-error:
     resolution: {directory: test/browser/deps/test-dep-error, type: directory}
+
+  test-dep-simple2@file:test/e2e/deps/dep-simple2:
+    resolution: {directory: test/e2e/deps/dep-simple2, type: directory}
 
   test-dep-simple@file:test/e2e/deps/dep-simple:
     resolution: {directory: test/e2e/deps/dep-simple, type: directory}
@@ -19040,6 +19046,8 @@ snapshots:
       test-dep-conditions-indirect: file:test/e2e/deps/test-dep-conditions-indirect
 
   test-dep-error@file:test/browser/deps/test-dep-error: {}
+
+  test-dep-simple2@file:test/e2e/deps/dep-simple2: {}
 
   test-dep-simple@file:test/e2e/deps/dep-simple: {}
 
