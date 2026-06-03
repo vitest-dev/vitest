@@ -30,9 +30,10 @@ export interface Environment {
    * @default `true`
    */
   prewarmModules?: boolean
-  setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
+  setupVM?: (options: Record<string, any>, configOptions: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
     options: Record<string, any>,
+    configOptions: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
 }
