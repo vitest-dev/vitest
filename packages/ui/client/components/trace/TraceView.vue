@@ -119,10 +119,6 @@ function getStepGuideStyle(step: NormalizedBrowserTraceEntry) {
   }
 }
 
-function hasTraceDepth(step: NormalizedBrowserTraceEntry) {
-  return step.traceDepth > 0
-}
-
 function formatTraceTime(ms: number) {
   return ms < 1000
     ? `${Math.round(ms)}ms`
@@ -174,7 +170,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
           @click="onSelectStep(index)"
         >
           <span
-            v-if="hasTraceDepth(step)"
+            v-if="step.traceDepth > 0"
             class="absolute bottom-1 top-1 border-l border-gray/20 dark:border-gray/30"
             :style="getStepGuideStyle(step)"
           />
