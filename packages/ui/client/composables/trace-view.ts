@@ -35,60 +35,47 @@ function getTraceAttemptKey(trace: BrowserTraceData): string {
 
 function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
   const merged: NormalizedBrowserTraceEntry[] = []
-  const startMap = new Map<string, { index: number; depth: number }>()
-  const stack: string[] = []
-
-  function closeRange(id: string) {
-    const index = stack.lastIndexOf(id)
-    if (index !== -1) {
-      stack.splice(index)
-    }
-  }
+  const startMap = new Map<string, number>()
+  const parents: string[] = []
 
   for (const entry of entries) {
     const range = entry.range
     if (!range) {
       merged.push({
         ...entry,
-        depth: stack.length,
+        depth: parents.length,
       })
       continue
     }
 
     if (range.phase === 'start') {
-      startMap.set(range.id, {
-        index: merged.length,
-        depth: stack.length,
-      })
+      startMap.set(range.id, merged.length)
       merged.push({
         ...entry,
-        depth: stack.length,
+        depth: parents.length,
       })
-      stack.push(range.id)
+      parents.push(range.id)
       continue
     }
 
-    const start = startMap.get(range.id)
-    if (!start) {
+    // when range.phase === 'end'
+    const index = startMap.get(range.id)
+    if (index == null) {
       // unpaired range shouldn't happen but just leave it there
-      merged.push({
-        ...entry,
-        depth: stack.length,
-      })
+      merged.push({ ...entry, depth: 0 })
       continue
     }
 
     // Keep the start timestamp for positioning, but derive display duration
     // from the end event timestamp.
-    const startEntry = merged[start.index]
-    merged[start.index] = {
-      ...startEntry,
+    const start = merged[index]
+    merged[index] = {
+      ...start,
       ...entry,
-      startTime: startEntry.startTime,
-      duration: entry.startTime - startEntry.startTime,
-      depth: start.depth,
+      startTime: start.startTime,
+      duration: entry.startTime - start.startTime,
     }
-    closeRange(range.id)
+    parents.pop()
   }
 
   return merged
