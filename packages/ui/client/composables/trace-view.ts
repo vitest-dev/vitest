@@ -19,13 +19,13 @@ export interface TraceEditorMarker {
   active?: boolean
 }
 
+export interface NormalizedBrowserTraceData extends BrowserTraceData {
+  entries: NormalizedBrowserTraceEntry[]
+}
+
 export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
   traceDepth: number
   traceHasChildren: boolean
-}
-
-export interface NormalizedBrowserTraceData extends BrowserTraceData {
-  entries: NormalizedBrowserTraceEntry[]
 }
 
 export const activeTraceView = ref<TraceSelection>()
