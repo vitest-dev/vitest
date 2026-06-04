@@ -134,6 +134,10 @@ $ cd subdir && vitest # [!code --]
 $ cd subdir && vitest --config ../vitest.config.ts # [!code ++]
 ```
 
+### DOM Environment Global Assignments Now Update the Underlying Window
+
+Assignments to properties on `globalThis` or `window` in `jsdom` and `happy-dom` environments are now propagated to the underlying DOM implementation. Mutable properties such as `innerWidth` can affect APIs implemented by the DOM environment, for example `happy-dom`'s `matchMedia`.
+
 ## Migrating to Vitest 4.0 {#vitest-4}
 
 ::: warning Prerequisites
