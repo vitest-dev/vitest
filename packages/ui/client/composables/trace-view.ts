@@ -34,7 +34,7 @@ function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
   const merged: NormalizedBrowserTraceEntry[] = []
   const startMap = new Map<string, { index: number; depth: number }>()
   const stack: string[] = []
@@ -132,7 +132,7 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, No
     const entries = traces.flatMap(trace => trace.entries)
     merged[key] = {
       ...trace,
-      entries: mergeTraceRangeEntries(entries),
+      entries: normalizeTraceEntries(entries),
     }
   }
   return merged
