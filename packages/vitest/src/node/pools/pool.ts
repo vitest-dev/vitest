@@ -262,14 +262,18 @@ export class Pool {
   }
 
   private getWorkerId() {
-    let workerId = 1
+    let workerId: number | undefined
 
     this.workerIds.forEach((state, id) => {
-      if (state && !workerId) {
+      if (state && workerId == null) {
         workerId = id
         this.workerIds.set(id, false)
       }
     })
+
+    if (workerId == null) {
+      throw new Error('Cannot set worker id because there are no valid free ids.')
+    }
 
     return workerId
   }
