@@ -25,7 +25,6 @@ export interface NormalizedBrowserTraceData extends BrowserTraceData {
 
 export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
   traceDepth: number
-  traceHasChildren: boolean
 }
 
 export const activeTraceView = ref<TraceSelection>()
@@ -39,18 +38,6 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
   const startMap = new Map<string, { index: number; depth: number }>()
   const stack: string[] = []
 
-  function markParentHasChildren() {
-    const parentId = stack[stack.length - 1]
-    if (!parentId) {
-      return
-    }
-
-    const parent = startMap.get(parentId)
-    if (parent) {
-      merged[parent.index].traceHasChildren = true
-    }
-  }
-
   function closeRange(id: string) {
     const index = stack.lastIndexOf(id)
     if (index !== -1) {
@@ -61,17 +48,14 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
   for (const entry of entries) {
     const range = entry.range
     if (!range) {
-      markParentHasChildren()
       merged.push({
         ...entry,
         traceDepth: stack.length,
-        traceHasChildren: false,
       })
       continue
     }
 
     if (range.phase === 'start') {
-      markParentHasChildren()
       startMap.set(range.id, {
         index: merged.length,
         depth: stack.length,
@@ -79,7 +63,6 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       merged.push({
         ...entry,
         traceDepth: stack.length,
-        traceHasChildren: false,
       })
       stack.push(range.id)
       continue
@@ -88,11 +71,9 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
     const start = startMap.get(range.id)
     if (!start) {
       // unpaired range shouldn't happen but just leave it there
-      markParentHasChildren()
       merged.push({
         ...entry,
         traceDepth: stack.length,
-        traceHasChildren: false,
       })
       continue
     }
@@ -106,7 +87,6 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       startTime: startEntry.startTime,
       duration: entry.startTime - startEntry.startTime,
       traceDepth: start.depth,
-      traceHasChildren: startEntry.traceHasChildren,
     }
     closeRange(range.id)
   }
