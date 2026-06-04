@@ -262,7 +262,7 @@ export class Pool {
   }
 
   private getWorkerId() {
-    let workerId = 0
+    let workerId = 1
 
     this.workerIds.forEach((state, id) => {
       if (state && !workerId) {
