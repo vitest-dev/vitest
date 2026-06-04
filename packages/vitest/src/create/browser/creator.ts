@@ -4,11 +4,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
-import * as find from 'empathic/find'
 import prompt from 'prompts'
 import { x } from 'tinyexec'
 import c from 'tinyrainbow'
-import { configFiles } from '../../constants'
+import { findConfigFile } from '../../node/config/resolveConfig'
 import { generateExampleFiles } from './examples'
 
 // eslint-disable-next-line no-console
@@ -424,9 +423,7 @@ export async function create(): Promise<void> {
     dependenciesToInstall.filter(pkg => !dependencies[pkg]),
   )
 
-  const rootConfig = find.any(configFiles, {
-    cwd: process.cwd(),
-  })
+  const rootConfig = findConfigFile(process.cwd())
 
   let scriptCommand = 'vitest'
 

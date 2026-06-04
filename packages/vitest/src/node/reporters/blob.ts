@@ -1,6 +1,6 @@
-import type { File } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
+import type { File } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'

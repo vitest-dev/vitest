@@ -1,6 +1,6 @@
-import type { TestTagDefinition } from '@vitest/runner'
-import { createTagsFilter } from '@vitest/runner/utils'
+import type { TestTagDefinition } from 'vitest'
 import { describe, expect, test } from 'vitest'
+import { createTagsFilter } from '../../../packages/vitest/src/runtime/runner/utils/tags'
 
 function tags(...names: string[]): TestTagDefinition[] {
   return names.map(name => ({ name }))

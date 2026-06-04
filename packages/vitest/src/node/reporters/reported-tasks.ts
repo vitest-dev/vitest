@@ -1,3 +1,5 @@
+import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type {
   ImportDuration,
   Task as RunnerTask,
@@ -8,9 +10,8 @@ import type {
   TaskMeta,
   TestAnnotation,
   TestArtifact,
-} from '@vitest/runner'
-import type { SerializedError, TestError } from '@vitest/utils'
-import type { DevEnvironment } from 'vite'
+  TestBenchmark,
+} from '../../runtime/runner/types'
 import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
@@ -211,6 +212,15 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public artifacts(): ReadonlyArray<TestArtifact> {
     return [...this.task.artifacts]
+  }
+
+  /**
+   * @experimental
+   *
+   * A list of benchmarks performed during the test.
+   */
+  public benchmarks(): ReadonlyArray<TestBenchmark> {
+    return [...this.task.benchmarks]
   }
 
   /**

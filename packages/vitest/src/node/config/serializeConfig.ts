@@ -13,7 +13,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
-    mode: config.mode,
     isolate: config.isolate,
     maxWorkers: config.maxWorkers,
     base: config.base,
@@ -134,8 +133,11 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,
-    benchmark: config.benchmark && {
-      includeSamples: config.benchmark.includeSamples,
+    benchmark: {
+      enabled: config.benchmark.enabled,
+      retainSamples: config.benchmark.retainSamples,
+      suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
+      projectName: config.benchmark.projectName,
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled

@@ -332,7 +332,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     },
   },
   mode: {
-    description: 'Override Vite mode (default: `test` or `benchmark`)',
+    description: 'Override Vite mode (default: `test`)',
     argument: '<name>',
   },
   isolate: {
@@ -447,7 +447,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           testIdAttribute: null,
           exact: {
-            description: 'Should locators match the text exactly by default (default: `false`)',
+            description: 'Should locators match the text exactly by default (default: `true`)',
           },
           errorFormat: null,
         },
@@ -980,8 +980,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   deps: null,
   name: null,
   snapshotEnvironment: null,
-  compare: null,
-  outputJson: null,
   json: null,
   provide: null,
   filesOnly: null,
@@ -990,21 +988,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   projects: null,
   watchTriggerPatterns: null,
   tags: null,
+  benchmarkOnly: null,
   taskTitleValueFormatTruncate: null,
-}
-
-export const benchCliOptionsConfig: Pick<
-  VitestCLIOptions,
-  'compare' | 'outputJson'
-> = {
-  compare: {
-    description: 'Benchmark output file to compare against',
-    argument: '<filename>',
-  },
-  outputJson: {
-    description: 'Benchmark output file',
-    argument: '<filename>',
-  },
 }
 
 export const collectCliOptionsConfig: VitestCLIOptions = {

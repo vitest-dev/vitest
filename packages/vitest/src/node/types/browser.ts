@@ -1,10 +1,10 @@
 import type { MockedModule } from '@vitest/mocker'
-import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { Plugin, ViteDevServer } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
@@ -366,12 +366,25 @@ export interface BrowserCommandContext {
     name: K,
     ...args: Parameters<BrowserCommands[K]>
   ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
   project: TestProject
   otelCarrier?: OTELCarrier
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { File, Task } from '@vitest/runner'
+import type { RunnerTestFile as File, RunnerTask as Task } from 'vitest'
 import { hideAllPoppers } from 'floating-vue'
 import { computed, ref } from 'vue'
 

@@ -1,3 +1,5 @@
+/* eslint-disable style/no-tabs */
+import type { Rolldown } from 'vite'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'vite'
@@ -17,14 +19,15 @@ const hoistMocksOptions: HoistMocksPluginOptions = {
       node.start + 1,
     )
   },
+  root: '/',
 }
 
-function hoistSimple(code: string, url = '') {
+function hoistSimple(code: string, url = '/test.js') {
   return hoistMockAndResolve(code, url, parse, hoistMocksOptions)
 }
 
-function hoistSimpleCode(code: string) {
-  return hoistMockAndResolve(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
+function hoistSimpleCode(code: string, options?: HoistMocksPluginOptions) {
+  return hoistMockAndResolve(code, '/test.js', parse, { ...hoistMocksOptions, ...options })?.code.trim()
 }
 
 test('hoists mock, unmock, hoisted', () => {
@@ -54,6 +57,21 @@ import { test } from 'vitest'
 
     import { vi } from 'vitest'
     import { test } from 'vitest'"
+  `)
+})
+
+test('recognizes the vite-plus/test redistribution as the hoisted module', () => {
+  expect(hoistSimpleCode(`
+import { vi } from 'vite-plus/test'
+vi.mock('path', () => {})
+vi.unmock('path')
+vi.hoisted(() => {})
+  `)).toMatchInlineSnapshot(`
+    "vi.mock('path', () => {})
+    vi.unmock('path')
+    vi.hoisted(() => {})
+
+    import { vi } from 'vite-plus/test'"
   `)
 })
 
@@ -527,10 +545,10 @@ vi.mock('./mock.js', () => {
       (hoistSimple(
         `vi.mock(any);
       export const a = 1`,
-        'input.js',
+        '/input.js',
       ))?.map
     )
-    expect(map?.sources).toStrictEqual(['input.js'])
+    expect(map?.sources).toStrictEqual(['/input.js'])
   })
 
   test('overwrite bindings', () => {
@@ -774,7 +792,7 @@ add(4);
         del = () => __vi_import_0__.del()
         call = __vi_import_0__.call(4)
       }
-      
+
       __vi_import_0__.remove(2);
       __vi_import_0__.add(4);"
     `)
@@ -1599,128 +1617,82 @@ export const mocked = vi.unmock('./mocked')
     expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
   })
 
-  it('shows an error when hoisted methods are used outside the top level scope', ({ onTestFinished }) => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    onTestFinished(() => warn.mockRestore())
-    const result = hoistSimpleCode(`
+  it('shows an error when hoisted methods are used outside the top level scope', () => {
+    const code = `import { test, vi } from "vitest";
 // correct
-vi.mock('./hello-world-1')
-
+vi.mock("./hello-world-1");
 if (condition) {
-  vi.mock('./hello-world-2')
+	vi.mock("./hello-world-2");
 }
+test("some test", () => {
+	vi.mock("./hello-world-3");
+});
+test("some test", () => {
+	if (condition) {
+		vi.mock("./hello-world-4");
+		vi.hoisted(() => {});
+		vi.mock(import("./hello-world-5"));
+		const variable = vi.hoisted(() => {});
+	}
+});
+describe("some suite", () => {
+	if (condition) {
+		vi.mock("./hello-world-6");
+	}
+});
+`
+    const map: Rolldown.SourceMap = {
+      file: '/test.js',
+      toUrl: () => 'not called',
+      mappings: 'AAAA,SAAS,MAAM,UAAU;;AAGzB,GAAG,KAAK,kBAAkB;AAE1B,IAAI,WAAW;CACb,GAAG,KAAK,kBAAkB;;AAG5B,KAAK,mBAAmB;CACtB,GAAG,KAAK,kBAAkB;EAC1B;AAEF,KAAK,mBAAmB;CACtB,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;EAC1B,GAAG,cAAc,GAAG;EACpB,GAAG,KAAK,OAAO,mBAAmB;EAClC,MAAM,WAAW,GAAG,cAAc,GAAG;;EAEvC;AAEF,SAAS,oBAAoB;CAC3B,IAAI,WAAW;EACb,GAAG,KAAK,kBAAkB;;EAE5B',
+      names: [],
+      sources: [
+        '/test.js',
+      ],
+      version: 3,
+      sourcesContent: [
+        'import { test, vi } from \'vitest\'\n'
+        + '\n'
+        + '// correct\n'
+        + 'vi.mock(\'./hello-world-1\')\n'
+        + '\n'
+        + 'if (condition) {\n'
+        + '  vi.mock(\'./hello-world-2\')\n'
+        + '}\n'
+        + '\n'
+        + 'test(\'some test\', () => {\n'
+        + '  vi.mock(\'./hello-world-3\')\n'
+        + '})\n'
+        + '\n'
+        + 'test(\'some test\', () => {\n'
+        + '  if (condition) {\n'
+        + '    vi.mock(\'./hello-world-4\')\n'
+        + '    vi.hoisted(() => {})\n'
+        + '    vi.mock(import(\'./hello-world-5\'))\n'
+        + '    const variable = vi.hoisted(() => {})\n'
+        + '  }\n'
+        + '})\n'
+        + '\n'
+        + 'describe(\'some suite\', () => {\n'
+        + '  if (condition) {\n'
+        + '    vi.mock(\'./hello-world-6\')\n'
+        + '  }\n'
+        + '})\n',
+      ],
+    }
+    expect(() => hoistSimpleCode(code, { getMap: () => map })).toThrowErrorMatchingInlineSnapshot(`
+      [Error: 7 calls in "test.js" were defined outside of the module's top level scope:
 
-test('some test', () => {
-  vi.mock('./hello-world-3')
-})
+      - vi.mock("./hello-world-2") at test.js:7:3
+      - vi.mock("./hello-world-3") at test.js:11:3
+      - vi.mock("./hello-world-4") at test.js:16:5
+      - vi.hoisted() at test.js:17:5
+      - vi.mock(import("./hello-world-5")) at test.js:18:5
+      - vi.hoisted() at test.js:19:5
+      - vi.mock("./hello-world-6") at test.js:25:5
 
-test('some test', () => {
-  if (condition) {
-    vi.mock('./hello-world-4')
-    vi.hoisted(() => {})
-    vi.mock(import('./hello-world-5'))
-    const variable = vi.hoisted(() => {})
-  }
-})
-
-describe('some suite', () => {
-  if (condition) {
-    vi.mock('./hello-world-6')
-  }
-})
-      `)
-    expect(result).toMatchInlineSnapshot(`
-      "import { vi } from "vitest"
-      vi.mock('./hello-world-1')
-      vi.mock('./hello-world-2')
-      vi.mock('./hello-world-3')
-      vi.mock('./hello-world-4')
-      vi.hoisted(() => {})
-      vi.mock('./hello-world-5')
-      const variable = vi.hoisted(() => {})
-      vi.mock('./hello-world-6')
-
-      // correct
-
-      if (condition) {
-        }
-
-      test('some test', () => {
-        })
-
-      test('some test', () => {
-        if (condition) {
-                        }
-      })
-
-      describe('some suite', () => {
-        if (condition) {
-            }
-      })"
-    `)
-    expect(warn).toMatchInlineSnapshot(`
-      [MockFunction warn] {
-        "calls": [
-          [
-            "Warning: A vi.mock('./hello-world-2') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-3') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-4') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock(import('./hello-world-5')) call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.hoisted() call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-          [
-            "Warning: A vi.mock('./hello-world-6') call in "/test.js" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
-      See: https://vitest.dev/guide/mocking/modules#how-it-works",
-          ],
-        ],
-        "results": [
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-          {
-            "type": "return",
-            "value": undefined,
-          },
-        ],
-      }
+      Although they appear nested, they will be hoisted and executed before anything in this file. Move them to the top level to reflect their actual execution order.
+      See: https://vitest.dev/guide/mocking/modules#how-it-works]
     `)
   })
 
@@ -1741,4 +1713,19 @@ if (import.meta.vitest) {
     `)
     expect(warn).not.toHaveBeenCalled()
   })
+})
+
+test('does not transform when hoistable API only appears in comments', () => {
+  expect(hoistSimpleCode(`
+import { lib } from 'lib'
+// vi.mock('lib')
+console.log(lib)
+  `)).toMatchInlineSnapshot(`undefined`)
+})
+
+test('does not transform when hoistable API only appears in strings', () => {
+  expect(hoistSimpleCode(`
+import { lib } from 'lib'
+console.log("vi.mock('lib')", lib)
+  `)).toMatchInlineSnapshot(`undefined`)
 })

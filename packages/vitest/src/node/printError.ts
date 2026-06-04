@@ -237,11 +237,11 @@ function printErrorInner(
   if (testName) {
     logger.error(
       c.red(
-        `The latest test that might've caused the error is "${c.bold(
+        `The last test to run before this error was "${c.bold(
           testName,
-        )}". It might mean one of the following:`
-        + '\n- The error was thrown, while Vitest was running this test.'
-        + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
+        )}". This means either:`
+        + '\n- the error was thrown while Vitest was running this test, or'
+        + '\n- the error was thrown after the test completed, and this was the most recent test at that point.',
       ),
     )
   }

@@ -213,7 +213,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Custom element button"i]",
+                      "_pwSelector": "internal:role=button[name="Custom element button"s]",
                       "locator": "getByRole('button', { name: 'Custom element button' })",
                       "selector": ">>>html > body > trace-widget > button",
                     },
@@ -243,7 +243,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Shadow button"i]",
+                      "_pwSelector": "internal:role=button[name="Shadow button"s]",
                       "locator": "getByRole('button', { name: 'Shadow button' })",
                       "selector": ">>>html > body > section > button",
                     },
@@ -275,8 +275,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Hello"i]",
-                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "_pwSelector": "internal:role=button",
+                      "locator": "getByRole('button')",
                       "selector": "html > body > button",
                     },
                     "kind": "action",
@@ -295,8 +295,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Hello"i]",
-                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "_pwSelector": "internal:role=button",
+                      "locator": "getByRole('button')",
                       "selector": "html > body > button",
                     },
                     "kind": "action",
@@ -488,7 +488,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "_pwSelector": "internal:role=button[name="Hello"i]",
-                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "locator": "getByRole('button', { name: 'Hello', exact: false })",
                       "selector": "html > body > button",
                     },
                     "kind": "mark",
@@ -735,7 +735,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:attr=[alt="external trace asset"i]",
+                      "_pwSelector": "internal:attr=[alt="external trace asset"s]",
                       "locator": "getByAltText('external trace asset')",
                       "selector": "html > body > img",
                     },
@@ -765,7 +765,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:attr=[alt="local trace asset"i]",
+                      "_pwSelector": "internal:attr=[alt="local trace asset"s]",
                       "locator": "getByAltText('local trace asset')",
                       "selector": "html > body > img",
                     },
@@ -1366,7 +1366,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="First pseudo state"s]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
                       "selector": "html > body > button:nth-child(1)",
                     },
@@ -1386,7 +1386,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="First pseudo state"s]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
                       "selector": "html > body > button:nth-child(1)",
                     },
@@ -1407,7 +1407,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="First pseudo state"s]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
                       "selector": "html > body > button:nth-child(1)",
                     },
@@ -1427,7 +1427,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="First pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="First pseudo state"s]",
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
                       "selector": "html > body > button:nth-child(1)",
                     },
@@ -1448,7 +1448,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Second pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="Second pseudo state"s]",
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
                       "selector": "html > body > button:nth-child(2)",
                     },
@@ -1468,7 +1468,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:role=button[name="Second pseudo state"i]",
+                      "_pwSelector": "internal:role=button[name="Second pseudo state"s]",
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
                       "selector": "html > body > button:nth-child(2)",
                     },
@@ -1489,8 +1489,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:label="Focused pseudo state"i",
-                      "locator": "getByLabel('Focused pseudo state')",
+                      "_pwSelector": "internal:role=textbox[name="Focused pseudo state"s]",
+                      "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
                       "selector": "html > body > input",
                     },
                     "kind": "action",
@@ -1509,8 +1509,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:label="Focused pseudo state"i",
-                      "locator": "getByLabel('Focused pseudo state')",
+                      "_pwSelector": "internal:role=textbox[name="Focused pseudo state"s]",
+                      "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
                       "selector": "html > body > input",
                     },
                     "kind": "action",
@@ -1530,8 +1530,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:label="Focus within pseudo state"i",
-                      "locator": "getByLabel('Focus within pseudo state')",
+                      "_pwSelector": "internal:role=textbox[name="Focus within pseudo state"s]",
+                      "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
                       "selector": "html > body > label > input",
                     },
                     "kind": "action",
@@ -1550,8 +1550,8 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "_pwSelector": "internal:label="Focus within pseudo state"i",
-                      "locator": "getByLabel('Focus within pseudo state')",
+                      "_pwSelector": "internal:role=textbox[name="Focus within pseudo state"s]",
+                      "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
                       "selector": "html > body > label > input",
                     },
                     "kind": "action",
@@ -1759,7 +1759,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Custom element button' })",
-                      "selector": "internal:role=button[name="Custom element button"i]",
+                      "selector": "internal:role=button[name="Custom element button"s]",
                     },
                     "kind": "mark",
                     "location": "exotic.test.ts:47",
@@ -1788,7 +1788,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Shadow button' })",
-                      "selector": "internal:role=button[name="Shadow button"i]",
+                      "selector": "internal:role=button[name="Shadow button"s]",
                     },
                     "kind": "mark",
                     "location": "exotic.test.ts:28",
@@ -1871,7 +1871,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Missing' })",
-                      "selector": "internal:role=button[name="Missing"i]",
+                      "selector": "internal:role=button[name="Missing"s]",
                     },
                     "kind": "action",
                     "location": "expect.test.ts:33",
@@ -1890,7 +1890,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Missing' })",
-                      "selector": "internal:role=button[name="Missing"i]",
+                      "selector": "internal:role=button[name="Missing"s]",
                     },
                     "kind": "action",
                     "location": "expect.test.ts:33",
@@ -2063,7 +2063,7 @@ test('trace view artifacts', async () => {
                 "entries": [
                   {
                     "element": {
-                      "locator": "getByRole('button', { name: 'Hello' })",
+                      "locator": "getByRole('button', { name: 'Hello', exact: false })",
                       "selector": "internal:role=button[name="Hello"i]",
                     },
                     "kind": "mark",
@@ -2309,7 +2309,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByAltText('external trace asset')",
-                      "selector": "internal:attr=[alt="external trace asset"i]",
+                      "selector": "internal:attr=[alt="external trace asset"s]",
                     },
                     "kind": "mark",
                     "location": "resources.test.ts:20",
@@ -2338,7 +2338,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByAltText('local trace asset')",
-                      "selector": "internal:attr=[alt="local trace asset"i]",
+                      "selector": "internal:attr=[alt="local trace asset"s]",
                     },
                     "kind": "mark",
                     "location": "resources.test.ts:12",
@@ -2923,7 +2923,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": "internal:role=button[name="First pseudo state"i]",
+                      "selector": "internal:role=button[name="First pseudo state"s]",
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
@@ -2942,7 +2942,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": "internal:role=button[name="First pseudo state"i]",
+                      "selector": "internal:role=button[name="First pseudo state"s]",
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
@@ -2962,7 +2962,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": "internal:role=button[name="First pseudo state"i]",
+                      "selector": "internal:role=button[name="First pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:104",
@@ -2981,7 +2981,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'First pseudo state' })",
-                      "selector": "internal:role=button[name="First pseudo state"i]",
+                      "selector": "internal:role=button[name="First pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:104",
@@ -3001,7 +3001,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
-                      "selector": "internal:role=button[name="Second pseudo state"i]",
+                      "selector": "internal:role=button[name="Second pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:105",
@@ -3020,7 +3020,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('button', { name: 'Second pseudo state' })",
-                      "selector": "internal:role=button[name="Second pseudo state"i]",
+                      "selector": "internal:role=button[name="Second pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:105",
@@ -3040,7 +3040,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
-                      "selector": "internal:role=textbox[name="Focused pseudo state"i]",
+                      "selector": "internal:role=textbox[name="Focused pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:106",
@@ -3059,7 +3059,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focused pseudo state' })",
-                      "selector": "internal:role=textbox[name="Focused pseudo state"i]",
+                      "selector": "internal:role=textbox[name="Focused pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:106",
@@ -3079,7 +3079,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
-                      "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
+                      "selector": "internal:role=textbox[name="Focus within pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:107",
@@ -3098,7 +3098,7 @@ test('trace view artifacts', async () => {
                   {
                     "element": {
                       "locator": "getByRole('textbox', { name: 'Focus within pseudo state' })",
-                      "selector": "internal:role=textbox[name="Focus within pseudo state"i]",
+                      "selector": "internal:role=textbox[name="Focus within pseudo state"s]",
                     },
                     "kind": "action",
                     "location": "styles.test.ts:107",

@@ -156,14 +156,15 @@ export class BaseCoverageProvider {
       return cacheHit
     }
 
+    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
+
     // File outside project root with default allowExternal
-    if (this.options.allowExternal === false && roots.every(root => !filename.startsWith(root))) {
+    if (this.options.allowExternal === false && !matchingRoot) {
       this.globCache.set(filename, false)
 
       return false
     }
 
-    const matchingRoot = roots.find(root => filename.startsWith(`${slash(root)}/`) || filename === slash(root))
     const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
 
     if (pm.isMatch(relativeFilename, this.options.exclude, { dot: true })) {
@@ -595,7 +596,7 @@ export class BaseCoverageProvider {
             )
         : [coverageMap.getCoverageSummary()]
 
-      const thresholdsToUpdate: [Threshold, number][] = []
+      const thresholdsToUpdate: [Threshold, number, number][] = []
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
@@ -609,7 +610,7 @@ export class BaseCoverageProvider {
           )
 
           if (actual > threshold) {
-            thresholdsToUpdate.push([key, actual])
+            thresholdsToUpdate.push([key, actual, threshold])
           }
         }
         else {
@@ -621,7 +622,7 @@ export class BaseCoverageProvider {
           if (actual < absoluteThreshold) {
             // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
             const updatedThreshold = actual === 0 ? 100 : actual * -1
-            thresholdsToUpdate.push([key, updatedThreshold])
+            thresholdsToUpdate.push([key, updatedThreshold, threshold])
           }
         }
       }
@@ -634,8 +635,8 @@ export class BaseCoverageProvider {
 
       const thresholdFormatter = typeof this.options.thresholds?.autoUpdate === 'function' ? this.options.thresholds?.autoUpdate : (value: number) => value
 
-      for (const [threshold, newValue] of thresholdsToUpdate) {
-        const formattedValue = thresholdFormatter(newValue)
+      for (const [threshold, newValue, previousValue] of thresholdsToUpdate) {
+        const formattedValue = thresholdFormatter(newValue, previousValue)
         if (name === GLOBAL_THRESHOLDS_KEY) {
           config.test.coverage.thresholds[threshold] = formattedValue
         }

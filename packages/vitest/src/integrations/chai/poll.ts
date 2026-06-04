@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'

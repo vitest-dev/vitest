@@ -156,6 +156,22 @@ test('formats values with custom formatter', async () => {
   expect(calls.sort()).toEqual([50, 60, 70, 80])
 })
 
+test('passes previous threshold as second argument to custom formatter', async () => {
+  const config = parseModule(`export default ${initialConfig}`)
+
+  const autoUpdate = vi.fn().mockImplementation(value => value)
+  await updateThresholds(config, { thresholds: { autoUpdate } })
+
+  const previousValues = autoUpdate.mock.calls.map(call => [call[0], call[1]])
+
+  expect(previousValues.sort((a, b) => a[0] - b[0])).toEqual([
+    [coveredThresholds.lines, initialThresholds.lines],
+    [coveredThresholds.branches, initialThresholds.branches],
+    [coveredThresholds.functions, initialThresholds.functions],
+    [coveredThresholds.statements, initialThresholds.statements],
+  ].sort((a, b) => a[0] - b[0]))
+})
+
 async function updateThresholds(configurationFile: ReturnType<typeof parseModule>, _coverageOptions: Partial<(InstanceType<typeof BaseCoverageProvider>)['options']> = {}) {
   const summaryData = { total: 0, covered: 0, skipped: 0 }
   const thresholds = [{

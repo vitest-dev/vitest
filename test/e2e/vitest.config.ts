@@ -5,9 +5,18 @@ import { defaultExclude } from 'vitest/config'
 export default defineConfig({
   test: {
     reporters: [
-      'verbose',
+      process.env.CI ? 'minimal' : 'verbose',
       (process.env.VITEST_CI_BLOB_LABEL
         ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]
+        : {}),
+      (process.env.VITEST_CI_MERGE_REPORTS
+        ? [
+            'html',
+            {
+              outputFile: '.vitest/html/index.html',
+              singleFile: true,
+            },
+          ]
         : {}),
     ],
     onConsoleLog(log) {
@@ -35,7 +44,11 @@ export default defineConfig({
           },
           typecheck: {
             enabled: true,
-            include: ['./test/reporters/configuration-options.test-d.ts'],
+            include: [
+              './test/reporters/configuration-options.test-d.ts',
+              './test/benchmarking.test-d.ts',
+              './test/config-types.test-d.ts',
+            ],
           },
           sequence: {
             groupOrder: 0,
@@ -59,6 +72,7 @@ export default defineConfig({
   server: {
     watch: {
       ignored: [
+        '**/vitest-test-*/**',
         '**/fixtures/browser-multiple/**/*',
         '**/fixtures/browser-init/**/*',
         '**/package.json',

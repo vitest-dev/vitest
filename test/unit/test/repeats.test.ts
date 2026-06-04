@@ -1,5 +1,4 @@
-import { getCurrentTest } from '@vitest/runner'
-import { afterAll, describe, expect, test } from 'vitest'
+import { afterAll, describe, expect, test, TestRunner } from 'vitest'
 
 const testNumbers: number[] = []
 
@@ -53,7 +52,7 @@ describe('testing repeats with retry', () => {
   })
 
   test('should not reset retry count', { repeats: 2, retry: 1 }, () => {
-    expect(getCurrentTest()!.result?.retryCount).toBe(3)
+    expect(TestRunner.getCurrentTest()!.result?.retryCount).toBe(3)
   })
 })
 

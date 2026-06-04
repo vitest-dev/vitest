@@ -1,10 +1,9 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Tester } from '@vitest/expect'
 import { stripVTControlCharacters } from 'node:util'
-import { getCurrentTest } from '@vitest/runner'
 import { processError } from '@vitest/utils/error'
 import { Temporal } from 'temporal-polyfill'
-import { describe, expect, expectTypeOf, test, vi } from 'vitest'
+import { describe, expect, expectTypeOf, test, TestRunner, vi } from 'vitest'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -35,8 +34,8 @@ describe('expect.soft', () => {
   test('should have multiple error', () => {
     expect.soft(1).toBe(2)
     expect.soft(2).toBe(3)
-    getCurrentTest()!.result!.state = 'run'
-    expect(getCurrentTest()?.result?.errors).toHaveLength(2)
+    TestRunner.getCurrentTest()!.result!.state = 'run'
+    expect(TestRunner.getCurrentTest()?.result?.errors).toHaveLength(2)
   })
 
   test.fails('should be a failure', () => {

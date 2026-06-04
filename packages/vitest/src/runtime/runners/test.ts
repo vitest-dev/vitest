@@ -1,5 +1,10 @@
 import type { SpanOptions } from '@opentelemetry/api'
 import type { ExpectStatic } from '@vitest/expect'
+import type { Bench as Tinybench, Task as TinybenchTask } from 'tinybench'
+import type { ModuleRunner } from 'vite/module-runner'
+import type { Traces } from '../../utils/traces'
+import type { Bench } from '../benchmark'
+import type { SerializedConfig } from '../config'
 import type {
   CancelReason,
   File,
@@ -8,29 +13,25 @@ import type {
   Task,
   Test,
   TestContext,
+  TestTryOptions,
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
-} from '@vitest/runner'
-import type { ModuleRunner } from 'vite/module-runner'
-import type { Traces } from '../../utils/traces'
-import type { SerializedConfig } from '../config'
+} from '../runner/types'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import {
-  createTaskCollector,
-  getCurrentSuite,
-  getCurrentTest,
-  getFn,
-  getHooks,
-} from '@vitest/runner'
-import { createChainable, getNames, getTestName, getTests, matchesTags } from '@vitest/runner/utils'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
-import { getBenchFn, getBenchOptions } from '../benchmark'
+import { createFileTask, getNames, getTestName, getTests } from '../../utils/tasks'
+import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
+import { getFn, getHooks } from '../runner/map'
+import { createTaskCollector, getCurrentSuite } from '../runner/suite'
+import { getCurrentTest } from '../runner/test-state'
+import { createChainable } from '../runner/utils/chain'
+import { matchesTags } from '../runner/utils/tags'
 import { getWorkerState } from '../utils'
 
 export class TestRunner implements VitestTestRunner {
@@ -40,9 +41,13 @@ export class TestRunner implements VitestTestRunner {
   private cancelRun = false
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
+  private benchInstances = new WeakMap<Readonly<Task>, Bench>()
 
   public pool: string = this.workerState.ctx.pool
-  private _otel!: Traces
+  /**
+   * @internal
+   */
+  public _otel!: Traces
   public viteEnvironment: string
   private viteModuleRunner: boolean
 
@@ -83,7 +88,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.onCleanup(listener)
   }
 
-  onAfterRunFiles(): void {
+  onAfterRunFiles(_files: File[]): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
   }
@@ -167,7 +172,7 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task): void {
+  onBeforeTryTask(test: Task, _options: TestTryOptions): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
@@ -185,6 +190,7 @@ export class TestRunner implements VitestTestRunner {
   }
 
   onAfterTryTask(test: Test): void {
+    this.benchInstances.get(test)?.[kFinalize]()
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -229,6 +235,18 @@ export class TestRunner implements VitestTestRunner {
     Object.defineProperty(context, '_local', {
       get() {
         return _expect != null
+      },
+    })
+    let _bench: Bench | undefined
+    const runnerConfig = this.config
+    const benchInstances = this.benchInstances
+    Object.defineProperty(context, 'bench', {
+      get() {
+        if (!_bench) {
+          _bench = createBench(context.task, runnerConfig)
+          benchInstances.set(context.task, _bench)
+        }
+        return _bench
       },
     })
     return context
@@ -279,15 +297,16 @@ export class TestRunner implements VitestTestRunner {
   static setSuiteHooks: typeof getHooks = getHooks
   static setTestFn: typeof getFn = getFn
   static matchesTags: typeof matchesTags = matchesTags
+  static createFileTask: typeof createFileTask = createFileTask
 
   /**
-   * @deprecated
+   * @experimental
+   * A function that runs tinybench tasks.
+   * Can be overriden to run tasks in a special environment.
    */
-  static getBenchFn: typeof getBenchFn = getBenchFn
-  /**
-   * @deprecated
-   */
-  static getBenchOptions: typeof getBenchOptions = getBenchOptions
+  static async runBenchmarks(tinybench: Tinybench): Promise<TinybenchTask[]> {
+    return await tinybench.run()
+  }
 }
 
 function clearModuleMocks(config: SerializedConfig) {

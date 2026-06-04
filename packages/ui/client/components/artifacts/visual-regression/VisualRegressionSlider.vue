@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { VisualRegressionArtifact } from '@vitest/runner'
+import type { VisualRegressionArtifact } from 'vitest'
 import { computed, ref, useId } from 'vue'
 import { internalOrExternalUrl } from '~/composables/attachments'
 import VisualRegressionImageContainer from './VisualRegressionImageContainer.vue'
