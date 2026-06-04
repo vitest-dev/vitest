@@ -54,8 +54,7 @@ expect.extend({
 })
 
 declare module 'vitest' {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface Assertion<T = any> {
+  interface Matchers {
     // eslint-disable-next-line ts/method-signature-style
     toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): void
     // eslint-disable-next-line ts/method-signature-style

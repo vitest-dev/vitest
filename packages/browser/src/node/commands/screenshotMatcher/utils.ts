@@ -1,3 +1,7 @@
+import type { SerializedLocator } from '@vitest/browser'
+
+// Note: this augments `screenshotOptions` types
+import type {} from '@vitest/browser-playwright'
 import type { BrowserCommandContext, BrowserConfigOptions } from 'vitest/node'
 import type { ScreenshotMatcherOptions } from '../../../../context'
 import type { ScreenshotMatcherArguments } from '../../../shared/screenshotMatcher/types'
@@ -5,16 +9,16 @@ import type { AnyCodec } from './codecs'
 import { platform } from 'node:os'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, extname, join, relative, resolve } from 'pathe'
-import { takeScreenshot } from '../screenshot'
 import { getCodec } from './codecs'
 import { getComparator } from './comparators'
 
-type GlobalOptions = Required<
+type GlobalOptions = Required<Omit<
   NonNullable<
     NonNullable<BrowserConfigOptions['expect']>['toMatchScreenshot']
     & NonNullable<Pick<ScreenshotMatcherArguments[2], 'screenshotOptions'>>
-  >
->
+  >,
+  'comparators'
+>>
 
 const defaultOptions = {
   comparatorName: 'pixelmatch',
@@ -29,6 +33,7 @@ const defaultOptions = {
     scale: 'device',
   },
   timeout: 5_000,
+  strict: true,
   resolveDiffPath: ({
     arg,
     ext,
@@ -66,6 +71,20 @@ type SupportedCodecs = Parameters<typeof getCodec>[0]
 
 const supportedExtensions = ['png'] satisfies SupportedCodecs[]
 
+export interface ResolvedOptions {
+  codec: ReturnType<typeof getCodec>
+  comparator: ReturnType<typeof getComparator>
+  resolvedOptions: GlobalOptions
+  paths: {
+    reference: string
+    diffs: {
+      reference: string
+      actual: string
+      diff: string
+    }
+  }
+}
+
 export function resolveOptions(
   {
     context,
@@ -78,19 +97,7 @@ export function resolveOptions(
     testName: string
     options: ScreenshotMatcherOptions
   },
-): {
-  codec: ReturnType<typeof getCodec>
-  comparator: ReturnType<typeof getComparator>
-  resolvedOptions: GlobalOptions
-  paths: {
-    reference: string
-    diffs: {
-      reference: string
-      actual: string
-      diff: string
-    }
-  }
-} {
+): ResolvedOptions {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
   }
@@ -137,11 +144,12 @@ export function resolveOptions(
     testFileName: basename(context.testPath),
     testName: sanitize(testName, false),
     browserName: context.project.config.browser.name,
+    project: context.project,
   } satisfies Parameters<GlobalOptions['resolveDiffPath']>[0]
 
   return {
     codec: getCodec(extension),
-    comparator: getComparator(resolvedOptions.comparatorName),
+    comparator: getComparator(resolvedOptions.comparatorName, context),
     resolvedOptions,
     paths: {
       reference: resolvedOptions.resolveScreenshotPath(resolvePathData),
@@ -225,25 +233,41 @@ function sanitizeArg(input: string): string {
  *
  * @returns `Promise` resolving to the decoded screenshot data
  */
-export function takeDecodedScreenshot({
-  codec,
+export function takeScreenshotBuffer({
   context,
   element,
   name,
   screenshotOptions,
+  target,
+}: {
+  context: BrowserCommandContext
+  element?: SerializedLocator
+  name: string
+  screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
+  target?: ScreenshotMatcherArguments[2]['target']
+}): Promise<Buffer<ArrayBufferLike>> {
+  return context.triggerCommand(
+    '__vitest_takeScreenshot',
+    name,
+    { ...screenshotOptions, save: false, element, target },
+  ).then(
+    ({ buffer }) => buffer,
+  )
+}
+
+export function takeDecodedScreenshot({
+  codec,
+  ...options
 }: {
   codec: AnyCodec
   context: BrowserCommandContext
-  element: string
+  element?: SerializedLocator
   name: string
   screenshotOptions: ScreenshotMatcherArguments[2]['screenshotOptions']
+  target?: ScreenshotMatcherArguments[2]['target']
 }): ReturnType<AnyCodec['decode']> {
-  return takeScreenshot(
-    context,
-    name,
-    { ...screenshotOptions, save: false, element },
-  ).then(
-    ({ buffer }) => codec.decode(buffer, {}),
+  return takeScreenshotBuffer(options).then(
+    buffer => codec.decode(buffer, {}),
   )
 }
 

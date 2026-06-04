@@ -4,17 +4,35 @@ title: Test Filtering | Guide
 
 # Test Filtering
 
-Filtering, timeouts, concurrent for suite and tests
+As your test suite grows, running every test on every change becomes slow and distracting. If you're fixing a bug in a single module, you don't need to wait for hundreds of unrelated tests to finish. Test filtering lets you narrow down which tests run so you can stay focused on the code you're actively working on.
 
-## CLI
+Vitest offers several ways to filter tests: from the command line, inside your test files, and through tags. Each approach is useful in different situations.
 
-You can use CLI to filter test files by name:
+::: tip Performance Note
+Filters like `-t`, `--tags-filter`, `.only`, and `.skip` are applied *per test file* — Vitest still has to run each test file to discover which tests match. In a large project, this overhead adds up even if only a few tests actually execute.
+
+To avoid this, always pass a file path alongside your filter so Vitest only loads the files you care about:
 
 ```bash
-$ vitest basic
+vitest utils.test.ts -t "handles empty input"
 ```
 
-Will only execute test files that contain `basic`, e.g.
+Alternatively, you can use the [`--experimental.preParse`](/config/experimental#experimental-preparse) flag, which parses test files to discover test names without fully executing them:
+
+```bash
+vitest --experimental.preParse -t "handles empty input"
+```
+:::
+
+## Filtering by File Name
+
+The simplest way to run a subset of tests is to pass a filename pattern as a CLI argument. Vitest will only run test files whose path contains the given string:
+
+```bash
+vitest basic
+```
+
+This matches any test file with `basic` in its path:
 
 ```
 basic.test.ts
@@ -22,112 +40,140 @@ basic-foo.test.ts
 basic/foo.test.ts
 ```
 
-You can also use the `-t, --testNamePattern <pattern>` option to filter tests by full name. This can be helpful when you want to filter by the name defined within a file rather than the filename itself.
+This is useful when you know which file you need to work on and want to skip everything else.
 
-Since Vitest 3, you can also specify the test by filename and line number:
+## Filtering by Test Name
 
-```bash
-$ vitest basic/foo.test.ts:10
-```
-
-::: warning
-Note that Vitest requires the full filename for this feature to work. It can be relative to the current working directory or an absolute file path.
+Sometimes the test you care about is buried in a file with many other tests. The `-t` (or `--testNamePattern`) option filters by the test's name rather than the filename. It accepts a regex pattern and matches against the full test name, which includes any `describe` block names:
 
 ```bash
-$ vitest basic/foo.js:10 # ✅
-$ vitest ./basic/foo.js:10 # ✅
-$ vitest /users/project/basic/foo.js:10 # ✅
-$ vitest foo:10 # ❌
-$ vitest ./basic/foo:10 # ❌
+vitest -t "handles empty input"
 ```
 
-At the moment Vitest also doesn't support ranges:
+You can combine this with a file filter to narrow things down further:
 
 ```bash
-$ vitest basic/foo.test.ts:10, basic/foo.test.ts:25 # ✅
-$ vitest basic/foo.test.ts:10-25 # ❌
-```
-:::
-
-## Specifying a Timeout
-
-You can optionally pass a timeout in milliseconds as a third argument to tests. The default is [5 seconds](/config/#testtimeout).
-
-```ts
-import { test } from 'vitest'
-
-test('name', async () => { /* ... */ }, 1000)
+vitest utils -t "handles empty input"
 ```
 
-Hooks also can receive a timeout, with the same 5 seconds default.
+This runs only tests whose name matches `"handles empty input"` inside files matching `utils`.
 
-```ts
-import { beforeAll } from 'vitest'
+## Filtering by Line Number
 
-beforeAll(async () => { /* ... */ }, 1000)
+When you're looking at a specific test in your editor, you often just want to run *that one test*. You can point directly to a line number:
+
+```bash
+vitest basic/foo.test.ts:10
 ```
 
-## Skipping Suites and Tests
+Vitest will run the test that contains line 10. This requires the full filename (relative or absolute):
 
-Use `.skip` to avoid running certain suites or tests
+```bash
+vitest basic/foo.test.ts:10 # ✅
+vitest ./basic/foo.test.ts:10 # ✅
+vitest /users/project/basic/foo.test.ts:10 # ✅
+vitest foo:10 # ❌ partial name won't work
+vitest ./basic/foo:10 # ❌ missing file extension
+```
+
+To run multiple specific tests, separate them with spaces:
+
+```bash
+vitest basic/foo.test.ts:10 basic/foo.test.ts:25 # ✅
+vitest basic/foo.test.ts:10-25 # ❌ ranges are not supported
+```
+
+## Filtering by Tags
+
+For larger projects, you may want to categorize tests and run them by category. [Tags](/guide/test-tags) let you label tests and then filter by those labels from the CLI:
 
 ```ts
-import { assert, describe, it } from 'vitest'
-
-describe.skip('skipped suite', () => {
-  it('test', () => {
-    // Suite skipped, no error
-    assert.equal(Math.sqrt(4), 3)
-  })
+test('renders a form', { tags: ['frontend'] }, () => {
+  // ...
 })
 
-describe('suite', () => {
-  it.skip('skipped test', () => {
-    // Test skipped, no error
-    assert.equal(Math.sqrt(4), 3)
-  })
+test('calls an external API', { tags: ['backend'] }, () => {
+  // ...
 })
 ```
 
-## Selecting Suites and Tests to Run
+```bash
+vitest --tags-filter=frontend
+```
 
-Use `.only` to only run certain suites or tests
+This is particularly helpful in CI pipelines where you might want to run frontend and backend tests in separate jobs, or skip slow integration tests during quick checks.
+
+## Focusing on Specific Tests with `.only`
+
+When you're debugging a failing test, you want to run just that test without modifying CLI arguments every time. Adding `.only` to a test or suite tells Vitest to skip everything else in the file:
 
 ```ts
-import { assert, describe, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-// Only this suite (and others marked with only) are run
 describe.only('suite', () => {
   it('test', () => {
-    assert.equal(Math.sqrt(4), 3)
+    // This runs because the suite is marked with .only
+    expect(Math.sqrt(4)).toBe(2)
   })
 })
 
 describe('another suite', () => {
   it('skipped test', () => {
-    // Test skipped, as tests are running in Only mode
-    assert.equal(Math.sqrt(4), 3)
+    // This does not run
+    expect(Math.sqrt(4)).toBe(2)
   })
 
-  it.only('test', () => {
-    // Only this test (and others marked with only) are run
-    assert.equal(Math.sqrt(4), 2)
+  it.only('focused test', () => {
+    // This also runs because it is marked with .only
+    expect(Math.sqrt(4)).toBe(2)
   })
 })
 ```
 
-## Unimplemented Suites and Tests
+You can use `.only` on both `describe` blocks and individual tests. When any test or suite in a file is marked with `.only`, all unmarked tests in that file are skipped.
 
-Use `.todo` to stub suites and tests that should be implemented
+::: warning
+Remember to remove `.only` before committing. By default, Vitest will fail the entire test run if it encounters `.only` in CI (when `process.env.CI` is set), preventing you from accidentally skipping tests in your pipeline. This behavior is controlled by the [`allowOnly`](/config/allowonly) option.
+
+To catch `.only` even earlier, the [`no-focused-tests`](https://github.com/vitest-dev/eslint-plugin-vitest/blob/main/docs/rules/no-focused-tests.md) ESLint rule (also available in [oxlint](https://oxc.rs/docs/guide/usage/linter/rules/jest/no-focused-tests.html)) can flag it in your editor before you commit.
+:::
+
+## Skipping Tests with `.skip`
+
+The opposite of `.only` is `.skip`. Use it to temporarily disable a test or suite without deleting it. Skipped tests still show up in the report so you don't forget about them:
+
+```ts
+import { describe, expect, it } from 'vitest'
+
+describe.skip('skipped suite', () => {
+  it('test', () => {
+    // This entire suite is skipped
+    expect(Math.sqrt(4)).toBe(2)
+  })
+})
+
+describe('suite', () => {
+  it.skip('skipped test', () => {
+    // Just this one test is skipped
+    expect(Math.sqrt(4)).toBe(2)
+  })
+})
+```
+
+This is useful when a test is flaky or depends on an external service that's temporarily down. It lets you keep the test in place as a reminder while unblocking the rest of the suite.
+
+## Placeholder Tests with `.todo`
+
+When planning new features, you might know what tests you'll need before you write the actual implementation. `.todo` marks a test as planned but not yet written. It shows up in the report as a reminder:
 
 ```ts
 import { describe, it } from 'vitest'
 
-// An entry will be shown in the report for this suite
 describe.todo('unimplemented suite')
 
-// An entry will be shown in the report for this test
 describe('suite', () => {
   it.todo('unimplemented test')
 })
 ```
+
+Unlike `.skip`, a `.todo` test has no test body. It's purely a placeholder for future work.

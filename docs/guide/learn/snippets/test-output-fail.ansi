@@ -1,0 +1,16 @@
+ [31mFAIL[39m src/utils.test.js [2m>[22m Math.sqrt [2m>[22m returns the square root of perfect squares
+[31mAssertionError: expected 3 to be 2[39m
+
+[31m- Expected[39m
+[32m+ Received[39m
+
+  [31m2[39m
+  [32m3[39m
+
+ [2m❯[22m [36msrc/utils.test.js[39m[2m:5:28[22m
+[2m      3|[22m   [34mtest[39m([32m'returns the square root of perfect squares'[39m, () => {
+[2m      4|[22m     [34mexpect[39m(Math.[34msqrt[39m([34m4[39m)).[34mtoBe[39m([34m2[39m)
+[2m      5|[22m     [34mexpect[39m(Math.[34msqrt[39m([34m9[39m)).[34mtoBe[39m([34m2[39m)
+                                  [31m^[39m
+[2m      6|[22m   })
+[2m      7|[22m

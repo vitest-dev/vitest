@@ -4,7 +4,7 @@ import { parseModule } from 'magicast'
 
 import { expect, test, vi } from 'vitest'
 import { defineConfig } from 'vitest/config'
-import { BaseCoverageProvider } from 'vitest/coverage'
+import { BaseCoverageProvider } from 'vitest/node'
 
 const initialThresholds = { lines: 1, branches: 2, functions: 3, statements: 4 }
 const coveredThresholds = { lines: 50, branches: 60, functions: 70, statements: 80 }
@@ -154,6 +154,22 @@ test('formats values with custom formatter', async () => {
   const calls = autoUpdate.mock.calls.flatMap(call => call[0])
 
   expect(calls.sort()).toEqual([50, 60, 70, 80])
+})
+
+test('passes previous threshold as second argument to custom formatter', async () => {
+  const config = parseModule(`export default ${initialConfig}`)
+
+  const autoUpdate = vi.fn().mockImplementation(value => value)
+  await updateThresholds(config, { thresholds: { autoUpdate } })
+
+  const previousValues = autoUpdate.mock.calls.map(call => [call[0], call[1]])
+
+  expect(previousValues.sort((a, b) => a[0] - b[0])).toEqual([
+    [coveredThresholds.lines, initialThresholds.lines],
+    [coveredThresholds.branches, initialThresholds.branches],
+    [coveredThresholds.functions, initialThresholds.functions],
+    [coveredThresholds.statements, initialThresholds.statements],
+  ].sort((a, b) => a[0] - b[0]))
 })
 
 async function updateThresholds(configurationFile: ReturnType<typeof parseModule>, _coverageOptions: Partial<(InstanceType<typeof BaseCoverageProvider>)['options']> = {}) {

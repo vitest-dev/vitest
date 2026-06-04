@@ -1,9 +1,16 @@
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import { onTestFinished } from 'vitest'
 
 export async function runDynamicFileESM() {
-  const filename = fileURLToPath(new URL('./dynamic-file-esm.ignore.js', import.meta.url))
+  const fileUrl = new URL('./dynamic-file-esm.ignore.js', import.meta.url)
+  const filename = fileURLToPath(fileUrl)
+  onTestFinished(() => {
+    if(existsSync(filename)) {
+      rmSync(filename)
+    }
+  })
 
   if (existsSync(filename)) {
     rmSync(filename)
@@ -17,13 +24,11 @@ export function run() {
 function uncovered() {}
   `.trim(), 'utf-8')
 
-  const { run } = await import(/* @vite-ignore */ filename)
+  const { run } = await import(/* @vite-ignore */ fileUrl.href)
 
   if (run() !== 'Import works') {
     throw new Error(`Failed to run ${filename}`)
   }
-
-  rmSync(filename)
 
   return "Done"
 }
@@ -34,6 +39,11 @@ export async function runDynamicFileCJS() {
   if (existsSync(filename)) {
     rmSync(filename)
   }
+  onTestFinished(() => {
+    if(existsSync(filename)) {
+      rmSync(filename)
+    }
+  })
 
   writeFileSync(filename, `
 // File created by coverage/fixtures/src/dynamic-files.ts
@@ -48,8 +58,6 @@ function uncovered() {}
   if (run() !== 'Import works') {
     throw new Error(`Failed to run ${filename}`)
   }
-
-  rmSync(filename)
 
   return "Done"
 }

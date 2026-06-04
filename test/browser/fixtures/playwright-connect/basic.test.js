@@ -10,3 +10,7 @@ test('[playwright] Run browser-only test in browser via connect mode', () => {
   expect(element instanceof HTMLElement).toBe(true)
   expect(element instanceof HTMLInputElement).not.toBe(true)
 })
+
+test('[playwright] applies launch options from connect header', () => {
+  expect(navigator.userAgent).toContain('VitestLaunchOptionsTester')
+})

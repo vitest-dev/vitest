@@ -121,10 +121,55 @@ tests/test1.test.ts
 tests/test2.test.ts
 ```
 
+Since Vitest 4.1, you may pass `--static-parse` to [parse test files](/api/advanced/vitest#parsespecifications) instead of running them to collect tests. Vitest parses test files with limited concurrency, defaulting to `os.availableParallelism()`. You can change it via the `--static-parse-concurrency` option.
+
+## Shell Autocompletions
+
+Vitest provides shell autocompletions for commands, options, and option values powered by [`@bomb.sh/tab`](https://github.com/bombshell-dev/tab).
+
+### Setup
+
+For permanent setup in zsh, add this to your `~/.zshrc`:
+
+```bash
+# Add to ~/.zshrc for permanent autocompletions (same can be done for other shells)
+source <(vitest complete zsh)
+```
+
+### Package Manager Integration
+
+`@bomb.sh/tab` integrates with [package managers](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions). Autocompletions work when running vitest directly:
+
+::: code-group
+
+```bash [npm]
+npm vitest <Tab>
+```
+
+```bash [npm]
+npm exec vitest <Tab>
+```
+
+```bash [pnpm]
+pnpm vitest <Tab>
+```
+
+```bash [yarn]
+yarn vitest <Tab>
+```
+
+```bash [bun]
+bun vitest <Tab>
+```
+
+:::
+
+For package manager autocompletions, you should install [tab's package manager completions](https://github.com/bombshell-dev/tab?tab=readme-ov-file#package-manager-completions) separately.
+
 ## Options
 
 ::: tip
-Vitest supports both camel case and kebab case for CLI arguments. For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
+Vitest supports both camel case and kebab case for [CLI arguments](https://github.com/cacjs/cac#dot-nested-options). For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
 
 Vitest also supports different ways of specifying the value: `--reporter dot` and `--reporter=dot` are both valid.
 
@@ -146,8 +191,8 @@ vitest --api=false
 
 ### changed
 
-- **Type**: `boolean | string`
-- **Default**: false
+- **Type:** `boolean | string`
+- **Default:** false
 
 Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
@@ -155,12 +200,12 @@ To run tests against changes made in the last commit, you can use `--changed HEA
 
 When used with code coverage the report will contain only the files that were related to the changes.
 
-If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
+If paired with the [`forceRerunTriggers`](/config/forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
 
 ### shard
 
-- **Type**: `string`
-- **Default**: disabled
+- **Type:** `string`
+- **Default:** disabled
 
 Test suite shard to execute in a format of `<index>`/`<count>`, where
 
@@ -180,17 +225,15 @@ You cannot use this option with `--watch` enabled (enabled in dev by default).
 :::
 
 ::: tip
-If `--reporter=blob` is used without an output file, the default path will include the current shard config to avoid collisions with other Vitest processes.
+If `--reporter=blob` is used without an output file, the default path will include the current shard config and blob label from `VITEST_BLOB_LABEL` or the blob reporter `label` option to avoid collisions with other Vitest processes.
 :::
 
 ### merge-reports
 
 - **Type:** `boolean | string`
 
-Merges every blob report located in the specified folder (`.vitest-reports` by default). You can use any reporters with this command (except [`blob`](/guide/reporters#blob-reporter)):
+Merges every blob report located in the specified folder (`.vitest/blob/` by default). You can use any reporters with this command (except [`blob`](/guide/reporters#blob-reporter)):
 
 ```sh
 vitest --merge-reports --reporter=junit
 ```
-
-[cac's dot notation]: https://github.com/cacjs/cac#dot-nested-options

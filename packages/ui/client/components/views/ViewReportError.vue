@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ParsedStack, TestError } from 'vitest'
+import { computed } from 'vue'
 import { showLocationSource } from '~/composables/codemirror'
-import { isTestFile, openInEditor } from '~/composables/error'
+import { isDark } from '~/composables/dark'
+import { createAnsiToHtmlFilter, isTestFile, openInEditor } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -30,6 +32,10 @@ const diff = computed(() =>
     : undefined,
 )
 
+const message = computed(() =>
+  filter.value.toHtml(escapeHtml(props.error.message || '')),
+)
+
 function showCode(stack: ParsedStack) {
   if (isTestFile(stack.file, props.filename)) {
     return showLocationSource(props.fileId, stack)
@@ -40,7 +46,7 @@ function showCode(stack: ParsedStack) {
 
 <template>
   <div class="scrolls scrolls-rounded task-error">
-    <pre><b>{{ error.name }}</b>: {{ error.message }}</pre>
+    <pre><b>{{ error.name }}</b>: <span v-html="message" /></pre>
     <div
       v-for="(stack, i) of error.stacks"
       :key="i"
@@ -51,7 +57,7 @@ function showCode(stack: ParsedStack) {
  - {{ relative(stack.file) }}:{{ stack.line }}:{{ stack.column }}</pre>
       <div
         v-tooltip.bottom="'Open in Editor'"
-        class="i-carbon-launch c-red-600 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
+        class="i-carbon-launch c-red-700 dark:c-red-400 hover:cursor-pointer min-w-1em min-h-1em"
         tabindex="0"
         aria-label="Open in Editor"
         @click.passive="showCode(stack)"

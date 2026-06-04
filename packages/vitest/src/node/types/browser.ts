@@ -1,19 +1,16 @@
 import type { MockedModule } from '@vitest/mocker'
-import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ParsedStack, TestError } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ViteDevServer } from 'vite'
+import type { Plugin, ViteDevServer } from 'vite'
+import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
 import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
+import type { OTELCarrier } from '../../utils/traces'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
-export interface CDPSession {
-  send: (method: string, params?: Record<string, unknown>) => Promise<unknown>
-  on: (event: string, listener: (...args: unknown[]) => void) => void
-  once: (event: string, listener: (...args: unknown[]) => void) => void
-  off: (event: string, listener: (...args: unknown[]) => void) => void
-}
+export type { CDPSession }
 
 export interface BrowserModuleMocker {
   register: (sessionId: string, module: MockedModule) => Promise<void>
@@ -25,23 +22,71 @@ export interface BrowserProviderOption<Options extends object = object> {
   name: string
   supportedBrowser?: ReadonlyArray<string>
   options: Options
-  factory: (project: TestProject) => BrowserProvider
+  providerFactory: (project: TestProject) => BrowserProvider
+  serverFactory: BrowserServerFactory
+}
+
+export interface BrowserServerOptions {
+  project: TestProject
+  coveragePlugin: () => Plugin
+  mocksPlugins: (options: { filter: (id: string) => boolean }) => Plugin[]
+  metaEnvReplacer: () => Plugin
+}
+
+export interface BrowserServerFactory {
+  (options: BrowserServerOptions): Promise<ParentProjectBrowser>
 }
 
 export interface BrowserProvider {
   name: string
   mocker?: BrowserModuleMocker
+  readonly initScripts?: string[]
   /**
    * @experimental opt-in into file parallelisation
    */
   supportsParallelism: boolean
   getCommandsContext: (sessionId: string) => Record<string, unknown>
-  openPage: (sessionId: string, url: string) => Promise<void>
+  openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
+export interface _BrowserNames {}
+
+export interface BrowserTraceViewOptions {
+  /**
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  enabled?: boolean
+
+  /**
+   * Capture canvas pixels in trace view snapshots.
+   *
+   * This uses rrweb's canvas snapshot support and can increase trace artifact size.
+   * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
+   *
+   * @default false
+   * @experimental
+   */
+  recordCanvas?: boolean
+
+  /**
+   * Inline loaded `<img>` element pixels in trace view snapshots.
+   *
+   * This uses rrweb's image inlining support. It improves offline replay for still images,
+   * but can increase trace artifact size and does not preserve original image resource bytes.
+   *
+   * @default false
+   * @experimental
+   */
+  inlineImages?: boolean
+}
 
 type UnsupportedProperties
   = | 'browser'
@@ -50,7 +95,6 @@ type UnsupportedProperties
     | 'sequence'
     | 'root'
     | 'pool'
-    | 'poolOptions'
   // browser mode doesn't support a custom runner
     | 'runner'
   // non-browser options
@@ -72,14 +116,16 @@ export interface BrowserInstanceOption extends
     | 'testerHtmlPath'
     | 'screenshotDirectory'
     | 'screenshotFailures'
-    | 'provider'
   > {
   /**
    * Name of the browser
    */
-  browser: string
+  browser: keyof _BrowserNames extends never
+    ? string
+    : _BrowserNames[keyof _BrowserNames]
 
   name?: string
+  provider?: BrowserProviderOption
 }
 
 export interface BrowserConfigOptions {
@@ -100,10 +146,21 @@ export interface BrowserConfigOptions {
   /**
    * Configurations for different browser setups
    */
-  instances: BrowserInstanceOption[]
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider
+   * @example
+   * ```ts
+   * import { playwright } from '@vitest/browser-playwright'
+   * export default defineConfig({
+   *   test: {
+   *     browser: {
+   *       provider: playwright(),
+   *     },
+   *   },
+   * })
+   * ```
    */
   provider?: BrowserProviderOption
 
@@ -125,6 +182,7 @@ export interface BrowserConfigOptions {
    * Isolate test environment after each test
    *
    * @default true
+   * @deprecated use top-level `isolate` instead
    */
   isolate?: boolean
 
@@ -133,6 +191,7 @@ export interface BrowserConfigOptions {
    * This option only has effect in headless mode (enabled in CI by default)
    *
    * @default // Same as "test.fileParallelism"
+   * @deprecated use top-level `fileParallelism` instead
    */
   fileParallelism?: boolean
 
@@ -142,6 +201,14 @@ export interface BrowserConfigOptions {
    * @default !process.env.CI
    */
   ui?: boolean
+
+  /**
+   * Default position for the details panel in browser mode
+   * 'right' shows the details panel on the right side (horizontal split)
+   * 'bottom' shows the details panel at the bottom (vertical split)
+   * @default 'right'
+   */
+  detailsPanelPosition?: 'right' | 'bottom'
 
   /**
    * Default viewport size
@@ -168,6 +235,17 @@ export interface BrowserConfigOptions {
      * @default 'data-testid'
      */
     testIdAttribute?: string
+    /**
+     * Should locators match the text exactly by default
+     * @default false
+     */
+    exact?: boolean
+    /**
+     * Format used for locator "Cannot find element" error details.
+     *
+     * @default 'all'
+     */
+    errorFormat?: 'html' | 'aria' | 'all'
   }
 
   /**
@@ -197,6 +275,17 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   *
+   * Enable Vitest trace view artifacts collection.
+   *
+   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
+   *
+   * @default false
+   * @experimental
+   */
+  traceView?: boolean | BrowserTraceViewOptions
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -222,8 +311,8 @@ export interface BrowserConfigOptions {
 
   /**
    * Commands that will be executed on the server
-   * via the browser `import("@vitest/browser/context").commands` API.
-   * @see {@link https://vitest.dev/guide/browser/commands}
+   * via the browser `import("vitest/browser").commands` API.
+   * @see {@link https://vitest.dev/api/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 
@@ -251,7 +340,7 @@ export interface BrowserConfigOptions {
   /**
    * Enables tracking uncaught errors and exceptions so they can be reported by Vitest.
    *
-   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/#onunhandlederror) option instead.
+   * If you need to hide certain errors, it is recommended to use [`onUnhandledError`](https://vitest.dev/config/onunhandlederror) option instead.
    *
    * Disabling this will completely remove all Vitest error handlers, which can help debugging with the "Pause on exceptions" checkbox turned on.
    * @default true
@@ -264,11 +353,30 @@ export interface BrowserCommandContext {
   provider: BrowserProvider
   project: TestProject
   sessionId: string
+  mark: (name: string, options?: MarkOptions) => Promise<void>
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
+  /**
+   * Returns Vitest's cached CDP handler for the current tester RPC connection.
+   * This works similar to client `cdp()` API.
+   *
+   * Unlike `provider.getCDPSession`, this preserves CDP session state across
+   * multiple command calls from the same browser tester. This matters for
+   * stateful CDP domains such as `Profiler`, where `startPreciseCoverage` and
+   * `takePreciseCoverage` must run on the same CDP session.
+   *
+   * @internal
+   */
+  __ensureCDPHandler: () => Promise<any> // use `any` since type is messy
 }
 
 export interface BrowserServerStateSession {
   project: TestProject
+  otelCarrier?: OTELCarrier
   connected: () => void
+  ready: () => void
   fail: (v: Error) => void
 }
 
@@ -285,6 +393,7 @@ export interface BrowserServerState {
 
 export interface ParentProjectBrowser {
   spawn: (project: TestProject) => ProjectBrowser
+  vite: ViteDevServer
 }
 
 export interface ProjectBrowser {
@@ -295,10 +404,22 @@ export interface ProjectBrowser {
   initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
+  registerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    cb: BrowserCommand<
+      Parameters<BrowserCommands[K]>,
+      ReturnType<BrowserCommands[K]>
+    >,
+  ) => void
+  triggerCommand: <K extends keyof BrowserCommands>(
+    name: K,
+    context: BrowserCommandContext,
+    ...args: Parameters<BrowserCommands[K]>
+  ) => ReturnType<BrowserCommands[K]>
 }
 
-export interface BrowserCommand<Payload extends unknown[] = []> {
-  (context: BrowserCommandContext, ...payload: Payload): Awaitable<any>
+export interface BrowserCommand<Payload extends unknown[] = [], ReturnValue = any> {
+  (context: BrowserCommandContext, ...payload: Payload): Awaitable<ReturnValue>
 }
 
 export interface BrowserScript {
@@ -345,15 +466,17 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
   screenshotFailures: boolean
   locators: {
     testIdAttribute: string
+    exact: boolean
+    errorFormat: 'html' | 'aria' | 'all'
   }
   trace: {
     mode: BrowserTraceViewMode
     tracesDir?: string
     screenshots?: boolean
     snapshots?: boolean
-    // TODO: map locations to test ones
-    // sources?: boolean
+    sources?: boolean
   }
+  traceView: Required<BrowserTraceViewOptions>
 }
 
 type ToMatchScreenshotResolvePath = (data: {
@@ -395,18 +518,18 @@ type ToMatchScreenshotResolvePath = (data: {
   platform: NodeJS.Platform
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/guide/browser/config#browser-screenshotdirectory|browser.screenshotDirectory},
+   * {@linkcode https://vitest.dev/config/browser/screenshotdirectory|browser.screenshotDirectory},
    * if none is provided, its default value.
    */
   screenshotDirectory: string
   /**
    * Absolute path to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   root: string
   /**
    * Path to the test file, relative to the project's
-   * {@linkcode https://vitest.dev/config/#root|root}.
+   * {@linkcode https://vitest.dev/config/root|root}.
    */
   testFileDirectory: string
   /**
@@ -420,10 +543,16 @@ type ToMatchScreenshotResolvePath = (data: {
   testName: string
   /**
    * The value provided to
-   * {@linkcode https://vitest.dev/config/#attachmentsdir|attachmentsDir},
+   * {@linkcode https://vitest.dev/config/attachmentsdir|attachmentsDir},
    * if none is provided, its default value.
    */
   attachmentsDir: string
+  /**
+   * The {@linkcode https://vitest.dev/api/advanced/test-project|TestProject} the test belongs to.
+   *
+   * @experimental
+   */
+  project: TestProject
 }) => string
 
 export interface ToMatchScreenshotOptions {

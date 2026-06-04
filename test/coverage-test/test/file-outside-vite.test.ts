@@ -23,7 +23,7 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
   }
   else {
     // On istanbul the instrumentation happens on Vite plugin, so files
-    // loaded outsite Vite should have 0% coverage
+    // loaded outside Vite should have 0% coverage
     expect(fileCoverage).toMatchInlineSnapshot(`
       {
         "branches": "0/0 (100%)",

@@ -1,11 +1,11 @@
 {
   "name": "@vitest/snapshot",
   "type": "module",
-  "version": "4.0.0-beta.13",
+  "version": "5.0.0-beta.4",
   "description": "Vitest snapshot manager",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/snapshot#readme",
+  "homepage": "https://vitest.dev/guide/snapshot",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,21 +14,29 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "snapshot"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
+      "__vitest_source__": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./environment": {
+      "__vitest_source__": "./src/environment.ts",
       "types": "./dist/environment.d.ts",
       "default": "./dist/environment.js"
     },
     "./manager": {
+      "__vitest_source__": "./src/manager.ts",
       "types": "./dist/manager.d.ts",
       "default": "./dist/manager.js"
     },
-    "./*": "./*"
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -43,12 +51,12 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
     "pathe": "catalog:"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",
-    "@vitest/utils": "workspace:*",
     "natural-compare": "^1.4.0"
   }
 }

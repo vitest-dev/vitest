@@ -1,26 +1,19 @@
-import type { Task, TestAttachment } from '@vitest/runner'
-import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
-import type { HTMLOptions, Vitest } from 'vitest/node'
-import type { Reporter } from 'vitest/reporters'
-import crypto from 'node:crypto'
-import { promises as fs } from 'node:fs'
-import { readFile, writeFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
+import type { SerializedError, TestAttachment } from 'vitest'
+import type { HTMLOptions, Reporter, ResolvedConfig, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+import type { HTMLReportMetadata } from '../client/composables/client/static'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
-import mime from 'mime/lite'
-import { dirname, extname, relative, resolve } from 'pathe'
-import { globSync } from 'tinyglobby'
+import { dirname, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { distClientRoot } from './paths'
 
-interface PotentialConfig {
-  outputFile?: string | Partial<Record<string, string>>
-}
+const gzipAsync = promisify(gzip)
 
-function getOutputFile(config: PotentialConfig | undefined) {
-  if (!config?.outputFile) {
+function getOutputFile(config: ResolvedConfig) {
+  if (!config.outputFile) {
     return
   }
 
@@ -31,26 +24,11 @@ function getOutputFile(config: PotentialConfig | undefined) {
   return config.outputFile.html
 }
 
-interface HTMLReportData {
-  paths: string[]
-  files: RunnerTestFile[]
-  config: SerializedConfig
-  projects: string[]
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
-  unhandledErrors: unknown[]
-  // filename -> source
-  sources: Record<string, string>
-}
-
-const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
-
 export default class HTMLReporter implements Reporter {
-  start = 0
   ctx!: Vitest
   options: HTMLOptions
 
   private reporterDir!: string
-  private htmlFilePath!: string
 
   constructor(options: HTMLOptions) {
     this.options = options
@@ -58,138 +36,50 @@ export default class HTMLReporter implements Reporter {
 
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
-    this.start = Date.now()
     const htmlFile
       = this.options.outputFile
         || getOutputFile(this.ctx.config)
         || 'html/index.html'
     const htmlFilePath = resolve(this.ctx.config.root, htmlFile)
     this.reporterDir = dirname(htmlFilePath)
-    this.htmlFilePath = htmlFilePath
-
-    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
-    await fs.mkdir(resolve(this.reporterDir, 'assets'), { recursive: true })
   }
 
-  async onTestRunEnd(): Promise<void> {
-    const result: HTMLReportData = {
-      paths: this.ctx.state.getPaths(),
-      files: this.ctx.state.getFiles(),
-      config: this.ctx.getRootProject().serializedConfig,
-      unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      projects: this.ctx.projects.map(p => p.name),
-      moduleGraph: {},
-      sources: {},
-    }
-    const promises: Promise<void>[] = []
-
-    const processAttachments = (task: Task) => {
-      if (task.type === 'test') {
-        task.annotations.forEach((annotation) => {
-          const attachment = annotation.attachment
-          if (attachment) {
-            promises.push(this.processAttachment(attachment))
-          }
-        })
-      }
-      else {
-        task.tasks.forEach(processAttachments)
-      }
+  async onTestRunEnd(
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
+  ): Promise<void> {
+    const result = await serializeReportMetadata(
+      this.ctx,
+      testModules,
+      unhandledErrors,
+    )
+    if (this.options.singleFile) {
+      await inlineAttachments(result.files)
     }
 
-    promises.push(...result.files.map(async (file) => {
-      processAttachments(file)
-      const projectName = file.projectName || ''
-      const resolvedConfig = this.ctx.getProjectByName(projectName).config
-      const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
-      result.moduleGraph[projectName] ??= {}
-      result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-        this.ctx,
-        projectName,
-        file.filepath,
-        browser,
-      )
-      if (!result.sources[file.filepath]) {
-        try {
-          result.sources[file.filepath] = await fs.readFile(file.filepath, {
-            encoding: 'utf-8',
-          })
-        }
-        catch {
-          // just ignore
-        }
-      }
-    }))
+    // copy ui assets
+    await fs.cp(distClientRoot, this.reporterDir, { recursive: true })
 
-    await Promise.all(promises)
-    await this.writeReport(stringify(result))
-  }
-
-  async processAttachment(attachment: TestAttachment): Promise<void> {
-    if (attachment.path) {
-      // keep external resource as is, but remove body if it's set somehow
-      if (
-        attachment.path.startsWith('http://')
-        || attachment.path.startsWith('https://')
-      ) {
-        attachment.body = undefined
-        return
-      }
-
-      const buffer = await readFile(attachment.path)
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const filename = hash + extname(attachment.path)
-      // move the file into an html directory to make access/publishing UI easier
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
-      return
-    }
-
-    if (attachment.body) {
-      const buffer = typeof attachment.body === 'string'
-        ? Buffer.from(attachment.body, 'base64')
-        : Buffer.from(attachment.body)
-
-      const hash = crypto.createHash('sha1').update(buffer).digest('hex')
-      const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
-      const filename = `${hash}.${extension}`
-      // store the file in html directory instead of passing down as a body
-      await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
-      attachment.path = filename
-      attachment.body = undefined
-    }
-  }
-
-  async writeReport(report: string): Promise<void> {
-    const metaFile = resolve(this.reporterDir, 'html.meta.json.gz')
-
-    const promiseGzip = promisify(gzip)
-    const data = await promiseGzip(report, {
+    // create index.html and metadata
+    const rawData = stringify(result)
+    const data = await gzipAsync(rawData, {
       level: zlibConstants.Z_BEST_COMPRESSION,
     })
-    await fs.writeFile(metaFile, data, 'base64')
-    const ui = resolve(distDir, 'client')
-    // copy ui
-    const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
-    await Promise.all(
-      files.map(async (f) => {
-        if (f === 'index.html') {
-          const html = await fs.readFile(resolve(ui, f), 'utf-8')
-          const filePath = relative(this.reporterDir, metaFile)
-          await fs.writeFile(
-            this.htmlFilePath,
-            html.replace(
-              '<!-- !LOAD_METADATA! -->',
-              `<script>window.METADATA_PATH="${filePath}"</script>`,
-            ),
-          )
-        }
-        else {
-          await fs.copyFile(resolve(ui, f), resolve(this.reporterDir, f))
-        }
-      }),
-    )
+    await handleIndexHtml({
+      srcDir: distClientRoot,
+      dstDir: this.reporterDir,
+      data,
+      singleFile: this.options.singleFile,
+    })
+
+    // copy attachments
+    // TODO: unify attachmentsDir and html outputFile, so both live together without extra copy
+    if (!this.options.singleFile && existsSync(this.ctx.config.attachmentsDir)) {
+      const destAttachmentsDir = resolve(this.reporterDir, 'data')
+      await fs.rm(destAttachmentsDir, { recursive: true, force: true })
+      await fs.mkdir(destAttachmentsDir, { recursive: true })
+      await fs.cp(this.ctx.config.attachmentsDir, destAttachmentsDir, { recursive: true })
+    }
 
     this.ctx.logger.log(
       `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
@@ -202,4 +92,220 @@ export default class HTMLReporter implements Reporter {
       )}${c.dim(' to see the test results.')}`,
     )
   }
+
+  async onFinishedReportCoverage(): Promise<void> {
+    if (this.ctx.config.coverage.enabled && this.ctx.config.coverage.htmlDir) {
+      const coverageHtmlDir = this.ctx.config.coverage.htmlDir
+      const destCoverageDir = resolve(this.reporterDir, 'coverage')
+      if (coverageHtmlDir === destCoverageDir) {
+        // skip and preserve already generated coverage report.
+        // this can happen when users configures `outputFile`
+        // next to `coverage.reportsDirectory`.
+        return
+      }
+      await fs.rm(destCoverageDir, { recursive: true, force: true })
+      await fs.mkdir(destCoverageDir, { recursive: true })
+      await fs.cp(coverageHtmlDir, destCoverageDir, { recursive: true })
+    }
+  }
+}
+
+async function serializeReportMetadata(
+  ctx: Vitest,
+  testModules: ReadonlyArray<TestModule>,
+  unhandledErrors: ReadonlyArray<SerializedError>,
+) {
+  const result: HTMLReportMetadata = {
+    files: [],
+    config: ctx.serializedRootConfig,
+    unhandledErrors: [...unhandledErrors],
+    moduleGraph: {},
+    testModules: [],
+    sourceCode: {
+      codeTable: [],
+      testModules: {},
+    },
+  }
+
+  // dedupe based on project relative paths since
+  // they can have different absolute paths for different test runs
+  // when merging with platform blob labels and shards.
+  // Source code is stored in a separate table so the same file included
+  // in multiple projects can share the content while keeping distinct
+  // project-relative test module entries.
+  const testModuleCodes = result.sourceCode.testModules
+  const codeIndexes = new Map<string, number>()
+  function getCodeIndex(code: string) {
+    const existing = codeIndexes.get(code)
+    if (existing != null) {
+      return existing
+    }
+    const index = result.sourceCode.codeTable.length
+    codeIndexes.set(code, index)
+    result.sourceCode.codeTable.push(code)
+    return index
+  }
+
+  const promises: Promise<void>[] = []
+
+  for (const testModule of testModules) {
+    result.files.push(testModule.task)
+
+    const project = testModule.project
+    const projectName = project.name
+    result.testModules.push({
+      projectName,
+      moduleId: testModule.moduleId,
+      relativeModuleId: testModule.relativeModuleId,
+    })
+
+    testModuleCodes[projectName] ??= {}
+    if (testModuleCodes[projectName][testModule.relativeModuleId] == null) {
+      try {
+        const code = readFileSync(
+          testModule.moduleId,
+          'utf-8',
+        )
+        testModuleCodes[projectName][testModule.relativeModuleId] = getCodeIndex(code)
+      }
+      catch {}
+    }
+
+    // TODO: https://github.com/vitest-dev/vitest/issues/9763
+    promises.push((async () => {
+      result.moduleGraph[projectName] ??= {}
+      result.moduleGraph[projectName][testModule.moduleId] = await getModuleGraph(
+        ctx,
+        projectName,
+        testModule.moduleId,
+      )
+    })())
+  }
+
+  await Promise.all(promises)
+
+  return result
+}
+
+async function handleIndexHtml(options: {
+  dstDir: string
+  srcDir: string
+  data: Buffer
+  singleFile?: boolean
+}): Promise<void> {
+  const indexHtmlFilePath = resolve(options.srcDir, 'index.html')
+  let html = await fs.readFile(indexHtmlFilePath, 'utf-8')
+  let metadataCode: string
+
+  if (options.singleFile) {
+    html = await inlineHtmlAssets(indexHtmlFilePath, html)
+    const base64 = options.data.toString('base64')
+    metadataCode = `Promise.resolve((${uint8ArrayFromBase64.toString()})("${base64}"))`
+  }
+  else {
+    const dataFile = 'html.meta.json.gz'
+    await fs.writeFile(resolve(options.dstDir, dataFile), options.data)
+    metadataCode = `fetch(new URL("./${dataFile}", window.location.href)).then(async res => new Uint8Array(await res.arrayBuffer()))`
+  }
+
+  await fs.writeFile(
+    resolve(options.dstDir, 'index.html'),
+    html.replace(
+      '<!-- !LOAD_METADATA! -->',
+      `<script>window.HTML_REPORT_METADATA=${metadataCode}</script>`,
+    ),
+  )
+}
+
+async function inlineAttachments(files: RunnerTestFile[]): Promise<void> {
+  for (const file of files) {
+    await inlineTaskAttachments(file)
+  }
+}
+
+async function inlineTaskAttachments(task: RunnerTask): Promise<void> {
+  if (task.type === 'suite') {
+    for (const child of task.tasks) {
+      await inlineTaskAttachments(child)
+    }
+  }
+  if (task.type === 'test') {
+    for (const annotation of task.annotations) {
+      if (annotation.attachment) {
+        await inlineTestAttachment(annotation.attachment)
+      }
+    }
+    for (const artifact of task.artifacts) {
+      for (const attachment of artifact.attachments ?? []) {
+        await inlineTestAttachment(attachment)
+      }
+    }
+  }
+}
+
+async function inlineTestAttachment(attachment: TestAttachment): Promise<void> {
+  if (attachment.path && !attachment.path.startsWith('http://') && !attachment.path.startsWith('https://')) {
+    try {
+      const buffer = await fs.readFile(attachment.path)
+      attachment.body = buffer.toString('base64')
+      attachment.bodyEncoding = 'base64'
+      attachment.path = undefined
+    }
+    catch {
+      // Keep the path so report generation does not fail when an attachment
+      // cannot be embedded.
+    }
+  }
+}
+
+function uint8ArrayFromBase64(base64: string): Uint8Array {
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64
+  if ('fromBase64' in Uint8Array && typeof Uint8Array.fromBase64 === 'function') {
+    return Uint8Array.fromBase64(base64)
+  }
+  function stringToUint8Array(binary: string): Uint8Array {
+    const len = binary.length
+    const arr = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      arr[i] = binary.charCodeAt(i)
+    }
+    return arr
+  }
+  return stringToUint8Array(atob(base64))
+}
+
+// regex based inlining for packages/ui/dist/client/index.html
+async function inlineHtmlAssets(file: string, content: string): Promise<string> {
+  const baseDir = dirname(file)
+  content = content.replace(
+    /<link rel="icon" href="\.\/favicon\.ico" sizes="48x48">\n/,
+    '',
+  )
+  content = content.replace(
+    /<link rel="icon" href="(\.\/favicon\.svg)" sizes="any" type="image\/svg\+xml">/,
+    (_, asset: string) => {
+      const icon = readFileSync(resolve(baseDir, asset)).toString('base64')
+      return `<link rel="icon" href="data:image/svg+xml;base64,${icon}" sizes="any" type="image/svg+xml">`
+    },
+  )
+  content = content.replace(
+    /<script type="module" src="(\.\/assets\/[^"]+\.js)"><\/script>/,
+    (_, asset: string) => `<script type="module">${escapeInlineScript(readFileSync(resolve(baseDir, asset), 'utf-8'))}</script>`,
+  )
+  content = content.replace(
+    /<link rel="stylesheet" href="(\.\/assets\/[^"]+\.css)">/,
+    (_, asset: string) => `<style>${escapeInlineStyle(readFileSync(resolve(baseDir, asset), 'utf-8'))}</style>`,
+  )
+  return content
+}
+
+function escapeInlineScript(content: string): string {
+  // https://github.com/devongovett/rsc-html-stream/blob/9b858445f4f5817470f373ae266dea04d5fcfac3/server.js#L94-L102
+  return content
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<\/(script)/gi, '</\\$1')
+}
+
+function escapeInlineStyle(content: string): string {
+  return content.replace(/<\/style/gi, '<\\/style')
 }

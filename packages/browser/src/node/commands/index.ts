@@ -1,56 +1,26 @@
-import { clear } from './clear'
-import { click, dblClick, tripleClick } from './click'
-import { dragAndDrop } from './dragAndDrop'
-import { fill } from './fill'
+import { _startV8Coverage, _takeV8Coverage } from './coverage'
 import {
   _fileInfo,
   readFile,
   removeFile,
   writeFile,
 } from './fs'
-import { hover } from './hover'
-import { keyboard, keyboardCleanup } from './keyboard'
 import { screenshot } from './screenshot'
 import { screenshotMatcher } from './screenshotMatcher'
-import { selectOptions } from './select'
-import { tab } from './tab'
-import {
-  annotateTraces,
-  deleteTracing,
-  startChunkTrace,
-  startTracing,
-  stopChunkTrace,
-} from './trace'
-import { type } from './type'
-import { upload } from './upload'
-import { viewport } from './viewport'
+import { _groupTraceEnd, _groupTraceStart, _markTrace, _recordBrowserTrace } from './trace'
 
 export default {
   readFile: readFile as typeof readFile,
   removeFile: removeFile as typeof removeFile,
   writeFile: writeFile as typeof writeFile,
-
   // private commands
+  __vitest_startV8Coverage: _startV8Coverage as typeof _startV8Coverage,
+  __vitest_takeV8Coverage: _takeV8Coverage as typeof _takeV8Coverage,
+  __vitest_markTrace: _markTrace as typeof _markTrace,
+  __vitest_groupTraceStart: _groupTraceStart as typeof _groupTraceStart,
+  __vitest_groupTraceEnd: _groupTraceEnd as typeof _groupTraceEnd,
+  __vitest_recordBrowserTrace: _recordBrowserTrace as typeof _recordBrowserTrace,
   __vitest_fileInfo: _fileInfo as typeof _fileInfo,
-  __vitest_upload: upload as typeof upload,
-  __vitest_click: click as typeof click,
-  __vitest_dblClick: dblClick as typeof dblClick,
-  __vitest_tripleClick: tripleClick as typeof tripleClick,
   __vitest_screenshot: screenshot as typeof screenshot,
-  __vitest_type: type as typeof type,
-  __vitest_clear: clear as typeof clear,
-  __vitest_fill: fill as typeof fill,
-  __vitest_tab: tab as typeof tab,
-  __vitest_keyboard: keyboard as typeof keyboard,
-  __vitest_selectOptions: selectOptions as typeof selectOptions,
-  __vitest_dragAndDrop: dragAndDrop as typeof dragAndDrop,
-  __vitest_hover: hover as typeof hover,
-  __vitest_cleanup: keyboardCleanup as typeof keyboardCleanup,
-  __vitest_viewport: viewport as typeof viewport,
   __vitest_screenshotMatcher: screenshotMatcher as typeof screenshotMatcher,
-  __vitest_deleteTracing: deleteTracing as typeof deleteTracing,
-  __vitest_startChunkTrace: startChunkTrace as typeof startChunkTrace,
-  __vitest_startTracing: startTracing as typeof startTracing,
-  __vitest_stopChunkTrace: stopChunkTrace as typeof stopChunkTrace,
-  __vitest_annotateTraces: annotateTraces as typeof annotateTraces,
 }

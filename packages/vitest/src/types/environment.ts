@@ -25,7 +25,7 @@ export interface Environment {
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
   setup: (
     global: any,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
 }
 

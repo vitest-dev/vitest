@@ -3,6 +3,11 @@ declare class Element {
   tagName: string
 }
 
+// buffer exists only in node
+declare class Buffer {
+  length: number
+}
+
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 const IS_COLLECTION_SYMBOL = '@@__IMMUTABLE_ITERABLE__@@'
 
@@ -120,7 +125,7 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
       obj = Object.getPrototypeOf(obj)
     }
     if (val instanceof Error) {
-      safe(() => val.message = normalizeErrorMessage(val.message))
+      safe(() => clone.message = normalizeErrorMessage(val.message))
     }
     return clone
   }
@@ -136,5 +141,11 @@ function safe(fn: () => void) {
 }
 
 function normalizeErrorMessage(message: string) {
-  return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
+  return message
+    // vite 7+
+    .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+    .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
+    // vitest-browser-* errors will have __vitest_<componentId>__ in their messages
+    .replace(/getByTestId('__vitest_\d+__')/g, 'page')
 }

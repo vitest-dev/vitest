@@ -1,6 +1,6 @@
 import type { SerializedError } from '@vitest/utils'
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
@@ -9,6 +9,9 @@ import { SummaryReporter } from './summary'
 
 export interface DefaultReporterOptions extends BaseOptions {
   summary?: boolean
+
+  /** @internal */
+  summaryOptions?: SummaryReporter['options']
 }
 
 export class DefaultReporter extends BaseReporter {
@@ -42,6 +45,7 @@ export class DefaultReporter extends BaseReporter {
       }
     }
 
+    super.onTestRunStart(specifications)
     this.summary?.onTestRunStart(specifications)
   }
 
@@ -86,6 +90,6 @@ export class DefaultReporter extends BaseReporter {
 
   onInit(ctx: Vitest): void {
     super.onInit(ctx)
-    this.summary?.onInit(ctx, { verbose: this.verbose })
+    this.summary?.onInit(ctx, { verbose: this.verbose, ...this.options.summaryOptions })
   }
 }

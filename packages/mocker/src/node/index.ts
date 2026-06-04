@@ -3,7 +3,7 @@ export { automockModule } from './automock'
 export type { AutomockPluginOptions } from './automockPlugin'
 export { automockPlugin } from './automockPlugin'
 export { dynamicImportPlugin } from './dynamicImportPlugin'
-export { hoistMocks, hoistMocksPlugin } from './hoistMocksPlugin'
+export { hoistMockAndResolve as hoistMocks, hoistMocksPlugin } from './hoistMocksPlugin'
 export type { HoistMocksPluginOptions, HoistMocksResult } from './hoistMocksPlugin'
 export { interceptorPlugin } from './interceptorPlugin'
 

@@ -13,14 +13,14 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput } from './utils'
 
 export default function toHaveFocus(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveFocus, this)
 
   return {

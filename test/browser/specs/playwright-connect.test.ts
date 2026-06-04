@@ -1,62 +1,68 @@
-import { playwright } from '@vitest/browser/providers/playwright'
-import { chromium } from 'playwright'
+import { fileURLToPath } from 'node:url'
+import { playwright } from '@vitest/browser-playwright'
+import { x } from 'tinyexec'
 import { expect, test } from 'vitest'
+import { Cli } from '../../test-utils/cli'
 import { provider } from '../settings'
 import { runBrowserTests } from './utils'
 
-test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', async () => {
-  const browserServer = await chromium.launchServer()
-  const wsEndpoint = browserServer.wsEndpoint()
-
-  const { stdout, exitCode, stderr } = await runBrowserTests({
-    root: './fixtures/playwright-connect',
-    browser: {
-      instances: [
-        {
-          browser: 'chromium',
-          name: 'chromium',
-          provider: playwright({
-            connectOptions: {
-              wsEndpoint,
-            },
-          }),
-        },
-      ],
-    },
+test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', async ({ onTestFinished }) => {
+  const cliPath = fileURLToPath(new URL('./cli.js', import.meta.resolve('@playwright/test')))
+  const subprocess = x(process.execPath, [
+    cliPath,
+    'run-server',
+    '--port',
+    '9898',
+    '--host',
+    '127.0.0.1',
+    '--unsafe',
+  ]).process
+  const cli = new Cli({
+    stdin: subprocess.stdin,
+    stdout: subprocess.stdout,
+    stderr: subprocess.stderr,
+  })
+  let setDone: (value?: unknown) => void
+  const isDone = new Promise(resolve => (setDone = resolve))
+  subprocess.on('exit', () => setDone())
+  onTestFinished(async () => {
+    subprocess.kill('SIGILL')
+    await isDone
   })
 
-  await browserServer.close()
+  await cli.waitForStdout('Listening on ws://127.0.0.1:9898')
 
-  expect(stdout).toContain('Tests  2 passed')
-  expect(exitCode).toBe(0)
-  expect(stderr).toBe('')
-})
-
-test.runIf(provider.name === 'playwright')('[playwright] warns if both connect and launch mode are configured', async () => {
-  const browserServer = await chromium.launchServer()
-  const wsEndpoint = browserServer.wsEndpoint()
-
-  const { stdout, exitCode, stderr } = await runBrowserTests({
-    root: './fixtures/playwright-connect',
-    browser: {
-      instances: [
-        {
-          browser: 'chromium',
-          name: 'chromium',
-          provider: playwright({
-            connectOptions: {
-              wsEndpoint,
-            },
-            launchOptions: {},
-          }),
-        },
-      ],
+  const result = await runBrowserTests(
+    {
+      root: './fixtures/playwright-connect',
+      browser: {
+        instances: [
+          {
+            browser: 'chromium',
+            name: 'chromium',
+            provider: playwright({
+              connectOptions: {
+                wsEndpoint: 'ws://127.0.0.1:9898',
+              },
+              launchOptions: {
+                args: [`--user-agent=VitestLaunchOptionsTester`],
+              },
+            }),
+          },
+        ],
+      },
     },
-  })
+    ['basic.test.js'],
+  )
 
-  await browserServer.close()
-
-  expect(stdout).toContain('Tests  2 passed')
-  expect(exitCode).toBe(0)
-  expect(stderr).toContain('Found both connect and launch options in browser instance configuration.')
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "[playwright] Run basic test in browser via connect mode": "passed",
+        "[playwright] Run browser-only test in browser via connect mode": "passed",
+        "[playwright] applies launch options from connect header": "passed",
+      },
+    }
+  `)
 })

@@ -52,6 +52,8 @@ export function populateGlobal(
 
   const originals = new Map<string | symbol, any>()
 
+  const overriddenKeys = new Set([...KEYS, ...options.additionalKeys || []])
+
   const overrideObject = new Map<string | symbol, any>()
   for (const key of keys) {
     const boundFunction
@@ -60,7 +62,7 @@ export function populateGlobal(
         && !isClassLikeName(key)
         && win[key].bind(win)
 
-    if (KEYS.includes(key) && key in global) {
+    if (overriddenKeys.has(key) && key in global) {
       originals.set(key, global[key])
     }
 
@@ -76,6 +78,10 @@ export function populateGlobal(
       },
       set(v) {
         overrideObject.set(key, v)
+        // propagate changes to underlying window implementation,
+        // which can affect other window API behavior internally, e.g.
+        // updating `innerWidth` affects `matchMedia("(max-width: *)")` on happy-dom.
+        win[key] = v
       },
       configurable: true,
     })

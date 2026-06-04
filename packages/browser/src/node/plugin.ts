@@ -1,16 +1,14 @@
-import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
 import type { Plugin } from 'vitest/config'
-import type { Vitest } from 'vitest/node'
 import type { ParentBrowserProject } from './projectParent'
-import { createReadStream, lstatSync, readFileSync } from 'node:fs'
+import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { toArray } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { basename, dirname, extname, resolve } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import sirv from 'sirv'
-import { coverageConfigDefaults } from 'vitest/config'
 import {
   isFileServingAllowed,
   isValidApiRequest,
@@ -24,7 +22,6 @@ import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddlewa
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
 
-export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
@@ -53,6 +50,20 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           }
           next()
         })
+        // strip _vitest_original query added by importActual so that
+        // the plugin pipeline sees the original import id (e.g. virtual modules's load hook).
+        server.middlewares.use((req, _res, next) => {
+          if (
+            req.url?.includes('_vitest_original')
+            && parentServer.project.config.browser.provider?.name === 'playwright'
+          ) {
+            req.url = req.url
+              .replace(/[?&]_vitest_original(?=[&#]|$)/, '')
+              .replace(/[?&]ext\b[^&#]*/, '')
+              .replace(/\?$/, '')
+          }
+          next()
+        })
         server.middlewares.use(createOrchestratorMiddleware(parentServer))
         server.middlewares.use(createTesterMiddleware(parentServer))
 
@@ -65,21 +76,24 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(parentServer.vitest)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
-          )
-        }
-
-        if (coverageFolder) {
+        // Serve coverage HTML at ./coverage if configured
+        const coverageHtmlDir = parentServer.vitest.config.coverage?.htmlDir
+        if (coverageHtmlDir) {
           server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
+            '/__vitest_test__/coverage',
+            sirv(coverageHtmlDir, {
               single: true,
               dev: true,
               setHeaders: (res) => {
+                const csp = res.getHeader('Content-Security-Policy')
+                if (typeof csp === 'string') {
+                  // add frame-ancestors to allow the iframe to be loaded by Vitest,
+                  // but keep the rest of the CSP
+                  res.setHeader(
+                    'Content-Security-Policy',
+                    csp.replace(/frame-ancestors [^;]+/, 'frame-ancestors *'),
+                  )
+                }
                 res.setHeader(
                   'Cache-Control',
                   'public,max-age=0,must-revalidate',
@@ -89,61 +103,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           )
         }
 
-        const uiEnabled = parentServer.config.browser.ui
-
-        if (uiEnabled) {
-        // eslint-disable-next-line prefer-arrow-callback
-          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const url = new URL(req.url, 'http://localhost')
-            const id = url.searchParams.get('id')
-            if (!id) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const task = parentServer.vitest.state.idMap.get(id)
-            const file = task?.meta.failScreenshotPath
-            if (!file) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            let stat: Stats | undefined
-            try {
-              stat = lstatSync(file)
-            }
-            catch {
-            }
-
-            if (!stat?.isFile()) {
-              res.statusCode = 404
-              res.end()
-              return
-            }
-
-            const ext = extname(file)
-            const buffer = readFileSync(file)
-            res.setHeader(
-              'Cache-Control',
-              'public,max-age=0,must-revalidate',
-            )
-            res.setHeader('Content-Length', buffer.length)
-            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
-              ? 'image/jpeg'
-              : ext === 'webp'
-                ? 'image/webp'
-                : 'image/png')
-            res.end(buffer)
-          })
-        }
         server.middlewares.use((req, res, next) => {
           // 9000 mega head move
           // Vite always caches optimized dependencies, but users might mock
@@ -210,7 +169,27 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         // this plugin can be used in different projects, but all of them
         // have the same `include` pattern, so it doesn't matter which project we use
         const project = parentServer.project
-        const { testFiles: browserTestFiles } = await project.globTestFiles()
+        // only glob benchmarks when a browser-enabled bench project exists in
+        // the workspace — keeps the optimizeDeps entries symmetrical across
+        // the test/bench project clones so the optimizer doesn't re-scan when
+        // the user switches modes
+        const hasBrowserBenchProject = parentServer.vitest.projects.some(p =>
+          p.config.browser.enabled && p.config.benchmark.enabled,
+        )
+        const benchInclude = hasBrowserBenchProject
+          ? project.config.benchmark.include
+          : []
+        const dir = project.config.dir || project.config.root
+        const [{ testFiles: browserTestFiles }, browserBenchFiles] = await Promise.all([
+          project.globTestFiles(),
+          benchInclude.length > 0
+            ? project.globFiles(
+                benchInclude,
+                project.config.benchmark.exclude ?? project.config.exclude,
+                dir,
+              )
+            : [],
+        ])
         const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
@@ -221,7 +200,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         const entries: string[] = [
-          ...browserTestFiles,
+          ...new Set([...browserTestFiles, ...browserBenchFiles]),
           ...setupFiles,
           resolve(vitestDist, 'index.js'),
           resolve(vitestDist, 'browser.js'),
@@ -232,17 +211,16 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const exclude = [
           'vitest',
+          'vitest/browser',
           'vitest/internal/browser',
-          'vitest/runners',
-          '@vitest/browser',
+          'vite/module-runner',
+          '@vitest/browser/utils',
+          '@vitest/browser/context',
           '@vitest/browser/client',
           '@vitest/utils',
           '@vitest/utils/source-map',
-          '@vitest/runner',
           '@vitest/spy',
           '@vitest/utils/error',
-          '@vitest/snapshot',
-          '@vitest/expect',
           'std-env',
           'tinybench',
           'tinyspy',
@@ -280,11 +258,17 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         const include = [
           'vitest > expect-type',
-          'vitest > @vitest/snapshot > magic-string',
-          'vitest > @vitest/expect > chai',
-          '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
+          'vitest > magic-string',
+          'vitest > chai',
         ]
+
+        const provider = parentServer.config.browser.provider || [...parentServer.children][0]?.provider
+        if (provider?.name === 'preview') {
+          include.push(
+            '@vitest/browser-preview > @testing-library/user-event',
+            '@vitest/browser-preview > @testing-library/dom',
+          )
+        }
 
         const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
 
@@ -306,6 +290,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
+        }
+
+        const otelConfig = project.config.experimental.openTelemetry
+        if (otelConfig?.enabled && otelConfig.browserSdkPath) {
+          entries.push(otelConfig.browserSdkPath)
+          include.push('@opentelemetry/api')
+        }
+        else {
+          exclude.push('@opentelemetry/api')
         }
 
         return {
@@ -352,7 +345,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       configureServer(server) {
         server.middlewares.use(
           '/__vitest__',
-          sirv(resolve(distRoot, 'client/__vitest__')),
+          sirv(uiClientRoot),
         )
       },
       resolveId(id) {
@@ -362,7 +355,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       },
       transform(code, id) {
         if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
-          // loupe bundle has a nastry require('util') call that leaves a warning in the console
+          // loupe bundle has a nasty require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }
@@ -371,7 +364,10 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
-      filter(id) {
+      filter(id, environment) {
+        if (environment.name !== 'client') {
+          return false
+        }
         if (id.includes(distRoot)) {
           return false
         }
@@ -383,7 +379,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        if (viteConfig.esbuild !== false) {
+        // Only set esbuild options when not using rolldown-vite (Vite 8+),
+        // which uses oxc for transformation instead of esbuild
+        if (!rolldownVersion && viteConfig.esbuild !== false) {
           viteConfig.esbuild ||= {}
           viteConfig.esbuild.legalComments = 'inline'
         }
@@ -421,21 +419,25 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:in-source-tests',
-      transform(code, id) {
-        const filename = cleanUrl(id)
-        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+      transform: {
+        filter: {
+          code: /import\.meta\.vitest/,
+        },
+        handler(code, id) {
+          const filename = cleanUrl(id)
 
-        if (!project._isCachedTestFile(filename) || !code.includes('import.meta.vitest')) {
-          return
-        }
-        const s = new MagicString(code, { filename })
-        s.prepend(
-          `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
-        )
-        return {
-          code: s.toString(),
-          map: s.generateMap({ hires: true }),
-        }
+          if (!code.includes('import.meta.vitest')) {
+            return
+          }
+          const s = new MagicString(code, { filename })
+          s.prepend(
+            `Object.defineProperty(import.meta, 'vitest', { get() { return typeof __vitest_worker__ !== 'undefined' && __vitest_worker__.filepath === "${filename.replace(/"/g, '\\"')}" ? __vitest_index__ : undefined } });\n`,
+          )
+          return {
+            code: s.toString(),
+            map: s.generateMap({ hires: true }),
+          }
+        },
       },
     },
     {
@@ -549,22 +551,21 @@ body {
             },
             injectTo: 'head' as const,
           },
-          parentServer.locatorsUrl
-            ? {
-                tag: 'script',
-                attrs: {
-                  type: 'module',
-                  src: parentServer.locatorsUrl,
-                },
-                injectTo: 'head',
-              } as const
-            : null,
+          ...parentServer.initScripts.map(script => ({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: join('/@fs/', script),
+            },
+            injectTo: 'head',
+          } as const)),
           ...testerTags,
         ].filter(s => s != null)
       },
     },
     {
       name: 'vitest:browser:support-testing-library',
+      enforce: 'pre',
       config() {
         const rolldownPlugin = {
           name: 'vue-test-utils-rewrite',
@@ -580,7 +581,6 @@ body {
             },
           },
         }
-
         const esbuildPlugin = {
           name: 'test-utils-rewrite',
           // "any" because vite doesn't expose any types for this
@@ -598,9 +598,21 @@ body {
 
         return {
           optimizeDeps: rolldownVersion
-            ? { rollupOptions: { plugins: [rolldownPlugin] } }
+            ? { rolldownOptions: { plugins: [rolldownPlugin] } }
             : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
+      },
+    },
+    {
+      name: 'vitest:browser:__vitest_browser_import_meta_env_init__',
+      transform: {
+        handler(code) {
+          // this transform runs after `vitest:meta-env-replacer` so that
+          // `import.meta.env` will be handled by Vite import analysis to match behavior.
+          if (code.includes('__vitest_browser_import_meta_env_init__')) {
+            return code.replace('__vitest_browser_import_meta_env_init__', 'import.meta.env')
+          }
+        },
       },
     },
   ]
@@ -622,43 +634,6 @@ function getRequire() {
     _require = createRequire(import.meta.url)
   }
   return _require
-}
-
-function resolveCoverageFolder(vitest: Vitest) {
-  const options = vitest.config
-  const coverageOptions = vitest._coverageOptions
-  const htmlReporter = coverageOptions?.enabled
-    ? toArray(options.coverage.reporter).find((reporter) => {
-        if (typeof reporter === 'string') {
-          return reporter === 'html'
-        }
-
-        return reporter[0] === 'html'
-      })
-    : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    options.root || process.cwd(),
-    coverageOptions.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-      && htmlReporter.length > 1
-      && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }
 
 const postfixRE = /[?#].*$/

@@ -1,14 +1,20 @@
+import type { SerializedError, TestError } from '@vitest/utils'
+import type { DevEnvironment } from 'vite'
 import type {
   ImportDuration,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SerializableRetry,
   TaskMeta,
   TestAnnotation,
-} from '@vitest/runner'
-import type { SerializedError, TestError } from '@vitest/utils'
+  TestArtifact,
+  TestBenchmark,
+} from '../../runtime/runner/types'
+import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../test-specification'
 
 class ReportedTaskImplementation {
   /**
@@ -62,6 +68,13 @@ class ReportedTaskImplementation {
   }
 
   /**
+   * Console logs recorded during the test execution.
+   */
+  public logs(): ReadonlyArray<UserConsoleLog> {
+    return [...this.task.logs || []]
+  }
+
+  /**
    * Creates a new reported task instance and stores it in the project's state for future use.
    * @internal
    */
@@ -99,6 +112,11 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
+  /**
+   * Tags associated with the test.
+   */
+  public readonly tags: string[]
+
   /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
@@ -113,6 +131,7 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = this.module
     }
     this.options = buildOptions(task)
+    this.tags = this.options.tags || []
   }
 
   /**
@@ -187,6 +206,24 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
+   * @experimental
+   *
+   * Test artifacts recorded via the `recordArtifact` API during the test execution.
+   */
+  public artifacts(): ReadonlyArray<TestArtifact> {
+    return [...this.task.artifacts]
+  }
+
+  /**
+   * @experimental
+   *
+   * A list of benchmarks performed during the test.
+   */
+  public benchmarks(): ReadonlyArray<TestBenchmark> {
+    return [...this.task.benchmarks]
+  }
+
+  /**
    * Useful information about the test like duration, memory usage, etc.
    * Diagnostic is only available after the test has finished.
    */
@@ -207,6 +244,18 @@ export class TestCase extends ReportedTaskImplementation {
       repeatCount: result.repeatCount ?? 0,
       flaky: !!result.retryCount && result.state === 'pass' && result.retryCount > 0,
     }
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test case.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds: [this.id] },
+      isTypecheck ? 'typecheck' : undefined,
+    )
   }
 }
 
@@ -409,6 +458,19 @@ export class TestSuite extends SuiteImplementation {
   }
 
   /**
+   * Returns a new test specification that can be used to filter or run this specific test suite.
+   */
+  public toTestSpecification(): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    const testIds = [...this.children.allTests()].map(test => test.id)
+    return this.project.createSpecification(
+      this.module.moduleId,
+      { testIds },
+      isTypecheck ? 'typecheck' : undefined,
+    )
+  }
+
+  /**
    * Full name of the suite including all parent suites separated with `>`.
    */
   public get fullName(): string {
@@ -431,6 +493,13 @@ export class TestModule extends SuiteImplementation {
   public readonly type = 'module'
 
   /**
+   * The Vite environment that processes files on the server.
+   *
+   * Can be empty if test module did not run yet.
+   */
+  public readonly viteEnvironment: DevEnvironment | undefined
+
+  /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual ID if the file is not on the disk.
    * This value corresponds to the ID in the Vite's module graph.
@@ -447,6 +516,24 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
     this.relativeModuleId = task.name
+    if (task.viteEnvironment === '__browser__') {
+      this.viteEnvironment = project.browser?.vite.environments.client
+    }
+    else if (typeof task.viteEnvironment === 'string') {
+      this.viteEnvironment = project.vite.environments[task.viteEnvironment]
+    }
+  }
+
+  /**
+   * Returns a new test specification that can be used to filter or run this specific test module.
+   */
+  public toTestSpecification(testCases?: TestCase[]): TestSpecification {
+    const isTypecheck = this.task.meta.typecheck === true
+    return this.project.createSpecification(
+      this.moduleId,
+      testCases?.length ? { testIds: testCases.map(t => t.id) } : undefined,
+      isTypecheck ? 'typecheck' : undefined,
+    )
   }
 
   /**
@@ -500,8 +587,13 @@ export interface TaskOptions {
   readonly fails: boolean | undefined
   readonly concurrent: boolean | undefined
   readonly shuffle: boolean | undefined
-  readonly retry: number | undefined
+  readonly retry: SerializableRetry | undefined
   readonly repeats: number | undefined
+  readonly tags: string[] | undefined
+  /**
+   * Only tests have a `timeout` option.
+   */
+  readonly timeout: number | undefined
   readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
@@ -513,8 +605,10 @@ function buildOptions(
     fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
-    retry: task.retry,
+    retry: task.retry as SerializableRetry | undefined,
     repeats: task.repeats,
+    tags: task.tags,
+    timeout: task.type === 'test' ? task.timeout : undefined,
     // runner types are too broad, but the public API should be more strict
     // the queued state exists only on Files and this method is called
     // only for tests and suites

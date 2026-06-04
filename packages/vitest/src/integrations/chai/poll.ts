@@ -1,8 +1,9 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { Test } from '@vitest/runner'
+import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
-import { getSafeTimers } from '@vitest/utils/timers'
+import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
+import { vi } from '../vi'
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -26,6 +27,25 @@ const unsupported = [
   // resolves
 ]
 
+/**
+ * Attaches a `cause` property to the error if missing, copies the stack trace from the source, and throws.
+ *
+ * @param error - The error to throw
+ * @param source - Error to copy the stack trace from
+ *
+ * @throws Always throws the provided error with an amended stack trace
+ */
+function throwWithCause(error: any, source: Error) {
+  if (error.cause == null) {
+    error.cause = new Error('Matcher did not succeed in time.')
+  }
+
+  throw copyStackTrace(
+    error,
+    source,
+  )
+}
+
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
@@ -40,6 +60,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    // injected so that domain snapshot can take over poll implementation.
+    chai.util.flag(assertion, '_poll.fn', fn)
+    chai.util.flag(assertion, '_poll.timeout', timeout)
+    chai.util.flag(assertion, '_poll.interval', interval)
     const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
@@ -62,49 +86,120 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           )
         }
 
-        return function (this: any, ...args: any[]) {
+        // Core poll stack-trace trick:
+        //   1. capture STACK_TRACE_ERROR here before entering the async poll loop
+        //   2. when the matcher eventually fails, rethrow via throwWithCause()
+        //      so the final error keeps this earlier stack
+        //
+        // For example, when user writes:
+        //    await expect.poll(...).toBeSomething()
+        // STACK_TRACE_ERROR.stack would look like
+        //   at ...(more internal stacks)...
+        //   at __VITEST_POLL_CHAIN__ .../packages/vitest/dist/...
+        //   at .../my-file.test.ts:12:3   (this points to `toBeSomething()` callsite in user test file)
+        // Vitest later filters out internal stacks from `vitest/dist`, so the reported errors correctly
+        // points to the user callsite for poll assertion errors.
+        //
+        // Inline snapshots piggyback on the same idea. We pass
+        // STACK_TRACE_ERROR through `chai.util.flag(assertion, 'error', ...)`.
+        // Inline snapshot assertion access the same error stack for
+        // extracting inline snapshot location to validate and update new snapshots.
+        return function __VITEST_POLL_CHAIN__(this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          const promise = () => new Promise<void>((resolve, reject) => {
-            let intervalId: any
-            let timeoutId: any
-            let lastError: any
-            const { setTimeout, clearTimeout } = getSafeTimers()
-            const check = async () => {
+          const promise = async () => {
+            chai.util.flag(assertion, '_name', key)
+            chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
+
+            const onStart = chai.util.flag(assertion, '_poll.onStart') as Function | undefined
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+            await onStart?.({ assertion })
+
+            // We use `matcher.__vitest_poll_takeover__` flag
+            // to let domain snapshot matchers take over polling logic.
+            // this is not public API yet.
+            // Need to use `getOwnPropertyDescriptor` since otherwise chai proxy breaks.
+            const pollTakeover = Object.getOwnPropertyDescriptor(
+              assertionFunction,
+              '__vitest_poll_takeover__',
+            )?.value
+            if (pollTakeover) {
               try {
-                chai.util.flag(assertion, '_name', key)
-                const obj = await fn()
-                chai.util.flag(assertion, 'object', obj)
-                resolve(await assertionFunction.call(assertion, ...args))
-                clearTimeout(intervalId)
-                clearTimeout(timeoutId)
+                const output = await assertionFunction.call(assertion, ...args)
+                await onSettled?.({ assertion, status: 'pass' })
+                return output
               }
               catch (err) {
-                lastError = err
-                if (!chai.util.flag(assertion, '_isLastPollAttempt')) {
-                  intervalId = setTimeout(check, interval)
+                await onSettled?.({ assertion, status: 'fail' })
+                throwWithCause(err, STACK_TRACE_ERROR)
+              }
+            }
+
+            const { setTimeout, clearTimeout } = getSafeTimers()
+            let timerId: ReturnType<typeof setTimeout> | undefined
+            const timeoutController = new AbortController()
+            const timeoutPromise = new Promise<void>((resolve) => {
+              timerId = setTimeout(() => {
+                timeoutController.abort()
+                resolve()
+              }, timeout)
+            })
+            let lastError: unknown
+
+            try {
+              while (true) {
+                try {
+                  const fnResult = await raceWith(
+                    Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
+                    timeoutPromise,
+                  )
+                  if (!fnResult.ok) {
+                    lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
+                    break
+                  }
+                  const obj = fnResult.value
+                  chai.util.flag(assertion, 'object', obj)
+
+                  const assertionResult = await raceWith(
+                    Promise.resolve().then(() => assertionFunction.apply(assertion, args)),
+                    timeoutPromise,
+                  )
+                  if (!assertionResult.ok) {
+                    lastError ??= new Error(`expect.poll() assertion didn't resolve in time.`)
+                    break
+                  }
+                  const output = assertionResult.value
+                  await onSettled?.({ assertion, status: 'pass' })
+
+                  return output
+                }
+                catch (err) {
+                  lastError = err
+                  // no retry for toMatchScreenshot since
+                  // it owns retry/stability after the first element resolution
+                  if (key === 'toMatchScreenshot') {
+                    break
+                  }
+                  const result = await raceWith(
+                    delay(interval, setTimeout),
+                    timeoutPromise,
+                  )
+                  if (!result.ok) {
+                    break
+                  }
+                  if (vi.isFakeTimers()) {
+                    vi.advanceTimersByTime(interval)
+                  }
                 }
               }
             }
-            timeoutId = setTimeout(() => {
-              clearTimeout(intervalId)
-              chai.util.flag(assertion, '_isLastPollAttempt', true)
-              const rejectWithCause = (error: any) => {
-                if (error.cause == null) {
-                  error.cause = new Error('Matcher did not succeed in time.')
-                }
-                reject(
-                  copyStackTrace(
-                    error,
-                    STACK_TRACE_ERROR,
-                  ),
-                )
-              }
-              check()
-                .then(() => rejectWithCause(lastError))
-                .catch(e => rejectWithCause(e))
-            }, timeout)
-            check()
-          })
+            finally {
+              clearTimeout(timerId)
+            }
+            if (lastError) {
+              await onSettled?.({ assertion, status: 'fail' })
+              throwWithCause(lastError, STACK_TRACE_ERROR)
+            }
+          }
           let awaited = false
           test.onFinished ??= []
           test.onFinished.push(() => {
@@ -127,9 +222,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               return (resultPromise ||= promise()).then(onFulfilled, onRejected)
             },
             catch(onRejected) {
+              awaited = true
               return (resultPromise ||= promise()).catch(onRejected)
             },
             finally(onFinally) {
+              awaited = true
               return (resultPromise ||= promise()).finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',
@@ -146,4 +243,18 @@ function copyStackTrace(target: Error, source: Error) {
     target.stack = source.stack.replace(source.message, target.message)
   }
   return target
+}
+
+function raceWith<A, B>(
+  promise: Promise<A>,
+  other?: Promise<B>,
+): Promise<{ ok: true; value: A } | { ok: false; value: B }> {
+  const left = promise.then(value => ({ ok: true as const, value }))
+  if (!other) {
+    return left
+  }
+  return Promise.race([
+    left,
+    other.then(value => ({ ok: false as const, value })),
+  ])
 }

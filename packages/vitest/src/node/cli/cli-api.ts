@@ -2,7 +2,7 @@ import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } f
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
@@ -28,14 +28,31 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+  /**
+   * Parse files statically instead of running them to collect tests
+   * @experimental
+   */
+  staticParse?: boolean
+  /**
+   * How many tests to process at the same time
+   * @experimental
+   */
+  staticParseConcurrency?: number
 
   /**
-   * Override vite config's configLoader from cli.
+   * Override vite config's configLoader from CLI.
    * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
    * This is only available with **vite version 6.1.0** and above.
    * @experimental
    */
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
+
+  /**
+   * Only run benchmark projects, filtering out all other projects.
+   * Set automatically by `vitest bench`.
+   * @internal
+   */
+  benchmarkOnly?: boolean
 }
 
 /**
@@ -44,23 +61,54 @@ export interface CliOptions extends UserConfig {
  * Returns a Vitest instance if initialized successfully.
  */
 export async function startVitest(
-  mode: VitestRunMode,
-  cliFilters: string[] = [],
-  options: CliOptions = {},
+  cliFilters?: string[],
+  options?: CliOptions,
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
+): Promise<Vitest>
+/**
+ * @deprecated The `mode` argument is no longer used. Use `startVitest(cliFilters?, options?, viteOverrides?, vitestOptions?)` instead.
+ */
+export async function startVitest(
+  mode: VitestRunMode,
+  cliFilters?: string[],
+  options?: CliOptions,
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+): Promise<Vitest>
+export async function startVitest(
+  modeOrCliFilters?: VitestRunMode | string[],
+  cliFiltersOrOptions?: string[] | CliOptions,
+  optionsOrViteOverrides?: CliOptions | ViteUserConfig,
+  viteOverridesOrVitestOptions?: ViteUserConfig | VitestOptions,
+  maybeVitestOptions?: VitestOptions,
 ): Promise<Vitest> {
+  let cliFilters: string[]
+  let options: CliOptions
+  let viteOverrides: ViteUserConfig | undefined
+  let vitestOptions: VitestOptions | undefined
+  if (typeof modeOrCliFilters === 'string') {
+    cliFilters = (cliFiltersOrOptions as string[] | undefined) ?? []
+    options = (optionsOrViteOverrides as CliOptions | undefined) ?? {}
+    viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
+    vitestOptions = maybeVitestOptions
+  }
+  else {
+    cliFilters = modeOrCliFilters ?? []
+    options = (cliFiltersOrOptions as CliOptions | undefined) ?? {}
+    viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
+    vitestOptions = viteOverridesOrVitestOptions as VitestOptions | undefined
+  }
   const root = resolve(options.root || process.cwd())
 
   const ctx = await prepareVitest(
-    mode,
     options,
     viteOverrides,
     vitestOptions,
     cliFilters,
   )
 
-  if (mode === 'test' && ctx._coverageOptions.enabled) {
+  if (ctx._coverageOptions.enabled) {
     const provider = ctx._coverageOptions.provider || 'v8'
     const requiredPackages = CoverageProviderMap[provider]
 
@@ -83,7 +131,7 @@ export async function startVitest(
 
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone) {
-      ctx.init()
+      ctx.standalone()
     }
     else {
       ctx.start(cliFilters)
@@ -91,15 +139,22 @@ export async function startVitest(
   })
 
   try {
-    if (ctx.config.mergeReports) {
+    if (ctx.config.listTags) {
+      await ctx.listTags()
+    }
+    else if (ctx.config.clearCache) {
+      await ctx.experimental_clearCache()
+    }
+    else if (ctx.config.mergeReports) {
       await ctx.mergeReports()
     }
     else if (ctx.config.standalone) {
-      await ctx.init()
+      await ctx.standalone()
     }
     else {
       await ctx.start(cliFilters)
     }
+    return ctx
   }
   catch (e) {
     if (e instanceof FilesNotFoundError) {
@@ -125,23 +180,53 @@ export async function startVitest(
     ctx.logger.error('\n\n')
     return ctx
   }
-
-  if (ctx.shouldKeepServer()) {
-    return ctx
+  finally {
+    if (!ctx?.shouldKeepServer()) {
+      stdinCleanup?.()
+      await ctx.close()
+    }
   }
-
-  stdinCleanup?.()
-  await ctx.close()
-  return ctx
 }
 
 export async function prepareVitest(
-  mode: VitestRunMode,
-  options: CliOptions = {},
+  options?: CliOptions,
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
   cliFilters?: string[],
+): Promise<Vitest>
+/**
+ * @deprecated The `mode` argument is no longer used. Use `prepareVitest(options?, viteOverrides?, vitestOptions?, cliFilters?)` instead.
+ */
+export async function prepareVitest(
+  mode: VitestRunMode,
+  options?: CliOptions,
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+  cliFilters?: string[],
+): Promise<Vitest>
+export async function prepareVitest(
+  modeOrOptions?: VitestRunMode | CliOptions,
+  optionsOrViteOverrides?: CliOptions | ViteUserConfig,
+  viteOverridesOrVitestOptions?: ViteUserConfig | VitestOptions,
+  vitestOptionsOrCliFilters?: VitestOptions | string[],
+  maybeCliFilters?: string[],
 ): Promise<Vitest> {
+  let options: CliOptions
+  let viteOverrides: ViteUserConfig | undefined
+  let vitestOptions: VitestOptions | undefined
+  let cliFilters: string[] | undefined
+  if (typeof modeOrOptions === 'string') {
+    options = (optionsOrViteOverrides as CliOptions | undefined) ?? {}
+    viteOverrides = viteOverridesOrVitestOptions as ViteUserConfig | undefined
+    vitestOptions = vitestOptionsOrCliFilters as VitestOptions | undefined
+    cliFilters = maybeCliFilters
+  }
+  else {
+    options = modeOrOptions ?? {}
+    viteOverrides = optionsOrViteOverrides as ViteUserConfig | undefined
+    vitestOptions = viteOverridesOrVitestOptions as VitestOptions | undefined
+    cliFilters = vitestOptionsOrCliFilters as string[] | undefined
+  }
   process.env.TEST = 'true'
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= 'test'
@@ -157,7 +242,7 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
+  const ctx = await createVitest(options, viteOverrides, vitestOptions)
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 

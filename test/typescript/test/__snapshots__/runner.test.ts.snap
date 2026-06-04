@@ -12,18 +12,18 @@ TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has n
 `;
 
 exports[`should fail > typecheck files 2`] = `
-" FAIL  fail.test-d.ts > nested suite
+" FAIL  fail.test-d.ts:7:1 > nested suite
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:15:19
      13|   })
-     14| 
+     14|
      15|   expectTypeOf(1).toBeVoid()
        |                   ^
      16| })"
 `;
 
 exports[`should fail > typecheck files 3`] = `
-" FAIL  expect-error.test-d.ts > failing test with expect-error
+" FAIL  expect-error.test-d.ts:4:1 > failing test with expect-error
 TypeCheckError: Unused '@ts-expect-error' directive.
  ❯ expect-error.test-d.ts:5:3
       3| //
@@ -34,10 +34,10 @@ TypeCheckError: Unused '@ts-expect-error' directive.
 `;
 
 exports[`should fail > typecheck files 4`] = `
-" FAIL  fail.test-d.ts > failing test
+" FAIL  fail.test-d.ts:3:1 > failing test
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
  ❯ fail.test-d.ts:4:33
-      2| 
+      2|
       3| test('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
        |                                 ^
@@ -45,7 +45,7 @@ TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string,
 `;
 
 exports[`should fail > typecheck files 5`] = `
-" FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
+" FAIL  fail.test-d.ts:9:5 > nested suite > nested 2 > failing test 2
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:10:23
       8|   describe('nested 2', () => {
@@ -56,7 +56,7 @@ TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has n
 `;
 
 exports[`should fail > typecheck files 6`] = `
-" FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
+" FAIL  fail.test-d.ts:9:5 > nested suite > nested 2 > failing test 2
 TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
  ❯ fail.test-d.ts:11:23
       9|     test('failing test 2', () => {
@@ -67,10 +67,10 @@ TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' 
 `;
 
 exports[`should fail > typecheck files 7`] = `
-" FAIL  js-fail.test-d.js > js test fails
+" FAIL  js-fail.test-d.js:5:1 > js test fails
 TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
  ❯ js-fail.test-d.js:6:19
-      4| 
+      4|
       5| test('js test fails', () => {
       6|   expectTypeOf(1).toBeArray()
        |                   ^
@@ -78,10 +78,10 @@ TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has 
 `;
 
 exports[`should fail > typecheck files 8`] = `
-" FAIL  node-types.test-d.ts > buffer is not available
+" FAIL  node-types.test-d.ts:3:1 > buffer is not available
 TypeCheckError: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try \`npm i --save-dev @types/node\` and then add 'node' to the types field in your tsconfig.
  ❯ node-types.test-d.ts:4:3
-      2| 
+      2|
       3| test('buffer is not available', () => {
       4|   Buffer.from([])
        |   ^
@@ -89,10 +89,10 @@ TypeCheckError: Cannot find name 'Buffer'. Do you need to install type definitio
 `;
 
 exports[`should fail > typecheck files 9`] = `
-" FAIL  only.test-d.ts > failing test
+" FAIL  only.test-d.ts:3:1 > failing test
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
  ❯ only.test-d.ts:4:33
-      2| 
+      2|
       3| test.only('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
        |                                 ^
@@ -100,17 +100,15 @@ TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string,
 `;
 
 exports[`should fail > typechecks empty "include" but with tests 1`] = `
-"Testing types with tsc and vue-tsc is an experimental feature.
-Breaking changes might not follow SemVer, please pin Vitest's version when using it.
-⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+"⎯⎯ Unhandled Errors ⎯⎯
 
 Vitest caught 1 unhandled error during the test run.
 This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
 
-⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯ Typecheck Error ⎯⎯
 Error: error TS18003: No inputs were found in config file '<root>/tsconfig.empty.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+⎯⎯
 
 "
 `;

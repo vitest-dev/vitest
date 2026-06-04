@@ -1,0 +1,1105 @@
+import type { RunVitestConfig } from '#test-utils'
+import type { RunnerTestFile as File, RunnerTestCase as Test } from 'vitest'
+import type { TestUserConfig, Vitest } from 'vitest/node'
+import type { MergeReport } from 'vitest/src/node/reporters/blob.js'
+import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import { buildTestTree, runVitest, useFS } from '#test-utils'
+import { playwright } from '@vitest/browser-playwright'
+import { stringify } from 'flatted'
+import { dirname, resolve } from 'pathe'
+import { beforeEach, expect, test, TestRunner } from 'vitest'
+import { version } from 'vitest/package.json'
+import { getModuleGraph } from 'vitest/src/utils/graph.js'
+
+// always relative to CWD because it's used only from the CLI,
+// so we need to correctly resolve it here
+const reportsDir = resolve('./fixtures/reporters/merge-reports/.vitest/blob')
+
+beforeEach(() => {
+  rmSync(reportsDir, { force: true, recursive: true })
+})
+
+test('merge reports', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest/blob/first-run.json' }]],
+  })
+
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['second.test.ts'],
+    reporters: [['blob', { outputFile: './.vitest/blob/second-run.json' }]],
+  })
+
+  const { stdout: reporterDefault, stderr: stderrDefault, exitCode } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(exitCode).toBe(1)
+
+  const stdoutCheck = trimReporterOutput(reporterDefault)
+  const stderrArr = stderrDefault.split('\n')
+  const stderrCheck = [
+    ...stderrArr.slice(4, 19),
+    ...stderrArr.slice(21, -3),
+  ]
+
+  expect(stderrDefault).toMatch('Failed Tests 2')
+
+  expect(stderrCheck.join('\n')).toMatchInlineSnapshot(`
+    "AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ first.test.ts:15:13
+         13| test('test 1-2', () => {
+         14|   console.log('test 1-2')
+         15|   expect(1).toBe(2)
+           |             ^
+         16| })
+         17|
+
+     FAIL  second.test.ts > test 2-1
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ second.test.ts:5:13
+          3| test('test 2-1', () => {
+          4|   console.log('test 2-1')
+          5|   expect(1).toBe(2)
+           |             ^
+          6| })
+          7|
+    "
+  `)
+
+  expect(stdoutCheck).toMatchInlineSnapshot(`
+    "stdout | first.test.ts
+    global scope
+
+    stdout | first.test.ts > test 1-1
+    beforeEach
+
+    stdout | first.test.ts > test 1-2
+    beforeEach
+
+    stdout | first.test.ts > test 1-2
+    test 1-2
+
+     ❯ first.test.ts (2 tests | 1 failed) <time>
+       ✓ test 1-1 <time>
+       × test 1-2 <time>
+    stdout | second.test.ts > test 2-1
+    test 2-1
+
+     ❯ second.test.ts (3 tests | 1 failed) <time>
+       × test 2-1 <time>
+         ✓ test 2-2 <time>
+         ✓ test 2-3 <time>
+
+     Test Files  2 failed (2)
+          Tests  2 failed | 3 passed (5)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Per blob  <time> <time>"
+  `)
+
+  const { stdout: reporterJson } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    reporters: [['json', { outputFile: /** so it outputs into stdout */ null }]],
+  })
+
+  const slash = (r: string) => r.replace(/\\/g, '/')
+  const path = (r: string) => slash(r)
+    .replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
+
+  const json = JSON.parse(reporterJson)
+  json.testResults.forEach((result: any) => {
+    result.startTime = '<time>'
+    result.endTime = '<time>'
+    result.name = path(result.name)
+    result.assertionResults.forEach((assertion: any) => {
+      delete assertion.duration
+      assertion.failureMessages = assertion.failureMessages.map((m: string) => {
+        return m.split('\n').slice(0, 2).map(path).join('\n')
+      })
+    })
+  })
+  json.startTime = '<time>'
+
+  expect(json).toMatchInlineSnapshot(`
+    {
+      "numFailedTestSuites": 2,
+      "numFailedTests": 2,
+      "numPassedTestSuites": 1,
+      "numPassedTests": 3,
+      "numPendingTestSuites": 0,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "numTotalTestSuites": 3,
+      "numTotalTests": 5,
+      "snapshot": {
+        "added": 0,
+        "didUpdate": false,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": [],
+        "filesUnmatched": 0,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 0,
+        "unchecked": 0,
+        "uncheckedKeysByFile": [],
+        "unmatched": 0,
+        "updated": 0,
+      },
+      "startTime": "<time>",
+      "success": false,
+      "testResults": [
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [],
+              "benchmarks": [],
+              "failureMessages": [],
+              "fullName": "test 1-1",
+              "meta": {},
+              "status": "passed",
+              "tags": [],
+              "title": "test 1-1",
+            },
+            {
+              "ancestorTitles": [],
+              "benchmarks": [],
+              "failureMessages": [
+                "AssertionError: expected 1 to be 2 // Object.is equality
+        at <root>/fixtures/reporters/merge-reports/first.test.ts:15:13",
+              ],
+              "fullName": "test 1-2",
+              "meta": {},
+              "status": "failed",
+              "tags": [],
+              "title": "test 1-2",
+            },
+          ],
+          "endTime": "<time>",
+          "message": "",
+          "name": "<root>/fixtures/reporters/merge-reports/first.test.ts",
+          "startTime": "<time>",
+          "status": "failed",
+        },
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [],
+              "benchmarks": [],
+              "failureMessages": [
+                "AssertionError: expected 1 to be 2 // Object.is equality
+        at <root>/fixtures/reporters/merge-reports/second.test.ts:5:13",
+              ],
+              "fullName": "test 2-1",
+              "meta": {},
+              "status": "failed",
+              "tags": [],
+              "title": "test 2-1",
+            },
+            {
+              "ancestorTitles": [
+                "group",
+              ],
+              "benchmarks": [],
+              "failureMessages": [],
+              "fullName": "group test 2-2",
+              "meta": {},
+              "status": "passed",
+              "tags": [],
+              "title": "test 2-2",
+            },
+            {
+              "ancestorTitles": [
+                "group",
+              ],
+              "benchmarks": [],
+              "failureMessages": [],
+              "fullName": "group test 2-3",
+              "meta": {},
+              "status": "passed",
+              "tags": [],
+              "title": "test 2-3",
+            },
+          ],
+          "endTime": "<time>",
+          "message": "",
+          "name": "<root>/fixtures/reporters/merge-reports/second.test.ts",
+          "startTime": "<time>",
+          "status": "failed",
+        },
+      ],
+    }
+  `)
+})
+
+test('total and merged execution times are shown', async () => {
+  for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
+    const index = 1 + _index
+    const file = TestRunner.createFileTask(
+      resolve('./fixtures/reporters/merge-reports', name),
+      resolve('./fixtures/reporters/merge-reports'),
+      '',
+    )
+    file.tasks.push(createTest('some test', file))
+
+    await writeBlob(
+      [version, [file], [], undefined, 1500 * index, {}],
+      resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
+    )
+  }
+
+  const { stdout } = await runVitest({
+    root: resolve('./fixtures/reporters/merge-reports'),
+    mergeReports: resolve('./fixtures/reporters/merge-reports/.vitest/blob'),
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stdout).toContain('✓ first.test.ts (1 test)')
+  expect(stdout).toContain('✓ second.test.ts (1 test)')
+
+  expect(stdout).toContain('Duration  4.50s')
+  expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
+test('merges reports with a file-less imported module graph entry', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    // TODO: vite 8 crashes when trying to resolve
+    // non existing `imports` subpath in `test/e2e/package.json`.
+    'package.json': '{ "type": "module" }',
+    'repro1.test.ts': `
+test('repro1', async () => {
+  await expect(import('#repro1')).rejects.toThrow()
+})
+`,
+    'repro2.test.ts': `
+import * as repro from "#repro2";
+
+vi.mock("#repro2", () => ({
+  someExport: { mocked: true },
+}));
+
+it("repro2", () => {
+  expect(repro.someExport).toEqual({ mocked: true })
+});
+`,
+  })
+
+  const result1 = await runVitest({
+    root,
+    reporters: ['blob'],
+    globals: true,
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result1.exitCode).toBe(0)
+
+  const result2 = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest/blob'),
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "repro1.test.ts": {
+        "repro1": "passed",
+      },
+      "repro2.test.ts": {
+        "repro2": "passed",
+      },
+    }
+  `)
+  expect(result2.exitCode).toBe(0)
+})
+
+test.for([
+  'node',
+  'browser',
+])('module graph and html reporter $0', async (mode) => {
+  const root = resolve('./fixtures/reporters/merge-reports-module-graph')
+  const reportsDir = resolve(root, '.vitest/blob')
+  rmSync(reportsDir, { force: true, recursive: true })
+
+  const baseConfig: TestUserConfig = {
+    root,
+  }
+  if (mode === 'browser') {
+    baseConfig.browser = {
+      enabled: true,
+      provider: playwright(),
+      instances: [
+        {
+          browser: 'chromium',
+        },
+      ],
+      headless: true,
+    }
+  }
+
+  const result = await runVitest({
+    ...baseConfig,
+    reporters: ['blob'],
+  })
+  expect.assert(result.ctx)
+  const generatedModuleGraphJson = await getSerializedModuleGraph(result.ctx)
+  if (mode === 'browser') {
+    expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
+      "{
+        "<root>/basic.test.ts": {
+          "graph": {
+            "<root>/sub/subject.ts": [],
+            "<root>/sub/format.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/basic.test.ts": [
+              "<root>/sub/format.ts",
+              "<root>/util.ts"
+            ]
+          },
+          "externalized": [],
+          "inlined": [
+            "<root>/basic.test.ts",
+            "<root>/sub/format.ts",
+            "<root>/sub/subject.ts",
+            "<root>/util.ts"
+          ]
+        },
+        "<root>/second.test.ts": {
+          "graph": {
+            "<root>/sub/subject.ts": [],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/second.test.ts": [
+              "<root>/util.ts",
+              "<optimized-deps>/obug.js"
+            ]
+          },
+          "externalized": [
+            "<optimized-deps>/obug.js?v=<hash>"
+          ],
+          "inlined": [
+            "<root>/second.test.ts",
+            "<root>/util.ts",
+            "<root>/sub/subject.ts"
+          ]
+        }
+      }"
+    `)
+  }
+  else {
+    expect(generatedModuleGraphJson).toMatchInlineSnapshot(`
+      "{
+        "<root>/basic.test.ts": {
+          "graph": {
+            "<root>/sub/subject.ts": [],
+            "<root>/sub/format.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/basic.test.ts": [
+              "<root>/sub/format.ts",
+              "<root>/util.ts"
+            ]
+          },
+          "externalized": [],
+          "inlined": [
+            "<root>/basic.test.ts",
+            "<root>/sub/format.ts",
+            "<root>/sub/subject.ts",
+            "<root>/util.ts"
+          ]
+        },
+        "<root>/second.test.ts": {
+          "graph": {
+            "<root>/sub/subject.ts": [],
+            "<root>/util.ts": [
+              "<root>/sub/subject.ts"
+            ],
+            "<root>/second.test.ts": [
+              "<root>/util.ts",
+              "<node_modules>/obug/dist/node.js"
+            ]
+          },
+          "externalized": [
+            "<node_modules>/obug/dist/node.js"
+          ],
+          "inlined": [
+            "<root>/second.test.ts",
+            "<root>/util.ts",
+            "<root>/sub/subject.ts"
+          ]
+        }
+      }"
+    `)
+  }
+
+  const result2 = await runVitest({
+    ...baseConfig,
+    mergeReports: reportsDir,
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect.assert(result2.ctx)
+  const restoredModuleGraphJson = await getSerializedModuleGraph(result2.ctx)
+  expect(restoredModuleGraphJson).toBe(generatedModuleGraphJson)
+
+  const result3 = await runVitest({
+    ...baseConfig,
+    mergeReports: resolve(root, '.vitest/blob'),
+    reporters: ['html'],
+  })
+  expect(result3.stderr).toMatchInlineSnapshot(`""`)
+  expect(result3.stdout).toMatchInlineSnapshot(`
+    " HTML  Report is generated
+           You can run npx vite preview --outDir html to see the test results.
+    "
+  `)
+})
+
+async function getSerializedModuleGraph(ctx: Vitest) {
+  const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
+  const moduleGraphs = Object.fromEntries(
+    await Promise.all(
+      files.map(async (file) => {
+        const projectName = file.projectName || ''
+        const graph = await getModuleGraph(
+          ctx,
+          projectName,
+          file.filepath,
+        )
+        return [file.filepath, graph] as const
+      }),
+    ),
+  )
+  return JSON.stringify(moduleGraphs, null, 2)
+    .replaceAll(ctx.config.root, '<root>')
+    .replace(/"[^"\n]*\/node_modules\//g, '"<node_modules>/')
+    .replace(/<node_modules>\/\.vite\/vitest\/[a-f0-9]{40}\/deps\/([^"?]+)/g, '<optimized-deps>/$1')
+    .replace(/\?v=[a-f0-9]+/g, '?v=<hash>')
+}
+
+function trimReporterOutput(report: string) {
+  const rows = report
+    .replace(/\d+ms/g, '<time>')
+    .replace(/\d+\.\d+s/g, '<time>')
+    .replace(/blob report written to (.*)/g, 'blob report written to <path>')
+    .split('\n')
+
+  // Trim start and end, capture just rendered tree
+  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
+  rows.splice(rows.findIndex(row => row.includes('Start at')), 1)
+
+  return rows.join('\n').trim()
+}
+
+function createTest(name: string, file: File): Test {
+  file.result = { state: 'pass' }
+
+  return {
+    type: 'test',
+    name,
+    fullName: `${file.fullName} > ${name}`,
+    fullTestName: `${file.fullTestName} > ${name}`,
+    id: `${file.id}_0`,
+    mode: 'run',
+    file,
+    suite: file,
+    annotations: [],
+    artifacts: [],
+    timeout: 0,
+    result: { state: 'pass' },
+    meta: {},
+    context: {} as any,
+    benchmarks: [],
+  }
+}
+
+test('merge reports with labels', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'first.test.ts': `
+test("always good", () => {})
+
+test("works on linux", () => {
+  expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+})
+
+test("works on macos", () => {
+  expect(process.env.TEST_LABEL_ENV === 'macos').toBe(true)
+})
+`,
+    'second.test.ts': `
+test("linux only", () => {})
+`,
+    'third.test.ts': `
+test("macos only", () => {})
+`,
+  })
+  process.env.TEST_LABEL_ENV = 'linux'
+  const result1 = await runVitest({
+    root,
+    globals: true,
+    reporters: [['blob', { label: 'linux' }]],
+  }, ['first', 'second'])
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "first.test.ts": {
+        "always good": "passed",
+        "works on linux": "passed",
+        "works on macos": [
+          "expected false to be true // Object.is equality",
+        ],
+      },
+      "second.test.ts": {
+        "linux only": "passed",
+      },
+    }
+  `)
+  process.env.TEST_LABEL_ENV = 'macos'
+  process.env.VITEST_BLOB_LABEL = 'macos' // test VITEST_BLOB_LABEL
+  const result2 = await runVitest({
+    root,
+    globals: true,
+    reporters: [
+      'blob',
+      // test the original run's reporter doesn't include label
+      'verbose',
+    ],
+  }, ['first', 'third'])
+  delete process.env.VITEST_BLOB_LABEL
+  expect(trimReporterOutput(result2.stdout)).toMatchInlineSnapshot(`
+    "✓ first.test.ts > always good <time>
+     × first.test.ts > works on linux <time>
+       → expected false to be true // Object.is equality
+     ✓ first.test.ts > works on macos <time>
+     ✓ third.test.ts > macos only <time>
+
+     Test Files  1 failed | 1 passed (2)
+          Tests  1 failed | 3 passed (4)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+
+    blob report written to <path>"
+  `)
+  expect(result2.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  first.test.ts > works on linux
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:5:50
+          3|
+          4| test("works on linux", () => {
+          5|   expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+           |                                                  ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "first.test.ts": {
+        "always good": "passed",
+        "works on linux": [
+          "expected false to be true // Object.is equality",
+        ],
+        "works on macos": "passed",
+      },
+      "third.test.ts": {
+        "macos only": "passed",
+      },
+    }
+  `)
+  const blobDir = resolve(root, '.vitest/blob')
+  const result = await runVitest({
+    root,
+    mergeReports: blobDir,
+  })
+  expect(readdirSync(blobDir)).toMatchInlineSnapshot(`
+    [
+      "blob-linux.json",
+      "blob-macos.json",
+    ]
+  `)
+  expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
+    "✓  linux  first.test.ts > always good <time>
+     ✓  linux  first.test.ts > works on linux <time>
+     ×  linux  first.test.ts > works on macos <time>
+       → expected false to be true // Object.is equality
+     ✓  linux  second.test.ts > linux only <time>
+     ✓  macos  first.test.ts > always good <time>
+     ×  macos  first.test.ts > works on linux <time>
+       → expected false to be true // Object.is equality
+     ✓  macos  first.test.ts > works on macos <time>
+     ✓  macos  third.test.ts > macos only <time>
+
+     Test Files  2 failed | 2 passed (4)
+          Tests  2 failed | 6 passed (8)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Per blob  <time> <time>"
+  `)
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL   linux  first.test.ts > works on macos
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:9:50
+          7|
+          8| test("works on macos", () => {
+          9|   expect(process.env.TEST_LABEL_ENV === 'macos').toBe(true)
+           |                                                  ^
+         10| })
+         11|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+     FAIL   macos  first.test.ts > works on linux
+    AssertionError: expected false to be true // Object.is equality
+
+    - Expected
+    + Received
+
+    - true
+    + false
+
+     ❯ first.test.ts:5:50
+          3|
+          4| test("works on linux", () => {
+          5|   expect(process.env.TEST_LABEL_ENV === 'linux').toBe(true)
+           |                                                  ^
+          6| })
+          7|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+    "
+  `)
+  expect(result.errorTree({ fileLabel: true })).toMatchInlineSnapshot(`
+    {
+      "first.test.ts (linux)": {
+        "always good": "passed",
+        "works on linux": "passed",
+        "works on macos": [
+          "expected false to be true // Object.is equality",
+        ],
+      },
+      "first.test.ts (macos)": {
+        "always good": "passed",
+        "works on linux": [
+          "expected false to be true // Object.is equality",
+        ],
+        "works on macos": "passed",
+      },
+      "second.test.ts (linux)": {
+        "linux only": "passed",
+      },
+      "third.test.ts (macos)": {
+        "macos only": "passed",
+      },
+    }
+  `)
+})
+
+test('merge reports with projects and labels', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'basic.test.ts': `
+import { test, expect } from "vitest";
+
+test("always good", () => {})
+
+test("works on node", () => {
+  expect(typeof window).toBe('undefined')
+})
+
+test("works on browser", () => {
+  expect(typeof window).not.toBe('undefined')
+})
+`,
+  })
+  const baseConfig: RunVitestConfig = {
+    root,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'browser',
+          sequence: {
+            groupOrder: 1,
+          },
+          browser: {
+            enabled: true,
+            headless: true,
+            screenshotFailures: false,
+            provider: playwright(),
+            instances: [
+              {
+                browser: 'chromium',
+              },
+            ],
+          },
+        },
+      },
+    ],
+  }
+  const result1 = await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "browser (chromium)": {
+        "basic.test.ts": {
+          "always good": "passed",
+          "works on browser": "passed",
+          "works on node": [
+            "expected 'object' to be 'undefined' // Object.is equality",
+          ],
+        },
+      },
+      "node": {
+        "basic.test.ts": {
+          "always good": "passed",
+          "works on browser": [
+            "expected 'undefined' not to be 'undefined' // Object.is equality",
+          ],
+          "works on node": "passed",
+        },
+      },
+    }
+  `)
+  const result2 = await runVitest({
+    ...baseConfig,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree({ project: true })).toMatchInlineSnapshot(`
+    {
+      "browser (chromium)": {
+        "basic.test.ts": {
+          "always good": "passed",
+          "works on browser": "passed",
+          "works on node": [
+            "expected 'object' to be 'undefined' // Object.is equality",
+          ],
+        },
+      },
+      "node": {
+        "basic.test.ts": {
+          "always good": "passed",
+          "works on browser": [
+            "expected 'undefined' not to be 'undefined' // Object.is equality",
+          ],
+          "works on node": "passed",
+        },
+      },
+    }
+  `)
+  const result = await runVitest({
+    ...baseConfig,
+    mergeReports: resolve(root, '.vitest/blob'),
+  })
+  expect(trimReporterOutput(result.stdout)).toMatchInlineSnapshot(`
+    "✓ |node|  linux  basic.test.ts > always good <time>
+     ✓ |node|  linux  basic.test.ts > works on node <time>
+     × |node|  linux  basic.test.ts > works on browser <time>
+       → expected 'undefined' not to be 'undefined' // Object.is equality
+     ✓ |browser (chromium)|  linux  basic.test.ts > always good <time>
+     × |browser (chromium)|  linux  basic.test.ts > works on node <time>
+       → expected 'object' to be 'undefined' // Object.is equality
+     ✓ |browser (chromium)|  linux  basic.test.ts > works on browser <time>
+     ✓ |node|  macos  basic.test.ts > always good <time>
+     ✓ |node|  macos  basic.test.ts > works on node <time>
+     × |node|  macos  basic.test.ts > works on browser <time>
+       → expected 'undefined' not to be 'undefined' // Object.is equality
+     ✓ |browser (chromium)|  macos  basic.test.ts > always good <time>
+     × |browser (chromium)|  macos  basic.test.ts > works on node <time>
+       → expected 'object' to be 'undefined' // Object.is equality
+     ✓ |browser (chromium)|  macos  basic.test.ts > works on browser <time>
+
+     Test Files  4 failed (4)
+          Tests  4 failed | 8 passed (12)
+       Duration  <time> (transform <time>, setup <time>, import <time>, tests <time>, environment <time>)
+       Per blob  <time> <time>"
+  `)
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  |node|  linux  basic.test.ts > works on browser
+     FAIL  |node|  macos  basic.test.ts > works on browser
+    AssertionError: expected 'undefined' not to be 'undefined' // Object.is equality
+     ❯ basic.test.ts:11:29
+          9|
+         10| test("works on browser", () => {
+         11|   expect(typeof window).not.toBe('undefined')
+           |                             ^
+         12| })
+         13|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+     FAIL  |browser (chromium)|  linux  basic.test.ts > works on node
+    AssertionError: expected 'object' to be 'undefined' // Object.is equality
+
+    Expected: "undefined"
+    Received: "object"
+
+     ❯ basic.test.ts:7:24
+          5|
+          6| test("works on node", () => {
+          7|   expect(typeof window).toBe('undefined')
+           |                        ^
+          8| })
+          9|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+     FAIL  |browser (chromium)|  macos  basic.test.ts > works on node
+    AssertionError: expected 'object' to be 'undefined' // Object.is equality
+
+    Expected: "undefined"
+    Received: "object"
+
+     ❯ basic.test.ts:7:24
+          5|
+          6| test("works on node", () => {
+          7|   expect(typeof window).toBe('undefined')
+           |                        ^
+          8| })
+          9|
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+    "
+  `)
+  expect(result.errorTree({ project: true, fileLabel: true })).toMatchInlineSnapshot(`
+    {
+      "browser (chromium)": {
+        "basic.test.ts (linux)": {
+          "always good": "passed",
+          "works on browser": "passed",
+          "works on node": [
+            "expected 'object' to be 'undefined' // Object.is equality",
+          ],
+        },
+        "basic.test.ts (macos)": {
+          "always good": "passed",
+          "works on browser": "passed",
+          "works on node": [
+            "expected 'object' to be 'undefined' // Object.is equality",
+          ],
+        },
+      },
+      "node": {
+        "basic.test.ts (linux)": {
+          "always good": "passed",
+          "works on browser": [
+            "expected 'undefined' not to be 'undefined' // Object.is equality",
+          ],
+          "works on node": "passed",
+        },
+        "basic.test.ts (macos)": {
+          "always good": "passed",
+          "works on browser": [
+            "expected 'undefined' not to be 'undefined' // Object.is equality",
+          ],
+          "works on node": "passed",
+        },
+      },
+    }
+  `)
+})
+
+// currently file level meta is not inherited
+test('label meta', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'basic.test.ts': `
+describe("top-suite", () => {
+  test("inner-test", () => {})
+})
+test("top-test", () => {})
+`,
+  })
+  const result = await runVitest({
+    root,
+    globals: true,
+    reporters: [['blob', { label: 'windows' }]],
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "top-suite": {
+          "inner-test": "passed",
+        },
+        "top-test": "passed",
+      },
+    }
+  `)
+  const tree = buildTestTree(
+    result.results,
+    t => ({ '@META': t.meta(), 'state': t.result().state }),
+    (suite, children) => ({ '@META': suite.meta(), ...children }),
+    (file, children) => ({ '@META': file.meta(), ...children }),
+  )
+  expect(tree).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "@META": {
+          "__vitest_label__": "windows",
+        },
+        "top-suite": {
+          "@META": {},
+          "inner-test": {
+            "@META": {},
+            "state": "passed",
+          },
+        },
+        "top-test": {
+          "@META": {},
+          "state": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('onTestRunEnd(testModules) are preserved from different test run roots', async () => {
+  const root1 = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const root2 = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root1, {
+    'basic.test.ts': `test("ok", () => {})`,
+  })
+  useFS(root2, {
+    'basic.test.ts': `test("ok", () => {})`,
+  })
+
+  const result1 = await runVitest({
+    root: root1,
+    globals: true,
+    reporters: [['blob', { label: 'linux' }]],
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
+
+  const result2 = await runVitest({
+    root: root2,
+    globals: true,
+    reporters: [['blob', { label: 'macos' }]],
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "ok": "passed",
+      },
+    }
+  `)
+
+  const blobDir1 = path.join(root1, '.vitest/blob')
+  const blobDir2 = path.join(root2, '.vitest/blob')
+  for (const filename of readdirSync(blobDir2)) {
+    cpSync(path.join(blobDir2, filename), path.join(blobDir1, filename))
+  }
+
+  const result = await runVitest({
+    root: root1,
+    mergeReports: blobDir1,
+  })
+  expect(result.stderr).toMatchInlineSnapshot(`""`)
+  // previously this was "1 passed" due to broken onTestRunEnd(testModules)
+  expect(result.stdout).toContain('Test Files  2 passed')
+  expect(result.errorTree({ fileLabel: true })).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts (linux)": {
+        "ok": "passed",
+      },
+      "basic.test.ts (macos)": {
+        "ok": "passed",
+      },
+    }
+  `)
+})
+
+async function writeBlob(content: MergeReport, filename: string): Promise<void> {
+  const report = stringify(content)
+
+  const dir = dirname(filename)
+  if (!existsSync(dir)) {
+    await mkdir(dir, { recursive: true })
+  }
+
+  await writeFile(filename, report, 'utf-8')
+}

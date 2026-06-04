@@ -9,22 +9,21 @@ import type {
 } from '../types/config'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import os from 'node:os'
-import { limitConcurrency } from '@vitest/runner/utils'
 import { deepClone } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { isTTY } from '../../utils/env'
+import { limitConcurrency } from '../../utils/limit-concurrency'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
-import { withLabel } from '../reporters/renderers/utils'
 
 // vitest.config.*
 // vite.config.*
 // vitest.unit.config.*
 // vite.unit.config.*
-const CONFIG_REGEXP = /^vite(?:st)?(?:\.\w+)?\.config\./
+// vitest.unit-test.config.*
+const CONFIG_REGEXP = /^vite(?:st)?(?:\.[\w-]+)?\.config\./
 
 export async function resolveProjects(
   vitest: Vitest,
@@ -43,6 +42,7 @@ export async function resolveProjects(
   // not all options are allowed to be overridden
   const overridesOptions = [
     'logHeapUsage',
+    'detectAsyncLeaks',
     'allowOnly',
     'sequence',
     'testTimeout',
@@ -60,6 +60,7 @@ export async function resolveProjects(
     'inspect',
     'inspectBrk',
     'fileParallelism',
+    'tagsFilter',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -89,7 +90,28 @@ export async function resolveProjects(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
+      {
+        ...options,
+        root,
+        configFile,
+        plugins: [
+          {
+            name: 'vitest:tags',
+            // don't inherit tags from workspace config, they are merged separately
+            configResolved(config) {
+              ;(config as any).test ??= {}
+              config.test!.tags = options.test?.tags
+            },
+            api: {
+              vitest: {
+                experimental: { ignoreFsModuleCache: true },
+              },
+            },
+          },
+          ...options.plugins || [],
+        ],
+        test: { ...options.test, ...cliOverrides },
+      },
     )))
   })
 
@@ -175,10 +197,80 @@ export async function resolveProjects(
     names.add(name)
   }
 
-  return resolveBrowserProjects(vitest, names, resolvedProjects)
+  return resolveDefaultProjects(vitest, names, resolvedProjects)
 }
 
-export async function resolveBrowserProjects(
+export async function resolveDefaultProjects(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+): Promise<TestProject[]> {
+  const newProjects = await resolveBrowserProjects(vitest, names, resolvedProjects)
+
+  let lastGroupOrder = Math.max(0, ...newProjects.map(p => p.config.sequence.groupOrder))
+
+  newProjects.forEach((project) => {
+    const benchmark = project.config.benchmark
+    if (!benchmark.enabled) {
+      return
+    }
+
+    if (vitest.isExcludedByProjectFilter(project.config.name)) {
+      benchmark.enabled = false
+      return
+    }
+
+    const name = project.config.name ? `${project.config.name} (bench)` : 'bench'
+    if (!vitest.matchesProjectFilter(name)) {
+      benchmark.enabled = false
+      return
+    }
+
+    if (names.has(name)) {
+      throw new Error(`Cannot create a benchmark project because the name "${name}" is already in use.`)
+    }
+    names.add(name)
+
+    const benchmarkProject = TestProject._cloneTestProject(project, {
+      ...project.config,
+      name,
+      include: benchmark.include,
+      exclude: benchmark.exclude,
+      includeSource: benchmark.includeSource,
+      coverage: {
+        ...project.config.coverage,
+        enabled: false,
+      },
+      maxWorkers: 1,
+      maxConcurrency: 1,
+      testTimeout: project.config.testTimeout < 60_000 ? 60_000 : project.config.testTimeout,
+      hookTimeout: project.config.hookTimeout < 120_000 ? 120_000 : project.config.hookTimeout,
+      // Spread because we disable it in the original project. `projectName`
+      // carries the parent's name so the runtime can substitute it into
+      // `${projectName}` placeholders inside `writeResult` / `bench.from()`
+      // paths — `project.config.name` already excludes the ` (bench)` suffix
+      // we add to the cloned project's own name above.
+      benchmark: { ...benchmark, projectName: project.config.name ?? '' },
+      sequence: {
+        ...project.config.sequence,
+        concurrent: false,
+        // benchmarks should always run in a separate isolated group
+        groupOrder: ++lastGroupOrder,
+      },
+      typecheck: {
+        ...project.config.typecheck,
+        enabled: false,
+      },
+      // TODO: mark if benchmark project?
+    })
+    // disable benchmark in the original project
+    benchmark.enabled = false
+    newProjects.push(benchmarkProject)
+  })
+  return newProjects
+}
+
+async function resolveBrowserProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
@@ -189,29 +281,14 @@ export async function resolveBrowserProjects(
     if (!project.config.browser.enabled) {
       return
     }
-    const instances = project.config.browser.instances || []
-    const browser = project.config.browser.name
-    if (instances.length === 0 && browser) {
-      instances.push({
-        browser,
-        name: project.name ? `${project.name} (${browser})` : browser,
-      })
-      vitest.logger.warn(
-        withLabel(
-          'yellow',
-          'Vitest',
-          [
-            `No browser "instances" were defined`,
-            project.name ? ` for the "${project.name}" project. ` : '. ',
-            `Running tests in "${project.config.browser.name}" browser. `,
-            'The "browser.name" field is deprecated since Vitest 3. ',
-            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
-          ].filter(Boolean).join(''),
-        ),
-      )
-    }
     const originalName = project.config.name
-    // if original name is in the --project=name filter, keep all instances
+    const instances = project.config.browser.instances || []
+    if (instances.length === 0 || vitest.isExcludedByProjectFilter(originalName)) {
+      removeProjects.add(project)
+      return
+    }
+    // if original name matches a positive filter, keep all instances
+    // otherwise, filter instances individually (user may target a specific instance name)
     const filteredInstances = vitest.matchesProjectFilter(originalName)
       ? instances
       : instances.filter((instance) => {
@@ -237,6 +314,9 @@ export async function resolveBrowserProjects(
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
       }
+      if (config.provider?.name != null && project.config.browser.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
+        throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
+      }
 
       if (names.has(name)) {
         throw new Error(
@@ -250,43 +330,14 @@ export async function resolveBrowserProjects(
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
       clonedConfig.name = name
-      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      const clone = TestProject._cloneTestProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
 
     removeProjects.add(project)
   })
 
-  resolvedProjects = resolvedProjects.filter(project => !removeProjects.has(project))
-
-  const headedBrowserProjects = resolvedProjects.filter((project) => {
-    return project.config.browser.enabled && !project.config.browser.headless
-  })
-  if (headedBrowserProjects.length > 1) {
-    const message = [
-      `Found multiple projects that run browser tests in headed mode: "${headedBrowserProjects.map(p => p.name).join('", "')}".`,
-      ` Vitest cannot run multiple headed browsers at the same time.`,
-    ].join('')
-    if (!isTTY) {
-      throw new Error(`${message} Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option.`)
-    }
-    const prompts = await import('prompts')
-    const { projectName } = await prompts.default({
-      type: 'select',
-      name: 'projectName',
-      choices: headedBrowserProjects.map(project => ({
-        title: project.name,
-        value: project.name,
-      })),
-      message: `${message} Select a single project to run or cancel and run tests with "headless: true" option. Note that you can also start tests with --browser=name or --project=name flag.`,
-    })
-    if (!projectName) {
-      throw new Error('The test run was aborted.')
-    }
-    return resolvedProjects.filter(project => project.name === projectName)
-  }
-
-  return resolvedProjects
+  return resolvedProjects.filter(project => !removeProjects.has(project))
 }
 
 function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
@@ -297,6 +348,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     headless,
     screenshotDirectory,
     screenshotFailures,
+    fileParallelism,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -312,6 +364,8 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       locators: locators
         ? {
             testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
+            exact: locators.exact ?? currentConfig.locators.exact,
+            errorFormat: locators.errorFormat ?? currentConfig.locators.errorFormat,
           }
         : project.config.browser.locators,
       viewport: viewport ?? currentConfig.viewport,
@@ -320,6 +374,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       headless: headless ?? currentConfig.headless,
       provider: provider ?? currentConfig.provider,
+      fileParallelism: fileParallelism ?? currentConfig.fileParallelism,
       name: browser,
       instances: [], // projects cannot spawn more configs
     },
@@ -496,11 +551,15 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
 
 function getPotentialProjectNames(project: TestProject) {
   const names = [project.name]
+  // TODO: include benchmarks in browsers
   if (project.config.browser.instances) {
     names.push(...project.config.browser.instances.map(i => i.name!))
   }
   else if (project.config.browser.name) {
     names.push(project.config.browser.name)
+  }
+  if (project.config.benchmark.enabled) {
+    names.push(project.name ? `${project.name} (bench)` : 'bench')
   }
   return names
 }

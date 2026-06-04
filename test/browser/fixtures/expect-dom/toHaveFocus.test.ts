@@ -18,6 +18,6 @@ test('.toHaveFocus', () => {
   expect(focused).toHaveFocus()
   expect(notFocused).not.toHaveFocus()
 
-  expect(() => expect(focused).not.toHaveFocus()).toThrowError()
-  expect(() => expect(notFocused).toHaveFocus()).toThrowError()
+  expect(() => expect(focused).not.toHaveFocus()).toThrow()
+  expect(() => expect(notFocused).toHaveFocus()).toThrow()
 })

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { TestAnnotation, TestAnnotationLocation } from '@vitest/runner'
 import type { RunnerTestCase } from 'vitest'
-import { relative } from 'pathe'
+import { computed } from 'vue'
 import { getAttachmentUrl, sanitizeFilePath } from '~/composables/attachments'
-import { browserState, config } from '~/composables/client'
-import { showAnnotationSource } from '~/composables/codemirror'
-import { isDark } from '~/composables/dark'
-import { mapLeveledTaskStacks } from '~/composables/error'
-import { openScreenshot, useScreenshot } from '~/composables/screenshot'
+import { config } from '~/composables/client'
+import { getLocationString, openLocation } from '~/composables/location'
+import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
+import Artifacts from '../artifacts/Artifacts.vue'
+import FailureScreenshot from '../FailureScreenshot.vue'
+import ViewReportError from './ViewReportError.vue'
 
 const props = defineProps<{
   test: RunnerTestCase
@@ -17,29 +17,15 @@ const failed = computed(() => {
   if (!props.test.result || !props.test.result.errors?.length) {
     return null
   }
-  return mapLeveledTaskStacks(isDark.value, [props.test])[0] as RunnerTestCase | null
+  return props.test
 })
 
-function openAnnotation(annotation: TestAnnotation) {
-  return showAnnotationSource(props.test, annotation)
-}
-
-const {
-  currentTask,
-  showScreenshot,
-  showScreenshotModal,
-  currentScreenshotUrl,
-} = useScreenshot()
-
-function getLocationString(location: TestAnnotationLocation) {
-  const path = relative(config.value.root, location.file)
-  return `${path}:${location.line}:${location.column}`
-}
-
+// filter out internal TaskMeta
+// packages/vitest/src/types/global.ts
 const kWellKnownMeta = new Set([
   'benchmark',
   'typecheck',
-  'failScreenshotPath',
+  '__vitest_label__',
 ])
 const meta = computed(() => {
   return Object.entries(props.test.meta).filter(([name]) => {
@@ -58,32 +44,8 @@ const meta = computed(() => {
         m-2
         rounded
       >
-        <div flex="~ gap-2 items-center">
-          <template v-if="browserState && test.meta?.failScreenshotPath">
-            <IconButton
-              v-tooltip.bottom="'View screenshot error'"
-              class="!op-100"
-              icon="i-carbon:image"
-              title="View screenshot error"
-              @click="showScreenshotModal(test)"
-            />
-            <IconButton
-              v-tooltip.bottom="'Open screenshot error in editor'"
-              class="!op-100"
-              icon="i-carbon:image-reference"
-              title="Open screenshot error in editor"
-              @click="openScreenshot(test)"
-            />
-          </template>
-        </div>
-        <div
-          v-if="test.result?.htmlError"
-          class="scrolls scrolls-rounded task-error"
-          data-testid="task-error"
-        >
-          <pre v-html="test.result.htmlError" />
-        </div>
-        <template v-else-if="test.result?.errors">
+        <FailureScreenshot :task="test" />
+        <template v-if="test.result?.errors && config.root">
           <ViewReportError
             v-for="(error, idx) of test.result.errors"
             :key="idx"
@@ -97,7 +59,7 @@ const meta = computed(() => {
     </div>
     <template v-else>
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
-        All tests passed in this file
+        The test has passed without any errors
       </div>
     </template>
     <template v-if="test.annotations.length">
@@ -134,7 +96,7 @@ const meta = computed(() => {
               title="Open in Editor"
               class="flex gap-1 text-yellow-500/80 cursor-pointer"
               ws-nowrap
-              @click="openAnnotation(annotation)"
+              @click="openLocation(test, annotation.location)"
             >
               {{ getLocationString(annotation.location) }}
             </span>
@@ -158,6 +120,7 @@ const meta = computed(() => {
         <AnnotationAttachmentImage :annotation="annotation" />
       </div>
     </template>
+    <Artifacts :test="test" />
     <template v-if="meta.length">
       <h1 m-2>
         Test Meta
@@ -178,20 +141,6 @@ const meta = computed(() => {
           <pre overflow-auto bg="gray/30" rounded p-2>{{ content }}</pre>
         </template>
       </div>
-    </template>
-    <template v-if="browserState">
-      <Modal v-model="showScreenshot" direction="right">
-        <template v-if="currentTask">
-          <Suspense>
-            <ScreenshotError
-              :file="currentTask.file.filepath"
-              :name="currentTask.name"
-              :url="currentScreenshotUrl"
-              @close="showScreenshot = false"
-            />
-          </Suspense>
-        </template>
-      </Modal>
     </template>
   </div>
 </template>

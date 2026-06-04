@@ -230,9 +230,9 @@ export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   }
 
   private restoreCursor() {
-    const cursortPos
+    const cursorPos
       = this.keywordOffset() + (this.currentKeyword?.length || 0)
-    this.write(`${ESC}${cursortPos}G`)
+    this.write(`${ESC}${cursorPos}G`)
   }
 
   private write(data: string) {

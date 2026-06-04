@@ -1,4 +1,4 @@
-import type { MatchersObject } from '@vitest/expect'
+import type { MatchersObject } from 'vitest'
 import toBeChecked from './toBeChecked'
 import toBeEmptyDOMElement from './toBeEmptyDOMElement'
 import { toBeDisabled, toBeEnabled } from './toBeEnabled'
@@ -24,6 +24,7 @@ import toHaveStyle from './toHaveStyle'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
 import toMatchScreenshot from './toMatchScreenshot'
+import toMatchTextContent from './toMatchTextContent'
 
 export const matchers: MatchersObject = {
   toBeDisabled,
@@ -46,6 +47,7 @@ export const matchers: MatchersObject = {
   toHaveFormValues,
   toHaveStyle,
   toHaveTextContent,
+  toMatchTextContent,
   toHaveValue,
   toHaveDisplayValue,
   toBeChecked,

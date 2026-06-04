@@ -1,9 +1,6 @@
-import type { Arrayable } from '@vitest/utils'
-
-import type { BenchmarkBuiltinReporters } from '../reporters'
-import type { Reporter } from './reporter'
-
 export interface BenchmarkUserOptions {
+  enabled?: boolean
+
   /**
    * Include globs for benchmark test files
    *
@@ -13,7 +10,7 @@ export interface BenchmarkUserOptions {
 
   /**
    * Exclude globs for benchmark test files
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default []
    */
   exclude?: string[]
 
@@ -25,35 +22,24 @@ export interface BenchmarkUserOptions {
   includeSource?: string[]
 
   /**
-   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
-   * and/or paths to custom reporters
-   *
-   * @default ['default']
-   */
-  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
-
-  /**
-   * @deprecated Use `benchmark.outputJson` instead
-   */
-  outputFile?:
-    | string
-    | (Partial<Record<BenchmarkBuiltinReporters, string>>
-      & Record<string, string>)
-
-  /**
-   * benchmark output file to compare against
-   */
-  compare?: string
-
-  /**
-   * benchmark output file
-   */
-  outputJson?: string
-
-  /**
    * Include `samples` array of benchmark results for API or custom reporter usages.
    * This is disabled by default to reduce memory usage.
    * @default false
    */
-  includeSamples?: boolean
+  retainSamples?: boolean
+
+  /**
+   * Disable warnings when a benchmark accesses module export getters too many times.
+   * @default false
+   */
+  suppressExportGetterWarnings?: boolean
+
+  /**
+   * The name of the parent project that this benchmark project was cloned
+   * from. Populated automatically when Vitest creates the dedicated benchmark
+   * project for a parent project. Used by the runtime as the value for the
+   * `${projectName}` placeholder in `writeResult` / `bench.from()` paths.
+   * @internal
+   */
+  projectName?: string
 }

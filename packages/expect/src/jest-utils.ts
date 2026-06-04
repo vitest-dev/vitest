@@ -22,6 +22,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Tester, TesterContext } from './types'
 import { isObject } from '@vitest/utils/helpers'
@@ -84,6 +85,21 @@ function asymmetricMatch(a: any, b: any, customTesters: Array<Tester>) {
     return b.asymmetricMatch(a, customTesters)
   }
 }
+
+// https://github.com/jestjs/jest/blob/905bcbced3d40cdf7aadc4cdf6fb731c4bb3dbe3/packages/expect-utils/src/utils.ts#L509
+export function isError(value: unknown): value is Error {
+  if (typeof Error.isError === 'function') {
+    return Error.isError(value)
+  }
+  switch (Object.prototype.toString.call(value)) {
+    case '[object Error]':
+    case '[object Exception]':
+    case '[object DOMException]':
+      return true
+    default:
+      return value instanceof Error
+  }
+};
 
 // Equality function lovingly adapted from isEqual in
 //   [Underscore](http://underscorejs.org)
@@ -203,7 +219,7 @@ function eq(
     return false
   }
 
-  if (a instanceof Error && b instanceof Error) {
+  if (isError(a) && isError(b)) {
     try {
       return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
     }
@@ -256,7 +272,7 @@ function isErrorEqual(
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
 
   let result = (
-    Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+    Object.prototype.toString.call(a) === Object.prototype.toString.call(b)
     && a.name === b.name
     && a.message === b.message
   )
@@ -580,9 +596,11 @@ function hasPropertyInObject(object: object, key: string | symbol): boolean {
 function isObjectWithKeys(a: any) {
   return (
     isObject(a)
-    && !(a instanceof Error)
+    && !isError(a)
     && !Array.isArray(a)
     && !(a instanceof Date)
+    && !(a instanceof Set)
+    && !(a instanceof Map)
   )
 }
 
@@ -798,4 +816,16 @@ export function getObjectSubset(
       }
 
   return { subset: getObjectSubsetWithContext()(object, subset), stripped }
+}
+
+/**
+ * Detects if an object is a Standard Schema V1 compatible schema
+ */
+export function isStandardSchema(obj: any): obj is StandardSchemaV1 {
+  return (
+    !!obj
+    && (typeof obj === 'object' || typeof obj === 'function')
+    && obj['~standard']
+    && typeof obj['~standard'].validate === 'function'
+  )
 }

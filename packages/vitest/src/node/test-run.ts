@@ -1,26 +1,28 @@
+import type { SerializedError } from '@vitest/utils'
 import type {
   File as RunnerTestFile,
+  TaskEventData,
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
-  TestAnnotation,
+  TestArtifact,
   TestAttachment,
-} from '@vitest/runner'
-import type { TaskEventData } from '@vitest/runner/types/tasks'
-import type { SerializedError } from '@vitest/utils'
+  TestBenchmark,
+} from '../runtime/runner/types'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { ReportedHookContext, TestCase, TestCollection, TestModule } from './reporters/reported-tasks'
-import type { TestSpecification } from './spec'
+import type { TestSpecification } from './test-specification'
 import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
-import { existsSync } from 'node:fs'
-import { copyFile, mkdir } from 'node:fs/promises'
-import { isPrimitive } from '@vitest/utils/helpers'
+import { existsSync, readFileSync } from 'node:fs'
+import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
@@ -55,19 +57,37 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async annotate(testId: string, annotation: TestAnnotation): Promise<TestAnnotation> {
-    const task = this.vitest.state.idMap.get(testId)
-    const entity = task && this.vitest.state.getReportedEntity(task)
+  async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
+    const testCase = this.getTestCaseById(testId, 'Benchmark')
+    testCase.task.benchmarks.push(benchmark)
+    await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
+  }
 
-    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
-    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+  async recordArtifact<Artifact extends TestArtifact>(testId: string, artifact: Artifact): Promise<Artifact> {
+    const testCase = this.getTestCaseById(testId, 'Artifact')
 
-    await this.resolveTestAttachment(entity, annotation)
+    // annotations won't resolve as artifacts for backwards compatibility until next major
+    if (artifact.type === 'internal:annotation') {
+      await this.resolveTestAttachment(testCase, artifact.annotation.attachment, artifact.annotation.message)
 
-    entity.task.annotations.push(annotation)
+      testCase.task.annotations.push(artifact.annotation)
 
-    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
-    return annotation
+      await this.vitest.report('onTestCaseAnnotate', testCase, artifact.annotation)
+
+      return artifact
+    }
+
+    if (Array.isArray(artifact.attachments)) {
+      await Promise.all(
+        artifact.attachments.map(attachment => this.resolveTestAttachment(testCase, attachment)),
+      )
+    }
+
+    testCase.task.artifacts.push(artifact)
+
+    await this.vitest.report('onTestCaseArtifactRecord', testCase, artifact)
+
+    return artifact
   }
 
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
@@ -84,6 +104,15 @@ export class TestRun {
     // "onTaskUpdate" in parallel with others or before all or after all?
     // TODO: error handling - what happens if custom reporter throws an error?
     await this.vitest.report('onTaskUpdate', update, events)
+  }
+
+  private getTestCaseById(testId: string, recordType: string) {
+    const task = this.vitest.state.idMap.get(testId)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || testId}`)
+    assert(entity.type === 'test', `${recordType} can only be recorded on a test, instead got ${entity.type}`)
+    return entity
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
@@ -107,6 +136,24 @@ export class TestRun {
     }
 
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
+
+    for (const project in this.vitest.state.metadata) {
+      const meta = this.vitest.state.metadata[project]
+      if (!meta?.dumpDir) {
+        continue
+      }
+      const path = resolve(meta.dumpDir, 'vitest-metadata.json')
+      meta.outline = {
+        externalized: Object.keys(meta.externalized).length,
+        inlined: Object.keys(meta.tmps).length,
+      }
+      await writeFile(
+        path,
+        JSON.stringify(meta, null, 2),
+        'utf-8',
+      )
+      this.vitest.logger.log(`Metadata written to ${path}`)
+    }
   }
 
   private hasFailed(modules: TestModule[]) {
@@ -117,6 +164,7 @@ export class TestRun {
     return modules.some(m => !m.ok())
   }
 
+  // make sure the error always has a "stacks" property
   private syncUpdateStacks(update: TaskResultPack[]): void {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
@@ -136,6 +184,18 @@ export class TestRun {
         else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
+            getSourceMap(file) {
+              // This only handles external modules since
+              // source map is already applied for inlined modules.
+              // Module node exists due to Vitest fetch module,
+              // but transformResult should be empty for external modules.
+              const mod = project.vite.moduleGraph.getModuleById(file)
+              if (!mod?.transformResult && existsSync(file)) {
+                const code = readFileSync(file, 'utf-8')
+                const result = extractSourcemapFromFile(code, file)
+                return result?.map
+              }
+            },
           })
         }
       })
@@ -147,6 +207,13 @@ export class TestRun {
     const entity = task && this.vitest.state.getReportedEntity(task)
 
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+
+    if (event === 'suite-failed-early' && entity.type === 'module') {
+      // the file failed during import
+      await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleEnd', entity)
+      return
+    }
 
     if (event === 'suite-prepare' && entity.type === 'suite') {
       return await this.vitest.report('onTestSuiteReady', entity)
@@ -173,6 +240,11 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', entity)
       }
 
+      return
+    }
+
+    if (event === 'test-cancel' && entity.type === 'test') {
+      // This is used to just update state of the task
       return
     }
 
@@ -213,9 +285,8 @@ export class TestRun {
     }
   }
 
-  private async resolveTestAttachment(test: TestCase, annotation: TestAnnotation): Promise<TestAttachment | undefined> {
+  private async resolveTestAttachment(test: TestCase, attachment: TestAttachment | undefined, filename?: string): Promise<TestAttachment | undefined> {
     const project = test.project
-    const attachment = annotation.attachment
     if (!attachment) {
       return attachment
     }
@@ -225,7 +296,7 @@ export class TestRun {
       const hash = createHash('sha1').update(currentPath).digest('hex')
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${sanitizeFilePath(annotation.message)}-${hash}${extname(currentPath)}`,
+        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })
@@ -252,9 +323,4 @@ export class TestRun {
       }
     }
   }
-}
-
-function sanitizeFilePath(s: string): string {
-  // eslint-disable-next-line no-control-regex
-  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
 }

@@ -23,7 +23,7 @@ test('.toBeEmptyDOMElement', () => {
   const withElementAndComment = queryByTestId('with-element-and-comment')
   const withWhitespace = queryByTestId('with-whitespace')
   const withText = queryByTestId('with-whitespace')
-  const nonExistantElement = queryByTestId('not-exists')
+  const nonExistentElement = queryByTestId('not-exists')
   const fakeElement = {thisIsNot: 'an html element'}
 
   expect(empty).toBeEmptyDOMElement()
@@ -37,27 +37,27 @@ test('.toBeEmptyDOMElement', () => {
   expect(withText).not.toBeEmptyDOMElement()
 
   // negative test cases wrapped in throwError assertions for coverage.
-  expect(() => expect(empty).not.toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(empty).not.toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(svgEmpty).not.toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(svgEmpty).not.toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(notEmpty).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(notEmpty).toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withComment).not.toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withComment).not.toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withMultipleComments).not.toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withMultipleComments).not.toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withElement).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withElement).toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withElementAndComment).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withElementAndComment).toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withWhitespace).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withWhitespace).toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(withText).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(withText).toBeEmptyDOMElement()).toThrow()
 
-  expect(() => expect(fakeElement).toBeEmptyDOMElement()).toThrowError()
+  expect(() => expect(fakeElement).toBeEmptyDOMElement()).toThrow()
 
   expect(() => {
-    expect(nonExistantElement).toBeEmptyDOMElement()
-  }).toThrowError()
+    expect(nonExistentElement).toBeEmptyDOMElement()
+  }).toThrow()
 })

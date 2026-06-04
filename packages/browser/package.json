@@ -1,11 +1,11 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "4.0.0-beta.13",
+  "version": "5.0.0-beta.4",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
-  "homepage": "https://github.com/vitest-dev/vitest/tree/main/packages/browser#readme",
+  "homepage": "https://vitest.dev/guide/browser/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitest-dev/vitest.git",
@@ -14,36 +14,43 @@
   "bugs": {
     "url": "https://github.com/vitest-dev/vitest/issues"
   },
+  "keywords": [
+    "vitest",
+    "test",
+    "browser",
+    "component"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./providers/*": {
-      "types": "./dist/providers/*.d.ts",
-      "default": "./dist/providers/*.js"
-    },
     "./context": {
       "types": "./context.d.ts",
       "default": "./context.js"
     },
     "./client": {
+      "__vitest_source__": "./src/client/client.ts",
       "default": "./dist/client.js"
     },
     "./matchers": {
       "types": "./matchers.d.ts",
       "default": "./dummy.js"
     },
-    "./locator": {
-      "types": "./dist/locators/index.d.ts",
-      "default": "./dist/locators/index.js"
+    "./locators": {
+      "__vitest_source__": "./src/client/tester/locators.ts",
+      "types": "./dist/locators.d.ts",
+      "default": "./dist/locators.js"
     },
     "./utils": {
-      "types": "./utils.d.ts",
-      "default": "./dist/utils.js"
+      "default": "./dummy.js"
     },
-    "./*": "./*"
+    "./internal/vendor-types": {
+      "types": "./dist/vendor-types.d.ts",
+      "default": "./dummy.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -61,51 +68,36 @@
     "build": "premove dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
-    "dev:client": "vite build src/client --watch",
+    "dev:client": "node --watch-preserve-output --watch-path src/client scripts/build-client.js",
     "dev:node": "rollup -c --watch --watch.include 'src/**'",
     "dev": "premove dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
-    "playwright": "*",
-    "vitest": "workspace:*",
-    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    },
-    "safaridriver": {
-      "optional": true
-    },
-    "webdriverio": {
-      "optional": true
-    }
+    "vitest": "workspace:*"
   },
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/user-event": "^14.6.1",
+    "@blazediff/core": "1.9.1",
     "@vitest/mocker": "workspace:*",
+    "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "pixelmatch": "7.1.0",
     "pngjs": "^7.0.0",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
-    "@vitest/runner": "workspace:*",
-    "@wdio/types": "^9.19.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.7.0",
+    "ivya": "^1.8.2",
     "mime": "^4.1.0",
     "pathe": "catalog:",
-    "playwright": "^1.55.0",
-    "playwright-core": "^1.55.0",
-    "vitest": "workspace:*",
-    "webdriverio": "^9.19.2"
+    "rrweb-snapshot": "2.0.0-alpha.20",
+    "vitest": "workspace:*"
   }
 }

@@ -20,29 +20,29 @@ test('.toHaveAttribute', () => {
 
   expect(() =>
     expect(queryByTestId('ok-button')).not.toHaveAttribute('disabled'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('ok-button')).not.toHaveAttribute('type'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('ok-button')).toHaveAttribute('class'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('ok-button')).not.toHaveAttribute('type', 'submit'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('ok-button')).toHaveAttribute('type', 'button'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('svg-element')).not.toHaveAttribute('width'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('svg-element')).not.toHaveAttribute('width', '12'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     // @ts-expect-error invalid signature
     expect({thisIsNot: 'an html element'}).not.toHaveAttribute(),
-  ).toThrowError()
+  ).toThrow()
 
   // Asymmetric matchers
   expect(queryByTestId('ok-button')).toHaveAttribute(
@@ -60,5 +60,5 @@ test('.toHaveAttribute', () => {
       'type',
       expect.not.stringContaining('sub'),
     ),
-  ).toThrowError()
+  ).toThrow()
 })

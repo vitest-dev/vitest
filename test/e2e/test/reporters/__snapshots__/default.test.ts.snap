@@ -1,0 +1,110 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`default reporter > merge identical errors 1`] = `
+"
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  basic.test.ts > test-a 1
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ basic.test.ts:5:13
+      3| // not merged
+      4| test.for([1, 2])("test-a %$", (n) => {
+      5|   expect(n).toBe(0);
+       |             ^
+      6| });
+      7|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  basic.test.ts > test-a 2
+AssertionError: expected 2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 2
+
+ ❯ basic.test.ts:5:13
+      3| // not merged
+      4| test.for([1, 2])("test-a %$", (n) => {
+      5|   expect(n).toBe(0);
+       |             ^
+      6| });
+      7|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  basic.test.ts > test-b 1
+ FAIL  basic.test.ts > test-b 2
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ basic.test.ts:10:13
+      8| // merged
+      9| test.for([1, 2])("test-b %$", (n) => {
+     10|   expect(1).toBe(0);
+       |             ^
+     11| });
+     12|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  basic.test.ts > test-c 1
+AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
++ [
++   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  ]
+
+ ❯ basic.test.ts:24:18
+     22|   },
+     23| ])("test-c %$", async ({ actual, expected }) => {
+     24|   expect(actual).toEqual(expect.arrayContaining(expected));
+       |                  ^
+     25| });
+     26|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  basic.test.ts > test-c 2
+AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "dddddddddddddddddddddddddddddddddddddddddddddddddd",
++ [
++   "cccccccccccccccccccccccccccccccccccccccccccccccccc",
+  ]
+
+ ❯ basic.test.ts:24:18
+     22|   },
+     23| ])("test-c %$", async ({ actual, expected }) => {
+     24|   expect(actual).toEqual(expect.arrayContaining(expected));
+       |                  ^
+     25| });
+     26|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+"
+`;

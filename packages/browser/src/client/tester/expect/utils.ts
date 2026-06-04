@@ -13,8 +13,25 @@
  * copies or substantial portions of the Software.
  */
 
-import type { MatcherState } from '@vitest/expect'
+import type { MatcherState } from 'vitest'
 import { Locator } from '../locators'
+
+export function queryElementFromUserInput(
+  elementOrLocator: Element | Locator | null,
+  // TODO: minifier doesn't keep names, so we need to update this
+  matcherFn: (...args: any) => any,
+  context: MatcherState,
+): HTMLElement | SVGElement | null {
+  if (elementOrLocator instanceof Locator) {
+    elementOrLocator = elementOrLocator.query()
+  }
+
+  if (elementOrLocator == null) {
+    return null
+  }
+
+  return getElementFromUserInput(elementOrLocator, matcherFn, context)
+}
 
 export function getElementFromUserInput(
   elementOrLocator: Element | Locator | null,

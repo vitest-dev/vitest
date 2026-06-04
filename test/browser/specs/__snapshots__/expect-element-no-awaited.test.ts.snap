@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`should fail for non-awaited expect.element 1`] = `
+"
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |browser (chromium)| expect-element.test.js > not awaited
+Error: expect.element(locator).toBeInTheDocument() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
+
+await expect.element(locator).toBeInTheDocument()
+
+ ❯ expect-element.test.js:18:33
+     16|         const element = page.getByText("Hello Vitest!");
+     17|
+     18|         expect.element(element).toBeInTheDocument();
+       |                                 ^
+     19|       })
+     20|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+"
+`;

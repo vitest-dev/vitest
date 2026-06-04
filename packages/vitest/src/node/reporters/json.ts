@@ -1,13 +1,13 @@
-import type { Suite, TaskMeta, TaskState } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { Suite, TaskMeta, TaskState, TestBenchmark } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { existsSync, promises as fs } from 'node:fs'
-import { getSuites, getTests } from '@vitest/runner/utils'
 import { dirname, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
+import { getSuites, getTests } from '../../utils/tasks'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -39,6 +39,8 @@ export interface JsonAssertionResult {
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
+  tags: string[]
+  benchmarks: TestBenchmark[]
 }
 
 export interface JsonTestResult {
@@ -73,6 +75,8 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /** @experimental */
+  filterMeta?: (key: string, value: unknown) => unknown
 }
 
 export class JsonReporter implements Reporter {
@@ -120,6 +124,7 @@ export class JsonReporter implements Reporter {
     const testResults: Array<JsonTestResult> = []
 
     const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
+    const { filterMeta } = this.options
 
     for (const file of files) {
       const tests = getTests([file])
@@ -160,7 +165,20 @@ export class JsonReporter implements Reporter {
           failureMessages:
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
-          meta: t.meta,
+          meta: filterMeta
+            ? (() => {
+                const filtered: Record<string, unknown> = {}
+                for (const key in t.meta) {
+                  const value = t.meta[key as keyof TaskMeta]
+                  if (filterMeta(key, value)) {
+                    filtered[key] = value
+                  }
+                }
+                return filtered
+              })()
+            : t.meta,
+          tags: t.tags || [],
+          benchmarks: t.benchmarks,
         } satisfies JsonAssertionResult
       })
 

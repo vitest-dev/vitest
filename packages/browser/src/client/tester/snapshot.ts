@@ -1,6 +1,6 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
 import type { ParsedStack } from 'vitest/internal/browser'
-import type { SnapshotEnvironment } from 'vitest/snapshot'
+import type { SnapshotEnvironment } from 'vitest/runtime'
 import { DecodedMap, getOriginalPosition } from 'vitest/internal/browser'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {

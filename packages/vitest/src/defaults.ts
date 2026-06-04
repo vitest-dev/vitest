@@ -1,11 +1,11 @@
 import type {
   BenchmarkUserOptions,
-  CoverageV8Options,
-  ResolvedCoverageOptions,
+  CoverageOptions,
   UserConfig,
 } from './node/types/config'
+import type { FieldsWithDefaultValues } from './node/types/coverage'
 import os from 'node:os'
-import { isCI } from './utils/env'
+import { isAgent, isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
@@ -14,18 +14,20 @@ export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/.git/**',
 ]
-export const benchmarkConfigDefaults: Required<
-  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-> = {
+export const benchmarkConfigDefaults: Required<BenchmarkUserOptions> = {
+  enabled: false,
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
-  reporters: ['default'],
-  includeSamples: false,
+  retainSamples: false,
+  suppressExportGetterWarnings: false,
+  // Populated automatically when Vitest clones the parent project; the default
+  // here applies to the (unused) raw config that's never run as a benchmark.
+  projectName: '',
 }
 
 // These are the generic defaults for coverage. Providers may also set some provider specific defaults.
-export const coverageConfigDefaults: ResolvedCoverageOptions = {
+export const coverageConfigDefaults: Required<Pick<CoverageOptions, FieldsWithDefaultValues>> = {
   provider: 'v8',
   enabled: false,
   clean: true,
@@ -34,10 +36,10 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   exclude: [],
   reportOnFailure: false,
   reporter: [
-    ['text', {}],
-    ['html', {}],
-    ['clover', {}],
-    ['json', {}],
+    'text',
+    'html',
+    'clover',
+    'json',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
@@ -45,6 +47,15 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     20,
     os.availableParallelism?.() ?? os.cpus().length,
   ),
+  ignoreClassMethods: [],
+  skipFull: false,
+  watermarks: {
+    statements: [50, 80],
+    functions: [50, 80],
+    branches: [50, 80],
+    lines: [50, 80],
+  },
+  autoAttachSubprocess: false,
 }
 
 export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
@@ -58,7 +69,6 @@ export const configDefaults: Readonly<{
   watch: boolean
   globals: boolean
   environment: 'node'
-  pool: 'forks'
   clearMocks: boolean
   restoreMocks: boolean
   mockReset: boolean
@@ -69,7 +79,7 @@ export const configDefaults: Readonly<{
   teardownTimeout: number
   forceRerunTriggers: string[]
   update: boolean
-  reporters: never[]
+  reporters: string[]
   silent: boolean
   hideSkippedTests: boolean
   api: boolean
@@ -79,8 +89,8 @@ export const configDefaults: Readonly<{
   css: {
     include: never[]
   }
-  coverage: CoverageV8Options
-  fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
+  coverage: CoverageOptions
+  fakeTimers: import('@sinonjs/fake-timers').Config
   maxConcurrency: number
   dangerouslyIgnoreUnhandledErrors: boolean
   typecheck: {
@@ -89,14 +99,15 @@ export const configDefaults: Readonly<{
     exclude: string[]
   }
   slowTestThreshold: number
+  taskTitleValueFormatTruncate: number
   disableConsoleIntercept: boolean
+  detectAsyncLeaks: boolean
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI && process.stdin.isTTY,
+  watch: !isCI && process.stdin.isTTY && !isAgent,
   globals: false,
-  environment: 'node' as const,
-  pool: 'forks' as const,
+  environment: 'node',
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
@@ -105,9 +116,12 @@ export const configDefaults: Readonly<{
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
-  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
+  forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'],
   update: false,
-  reporters: [],
+  reporters: [
+    isAgent ? 'minimal' : 'default',
+    ...(process.env.GITHUB_ACTIONS === 'true' ? ['github-actions'] : []),
+  ],
   silent: false,
   hideSkippedTests: false,
   api: false,
@@ -117,7 +131,7 @@ export const configDefaults: Readonly<{
   css: {
     include: [],
   },
-  coverage: coverageConfigDefaults as CoverageV8Options,
+  coverage: coverageConfigDefaults,
   fakeTimers: fakeTimersDefaults,
   maxConcurrency: 5,
   dangerouslyIgnoreUnhandledErrors: false,
@@ -127,5 +141,7 @@ export const configDefaults: Readonly<{
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
+  taskTitleValueFormatTruncate: 40,
   disableConsoleIntercept: false,
+  detectAsyncLeaks: false,
 })

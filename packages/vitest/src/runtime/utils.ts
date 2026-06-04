@@ -4,6 +4,10 @@ import { getSafeTimers } from '@vitest/utils/timers'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 
+export class EnvironmentTeardownError extends Error {
+  name = 'EnvironmentTeardownError'
+}
+
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
   const workerState = globalThis[NAME_WORKER_STATE]
@@ -18,6 +22,11 @@ export function getWorkerState(): WorkerGlobalState {
     throw new Error(errorMsg)
   }
   return workerState
+}
+
+export function getSafeWorkerState(): WorkerGlobalState | undefined {
+  // @ts-expect-error untyped global
+  return globalThis[NAME_WORKER_STATE]
 }
 
 export function provideWorkerState(context: any, state: WorkerGlobalState): WorkerGlobalState {

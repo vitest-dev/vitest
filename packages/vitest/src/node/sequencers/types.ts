@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from '../core'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 
 export interface TestSequencer {
   /**

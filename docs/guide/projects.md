@@ -42,11 +42,17 @@ export default defineConfig({
 })
 ```
 
-Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If the glob pattern matches a file, it will validate that the name starts with `vitest.config`/`vite.config` or matches `(vite|vitest).*.config.*` pattern to ensure it's a Vitest configuration file. For example, these config files are valid:
+Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If a project entry resolves to a file (either from a glob pattern or a direct file path), Vitest will validate that the name either:
+
+- starts with `vitest.config` or `vite.config` (for example, `vitest.config.unit.ts`)
+- or matches `vitest.<name>.config.*` / `vite.<name>.config.*`, where `<name>` can contain letters, numbers, `_`, and `-`
+
+For example, these config files are valid:
 
 - `vitest.config.ts`
 - `vite.config.js`
 - `vitest.unit.config.ts`
+- `vitest.e2e-node.config.ts`
 - `vite.e2e.config.js`
 - `vitest.config.unit.js`
 - `vite.config.e2e.js`
@@ -283,7 +289,8 @@ Some of the configuration options are not allowed in a project config. Most nota
 - `coverage`: coverage is done for the whole process
 - `reporters`: only root-level reporters can be supported
 - `resolveSnapshotPath`: only root-level resolver is respected
+- `attachmentsDir`: attachments are stored in one root-level directory shared by all projects
 - all other options that don't affect test runners
 
-All configuration options that are not supported inside a project configuration are marked with a <NonProjectOption /> sign in the ["Config"](/config/) guide. They have to be defined once in the root config file.
+All configuration options that are not supported inside a project configuration are marked with a <CRoot /> icon next to their name. They can only be defined once in the root config file.
 :::

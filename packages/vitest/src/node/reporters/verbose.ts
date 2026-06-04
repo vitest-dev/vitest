@@ -1,6 +1,6 @@
 import type { TestCase, TestModule } from './reported-tasks'
-import { getTestName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
+import { getTestName } from '../../utils/tasks'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
 import { separator } from './renderers/utils'
@@ -18,7 +18,7 @@ export class VerboseReporter extends DefaultReporter {
 
     const testResult = test.result()
 
-    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped') {
+    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
       return
     }
 
@@ -43,6 +43,12 @@ export class VerboseReporter extends DefaultReporter {
       this.log()
       this.printAnnotations(test, 'log', 3)
       this.log()
+    }
+
+    const benchmarks = test.benchmarks()
+    const inlineBenchmarks = benchmarks.filter(b => b.tasks.length > 0)
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, '')
     }
   }
 }

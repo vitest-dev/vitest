@@ -1,13 +1,13 @@
-import type { Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
+import type { CapturePrintErrorResult } from './printError'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './printError'
+import { capturePrintError, printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
@@ -17,7 +17,6 @@ export interface ErrorOptions {
   project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
-  task?: Task
   showCodeFrame?: boolean
 }
 
@@ -109,6 +108,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  formatError(err: unknown, options: ErrorOptions = {}): CapturePrintErrorResult {
+    return capturePrintError(err, this.ctx, options)
+  }
+
   deprecate(message: string): void {
     this.error(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
   }
@@ -131,24 +134,55 @@ export class Logger {
     return code
   }
 
+  printNoTestTagsFound(): void {
+    this.error(c.bgRed(' ERROR '), c.red('No test tags found in any project. Exiting with code 1.'))
+  }
+
+  printTags(): void {
+    const vitest = this.ctx
+    const rootProject = vitest.getRootProject()
+    const projects = [
+      rootProject,
+      ...vitest.projects.filter(p => p !== rootProject),
+    ]
+
+    const hasTags = projects.some(p => p.config.tags && p.config.tags.length > 0)
+
+    if (!hasTags) {
+      process.exitCode = 1
+      return this.printNoTestTagsFound()
+    }
+
+    for (const project of projects) {
+      const name = project.name
+      if (name) {
+        this.log(formatProjectName(project, ''))
+      }
+      project.config.tags.forEach((tag) => {
+        const tagLog = `${tag.name}${tag.description ? `: ${tag.description}` : ''}`
+        this.log(`  ${tagLog}`)
+      })
+    }
+  }
+
   printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
+      this.log(`No affected test files found\n`)
     }
     else if (config.watch) {
       this.log(
-        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+        c.red(`No test files found. You can change the file name pattern by pressing "p"\n`),
       )
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No test files found, exiting with code 0\n`)
       }
       else {
         this.error(
-          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+          c.red(`No test files found, exiting with code 1\n`),
         )
       }
     }
@@ -201,7 +235,8 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    if (this.ctx.config.sequence.sequencer === RandomSequencer) {
+    // Log seed if either files (RandomSequencer) or tests are shuffled
+    if (this.ctx.config.sequence.sequencer === RandomSequencer || this.ctx.config.sequence.shuffle) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
@@ -226,7 +261,7 @@ export class Logger {
     }
 
     if (this.ctx.config.standalone) {
-      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.\n`))
     }
     else {
       this.log()
@@ -247,7 +282,7 @@ export class Logger {
     const output = project.isRootProject()
       ? ''
       : formatProjectName(project)
-    const provider = project.browser.provider.name
+    const provider = project.browser.provider?.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
       c.dim(
@@ -269,7 +304,7 @@ export class Logger {
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
-        fullStack: true,
+        fullStack: (err as any).name !== 'EnvironmentTeardownError',
         type: (err as any).type || 'Unhandled Error',
       })
     })
@@ -318,7 +353,8 @@ export class Logger {
         process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
       }
 
-      process.exit()
+      // Timeout to flush stderr
+      setTimeout(() => process.exit(), 1)
     }
 
     process.once('SIGINT', onExit)

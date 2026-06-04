@@ -9,8 +9,8 @@ import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-form
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { format as prettyFormat } from '@vitest/pretty-format'
+import { isObject } from '@vitest/utils/helpers'
 import naturalCompare from 'natural-compare'
-import { isObject } from '../../../utils/src/helpers'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
@@ -284,5 +284,16 @@ export class CounterMap<K> extends DefaultMap<K, number> {
       total += x
     }
     return total
+  }
+}
+
+/* @__NO_SIDE_EFFECTS__ */
+export function memo<T, U>(fn: (arg: T) => U): (arg: T) => U {
+  const cache = new Map<T, U>()
+  return (arg: T) => {
+    if (!cache.has(arg)) {
+      cache.set(arg, fn(arg))
+    }
+    return cache.get(arg)!
   }
 }

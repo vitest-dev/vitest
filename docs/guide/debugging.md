@@ -14,6 +14,8 @@ When debugging tests you might want to use following options:
 
 ## VS Code
 
+The [official VS Code](https://vitest.dev/vscode) extension supports debugging tests via "Debug Tests" button. However Vitest also exposes tools to define a custom configuration.
+
 Quick way to debug tests in VS Code is via `JavaScript Debug Terminal`. Open a new `JavaScript Debug Terminal` and run `npm run test` or `vitest` directly. *this works with any code run in Node, so will work with most JS testing frameworks*
 
 ![image](https://user-images.githubusercontent.com/5594348/212169143-72bf39ce-f763-48f5-822a-0c8b2e6a8484.png)
@@ -44,7 +46,9 @@ Then in the debug tab, ensure 'Debug Current Test File' is selected. You can the
 
 ### Browser mode
 
-To debug [Vitest Browser Mode](/guide/browser/index.md), pass `--inspect` or `--inspect-brk` in CLI or define it in your Vitest configuration:
+The simplest way to debug browser tests is to use the [official VS Code](https://vitest.dev/vscode) extension.
+
+However you can also pass `--inspect` or `--inspect-brk` in CLI or define it in your Vitest configuration:
 
 ::: code-group
 ```bash [CLI]
@@ -52,7 +56,7 @@ vitest --inspect-brk --browser --no-file-parallelism
 ```
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
-import { playwright } from '@vitest/browser/providers/playwright'
+import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
   test: {
@@ -120,22 +124,12 @@ Vitest also supports debugging tests without IDEs. However this requires that te
 
 ```sh
 # To run in a single worker
-vitest --inspect-brk --pool threads --poolOptions.threads.singleThread
-
-# To run in a single child process
-vitest --inspect-brk --pool forks --poolOptions.forks.singleFork
+vitest --inspect-brk --no-file-parallelism
 
 # To run in browser mode
 vitest --inspect-brk --browser --no-file-parallelism
 ```
 
-If you are using Vitest 1.1 or higher, you can also just provide `--no-file-parallelism` flag:
-
-```sh
-# If pool is unknown
-vitest --inspect-brk --no-file-parallelism
-```
-
 Once Vitest starts it will stop execution and wait for you to open developer tools that can connect to [Node.js inspector](https://nodejs.org/en/docs/guides/debugging-getting-started/). You can use Chrome DevTools for this by opening `chrome://inspect` on browser.
 
-In watch mode you can keep the debugger open during test re-runs by using the `--poolOptions.threads.isolate false` options.
+In watch mode you can keep the debugger open during test re-runs by using the `--isolate false` options.

@@ -81,10 +81,11 @@ describe('should fail', async () => {
       dir: resolve(import.meta.dirname, '..', './failing'),
       config: resolve(import.meta.dirname, './vitest.empty.config.ts'),
       typecheck: { enabled: true },
-    },
-    )
+    })
 
-    expect(stderr.replace(resolve(import.meta.dirname, '..'), '<root>')).toMatchSnapshot()
+    const message = removeLines(stderr.replace(resolve(import.meta.dirname, '..'), '<root>'))
+
+    expect(message.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '')).toMatchSnapshot()
   })
 })
 
@@ -123,7 +124,7 @@ describe('when the title is dynamic', () => {
 
     expect(vitest.stdout).toContain('✓ for: %s')
     expect(vitest.stdout).toContain('✓ each: %s')
-    expect(vitest.stdout).toContain('✓ dynamic skip')
+    expect(vitest.stdout).toContain('↓ dynamic skip')
     expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
     expect(vitest.stdout).toContain('✓ template string')
     // eslint-disable-next-line no-template-curly-in-string
@@ -151,3 +152,7 @@ it('throws an error if typechecker process exists', async () => {
     expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
   }
 })
+
+function removeLines(log: string) {
+  return log.replace(/⎯{2,}/g, '⎯⎯')
+}

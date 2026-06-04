@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
+import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -37,7 +37,9 @@ export function WorkspaceVitestPlugin(
       name: 'vitest:project:name',
       enforce: 'post',
       config(viteConfig) {
-        const testConfig = viteConfig.test || {}
+        viteConfig.test ??= {}
+
+        const testConfig = viteConfig.test
 
         let { label: name, color } = typeof testConfig.name === 'string'
           ? { label: testConfig.name }
@@ -62,6 +64,11 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        if (project.vitest._cliOptions.benchmarkOnly) {
+          viteConfig.test.benchmark ??= {}
+          viteConfig.test.benchmark.enabled = true
+        }
+
         const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
         const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
@@ -79,6 +86,9 @@ export function WorkspaceVitestPlugin(
             workspaceNames.push(instance.name)
           }
         })
+        if (viteConfig.test?.benchmark?.enabled) {
+          workspaceNames.push(name ? `${name} (bench)` : 'bench')
+        }
 
         const filters = project.vitest.config.project
         // if there is `--project=...` filter, check if any of the potential projects match
@@ -93,15 +103,37 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const vitestConfig: UserConfig = {
+          name: { label: name, color },
+        }
+
+        vitestConfig.experimental ??= {}
+
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
+          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        }
+        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
+          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
+          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
+          vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
+        }
+        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
+          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
+        }
+
         return {
+          base: '/',
           environments: {
             __vitest__: {
               dev: {},
             },
           },
-          test: {
-            name: { label: name, color },
-          },
+          test: vitestConfig,
         }
       },
     },
@@ -112,6 +144,7 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
         const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const testConfig = viteConfig.test || {}
@@ -184,6 +217,7 @@ export function WorkspaceVitestPlugin(
         }
 
         ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
@@ -221,7 +255,7 @@ export function WorkspaceVitestPlugin(
     },
     {
       name: 'vitest:project:server',
-      enforce: 'post',
+      enforce: 'pre',
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
         await project._configureServer(options, server)

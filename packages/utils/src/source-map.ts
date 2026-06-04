@@ -20,10 +20,9 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /\/@vitest\/\w+\/dist\//,
   '/vitest/dist/',
   '/vitest/src/',
-  '/vite-node/dist/',
-  '/vite-node/src/',
+  '/packages/expect/src/',
+  '/packages/snapshot/src/',
   '/node_modules/chai/',
-  '/node_modules/tinypool/',
   '/node_modules/tinyspy/',
   '/vite/dist/node/module-runner',
   '/rolldown-vite/dist/node/module-runner',
@@ -32,13 +31,20 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   '/deps/@vitest',
   '/deps/loupe',
   '/deps/chai',
+  '/browser-playwright/dist/locators.js',
+  '/browser-webdriverio/dist/locators.js',
+  '/browser-preview/dist/locators.js',
   /node:\w+/,
   /__vitest_test__/,
   /__vitest_browser__/,
+  '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
 ]
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
+
+const NOW_LENGTH = Date.now().toString().length
+const REGEXP_VITEST = new RegExp(`vitest=\\d{${NOW_LENGTH}}`)
 
 function extractLocation(urlLike: string) {
   // Fail-fast but return locations like "(native)"
@@ -64,6 +70,9 @@ function extractLocation(urlLike: string) {
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url = url.slice(isWindows ? 5 : 4)
+  }
+  if (url.includes('vitest=')) {
+    url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
 }
@@ -191,7 +200,10 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
 
   if (method) {
     method = method
-      .replace(/__vite_ssr_import_\d+__\./g, '')
+    // vite 7+
+      .replace(/\(0\s?,\s?__vite_ssr_import_\d+__.(\w+)\)/g, '$1')
+    // vite <7
+      .replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
       .replace(/(Object\.)?__vite_ssr_export_default__\s?/g, '')
   }
 
@@ -218,9 +230,22 @@ export function parseStacktrace(
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
+
+  // remove vi.defineHelper's internal stacks
+  const helperIndex = stacks.findLastIndex(s =>
+    // this covers cases such as
+    //   "__VITEST_HELPER__"
+    //   "__VITEST_HELPER__ [as <object method name>]"
+    //   "async*__VITEST_HELPER__" (firefox)
+    //   "async __VITEST_HELPER__" (webkit)
+    s.method.includes('__VITEST_HELPER__'),
+  )
+  if (helperIndex >= 0) {
+    stacks = stacks.slice(helperIndex + 1)
+  }
 
   return stacks.map((stack) => {
     if (options.getUrlId) {
@@ -354,7 +379,7 @@ export class DecodedMap {
     this._decodedMemo = memoizedState()
     this.url = from
     this.resolvedSources = (sources || []).map(s =>
-      resolve(s || '', from),
+      resolve(from, '..', s || ''),
     )
   }
 }

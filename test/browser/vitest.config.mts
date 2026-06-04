@@ -1,21 +1,11 @@
-import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
+import type { BrowserCommand } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
-import { playwright } from '@vitest/browser/providers/playwright'
-import { preview } from '@vitest/browser/providers/preview'
-import { webdriverio } from '@vitest/browser/providers/webdriverio'
 import { defineConfig } from 'vitest/config'
+import { instances, provider } from './settings'
 
 const dir = dirname(fileURLToPath(import.meta.url))
-
-const providerName = process.env.PROVIDER || 'playwright'
-const browser = process.env.BROWSER || (providerName === 'playwright' ? 'chromium' : 'chrome')
-const provider = {
-  playwright,
-  preview,
-  webdriverio,
-}[providerName]
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
@@ -24,21 +14,6 @@ const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPat
 const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
   return util.stripVTControlCharacters(text)
 }
-
-const devInstances: BrowserInstanceOption[] = [
-  { browser },
-]
-
-const playwrightInstances: BrowserInstanceOption[] = [
-  { browser: 'chromium' },
-  { browser: 'firefox' },
-  { browser: 'webkit' },
-]
-
-const webdriverioInstances: BrowserInstanceOption[] = [
-  { browser: 'chrome' },
-  { browser: 'firefox' },
-]
 
 export default defineConfig({
   server: {
@@ -52,6 +27,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
+  define: {
+    'import.meta.env.DEFINE_CUSTOM_ENV': JSON.stringify('define-custom-env'),
+  },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
     includeSource: ['src/*.ts'],
@@ -62,13 +40,8 @@ export default defineConfig({
     },
     browser: {
       enabled: true,
-      headless: false,
-      instances: process.env.BROWSER
-        ? devInstances
-        : providerName === 'playwright'
-          ? playwrightInstances
-          : webdriverioInstances,
-      provider: provider(),
+      instances,
+      provider,
       // isolate: false,
       testerHtmlPath: './custom-tester.html',
       orchestratorScripts: [
@@ -94,10 +67,17 @@ export default defineConfig({
         },
       },
     },
+    tags: [
+      { name: 'e2e', priority: 10 },
+      { name: 'test', priority: 5 },
+      { name: 'browser', priority: 1 },
+    ],
+    benchmark: {
+      enabled: true,
+    },
     alias: {
       '#src': resolve(dir, './src'),
     },
-    open: false,
     diff: './custom-diff-config.ts',
     outputFile: {
       html: './html/index.html',
@@ -107,6 +87,11 @@ export default defineConfig({
       if (log.includes('MESSAGE ADDED')) {
         return false
       }
+    },
+    typecheck: {
+      enabled: true,
+      include: ['test/*.test-d.ts'],
+      ignoreSourceErrors: true,
     },
   },
   plugins: [
@@ -122,6 +107,27 @@ export default defineConfig({
       name: 'test-early-transform',
       async configureServer(server) {
         await server.ssrLoadModule('/package.json')
+      },
+    },
+    {
+      name: 'my-ssr',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          const url = new URL(req.url || '', 'http://localhost')
+          if (url.pathname.startsWith('/api/')) {
+            try {
+              const mod = await server.ssrLoadModule('./test/server/entry.ts')
+              const result = await mod.default(url)
+              res.end(JSON.stringify(result))
+              return
+            }
+            catch (e) {
+              next(e)
+              return
+            }
+          }
+          next()
+        })
       },
     },
   ],

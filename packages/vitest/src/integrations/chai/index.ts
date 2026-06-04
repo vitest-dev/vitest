@@ -1,5 +1,5 @@
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import type { TaskPopulated, Test } from '@vitest/runner'
+import type { TaskPopulated, Test } from '../../runtime/runner/types'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
@@ -9,13 +9,13 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '@vitest/runner'
-import { getTestName } from '@vitest/runner/utils'
+import { getCurrentTest } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
+import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
 import './setup'
 
-export function createExpect(test?: TaskPopulated): ExpectStatic {
+export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
@@ -51,12 +51,13 @@ export function createExpect(test?: TaskPopulated): ExpectStatic {
         return getWorkerState().filepath
       },
       currentTestName: test
-        ? getTestName(test as Test)
+        ? test.fullTestName ?? ''
         : globalState.currentTestName,
     },
     expect,
   )
 
+  expect.assert = chai.assert
   // @ts-expect-error untyped
   expect.extend = matchers => chai.expect.extend(expect, matchers)
   expect.addEqualityTesters = customTesters =>
@@ -108,6 +109,7 @@ export function createExpect(test?: TaskPopulated): ExpectStatic {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   expect.extend(customMatchers)
+  expect.extend(benchMatchers)
 
   return expect
 }

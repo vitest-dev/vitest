@@ -1,0 +1,240 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 3c2c978099ce42ef26b9cd86d5772cff79e329af..0000000000000000000000000000000000000000
+diff --git a/package.json b/package.json
+index 5e3c704a13d642e07c6d8eb655cb052b69a99e45..743037fa385ac381b193ac7b975e5f548e064727 100644
+--- a/package.json
++++ b/package.json
+@@ -13,6 +13,7 @@
+   "dependencies": {
+     "@babel/core": "^7.23.9",
+     "@babel/parser": "^7.23.9",
++    "@jridgewell/trace-mapping": "^0.3.23",
+     "@istanbuljs/schema": "^0.1.3",
+     "istanbul-lib-coverage": "^3.2.0",
+     "semver": "^7.5.4"
+diff --git a/src/ignored-lines.js b/src/ignored-lines.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..5392b2b17165b3bbd52871bb931be1306f7fabe1
+--- /dev/null
++++ b/src/ignored-lines.js
+@@ -0,0 +1,61 @@
++const IGNORE_LINES_PATTERN = /\s*istanbul\s+ignore\s+(start|stop)/;
++const EOL_PATTERN = /\r?\n/g;
++
++/**
++ * Parse ignore start/stop hints from **text file** based on regular expressions
++ * - Does not understand what a comment is in Javascript (or JSX, Vue, Svelte)
++ * - Parses source code (JS, TS, Vue, Svelte, anything) based on text search by
++ *   matching for `/* istanbul ignore start *\/` pattern - not by looking for real comments
++ *
++ * ```js
++ * /* istanbul ignore start *\/
++ * <!-- /* istanbul ignore start *\/ -->
++ * <SomeFrameworkComment content="/* istanbul ignore start *\/">
++ * ```
++ */
++function getIgnoredLines(text) {
++    if (!text) {
++        return new Set();
++    }
++
++    const ranges = [];
++    let lineNumber = 0;
++
++    for (const line of text.split(EOL_PATTERN)) {
++        lineNumber++;
++
++        const match = line.match(IGNORE_LINES_PATTERN);
++        if (match) {
++            const type = match[1];
++
++            if (type === 'stop') {
++                const previous = ranges.at(-1);
++
++                // Ignore whole "ignore stop" if no previous start was found
++                if (previous && previous.stop === Infinity) {
++                    previous.stop = lineNumber;
++                }
++
++                continue;
++            }
++
++            ranges.push({ start: lineNumber, stop: Infinity });
++        }
++    }
++
++    const ignoredLines = new Set();
++
++    for (const range of ranges) {
++        for (let line = range.start; line <= range.stop; line++) {
++            ignoredLines.add(line);
++
++            if (line >= lineNumber) {
++                break;
++            }
++        }
++    }
++
++    return ignoredLines;
++}
++
++module.exports = { getIgnoredLines };
+diff --git a/src/instrumenter.js b/src/instrumenter.js
+index ffc4387b9ba9477bdce3823760400fddb021637d..39f5ee8fede4a6d724b28050e1dd1e1942bd665a 100644
+--- a/src/instrumenter.js
++++ b/src/instrumenter.js
+@@ -21,6 +21,7 @@ const readInitialCoverage = require('./read-coverage');
+  * @param {boolean} [opts.autoWrap=false] set to true to allow `return` statements outside of functions.
+  * @param {boolean} [opts.produceSourceMap=false] set to true to produce a source map for the instrumented code.
+  * @param {Array} [opts.ignoreClassMethods=[]] set to array of class method names to ignore for coverage.
++ * @param {Array} [opts.ignoreLines=false] enable ignore hints for lines (start, end).
+  * @param {Function} [opts.sourceMapUrlCallback=null] a callback function that is called when a source map URL
+  *     is found in the original code. This function is called with the source file name and the source map URL.
+  * @param {boolean} [opts.debug=false] - turn debugging on.
+@@ -83,6 +84,7 @@ class Instrumenter {
+                             coverageGlobalScopeFunc:
+                                 opts.coverageGlobalScopeFunc,
+                             ignoreClassMethods: opts.ignoreClassMethods,
++                            ignoreLines: opts.ignoreLines,
+                             inputSourceMap
+                         });
+ 
+diff --git a/src/visitor.js b/src/visitor.js
+index 04e3115f832799fad6d141e8b0aeaa61ac5c98f9..88f8d2420daabecef2ad2def18c8be245b60e253 100644
+--- a/src/visitor.js
++++ b/src/visitor.js
+@@ -1,8 +1,17 @@
++const { readFileSync } = require('fs');
+ const { createHash } = require('crypto');
+ const { template } = require('@babel/core');
++const {
++    originalPositionFor,
++    TraceMap,
++    GREATEST_LOWER_BOUND,
++    LEAST_UPPER_BOUND,
++    sourceContentFor
++} = require('@jridgewell/trace-mapping');
+ const { defaults } = require('@istanbuljs/schema');
+ const { SourceCoverage } = require('./source-coverage');
+ const { SHA, MAGIC_KEY, MAGIC_VALUE } = require('./constants');
++const { getIgnoredLines } = require('./ignored-lines');
+ 
+ // pattern for istanbul to ignore a section
+ const COMMENT_RE = /^\s*istanbul\s+ignore\s+(if|else|next)(?=\W|$)/;
+@@ -26,7 +35,8 @@ class VisitState {
+         sourceFilePath,
+         inputSourceMap,
+         ignoreClassMethods = [],
+-        reportLogic = false
++        reportLogic = false,
++        ignoreLines = false
+     ) {
+         this.varName = genVar(sourceFilePath);
+         this.attrs = {};
+@@ -35,8 +45,13 @@ class VisitState {
+ 
+         if (typeof inputSourceMap !== 'undefined') {
+             this.cov.inputSourceMap(inputSourceMap);
++
++            if (ignoreLines) {
++                this.traceMap = new TraceMap(inputSourceMap);
++            }
+         }
+         this.ignoreClassMethods = ignoreClassMethods;
++        this.ignoredLines = new Map();
+         this.types = types;
+         this.sourceMappingURL = null;
+         this.reportLogic = reportLogic;
+@@ -45,7 +60,42 @@ class VisitState {
+     // should we ignore the node? Yes, if specifically ignoring
+     // or if the node is generated.
+     shouldIgnore(path) {
+-        return this.nextIgnore || !path.node.loc;
++        if (this.nextIgnore || !path.node.loc) {
++            return true;
++        }
++
++        if (!this.traceMap) {
++            return false;
++        }
++
++        // Anything that starts between the line ignore hints is ignored
++        const start = originalPositionTryBoth(
++            this.traceMap,
++            path.node.loc.start
++        );
++
++        // Generated code
++        if (start.line == null) {
++            return false;
++        }
++
++        const filename = start.source;
++        let ignoredLines = this.ignoredLines.get(filename);
++
++        if (!ignoredLines) {
++            const sources = sourceContentFor(this.traceMap, filename);
++            ignoredLines = getIgnoredLines(
++                sources || tryReadFileSync(filename)
++            );
++
++            this.ignoredLines.set(filename, ignoredLines);
++        }
++
++        if (ignoredLines.has(start.line)) {
++            return true;
++        }
++
++        return false;
+     }
+ 
+     // extract the ignore comment hint (next|if|else) or null
+@@ -742,6 +792,7 @@ function shouldIgnoreFile(programNode) {
+  * @param {string} [opts.coverageGlobalScope=this] the global coverage variable scope.
+  * @param {boolean} [opts.coverageGlobalScopeFunc=true] use an evaluated function to find coverageGlobalScope.
+  * @param {Array} [opts.ignoreClassMethods=[]] names of methods to ignore by default on classes.
++ * @param {Array} [opts.ignoreLines=false] enable ignore hints for lines (start, end).
+  * @param {object} [opts.inputSourceMap=undefined] the input source map, that maps the uninstrumented code back to the
+  * original code.
+  */
+@@ -756,7 +807,8 @@ function programVisitor(types, sourceFilePath = 'unknown.js', opts = {}) {
+         sourceFilePath,
+         opts.inputSourceMap,
+         opts.ignoreClassMethods,
+-        opts.reportLogic
++        opts.reportLogic,
++        opts.ignoreLines
+     );
+     return {
+         enter(path) {
+@@ -840,4 +892,29 @@ function programVisitor(types, sourceFilePath = 'unknown.js', opts = {}) {
+     };
+ }
+ 
++function originalPositionTryBoth(sourceMap, { line, column }) {
++    const mapping = originalPositionFor(sourceMap, {
++        line,
++        column,
++        bias: GREATEST_LOWER_BOUND
++    });
++    if (mapping.source === null) {
++        return originalPositionFor(sourceMap, {
++            line,
++            column,
++            bias: LEAST_UPPER_BOUND
++        });
++    } else {
++        return mapping;
++    }
++}
++
++function tryReadFileSync(filename) {
++    try {
++        return readFileSync(filename, 'utf8');
++    } catch (_) {
++        return undefined;
++    }
++}
++
+ module.exports = programVisitor;

@@ -1,5 +1,5 @@
-import { cdp, server } from '@vitest/browser/context'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
+import { cdp, server } from 'vitest/browser'
 
 describe.runIf(
   server.provider === 'playwright' && server.browser === 'chromium',

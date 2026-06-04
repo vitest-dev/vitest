@@ -1,0 +1,6 @@
+ [32m✓[39m src/utils.test.js [90m(3 tests)[39m [32m5ms[39m
+ [32m✓[39m src/math.test.js [90m(2 tests)[39m [32m3ms[39m
+ [32m✓[39m src/strings.test.js [90m(4 tests)[39m [32m7ms[39m
+
+ [1mTest Files[22m  [32m3 passed[39m (3)
+ [1m     Tests[22m  [32m9 passed[39m (9)

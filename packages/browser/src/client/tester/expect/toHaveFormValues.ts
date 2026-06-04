@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { cssEscape } from 'ivya/utils'
 import { arrayAsSetComparison, getElementFromUserInput, getSingleElementValue, getTag } from './utils'
@@ -22,7 +22,7 @@ export default function toHaveFormValues(
   this: MatcherState,
   actual: Element | Locator,
   expectedValues: Record<string, unknown>,
-): ExpectationResult {
+): MatcherResult {
   const formElement = getElementFromUserInput(actual, toHaveFormValues, this)
 
   const defaultView = formElement.ownerDocument.defaultView || window
@@ -66,13 +66,16 @@ export default function toHaveFormValues(
 // Returns the combined value of several elements that have the same name
 // e.g. radio buttons or groups of checkboxes
 function getMultiElementValue(elements: HTMLInputElement[]) {
-  const types = [...new Set(elements.map(element => element.type))]
-  if (types.length !== 1) {
-    throw new Error(
-      'Multiple form elements with the same name must be of the same type',
-    )
+  let type = ''
+  for (const element of elements) {
+    if (type && type !== element.type) {
+      throw new Error(
+        'Multiple form elements with the same name must be of the same type',
+      )
+    }
+    type = element.type
   }
-  switch (types[0]) {
+  switch (type) {
     case 'radio': {
       const selected = elements.find(radio => radio.checked)
       return selected ? selected.value : undefined

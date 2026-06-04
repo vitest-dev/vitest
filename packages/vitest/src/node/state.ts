@@ -1,10 +1,11 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
-import type { UserConsoleLog } from '../types/general'
+import type { File, FileSpecification, Task, TaskResultPack } from '../runtime/runner/types'
+import type { AsyncLeak, UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
-import { createFileTask } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import { defaultBrowserPort } from '../constants'
+import { createFileTask, generateFileHash } from '../utils/tasks'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {
@@ -21,10 +22,21 @@ export class StateManager {
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
-  processTimeoutCauses: Set<string> = new Set()
+  leakSet: Set<AsyncLeak> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
   transformTime = 0
+
+  metadata: Record<string, {
+    externalized: Record<string, string>
+    duration: Record<string, number[]>
+    tmps: Record<string, string>
+    dumpDir?: string
+    outline?: {
+      externalized: number
+      inlined: number
+    }
+  }> = {}
 
   onUnhandledError?: OnUnhandledErrorCallback
 
@@ -71,20 +83,17 @@ export class StateManager {
     }
   }
 
+  catchLeaks(leaks: AsyncLeak[]): void {
+    leaks.forEach(leak => this.leakSet.add(leak))
+  }
+
   clearErrors(): void {
     this.errorsSet.clear()
+    this.leakSet.clear()
   }
 
   getUnhandledErrors(): unknown[] {
-    return Array.from(this.errorsSet.values())
-  }
-
-  addProcessTimeoutCause(cause: string): void {
-    this.processTimeoutCauses.add(cause)
-  }
-
-  getProcessTimeoutCauses(): string[] {
-    return Array.from(this.processTimeoutCauses.values())
+    return Array.from(this.errorsSet)
   }
 
   getPaths(): string[] {
@@ -136,17 +145,17 @@ export class StateManager {
   collectFiles(project: TestProject, files: File[] = []): void {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
-      const otherFiles = existing.filter(
-        i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck,
-      )
       const currentFile = existing.find(
-        i => i.projectName === file.projectName,
+        i => i.projectName === file.projectName
+          && i.meta.typecheck === file.meta.typecheck
+          && i.meta.__vitest_label__ === file.meta.__vitest_label__,
       )
       // keep logs for the previous file because it should always be initiated before the collections phase
       // which means that all logs are collected during the collection and not inside tests
       if (currentFile) {
         file.logs = currentFile.logs
       }
+      const otherFiles = existing.filter(i => i !== currentFile)
       otherFiles.push(file)
       this.filesMap.set(file.filepath, otherFiles)
       this.updateId(file, project)
@@ -246,11 +255,18 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], project: TestProject): void {
+  cancelFiles(files: FileSpecification[], project: TestProject): void {
+    // if we don't filter existing modules, they will be overridden by `collectFiles`
+    const nonRegisteredFiles = files.filter(({ filepath }) => {
+      const relativePath = relative(project.config.root, filepath)
+      const id = generateFileHash(relativePath, project.name)
+      return !this.idMap.has(id)
+    })
+
     this.collectFiles(
       project,
-      files.map(filepath =>
-        createFileTask(filepath, project.config.root, project.config.name),
+      nonRegisteredFiles.map(file =>
+        createFileTask(file.filepath, project.config.root, project.config.name),
       ),
     )
   }

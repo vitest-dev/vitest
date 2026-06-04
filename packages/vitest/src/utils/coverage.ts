@@ -15,7 +15,13 @@ export interface RuntimeCoverageProviderModule {
   /**
    * Executed before tests are run in the worker thread.
    */
-  startCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
+  startCoverage?: (runtimeOptions: {
+    isolate: boolean
+    /** @internal */
+    autoAttachSubprocess: boolean
+    /** @internal */
+    reportsDirectory: string
+  }) => unknown | Promise<unknown>
 
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
@@ -50,7 +56,10 @@ export async function resolveCoverageProviderModule(
       builtInModule += '/browser'
     }
 
-    const { default: coverageModule } = await loader.import(builtInModule)
+    const { default: coverageModule }
+      = loader.isBrowser
+        ? await loader.import(builtInModule)
+        : await import(/* @vite-ignore */ builtInModule)
 
     if (!coverageModule) {
       throw new Error(

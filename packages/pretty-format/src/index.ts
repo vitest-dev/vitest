@@ -30,21 +30,7 @@ import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
 
-export type {
-  Colors,
-  CompareKeys,
-  Config,
-  NewPlugin,
-  OldPlugin,
-  Options,
-  OptionsReceived,
-  Plugin,
-  Plugins,
-  PrettyFormatOptions,
-  Printer,
-  Refs,
-  Theme,
-} from './types'
+export { createDOMElementFilter } from './plugins/DOMElement'
 
 const toString = Object.prototype.toString
 const toISOString = Date.prototype.toISOString
@@ -125,6 +111,7 @@ function printBasicValue(
   printFunctionName: boolean,
   escapeRegex: boolean,
   escapeString: boolean,
+  singleQuote: boolean,
 ): string | null {
   if (val === true || val === false) {
     return `${val}`
@@ -145,10 +132,15 @@ function printBasicValue(
     return printBigInt(val)
   }
   if (typeOf === 'string') {
+    const q = singleQuote ? '\'' : '"'
     if (escapeString) {
-      return `"${val.replaceAll(/"|\\/g, '\\$&')}"`
+      // escape quote in each case, e.g.
+      //   it's me -> 'it\'s me'
+      //   say "hi" -> "say \"hi\""
+      const escapePattern = singleQuote ? /['\\]/g : /["\\]/g
+      return `${q}${val.replaceAll(escapePattern, '\\$&')}${q}`
     }
-    return `"${val}"`
+    return `${q}${val}${q}`
   }
   if (typeOf === 'function') {
     return printFunction(val, printFunctionName)
@@ -243,11 +235,9 @@ function printComplexValue(
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-        min
+        !config.printBasicPrototype && val.constructor.name === 'Array'
           ? ''
-          : !config.printBasicPrototype && val.constructor.name === 'Array'
-              ? ''
-              : `${val.constructor.name} `
+          : `${val.constructor.name} `
       }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
   if (toStringed === '[object Map]') {
@@ -261,6 +251,7 @@ function printComplexValue(
         refs,
         printer,
         ' => ',
+        val.size,
       )}}`
   }
   if (toStringed === '[object Set]') {
@@ -273,6 +264,7 @@ function printComplexValue(
         depth,
         refs,
         printer,
+        val.size,
       )}}`
   }
 
@@ -281,11 +273,9 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-      min
+      !config.printBasicPrototype && getConstructorName(val) === 'Object'
         ? ''
-        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
-            ? ''
-            : `${getConstructorName(val)} `
+        : `${getConstructorName(val)} `
     }{${printObjectProperties(
       val,
       config,
@@ -314,13 +304,14 @@ const ErrorPlugin: NewPlugin = {
     const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
     return hitMaxDepth
       ? `[${name}]`
-      : `${name} {${printIteratorEntries(
-        Object.entries(entries).values(),
+      : `${name} {${printObjectProperties(
+        entries,
         config,
         indentation,
         depth,
         refs,
         printer,
+        null,
       )}}`
   },
 }
@@ -394,29 +385,48 @@ function printer(
   refs: Refs,
   hasCalledToJSON?: boolean,
 ): string {
+  let result: string
+
   const plugin = findPlugin(config.plugins, val)
   if (plugin !== null) {
-    return printPlugin(plugin, val, config, indentation, depth, refs)
+    result = printPlugin(plugin, val, config, indentation, depth, refs)
+  }
+  else {
+    const basicResult = printBasicValue(
+      val,
+      config.printFunctionName,
+      config.escapeRegex,
+      config.escapeString,
+      config.singleQuote,
+    )
+    if (basicResult !== null) {
+      result = basicResult
+    }
+    else {
+      result = printComplexValue(
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        hasCalledToJSON,
+      )
+    }
   }
 
-  const basicResult = printBasicValue(
-    val,
-    config.printFunctionName,
-    config.escapeRegex,
-    config.escapeString,
-  )
-  if (basicResult !== null) {
-    return basicResult
+  // Per-depth output budget (inspired by Node's util.inspect).
+  // Each depth level tracks output independently, so nested results
+  // don't inflate a single counter (which would undercount by ~Nx for
+  // N levels of nesting). Nodes at the same depth produce disjoint spans
+  // in the output string, so each bucket accurately reflects output at
+  // that level. Total output is bounded by maxDepth × maxOutputLength.
+  config._outputLengthPerDepth[depth] ??= 0
+  config._outputLengthPerDepth[depth] += result.length
+  if (config._outputLengthPerDepth[depth] > config.maxOutputLength) {
+    config.maxDepth = 0
   }
 
-  return printComplexValue(
-    val,
-    config,
-    indentation,
-    depth,
-    refs,
-    hasCalledToJSON,
-  )
+  return result
 }
 
 const DEFAULT_THEME: Theme = {
@@ -439,6 +449,9 @@ export const DEFAULT_OPTIONS: Options = {
   highlight: false,
   indent: 2,
   maxDepth: Number.POSITIVE_INFINITY,
+  // Practical default hard-limit to avoid too long string being generated
+  // (Node's limit is buffer.constants.MAX_STRING_LENGTH ~ 512MB)
+  maxOutputLength: 1_000_000,
   maxWidth: Number.POSITIVE_INFINITY,
   min: false,
   plugins: [],
@@ -446,6 +459,10 @@ export const DEFAULT_OPTIONS: Options = {
   printFunctionName: true,
   printShadowRoot: true,
   theme: DEFAULT_THEME,
+  singleQuote: false,
+  quoteKeys: true,
+  spacingInner: '\n',
+  spacingOuter: '\n',
 } satisfies Options
 
 function validateOptions(options: OptionsReceived) {
@@ -518,11 +535,15 @@ function getConfig(options?: OptionsReceived): Config {
     maxWidth: options?.maxWidth ?? DEFAULT_OPTIONS.maxWidth,
     min: options?.min ?? DEFAULT_OPTIONS.min,
     plugins: options?.plugins ?? DEFAULT_OPTIONS.plugins,
-    printBasicPrototype: options?.printBasicPrototype ?? true,
+    printBasicPrototype: options?.printBasicPrototype ?? !options?.min,
     printFunctionName: getPrintFunctionName(options),
     printShadowRoot: options?.printShadowRoot ?? true,
-    spacingInner: options?.min ? ' ' : '\n',
-    spacingOuter: options?.min ? '' : '\n',
+    spacingInner: options?.spacingInner ?? (options?.min ? ' ' : '\n'),
+    spacingOuter: options?.spacingOuter ?? (options?.min ? '' : '\n'),
+    singleQuote: options?.singleQuote ?? DEFAULT_OPTIONS.singleQuote,
+    quoteKeys: options?.quoteKeys ?? DEFAULT_OPTIONS.quoteKeys,
+    maxOutputLength: options?.maxOutputLength ?? DEFAULT_OPTIONS.maxOutputLength,
+    _outputLengthPerDepth: [],
   }
 }
 
@@ -538,26 +559,43 @@ function createIndent(indent: number): string {
 export function format(val: unknown, options?: OptionsReceived): string {
   if (options) {
     validateOptions(options)
-    if (options.plugins) {
-      const plugin = findPlugin(options.plugins, val)
-      if (plugin !== null) {
-        return printPlugin(plugin, val, getConfig(options), '', 0, [])
-      }
-    }
+  }
+
+  const config = getConfig(options)
+  const plugin = findPlugin(config.plugins, val)
+  if (plugin !== null) {
+    return printPlugin(plugin, val, config, '', 0, [])
   }
 
   const basicResult = printBasicValue(
     val,
-    getPrintFunctionName(options),
-    getEscapeRegex(options),
-    getEscapeString(options),
+    config.printFunctionName,
+    config.escapeRegex,
+    config.escapeString,
+    config.singleQuote,
   )
   if (basicResult !== null) {
     return basicResult
   }
 
-  return printComplexValue(val, getConfig(options), '', 0, [])
+  return printComplexValue(val, config, '', 0, [])
 }
+
+export type {
+  Colors,
+  CompareKeys,
+  Config,
+  NewPlugin,
+  OldPlugin,
+  Options,
+  OptionsReceived,
+  Plugin,
+  Plugins,
+  PrettyFormatOptions,
+  Printer,
+  Refs,
+  Theme,
+} from './types'
 
 export const plugins: {
   AsymmetricMatcher: NewPlugin

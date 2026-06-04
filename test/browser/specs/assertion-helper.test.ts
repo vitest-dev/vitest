@@ -1,0 +1,86 @@
+import { expect, test } from 'vitest'
+import { instances, runBrowserTests } from './utils'
+
+test('vi.defineHelper hides internal stack traces', async () => {
+  const { errorTree } = await runBrowserTests({
+    root: './fixtures/assertion-helper',
+  })
+
+  const projectTree = errorTree({ project: true, stackTrace: true })
+  expect(Object.keys(projectTree).sort()).toEqual(instances.map(i => i.browser).sort())
+
+  for (const [name, tree] of Object.entries(projectTree)) {
+    if (name === 'firefox') {
+      expect.soft(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "async": [
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:26:8",
+            ],
+            "soft": [
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:14",
+            ],
+            "soft async": [
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:34:8",
+            ],
+            "sync": [
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:10",
+            ],
+          },
+        }
+      `)
+    }
+    else if (name === 'webkit') {
+      expect.soft(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "async": [
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:26:21",
+            ],
+            "soft": [
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:14",
+            ],
+            "soft async": [
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:34:25",
+            ],
+            "sync": [
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:10",
+            ],
+          },
+        }
+      `)
+    }
+    else {
+      expect.soft(tree).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "async": [
+              "expected 'async' to deeply equal 'x'
+            at basic.test.ts:26:2",
+            ],
+            "soft": [
+              "expected 'soft' to deeply equal 'x'
+            at basic.test.ts:30:2",
+            ],
+            "soft async": [
+              "expected 'soft async' to deeply equal 'x'
+            at basic.test.ts:34:2",
+            ],
+            "sync": [
+              "expected 'sync' to deeply equal 'x'
+            at basic.test.ts:22:2",
+            ],
+          },
+        }
+      `)
+    }
+  }
+})

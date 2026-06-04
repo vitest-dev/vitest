@@ -1,0 +1,96 @@
+name: Label Automated PR
+
+on:
+  # zizmor: ignore[dangerous-triggers]
+  # Information from the PR is used only inside builtin `contains` function, it's not passed down as untrusted code.
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  prompt-label:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && contains(github.event.pull_request.body, '<!-- VITEST_AUTOMATED_PR -->')
+    name: Automatic Clanker Alert
+    permissions:
+      contents: read # to check out the repo for local actions
+      pull-requests: write # comment and label on PRs
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: main
+      - name: maybe automated (label)
+        uses: ./.github/actions/issues-helper
+        with:
+          actions: add-labels
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          labels: maybe automated
+      - uses: ./.github/actions/send-ai-bot-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+          login: ${{ github.event.pull_request.user.login }}
+
+  agentscan:
+    runs-on: ubuntu-slim
+    # run only for our repo and ignore PRs from origin that only maintainers can do
+    # also ignore known bots
+    if: |
+      github.repository == 'vitest-dev/vitest' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      !contains(
+        fromJSON('["dependabot[bot]","github-actions[bot]","sheremet-va","hi-ogawa","AriPerkkio","macarie","antfu","userquin","patak-cat"]'),
+        github.event.pull_request.user.login
+      )
+    name: AgentScan Alert
+    permissions:
+      contents: read # to check out the repo for local actions
+      pull-requests: write # comment and label on PRs
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          # we checkout just to read ./issue-helper
+          # we do not care about user code
+          ref: main
+      - name: AgentScan
+        id: agentscan
+        uses: MatteoGabriele/agentscan-action@f41545309db947a68e22ed2643f182e754f4d41a # v1.8.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          agent-scan-comment: false
+          skip-comment-on-organic: true
+          label-automation: maybe automated
+          label-mixed: maybe automated
+          label-community-flagged: bot
+
+      # agentscan-action puts a label automatically and we send a comment if the account looks suspicious
+      - name: Comment flagged PR
+        if: steps.agentscan.outputs.classification != 'organic' && steps.agentscan.outputs.community-flagged != 'true'
+        uses: ./.github/actions/send-ai-bot-comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pr-number: ${{ github.event.pull_request.number }}
+          login: ${{ github.event.pull_request.user.login }}
+
+      # if the account is confirmed to be a bot, just close the PR
+      - name: Close community flagged accounts
+        if: steps.agentscan.outputs.community-flagged == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              state: 'closed',
+            });

@@ -4,17 +4,17 @@ title: Test Environment | Guide
 
 # Test Environment
 
-Vitest provides [`environment`](/config/#environment) option to run code inside a specific environment. You can modify how environment behaves with [`environmentOptions`](/config/#environmentoptions) option.
+Vitest provides [`environment`](/config/environment) option to run code inside a specific environment. You can modify how environment behaves with [`environmentOptions`](/config/environmentoptions) option.
 
 By default, you can use these environments:
 
 - `node` is default environment
 - `jsdom` emulates browser environment by providing Browser API, uses [`jsdom`](https://github.com/jsdom/jsdom) package
 - `happy-dom` emulates browser environment by providing Browser API, and considered to be faster than jsdom, but lacks some API, uses [`happy-dom`](https://github.com/capricorn86/happy-dom) package
-- `edge-runtime` emulates Vercel's [edge-runtime](https://edge-runtime.vercel.app/), uses [`@edge-runtime/vm`](https://www.npmjs.com/package/@edge-runtime/vm) package
+- `edge-runtime` emulates Vercel's [edge-runtime](https://edge-runtime.vercel.app/), uses [`@edge-runtime/vm`](https://npmx.dev/package/@edge-runtime/vm) package
 
 ::: info
-When using `jsdom` or `happy-dom` environments, Vitest follows the same rules that Vite does when importing [CSS](https://vitejs.dev/guide/features.html#css) and [assets](https://vitejs.dev/guide/features.html#static-assets). If importing external dependency fails with `unknown extension .css` error, you need to inline the whole import chain manually by adding all packages to [`server.deps.inline`](/config/#server-deps-inline). For example, if the error happens in `package-3` in this import chain: `source code -> package-1 -> package-2 -> package-3`, you need to add all three packages to `server.deps.inline`.
+When using `jsdom` or `happy-dom` environments, Vitest follows the same rules that Vite does when importing [CSS](https://vitejs.dev/guide/features.html#css) and [assets](https://vitejs.dev/guide/features.html#static-assets). If importing external dependency fails with `unknown extension .css` error, you need to inline the whole import chain manually by adding all packages to [`server.deps.inline`](/config/server#inline). For example, if the error happens in `package-3` in this import chain: `source code -> package-1 -> package-2 -> package-3`, you need to add all three packages to `server.deps.inline`.
 
 The `require` of CSS and assets inside the external dependencies are resolved automatically.
 :::
@@ -44,12 +44,12 @@ test('test', () => {
 You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
 ```ts
-import type { Environment } from 'vitest/environments'
+import type { Environment } from 'vitest/runtime'
 
 export default <Environment>{
   name: 'custom',
   viteEnvironment: 'ssr',
-  // optional - only if you support "experimental-vm" pool
+  // optional - only if you support "vmForks" or "vmThreads" pools
   async setupVM() {
     const vm = await import('node:vm')
     const context = vm.createContext()
@@ -77,10 +77,10 @@ export default <Environment>{
 Vitest requires `viteEnvironment` option on environment object (fallbacks to the Vitest environment name by default). It should be equal to `ssr`, `client` or any custom [Vite environment](https://vite.dev/guide/api-environment) name. This value determines which environment is used to process file.
 :::
 
-You also have access to default Vitest environments through `vitest/environments` entry:
+You also have access to default Vitest environments through `vitest/runtime` entry:
 
 ```ts
-import { builtinEnvironments, populateGlobal } from 'vitest/environments'
+import { builtinEnvironments, populateGlobal } from 'vitest/runtime'
 
 console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }
 ```

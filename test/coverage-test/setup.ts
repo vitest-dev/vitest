@@ -3,14 +3,14 @@ import { expect } from 'vitest'
 import { formatSummary } from './utils'
 
 expect.addSnapshotSerializer({
-  test: val => val.constructor.name === 'CoverageMap',
+  test: val => val.constructor?.name === 'CoverageMap',
   serialize: (val: CoverageMap, config, indentation, depth, refs, printer) => {
     return printer(formatSummary(val.getCoverageSummary()), config, indentation, depth, refs)
   },
 })
 
 expect.addSnapshotSerializer({
-  test: val => val.constructor.name === 'FileCoverage',
+  test: val => val.constructor?.name === 'FileCoverage',
   serialize: (val: FileCoverage, config, indentation, depth, refs, printer) => {
     return printer(formatSummary(val.toSummary()), config, indentation, depth, refs)
   },

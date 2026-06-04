@@ -44,52 +44,52 @@ test('.toHaveClass', () => {
 
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('btn'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('btn-danger'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('extra'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass('xtra'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass('btn', 'extra xtra'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('btn btn-danger'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('btn', 'btn-danger'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass('btn-link'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('cancel-button')).toHaveClass('btn-danger'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('svg-spinner')).not.toHaveClass('spinner'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('svg-spinner')).toHaveClass('wise'),
-  ).toThrowError()
+  ).toThrow()
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass(),
-  ).toThrowError(/At least one expected class must be provided/)
+  ).toThrow(/At least one expected class must be provided/)
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass(''),
-  ).toThrowError(/At least one expected class must be provided/)
-  expect(() => expect(queryByTestId('no-classes')).toHaveClass()).toThrowError(
+  ).toThrow(/At least one expected class must be provided/)
+  expect(() => expect(queryByTestId('no-classes')).toHaveClass()).toThrow(
     /At least one expected class must be provided/,
   )
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass(),
-  ).toThrowError(/(none)/)
+  ).toThrow(/(none)/)
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass('  '),
-  ).toThrowError(/(none)/)
+  ).toThrow(/(none)/)
 })
 
 test('.toHaveClass with regular expressions', () => {
@@ -111,11 +111,11 @@ test('.toHaveClass with regular expressions', () => {
 
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass(/danger/),
-  ).toThrowError()
+  ).toThrow()
 
   expect(() =>
     expect(queryByTestId('delete-button')).toHaveClass(/dangerous/),
-  ).toThrowError()
+  ).toThrow()
 })
 
 test('.toHaveClass with exact mode option', () => {
@@ -197,13 +197,13 @@ test('.toHaveClass with exact mode option', () => {
     expect(queryByTestId('only-one-class')).not.toHaveClass('alone', {
       exact: true,
     }),
-  ).toThrowError(/Expected the element not to have EXACTLY defined classes/)
+  ).toThrow(/Expected the element not to have EXACTLY defined classes/)
 
   expect(() =>
     expect(queryByTestId('only-one-class')).toHaveClass('alone', 'foo', {
       exact: true,
     }),
-  ).toThrowError(/Expected the element to have EXACTLY defined classes/)
+  ).toThrow(/Expected the element to have EXACTLY defined classes/)
 })
 
 test('.toHaveClass combining {exact:true} and regular expressions throws an error', () => {
@@ -214,7 +214,7 @@ test('.toHaveClass combining {exact:true} and regular expressions throws an erro
     expect(queryByTestId('delete-button')).not.toHaveClass(/btn/, {
       exact: true,
     }),
-  ).toThrowError()
+  ).toThrow()
 
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass(
@@ -224,10 +224,10 @@ test('.toHaveClass combining {exact:true} and regular expressions throws an erro
       /\bbtn/,
       {exact: true},
     ),
-  ).toThrowError()
+  ).toThrow()
 
   expect(() =>
     // @ts-expect-error regexp is not supported with exact
     expect(queryByTestId('delete-button')).toHaveClass(/danger/, {exact: true}),
-  ).toThrowError()
+  ).toThrow()
 })

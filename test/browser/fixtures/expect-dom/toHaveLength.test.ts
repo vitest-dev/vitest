@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { render } from './utils';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 
 describe('.toHaveLength', () => {
   test('accepts locator', async () => {

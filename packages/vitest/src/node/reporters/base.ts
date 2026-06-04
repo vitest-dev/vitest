@@ -1,17 +1,21 @@
-import type { File, Task, TestAnnotation } from '@vitest/runner'
-import type { SerializedError } from '@vitest/utils'
-import type { TestError, UserConsoleLog } from '../../types/general'
+import type { ParsedStack, SerializedError } from '@vitest/utils'
+import type { File, Task, TestAnnotation, TestBenchmark, TestBenchmarkTask } from '../../runtime/runner/types'
+import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
+import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
+import { groupBy } from '../../utils/base'
 import { isTTY } from '../../utils/env'
-import { hasFailedSnapshot } from '../../utils/tasks'
+import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
+import { generateCodeFrame, printStack } from '../printError'
+import { BENCH_TABLE_HEAD, computeBenchColumnWidths, padBenchRow, renderBenchmarkRow } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
   countTestErrors,
@@ -33,6 +37,7 @@ const BADGE_PADDING = '       '
 
 export interface BaseOptions {
   isTTY?: boolean
+  silent?: boolean | 'passed-only'
 }
 
 export abstract class BaseReporter implements Reporter {
@@ -45,19 +50,22 @@ export abstract class BaseReporter implements Reporter {
   renderSucceed = false
 
   protected verbose = false
+  protected silent?: boolean | 'passed-only'
 
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
+  private _perProjectBenchmarks = new Map<string, Map<string, TestBenchmarkTask>>()
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? isTTY
+    this.silent = options.silent
   }
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
+    this.silent ??= this.ctx.config.silent
 
     this.ctx.logger.printBanner()
-    this.start = performance.now()
   }
 
   log(...messages: any): void {
@@ -70,6 +78,12 @@ export abstract class BaseReporter implements Reporter {
 
   relative(path: string): string {
     return relative(this.ctx.config.root, path)
+  }
+
+  onTestRunStart(_specifications: ReadonlyArray<TestSpecification>): void {
+    this.start = performance.now()
+    this._timeStart = formatTimeString(new Date())
+    this._perProjectBenchmarks.clear()
   }
 
   onTestRunEnd(
@@ -85,6 +99,7 @@ export abstract class BaseReporter implements Reporter {
       this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
     }
     else {
+      this.printPerProjectBenchmarks()
       this.reportSummary(files, errors)
     }
   }
@@ -92,6 +107,22 @@ export abstract class BaseReporter implements Reporter {
   onTestCaseResult(testCase: TestCase): void {
     if (testCase.result().state === 'failed') {
       this.logFailedTask(testCase.task)
+    }
+  }
+
+  onTestCaseBenchmark(testCase: TestCase, benchmark: TestBenchmark): void {
+    const projectName = testCase.project.name || ''
+    for (const task of benchmark.tasks) {
+      if (!task.perProject) {
+        continue
+      }
+      const benchKey = `${testCase.module.relativeModuleId} > ${testCase.fullName} > ${task.name}`
+      let projectMap = this._perProjectBenchmarks.get(benchKey)
+      if (!projectMap) {
+        projectMap = new Map()
+        this._perProjectBenchmarks.set(benchKey, projectMap)
+      }
+      projectMap.set(projectName, task)
     }
   }
 
@@ -109,8 +140,8 @@ export abstract class BaseReporter implements Reporter {
     this.printTestModule(testModule)
   }
 
-  private logFailedTask(task: Task) {
-    if (this.ctx.config.silent === 'passed-only') {
+  protected logFailedTask(task: Task): void {
+    if (this.silent === 'passed-only') {
       for (const log of task.logs || []) {
         this.onUserConsoleLog(log, 'failed')
       }
@@ -126,6 +157,7 @@ export abstract class BaseReporter implements Reporter {
     let testsCount = 0
     let failedCount = 0
     let skippedCount = 0
+    let todoCount = 0
 
     // delaying logs to calculate the test stats first
     // which minimizes the amount of for loops
@@ -139,7 +171,7 @@ export abstract class BaseReporter implements Reporter {
           const suiteState = child.state()
 
           // Skipped suites are hidden when --hideSkippedTests, print otherwise
-          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped') {
+          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped' || child.task.mode === 'todo') {
             this.printTestSuite(child)
           }
 
@@ -153,10 +185,15 @@ export abstract class BaseReporter implements Reporter {
             failedCount++
           }
           else if (testResult.state === 'skipped') {
-            skippedCount++
+            if (child.options.mode === 'todo') {
+              todoCount++
+            }
+            else {
+              skippedCount++
+            }
           }
 
-          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped') {
+          if (this.ctx.config.hideSkippedTests && suiteState === 'skipped' && child.options.mode !== 'todo') {
             // Skipped suites are hidden when --hideSkippedTests
             continue
           }
@@ -177,6 +214,7 @@ export abstract class BaseReporter implements Reporter {
       tests: testsCount,
       failed: failedCount,
       skipped: skippedCount,
+      todo: todoCount,
     }))
     logs.forEach(log => this.log(log))
   }
@@ -187,6 +225,10 @@ export abstract class BaseReporter implements Reporter {
     const { duration = 0 } = test.diagnostic() || {}
     const padding = this.getTestIndentation(test.task)
     const suffix = this.getTestCaseSuffix(test)
+    const benchmarks = test.benchmarks()
+    // perProject tasks still appear in the inline table — they're additionally
+    // aggregated in the cross-project section at the end of the run
+    const inlineBenchmarks: TestBenchmark[] = benchmarks.filter(b => b.tasks.length > 0)
 
     if (testResult.state === 'failed') {
       this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, separator)}`) + suffix)
@@ -194,15 +236,19 @@ export abstract class BaseReporter implements Reporter {
 
     // also print slow tests
     else if (duration > this.ctx.config.slowTestThreshold) {
-      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)} ${suffix}`)
+      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, separator)}${suffix}`)
     }
 
-    else if (this.ctx.config.hideSkippedTests && (testResult.state === 'skipped')) {
+    else if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped' && test.options.mode !== 'todo') {
       // Skipped tests are hidden when --hideSkippedTests
     }
 
-    else if (this.renderSucceed || moduleState === 'failed') {
+    else if (this.renderSucceed || moduleState === 'failed' || inlineBenchmarks.length) {
       this.log(` ${padding}${this.getStateSymbol(test)} ${this.getTestName(test.task, separator)}${suffix}`)
+    }
+
+    if (inlineBenchmarks.length > 0) {
+      this.printBenchmarkTable(inlineBenchmarks, padding)
     }
   }
 
@@ -210,6 +256,7 @@ export abstract class BaseReporter implements Reporter {
     tests: number
     failed: number
     skipped: number
+    todo: number
   }): string {
     let state = c.dim(`${counts.tests} test${counts.tests > 1 ? 's' : ''}`)
 
@@ -219,6 +266,10 @@ export abstract class BaseReporter implements Reporter {
 
     if (counts.skipped) {
       state += c.dim(' | ') + c.yellow(`${counts.skipped} skipped`)
+    }
+
+    if (counts.todo) {
+      state += c.dim(' | ') + c.gray(`${counts.todo} todo`)
     }
 
     let suffix = c.dim('(') + state + c.dim(')') + this.getDurationPrefix(testModule.task)
@@ -309,6 +360,11 @@ export abstract class BaseReporter implements Reporter {
 
     if (entity.meta().typecheck) {
       title += ` ${c.bgBlue(c.bold(' TS '))}`
+    }
+
+    const label = this.ctx.state.blobs && entity.task.file.meta.__vitest_label__
+    if (label) {
+      title += ` ${c.bgCyan(c.bold(` ${label} `))}`
     }
 
     return title
@@ -419,9 +475,6 @@ export abstract class BaseReporter implements Reporter {
     for (const testModule of this.failedUnwatchedFiles) {
       this.printTestModule(testModule)
     }
-
-    this._timeStart = formatTimeString(new Date())
-    this.start = performance.now()
   }
 
   onUserConsoleLog(log: UserConsoleLog, taskState?: TestResult['state']): void {
@@ -487,11 +540,11 @@ export abstract class BaseReporter implements Reporter {
   }
 
   shouldLog(log: UserConsoleLog, taskState?: TestResult['state']): boolean {
-    if (this.ctx.config.silent === true) {
+    if (this.silent === true) {
       return false
     }
 
-    if (this.ctx.config.silent === 'passed-only' && taskState !== 'failed') {
+    if (this.silent === 'passed-only' && taskState !== 'failed') {
       return false
     }
 
@@ -517,15 +570,12 @@ export abstract class BaseReporter implements Reporter {
   reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
 
-    if (this.ctx.config.mode === 'benchmark') {
-      this.reportBenchmarkSummary(files)
-    }
-    else {
-      this.reportTestSummary(files, errors)
-    }
+    const leakCount = this.printLeaksSummary()
+
+    this.reportTestSummary(files, errors, leakCount)
   }
 
-  reportTestSummary(files: File[], errors: unknown[]): void {
+  reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
     const affectedFiles = [
@@ -569,6 +619,10 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
+    if (leakCount) {
+      this.log(padSummaryTitle('Leaks'), c.bold(c.red(`${leakCount} leak${leakCount > 1 ? 's' : ''}`)))
+    }
+
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, file => file.collectDuration)
@@ -585,17 +639,15 @@ export abstract class BaseReporter implements Reporter {
       const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
 
       const environmentTime = sum(files, file => file.environmentLoad)
-      const prepareTime = sum(files, file => file.prepareDuration)
       const transformTime = this.ctx.state.transformTime
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [
         `transform ${formatTime(transformTime)}`,
         `setup ${formatTime(setupTime)}`,
-        `collect ${formatTime(collectTime)}`,
+        `import ${formatTime(collectTime)}`,
         `tests ${formatTime(testsTime)}`,
         `environment ${formatTime(environmentTime)}`,
-        `prepare ${formatTime(prepareTime)}`,
         typecheck && `typecheck ${formatTime(typecheck)}`,
       ].filter(Boolean).join(', ')
 
@@ -606,7 +658,153 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
+    this.reportImportDurations()
+
     this.log()
+  }
+
+  private reportImportDurations() {
+    const { print, failOnDanger, thresholds } = this.ctx.config.experimental.importDurations
+    if (!print && !failOnDanger) {
+      return
+    };
+
+    const testModules = this.ctx.state.getTestModules()
+
+    interface ImportEntry {
+      importedModuleId: string
+      selfTime: number
+      external?: boolean
+      totalTime: number
+      testModule: TestModule
+    }
+
+    const allImports: ImportEntry[] = []
+
+    for (const testModule of testModules) {
+      const diagnostic = testModule.diagnostic()
+      const importDurations = diagnostic.importDurations
+
+      for (const filePath in importDurations) {
+        const duration = importDurations[filePath]
+        allImports.push({
+          importedModuleId: filePath,
+          testModule,
+          selfTime: duration.selfTime,
+          totalTime: duration.totalTime,
+          external: duration.external,
+        })
+      }
+    }
+
+    if (allImports.length === 0) {
+      return
+    }
+
+    let dangerImportsCount = 0
+    let hasWarnImports = false
+    let totalSelfTime = 0
+    let totalTotalTime = 0
+    for (const imp of allImports) {
+      if (imp.totalTime >= thresholds.danger) {
+        dangerImportsCount++
+      }
+      if (imp.totalTime >= thresholds.warn) {
+        hasWarnImports = true
+      }
+      totalSelfTime += imp.selfTime
+      totalTotalTime += imp.totalTime
+    }
+    const hasDangerImports = dangerImportsCount > 0
+
+    // Determine if we should print
+    const shouldFail = failOnDanger && hasDangerImports
+    const shouldPrint = (print === true) || (print === 'on-warn' && hasWarnImports) || shouldFail
+    if (!shouldPrint) {
+      return
+    }
+
+    const sortedImports = allImports.sort((a, b) => b.totalTime - a.totalTime)
+    const maxTotalTime = sortedImports[0].totalTime
+    const limit = this.ctx.config.experimental.importDurations.limit
+    const topImports = sortedImports.slice(0, limit)
+    const slowestImport = sortedImports[0]
+
+    this.log()
+    this.log(c.bold('Import Duration Breakdown') + c.dim(` (Top ${limit})`))
+    this.log()
+    this.log(c.dim(`${'Module'.padEnd(50)} ${'Self'.padStart(6)} ${'Total'.padStart(6)}`))
+
+    // if there are multiple files, it's highly possible that some of them will import the same large file
+    // we group them to show the distinction between those files more easily
+    //     Import Duration Breakdown (Top 10)
+    //
+    //     Module                                              Self     Total
+    //     .../fields/FieldFile/__tests__/FieldFile.spec.ts     7ms    1.01s  ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     861ms █████████████████░░░
+    //      ↳ tests/support/components/renderComponent.ts      59ms     861ms █████████████████░░░
+    //     ...s__/apps/desktop/form-updater.desktop.spec.ts     8ms     991ms ████████████████████
+    //     ...sts__/apps/mobile/form-updater.mobile.spec.ts    11ms     990ms ████████████████████
+    //     shared/components/Form/__tests__/Form.spec.ts        5ms     988ms ████████████████████
+    //      ↳ tests/support/components/index.ts                 0ms     935ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      61ms     935ms ███████████████████░
+    //     ...ditor/features/link/__test__/LinkForm.spec.ts     7ms     972ms ███████████████████░
+    //      ↳ tests/support/components/renderComponent.ts      56ms     936ms ███████████████████░
+
+    const groupedImports = Object.entries(
+      groupBy(topImports, i => i.testModule.id),
+      // the first one is always the highest because the modules are already sorted
+    ).sort(([, imps1], [, imps2]) => imps2[0].totalTime - imps1[0].totalTime)
+
+    for (const [_, group] of groupedImports) {
+      group.forEach((imp, index) => {
+        const barWidth = 20
+        const filledWidth = Math.round((imp.totalTime / maxTotalTime) * barWidth)
+        const bar = c.cyan('█'.repeat(filledWidth)) + c.dim('░'.repeat(barWidth - filledWidth))
+
+        // only show the arrow if there is more than 1 group
+        const pathDisplay = this.ellipsisPath(imp.importedModuleId, imp.external, groupedImports.length > 1 && index > 0)
+
+        this.log(
+          `${pathDisplay} ${this.importDurationTime(imp.selfTime)} ${this.importDurationTime(imp.totalTime)}  ${bar}`,
+        )
+      })
+    }
+
+    this.log()
+    this.log(c.dim('Total imports: ') + allImports.length)
+    this.log(c.dim('Slowest import (total-time): ') + formatTime(slowestImport.totalTime))
+    this.log(c.dim('Total import time (self/total): ') + formatTime(totalSelfTime) + c.dim(' / ') + formatTime(totalTotalTime))
+
+    // Fail if danger threshold exceeded
+    if (shouldFail) {
+      this.log()
+      this.ctx.logger.error(
+        `ERROR: ${dangerImportsCount} import(s) exceeded the danger threshold of ${thresholds.danger}ms`,
+      )
+      process.exitCode = 1
+    }
+  }
+
+  private importDurationTime(duration: number) {
+    const { thresholds } = this.ctx.config.experimental.importDurations
+    const color = duration >= thresholds.danger ? c.red : duration >= thresholds.warn ? c.yellow : (c: string) => c
+    return color(formatTime(duration).padStart(6))
+  }
+
+  private ellipsisPath(path: string, external: boolean | undefined, nested: boolean) {
+    const pathDisplay = this.relative(path)
+    const color = external ? c.magenta : (c: string) => c
+    const slicedPath = pathDisplay.slice(-44)
+    let title = ''
+    if (pathDisplay.length > slicedPath.length) {
+      title += '...'
+    }
+    if (nested) {
+      title = ` ${F_DOWN_RIGHT} ${title}`
+    }
+    title += slicedPath
+    return color(title.padEnd(50))
   }
 
   private printErrorsSummary(files: File[], errors: unknown[]) {
@@ -617,6 +815,7 @@ export abstract class BaseReporter implements Reporter {
     const failedTests = tests.filter(i => i.result?.state === 'fail')
     const failedTotal = countTestErrors(failedSuites) + countTestErrors(failedTests)
 
+    // TODO: error divider should take into account merged errors for counting
     let current = 1
     const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
@@ -636,34 +835,151 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  reportBenchmarkSummary(files: File[]): void {
-    const benches = getTests(files)
-    const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
+  private printLeaksSummary() {
+    const leaks = this.ctx.state.leakSet
 
-    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
+    if (leaks.size === 0) {
+      return 0
+    }
 
-    for (const bench of topBenches) {
-      const group = bench.suite || bench.file
+    const leakWithStacks = new Map<string, { leak: AsyncLeak; stacks: ParsedStack[] }>()
 
-      if (!group) {
+    // Leaks can be duplicate, where type and position are identical
+    for (const leak of leaks) {
+      const stacks = parseStacktrace(leak.stack)
+
+      if (stacks.length === 0) {
         continue
       }
 
-      const groupName = this.getFullName(group, separator)
-      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+      const filename = this.relative(leak.filename)
+      const key = `${filename}:${stacks[0].line}:${stacks[0].column}:${leak.type}`
 
-      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
+      if (leakWithStacks.has(key)) {
+        continue
+      }
 
-      const siblings = group.tasks
-        .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
-        .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
+      leakWithStacks.set(key, { leak, stacks })
+    }
 
-      for (const sibling of siblings) {
-        const number = (sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)
-        this.log(c.green(`    ${number}x `) + c.gray('faster than ') + sibling.name)
+    this.error(`\n${errorBanner(`Async Leaks ${leakWithStacks.size}`)}\n`)
+
+    for (const { leak, stacks } of leakWithStacks.values()) {
+      const filename = this.relative(leak.filename)
+      this.ctx.logger.error(c.red(`${leak.type} leaking in ${filename}`))
+
+      try {
+        const sourceCode = readFileSync(stacks[0].file, 'utf-8')
+
+        this.ctx.logger.error(generateCodeFrame(
+          sourceCode.length > 100_000
+            ? sourceCode
+            : this.ctx.logger.highlight(stacks[0].file, sourceCode),
+          undefined,
+          stacks[0],
+        ))
+      }
+      catch {
+        // ignore error, do not produce more detailed message with code frame.
+      }
+
+      printStack(
+        this.ctx.logger,
+        this.ctx.getProjectByName(leak.projectName),
+        stacks,
+        stacks[0],
+        {},
+      )
+    }
+
+    return leakWithStacks.size
+  }
+
+  protected printPerProjectBenchmarks(): void {
+    if (this._perProjectBenchmarks.size === 0) {
+      return
+    }
+
+    let hasComparable = false
+    for (const projectMap of this._perProjectBenchmarks.values()) {
+      if (projectMap.size > 1) {
+        hasComparable = true
+        break
+      }
+    }
+    if (!hasComparable) {
+      return
+    }
+
+    this.log('')
+    this.log(divider(c.bold(c.bgBlue(` Cross-Project Benchmark Comparison `)), null, null, c.blue))
+
+    for (const [benchName, projectMap] of this._perProjectBenchmarks) {
+      const tasks = [...projectMap.entries()]
+        .sort((a, b) => a[1].latency.mean - b[1].latency.mean)
+        .map(([projectName, task], index) => ({ ...task, name: projectName, rank: index + 1 }))
+
+      if (tasks.length <= 1) {
+        continue
       }
 
       this.log('')
+      this.log(`  ${c.dim(benchName)}`)
+      this.printBenchmarkTable([{ name: benchName, tasks }], '', 'project')
+    }
+
+    this.log('')
+  }
+
+  protected printBenchmarkTable(benchmarks: readonly TestBenchmark[], basePadding: string, columnName = 'name'): void {
+    let printedCount = 0
+    for (const benchmark of benchmarks) {
+      const { tasks } = benchmark
+      if (tasks.length === 0) {
+        continue
+      }
+
+      if (printedCount > 0) {
+        this.log('')
+      }
+
+      const rows = tasks.map(t => renderBenchmarkRow(t))
+      const tableHead = [
+        columnName,
+        ...BENCH_TABLE_HEAD,
+      ]
+      const widths = computeBenchColumnWidths(tableHead, rows)
+      const indent = ` ${basePadding}  `
+
+      this.log(`${indent}${padBenchRow(tableHead, widths).map(c.bold).join('  ')}`)
+      printedCount++
+
+      for (const task of tasks) {
+        const padded = padBenchRow(renderBenchmarkRow(task), widths)
+        let row = [
+          padded[0],
+          c.blue(padded[1]),
+          c.cyan(padded[2]),
+          c.cyan(padded[3]),
+          c.cyan(padded[4]),
+          c.cyan(padded[5]),
+          c.cyan(padded[6]),
+          c.cyan(padded[7]),
+          c.cyan(padded[8]),
+          c.dim(padded[9]),
+          c.dim(padded[10]),
+        ].join('  ')
+
+        if (task.rank === 1 && tasks.length > 1) {
+          row += c.bold(c.green('   fastest'))
+        }
+
+        if (task.rank === tasks.length && tasks.length > 2) {
+          row += c.bold(c.gray('   slowest'))
+        }
+
+        this.log(`${indent}${row}`)
+      }
     }
   }
 
@@ -677,7 +993,7 @@ export abstract class BaseReporter implements Reporter {
 
         if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stack !== error.stack) {
+            if (i[0]?.stack !== error.stack || i[0]?.diff !== error.diff) {
               return false
             }
 
@@ -712,18 +1028,30 @@ export abstract class BaseReporter implements Reporter {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
         }
 
+        const label = this.ctx.state.blobs && task.file?.meta?.__vitest_label__
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${label ? `${c.bgCyan(c.bold(` ${label} `))} ` : ''}${name}`,
         )
       }
 
-      const screenshotPaths = tasks.map(t => t.meta?.failScreenshotPath).filter(screenshot => screenshot != null)
+      const screenshotPaths = tasks.reduce<string[]>((paths, t) => {
+        if (t.type === 'test') {
+          for (const artifact of t.artifacts) {
+            if (artifact.type === 'internal:failureScreenshot') {
+              if (artifact.attachments.length) {
+                paths.push(artifact.attachments[0].originalPath)
+              }
+            }
+          }
+        }
+
+        return paths
+      }, [])
 
       this.ctx.logger.printError(error, {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
         screenshotPaths,
-        task: tasks[0],
       })
 
       if (tasks[0].type === 'test' && tasks[0].annotations.length) {
@@ -752,7 +1080,7 @@ function deepEqual(a: any, b: any): boolean {
   }
 
   for (const key of keysA) {
-    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+    if (!Object.prototype.hasOwnProperty.call(b, key) || !deepEqual(a[key], b[key])) {
       return false
     }
   }

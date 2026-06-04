@@ -1,5 +1,5 @@
 import type { Stats } from 'node:fs'
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import fs from 'node:fs'
 import { relative } from 'pathe'
 

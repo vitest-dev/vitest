@@ -13,16 +13,16 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
-import { server } from '@vitest/browser/context'
 import { beginAriaCaches, endAriaCaches, isElementVisible as ivyaIsVisible } from 'ivya/utils'
+import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
 
 export default function toBeVisible(
   this: MatcherState,
   actual: Element | Locator,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toBeVisible, this)
   const isInDocument
     = htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })

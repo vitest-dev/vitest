@@ -1,0 +1,28 @@
+import { playwright } from '@vitest/browser-playwright'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      provider: playwright({
+        launchOptions: {
+          timeout: 1234,
+          // @ts-expect-error test type error
+          slowMo: 'wrong',
+        },
+      }),
+      instances: [
+        {
+          browser: 'chromium',
+          provider: playwright({
+            launchOptions: {
+              timeout: 1234,
+              // @ts-expect-error test type error
+              slowMo: 'wrong',
+            },
+          }),
+        },
+      ],
+    },
+  },
+})

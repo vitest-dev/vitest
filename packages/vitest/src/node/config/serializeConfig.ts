@@ -1,26 +1,27 @@
+import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
-import type { SerializedConfig } from '../types/config'
+import type { ApiConfig } from '../types/config'
+import { resolve } from 'node:path'
+import { configDefaults } from '../../defaults'
+import { isAgent, isForceColor } from '../../utils/env'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig } = project
   const viteConfig = project._vite?.config
   const optimizer = config.deps?.optimizer || {}
-  const poolOptions = config.poolOptions
-
-  // Resolve from server.config to avoid comparing against default value
-  const isolate = viteConfig?.test?.isolate
 
   return {
     // TODO: remove functions from environmentOptions
     environmentOptions: config.environmentOptions,
-    mode: config.mode,
     isolate: config.isolate,
+    maxWorkers: config.maxWorkers,
     base: config.base,
     logHeapUsage: config.logHeapUsage,
     runner: config.runner,
     bail: config.bail,
     defines: config.defines,
     chaiConfig: config.chaiConfig,
+    taskTitleValueFormatTruncate: config.taskTitleValueFormatTruncate,
     setupFiles: config.setupFiles,
     allowOnly: config.allowOnly,
     testTimeout: config.testTimeout,
@@ -35,70 +36,35 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    api: ((api: ApiConfig | undefined) => {
+      return {
+        allowExec: api?.allowExec,
+        allowWrite: api?.allowWrite,
+      }
+    })(project.isBrowserEnabled() ? config.browser.api : config.api),
     // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
     root: config.root,
     name: config.name,
+    color: config.color,
     globals: config.globals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
     coverage: ((coverage) => {
-      const htmlReporter = coverage.reporter.find(([reporterName]) => reporterName === 'html') as [
-        'html',
-        { subdir?: string },
-      ] | undefined
-      const subdir = htmlReporter && htmlReporter[1]?.subdir
       return {
-        reportsDirectory: coverage.reportsDirectory,
+        reportsDirectory: resolve(globalConfig.root, coverage.reportsDirectory),
         provider: coverage.provider,
         enabled: coverage.enabled,
-        htmlReporter: htmlReporter
-          ? { subdir }
-          : undefined,
         customProviderModule: 'customProviderModule' in coverage
           ? coverage.customProviderModule
           : undefined,
+        htmlDir: coverage.htmlDir,
+        autoAttachSubprocess: coverage.autoAttachSubprocess ?? false,
       }
     })(config.coverage),
     fakeTimers: config.fakeTimers,
-    poolOptions: {
-      forks: {
-        singleFork:
-          poolOptions?.forks?.singleFork
-          ?? globalConfig.poolOptions?.forks?.singleFork
-          ?? false,
-        isolate:
-          poolOptions?.forks?.isolate
-          ?? isolate
-          ?? globalConfig.poolOptions?.forks?.isolate
-          ?? true,
-      },
-      threads: {
-        singleThread:
-          poolOptions?.threads?.singleThread
-          ?? globalConfig.poolOptions?.threads?.singleThread
-          ?? false,
-        isolate:
-          poolOptions?.threads?.isolate
-          ?? isolate
-          ?? globalConfig.poolOptions?.threads?.isolate
-          ?? true,
-      },
-      vmThreads: {
-        singleThread:
-          poolOptions?.vmThreads?.singleThread
-          ?? globalConfig.poolOptions?.vmThreads?.singleThread
-          ?? false,
-      },
-      vmForks: {
-        singleFork:
-          poolOptions?.vmForks?.singleFork
-          ?? globalConfig.poolOptions?.vmForks?.singleFork
-          ?? false,
-      },
-    },
     deps: {
       web: config.deps.web || {},
       optimizer: Object.entries(optimizer).reduce((acc, [name, option]) => {
@@ -129,6 +95,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,
     inspector: globalConfig.inspector,
+    detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
     includeTaskLocation:
       config.includeTaskLocation
@@ -145,10 +112,13 @@ export function serializeConfig(project: TestProject): SerializedConfig {
         isolate: browser.isolate,
         fileParallelism: browser.fileParallelism,
         ui: browser.ui,
+        detailsPanelPosition: browser.detailsPanelPosition ?? 'right',
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
+          exact: browser.locators.exact,
+          errorFormat: browser.locators.errorFormat,
         },
         providerOptions: provider?.name === 'playwright'
           ? {
@@ -157,17 +127,37 @@ export function serializeConfig(project: TestProject): SerializedConfig {
           : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
         trace: browser.trace.mode,
+        traceView: browser.traceView,
       }
     })(config.browser),
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? globalConfig.printConsoleTrace,
-    benchmark: config.benchmark && {
-      includeSamples: config.benchmark.includeSamples,
+    benchmark: {
+      enabled: config.benchmark.enabled,
+      retainSamples: config.benchmark.retainSamples,
+      suppressExportGetterWarnings: config.benchmark.suppressExportGetterWarnings,
+      projectName: config.benchmark.projectName,
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled
       ? ''
       : project._serializedDefines || '',
+    experimental: {
+      fsModuleCache: config.experimental.fsModuleCache ?? false,
+      importDurations: config.experimental.importDurations,
+      viteModuleRunner: config.experimental.viteModuleRunner ?? true,
+      nodeLoader: config.experimental.nodeLoader ?? true,
+      openTelemetry: config.experimental.openTelemetry,
+    },
+    tags: config.tags || [],
+    tagsFilter: config.tagsFilter,
+    strictTags: config.strictTags ?? true,
+    mergeReportsLabel: config.mergeReportsLabel,
+    slowTestThreshold:
+      config.slowTestThreshold
+      ?? globalConfig.slowTestThreshold
+      ?? configDefaults.slowTestThreshold,
+    disableColors: isAgent && !isForceColor(),
   }
 }

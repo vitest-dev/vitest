@@ -1,4 +1,4 @@
-import type { ScreenshotComparatorRegistry, ScreenshotMatcherOptions } from '../../../context'
+import type { ScreenshotComparatorRegistry, ScreenshotMatcherOptions, SerializedLocator } from '../../../context'
 
 export type ScreenshotMatcherArguments<
   ComparatorName extends keyof ScreenshotComparatorRegistry = keyof ScreenshotComparatorRegistry,
@@ -7,20 +7,31 @@ export type ScreenshotMatcherArguments<
   testName: string,
   options: ScreenshotMatcherOptions<ComparatorName>
     & {
-      element: string
-      screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly string[] }
+      element?: SerializedLocator
+      target?: 'element' | 'page'
+      screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & { mask?: readonly SerializedLocator[] }
     },
 ]
+
+interface ScreenshotData { path: string; width: number; height: number }
 
 export type ScreenshotMatcherOutput = Promise<
   {
     pass: false
-    reference: string | null
-    actual: string | null
-    diff: string | null
+    outcome:
+      | 'unstable-screenshot'
+      | 'missing-reference'
+      | 'mismatch'
+    reference: ScreenshotData | null
+    actual: ScreenshotData | null
+    diff: ScreenshotData | null
     message: string
   }
   | {
     pass: true
+    outcome:
+      | 'update-reference'
+      | 'matched-immediately'
+      | 'matched-after-comparison'
   }
 >

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { page, userEvent } from '@vitest/browser/context';
+import { page, userEvent } from 'vitest/browser';
 
 test('clipboard', async () => {
   // make it smaller since webdriverio fails when scaled

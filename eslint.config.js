@@ -14,24 +14,25 @@ export default antfu(
       '**/assets/**',
       '**/*.d.ts',
       '**/*.timestamp-*',
-      'test/core/src/self',
-      'test/core/test/mocking/already-hoisted.test.ts',
+      '**/test-results',
+      'test/unit/src/self',
+      'test/unit/test/mocking/already-hoisted.test.ts',
       'test/cache/cache/.vitest-base/results.json',
-      'test/core/src/wasm/wasm-bindgen-no-cyclic',
+      'test/unit/src/wasm/wasm-bindgen-no-cyclic',
       'test/workspaces/results.json',
       'test/workspaces-browser/results.json',
       'test/reporters/fixtures/with-syntax-error.test.js',
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
-      'test/cli/deps/error/*',
+      'test/e2e/deps/error/*',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
       // uses invalid js example
-      'docs/advanced/api/import-example.md',
+      'docs/api/advanced/import-example.md',
       'docs/guide/examples/*.md',
     ],
   },
@@ -43,6 +44,7 @@ export default antfu(
       'no-empty-pattern': 'off',
       'antfu/indent-binary-ops': 'off',
       'unused-imports/no-unused-imports': 'error',
+      'pnpm/json-enforce-catalog': 'off',
       'style/member-delimiter-style': [
         'error',
         {
@@ -59,6 +61,10 @@ export default antfu(
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
       'ts/no-unsafe-function-type': 'off',
+
+      'markdown/fenced-code-language': 'off',
+      // it uses parser which is not compatible with vitepress
+      'markdown/no-missing-link-fragments': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -89,7 +95,7 @@ export default antfu(
   },
   {
     // these files define vitest as peer dependency
-    files: [`packages/{coverage-*,ui,browser,web-worker}/${GLOB_SRC}`],
+    files: [`packages/{coverage-*,ui,browser,web-worker,browser-*}/${GLOB_SRC}`],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -106,6 +112,7 @@ export default antfu(
       `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'prefer-arrow-callback': 'off',
       'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
@@ -114,13 +121,15 @@ export default antfu(
       'ts/method-signature-style': 'off',
       'no-self-compare': 'off',
       'import/no-mutable-exports': 'off',
+      'no-throw-literal': 'off',
+      'import/no-duplicates': 'off',
     },
   },
   {
     files: [
       `docs/${GLOB_SRC}`,
       `packages/web-worker/${GLOB_SRC}`,
-      `test/core/${GLOB_SRC}`,
+      `test/unit/${GLOB_SRC}`,
     ],
     rules: {
       'no-restricted-globals': 'off',
@@ -136,10 +145,37 @@ export default antfu(
     },
   },
   {
-    files: [`packages/vite-node/${GLOB_SRC}`],
+    files: [`packages/browser/src/client/orchestrator.ts`],
     rules: {
-      // false positive on "exports" variable
-      'antfu/no-cjs-exports': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['vitest/internal/browser', 'vitest/node'],
+        },
+      ],
+    },
+  },
+  // ivya should be loaded only once in "ivya chunk" (see browser rollup config)
+  {
+    files: [`packages/browser/${GLOB_SRC}`],
+    ignores: [
+      // aria snapshots
+      `packages/browser/src/vendor-types.ts`,
+      `packages/browser/src/client/tester/aria.ts`,
+      // primary use case - creates the engine
+      `packages/browser/src/client/tester/locators.ts`,
+      // uses utils from ivya to reuse locator syntax
+      `packages/browser/src/client/tester/expect/${GLOB_SRC}`,
+      // used as a type
+      `packages/browser/src/client/utils.ts`,
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['ivya', 'ivya/utils', 'ivya/aria'],
+        },
+      ],
     },
   },
 )

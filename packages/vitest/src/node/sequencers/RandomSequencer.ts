@@ -1,4 +1,4 @@
-import type { TestSpecification } from '../spec'
+import type { TestSpecification } from '../test-specification'
 import { shuffle } from '@vitest/utils/helpers'
 import { BaseSequencer } from './BaseSequencer'
 

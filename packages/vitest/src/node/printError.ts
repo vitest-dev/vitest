@@ -36,12 +36,17 @@ interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
+export interface CapturePrintErrorResult {
+  nearest: ParsedStack | undefined
+  output: string
+}
+
 // use Logger with custom Console to capture entire error printing
 export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-): { nearest: ParsedStack | undefined; output: string } {
+): CapturePrintErrorResult {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
@@ -90,7 +95,7 @@ export function printError(
 
       // browser stack trace needs to be processed differently,
       // so there is a separate method for that
-      if (options.task?.file.pool === 'browser' && project.browser) {
+      if (project.browser) {
         return project.browser.parseErrorStacktrace(error, {
           frameFilter: project.config.onStackTrace,
           ignoreStackEntries: options.fullStack ? [] : undefined,
@@ -219,7 +224,6 @@ function printErrorInner(
 
   const testPath = (e as any).VITEST_TEST_PATH
   const testName = (e as any).VITEST_TEST_NAME
-  const afterEnvTeardown = (e as any).VITEST_AFTER_ENV_TEARDOWN
   // testName has testPath inside
   if (testPath) {
     logger.error(
@@ -233,20 +237,11 @@ function printErrorInner(
   if (testName) {
     logger.error(
       c.red(
-        `The latest test that might've caused the error is "${c.bold(
+        `The last test to run before this error was "${c.bold(
           testName,
-        )}". It might mean one of the following:`
-        + '\n- The error was thrown, while Vitest was running this test.'
-        + '\n- If the error occurred after the test had been completed, this was the last documented test before it was thrown.',
-      ),
-    )
-  }
-  if (afterEnvTeardown) {
-    logger.error(
-      c.red(
-        'This error was caught after test environment was torn down. Make sure to cancel any running tasks before test finishes:'
-        + '\n- cancel timeouts using clearTimeout and clearInterval'
-        + '\n- wait for promises to resolve using the await keyword',
+        )}". This means either:`
+        + '\n- the error was thrown while Vitest was running this test, or'
+        + '\n- the error was thrown after the test completed, and this was the most recent test at that point.',
       ),
     )
   }
@@ -292,8 +287,9 @@ const skipErrorProperties = new Set([
   'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
-  'VITEST_AFTER_ENV_TEARDOWN',
   '__vitest_rollup_error__',
+  '__vitest_error_context__',
+  '__vitest_test_syntax_error__',
   ...Object.getOwnPropertyNames(Error.prototype),
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
@@ -400,14 +396,14 @@ function printErrorMessage(error: TestError, logger: ErrorLogger) {
   }
 }
 
-function printStack(
+export function printStack(
   logger: ErrorLogger,
   project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
   onStack?: (stack: ParsedStack) => void,
-) {
+): void {
   for (const frame of stack) {
     const color = frame === highlight ? c.cyan : c.gray
     const path = relative(project.config.root, frame.file)
@@ -480,10 +476,8 @@ export function generateCodeFrame(
           return ''
         }
 
-        res.push(
-          lineNo(j + 1)
-          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
-        )
+        const truncatedLine = truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent).trimEnd()
+        res.push(lineNo(j + 1) + (truncatedLine ? ' ' + truncatedLine : truncatedLine))
 
         if (j === i) {
           // push underline
@@ -492,12 +486,12 @@ export function generateCodeFrame(
             1,
             end > count ? lineLength - pad : end - start,
           )
-          res.push(lineNo() + ' '.repeat(pad) + c.red('^'.repeat(length)))
+          res.push(lineNo() + ' '.repeat(pad + 1) + c.red('^'.repeat(length)))
         }
         else if (j > i) {
           if (end > count) {
             const length = Math.max(1, Math.min(end - count, lineLength))
-            res.push(lineNo() + c.red('^'.repeat(length)))
+            res.push(lineNo() + ' ' + c.red('^'.repeat(length)))
           }
           count += lineLength + 1
         }
@@ -514,5 +508,5 @@ export function generateCodeFrame(
 }
 
 function lineNo(no: number | string = '') {
-  return c.gray(`${String(no).padStart(3, ' ')}| `)
+  return c.gray(`${String(no).padStart(3, ' ')}|`)
 }

@@ -1,4 +1,4 @@
-import { page, userEvent, server } from "@vitest/browser/context";
+import { page, userEvent, server } from "vitest/browser";
 import { expect, test } from "vitest";
 
 test("drag and drop over large viewport", async () => {

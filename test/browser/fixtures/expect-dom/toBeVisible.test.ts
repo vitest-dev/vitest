@@ -30,16 +30,16 @@ describe('.toBeVisible', () => {
 
     expect(() =>
       expect(container.querySelector('header')).not.toBeVisible(),
-    ).toThrowError()
+    ).toThrow()
     expect(() =>
       expect(container.querySelector('p')).toBeVisible(),
-    ).toThrowError()
+    ).toThrow()
   })
 
   it('detached element is not visible', () => {
     const subject = document.createElement('div')
     expect(subject).not.toBeVisible()
-    expect(() => expect(subject).toBeVisible()).toThrowError()
+    expect(() => expect(subject).toBeVisible()).toThrow()
   })
 
   describe('with a <details /> element', () => {

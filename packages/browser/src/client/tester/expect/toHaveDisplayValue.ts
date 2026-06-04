@@ -13,7 +13,7 @@
  * copies or substantial portions of the Software.
  */
 
-import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { MatcherResult, MatcherState } from 'vitest'
 import type { Locator } from '../locators'
 import { getElementFromUserInput, getMessage, getTag, isInputElement } from './utils'
 
@@ -21,7 +21,7 @@ export default function toHaveDisplayValue(
   this: MatcherState,
   actual: Element | Locator,
   expectedValue: string | RegExp | Array<string | RegExp>,
-): ExpectationResult {
+): MatcherResult {
   const htmlElement = getElementFromUserInput(actual, toHaveDisplayValue, this)
   const tagName = getTag(htmlElement)
 
