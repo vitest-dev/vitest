@@ -2,16 +2,8 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { afterEach, expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { BaseCoverageProvider } from 'vitest/node'
-
-const cleanups: Array<() => void> = []
-
-afterEach(() => {
-  while (cleanups.length) {
-    cleanups.pop()!()
-  }
-})
 
 function createProvider() {
   const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-reports-'))
@@ -21,7 +13,7 @@ function createProvider() {
 
   const lockFile = (provider as any).reportsDirectoryLockFile as string
 
-  cleanups.push(() => {
+  onTestFinished(() => {
     rmSync(reportsDirectory, { recursive: true, force: true })
     rmSync(lockFile, { force: true })
   })
@@ -74,7 +66,7 @@ test('clean() throws an actionable error when another live process holds the loc
 
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
   await new Promise(resolve => child.once('spawn', resolve))
-  cleanups.push(() => child.kill())
+  onTestFinished(() => child.kill())
 
   writeFileSync(lockFile, JSON.stringify({ pid: child.pid, reportsDirectory, timestamp: Date.now() }))
 
