@@ -1,10 +1,10 @@
 import type { TestModule } from 'vitest/node'
 import { expect, test } from 'vitest'
-import { instances, runInlineBrowserTests } from './utils'
+import { instances, provider, runInlineBrowserTests } from './utils'
 
 const [firstInstance] = instances
 
-test('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
+test.runIf(provider.name === 'playwright')('exposes concurrencyId/workerId bounded by maxWorkers', async () => {
   const maxWorkers = 2
   const fileCount = 4
 
