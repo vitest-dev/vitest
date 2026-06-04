@@ -19,9 +19,13 @@ export interface TraceEditorMarker {
   active?: boolean
 }
 
-export interface TraceViewEntry extends BrowserTraceEntry {
-  traceDepth?: number
-  traceHasChildren?: boolean
+export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
+  traceDepth: number
+  traceHasChildren: boolean
+}
+
+export interface NormalizedBrowserTraceData extends BrowserTraceData {
+  entries: NormalizedBrowserTraceEntry[]
 }
 
 export const activeTraceView = ref<TraceSelection>()
@@ -30,8 +34,8 @@ function getTraceAttemptKey(trace: BrowserTraceData): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] {
-  const merged: TraceViewEntry[] = []
+function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+  const merged: NormalizedBrowserTraceEntry[] = []
   const startMap = new Map<string, { index: number; depth: number }>()
   const stack: string[] = []
 
@@ -61,6 +65,7 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] 
       merged.push({
         ...entry,
         traceDepth: stack.length,
+        traceHasChildren: false,
       })
       continue
     }
@@ -74,6 +79,7 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] 
       merged.push({
         ...entry,
         traceDepth: stack.length,
+        traceHasChildren: false,
       })
       stack.push(range.id)
       continue
@@ -86,6 +92,7 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] 
       merged.push({
         ...entry,
         traceDepth: stack.length,
+        traceHasChildren: false,
       })
       continue
     }
@@ -107,7 +114,7 @@ function mergeTraceRangeEntries(entries: BrowserTraceEntry[]): TraceViewEntry[] 
   return merged
 }
 
-export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, BrowserTraceData> {
+export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, NormalizedBrowserTraceData> {
   const grouped: Record<string, BrowserTraceData[]> = {}
   for (const artifact of artifacts) {
     if (artifact.type !== 'internal:browserTrace') {
@@ -119,7 +126,7 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
     grouped[key].push(trace)
   }
 
-  const merged: Record<string, BrowserTraceData> = {}
+  const merged: Record<string, NormalizedBrowserTraceData> = {}
   for (const [key, traces] of Object.entries(grouped)) {
     const trace = traces[0]
     const entries = traces.flatMap(trace => trace.entries)
@@ -131,7 +138,7 @@ export function getTraceAttemptMap(artifacts: TestArtifact[]): Record<string, Br
   return merged
 }
 
-export function getSelectedTrace(selection: TraceSelection): BrowserTraceData | undefined {
+export function getSelectedTrace(selection: TraceSelection): NormalizedBrowserTraceData | undefined {
   const attempts = getTraceAttemptMap(selection.test.artifacts)
   return selection.attemptKey
     ? attempts[selection.attemptKey]

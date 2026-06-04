@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { BrowserTraceData } from '../../../../browser/src/client/tester/trace'
-import type { TraceSelection, TraceViewEntry } from '~/composables/trace-view'
+import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry, TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 // @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
@@ -9,11 +8,11 @@ import { openLocation } from '~/composables/location'
 import { getTraceEntryClass, selectActiveTraceStep } from '~/composables/trace-view'
 
 const props = defineProps<{
-  trace: BrowserTraceData
+  trace: NormalizedBrowserTraceData
   selection: TraceSelection
 }>()
 
-const entries = computed(() => props.trace.entries as TraceViewEntry[])
+const entries = computed(() => props.trace.entries)
 const selectedStep = computed(() => entries.value[props.selection.selectedStepIndex])
 
 const iframeEl = ref<HTMLIFrameElement>()
@@ -90,7 +89,7 @@ watch([selectedStep, iframeEl], ([step, iframe]) => {
   }
 }, { immediate: true })
 
-function getStepButtonClass(step: TraceViewEntry, index: number) {
+function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   const selected = props.selection.selectedStepIndex === index
   // TODO: move trace step state colors to shared semantic UI shortcuts.
   if (isTraceStepInProgress(step)) {
@@ -106,22 +105,22 @@ function getStepButtonClass(step: TraceViewEntry, index: number) {
   return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
 }
 
-function getStepButtonStyle(step: TraceViewEntry) {
-  const depth = step.traceDepth ?? 0
+function getStepButtonStyle(step: NormalizedBrowserTraceEntry) {
+  const depth = step.traceDepth
   return {
     paddingInlineStart: `${0.5 + depth}rem`,
   }
 }
 
-function getStepGuideStyle(step: TraceViewEntry) {
-  const depth = step.traceDepth ?? 0
+function getStepGuideStyle(step: NormalizedBrowserTraceEntry) {
+  const depth = step.traceDepth
   return {
     insetInlineStart: `${0.75 + Math.max(0, depth - 1)}rem`,
   }
 }
 
-function hasTraceDepth(step: TraceViewEntry) {
-  return (step.traceDepth ?? 0) > 0
+function hasTraceDepth(step: NormalizedBrowserTraceEntry) {
+  return step.traceDepth > 0
 }
 
 function formatTraceTime(ms: number) {
@@ -130,7 +129,7 @@ function formatTraceTime(ms: number) {
     : `${(ms / 1000).toFixed(1)}s`
 }
 
-function formatTraceTiming(step: TraceViewEntry) {
+function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
   if (isTraceStepInProgress(step)) {
     return 'running'
   }
@@ -141,7 +140,7 @@ function formatTraceTiming(step: TraceViewEntry) {
     : `${startTime} · ${formatTraceTime(step.duration)}`
 }
 
-function formatStepName(step: TraceViewEntry) {
+function formatStepName(step: NormalizedBrowserTraceEntry) {
   if (step.name === 'vitest:onAfterRetryTask') {
     return 'test finished'
   }
@@ -151,7 +150,7 @@ function formatStepName(step: TraceViewEntry) {
   return step.name
 }
 
-function isTraceStepInProgress(step: TraceViewEntry) {
+function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
   return step.range?.phase === 'start'
 }
 </script>
