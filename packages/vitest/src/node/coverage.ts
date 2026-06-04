@@ -78,6 +78,7 @@ export async function getCoverageProvider(
 
 function isProcessAlive(pid: number): boolean {
   try {
+    // Sending signal 0 checks if process exists without actually killing it: https://nodejs.org/api/process.html#processkillpid-signal
     process.kill(pid, 0)
     return true
   }
@@ -293,7 +294,9 @@ export class BaseCoverageProvider {
       timestamp: Date.now(),
     })
 
-    for (let attempt = 0; attempt < 10; attempt++) {
+    // One initial attempt, plus a single retry that is only reached after
+    // reclaiming a stale lock left behind by a process that no longer exists.
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         await fs.writeFile(lockFile, payload, { flag: 'wx' })
         return
@@ -306,27 +309,43 @@ export class BaseCoverageProvider {
 
       const owner = await this.readReportsDirectoryLockOwner(lockFile)
 
+      // This same process already holds the lock (e.g. watch-mode reruns).
       if (owner?.pid === process.pid) {
         return
       }
 
-      if (owner == null || !isProcessAlive(owner.pid)) {
-        await fs.rm(lockFile, { force: true })
-        continue
+      // The lock is held by another running process, so fail fast.
+      if (owner != null && isProcessAlive(owner.pid)) {
+        throw this.reportsDirectoryInUseError(owner.pid)
       }
 
-      throw new Error(
-        `The coverage report directory "${this.options.reportsDirectory}" is already in use by `
-        + `another Vitest process (pid ${owner.pid}). Running coverage for multiple Vitest processes `
-        + `in the same directory at the same time is not supported, because they would delete each `
-        + `other's reports.\nGive each run its own "coverage.reportsDirectory" `
-        + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
-      )
+      // The lock is stale (its owner is gone or the file is unreadable).
+      // Steal it with an atomic rename so that two processes racing to reclaim
+      // the same stale lock can't both succeed: only the one whose rename wins
+      // removes the file, the loser's rename fails with ENOENT and it retries
+      // the exclusive create on the next iteration.
+      try {
+        await fs.rename(lockFile, `${lockFile}.${process.pid}.stale`)
+        await fs.rm(`${lockFile}.${process.pid}.stale`, { force: true })
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error
+        }
+      }
     }
 
-    throw new Error(
-      `Could not acquire the coverage report directory lock for "${this.options.reportsDirectory}". `
-      + `Give each run its own "coverage.reportsDirectory" or run them sequentially.`,
+    // The reclaimed stale lock was taken by another process before we could grab it.
+    throw this.reportsDirectoryInUseError()
+  }
+
+  private reportsDirectoryInUseError(pid?: number): Error {
+    return new Error(
+      `The coverage report directory "${this.options.reportsDirectory}" is already in use by `
+      + `another Vitest process${pid ? ` (pid ${pid})` : ''}. Running coverage for multiple Vitest `
+      + `processes in the same directory at the same time is not supported, because they would delete `
+      + `each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
     )
   }
 
@@ -349,7 +368,10 @@ export class BaseCoverageProvider {
     const lockFile = this.reportsDirectoryLockFile
     const owner = await this.readReportsDirectoryLockOwner(lockFile)
 
-    if (owner == null || owner.pid === process.pid) {
+    // Only remove the lock when we can confirm we own it. A transient unreadable
+    // read (e.g. another process mid-write) must not authorize deleting a lock
+    // that belongs to a different process.
+    if (owner?.pid === process.pid) {
       await fs.rm(lockFile, { force: true })
     }
   }
