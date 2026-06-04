@@ -243,6 +243,14 @@ test('basic', () => {
     + - paragraph: count - 1
 
 
+     ❯ basic.test.ts:7:26
+          5|   for (let i = 0; i < 3; i++) {
+          6|     document.body.innerHTML = "<p>count - " + i + "</p>";
+          7|     expect(document.body).toMatchAriaInlineSnapshot();
+           |                          ^
+          8|   }
+          9| });
+
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
     "

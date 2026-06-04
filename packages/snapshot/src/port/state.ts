@@ -287,15 +287,16 @@ export default class SnapshotState {
 
       const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== snapshot)
       if (differentSnapshot) {
-        throw Object.assign(
-          new Error(
-            `${assertionName} with different snapshots cannot be called at the same location`,
-          ),
-          {
-            actual: snapshot,
-            expected: differentSnapshot.snapshot,
-          },
+        const stackTraceLimit = Error.stackTraceLimit
+        Error.stackTraceLimit = stackTraceLimit + 20
+        const error = new Error(
+          `${assertionName} with different snapshots cannot be called at the same location`,
         )
+        Error.stackTraceLimit = stackTraceLimit
+        throw Object.assign(error, {
+          actual: snapshot,
+          expected: differentSnapshot.snapshot,
+        })
       }
     }
     this._inlineSnapshotStacks.push({ ...stack, testId, snapshot })
