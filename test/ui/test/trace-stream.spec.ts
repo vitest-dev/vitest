@@ -158,4 +158,65 @@ test.describe('trace stream', () => {
       'test finished',
     ])
   })
+
+  test('nested range', async ({ page }) => {
+    await page.goto(baseURL)
+
+    const runPromise = vitest!.runTestSpecifications(
+      await vitest!.globTestSpecifications(['nested.test.ts']),
+    )
+
+    const testItem = getExplorerItem(page, 'nested')
+    await expect(testItem).toBeVisible()
+
+    const traceView = page.getByTestId('trace-view')
+    await expect(traceView).not.toBeVisible()
+    await testItem.click()
+    await expect(traceView).toBeVisible()
+
+    const traceSteps = traceView.getByTestId('trace-step')
+    const traceStepNames = traceView.getByTestId('trace-step-name')
+
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'Outer group',
+      'Outer mark',
+    ])
+    await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
+
+    await writeFile(resolve(gatesDir, 'nested-inner.txt'), 'open')
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'Outer group',
+      'Outer mark',
+      'Inner group',
+      'Inner mark',
+      'toBeVisible',
+    ])
+    await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
+    await expect(traceSteps.nth(2)).toHaveAttribute('data-test-range', 'start')
+    await expect(traceSteps.nth(4)).toHaveAttribute('data-test-range', 'start')
+
+    await writeFile(resolve(gatesDir, 'nested-leaf.txt'), 'open')
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'Outer group',
+      'Outer mark',
+      'Inner group',
+      'Inner mark',
+      'toBeVisible',
+    ])
+    await expect(traceSteps.nth(2)).toHaveAttribute('data-test-range', 'end')
+    await expect(traceSteps.nth(4)).toHaveAttribute('data-test-range', 'end')
+
+    await writeFile(resolve(gatesDir, 'nested-sibling.txt'), 'open')
+    await runPromise
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+      'Outer group',
+      'Outer mark',
+      'Inner group',
+      'Inner mark',
+      'toBeVisible',
+      'Sibling mark',
+      'test finished',
+    ])
+    await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'end')
+  })
 })
