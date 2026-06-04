@@ -8,9 +8,12 @@ import type {
   ImportDeclaration,
   VariableDeclaration,
 } from 'estree'
+import type { Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { findNodeAround } from 'acorn-walk'
 import MagicString from 'magic-string'
+import { relative } from 'pathe'
 import { esmWalker } from './esmWalker'
 
 export interface HoistMocksOptions {
@@ -39,6 +42,12 @@ export interface HoistMocksOptions {
   regexpHoistable?: RegExp
   codeFrameGenerator?: CodeFrameGenerator
   magicString?: () => MagicString
+  /**
+   * Root of the project
+   * @default process.cwd()
+   */
+  root?: string
+  getMap?: () => Rollup.SourceMap
 }
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
@@ -73,6 +82,12 @@ function getNodeTail(code: string, node: Node) {
 const regexpHoistable
   = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\s*\(/
 const hashbangRE = /^#!.*\n/
+
+// Public redistributions of Vitest that re-export its mocking API (`vi`)
+// verbatim under their own specifier. Imports from these are treated as the
+// hoisted module so `vi.mock()` is hoisted for e.g.
+// `import { vi } from 'vite-plus/test'`, exactly as it is for `vitest`.
+const REDISTRIBUTED_HOISTED_MODULES = ['vite-plus/test']
 
 // this is a fork of Vite SSR transform
 export function hoistMocks(
@@ -132,8 +147,9 @@ export function hoistMocks(
   ) {
     const source = importNode.source.value as string
     // always hoist vitest import to top of the file, so
-    // "vi" helpers can access it
-    if (hoistedModule === source) {
+    // "vi" helpers can access it. Vitest redistributions that re-export the
+    // mocking API under their own specifier are recognized the same way.
+    if (hoistedModule === source || REDISTRIBUTED_HOISTED_MODULES.includes(source)) {
       hoistedModuleImported = true
       return
     }
@@ -488,13 +504,26 @@ export function hoistMocks(
       }
     }
 
-    for (const invalidNode of hoistedNodes) {
-      console.warn(
-        `Warning: A ${getNodeName(getNodeCall(invalidNode))} call in "${id}" is not at the top level of the module. `
-        + `Although it appears nested, it will be hoisted and executed before any tests run. `
-        + `Move it to the top level to reflect its actual execution order. This will become an error in a future version.\n`
-        + `See: https://vitest.dev/guide/mocking/modules#how-it-works`,
-      )
+    if (hoistedNodes.size) {
+      const locations = createIndexLocationsMap(code)
+      const map = options.getMap && new TraceMap(options.getMap() as any)
+      const plural = hoistedNodes.size > 1
+      const message = [
+        `${hoistedNodes.size} call${plural ? 's' : ''} in "${relative(options.root || process.cwd(), id)}" ${plural ? 'were' : 'was'} defined outside of the module's top level scope:`,
+        '',
+        ...[...hoistedNodes].map((invalidNode) => {
+          const currentLocation = locations.get(invalidNode.start)
+          const originalLocation = map && currentLocation && originalPositionFor(map, currentLocation)
+          const location = originalLocation?.column != null && originalLocation?.line != null
+            ? ` at ${relative(options.root || process.cwd(), id)}:${originalLocation.line}:${originalLocation.column + 1}`
+            : ''
+          return `- ${getNodeName(getNodeCall(invalidNode))}${location}`
+        }),
+        '',
+        `Although ${plural ? 'they appear nested, they' : 'it appears nested, it'} will be hoisted and executed before anything in this file. Move ${plural ? 'them' : 'it'} to the top level to reflect ${plural ? 'their' : 'its'} actual execution order.`,
+        'See: https://vitest.dev/guide/mocking/modules#how-it-works',
+      ].join('\n')
+      throw new Error(message)
     }
   }
 
@@ -562,4 +591,22 @@ export function hoistMocks(
 
 interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
+}
+
+function createIndexLocationsMap(source: string): Map<number, { line: number; column: number }> {
+  const map = new Map<number, { line: number; column: number }>()
+  let offset = 0
+  let line = 1
+  let column = 1
+  for (const char of source) {
+    map.set(offset++, { line, column })
+    if (char === '\n' || char === '\r\n') {
+      line++
+      column = 0
+    }
+    else {
+      column++
+    }
+  }
+  return map
 }

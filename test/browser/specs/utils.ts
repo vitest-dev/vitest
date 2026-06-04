@@ -43,5 +43,9 @@ export async function runBrowserTests(
     $viteConfig: viteOverrides,
   }, include, runnerOptions)
 
-  return { ...result, stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '') }
+  return {
+    ...result,
+    ctx: result.ctx!,
+    stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', ''),
+  }
 }

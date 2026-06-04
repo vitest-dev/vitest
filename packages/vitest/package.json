@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "5.0.0-beta.3",
+  "version": "5.0.0-beta.4",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -24,6 +24,7 @@
   "sideEffects": false,
   "imports": {
     "#module-evaluator": {
+      "__vitest_source__": "./src/runtime/moduleRunner/moduleEvaluator.ts",
       "types": "./dist/module-evaluator.d.ts",
       "default": "./dist/module-evaluator.js"
     },
@@ -169,7 +170,6 @@
     "@types/chai": "catalog:",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:*",
-    "@vitest/runner": "workspace:*",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "chai": "catalog:",
@@ -180,7 +180,7 @@
     "pathe": "catalog:",
     "picomatch": "^4.0.3",
     "std-env": "catalog:",
-    "tinybench": "^2.9.0",
+    "tinybench": "catalog:",
     "tinyexec": "^1.0.2",
     "tinyglobby": "catalog:",
     "tinyrainbow": "catalog:",
@@ -206,7 +206,6 @@
     "acorn-walk": "catalog:",
     "birpc": "catalog:",
     "cac": "catalog:",
-    "empathic": "^2.0.0",
     "flatted": "catalog:",
     "happy-dom": "^20.8.3",
     "jsdom": "^27.4.0",

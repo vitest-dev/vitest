@@ -1,12 +1,12 @@
 import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
-import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
+import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
@@ -27,9 +27,9 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
+export type { SequenceHooks, SequenceSetupFiles } from '../../runtime/runner/types'
 export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
-export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
 export type BuiltinEnvironment
   = | 'node'
@@ -73,7 +73,10 @@ export interface EnvironmentOptions {
 
 export type { HappyDOMOptions, JSDOMOptions }
 
-export type VitestRunMode = 'test' | 'benchmark'
+/**
+ * @deprecated
+ */
+export type VitestRunMode = 'test'
 
 export interface ProjectName {
   label: string
@@ -833,11 +836,10 @@ export interface InlineConfig {
   expandSnapshotDiff?: boolean
 
   /**
-   * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
-   * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
-   *
-   * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
+   * By default, Vitest intercepts console output during tests to add context such as the test file and test title.
+   * In browser mode, this interception is required to forward logs from the browser DevTools to the terminal.
+   * It is also required for console log previews in the Vitest UI.
+   * Disabling console interception can be useful when you want to debug code with normal synchronous terminal logging.
    *
    * @default false
    */
@@ -1095,16 +1097,6 @@ export interface UserConfig extends InlineConfig {
   clearScreen?: boolean
 
   /**
-   * benchmark.compare option exposed at the top level for cli
-   */
-  compare?: string
-
-  /**
-   * benchmark.outputJson option exposed at the top level for cli
-   */
-  outputJson?: string
-
-  /**
    * Directory of blob reports to merge
    * @default '.vitest/blob'
    */
@@ -1160,8 +1152,6 @@ export interface ResolvedConfig
     | 'fileParallelism'
     | 'tagsFilter'
   > {
-  mode: VitestRunMode
-
   name: ProjectName['label']
   color?: ProjectName['color']
   base?: string
@@ -1192,10 +1182,7 @@ export interface ResolvedConfig
   cliExclude?: string[]
 
   project: string[]
-  benchmark?: Required<
-    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
-  >
-  & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark: Required<BenchmarkUserOptions>
   shard?: {
     index: number
     count: number

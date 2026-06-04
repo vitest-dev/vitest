@@ -1,4 +1,4 @@
-import type { RunMode, Task, TaskState } from '@vitest/runner'
+import type { RunMode, RunnerTask as Task, TaskState } from 'vitest'
 
 export type FilterResult = [match: boolean, node: UITaskTreeNode]
 

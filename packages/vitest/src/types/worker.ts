@@ -1,7 +1,8 @@
-import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
+import type { GetterTracker } from '../runtime/getter-tracker'
+import type { CancelReason, FileSpecification, Task } from '../runtime/runner/types'
 import type { Traces } from '../utils/traces'
 import type { Environment } from './environment'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
@@ -74,6 +75,7 @@ export interface WorkerGlobalState {
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
+  getterTracker?: GetterTracker
   onCancel: (listener: (reason: CancelReason) => unknown) => void
   onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>

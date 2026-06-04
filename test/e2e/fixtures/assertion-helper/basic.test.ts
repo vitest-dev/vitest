@@ -131,3 +131,35 @@ test("async helper with context pass", async () => {
 test("async helper with context fail", async () => {
   await helperObject.assertEqualPropAsync(4321);
 });
+
+const checkWithWaitFor = vi.defineHelper(async () => {
+  await vi.waitFor(() => {
+    expect(1).toBe(2);
+  }, { timeout: 20, interval: 10 });
+});
+
+const checkWithWaitUntil = vi.defineHelper(async () => {
+  await vi.waitUntil(() => {
+    expect(1).toBe(2);
+  }, { timeout: 20, interval: 10 });
+});
+
+const throwPlainAsyncError = vi.defineHelper(async () => {
+  await new Promise((_resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error("async error from helper"));
+    }, 1);
+  });
+});
+
+test("waitFor keeps helper callsite", async () => {
+  await checkWithWaitFor();
+});
+
+test("waitUntil keeps helper callsite", async () => {
+  await checkWithWaitUntil();
+});
+
+test("plain async error", async () => {
+  await throwPlainAsyncError();
+});

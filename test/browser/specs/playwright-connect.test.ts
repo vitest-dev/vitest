@@ -8,7 +8,15 @@ import { runBrowserTests } from './utils'
 
 test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', async ({ onTestFinished }) => {
   const cliPath = fileURLToPath(new URL('./cli.js', import.meta.resolve('@playwright/test')))
-  const subprocess = x(process.execPath, [cliPath, 'run-server', '--port', '9898']).process
+  const subprocess = x(process.execPath, [
+    cliPath,
+    'run-server',
+    '--port',
+    '9898',
+    '--host',
+    '127.0.0.1',
+    '--unsafe',
+  ]).process
   const cli = new Cli({
     stdin: subprocess.stdin,
     stdout: subprocess.stdout,
@@ -22,27 +30,30 @@ test.runIf(provider.name === 'playwright')('[playwright] runs in connect mode', 
     await isDone
   })
 
-  await cli.waitForStdout('Listening on ws://localhost:9898')
+  await cli.waitForStdout('Listening on ws://127.0.0.1:9898')
 
-  const result = await runBrowserTests({
-    root: './fixtures/playwright-connect',
-    browser: {
-      instances: [
-        {
-          browser: 'chromium',
-          name: 'chromium',
-          provider: playwright({
-            connectOptions: {
-              wsEndpoint: 'ws://localhost:9898',
-            },
-            launchOptions: {
-              args: [`--user-agent=VitestLaunchOptionsTester`],
-            },
-          }),
-        },
-      ],
+  const result = await runBrowserTests(
+    {
+      root: './fixtures/playwright-connect',
+      browser: {
+        instances: [
+          {
+            browser: 'chromium',
+            name: 'chromium',
+            provider: playwright({
+              connectOptions: {
+                wsEndpoint: 'ws://127.0.0.1:9898',
+              },
+              launchOptions: {
+                args: [`--user-agent=VitestLaunchOptionsTester`],
+              },
+            }),
+          },
+        ],
+      },
     },
-  }, ['basic.test.js'])
+    ['basic.test.js'],
+  )
 
   expect(result.stderr).toMatchInlineSnapshot(`""`)
   expect(result.errorTree()).toMatchInlineSnapshot(`

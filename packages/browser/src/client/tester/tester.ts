@@ -1,5 +1,5 @@
 import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
-import type { FileSpecification } from '@vitest/runner'
+import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, onCancel, registerPageMarkHandler } from '@vitest/browser/client'
 import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
@@ -142,7 +142,9 @@ async function prepareTestEnvironment(options: PrepareOptions) {
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
-  setupConsoleLogSpy()
+  if (!config.disableConsoleIntercept) {
+    setupConsoleLogSpy()
+  }
   setupDialogsSpy()
 
   const runner = await initiateRunner(state, mocker, config)

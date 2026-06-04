@@ -1,4 +1,3 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
@@ -7,6 +6,7 @@ import type { Vitest } from '../node/core'
 import type { TestCase, TestModule } from '../node/reporters/reported-tasks'
 import type { TestSpecification } from '../node/test-specification'
 import type { Reporter } from '../node/types/reporter'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '../runtime/runner/types'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   ExternalResult,

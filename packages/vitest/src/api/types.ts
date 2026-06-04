@@ -1,7 +1,7 @@
-import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { BirpcReturn } from 'birpc'
 import type { SerializedRootConfig } from '../runtime/config'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation, TestArtifact } from '../runtime/runner/types'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type { ModuleDefinitionDurationsDiagnostic, UntrackedModuleDefinitionDiagnostic } from '../types/module-locations'

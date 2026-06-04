@@ -139,7 +139,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       else {
         timer = {
           stdoutTime: RealDate.now(),
-          stderrTime: RealDate.now(),
+          stderrTime: 0,
         }
         timers.set(id, timer)
       }
@@ -178,7 +178,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
       else {
         timer = {
           stderrTime: RealDate.now(),
-          stdoutTime: RealDate.now(),
+          stdoutTime: 0,
         }
         timers.set(id, timer)
       }

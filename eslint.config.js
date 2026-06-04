@@ -122,6 +122,7 @@ export default antfu(
       'no-self-compare': 'off',
       'import/no-mutable-exports': 'off',
       'no-throw-literal': 'off',
+      'import/no-duplicates': 'off',
     },
   },
   {

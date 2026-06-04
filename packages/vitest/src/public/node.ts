@@ -44,8 +44,6 @@ export type { SerializedTestProject, TestProject } from '../node/project'
 
 export {
   AgentReporter,
-  BenchmarkReporter,
-  BenchmarkReportsMap,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
@@ -56,12 +54,10 @@ export {
   ReportersMap,
   TapFlatReporter,
   TapReporter,
-  VerboseBenchmarkReporter,
   VerboseReporter,
 } from '../node/reporters'
 export type {
   BaseReporter,
-  BenchmarkBuiltinReporters,
   BuiltinReporterOptions,
   BuiltinReporters,
   JsonAssertionResult,
@@ -182,9 +178,9 @@ export type {
   RawErrsMap as TypeCheckRawErrorsMap,
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
-
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
 export { createDebugger } from '../utils/debugger'
+export { generateFileHash } from '../utils/tasks'
 export type {
   RunnerTask,
   RunnerTaskResult,
@@ -193,7 +189,6 @@ export type {
   RunnerTestFile,
   RunnerTestSuite,
 } from './index'
-export { generateFileHash } from '@vitest/runner/utils'
 export type { SerializedError } from '@vitest/utils'
 
 export {

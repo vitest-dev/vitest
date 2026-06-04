@@ -1,4 +1,4 @@
-import type { Test } from '@vitest/runner'
+import type { Test } from '../../vitest/src/runtime/runner/types'
 import type {
   ChaiPlugin,
   ExpectStatic,

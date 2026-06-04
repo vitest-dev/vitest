@@ -1,20 +1,16 @@
-import type { File, Suite, Task, Test } from '@vitest/runner'
+import type { File, Suite, Task, Test } from '../runtime/runner/types'
 import type { TestError } from '../types/general'
 import type { TestProject } from './project'
 import { promises as fs } from 'node:fs'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
-import {
-  calculateSuiteHash,
-  createFileTask as createFileTaskOriginal,
-  createTaskName,
-  validateTags,
-} from '@vitest/runner/utils'
 import { unique } from '@vitest/utils/helpers'
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAst } from 'vite'
+import { validateTags } from '../runtime/runner/utils/tags'
 import { createIndexLocationsMap } from '../utils/base'
 import { createDebugger } from '../utils/debugger'
+import { calculateSuiteHash, createFileTask as createFileTaskOriginal, createTaskName } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
 
 interface ParsedFile extends File {
@@ -34,7 +30,7 @@ interface ParsedSuite extends Suite {
   dynamic: boolean
 }
 
-interface LocalCallDefinition {
+export interface LocalCallDefinition {
   start: number
   end: number
   name: string
@@ -46,8 +42,36 @@ interface LocalCallDefinition {
   tags: string[]
 }
 
+export interface FileInformation {
+  file: File
+  filepath: string
+  parsed: string
+  map: any
+  definitions: LocalCallDefinition[]
+}
+
+export interface AstCollectOptions {
+  /**
+   * Override the pool stored on the resulting File task. Required when
+   * collecting typecheck files because the project's `config.pool` is the
+   * user's runtime pool (e.g. `forks`), not the `typescript` pool that the
+   * typecheck spec uses to compute its task id.
+   */
+  pool?: string
+}
+
 const debug = createDebugger('vitest:ast-collect-info')
 const verbose = createDebugger('vitest:ast-collect-verbose')
+
+const INTERMEDIATE_CALL_PROPERTIES = new Set([
+  'each',
+  'for',
+  'skipIf',
+  'runIf',
+  'extend',
+  'scoped',
+  'override',
+])
 
 function isTestFunctionName(name: string) {
   return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
@@ -153,7 +177,7 @@ function astParseFile(filepath: string, code: string) {
       const properties = getProperties(callee)
       const property = callee?.property?.name
       // intermediate calls like .each(), .for() will be picked up in the next iteration
-      if (property && ['each', 'for', 'skipIf', 'runIf', 'extend', 'scoped', 'override'].includes(property)) {
+      if (property && INTERMEDIATE_CALL_PROPERTIES.has(property)) {
         return
       }
       // skip properties on return values of calls - e.g., test('name', fn).skip()
@@ -277,15 +301,16 @@ function astParseFile(filepath: string, code: string) {
   }
 }
 
-export function createFailedFileTask(project: TestProject, filepath: string, error: Error): File {
+export function createFailedFileTask(project: TestProject, filepath: string, error: Error, options?: AstCollectOptions): File {
   const config = project.serializedConfig
+  const pool = options?.pool ?? config.pool
   const baseFile = createFileTaskOriginal(
     filepath,
     config.root,
     config.name,
-    config.pool,
+    pool,
     undefined,
-    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+    { typecheck: pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
   )
   const file: ParsedFile = {
     ...baseFile,
@@ -330,16 +355,18 @@ function createFileTask(
   requestMap: any,
   filepath: string,
   fileTags: string[] | undefined,
+  options?: AstCollectOptions,
 ) {
   const { definitions, ast } = astParseFile(testFilepath, code)
   const config = project.serializedConfig
+  const pool = options?.pool ?? config.pool
   const baseFile = createFileTaskOriginal(
     filepath,
     config.root,
     config.name,
-    config.pool,
+    pool,
     undefined,
-    { typecheck: config.pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
+    { typecheck: pool === 'typescript', __vitest_label__: config.mergeReportsLabel },
   )
   const file: ParsedFile = {
     ...baseFile,
@@ -379,13 +406,13 @@ function createFileTask(
             `Found location for`,
             definition.type,
             definition.name,
-            `${processedLocation.line}:${processedLocation.column}`,
+            `${processedLocation.line}:${processedLocation.column + 1}`,
             '->',
-            `${originalLocation.line}:${originalLocation.column}`,
+            `${originalLocation.line}:${originalLocation.column + 1}`,
           )
           location = {
             line: originalLocation.line,
-            column: originalLocation.column,
+            column: originalLocation.column + 1,
           }
         }
         else {
@@ -456,6 +483,7 @@ function createFileTask(
         timeout: 0,
         annotations: [],
         artifacts: [],
+        benchmarks: [],
         tags: taskTags,
       }
       definition.task = task
@@ -474,31 +502,55 @@ function createFileTask(
       ],
     }
   }
-  return file
+  return { file, definitions }
 }
 
 export async function astCollectTests(
   project: TestProject,
   filepath: string,
 ): Promise<File> {
+  const information = await astCollectFileInformation(project, filepath)
+  return information.file
+}
+
+export async function astCollectFileInformation(
+  project: TestProject,
+  filepath: string,
+  options?: AstCollectOptions,
+): Promise<FileInformation> {
   const request = await transformSSR(project, filepath)
   const testFilepath = relative(project.config.root, filepath)
   if (!request) {
     debug?.('Cannot parse', testFilepath, '(vite didn\'t return anything)')
-    return createFailedFileTask(
-      project,
+    return {
+      file: createFailedFileTask(
+        project,
+        filepath,
+        new Error(`Failed to parse ${testFilepath}. Vite didn't return anything.`),
+        options,
+      ),
       filepath,
-      new Error(`Failed to parse ${testFilepath}. Vite didn't return anything.`),
-    )
+      parsed: '',
+      map: null,
+      definitions: [],
+    }
   }
-  return createFileTask(
+  const { file, definitions } = createFileTask(
     project,
     testFilepath,
     request.code,
     request.map,
     filepath,
     request.fileTags,
+    options,
   )
+  return {
+    file,
+    filepath,
+    parsed: request.code,
+    map: request.map,
+    definitions,
+  }
 }
 
 async function transformSSR(project: TestProject, filepath: string) {
