@@ -1,6 +1,6 @@
-import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { FetchFunctionOptions, FetchResult } from 'vite/module-runner'
+import type { BaselineData, CancelReason, File, TaskEventPack, TaskResultPack, TestArtifact, TestBenchmark } from '../runtime/runner/types'
 import type { OTELCarrier } from '../utils/traces'
 import type { AfterSuiteRunMeta, AsyncLeak, FetchCachedFileSystemResult, ResolveFunctionResult, UserConsoleLog } from './general'
 

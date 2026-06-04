@@ -1,7 +1,8 @@
-import type { VitestRunner, VitestRunnerConfig } from './types/runner'
+import type { SerializedConfig } from '../config'
+import type { VitestRunner } from './types'
 
 export async function runSetupFiles(
-  config: VitestRunnerConfig,
+  config: SerializedConfig,
   files: string[],
   runner: VitestRunner,
 ): Promise<void> {

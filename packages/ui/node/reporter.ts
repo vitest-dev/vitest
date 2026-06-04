@@ -1,5 +1,4 @@
-import type { TestAttachment } from '@vitest/runner'
-import type { SerializedError } from 'vitest'
+import type { SerializedError, TestAttachment } from 'vitest'
 import type { HTMLOptions, Reporter, ResolvedConfig, RunnerTask, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 import type { HTMLReportMetadata } from '../client/composables/client/static'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'

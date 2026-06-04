@@ -1,4 +1,4 @@
-import type { TestBenchmark, TestBenchmarkTask } from '@vitest/runner'
+import type { TestBenchmark, TestBenchmarkTask } from '../../../runtime/runner/types'
 import { stripVTControlCharacters } from 'node:util'
 
 export const BENCH_TABLE_HEAD: string[] = [

@@ -1,9 +1,8 @@
-import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
+import type { PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
-import type { Test } from '@vitest/runner'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { Bench, BenchResult } from '../runtime/benchmark'
-import type { UserConsoleLog } from './general'
+import type { BenchResult } from '../runtime/benchmark'
+import type { Test } from '../runtime/runner/types'
 
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
@@ -126,38 +125,5 @@ declare module 'vitest' {
       expected: BenchResult,
       options?: { delta?: number },
     ) => void
-  }
-}
-
-declare module '@vitest/runner' {
-  interface TestContext {
-    /**
-     * `expect` instance bound to the current test.
-     *
-     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
-     */
-    readonly expect: ExpectStatic
-    /**
-     * Create a benchmark to run. It will be reported after the test is finished.
-     * @see {@link https://vitest.dev/guide/benchmarking}
-     */
-    readonly bench: Bench
-    /** @internal */
-    _local: boolean
-  }
-
-  interface TaskMeta {
-    typecheck?: boolean
-    benchmark?: boolean
-    __vitest_label__?: string
-  }
-
-  interface File {
-    prepareDuration?: number
-    environmentLoad?: number
-  }
-
-  interface TaskBase {
-    logs?: UserConsoleLog[]
   }
 }

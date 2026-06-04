@@ -1,4 +1,4 @@
-import type { InternalChainableContext, SuiteAPI, TestAPI } from '../types/tasks'
+import type { InternalChainableContext, SuiteAPI, TestAPI } from '../types'
 
 export type ChainableFunction<
   T extends string,

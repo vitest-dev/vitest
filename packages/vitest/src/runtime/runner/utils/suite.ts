@@ -1,4 +1,4 @@
-import type { Suite, Task } from '../types/tasks'
+import type { Suite, Task } from '../types'
 
 /**
  * Partition in tasks groups by consecutive concurrent

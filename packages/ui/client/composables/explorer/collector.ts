@@ -1,7 +1,6 @@
-import type { File, Task, TaskResultPack, Test, TestArtifact } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
+import type { RunnerTestFile as File, RunnerTask as Task, RunnerTaskResultPack as TaskResultPack, RunnerTestCase as Test, TestArtifact } from 'vitest'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests, SearchMatcher } from '~/composables/explorer/types'
-import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils/helpers'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
@@ -502,7 +501,7 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
-    if (isTestCase(s)) {
+    if (s.type === 'test') {
       yield s
     }
     else {

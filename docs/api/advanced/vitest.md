@@ -27,7 +27,7 @@ This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedev
 Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
-Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported Tasks API](/api/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
+Global state stores information about the current tests. It uses internal serializable Task API by default, but we recommend using the [Reported Tasks API](/api/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()`:
 
 ```ts
 const task = vitest.state.idMap.get(taskId) // old API
