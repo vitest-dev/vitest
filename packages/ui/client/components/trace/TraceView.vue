@@ -188,11 +188,7 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
               />
             </span>
             <div class="min-w-0 flex-1">
-              <div
-                truncate
-                data-testid="trace-step-name"
-                :class="{ 'font-medium': step.traceHasChildren }"
-              >
+              <div truncate data-testid="trace-step-name">
                 {{ formatStepName(step) }}
               </div>
               <div class="text-xs opacity-60 truncate">
