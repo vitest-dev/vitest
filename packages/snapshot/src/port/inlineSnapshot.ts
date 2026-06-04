@@ -6,6 +6,7 @@ import {
   offsetToLineNumber,
   positionToOffset,
 } from '@vitest/utils/offset'
+import { stripLiteral } from 'strip-literal'
 import { memo } from './utils'
 
 export interface InlineSnapshot {
@@ -50,7 +51,7 @@ export async function saveInlineSnapshots(
 }
 
 const defaultStartObjectRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*(?:\/\/[^\r\n]*\r?\n\s*)?\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*\{/
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -66,12 +67,13 @@ const buildStartObjectRegex = memo((assertionName: string) => {
 
 function replaceObjectSnap(
   code: string,
+  strippedCode: string,
   s: MagicString,
   index: number,
   newSnap: string,
   assertionName?: string,
 ) {
-  let _code = code.slice(index)
+  let _code = strippedCode.slice(index)
   const regex = assertionName ? buildStartObjectRegex(assertionName) : defaultStartObjectRegex
   const startMatch = regex.exec(_code)
   if (!startMatch) {
@@ -87,7 +89,7 @@ function replaceObjectSnap(
   callEnd += index + startMatch.index
 
   const shapeStart = index + startMatch.index + startMatch[0].length
-  const shapeEnd = getObjectShapeEndIndex(code, shapeStart)
+  const shapeEnd = getObjectShapeEndIndex(strippedCode, shapeStart)
   const snap = `, ${prepareSnapString(newSnap, code, index)}`
 
   if (shapeEnd === callEnd) {
@@ -143,24 +145,18 @@ function prepareSnapString(snap: string, source: string, index: number) {
 const defaultMethodNames = ['toMatchInlineSnapshot', 'toThrowErrorMatchingInlineSnapshot']
 
 // on webkit, the line number is at the end of the method, not at the start
-function getCodeStartingAtIndex(code: string, index: number, methodNames: string[]) {
+function getStartingIndex(code: string, index: number, methodNames: string[]) {
   for (const name of methodNames) {
     const adjusted = index - name.length
     if (adjusted >= 0 && code.slice(adjusted, index) === name) {
-      return {
-        code: code.slice(adjusted),
-        index: adjusted,
-      }
+      return adjusted
     }
   }
-  return {
-    code: code.slice(index),
-    index,
-  }
+  return index
 }
 
 const defaultStartRegex
-  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*(?:\/\/[^\r\n]*\r?\n\s*)?\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*[\w$]*(['"`)])/
 
 const buildStartRegex = memo((assertionName: string) => {
   const replaced = defaultStartRegex.source.replace(
@@ -177,8 +173,10 @@ export function replaceInlineSnap(
   newSnap: string,
   assertionName?: string,
 ): boolean {
+  const strippedCode = stripLiteral(code)
   const methodNames = assertionName ? [assertionName] : defaultMethodNames
-  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex, methodNames)
+  const index = getStartingIndex(code, currentIndex, methodNames)
+  const codeStartingAtIndex = strippedCode.slice(index)
 
   const startRegex = assertionName ? buildStartRegex(assertionName) : defaultStartRegex
   const startMatch = startRegex.exec(codeStartingAtIndex)
@@ -187,7 +185,7 @@ export function replaceInlineSnap(
   const firstKeywordMatch = keywordRegex.exec(codeStartingAtIndex)
 
   if (!startMatch || startMatch.index !== firstKeywordMatch?.index) {
-    return replaceObjectSnap(code, s, index, newSnap, assertionName)
+    return replaceObjectSnap(code, strippedCode, s, index, newSnap, assertionName)
   }
 
   const quote = startMatch[1]
