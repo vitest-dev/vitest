@@ -105,20 +105,6 @@ function getStepButtonClass(step: NormalizedBrowserTraceEntry, index: number) {
   return selected ? 'bg-blue-500/20' : 'hover:bg-gray/10'
 }
 
-function getStepButtonStyle(step: NormalizedBrowserTraceEntry) {
-  const depth = step.traceDepth
-  return {
-    paddingInlineStart: `${0.5 + depth}rem`,
-  }
-}
-
-function getStepGuideStyle(step: NormalizedBrowserTraceEntry) {
-  const depth = step.traceDepth
-  return {
-    insetInlineStart: `${0.75 + Math.max(0, depth - 1)}rem`,
-  }
-}
-
 function formatTraceTime(ms: number) {
   return ms < 1000
     ? `${Math.round(ms)}ms`
@@ -165,14 +151,14 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
           :data-test-range="step.range?.phase"
           class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
-          :style="getStepButtonStyle(step)"
+          :style="{ paddingInlineStart: `${0.5 + step.traceDepth}rem` }"
           :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
           <span
             v-if="step.traceDepth > 0"
-            class="absolute bottom-1 top-1 border-l border-gray/20 dark:border-gray/30"
-            :style="getStepGuideStyle(step)"
+            class="absolute bottom-1 top-1 border-l border-gray/40 dark:border-gray/50"
+            :style="{ insetInlineStart: `${step.traceDepth - 0.05}rem` }"
           />
           <div class="flex items-start gap-2">
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">
