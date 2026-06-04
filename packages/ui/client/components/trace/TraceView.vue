@@ -151,14 +151,14 @@ function isTraceStepInProgress(step: NormalizedBrowserTraceEntry) {
           :data-test-range="step.range?.phase"
           class="relative w-full text-left px-2 py-1 rounded text-sm"
           :class="getStepButtonClass(step, index)"
-          :style="{ paddingInlineStart: `${0.5 + step.traceDepth}rem` }"
+          :style="{ paddingInlineStart: `${0.5 + step.depth}rem` }"
           :aria-current="selection.selectedStepIndex === index ? 'step' : undefined"
           @click="onSelectStep(index)"
         >
           <span
-            v-if="step.traceDepth > 0"
+            v-if="step.depth > 0"
             class="absolute bottom-1 top-1 border-l border-gray/40 dark:border-gray/50"
-            :style="{ insetInlineStart: `${step.traceDepth - 0.05}rem` }"
+            :style="{ insetInlineStart: `${step.depth - 0.05}rem` }"
           />
           <div class="flex items-start gap-2">
             <span class="mt-0.5 h-4 w-4 flex flex-shrink-0 items-center justify-center">

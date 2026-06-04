@@ -24,7 +24,7 @@ export interface NormalizedBrowserTraceData extends BrowserTraceData {
 }
 
 export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
-  traceDepth: number
+  depth: number
 }
 
 export const activeTraceView = ref<TraceSelection>()
@@ -50,7 +50,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
     if (!range) {
       merged.push({
         ...entry,
-        traceDepth: stack.length,
+        depth: stack.length,
       })
       continue
     }
@@ -62,7 +62,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       })
       merged.push({
         ...entry,
-        traceDepth: stack.length,
+        depth: stack.length,
       })
       stack.push(range.id)
       continue
@@ -73,7 +73,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       // unpaired range shouldn't happen but just leave it there
       merged.push({
         ...entry,
-        traceDepth: stack.length,
+        depth: stack.length,
       })
       continue
     }
@@ -86,7 +86,7 @@ function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserT
       ...entry,
       startTime: startEntry.startTime,
       duration: entry.startTime - startEntry.startTime,
-      traceDepth: start.depth,
+      depth: start.depth,
     }
     closeRange(range.id)
   }
