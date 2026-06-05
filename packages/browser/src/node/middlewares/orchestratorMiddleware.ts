@@ -14,12 +14,16 @@ export function createOrchestratorMiddleware(parentServer: ParentBrowserProject)
     }
 
     const html = await resolveOrchestrator(parentServer, url, res)
-    if (html) {
-      disableCache(res)
-      allowIframes(res)
-
-      res.write(html, 'utf-8')
+    if (!html) {
+      res.statusCode = 404
       res.end()
+      return
     }
+
+    disableCache(res)
+    allowIframes(res)
+
+    res.write(html, 'utf-8')
+    res.end()
   }
 }
