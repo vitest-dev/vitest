@@ -295,6 +295,30 @@ test('trigger keystrokes', async () => {
 })
 ```
 
+### Special key syntax
+
+The `{}` and `{{` escape sequences are part of the [user-event keyboard syntax](https://testing-library.com/docs/user-event/keyboard) and are translated into the appropriate key events for your provider. They are not provider-specific — Vitest always passes the string through to the underlying driver, which is responsible for parsing the sequence.
+
+| Sequence | Meaning |
+| -------- | ------- |
+| `{a}` | Press and release `a` |
+| `{Shift}` | Press and release `Shift` |
+| `{Shift>}` | Press `Shift` without releasing |
+| `{/Shift}` | Release `Shift` |
+| `{a>5}` | Press `a` for 5 `keydown` events without releasing |
+| `{a>5/}` | Press `a` for 5 `keydown` events and then release |
+| `{{a[[}` | Type the literal characters `{`, `a`, `[`, `[` |
+
+### Supported keys by provider
+
+The set of named keys you can use inside `{}` is defined by your browser provider:
+
+- **`playwright`** uses [Playwright's `keyboard.press`](https://playwright.dev/docs/api/class-keyboard) names. Common ones include `Enter`, `Escape`, `Tab`, `Backspace`, `Delete`, `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`, `Home`, `End`, `PageUp`, `PageDown`, `Shift`, `Control`, `Alt`, `Meta`, `CapsLock`, and `Insert`. See the [Playwright reference](https://playwright.dev/docs/api/class-keyboard) for the full list.
+- **`webdriverio`** uses WebDriver protocol key names via [`action('key')`](https://webdriver.io/docs/api/browser/action#key-input-source). Use names like `Enter`, `Escape`, `Tab`, `Backspace`, `ArrowUp`, etc.
+- **`preview`** falls back to `@testing-library/user-event`, which uses the same [user-event keyboard syntax](https://testing-library.com/docs/user-event/keyboard) as above.
+
+If a named key is not supported by your provider, the call will reject with a `SyntaxError` or throw — prefer the provider's documented names over guessing.
+
 References:
 
 - [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
