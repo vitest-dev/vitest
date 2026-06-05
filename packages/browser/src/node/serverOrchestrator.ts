@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
 import { stringify } from 'flatted'
 import { replacer } from './utils'
@@ -14,7 +15,7 @@ export async function resolveOrchestrator(
     return
   }
 
-  const browserProject = session.project.browser
+  const browserProject = session.project.browser as ProjectBrowser | undefined
   if (!browserProject) {
     return
   }

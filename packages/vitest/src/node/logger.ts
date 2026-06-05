@@ -8,7 +8,7 @@ import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { capturePrintError, printError } from './printError'
-import { divider, errorBanner, withLabel } from './reporters/renderers/utils'
+import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
