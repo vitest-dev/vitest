@@ -1,15 +1,14 @@
 import type { RunnerTaskResult, RunnerTestCase, RunnerTestFile, RunnerTestSuite, RunnerTask as Task } from 'vitest'
 import { runVitest, runVitestCli } from '#test-utils'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, test, TestRunner } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { createFileTask } from '../../../../packages/vitest/src/utils/tasks'
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
 test('calc the duration used by junit', () => {
   const result: RunnerTaskResult = { state: 'pass', duration: 0 }
-  const file: RunnerTestFile = createFileTask('/test.ts', '/', 'test')
+  const file: RunnerTestFile = TestRunner.createFileTask('/test.ts', '/', 'test')
   const suiteName
     = 'suite'
   const suite: RunnerTestSuite = {

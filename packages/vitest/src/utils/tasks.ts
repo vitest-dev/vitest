@@ -173,6 +173,9 @@ export function createFileTask(
   meta?: HashMeta,
 ): File {
   const path = relative(root, filepath)
+  // this can be called outside of the test run, so worker might not be there
+  // @ts-expect-error injected global
+  const workerState = globalThis.__vitest_worker__
   const file: File = {
     id: generateFileHash(path, projectName, meta),
     name: path,
@@ -186,6 +189,8 @@ export function createFileTask(
     file: undefined!,
     pool,
     viteEnvironment,
+    concurrencyId: workerState?.ctx.concurrencyId ?? 0,
+    workerId: workerState?.ctx.workerId ?? 0,
   }
   file.file = file
   return file
