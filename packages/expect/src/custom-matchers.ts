@@ -56,14 +56,14 @@ ${printReceived(actual)}`,
 ${matcherHint('.not.toBeOneOf', 'received', '')}
 
 Expected value to not be one of:
-${printExpected(expected)}
+${printExpected(expected, { maxWidth: 10 })}
 Received:
 ${printReceived(actual)}`
           : `\
 ${matcherHint('.toBeOneOf', 'received', '')}
 
 Expected value to be one of:
-${printExpected(expected)}
+${printExpected(expected, { maxWidth: 10 })}
 
 Received:
 ${printReceived(actual)}`,

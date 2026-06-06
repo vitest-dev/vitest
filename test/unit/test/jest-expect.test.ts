@@ -751,6 +751,8 @@ describe('toBeOneOf()', () => {
     snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
     snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
     snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
+    snapshotError(() => expect('x').toBeOneOf(Array.from({ length: 20 }, (_, i) => i)))
+    snapshotError(() => expect('x').toBeOneOf(new Set(Array.from({ length: 20 }, (_, i) => i))))
   })
 })
 

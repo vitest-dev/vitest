@@ -1053,6 +1053,60 @@ exports[`toBeOneOf() > error message 4`] = `
 }
 `;
 
+exports[`toBeOneOf() > error message 5`] = `
+{
+  "actual": undefined,
+  "diff": undefined,
+  "expected": undefined,
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Array [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  …(10)
+]
+
+Received:
+"x"",
+}
+`;
+
+exports[`toBeOneOf() > error message 6`] = `
+{
+  "actual": undefined,
+  "diff": undefined,
+  "expected": undefined,
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Set {
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  …(10)
+}
+
+Received:
+"x"",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "[

@@ -93,8 +93,8 @@ function replaceTrailingSpaces(text: string): string {
 function printReceived(object: unknown): string {
   return RECEIVED_COLOR(replaceTrailingSpaces(stringify(object)))
 }
-function printExpected(value: unknown): string {
-  return EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
+function printExpected(value: unknown, options?: Parameters<typeof stringify>[2]): string {
+  return EXPECTED_COLOR(replaceTrailingSpaces(stringify(value, undefined, options)))
 }
 
 export function getMatcherUtils(): {
