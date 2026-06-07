@@ -25,6 +25,7 @@ import {
   getByTitleSelector,
   Ivya,
 } from 'ivya'
+import { vi } from 'vitest'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
@@ -246,7 +247,16 @@ export abstract class Locator {
   protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return this.locator(getByRoleSelector(role, options))
+    const locator = this.locator(getByRoleSelector(role, options))
+    if (!options?.hasText && !options?.hasNotText && !options?.has && !options?.hasNot) {
+      return locator
+    }
+    return locator.filter({
+      hasText: options.hasText,
+      hasNotText: options.hasNotText,
+      has: options.has,
+      hasNot: options.hasNot,
+    })
   }
 
   public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
@@ -393,7 +403,11 @@ export abstract class Locator {
       const nextInterval = timeout != null
         ? Math.min(interval, timeout - elapsed)
         : interval
-      await sleep(nextInterval)
+      const wait = sleep(nextInterval)
+      if (vi.isFakeTimers()) {
+        await vi.advanceTimersByTimeAsync(nextInterval)
+      }
+      await wait
     }
   }
 
