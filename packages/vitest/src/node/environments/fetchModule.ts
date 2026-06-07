@@ -242,8 +242,11 @@ class ModuleFetcher {
       return
     }
 
-    // keep the module graph in sync
-    let map: Rollup.SourceMap | null | { mappings: '' } = extractSourceMap(cachedModule.code)
+    // Prefer the explicitly persisted source map (added in saveCachedModule)
+    // because `inlineSourceMap` only inlines maps with a `version` field, so
+    // some transforms' maps wouldn't be recoverable via `extractSourceMap`
+    // alone — that breaks coverage v8 which silently drops files with no map.
+    let map: Rollup.SourceMap | null | { mappings: '' } = cachedModule.map ?? extractSourceMap(cachedModule.code)
     if (map && cachedModule.file) {
       map.file = cachedModule.file
     }

@@ -1,4 +1,4 @@
-import type { DevEnvironment, FetchResult } from 'vite'
+import type { DevEnvironment, FetchResult, Rollup } from 'vite'
 import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -110,6 +110,7 @@ export class FileSystemModuleCache {
       code,
       importedUrls: meta.importedUrls,
       mappings: meta.mappings,
+      map: meta.map,
     }
   }
 
@@ -120,12 +121,19 @@ export class FileSystemModuleCache {
     mappings: boolean = false,
   ): Promise<void> {
     if ('code' in fetchResult) {
+      // Persist the source map explicitly. `inlineSourceMap` (in fetchModule.ts)
+      // only inlines maps that have a `version` field, so transforms whose map
+      // is the rollup sentinel `{ mappings: '' }` or otherwise non-standard
+      // would lose their map on cache hit — which silently breaks coverage v8
+      // (ast-v8-to-istanbul drops files with no source map).
+      const fetchMap = ('map' in fetchResult ? fetchResult.map : undefined) as Rollup.SourceMap | null | undefined
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
         url: fetchResult.url,
         importedUrls,
         mappings,
+        map: fetchMap ?? null,
       } satisfies Omit<CachedInlineModuleMeta, 'code'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(cachedFilePath, `${fetchResult.code}${cacheComment}${this.toBase64(result)}`)
@@ -366,6 +374,7 @@ export interface CachedInlineModuleMeta {
   code: string
   mappings: boolean
   importedUrls: string[]
+  map?: Rollup.SourceMap | null
 }
 
 /**
