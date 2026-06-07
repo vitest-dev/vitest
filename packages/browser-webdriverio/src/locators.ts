@@ -9,6 +9,7 @@ import type {
   UserEventWheelOptions,
 } from 'vitest/browser'
 import {
+  applyLocatorFilters,
   convertElementToCssSelector,
   ensureAwaited,
   getByAltTextSelector,
@@ -180,7 +181,7 @@ page.extend({
     return new WebdriverIOLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    return new WebdriverIOLocator(getByRoleSelector(role, options))
+    return applyLocatorFilters(new WebdriverIOLocator(getByRoleSelector(role, options)), options)
   },
   getByTestId(testId) {
     return new WebdriverIOLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))

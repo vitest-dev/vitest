@@ -8,6 +8,7 @@ import type {
   UserEventWheelOptions,
 } from 'vitest/browser'
 import {
+  applyLocatorFilters,
   convertElementToCssSelector,
   getByAltTextSelector,
   getByLabelSelector,
@@ -105,7 +106,7 @@ page.extend({
     return new PreviewLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    return new PreviewLocator(getByRoleSelector(role, options))
+    return applyLocatorFilters(new PreviewLocator(getByRoleSelector(role, options)), options)
   },
   getByTestId(testId) {
     return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))

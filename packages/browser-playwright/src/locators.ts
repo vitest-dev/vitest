@@ -8,6 +8,7 @@ import type {
   UserEventUploadOptions,
 } from 'vitest/browser'
 import {
+  applyLocatorFilters,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -89,7 +90,7 @@ page.extend({
     return new PlaywrightLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    return new PlaywrightLocator(getByRoleSelector(role, options))
+    return applyLocatorFilters(new PlaywrightLocator(getByRoleSelector(role, options)), options)
   },
   getByTestId(testId) {
     return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))

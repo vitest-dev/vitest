@@ -48,6 +48,38 @@ __INTERNAL._asLocator = asLocator
 const now = Date.now
 const waitForIntervals = [0, 20, 50, 100, 100, 500]
 
+function getLocatorFilterSelectors(filter?: LocatorOptions) {
+  const selectors = []
+
+  if (filter?.hasText) {
+    selectors.push(`internal:has-text=${escapeForTextSelector(filter.hasText, false)}`)
+  }
+
+  if (filter?.hasNotText) {
+    selectors.push(`internal:has-not-text=${escapeForTextSelector(filter.hasNotText, false)}`)
+  }
+
+  if (filter?.has) {
+    const locator = filter.has as Locator
+    selectors.push(`internal:has=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+  }
+
+  if (filter?.hasNot) {
+    const locator = filter.hasNot as Locator
+    selectors.push(`internal:has-not=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+  }
+
+  return selectors
+}
+
+export function applyLocatorFilters<T extends Locator>(locator: T, filter?: LocatorOptions): T {
+  const selectors = getLocatorFilterSelectors(filter)
+  if (!selectors.length) {
+    return locator
+  }
+  return locator.filter(filter) as T
+}
+
 function sleep(ms: number): Promise<void> {
   const { setTimeout } = getSafeTimers()
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -246,7 +278,7 @@ export abstract class Locator {
   protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return this.locator(getByRoleSelector(role, options))
+    return applyLocatorFilters(this.locator(getByRoleSelector(role, options)), options)
   }
 
   public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
@@ -274,25 +306,7 @@ export abstract class Locator {
   }
 
   public filter(filter: LocatorOptions): Locator {
-    const selectors = []
-
-    if (filter?.hasText) {
-      selectors.push(`internal:has-text=${escapeForTextSelector(filter.hasText, false)}`)
-    }
-
-    if (filter?.hasNotText) {
-      selectors.push(`internal:has-not-text=${escapeForTextSelector(filter.hasNotText, false)}`)
-    }
-
-    if (filter?.has) {
-      const locator = filter.has as Locator
-      selectors.push(`internal:has=${JSON.stringify(locator._pwSelector || locator.selector)}`)
-    }
-
-    if (filter?.hasNot) {
-      const locator = filter.hasNot as Locator
-      selectors.push(`internal:has-not=${JSON.stringify(locator._pwSelector || locator.selector)}`)
-    }
+    const selectors = getLocatorFilterSelectors(filter)
 
     if (!selectors.length) {
       throw new Error(`Locator.filter expects at least one filter. None provided.`)
