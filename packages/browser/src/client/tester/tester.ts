@@ -111,6 +111,11 @@ getBrowserState().commands = commands
 getBrowserState().activeTraceTaskIds = new Set()
 getBrowserState().iframeId = iframeId
 
+channel.postMessage({
+  event: 'ready',
+  iframeId,
+})
+
 let contextSwitched = false
 
 async function prepareTestEnvironment(options: PrepareOptions) {

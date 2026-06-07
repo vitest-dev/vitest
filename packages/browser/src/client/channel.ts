@@ -20,6 +20,11 @@ export interface IframeViewportDoneEvent {
   iframeId: string
 }
 
+export interface IframeReadyEvent {
+  event: 'ready'
+  iframeId: string
+}
+
 export interface GlobalChannelTestRunCanceledEvent {
   type: 'cancel'
   reason: CancelReason
@@ -49,6 +54,7 @@ export type GlobalChannelIncomingEvent = GlobalChannelTestRunCanceledEvent
 
 export type IframeChannelIncomingEvent
   = | IframeViewportEvent
+    | IframeReadyEvent
 
 export type IframeChannelOutgoingEvent
   = | IframeExecuteEvent
