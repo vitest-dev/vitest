@@ -39,4 +39,47 @@ describe('testing date mock functionality', () => {
 
     expect(new Date()).toBeInstanceOf(Date)
   })
+
+  test('mocked system time also updates Temporal.Now', () => {
+    const originalTemporal = (globalThis as any).Temporal
+    const realNow = Date.now.bind(Date)
+
+    ;(globalThis as any).Temporal = {
+      Instant: {
+        fromEpochMilliseconds: (epochMilliseconds: number) => ({
+          epochMilliseconds,
+          toZonedDateTimeISO: () => ({
+            epochMilliseconds,
+            toPlainDateTime: () => ({ epochMilliseconds }),
+            toPlainDate: () => ({ epochMilliseconds }),
+            toPlainTime: () => ({ epochMilliseconds }),
+            toPlainYearMonth: () => ({ epochMilliseconds }),
+            toPlainMonthDay: () => ({ epochMilliseconds }),
+          }),
+        }),
+      },
+      Now: {
+        instant: () => ({ epochMilliseconds: realNow() }),
+        plainDateTimeISO: () => ({ epochMilliseconds: realNow() }),
+        plainDateISO: () => ({ epochMilliseconds: realNow() }),
+        plainTimeISO: () => ({ epochMilliseconds: realNow() }),
+        plainYearMonthISO: () => ({ epochMilliseconds: realNow() }),
+        plainMonthDayISO: () => ({ epochMilliseconds: realNow() }),
+        zonedDateTimeISO: () => ({ epochMilliseconds: realNow() }),
+        timeZoneId: () => 'UTC',
+      },
+    }
+
+    try {
+      const date = new Date(2000, 1, 1)
+
+      vi.setSystemTime(date)
+
+      expect((globalThis as any).Temporal.Now.instant().epochMilliseconds).toBe(date.valueOf())
+      expect((globalThis as any).Temporal.Now.plainDateTimeISO().epochMilliseconds).toBe(date.valueOf())
+    }
+    finally {
+      ;(globalThis as any).Temporal = originalTemporal
+    }
+  })
 })

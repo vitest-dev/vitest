@@ -26,6 +26,115 @@ SOFTWARE.
 export const RealDate: DateConstructor = Date
 
 let now: null | number = null
+type TemporalNowMethod = 'instant' | 'plainDateTimeISO' | 'plainDateISO' | 'plainTimeISO' | 'plainYearMonthISO' | 'plainMonthDayISO' | 'zonedDateTimeISO'
+
+const temporalNowMethods: TemporalNowMethod[] = [
+  'instant',
+  'plainDateTimeISO',
+  'plainDateISO',
+  'plainTimeISO',
+  'plainYearMonthISO',
+  'plainMonthDayISO',
+  'zonedDateTimeISO',
+]
+
+let originalTemporalNowDescriptors: Partial<Record<TemporalNowMethod, PropertyDescriptor | undefined>> | null = null
+let originalTemporalTimeZoneIdDescriptor: PropertyDescriptor | undefined
+
+function getTemporal(): any {
+  return (globalThis as any).Temporal as any
+}
+
+function getTemporalNowInstant(): any {
+  const Temporal = getTemporal()
+  return Temporal.Instant.fromEpochMilliseconds(Date.now())
+}
+
+function getTemporalNowZonedDateTimeISO(timeZone = getTemporal().Now.timeZoneId()): any {
+  return getTemporalNowInstant().toZonedDateTimeISO(timeZone)
+}
+
+function patchTemporalNow(): void {
+  const Temporal = getTemporal()
+  if (!Temporal?.Now) {
+    return
+  }
+
+  if (!originalTemporalNowDescriptors) {
+    originalTemporalNowDescriptors = {}
+    for (const method of temporalNowMethods) {
+      originalTemporalNowDescriptors[method] = Object.getOwnPropertyDescriptor(Temporal.Now, method)
+    }
+    originalTemporalTimeZoneIdDescriptor = Object.getOwnPropertyDescriptor(Temporal.Now, 'timeZoneId')
+  }
+
+  Object.defineProperty(Temporal.Now, 'instant', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: () => getTemporalNowInstant(),
+  })
+  Object.defineProperty(Temporal.Now, 'plainDateTimeISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone).toPlainDateTime(),
+  })
+  Object.defineProperty(Temporal.Now, 'plainDateISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone).toPlainDate(),
+  })
+  Object.defineProperty(Temporal.Now, 'plainTimeISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone).toPlainTime(),
+  })
+  Object.defineProperty(Temporal.Now, 'plainYearMonthISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone).toPlainYearMonth(),
+  })
+  Object.defineProperty(Temporal.Now, 'plainMonthDayISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone).toPlainMonthDay(),
+  })
+  Object.defineProperty(Temporal.Now, 'zonedDateTimeISO', {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    value: (timeZone?: string) => getTemporalNowZonedDateTimeISO(timeZone),
+  })
+}
+
+function restoreTemporalNow(): void {
+  const Temporal = getTemporal()
+  if (!Temporal?.Now || !originalTemporalNowDescriptors) {
+    return
+  }
+
+  for (const method of temporalNowMethods) {
+    const descriptor = originalTemporalNowDescriptors[method]
+    if (descriptor) {
+      Object.defineProperty(Temporal.Now, method, descriptor)
+    }
+    else {
+      Reflect.deleteProperty(Temporal.Now, method)
+    }
+  }
+
+  if (originalTemporalTimeZoneIdDescriptor) {
+    Object.defineProperty(Temporal.Now, 'timeZoneId', originalTemporalTimeZoneIdDescriptor)
+  }
+
+  originalTemporalNowDescriptors = null
+  originalTemporalTimeZoneIdDescriptor = undefined
+}
 
 class MockDate extends RealDate {
   constructor()
@@ -101,10 +210,20 @@ export function mockDate(date: string | number | Date): void {
 
   // @ts-expect-error global
   globalThis.Date = MockDate
+  patchTemporalNow()
 
   now = dateObj.valueOf()
 }
 
 export function resetDate(): void {
   globalThis.Date = RealDate
+  restoreTemporalNow()
+}
+
+export function mockTemporalNow(): void {
+  patchTemporalNow()
+}
+
+export function resetTemporalNow(): void {
+  restoreTemporalNow()
 }
