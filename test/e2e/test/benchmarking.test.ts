@@ -1265,13 +1265,21 @@ test('`toBeFasterThan` passes when actual.latency.mean is strictly smaller', () 
 test('`toBeFasterThan` fails with a percent-slower message when actual is slower', () => {
   expect(() => expect(fakeResult(1.0)).toBeFasterThan(fakeResult(0.5)))
     .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [2mexpect([22m[31mreceived[39m[2m).toBeFasterThan([22m[32mexpected[39m[2m)[22m
+      JestExtendError {
+        "message": "[2mexpect([22m[31mreceived[39m[2m).toBeFasterThan([22m[32mexpected[39m[2m)[22m
 
       Expected to be faster, but was 100.00% slower.
 
       Received: [31m1.00[39m ops/sec
       Expected: [32m2.00[39m ops/sec
-      ]
+      ",
+        "actual": undefined,
+        "expected": undefined,
+        "__vitest_error_context__": {
+          "assertionName": "toBeFasterThan",
+          "meta": undefined,
+        },
+      }
     `)
 })
 
@@ -1292,13 +1300,21 @@ test('`toBeSlowerThan` passes when actual.latency.mean is strictly larger', () =
 test('`toBeSlowerThan` fails with a percent-faster message when actual is faster', () => {
   expect(() => expect(fakeResult(0.5)).toBeSlowerThan(fakeResult(1.0)))
     .toThrowErrorMatchingInlineSnapshot(`
-      [Error: [2mexpect([22m[31mreceived[39m[2m).toBeSlowerThan([22m[32mexpected[39m[2m)[22m
+      JestExtendError {
+        "message": "[2mexpect([22m[31mreceived[39m[2m).toBeSlowerThan([22m[32mexpected[39m[2m)[22m
 
       Expected to be slower, but was 50% faster.
 
       Received: [31m2.00[39m ops/sec
       Expected: [32m1.00[39m ops/sec
-      ]
+      ",
+        "actual": undefined,
+        "expected": undefined,
+        "__vitest_error_context__": {
+          "assertionName": "toBeSlowerThan",
+          "meta": undefined,
+        },
+      }
     `)
 })
 

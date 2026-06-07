@@ -116,6 +116,15 @@ test('throwing inline snapshots', async () => {
     newlines]
   `)
 
+  expect(() => {
+    throw new Error('outer', { cause: new Error('inner') })
+  }).toThrowErrorMatchingInlineSnapshot(`
+    Error {
+      "message": "outer",
+      "cause": [Error: inner],
+    }
+  `)
+
   await expect(async () => {
     throw new Error('omega')
   }).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: omega]`)

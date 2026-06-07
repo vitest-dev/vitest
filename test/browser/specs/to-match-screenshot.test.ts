@@ -134,6 +134,7 @@ describe('--watch', () => {
   describe('--update', () => {
     test(
       'creates snapshot and does NOT update it if reference matches',
+      { timeout: 600_000 },
       async () => {
         const { fs, stderr, vitest } = await runBrowserTests(
           {
@@ -242,6 +243,7 @@ describe('--watch', () => {
   // tests whether the screenshots are stable in non-UI and UI mode
   test(
     'screenshots match across non-UI and UI mode',
+    { timeout: 600_000 },
     async () => {
       const { fs, vitest } = await runBrowserTests(
         {

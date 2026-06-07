@@ -488,7 +488,18 @@ test('signal', async () => {
           })
           return new Promise(() => {})
         }, { timeout: 100, interval: 10 }).toMatchKvSnapshot()
-      ).rejects.toThrowErrorMatchingInlineSnapshot(\`[Error: poll() did not produce a stable snapshot within the timeout]\`)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(\`
+        JestExtendError {
+          "message": "poll() did not produce a stable snapshot within the timeout",
+          "cause": [Error: Matcher did not succeed in time.],
+          "actual": undefined,
+          "expected": undefined,
+          "__vitest_error_context__": {
+            "assertionName": "toMatchKvSnapshot",
+            "meta": undefined,
+          },
+        }
+      \`)
       expect(aborted).toMatchInlineSnapshot(\`true\`)
     })
     "

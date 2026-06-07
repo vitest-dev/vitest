@@ -265,9 +265,7 @@ it('resolves/rejects', async () => {
       AssertionError: promise resolved "3" instead of rejecting
 
       - Expected:
-      Error {
-        "message": "rejected promise",
-      }
+      [Error: rejected promise]
 
       + Received:
       3
@@ -344,9 +342,7 @@ it('resolves/rejects', async () => {
     AssertionError: promise resolved "3" instead of rejecting
 
     - Expected:
-    Error {
-      "message": "rejected promise",
-    }
+    [Error: rejected promise]
 
     + Received:
     3

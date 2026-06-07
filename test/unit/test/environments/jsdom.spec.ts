@@ -276,7 +276,15 @@ test('toContain correctly handles DOM nodes', () => {
 
   expect(() => {
     expect(wrapper.classList).toContain('flex-row')
-  }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected "flex flex-col" to contain "flex-row"]`)
+  }).toThrowErrorMatchingInlineSnapshot(`
+    AssertionError {
+      "message": "expected \"flex flex-col\" to contain \"flex-row\"",
+      "actual": "flex flex-col",
+      "expected": "flex flex-col flex-row",
+      "showDiff": true,
+      "operator": "strictEqual",
+    }
+  `)
   expect(() => {
     expect(wrapper.classList).toContain(2)
   }).toThrowErrorMatchingInlineSnapshot(`[TypeError: class name value must be string, received "number"]`)

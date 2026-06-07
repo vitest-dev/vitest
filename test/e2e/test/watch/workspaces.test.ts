@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { runInlineTests, runVitestCli } from '#test-utils'
 import { dirname, resolve } from 'pathe'
 
-import { afterAll, afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it } from 'vitest'
 
 const file = fileURLToPath(import.meta.url)
 const dir = dirname(file)
@@ -16,6 +16,7 @@ const specSpace2File = resolve(root, 'space_2', 'test', 'node.spec.ts')
 
 const srcMathContent = readFileSync(srcMathFile, 'utf-8')
 const specSpace2Content = readFileSync(specSpace2File, 'utf-8')
+const resultsFile = resolve(root, 'results.json')
 
 const dynamicTestContent = `// Dynamic test added by test/watch/test/workspaces.test.ts
 import { expect, test } from "vitest";
@@ -42,11 +43,9 @@ async function startVitest() {
 
 afterEach(() => {
   cleanups.splice(0).forEach(cleanup => cleanup())
-})
-
-afterAll(() => {
   writeFileSync(srcMathFile, srcMathContent, 'utf8')
   writeFileSync(specSpace2File, specSpace2Content, 'utf8')
+  rmSync(resultsFile, { force: true })
 })
 
 it('editing a test file in a suite with workspaces reruns test', async () => {

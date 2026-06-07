@@ -396,21 +396,53 @@ describe('Temporal equality', () => {
 describe('expect with custom message', () => {
   describe('built-in matchers', () => {
     test('sync matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, 'custom message').toBe(2)).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "custom message: expected 1 to be 2 // Object.is equality",
+          "actual": 1,
+          "expected": 2,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
     })
 
     test('async rejects matcher throws custom message on failure', async ({ expect }) => {
       const asyncAssertion = expect(Promise.reject(new Error('test error')), 'custom async message').rejects.toBe(2)
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected Error: test error to be 2 // Object.is equality]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`
+        AssertionError {
+          "message": "custom async message: expected Error: test error to be 2 // Object.is equality",
+          "actual": [Error: test error],
+          "expected": 2,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
     })
 
     test('async resolves matcher throws custom message on failure', async ({ expect }) => {
       const asyncAssertion = expect(Promise.resolve(1), 'custom async message').resolves.toBe(2)
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[AssertionError: custom async message: expected 1 to be 2 // Object.is equality]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`
+        AssertionError {
+          "message": "custom async message: expected 1 to be 2 // Object.is equality",
+          "actual": 1,
+          "expected": 2,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
     })
 
     test('not matcher throws custom message on failure', () => {
-      expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: custom message: expected 1 not to be 1 // Object.is equality]`)
+      expect(() => expect(1, 'custom message').not.toBe(1)).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "custom message: expected 1 not to be 1 // Object.is equality",
+          "actual": 1,
+          "expected": 1,
+          "showDiff": true,
+          "operator": "notStrictEqual",
+        }
+      `)
     })
   })
 
@@ -425,7 +457,17 @@ describe('expect with custom message', () => {
           }
         },
       })
-      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`[Error: custom message: bar is foo]`)
+      expect(() => (expect('bar', 'custom message') as any).toBeFoo()).toThrowErrorMatchingInlineSnapshot(`
+        JestExtendError {
+          "message": "custom message: bar is foo",
+          "actual": undefined,
+          "expected": undefined,
+          "__vitest_error_context__": {
+            "assertionName": "toBeFoo",
+            "meta": undefined,
+          },
+        }
+      `)
     })
 
     test('sync custom matcher passes with custom message when assertion succeeds', ({ expect }) => {
@@ -452,7 +494,17 @@ describe('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('bar'), 'custom async message') as any).toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: bar is not foo]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`
+        JestExtendError {
+          "message": "custom async message: bar is not foo",
+          "actual": undefined,
+          "expected": undefined,
+          "__vitest_error_context__": {
+            "assertionName": "toBeFoo",
+            "meta": undefined,
+          },
+        }
+      `)
     })
 
     test('async custom matcher with not throws custom message on failure', async ({ expect }) => {
@@ -466,17 +518,43 @@ describe('expect with custom message', () => {
         },
       })
       const asyncAssertion = (expect(Promise.resolve('foo'), 'custom async message') as any).not.toBeFoo()
-      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`[Error: custom async message: foo is not foo]`)
+      await expect(asyncAssertion).rejects.toMatchInlineSnapshot(`
+        JestExtendError {
+          "message": "custom async message: foo is not foo",
+          "actual": undefined,
+          "expected": undefined,
+          "__vitest_error_context__": {
+            "assertionName": "toBeFoo",
+            "meta": undefined,
+          },
+        }
+      `)
     })
   })
 
   describe('edge cases', () => {
     test('empty custom message falls back to default matcher message', () => {
-      expect(() => expect(1, '').toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, '').toBe(2)).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected 1 to be 2 // Object.is equality",
+          "actual": 1,
+          "expected": 2,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
     })
 
     test('undefined custom message falls back to default matcher message', () => {
-      expect(() => expect(1, undefined as any).toBe(2)).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1 to be 2 // Object.is equality]`)
+      expect(() => expect(1, undefined as any).toBe(2)).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected 1 to be 2 // Object.is equality",
+          "actual": 1,
+          "expected": 2,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
     })
   })
 })
@@ -523,8 +601,36 @@ describe('Standard Schema', () => {
       expect('hello').toEqual(expect.schemaMatching(stringSchema))
       expect(42).toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 123 to deeply equal SchemaMatching{…}]`)
-      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to deeply equal SchemaMatching{…}]`)
+      expect(() => expect(123).toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected 123 to deeply equal SchemaMatching{…}",
+          "actual": 123,
+          "expected": SchemaMatching {
+          "issues": [
+            {
+              "message": "Expected string",
+            },
+          ],
+        },
+          "showDiff": true,
+          "operator": "deepStrictEqual",
+        }
+      `)
+      expect(() => expect('hello').toEqual(expect.schemaMatching(numberSchema))).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected 'hello' to deeply equal SchemaMatching{…}",
+          "actual": "hello",
+          "expected": SchemaMatching {
+          "issues": [
+            {
+              "message": "Expected number",
+            },
+          ],
+        },
+          "showDiff": true,
+          "operator": "deepStrictEqual",
+        }
+      `)
 
       try {
         expect(123).toEqual(expect.schemaMatching(stringSchema))
@@ -560,7 +666,25 @@ describe('Standard Schema', () => {
         email: 123,
       }).toEqual({
         email: expect.schemaMatching(emailSchema),
-      })).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { email: 123 } to deeply equal { email: SchemaMatching{…} }]`)
+      })).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected { email: 123 } to deeply equal { email: SchemaMatching{…} }",
+          "actual": {
+            "email": 123,
+          },
+          "expected": {
+            "email": SchemaMatching {
+          "issues": [
+            {
+              "message": "Expected email",
+            },
+          ],
+        },
+          },
+          "showDiff": true,
+          "operator": "deepStrictEqual",
+        }
+      `)
 
       try {
         expect({
@@ -662,7 +786,15 @@ describe('Standard Schema', () => {
       expect(123).not.toEqual(expect.schemaMatching(stringSchema))
       expect('hello').not.toEqual(expect.schemaMatching(numberSchema))
 
-      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to not deeply equal SchemaMatching]`)
+      expect(() => expect('hello').not.toEqual(expect.schemaMatching(stringSchema))).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected 'hello' to not deeply equal SchemaMatching",
+          "actual": "hello",
+          "expected": SchemaMatching,
+          "showDiff": true,
+          "operator": "notDeepStrictEqual",
+        }
+      `)
 
       try {
         expect('hello').not.toEqual(expect.schemaMatching(stringSchema))

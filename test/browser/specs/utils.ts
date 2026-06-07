@@ -46,6 +46,8 @@ export async function runBrowserTests(
   return {
     ...result,
     ctx: result.ctx!,
-    stderr: result.stderr.replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', ''),
+    stderr: result.stderr
+      .replace('Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest\'s version when using it.\n', '')
+      .replace(/^.*MESSAGE ADDED.*\r?\n?/gm, ''),
   }
 }

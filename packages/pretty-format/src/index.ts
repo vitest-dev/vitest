@@ -295,13 +295,20 @@ const ErrorPlugin: NewPlugin = {
     refs = [...refs, val]
     const hitMaxDepth = ++depth > config.maxDepth
     const { message, cause, ...rest } = val
+    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+
+    if (typeof cause === 'undefined' && !(val instanceof AggregateError) && Object.keys(rest).length === 0) {
+      return hitMaxDepth
+        ? `[${name}]`
+        : `[${name}: ${message}]`
+    }
+
     const entries = {
       message,
       ...typeof cause !== 'undefined' ? { cause } : {},
       ...val instanceof AggregateError ? { errors: val.errors } : {},
       ...rest,
     }
-    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
     return hitMaxDepth
       ? `[${name}]`
       : `${name} {${printObjectProperties(

@@ -43,12 +43,11 @@ test('locator.findElement fails if there are multiple elements by default', asyn
 
   await expect(
     () => page.getByRole('button').findElement(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ]
-  `)
+  ).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
 })
 
 test('locator.findElement fails if there are multiple elements if strict mode is specified', async () => {
@@ -57,12 +56,11 @@ test('locator.findElement fails if there are multiple elements if strict mode is
 
   await expect(
     () => page.getByRole('button').findElement({ strict: true }),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ]
-  `)
+  ).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
 })
 
 test('locator.findElement fails if multiple elements appear later with strict mode', async () => {
@@ -73,12 +71,11 @@ test('locator.findElement fails if multiple elements appear later with strict mo
 
   await expect(
     () => page.getByRole('button').findElement(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ]
-  `)
+  ).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
 })
 
 test('locator.findElement returns the first button if strict is disabled', async () => {
@@ -114,10 +111,9 @@ test('expect.element is strict', async () => {
   createButton()
   await expect(
     () => expect.element(page.getByRole('button'), { timeout: 50 }).toBeVisible(),
-  ).rejects.toThrowErrorMatchingInlineSnapshot(`
-    [Error: strict mode violation: getByRole('button') resolved to 2 elements:
-        1) <button></button> aka getByRole('button').first()
-        2) <button></button> aka getByRole('button').nth(1)
-    ]
-  `)
+  ).rejects.toThrow(
+    `strict mode violation: getByRole('button') resolved to 2 elements:\n`
+    + `    1) <button></button> aka getByRole('button').first()\n`
+    + `    2) <button></button> aka getByRole('button').nth(1)`,
+  )
 })

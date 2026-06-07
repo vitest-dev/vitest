@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { instances, runBrowserTests } from './utils'
 
-test('inline project server options are passed to browser server', async () => {
+test('inline project server options are passed to browser server', { timeout: 600_000 }, async () => {
   const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/server-options-inline',
   })

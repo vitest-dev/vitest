@@ -1003,18 +1003,14 @@ describe('ErrorPlugin', () => {
   test('Error with message', () => {
     const err = new Error('boom')
     expect(format(err, { plugins: [plugins.Error] })).toMatchInlineSnapshot(`
-      "Error {
-        "message": "boom",
-      }"
+      "[Error: boom]"
     `)
   })
 
   test('TypeError', () => {
     const err = new TypeError('bad type')
     expect(format(err, { plugins: [plugins.Error] })).toMatchInlineSnapshot(`
-      "TypeError {
-        "message": "bad type",
-      }"
+      "[TypeError: bad type]"
     `)
   })
 
@@ -1035,12 +1031,8 @@ describe('ErrorPlugin', () => {
       "AggregateError {
         "message": "multiple",
         "errors": Array [
-          Error {
-            "message": "a",
-          },
-          Error {
-            "message": "b",
-          },
+          [Error: a],
+          [Error: b],
         ],
       }"
     `)

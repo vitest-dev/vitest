@@ -125,7 +125,16 @@ test('toBeDefined', async () => {
 test('custom message', async () => {
   await expect(() =>
     expect.poll(() => 1, { timeout: 100, interval: 10, message: 'custom' }).toBe(2),
-  ).rejects.toMatchInlineSnapshot(`[AssertionError: custom: expected 1 to be 2 // Object.is equality]`)
+  ).rejects.toMatchInlineSnapshot(`
+    AssertionError {
+      "message": "custom: expected 1 to be 2 // Object.is equality",
+      "cause": [Error: Matcher did not succeed in time.],
+      "actual": 1,
+      "expected": 2,
+      "showDiff": true,
+      "operator": "strictEqual",
+    }
+  `)
 })
 
 test('unresolved function', async () => {
@@ -143,7 +152,12 @@ test('unresolved function', async () => {
         { timeout: 50 },
       )
       .toBe('ok'),
-  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() function didn't resolve in time.]`)
+  ).rejects.toMatchInlineSnapshot(`
+    Error {
+      "message": "expect.poll() function didn't resolve in time.",
+      "cause": [Error: Matcher did not succeed in time.],
+    }
+  `)
   expect(aborted).toBe(true)
 })
 
@@ -171,6 +185,11 @@ test('unresolved assertion', async () => {
         { timeout: 50 },
       ) as any
     ).toTestSlow(),
-  ).rejects.toMatchInlineSnapshot(`[Error: expect.poll() assertion didn't resolve in time.]`)
+  ).rejects.toMatchInlineSnapshot(`
+    Error {
+      "message": "expect.poll() assertion didn't resolve in time.",
+      "cause": [Error: Matcher did not succeed in time.],
+    }
+  `)
   expect(aborted).toBe(true)
 })

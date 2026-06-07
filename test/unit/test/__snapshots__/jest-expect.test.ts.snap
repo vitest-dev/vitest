@@ -354,16 +354,12 @@ stringContainingCustom<"ll">
 
 exports[`asymmetric matcher error 24`] = `
 {
-  "actual": "Error {
-  "message": "hello",
-}",
+  "actual": "[Error: hello]",
   "diff": "- Expected:
 StringContaining "ll"
 
 + Received:
-Error {
-  "message": "hello",
-}",
+[Error: hello]",
   "expected": "StringContaining "ll"",
   "message": "expected error to match asymmetric matcher",
 }
@@ -371,16 +367,12 @@ Error {
 
 exports[`asymmetric matcher error 25`] = `
 {
-  "actual": "Error {
-  "message": "hello",
-}",
+  "actual": "[Error: hello]",
   "diff": "- Expected:
 stringContainingCustom<"ll">
 
 + Received:
-Error {
-  "message": "hello",
-}",
+[Error: hello]",
   "expected": "stringContainingCustom<"ll">",
   "message": "expected error to match asymmetric matcher",
 }
@@ -388,16 +380,12 @@ Error {
 
 exports[`asymmetric matcher error 26`] = `
 {
-  "actual": "MyError2 {
-  "message": "hello",
-}",
+  "actual": "[MyError2: hello]",
   "diff": "- Expected:
 [Function MyError1]
 
 + Received:
-MyError2 {
-  "message": "hello",
-}",
+[MyError2: hello]",
   "expected": "[Function MyError1]",
   "message": "expected error to be instance of MyError1",
 }
@@ -596,16 +584,15 @@ exports[`error equality 5`] = `
 
 exports[`error equality 6`] = `
 {
-  "actual": "Error {
-  "message": "hello",
-}",
+  "actual": "[Error: hello]",
   "diff": "- Expected
 + Received
 
-  Error {
-    "message": "hello",
+- Error {
+-   "message": "hello",
 -   "cause": "y",
-  }",
+- }
++ [Error: hello]",
   "expected": "Error {
   "message": "hello",
   "cause": "y",
@@ -616,19 +603,13 @@ exports[`error equality 6`] = `
 
 exports[`error equality 7`] = `
 {
-  "actual": "Error {
-  "message": "hello",
-}",
+  "actual": "[Error: hello]",
   "diff": "- Expected
 + Received
 
-  Error {
--   "message": "world",
-+   "message": "hello",
-  }",
-  "expected": "Error {
-  "message": "world",
-}",
+- [Error: world]
++ [Error: hello]",
+  "expected": "[Error: world]",
   "message": "expected Error: hello to deeply equal Error: world",
 }
 `;

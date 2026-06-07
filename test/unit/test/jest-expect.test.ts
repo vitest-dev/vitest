@@ -203,7 +203,19 @@ describe('jest-expect', () => {
       }).toEqual({
         sum: expect.closeTo(0.4),
       })
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
+    }).toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }",
+        "actual": {
+          "sum": 0.30000000000000004,
+        },
+        "expected": {
+          "sum": NumberCloseTo 0.4 (2 digits),
+        },
+        "showDiff": true,
+        "operator": "deepStrictEqual",
+      }
+    `)
   })
 
   it('asymmetric matchers and equality testers', () => {
@@ -374,14 +386,41 @@ describe('jest-expect', () => {
 
     expect(() => {
       expect(complex).toHaveProperty('a-b', false)
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false]`)
+    }).toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected { '0': 'zero', foo: 1, …(4) } to have property "a-b" with value false",
+        "actual": true,
+        "expected": false,
+        "showDiff": true,
+      }
+    `)
 
     expect(() => {
       const x = { a: { b: { c: 1 } } }
       const y = { a: { b: { c: 2 } } }
       Object.freeze(x.a)
       expect(x).toEqual(y)
-    }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }]`)
+    }).toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected { a: { b: { c: 1 } } } to deeply equal { a: { b: { c: 2 } } }",
+        "actual": {
+          "a": {
+            "b": {
+              "c": 1,
+            },
+          },
+        },
+        "expected": {
+          "a": {
+            "b": {
+              "c": 2,
+            },
+          },
+        },
+        "showDiff": true,
+        "operator": "deepStrictEqual",
+      }
+    `)
   })
 
   it('assertions', () => {
@@ -478,14 +517,24 @@ describe('jest-expect', () => {
       expect(() => {
         expect(() => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected function to throw an error, but it didn't",
+          "showDiff": false,
+        }
+      `)
     })
 
     it('async wasn\'t awaited', () => {
       expect(() => {
         expect(async () => {
         }).toThrow(Error)
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected function to throw an error, but it didn't]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected function to throw an error, but it didn't",
+          "showDiff": false,
+        }
+      `)
     })
 
     it('custom error class', () => {
@@ -516,7 +565,15 @@ describe('jest-expect', () => {
         // eslint-disable-next-line no-throw-literal
           throw 42
         }).toThrow(43)
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal 43]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected a thrown value to equal 43",
+          "actual": 42,
+          "expected": 43,
+          "showDiff": true,
+          "operator": "strictEqual",
+        }
+      `)
 
       // deep equality
       expect(() => {
@@ -533,7 +590,19 @@ describe('jest-expect', () => {
         // eslint-disable-next-line no-throw-literal
           throw { foo: 'bar' }
         }).toThrow({ foo: expect.stringContaining('hello') })
-      }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected a thrown value to equal { foo: StringContaining "hello" }]`)
+      }).toThrowErrorMatchingInlineSnapshot(`
+        AssertionError {
+          "message": "expected a thrown value to equal { foo: StringContaining "hello" }",
+          "actual": {
+            "foo": "bar",
+          },
+          "expected": {
+            "foo": StringContaining "hello",
+          },
+          "showDiff": true,
+          "operator": "deepStrictEqual",
+        }
+      `)
     })
 
     it('error from different realm', async () => {
@@ -781,7 +850,19 @@ describe('toSatisfy()', () => {
     expect(() => {
       expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'odd') })
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected { value: 2 } to deeply equal { value: toSatisfy{…} }]`,
+      `
+      AssertionError {
+        "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",
+        "actual": {
+          "value": 2,
+        },
+        "expected": {
+          "value": toSatisfy<[Function isOdd], "odd">,
+        },
+        "showDiff": true,
+        "operator": "deepStrictEqual",
+      }
+    `,
     )
 
     expect(() => {
@@ -805,7 +886,16 @@ describe('toSatisfy()', () => {
         }),
       )
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected Error: 2 to match object { Object (message) }]`,
+      `
+      AssertionError {
+        "message": "expected Error: 2 to match object { Object (message) }",
+        "showDiff": true,
+        "expected": {
+          "message": toSatisfy<[Function isOdd]>,
+        },
+        "actual": [Error: 2],
+      }
+    `,
     )
   })
 
@@ -1414,17 +1504,59 @@ function getError(f: () => unknown) {
 
 it('toMatchObject', () => {
   expect(() => expect(null).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected null to match object Set{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected null to match object Set{}",
+        "showDiff": true,
+        "expected": Set {},
+        "actual": null,
+      }
+    `)
   expect(() => expect(undefined).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected undefined to match object Set{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected undefined to match object Set{}",
+        "showDiff": true,
+        "expected": Set {},
+        "actual": undefined,
+      }
+    `)
   expect(() => expect(1234).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 1234 to match object Set{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected 1234 to match object Set{}",
+        "showDiff": true,
+        "expected": Set {},
+        "actual": 1234,
+      }
+    `)
   expect(() => expect('hello').toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected 'hello' to match object Set{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected 'hello' to match object Set{}",
+        "showDiff": true,
+        "expected": Set {},
+        "actual": "hello",
+      }
+    `)
   expect(() => expect({}).toMatchObject(new Set()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Set{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected {} to match object Set{}",
+        "showDiff": true,
+        "expected": Set {},
+        "actual": {},
+      }
+    `)
   expect(() => expect({}).toMatchObject(new Map()))
-    .toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected {} to match object Map{}]`)
+    .toThrowErrorMatchingInlineSnapshot(`
+      AssertionError {
+        "message": "expected {} to match object Map{}",
+        "showDiff": true,
+        "expected": Map {},
+        "actual": {},
+      }
+    `)
 
   // subset equality works inside Set/Map
   expect(new Set([{ x: 1 }])).toMatchObject(new Set([{}]))

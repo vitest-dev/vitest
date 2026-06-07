@@ -20,6 +20,7 @@ const {
   ReactElement,
   ReactTestComponent,
   AsymmetricMatcher,
+  Error,
 } = prettyFormatPlugins
 
 let PLUGINS: PrettyFormatPlugins = [
@@ -28,6 +29,7 @@ let PLUGINS: PrettyFormatPlugins = [
   DOMElement,
   DOMCollection,
   Immutable,
+  Error,
   AsymmetricMatcher,
   MockSerializer,
 ]

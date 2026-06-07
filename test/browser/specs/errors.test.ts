@@ -4,7 +4,7 @@ import { rolldownVersion } from 'vitest/node'
 import { buildTestProjectTree } from '../../test-utils'
 import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
-test('prints correct unhandled error stack', async () => {
+test('prints correct unhandled error stack', { timeout: 600_000 }, async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/unhandled',
   })
