@@ -41,6 +41,8 @@ export class BrowserSessions {
     this.sessions.set(sessionId, {
       project,
       otelCarrier: options?.otelCarrier,
+      // assigned by the pool on the session's first run, freed when it disconnects
+      concurrencyId: 0,
       connected: () => {
         isConnected = true
         resolveIfReady()

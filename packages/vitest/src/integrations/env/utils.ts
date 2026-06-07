@@ -78,6 +78,10 @@ export function populateGlobal(
       },
       set(v) {
         overrideObject.set(key, v)
+        // propagate changes to underlying window implementation,
+        // which can affect other window API behavior internally, e.g.
+        // updating `innerWidth` affects `matchMedia("(max-width: *)")` on happy-dom.
+        win[key] = v
       },
       configurable: true,
     })
