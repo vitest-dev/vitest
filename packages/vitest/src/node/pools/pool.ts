@@ -101,11 +101,19 @@ export class Pool {
           }
 
           runner.off('message', onFinished)
+          runner.off('error', onTaskError)
           resolver.resolve()
         }
       }
 
+      const onTaskError = (error: unknown) => {
+        runner.off('message', onFinished)
+        runner.off('error', onTaskError)
+        resolver.reject(error instanceof Error ? error : new Error(String(error)))
+      }
+
       runner.on('message', onFinished)
+      runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
         runner.on('error', (error) => {
