@@ -32,11 +32,11 @@ Visual regression testing in Vitest can be done through the [`toMatchScreenshot`
 import { expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 
-test('hero section looks correct', async () => {
+test('button renders in default state', async () => {
   // render your component
 
   // capture and compare screenshot
-  await expect(page.getByTestId('hero')).toMatchScreenshot()
+  await expect(page.getByRole('button')).toMatchScreenshot()
 })
 ```
 
@@ -130,7 +130,7 @@ expect(element).toMatchScreenshot()
 No existing reference screenshot found; a new one was created. Review it before running tests again.
 
 Reference screenshot:
-  tests/__screenshots__/hero.vrt.test.ts/hero-section-chromium-darwin.png
+  tests/__screenshots__/button.vrt.test.ts/button-default-state-chromium-darwin.png
 ```
 
 This is normal. Check that the screenshot looks right, then run the test again. Vitest will now compare future runs against this baseline.
@@ -357,7 +357,9 @@ Unless you explicitly want to test the whole page, prefer capturing specific com
 await expect(page).toMatchScreenshot()
 
 // ✅ Captures only the component under test
-await expect(page.getByTestId('product-card')).toMatchScreenshot()
+await expect(
+  page.getByRole('article', { name: 'Tote bag' })
+).toMatchScreenshot()
 ```
 
 ### Handle dynamic content
@@ -365,9 +367,14 @@ await expect(page.getByTestId('product-card')).toMatchScreenshot()
 Dynamic content like timestamps, user data, or random values will cause tests to fail. You can either mock the sources of dynamic content or mask them when using the Playwright provider by using the [`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask) in `screenshotOptions`.
 
 ```ts
-await expect(page.getByTestId('profile')).toMatchScreenshot({
+const profile = page.getByRole(
+  'article',
+  { name: 'Gracie\'s profile' },
+)
+
+await expect(profile).toMatchScreenshot({
   screenshotOptions: {
-    mask: [page.getByTestId('last-seen')],
+    mask: [profile.getByRole('status')],
   },
 })
 ```
@@ -429,7 +436,9 @@ Font availability and rendering varies significantly between systems. Some possi
 - Increase comparison threshold for text-heavy areas:
 
   ```ts
-  await expect(page.getByTestId('article-summary')).toMatchScreenshot({
+  await expect(
+    page.getByRole('article', { name: 'How to grow tomatoes' })
+  ).toMatchScreenshot({
     comparatorName: 'pixelmatch',
     comparatorOptions: {
       // 10% of the pixels are allowed to change
