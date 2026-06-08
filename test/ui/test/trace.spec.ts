@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 12, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -51,6 +51,10 @@ test.describe('ui', () => {
 
   test('scroll', async ({ page }) => {
     await testScroll(page)
+  })
+
+  test('nested', async ({ page }) => {
+    await testNested(page)
   })
 
   test('attempts', async ({ page }) => {
@@ -92,7 +96,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 11, fail: 0 })
+    await assertTestCounts(page, { pass: 12, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -117,6 +121,10 @@ test.describe('html reporter', () => {
 
   test('scroll', async ({ page }) => {
     await testScroll(page)
+  })
+
+  test('nested', async ({ page }) => {
+    await testNested(page)
   })
 
   test('attempts', async ({ page }) => {
@@ -300,4 +308,21 @@ async function testAttempts(page: Page) {
   await traceOpenButtons.nth(2).click()
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+async function testNested(page: Page) {
+  await openExplorerItem(page, 'nested')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect(traceView).toBeVisible()
+  await expect.poll(() => traceStepNames.allInnerTexts()).toEqual([
+    'Outer group',
+    'Outer mark',
+    'Inner group',
+    'Inner mark',
+    'click',
+    'Sibling mark',
+    'test finished',
+  ])
 }

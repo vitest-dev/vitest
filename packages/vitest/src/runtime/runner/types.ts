@@ -330,6 +330,9 @@ export interface File extends Suite {
 
   prepareDuration?: number
   environmentLoad?: number
+
+  concurrencyId: number
+  workerId: number
 }
 
 export interface Test<ExtraContext = object> extends TaskPopulated {
