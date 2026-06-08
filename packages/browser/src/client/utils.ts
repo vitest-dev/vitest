@@ -34,6 +34,13 @@ export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
+export function createTestIframeSrc(sessionId: string, iframeId: string, locationHref: string) {
+  const src = new URL('/', locationHref)
+  src.searchParams.set('sessionId', sessionId)
+  src.searchParams.set('iframeId', iframeId)
+  return src.toString()
+}
+
 export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promise<T> {
   const test = getWorkerState().current
   if (!test || test.type !== 'test') {

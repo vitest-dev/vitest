@@ -8,7 +8,7 @@ import { Traces } from 'vitest/internal/traces'
 // This needs to be tree shaken properly to not include the whole runner by accident
 import { generateFileHash } from '../../../vitest/src/utils/tasks.js'
 import { getUiAPI } from './ui'
-import { getBrowserState, getConfig } from './utils'
+import { createTestIframeSrc, getBrowserState, getConfig } from './utils'
 
 const ID_ALL = '__vitest_all__'
 
@@ -353,7 +353,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = createTestIframeSrc(getBrowserState().sessionId, iframeId, location.href)
     const config = getConfig()
 
     iframe.setAttribute('loading', 'eager')
