@@ -110,5 +110,14 @@ function createImportMetaEnvProxy(): WorkerGlobalState['metaEnv'] {
 
       return true
     },
+    deleteProperty(_, key) {
+      if (typeof key !== 'string') {
+        return true
+      }
+
+      delete process.env[key]
+
+      return true
+    },
   }) as WorkerGlobalState['metaEnv']
 }

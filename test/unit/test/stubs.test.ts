@@ -82,6 +82,30 @@ describe('stubbing envs', () => {
     expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
   })
 
+  it('stubs to undefined to remove the env var', () => {
+    vi.stubEnv('VITE_TEST_UPDATE_ENV', undefined)
+    expect('VITE_TEST_UPDATE_ENV' in process.env).toBe(false)
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+  })
+
+  it('stubs to undefined to remove the env var after process.env is reassigned', () => {
+    const original = process.env
+    // Code under test may reassign process.env to a fresh object. The metaEnv proxy
+    // must keep targeting the live process.env for deletes too, not the object it
+    // captured at init.
+    process.env = { ...original, VITE_TEST_UPDATE_ENV: 'development' }
+    try {
+      vi.stubEnv('VITE_TEST_UPDATE_ENV', undefined)
+      expect('VITE_TEST_UPDATE_ENV' in process.env).toBe(false)
+      expect(process.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    }
+    finally {
+      process.env = original
+      vi.unstubAllEnvs()
+    }
+  })
+
   it('stubs and restores previously not defined env', () => {
     delete process.env.VITE_TEST_UPDATE_ENV
     vi.stubEnv('VITE_TEST_UPDATE_ENV', 'production')
