@@ -353,7 +353,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${encodeURIComponent(iframeId)}`
     const config = getConfig()
 
     iframe.setAttribute('loading', 'eager')
