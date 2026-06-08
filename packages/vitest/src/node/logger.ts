@@ -268,29 +268,6 @@ export class Logger {
     }
   }
 
-  printBrowserBanner(project: TestProject): void {
-    if (!project.browser) {
-      return
-    }
-
-    const resolvedUrls = project.browser.vite.resolvedUrls
-    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    if (!origin) {
-      return
-    }
-
-    const output = project.isRootProject()
-      ? ''
-      : formatProjectName(project)
-    const provider = project.browser.provider?.name
-    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
-    this.log(
-      c.dim(
-        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/__vitest_test__/', origin))}\n`,
-      ),
-    )
-  }
-
   printUnhandledErrors(errors: ReadonlyArray<unknown>): void {
     const errorMessage = c.red(
       c.bold(

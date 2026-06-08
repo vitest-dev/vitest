@@ -1,5 +1,5 @@
 import type { Context as OTELContext } from '@opentelemetry/api'
-import type { GlobalChannelIncomingEvent, IframeChannelIncomingEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
+import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelOutgoingEvent, IframeViewportDoneEvent, IframeViewportFailEvent } from '@vitest/browser/client'
 import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, globalChannel } from '@vitest/browser/client'
@@ -16,6 +16,8 @@ export class IframeOrchestrator {
   private cancelled = false
   private recreateNonIsolatedIframe = false
   private iframes = new Map<string, HTMLIFrameElement>()
+  private readyIframes = new Set<string>()
+  private readyWaiters = new Map<string, () => void>()
 
   public eventTarget: EventTarget = new EventTarget()
 
@@ -91,6 +93,8 @@ export class IframeOrchestrator {
 
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
+    this.readyIframes.clear()
+    this.readyWaiters.clear()
 
     for (let i = 0; i < options.files.length; i++) {
       if (this.cancelled) {
@@ -149,8 +153,7 @@ export class IframeOrchestrator {
       // because we called "cleanup" in the previous run
       // the iframe is not removed immediately to let the user see the last test
       this.recreateNonIsolatedIframe = false
-      this.iframes.get(ID_ALL)!.remove()
-      this.iframes.delete(ID_ALL)
+      this.removeIframe(ID_ALL)
       debug('recreate non-isolated iframe')
     }
 
@@ -191,8 +194,7 @@ export class IframeOrchestrator {
     const file = spec.filepath
 
     if (this.iframes.has(file)) {
-      this.iframes.get(file)!.remove()
-      this.iframes.delete(file)
+      this.removeIframe(file)
     }
 
     await this.prepareIframe(
@@ -257,12 +259,14 @@ export class IframeOrchestrator {
         }
         else {
           this.iframes.set(iframeId, iframe)
-          this.sendEventToIframe({
-            event: 'prepare',
-            iframeId,
-            startTime,
-            otelCarrier: this.traces.getContextCarrier(otelContext),
-          }).then(resolve, error => reject(this.dispatchIframeError(error)))
+          this.waitForReady(iframeId)
+            .then(() => this.sendEventToIframe({
+              event: 'prepare',
+              iframeId,
+              startTime,
+              otelCarrier: this.traces.getContextCarrier(otelContext),
+            }))
+            .then(resolve, error => reject(this.dispatchIframeError(error)))
         }
       }
       iframe.onerror = (e) => {
@@ -278,6 +282,34 @@ export class IframeOrchestrator {
       }
     })
     return iframe
+  }
+
+  private markReady(iframeId: string) {
+    this.readyIframes.add(iframeId)
+
+    const waiter = this.readyWaiters.get(iframeId)
+    if (waiter) {
+      this.readyWaiters.delete(iframeId)
+      waiter()
+    }
+  }
+
+  private waitForReady(iframeId: string): Promise<void> {
+    if (this.readyIframes.has(iframeId)) {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve) => {
+      this.readyWaiters.set(iframeId, resolve)
+    })
+  }
+
+  private removeIframe(iframeId: string) {
+    const iframe = this.iframes.get(iframeId)
+    this.iframes.delete(iframeId)
+    this.readyIframes.delete(iframeId)
+    this.readyWaiters.delete(iframeId)
+    iframe?.remove()
   }
 
   private loggedIframe = new WeakSet<HTMLIFrameElement>()
@@ -321,7 +353,7 @@ export class IframeOrchestrator {
 
   private createTestIframe(iframeId: string) {
     const iframe = document.createElement('iframe')
-    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${iframeId}`
+    const src = `/?sessionId=${getBrowserState().sessionId}&iframeId=${encodeURIComponent(iframeId)}`
     const config = getConfig()
 
     iframe.setAttribute('loading', 'eager')
@@ -369,9 +401,13 @@ export class IframeOrchestrator {
     }
   }
 
-  private async onIframeEvent(e: MessageEvent<IframeChannelIncomingEvent>) {
+  private async onIframeEvent(e: MessageEvent<IframeChannelEvent>) {
     debug('iframe event', JSON.stringify(e.data))
     switch (e.data.event) {
+      case 'ready': {
+        this.markReady(e.data.iframeId)
+        break
+      }
       case 'viewport': {
         const { width, height, iframeId: id } = e.data
         const iframe = this.iframes.get(id)

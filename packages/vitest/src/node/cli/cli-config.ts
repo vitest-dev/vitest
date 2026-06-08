@@ -630,6 +630,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
     },
   },
+  repeats: {
+    description:
+      'Repeat every test a specific number of times regardless of the result (default: `0`)',
+    argument: '<number>',
+  },
   diff: {
     description:
       'DiffOptions object or a path to a module which exports DiffOptions object',

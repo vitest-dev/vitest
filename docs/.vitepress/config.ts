@@ -508,6 +508,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/config/retry',
               },
               {
+                text: 'repeats',
+                link: '/config/repeats',
+              },
+              {
                 text: 'onConsoleLog',
                 link: '/config/onconsolelog',
               },
