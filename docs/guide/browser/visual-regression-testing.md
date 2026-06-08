@@ -253,11 +253,11 @@ await expect(element).toMatchScreenshot('button', {
 
 ## Third-party comparators
 
-Vitest ships with `pixelmatch` as its built-in comparator. It is fast, compares images pixel-by-pixel, has no native dependencies, and handles the majority of cases well.
+Vitest ships with `pixelmatch` as its built-in comparator. It is fast, compares images pixel-by-pixel, has no native dependencies, and handles the majority of cases well. Perceptual comparators aren't included by default because they bring heavier dependencies and there's no clear single "best one" to pick as different algorithms make different trade-offs, but the comparator API exists precisely to let you plug in whatever fits your needs. This decision may change as the ecosystem matures, though.
 
-For use cases where pixel-level diffing produces excessive noise, a perceptual or structural similarity comparator may be a better fit. These compare images more like a human would, tolerating minor rendering differences such as anti-aliasing, font rasterization, compression artifacts, or sub-pixel layout shifts while still detecting meaningful visual changes.
+For use cases where pixel-level diffing produces excessive noise, a perceptual or structural similarity comparator may be a better fit. These compare images more like a human would, tolerating minor rendering differences while still detecting meaningful visual changes.
 
-There are a few _drop-in_ options:
+There are many algorithms, so these are a useful starting point:
 
 - [`@blazediff/ssim`](https://blazediff.dev/docs/ssim), [SSIM (Structural Similarity Index)](https://en.wikipedia.org/wiki/Structural_similarity_index_measure) implementations for perceptual image quality assessment. It offers standard SSIM, MS-SSIM (Multi-Scale SSIM), and Hitchhiker’s SSIM for various use cases
 - [`@blazediff/gmsd`](https://blazediff.dev/docs/gmsd), a single-threaded GMSD (Gradient Magnitude Similarity Deviation) metric for perceptual image quality assessment, good for CI environments
@@ -319,6 +319,9 @@ export default defineConfig({
 ```
 
 Now you can use it by referencing it by name in your config or on a per-test basis:
+
+:::code-group
+
 ```ts{8} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
@@ -334,13 +337,14 @@ export default defineConfig({
   },
 })
 ```
-```ts{2}
-await expect(element).toMatchScreenshot('button', {
+
+```ts{2} [button.vrt.test.tsx]
+await expect(button).toMatchScreenshot('button', {
   comparatorName: 'standard-ssim',
 })
 ```
 
-For most projects the `pixelmatch` comparator is sufficient, reach for a third-party comparator when you find yourself having to suppress noise that isn't actually a visual problem.
+:::
 
 ## Best practices
 
