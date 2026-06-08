@@ -310,11 +310,7 @@ async function resolveBrowserProjects(
         const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
         throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
       }
-      const name = config.name
-
-      if (name == null) {
-        throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
-      }
+      const name = config.name ?? (originalName ? `${originalName} (${browser})` : browser)
       if (config.provider?.name != null && project.config.browser.provider?.name != null && config.provider?.name !== project.config.browser.provider?.name) {
         throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${config.provider?.name}" provider, but its parent has a "${project.config.browser.provider?.name}" provider.`)
       }

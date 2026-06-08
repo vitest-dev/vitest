@@ -59,13 +59,11 @@ export async function createVitest(
 
   options.config = configPath
 
-  const { browser: _removeBrowser, ...restOptions } = options
-
   const config: ViteInlineConfig = {
     configFile: configPath,
     configLoader: options.configLoader,
     mode: options.mode || 'test',
-    plugins: await VitestPlugin(restOptions, ctx),
+    plugins: await VitestPlugin(options, ctx),
   }
 
   try {

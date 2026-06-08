@@ -216,6 +216,7 @@ export async function VitestPlugin(
       },
       async configResolved(viteConfig) {
         const viteConfigTest = (viteConfig.test as UserConfig) || {}
+        const configBrowser = deepClone(viteConfigTest.browser)
         if (viteConfigTest.watch === false) {
           ;(viteConfigTest as any).run = true
         }
@@ -227,6 +228,16 @@ export async function VitestPlugin(
         // viteConfig.test is final now, merge it for real
         options = deepMerge({}, configDefaults, viteConfigTest, options)
         options.api = resolveApiServerConfig(options, defaultPort)
+        if (configBrowser && options.browser) {
+          if (Array.isArray(options.browser.instances)) {
+            if (options.browser.instances.length === 0) {
+              options.browser.instances = configBrowser.instances
+            }
+            else if (JSON.stringify(options.browser.instances) === JSON.stringify(configBrowser.instances || [])) {
+              options.browser.instances = configBrowser.instances
+            }
+          }
+        }
 
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env

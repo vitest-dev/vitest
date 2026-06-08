@@ -11,7 +11,7 @@ import type { CoverageOptions, CoverageReporterWithOptions } from '../types/cove
 import crypto from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { slash, toArray } from '@vitest/utils/helpers'
+import { deepClone, slash, toArray } from '@vitest/utils/helpers'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -344,10 +344,23 @@ export function resolveConfig(
     // if enabled is set to `false`, but CLI overrides it, then always override it
     && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
   ) {
+    const cliBrowser = vitest._cliOptions.browser
+    const configBrowser = deepClone(resolved.browser)
     resolved.browser = mergeConfig(
       resolved.browser,
-      vitest._cliOptions.browser,
+      cliBrowser,
     ) as ResolvedBrowserOptions
+    if (Array.isArray(cliBrowser.instances)) {
+      if (cliBrowser.instances.length === 0) {
+        resolved.browser.instances = configBrowser.instances
+      }
+      else if (JSON.stringify(cliBrowser.instances) === JSON.stringify(configBrowser.instances || [])) {
+        resolved.browser.instances = configBrowser.instances
+      }
+      else {
+        resolved.browser.instances = cliBrowser.instances
+      }
+    }
   }
 
   resolved.browser ??= {} as any
