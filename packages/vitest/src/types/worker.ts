@@ -43,6 +43,7 @@ export interface ContextRPC {
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
   workerId: number
+  concurrencyId: number
 }
 
 export interface WorkerSetupContext {

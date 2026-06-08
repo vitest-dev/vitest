@@ -27,6 +27,7 @@ it('correctly inherit from the cli', async () => {
       globals: true,
       expandSnapshotDiff: true,
       retry: 6,
+      repeats: 3,
       testNamePattern: 'math',
       passWithNoTests: true,
       bail: 100,
@@ -50,6 +51,7 @@ it('correctly inherit from the cli', async () => {
     globals: true,
     expandSnapshotDiff: true,
     retry: 6,
+    repeats: 3,
     passWithNoTests: true,
     bail: 100,
     experimental: {

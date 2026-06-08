@@ -375,6 +375,7 @@ export interface BrowserCommandContext {
 export interface BrowserServerStateSession {
   project: TestProject
   otelCarrier?: OTELCarrier
+  concurrencyId: number
   connected: () => void
   ready: () => void
   fail: (v: Error) => void

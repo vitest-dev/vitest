@@ -52,6 +52,7 @@ export async function resolveProjects(
     'expandSnapshotDiff',
     'disableConsoleIntercept',
     'retry',
+    'repeats',
     'testNamePattern',
     'passWithNoTests',
     'bail',

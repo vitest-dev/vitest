@@ -31,6 +31,7 @@ export interface SerializedConfig {
   testTimeout: number
   hookTimeout: number
   retry: SerializableRetry
+  repeats?: number
   includeTaskLocation: boolean | undefined
   tags: TestTagDefinition[]
   tagsFilter: string[] | undefined

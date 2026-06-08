@@ -84,7 +84,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       // browser pool has a more complex logic, so we keep it separately for now
       browserSpecs: TestSpecification[]
     }[] = []
-    let workerId = 0
+    let workerId = 1
 
     const sorted = await sequencer.sort(specs)
     const { environments, tags } = await getSpecificationsOptions(specs)
