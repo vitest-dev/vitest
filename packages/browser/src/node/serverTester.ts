@@ -22,8 +22,8 @@ export async function resolveTester(
     )
   }
 
-  const sessionId = url.searchParams.get('sessionId') || 'none'
-  const session = globalServer.vitest._browserSessions.getSession(sessionId)
+  const sessionId = url.searchParams.get('sessionId')
+  const session = sessionId && globalServer.vitest._browserSessions.getSession(sessionId)
 
   if (!session) {
     res.statusCode = 400
