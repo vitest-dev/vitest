@@ -12,6 +12,9 @@ test.for(['forks', 'threads', 'vmThreads', 'vmForks'])(
     expect(stderr).toBe('')
     expect(errorTree()).toMatchInlineSnapshot(`
     {
+      "basic.test.ts": {
+        "basic": "passed",
+      },
       "ssr.test.ts": {
         "import.meta.url": "passed",
       },

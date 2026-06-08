@@ -5,6 +5,7 @@ export default defineConfig({
     include: ["@test/test-dep-url"],
   },
   ssr: {
+    noExternal: ["test-dep-simple"],
     optimizeDeps: {
       include: ["@test/test-dep-url"],
     },
