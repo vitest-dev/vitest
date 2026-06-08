@@ -91,21 +91,30 @@ export class Pool {
         resolver.reject(new Error('Cancelled'))
       }
 
-      const onFinished = (message: WorkerResponse) => {
+      const state = this.options.state
+      function onFinished(message: WorkerResponse) {
         if (message?.__vitest_worker_response__ && message.type === 'testfileFinished') {
           if (task.memoryLimit && message.usedMemory) {
             isMemoryLimitReached = message.usedMemory >= task.memoryLimit
           }
           if (message.error) {
-            this.options.state.catchError(message.error, 'Test Run Error')
+            state.catchError(message.error, 'Test Run Error')
           }
 
           runner.off('message', onFinished)
+          runner.off('error', onTaskError)
           resolver.resolve()
         }
       }
 
+      function onTaskError(error: unknown) {
+        runner.off('message', onFinished)
+        runner.off('error', onTaskError)
+        resolver.reject(error instanceof Error ? error : new Error(String(error)))
+      }
+
       runner.on('message', onFinished)
+      runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
         runner.on('error', (error) => {
