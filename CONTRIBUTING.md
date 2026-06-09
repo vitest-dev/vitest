@@ -161,17 +161,15 @@ The release branches are also linked with the documentation site releases:
 - `release` points to the latest stable release line used for <https://vitest.dev/>. Release managers update it manually for non-beta releases from `main`; it is not moved for older-line backports.
 - `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
 
-### Release Pipeline
+### Release process
 
-Releases are prepared through a pull request and published by GitHub Actions. Use this process for maintained release branches: `main`, `vN`, and `vN.M`.
+Releases — publishing the npm packages, creating the git release tag, and generating the associated GitHub release — are driven by a pull request and carried out by GitHub Actions, not from a maintainer's machine. The release PR holds the version bump, and merging it kicks off the actual publish.
 
-- Open the `Prepare Publish` workflow in GitHub Actions.
-- Run it with `target_branch` set to the release branch, `release` set to the Bumpp release type, and `version` set only when an exact version is required.
-- Open the compare URL printed by the workflow and create a pull request back to `target_branch`.
-- Review and merge the release PR. The merged HEAD commit must be `chore: release vX.Y.Z`.
-- Approve the `Release` environment when the publish workflow requests approval.
-- Confirm that npm publish, tag creation, and GitHub release note generation completed successfully.
-- Backport release workflow changes to every maintained branch that is still expected to publish releases.
+1. **Prepare the release PR.** Run the `Prepare Publish` workflow, choosing the `target_branch` to release from (`main`, `v4`, …) and how to bump the version. By default the version is derived from the commit history; you can also force a bump type or pass an exact `version` for pre-releases. The workflow opens a release PR containing the version bump and prints a link to it.
+
+2. **Review and merge.** Check the version bump, then merge the PR. Use **Rebase and merge** so the release commit lands directly on the branch — that commit is what triggers publishing.
+
+3. **Publish.** Merging starts the `Publish Package` workflow, which pauses for a maintainer to approve the `Release` environment. Once approved, it builds and publishes the packages to npm, pushes the release tag, and generates the GitHub release notes. Approve when prompted, then confirm npm, the tag, and the GitHub release all look right.
 
 ### Issue Triaging Workflow
 
