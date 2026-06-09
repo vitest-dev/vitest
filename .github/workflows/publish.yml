@@ -98,18 +98,12 @@ jobs:
           git config user.email "actions@github.com"
 
           if git rev-parse --verify --quiet "refs/tags/$TAG"; then
-            tag_sha="$(git rev-list -n 1 "$TAG")"
-
-            if [ "$tag_sha" != "$GITHUB_SHA" ]; then
-              echo "Tag $TAG already exists at $tag_sha, expected $GITHUB_SHA"
-              exit 1
-            fi
-
-            echo "Tag $TAG already exists at the current release commit"
-          else
-            git tag "$TAG" "$GITHUB_SHA"
-            git push "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
+            echo "Tag $TAG already exists"
+            exit 1
           fi
+
+          git tag "$TAG" "$GITHUB_SHA"
+          git push "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "$TAG"
 
       - name: Generate Changelog
         env:
