@@ -9,14 +9,12 @@ const packages = await glob(['package.json', './packages/*/package.json'], {
 
 console.log('Bumping versions in packages:', packages.join(', '), '\n')
 
+const release = process.env.RELEASE_VERSION || process.env.RELEASE_TYPE
+
 await versionBump({
   files: packages,
-  release: process.env.RELEASE_VERSION || process.env.RELEASE_TYPE || 'next',
-  commit: 'chore: release v%s',
+  release,
   tag: false,
   push: false,
-  confirm: false,
-  interface: false,
+  confirm: !release,
 })
-
-console.log('New release commit is ready. Push a prepare branch and open a release PR instead of creating the final tag locally.')
