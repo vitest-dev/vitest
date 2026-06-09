@@ -24,7 +24,6 @@
     "publish-ci": "tsx scripts/publish-ci.ts",
     "release": "tsx scripts/release.ts",
     "release:detect": "tsx scripts/detect-release.ts",
-    "release:prepare": "tsx scripts/prepare-release.ts",
     "test": "pnpm --filter test-unit test:threads",
     "test:ci": "CI=true pnpm -r --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",
     "test:ci:no-bail": "CI=true pnpm -r --no-bail --reporter-hide-prefix --stream --sequential --filter '@vitest/test-*' --filter !test-browser run test",

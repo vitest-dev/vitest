@@ -76,7 +76,7 @@ jobs:
             args+=(--release "$RELEASE")
           fi
 
-          pnpm exec tsx scripts/prepare-release.ts "${args[@]}"
+          pnpm run release -- "${args[@]}"
 
       - name: Check for existing prepare branch
         id: existing
