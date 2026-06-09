@@ -153,23 +153,6 @@ No backport is made to `v3` unless the support policy changes or maintainers dec
 
 Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Branch names never include patch versions.
 
-#### Release Pull Requests
-
-Release preparation is done through a pull request and associated multiple workflows.
-
-To prepare a release:
-
-- Trigger `Prepare Publish` workflow dispatch in GitHub Actions with
-   - `target_branch`: the maintained release branch, for example `main`, `v4`, or `v4.1`
-   - `release`: Bumpp release type. By default `next`, which derives next major/minor/patch based on conventional commits.
-   - `version`: Override and specify exact version instead of deriving version through `release`.
-- TODO: auto PR creation via Github App or manual creation
-  - Wait for the workflow to create or reuse `prepare-vX.Y.Z`.
-  - Open the compare URL printed by the workflow and create a pull request back to `target_branch`.
-- Review the version bump PR like a normal PR and merge into the target release branch.
-- Approve the `Release` environment when automatically triggered `publish` workflow requests approval.
-- Confirm that npm publish, tag creation, and GitHub release note generation completed successfully.
-
 #### Documentation Branches
 
 The release branches are also linked with the documentation site releases:
@@ -177,6 +160,18 @@ The release branches are also linked with the documentation site releases:
 - `main` is the source for unreleased documentation at <https://main.vitest.dev/>.
 - `release` points to the latest stable release line used for <https://vitest.dev/>. Release managers update it manually for non-beta releases from `main`; it is not moved for older-line backports.
 - `vN` branches are used for old major documentation sites. For example, <https://v3.vitest.dev/> uses `v3`.
+
+### Release Pipeline
+
+Releases are prepared through a pull request and published by GitHub Actions. Use this process for maintained release branches: `main`, `vN`, and `vN.M`.
+
+- Open the `Prepare Publish` workflow in GitHub Actions.
+- Run it with `target_branch` set to the release branch, `release` set to the Bumpp release type, and `version` set only when an exact version is required.
+- Open the compare URL printed by the workflow and create a pull request back to `target_branch`.
+- Review and merge the release PR. The merged HEAD commit must be `chore: release vX.Y.Z`.
+- Approve the `Release` environment when the publish workflow requests approval.
+- Confirm that npm publish, tag creation, and GitHub release note generation completed successfully.
+- Backport release workflow changes to every maintained branch that is still expected to publish releases.
 
 ### Issue Triaging Workflow
 
