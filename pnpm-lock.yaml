@@ -1332,9 +1332,6 @@ importers:
       test-dep-simple2:
         specifier: file:./deps/dep-simple2
         version: file:test/cli/deps/dep-simple2
-      tinyexec:
-        specifier: ^1.0.2
-        version: 1.0.2
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4

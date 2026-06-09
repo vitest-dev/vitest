@@ -32,7 +32,6 @@
     "test-dep-invalid": "link:./deps/dep-invalid",
     "test-dep-simple": "file:./deps/dep-simple",
     "test-dep-simple2": "file:./deps/dep-simple2",
-    "tinyexec": "^1.0.2",
     "tinyspy": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "^1.5.9",
