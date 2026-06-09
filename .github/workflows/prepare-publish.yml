@@ -62,6 +62,8 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
+      # TODO: for now, this step only outputs a compare URL for maintainers to manually create a PR from.
+      # In the future, PR creation can be automated by using a Github App token like .github/workflows/ecosystem-ci-trigger.yml.
       - name: Prepare release branch
         id: prepare
         env:
