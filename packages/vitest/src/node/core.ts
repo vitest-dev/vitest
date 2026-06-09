@@ -6,7 +6,6 @@ import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/
 import type { CancelReason, File } from '../runtime/runner/types'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
-import type { CliOptions } from './cli/cli-api'
 import type { PluginHarness } from './config/pluginHarness'
 import type { VitestFetchFunction } from './environments/fetchModule'
 import type { Logger } from './logger'
@@ -150,7 +149,6 @@ export class Vitest {
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
   /** @internal */ _browserSessions = new BrowserSessions()
-  /** @internal */ _cliOptions: CliOptions = {}
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun = undefined!
@@ -331,7 +329,7 @@ export class Vitest {
 
     // `--benchmark` (CLI `benchmarkOnly`) narrows `vitest.projects` to only
     // the benchmark variants produced by the benchmark expansion step.
-    if (this._cliOptions.benchmarkOnly) {
+    if (resolved.cliOptions.benchmarkOnly) {
       this.projects = this.projects.filter(p => p.config.benchmark.enabled)
     }
 
@@ -348,7 +346,7 @@ export class Vitest {
       }))
     }))
 
-    if (this._cliOptions.browser?.enabled) {
+    if (resolved.cliOptions.browser?.enabled) {
       const browserProjects = this.projects.filter(p => p.config.browser.enabled)
       if (!browserProjects.length) {
         throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
@@ -1630,7 +1628,7 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
-    const projects = this.config?.project || this._cliOptions?.project
+    const projects = this.config?.project || this.config.cliOptions?.project
     return matchesProjectFilter(toArray(projects), name)
   }
 

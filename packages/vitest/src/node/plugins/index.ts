@@ -3,22 +3,18 @@ import type { CliOptions } from '../cli/cli-api'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
-import { relative, resolve } from 'pathe'
-import * as vite from 'vite'
+import { resolve } from 'pathe'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
-import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
+import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { VitestOptimizer } from './optimizer'
-import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
-  getDefaultResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
@@ -34,7 +30,7 @@ export function VitestCorePlugin(
       },
     }),
     ...MocksPlugins(),
-    CoverageTransform(() => harness.getVitest()),
+    CoverageTransform(harness),
     VitestCoreResolver(),
     NormalizeURLPlugin(),
     MetaEnvReplacerPlugin(),
@@ -86,10 +82,8 @@ export function VitestCorePlugin(
 }
 
 // the plugins required when resolving the config
-export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
+export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions = {}): VitePlugin[] {
   const userConfig = deepMerge({}, options) as CliOptions
-
-  let resolvedRoot: string
 
   return [
     <VitePlugin>{
@@ -130,19 +124,9 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
-        const resolveOptions = getDefaultResolveOptions()
-
-        let config: ViteConfig = {
+        const config: ViteConfig = {
           base: '/',
           root: viteConfig.test?.root || options.root,
-          define: {
-            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-          },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
           server: {
             ...testConfig.api,
             open,
@@ -158,49 +142,10 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
           },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
-            },
-            __vitest__: {
-              dev: {},
-            },
-          },
           test: {
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },
-        }
-
-        if ('rolldownVersion' in vite) {
-          config = {
-            ...config,
-            // eslint-disable-next-line ts/ban-ts-comment
-            // @ts-ignore rolldown-vite only
-            oxc: viteConfig.oxc === false
-              ? false
-              : {
-                  // eslint-disable-next-line ts/ban-ts-comment
-                  // @ts-ignore rolldown-vite only
-                  target: viteConfig.oxc?.target || 'node18',
-                },
-          }
-        }
-        else {
-          config = {
-            ...config,
-            esbuild: viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
-          }
         }
 
         if (options.benchmarkOnly) {
@@ -214,20 +159,11 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
           config.test!.cache = options.cache
         }
 
+        // TODO: how does this work now?
         // if (vitest.configOverride.project) {
         //   // project filter was set by the user, so we need to filter the project
         //   options.project = vitest.configOverride.project
         // }
-
-        // TODO!
-        // config.customLogger = createViteLogger(
-        //   vitest.logger,
-        //   viteConfig.logLevel || 'warn',
-        //   {
-        //     allowClearScreen: false,
-        //   },
-        // )
-        // config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -243,33 +179,9 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
           }
         }
 
-        const classNameStrategy
-          = (typeof testConfig.css !== 'boolean'
-            && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
-
-        if (classNameStrategy !== 'scoped') {
-          config.css ??= {}
-          config.css.modules ??= {}
-          if (config.css.modules) {
-            config.css.modules.generateScopedName = (
-              name: string,
-              filename: string,
-            ) => {
-              return generateScopedClassName(
-                classNameStrategy,
-                name,
-                relative(resolvedRoot, filename),
-              )!
-            }
-          }
-        }
-
         return config
       },
       async configResolved(viteConfig) {
-        resolvedRoot = viteConfig.root
-
         const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
           ;(viteConfigTest as any).run = true
@@ -280,9 +192,7 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
         }
 
         // Merge defaults + Vite's resolved test config + the CLI options into
-        // a single object and assign it back onto `viteConfig.test`. Downstream
-        // Vitest reads this resolved test config directly (no `_vitest` stash
-        // needed now that the server can be created from a resolved config).
+        // a single object and assign it back onto `viteConfig.test`.
         const merged: UserConfig = deepMerge({}, configDefaults, viteConfigTest, options)
         merged.api = resolveApiServerConfig(merged, defaultPort)
 
@@ -312,11 +222,9 @@ export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
           viteConfig.server.watch = null
         }
 
-        // TODO: call internal resolveConfig here and assign the value
         ;(viteConfig as any).test = merged
       },
     },
-    VitestOptimizer(),
-    ModuleRunnerTransform(),
+    ...VitestConfig(harness),
   ]
 }

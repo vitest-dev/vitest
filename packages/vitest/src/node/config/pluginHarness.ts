@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import { version } from '../../../package.json'
+import { version } from '../../../package.json' with { type: 'json' }
 import { Logger } from '../logger'
 import { VitestPackageInstaller } from '../packageInstaller'
 

@@ -1237,18 +1237,6 @@ export interface ResolvedConfig
 
   cliOptions: CliOptions
   viteOverrides: ViteUserConfig
-
-  /**
-   * Resolved project configs.
-   *
-   * Populated on the root config after `resolveConfig` runs. Each entry pairs the
-   * resolved Vite config (which may be shared between sibling entries — e.g. browser
-   * instance variants of the same parent) with the per-entry resolved Vitest config.
-   *
-   * Use the per-entry `projectConfig` for the current project's test config rather
-   * than `viteConfig.test`, because shared `viteConfig` instances retain only the
-   * primary project's `.test`.
-   */
   projects?: ResolvedProjectEntry[]
 }
 

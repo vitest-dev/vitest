@@ -4,6 +4,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { Logger } from '../logger'
+import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -353,19 +354,19 @@ export function resolveTestConfig(
     }
   }
 
-  // TODO: what is this logic?
+  // TODO: TEST THIS
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  // if (
-  //   vitest._cliOptions.browser
-  //   && resolved.browser
-  //   // if enabled is set to `false`, but CLI overrides it, then always override it
-  //   && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
-  // ) {
-  //   resolved.browser = mergeConfig(
-  //     resolved.browser,
-  //     vitest._cliOptions.browser,
-  //   ) as ResolvedBrowserOptions
-  // }
+  if (
+    options.browser
+    && resolved.browser
+    // if enabled is set to `false`, but CLI overrides it, then always override it
+    && (resolved.browser.enabled !== false || options.browser.enabled)
+  ) {
+    resolved.browser = mergeConfig(
+      resolved.browser,
+      options.browser,
+    ) as ResolvedBrowserOptions
+  }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
@@ -406,8 +407,8 @@ export function resolveTestConfig(
     logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
   }
 
-  const containsChromium = hasBrowserChromium(resolved.project, resolved)
-  const hasOnlyChromium = hasOnlyBrowserChromium(resolved.project, resolved)
+  const containsChromium = hasChromiumBrowser(resolved.project, resolved)
+  const hasOnlyChromium = hasOnlyChromiumBrowser(resolved.project, resolved)
 
   // Browser-mode "Chromium" only features:
   if (browser.enabled && (!containsChromium || !hasOnlyChromium)) {
@@ -1042,7 +1043,7 @@ export async function resolveConfig(
       configLoader: options.configLoader,
       mode: options.mode || 'test',
       plugins: [
-        VitestConfigPlugin(restOptions),
+        VitestConfigPlugin(pluginsHarness, restOptions),
         ...VitestCorePlugin(pluginsHarness),
       ],
     } satisfies InlineConfig,
@@ -1058,7 +1059,10 @@ export async function resolveConfig(
   )
   rootViteConfig.test = rootConfig
 
-  const userDefinitions = rootConfig.projects as unknown as
+  rootConfig.cliOptions = cliOptions
+  rootConfig.viteOverrides = viteOverridesCopy
+
+  const userDefinitions = rootConfig.projects as
     | TestProjectConfiguration[]
     | undefined
 
@@ -1068,9 +1072,6 @@ export async function resolveConfig(
     rootConfig,
     userDefinitions,
   )
-
-  rootConfig.cliOptions = cliOptions
-  rootConfig.viteOverrides = viteOverridesCopy
 
   return rootViteConfig
 }
@@ -1104,7 +1105,7 @@ function isChromiumName(provider: string, name: string) {
   return name === 'chrome' || name === 'edge'
 }
 
-function hasBrowserChromium(projects: string[], config: ResolvedConfig) {
+function hasChromiumBrowser(projects: string[], config: ResolvedConfig) {
   const browser = config.browser
   if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
     return false
@@ -1125,7 +1126,7 @@ function hasBrowserChromium(projects: string[], config: ResolvedConfig) {
   })
 }
 
-function hasOnlyBrowserChromium(projects: string[], config: ResolvedConfig) {
+function hasOnlyChromiumBrowser(projects: string[], config: ResolvedConfig) {
   const browser = config.browser
   if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
     return false
@@ -1147,9 +1148,8 @@ function hasOnlyBrowserChromium(projects: string[], config: ResolvedConfig) {
 }
 
 export function matchesProjectFilter(projects: string[], name: string): boolean {
-  // const projects = this._config?.project || this._cliOptions?.project
   // no filters applied, any project can be included
-  if (!projects || !projects.length) {
+  if (!projects.length) {
     return true
   }
   return projects.some((project) => {
@@ -1159,7 +1159,7 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
 }
 
 export function isExcludedByProjectFilter(projects: string[], name: string): boolean {
-  if (!projects || !projects.length) {
+  if (!projects.length) {
     return true
   }
 

@@ -1,21 +1,17 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type * as vite from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
-import { basename, dirname, relative, resolve } from 'pathe'
-import * as vite from 'vite'
-import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
+import { basename, dirname, resolve } from 'pathe'
+import { VitestConfig } from './config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import { VitestOptimizer } from './optimizer'
-import { ModuleRunnerTransform } from './runnerTransform'
 import {
   deleteDefineConfig,
-  getDefaultResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
@@ -25,19 +21,6 @@ interface WorkspaceOptions extends TestProjectInlineConfiguration {
   workspacePath: string | number
 }
 
-/**
- * Plugins applied when resolving a single project's Vite config.
- *
- * Takes a `Vitest` instance (not a `TestProject` — projects are no longer
- * created during config resolution). The CSS-modules and CSS-enabler hooks
- * fire at file transform time, well after the project's resolved config
- * exists on the Vite resolved config (`viteConfig.test`), so they look up
- * the project's config there lazily.
- *
- * Project filtering (`--project`) is intentionally NOT applied here — it runs
- * at the end of `resolveConfig` so error messages can list every name that was
- * considered (browser-instance and benchmark-derived names included).
- */
 export function WorkspaceVitestPlugin(
   harness: PluginHarness,
   globalViteConfig: vite.ResolvedConfig,
@@ -76,11 +59,10 @@ export function WorkspaceVitestPlugin(
           }
         }
 
-        // TODO: globalConfig.inlineConfig (?)
-        // if (vitest._cliOptions.benchmarkOnly) {
-        //   viteConfig.test.benchmark ??= {}
-        //   viteConfig.test.benchmark.enabled = true
-        // }
+        if (globalConfig.cliOptions.benchmarkOnly) {
+          viteConfig.test.benchmark ??= {}
+          viteConfig.test.benchmark.enabled = true
+        }
 
         viteConfig.test?.browser?.instances?.forEach((instance) => {
           // every instance is a potential project — give it a default name
@@ -91,32 +73,8 @@ export function WorkspaceVitestPlugin(
           name: { label: name, color },
         }
 
-        vitestConfig.experimental ??= {}
-
-        // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
-          vitestConfig.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
-        }
-        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
-          vitestConfig.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
-        }
-        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
-          vitestConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
-        }
-        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
-          vitestConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
-        }
-        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
-          vitestConfig.experimental.importDurations = globalConfig.experimental.importDurations
-        }
-
         return {
           base: '/',
-          environments: {
-            __vitest__: {
-              dev: {},
-            },
-          },
           test: vitestConfig,
         }
       },
@@ -134,17 +92,8 @@ export function WorkspaceVitestPlugin(
         const testConfig = viteConfig.test || {}
         const root = testConfig.root || viteConfig.root || options.root
 
-        const resolveOptions = getDefaultResolveOptions()
-        let config: ViteConfig = {
+        const config: ViteConfig = {
           root,
-          define: {
-            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
-            'process.env.NODE_ENV': 'process.env.NODE_ENV',
-          },
-          resolve: {
-            ...resolveOptions,
-            alias: testConfig.alias,
-          },
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
@@ -161,82 +110,31 @@ export function WorkspaceVitestPlugin(
               ),
             },
           },
-          // eslint-disable-next-line ts/ban-ts-comment
-          // @ts-ignore Vite 6 compat
-          environments: {
-            ssr: {
-              resolve: resolveOptions,
-            },
-          },
           test: {},
-        }
-
-        if ('rolldownVersion' in vite) {
-          config = {
-            ...config,
-            // eslint-disable-next-line ts/ban-ts-comment
-            // @ts-ignore rolldown-vite only
-            oxc: viteConfig.oxc === false
-              ? false
-              : {
-                  // eslint-disable-next-line ts/ban-ts-comment
-                  // @ts-ignore rolldown-vite only
-                  target: viteConfig.oxc?.target || 'node18',
-                },
-          }
-        }
-        else {
-          config = {
-            ...config,
-            esbuild: viteConfig.esbuild === false
-              ? false
-              : {
-                  // Lowest target Vitest supports is Node18
-                  target: viteConfig.esbuild?.target || 'node18',
-                  sourcemap: 'external',
-                  // Enables using ignore hint for coverage providers with @preserve keyword
-                  legalComments: 'inline',
-                },
-          }
         }
 
         ;(config.test as ResolvedConfig).defines = defines
         ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
-        const classNameStrategy
-          = (typeof testConfig.css !== 'boolean'
-            && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+        config.test ??= {}
+        config.test.experimental ??= {}
 
-        if (classNameStrategy !== 'scoped') {
-          config.css ??= {}
-          config.css.modules ??= {}
-          if (config.css.modules) {
-            config.css.modules.generateScopedName = (
-              name: string,
-              filename: string,
-            ) => {
-              // The project's own resolved root (the project's `viteConfig.root`
-              // mirrors the resolved Vitest `config.root`). At transform time
-              // the resolved viteConfig is available; before then we fall back
-              // to the inline `options.root`.
-              const projectRoot = root || globalConfig.root
-              return generateScopedClassName(
-                classNameStrategy,
-                name,
-                relative(projectRoot, filename),
-              )!
-            }
-          }
+        // always inherit the global `fsModuleCache` value even without `extends: true`
+        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
+          config.test.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
         }
-        config.customLogger = createViteLogger(
-          harness.logger,
-          viteConfig.logLevel || 'warn',
-          {
-            allowClearScreen: false,
-          },
-        )
-        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
+          config.test.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
+        }
+        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
+          config.test.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
+        }
+        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
+          config.test.experimental.nodeLoader = globalConfig.experimental.nodeLoader
+        }
+        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
+          config.test.experimental.importDurations = globalConfig.experimental.importDurations
+        }
 
         return config
       },
@@ -276,8 +174,7 @@ export function WorkspaceVitestPlugin(
     CoverageTransform(harness),
     ...MocksPlugins(),
     VitestProjectResolver(harness),
-    VitestOptimizer(),
     NormalizeURLPlugin(),
-    ModuleRunnerTransform(),
+    ...VitestConfig(harness),
   ]
 }

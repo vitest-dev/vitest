@@ -46,9 +46,6 @@ export class FileSystemModuleCache {
   >()
 
   constructor(private vitest: Vitest) {
-    // Use `viteConfig` (the resolved Vite config) rather than `vitest.vite`
-    // (the dev server) — the constructor is called before the server is
-    // attached during `_setRootConfig`.
     const workspaceRoot = searchForWorkspaceRoot(vitest.viteConfig.root)
     this.rootCache = vitest.config.experimental.fsModuleCachePath
       || join(workspaceRoot, 'node_modules', '.experimental-vitest-cache')

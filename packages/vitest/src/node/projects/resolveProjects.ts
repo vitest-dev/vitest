@@ -306,24 +306,13 @@ interface ProjectInlineOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 
-/**
- * Resolve a single declared project into a `{ viteConfig, projectConfig }` entry.
- *
- * Runs `vite.resolveConfig` for the project (which fires the project's plugins'
- * `config` / `configResolved` hooks), then resolves Vitest's test config from
- * the merged options stashed on `viteConfig._vitest`. Inherits root-only
- * settings (coverage, attachmentsDir, api token, mergeReportsLabel) from the
- * root config.
- *
- * No Vite server is created; no `TestProject` is instantiated.
- */
 async function resolveSingleProjectEntry(
   harness: PluginHarness,
   globalViteConfig: ResolvedViteConfig,
   globalConfig: ResolvedConfig,
   options: ProjectInlineOptions,
   workspacePath: string | number,
-  _cliOverrides: UserConfig,
+  _cliOverrides: UserConfig, // TODO: respect cliOverrides
 ): Promise<ResolvedProjectEntry> {
   const { configFile, ...restOptions } = options
 
@@ -341,11 +330,6 @@ async function resolveSingleProjectEntry(
 
   const projectViteConfig = await viteResolveConfig(projectInline, 'serve')
 
-  // The project plugin does not stash merged options on `_vitest` (the root
-  // plugin does that for the root config). For projects, read the merged test
-  // config directly off the resolved Vite config — `viteConfig.test` carries
-  // the user's `test` block + any additions returned from the workspace
-  // plugin's `config` hook (notably the resolved project name and color).
   const mergedOptions = (projectViteConfig.test ?? {}) as UserConfig
 
   const projectConfig = resolveTestConfig(
@@ -384,7 +368,6 @@ async function resolveSingleProjectEntry(
  * `vitest.projects`.
  */
 function expandBrowserInstancesInEntries(
-  // vitest: Vitest,
   globalConfig: ResolvedConfig,
   entries: ResolvedProjectEntry[],
   names: Set<string>,
@@ -792,9 +775,9 @@ export async function attachProjectsFromEntries(
   // `coreWorkspaceProject` is the stable "parent" for that cluster, owning
   // any browser provider that gets initialized. Set it up unconditionally
   // here so siblings can attach to it.
-  if (!vitest.coreWorkspaceProject && vitest.vite && vitest.viteConfig) {
+  if (!vitest.coreWorkspaceProject && vitest.vite) {
     vitest.coreWorkspaceProject = TestProject._createBasicProject(vitest)
-    primaryByViteConfig.set(vitest.viteConfig, vitest.coreWorkspaceProject)
+    primaryByViteConfig.set(vitest.vite.config, vitest.coreWorkspaceProject)
   }
 
   const projects: TestProject[] = []
@@ -803,20 +786,19 @@ export async function attachProjectsFromEntries(
     const { viteConfig, projectConfig, hidden } = entry
     const primary = primaryByViteConfig.get(viteConfig)
     if (primary) {
+      if (hidden) {
+        continue
+      }
       // Default-project no-browser case: the entry's `projectConfig` IS the
       // root's resolved config. Use `coreWorkspaceProject` directly so
       // callers that rely on `project === vitest.getRootProject()` work
       // (and so we don't have two TestProjects representing the same root).
       if (primary === vitest.coreWorkspaceProject && projectConfig === vitest.config) {
-        if (!hidden) {
-          projects.push(vitest.coreWorkspaceProject)
-        }
+        projects.push(vitest.coreWorkspaceProject)
         continue
       }
       const sibling = TestProject._spawnSibling(primary, projectConfig)
-      if (!hidden) {
-        projects.push(sibling)
-      }
+      projects.push(sibling)
       continue
     }
 
