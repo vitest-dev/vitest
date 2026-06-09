@@ -165,11 +165,11 @@ The release branches are also linked with the documentation site releases:
 
 Releases — publishing the npm packages, creating the git release tag, and generating the associated GitHub release — are driven by a pull request and carried out by GitHub Actions, not from a maintainer's machine. The release PR holds the version bump, and merging it kicks off the actual publish.
 
-1. **Prepare the release PR.** Run the `Prepare Publish` workflow, choosing the `target_branch` to release from (`main`, `v4`, …) and how to bump the version. By default the version is derived from the commit history; you can also force a bump type or pass an exact `version` for pre-releases. The workflow opens a release PR containing the version bump and prints a link to it.
+1. **Prepare the release PR.** Run the `Prepare Publish` workflow, choosing the `target_branch` to release from (`main`, `v4`, …) and how to bump the version. By default the version is derived from the commit history; you can also force a bump type or pass an exact `version` for pre-releases. The workflow pushes the version bump to a branch and prints a compare URL; open that URL to create the release PR.
 
-2. **Review and merge.** Check the version bump, then merge the PR. Use **Rebase and merge** so the release commit lands directly on the branch — that commit is what triggers publishing.
+2. **Review and merge.** Review the version bump, then merge the PR so the `chore: release v*` commit lands on the release branch — that commit is what triggers the Publish step.
 
-3. **Publish.** Merging starts the `Publish Package` workflow, which pauses for a maintainer to approve the `Release` environment. Once approved, it builds and publishes the packages to npm, pushes the release tag, and generates the GitHub release notes. Approve when prompted, then confirm npm, the tag, and the GitHub release all look right.
+3. **Publish.** The release commit starts the `Publish Package` workflow, which pauses for a maintainer to approve the `Release` environment. Once approved, it builds and publishes the packages to npm, pushes the release tag, and generates the GitHub release. Approve when prompted, then confirm npm, the tag, and the GitHub release all look right.
 
 ### Issue Triaging Workflow
 
