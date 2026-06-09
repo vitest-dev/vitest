@@ -41,5 +41,7 @@ if (releaseTag) {
   await $`pnpm -r publish --access public --no-git-checks --tag ${releaseTag} ${dryRunArgs}`
 }
 else {
+  // TODO: make stable backport releases use branch-aware npm dist-tags instead of
+  // falling through to `latest`, for example vN -> VN and vN.M -> VN_M.
   await $`pnpm -r publish --access public --no-git-checks ${dryRunArgs}`
 }
