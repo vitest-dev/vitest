@@ -75,7 +75,7 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
-      const poolId = runner.poolId ?? this.getWorkerId()
+      const poolId = runner.poolId ?? this.getConcurrencyId()
       runner.poolId = poolId
 
       const activeTask = { task, resolver, method, cancelTask }
@@ -261,17 +261,21 @@ export class Pool {
     throw new Error(`Runner ${task.worker} is not supported. Test files: ${formatFiles(task)}.`)
   }
 
-  private getWorkerId() {
-    let workerId = 0
+  private getConcurrencyId() {
+    let concurrencyId: number | undefined
 
     this.workerIds.forEach((state, id) => {
-      if (state && !workerId) {
-        workerId = id
+      if (state && concurrencyId == null) {
+        concurrencyId = id
         this.workerIds.set(id, false)
       }
     })
 
-    return workerId
+    if (concurrencyId == null) {
+      throw new Error('Cannot set concurrency id because there are no valid free ids.')
+    }
+
+    return concurrencyId
   }
 
   private freeWorkerId(id: number) {

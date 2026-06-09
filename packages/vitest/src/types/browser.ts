@@ -7,4 +7,6 @@ export interface BrowserTesterOptions {
   files: FileSpecification[]
   providedContext: string
   otelCarrier?: OTELCarrier
+  concurrencyId: number
+  workerId: number
 }

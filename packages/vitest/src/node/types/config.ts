@@ -832,6 +832,13 @@ export interface InlineConfig {
   retry?: SerializableRetry
 
   /**
+   * Repeat every test a specific number of times regardless of the result.
+   *
+   * @default 0 // Don't repeat
+   */
+  repeats?: number
+
+  /**
    * Show full diff when snapshot fails instead of a patch.
    */
   expandSnapshotDiff?: boolean

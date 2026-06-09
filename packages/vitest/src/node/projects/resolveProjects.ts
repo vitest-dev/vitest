@@ -48,6 +48,7 @@ const PROJECT_CLI_OVERRIDES = [
   'expandSnapshotDiff',
   'disableConsoleIntercept',
   'retry',
+  'repeats',
   'testNamePattern',
   'passWithNoTests',
   'bail',
