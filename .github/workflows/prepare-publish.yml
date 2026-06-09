@@ -61,22 +61,52 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
+      - name: Validate target branch
+        env:
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          if [[ ! "$TARGET_BRANCH" =~ ^(main|v[0-9]+(\.[0-9]+)?)$ ]]; then
+            echo "Release target must be main, vN, or vN.M. Received: $TARGET_BRANCH"
+            exit 1
+          fi
+
       - name: Prepare version bump
+        env:
+          RELEASE_TYPE: ${{ inputs.release }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "vitest-release-bot"
+          git config user.email "actions@github.com"
+          pnpm run release
+
+      - name: Read release metadata
         id: prepare
         env:
           TARGET_BRANCH: ${{ inputs.target_branch }}
-          RELEASE: ${{ inputs.release }}
-          VERSION: ${{ inputs.version }}
         run: |
-          args=(--target-branch "$TARGET_BRANCH")
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="v$VERSION"
+          PREPARE_BRANCH="prepare-$TAG"
+          COMPARE_URL="https://github.com/vitest-dev/vitest/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
 
-          if [ -n "$VERSION" ]; then
-            args+=(--version "$VERSION")
-          else
-            args+=(--release "$RELEASE")
+          if [[ "$TARGET_BRANCH" =~ ^v([0-9]+)(\.([0-9]+))?$ ]]; then
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+            if [ "$MAJOR" != "${BASH_REMATCH[1]}" ]; then
+              echo "Version $VERSION does not match release branch $TARGET_BRANCH"
+              exit 1
+            fi
+
+            if [ -n "${BASH_REMATCH[3]}" ] && [ "$MINOR" != "${BASH_REMATCH[3]}" ]; then
+              echo "Version $VERSION does not match release branch $TARGET_BRANCH"
+              exit 1
+            fi
           fi
 
-          pnpm run release -- "${args[@]}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "prepare_branch=$PREPARE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "compare_url=$COMPARE_URL" >> "$GITHUB_OUTPUT"
 
       - name: Check for existing prepare branch
         id: existing
@@ -91,16 +121,6 @@ jobs:
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Commit version bump
-        if: steps.existing.outputs.exists != 'true'
-        env:
-          VERSION: ${{ steps.prepare.outputs.version }}
-        run: |
-          git config user.name "vitest-release-bot"
-          git config user.email "actions@github.com"
-          git add package.json packages/*/package.json
-          git commit -m "chore: release v$VERSION"
 
       - name: Push prepare branch
         if: steps.existing.outputs.exists != 'true'
