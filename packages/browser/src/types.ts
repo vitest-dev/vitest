@@ -21,6 +21,7 @@ export interface WebSocketBrowserHandlers {
   onTaskArtifactRecord: <Artifact extends TestArtifact>(testId: string, artifact: Artifact) => Promise<Artifact>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
+  onOrchestratorReady: () => void
   cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
