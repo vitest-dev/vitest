@@ -61,15 +61,6 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-      - name: Validate target branch
-        env:
-          TARGET_BRANCH: ${{ inputs.target_branch }}
-        run: |
-          if [[ ! "$TARGET_BRANCH" =~ ^(main|v[0-9]+(\.[0-9]+)?)$ ]]; then
-            echo "Release target must be main, vN, or vN.M. Received: $TARGET_BRANCH"
-            exit 1
-          fi
-
       - name: Prepare version bump
         env:
           RELEASE_TYPE: ${{ inputs.release }}
@@ -88,42 +79,12 @@ jobs:
           TAG="v$VERSION"
           PREPARE_BRANCH="prepare-$TAG"
           COMPARE_URL="https://github.com/vitest-dev/vitest/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
-
-          if [[ "$TARGET_BRANCH" =~ ^v([0-9]+)(\.([0-9]+))?$ ]]; then
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-            if [ "$MAJOR" != "${BASH_REMATCH[1]}" ]; then
-              echo "Version $VERSION does not match release branch $TARGET_BRANCH"
-              exit 1
-            fi
-
-            if [ -n "${BASH_REMATCH[3]}" ] && [ "$MINOR" != "${BASH_REMATCH[3]}" ]; then
-              echo "Version $VERSION does not match release branch $TARGET_BRANCH"
-              exit 1
-            fi
-          fi
-
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "prepare_branch=$PREPARE_BRANCH" >> "$GITHUB_OUTPUT"
           echo "compare_url=$COMPARE_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Check for existing prepare branch
-        id: existing
-        env:
-          PREPARE_BRANCH: ${{ steps.prepare.outputs.prepare_branch }}
-          COMPARE_URL: ${{ steps.prepare.outputs.compare_url }}
-        run: |
-          if git ls-remote --exit-code --heads origin "$PREPARE_BRANCH"; then
-            echo "Prepare branch already exists: $PREPARE_BRANCH"
-            echo "Open or reuse the release PR from: $COMPARE_URL"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Push prepare branch
-        if: steps.existing.outputs.exists != 'true'
         env:
           PREPARE_BRANCH: ${{ steps.prepare.outputs.prepare_branch }}
         run: git push origin "HEAD:$PREPARE_BRANCH"
