@@ -225,22 +225,6 @@ async function resolveDeclaredProjectEntries(
       ...options,
       root,
       configFile,
-      plugins: [
-        {
-          name: 'vitest:tags',
-          // don't inherit tags from workspace config, they are merged separately
-          configResolved(config) {
-            ;(config as any).test ??= {}
-            config.test!.tags = options.test!.tags! // TODO
-          },
-          api: {
-            vitest: {
-              experimental: { ignoreFsModuleCache: true },
-            },
-          },
-        },
-        ...options.plugins || [],
-      ],
       test: { ...options.test, ...cliOverrides },
     }, index, cliOverrides)))
   })
@@ -332,6 +316,9 @@ async function resolveSingleProjectEntry(
   const projectViteConfig = await viteResolveConfig(projectInline, 'serve')
 
   const mergedOptions = (projectViteConfig.test ?? {}) as UserConfig
+
+  // Keep definitions from the global config to avoid a filter error
+  mergedOptions.tags = [...mergedOptions.tags || [], ...globalConfig.tags]
 
   const projectConfig = resolveTestConfig(
     harness.logger,

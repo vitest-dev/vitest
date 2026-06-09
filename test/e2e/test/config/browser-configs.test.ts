@@ -6,14 +6,14 @@ import { runVitest, runVitestCli, useFS } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { resolve } from 'pathe'
-import { describe, expect, onTestFinished, test } from 'vitest'
+import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { createVitest } from 'vitest/node'
 
-async function vitest(cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const vitest = await createVitest('test', { ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+const vitest = vi.defineHelper(async (cliOptions: TestUserConfig, configValue: TestUserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) => {
+  const vitest = await createVitest({ ...cliOptions, watch: false, config: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
   onTestFinished(() => vitest.close())
   return vitest
-}
+})
 
 test('assigns names as browsers', async () => {
   const { projects } = await vitest({}, {

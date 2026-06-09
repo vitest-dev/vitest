@@ -35,7 +35,7 @@ import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { FileSystemModuleCache } from './cache/fsModuleCache'
-import { matchesProjectFilter } from './config/resolveConfig'
+import { matchesProjectFilter, resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -196,6 +196,7 @@ export class Vitest {
     this._setRootConfig(config)
     await this._attachRootServer()
     await this._attachProjectServers()
+    this._harness.setVitest(this)
   }
 
   /**
@@ -248,7 +249,12 @@ export class Vitest {
     this.report('onServerRestart', reason)
     await this.close()
     this._harness.setVitest(undefined)
-    // TODO: this._start(await newConfig)
+    const config = await resolveConfig(
+      this.config.cliOptions,
+      this.config.viteOverrides,
+      this._harness,
+    )
+    await this._start(config)
   }
 
   /**
