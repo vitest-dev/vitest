@@ -77,4 +77,4 @@ jobs:
           pnpm run release
           git push origin "HEAD:$PREPARE_BRANCH"
           COMPARE_URL="https://github.com/vitest-dev/vitest/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
-          echo "Open the release PR from $COMPARE_URL"
+          echo "::notice title=Open release PR::$COMPARE_URL"
