@@ -61,35 +61,26 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-      - name: Prepare version bump
-        env:
-          RELEASE_TYPE: ${{ inputs.release }}
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          git config user.name "vitest-release-bot"
-          git config user.email "actions@github.com"
-          pnpm run release
-
-      - name: Read release metadata
+      - name: Prepare release branch
         id: prepare
         env:
           TARGET_BRANCH: ${{ inputs.target_branch }}
+          RELEASE_INPUT: ${{ inputs.version || inputs.release }}
+          RELEASE_TYPE: ${{ inputs.release }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RUN_ID: ${{ github.run_id }}
         run: |
+          PREPARE_BRANCH="prepare-$TARGET_BRANCH-$RELEASE_INPUT-$RUN_ID"
+          git switch -c "$PREPARE_BRANCH"
+          git config user.name "vitest-release-bot"
+          git config user.email "actions@github.com"
+          pnpm run release
           VERSION="$(node -p "require('./package.json').version")"
           TAG="v$VERSION"
-          PREPARE_BRANCH="prepare-$TAG"
           COMPARE_URL="https://github.com/vitest-dev/vitest/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "prepare_branch=$PREPARE_BRANCH" >> "$GITHUB_OUTPUT"
           echo "compare_url=$COMPARE_URL" >> "$GITHUB_OUTPUT"
-
-      - name: Push prepare branch
-        env:
-          PREPARE_BRANCH: ${{ steps.prepare.outputs.prepare_branch }}
-        run: git push origin "HEAD:$PREPARE_BRANCH"
-
-      - name: Print release PR URL
-        env:
-          COMPARE_URL: ${{ steps.prepare.outputs.compare_url }}
-        run: echo "Open the release PR from $COMPARE_URL"
+          git push origin "HEAD:$PREPARE_BRANCH"
+          echo "Open the release PR from $COMPARE_URL"
