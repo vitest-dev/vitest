@@ -21,7 +21,6 @@ jobs:
     outputs:
       release: ${{ steps.detect.outputs.release }}
       version: ${{ steps.detect.outputs.version }}
-      tag: ${{ steps.detect.outputs.tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -40,12 +39,10 @@ jobs:
           fi
 
           VERSION="${BASH_REMATCH[1]}"
-          TAG="v$VERSION"
 
           echo "release=true" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Detected release $TAG"
+          echo "Detected release v$VERSION"
 
   publish:
     if: needs.detect.outputs.release == 'true'
@@ -93,9 +90,10 @@ jobs:
 
       - name: Push release tag
         env:
-          TAG: ${{ needs.detect.outputs.tag }}
+          VERSION: ${{ needs.detect.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          TAG="v$VERSION"
           git config user.name "vitest-release-bot"
           git config user.email "actions@github.com"
 
@@ -115,6 +113,8 @@ jobs:
 
       - name: Generate Changelog
         env:
-          TAG: ${{ needs.detect.outputs.tag }}
+          VERSION: ${{ needs.detect.outputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx changelogithub --to "$TAG" --name "$TAG"
+        run: |
+          TAG="v$VERSION"
+          npx changelogithub --to "$TAG" --name "$TAG"
