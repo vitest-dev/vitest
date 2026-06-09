@@ -32,13 +32,13 @@ jobs:
         run: |
           SUBJECT="$(git log -1 --format=%s)"
 
-          if [[ ! "$SUBJECT" =~ ^chore:\ release\ v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$ ]]; then
+          if [[ "$SUBJECT" != "chore: release v"* ]]; then
             echo "release=false" >> "$GITHUB_OUTPUT"
             echo "No release commit found at HEAD"
             exit 0
           fi
 
-          VERSION="${BASH_REMATCH[1]}"
+          VERSION="${SUBJECT#chore: release v}"
 
           echo "release=true" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
