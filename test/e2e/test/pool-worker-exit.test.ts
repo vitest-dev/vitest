@@ -1,45 +1,50 @@
-import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
+import { readCoverageMap } from '../../coverage-test/utils'
 
-const fixtureDir = resolve(import.meta.dirname, '../fixtures/pool-worker-exit')
-const coverageFinal = resolve(fixtureDir, 'coverage/coverage-final.json')
+test('worker death on a shared runner does not skip coverage finalization', async () => {
+  const root = './fixtures/pool-worker-exit'
 
-test('worker death on a shared runner does not skip coverage finalization', () => {
-  rmSync(resolve(fixtureDir, 'coverage'), { force: true, recursive: true })
+  await runVitest({
+    root,
+    pool: 'forks',
 
-  try {
-    execFileSync(
-      'node',
-      [
-        resolve(import.meta.dirname, '../../../packages/vitest/vitest.mjs'),
-        'run',
-        '--reporter=default',
-      ],
-      {
-        cwd: fixtureDir,
-        encoding: 'utf-8',
-        timeout: 45_000,
-        stdio: 'pipe',
-      },
-    )
-  }
-  catch {
-    // vitest is expected to exit non-zero because of the worker crash
-  }
+    // Disable isolation to make sure crashed worker doesn't hang whole test run
+    isolate: false,
+    fileParallelism: false,
 
-  expect(
-    existsSync(coverageFinal),
-    `coverage-final.json must exist — its absence means runFiles.finally was skipped`,
-  ).toBe(true)
+    // Run test in alphabetical order, crash worker mid-run
+    sequence: { sequencer: StableTestFileOrderSorter },
+    include: [
+      '1-first.test.ts',
 
-  const report = JSON.parse(readFileSync(coverageFinal, 'utf-8'))
-  const entry = Object.values(report).find((file: any) => file.path.endsWith('src.js')) as any
+      /** Crashes worker, see @link {file://./../fixtures/pool-worker-exit/2-crash.test.ts} */
+      '2-crash.test.ts',
 
-  expect(entry, 'src.js should be present in the coverage report').toBeDefined()
-  expect(
-    Object.values(entry.s).some((count: any) => count > 0),
-    'covered() should have at least one recorded execution',
-  ).toBe(true)
-}, 60_000)
+      // Should not start as previous test crashed worker
+      '3-second.test.ts',
+    ],
+
+    reporters: 'default',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['json'],
+      reportOnFailure: true,
+    },
+  })
+
+  // Crashing worker should not interfere with other test-run, coverage should be reported:
+  const coverageMap = await readCoverageMap(resolve(root, 'coverage/coverage-final.json'))
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/pool-worker-exit/src.ts')
+
+  expect(fileCoverage.toSummary().functions).toMatchInlineSnapshot(`
+    {
+      "covered": 1,
+      "pct": 50,
+      "skipped": 0,
+      "total": 2,
+    }
+  `)
+})
