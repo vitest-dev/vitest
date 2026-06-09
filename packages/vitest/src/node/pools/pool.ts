@@ -91,14 +91,13 @@ export class Pool {
         resolver.reject(new Error('Cancelled'))
       }
 
-      const state = this.options.state
-      function onFinished(message: WorkerResponse) {
+      const onFinished = (message: WorkerResponse) => {
         if (message?.__vitest_worker_response__ && message.type === 'testfileFinished') {
           if (task.memoryLimit && message.usedMemory) {
             isMemoryLimitReached = message.usedMemory >= task.memoryLimit
           }
           if (message.error) {
-            state.catchError(message.error, 'Test Run Error')
+            this.options.state.catchError(message.error, 'Test Run Error')
           }
 
           runner.off('message', onFinished)
