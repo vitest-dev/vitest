@@ -1329,6 +1329,9 @@ importers:
       test-dep-simple:
         specifier: file:./deps/dep-simple
         version: file:test/cli/deps/dep-simple
+      test-dep-simple2:
+        specifier: file:./deps/dep-simple2
+        version: file:test/cli/deps/dep-simple2
       tinyspy:
         specifier: 'catalog:'
         version: 4.0.4
@@ -9845,6 +9848,9 @@ packages:
 
   test-dep-error@file:test/browser/deps/test-dep-error:
     resolution: {directory: test/browser/deps/test-dep-error, type: directory}
+
+  test-dep-simple2@file:test/cli/deps/dep-simple2:
+    resolution: {directory: test/cli/deps/dep-simple2, type: directory}
 
   test-dep-simple@file:test/cli/deps/dep-simple:
     resolution: {directory: test/cli/deps/dep-simple, type: directory}
@@ -19265,6 +19271,8 @@ snapshots:
       test-dep-conditions-indirect: file:test/config/deps/test-dep-conditions-indirect
 
   test-dep-error@file:test/browser/deps/test-dep-error: {}
+
+  test-dep-simple2@file:test/cli/deps/dep-simple2: {}
 
   test-dep-simple@file:test/cli/deps/dep-simple: {}
 
