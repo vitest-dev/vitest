@@ -183,7 +183,8 @@ export class VitestModuleRunner
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
-      if (currentMock !== mockedModule) {
+      const isAutoMock = currentMock.type === 'automock' || currentMock.type === 'autospy'
+      if (isAutoMock && currentMock !== mockedModule) {
         const freshNode = await this.fetchModule(injectQuery(url, '_vitest_original'))
         mocked = await this.mocker.requestWithMockedModule(url, freshNode, callstack, currentMock)
       }
