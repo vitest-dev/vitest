@@ -9,10 +9,10 @@ import * as vite from 'vite'
 import { rootDir } from '../../paths'
 
 export function resolveOptimizerConfig(
-  _testOptions: DepsOptimizationOptions | undefined,
+  testOptions_: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
 ): DepOptimizationOptions {
-  const testOptions = _testOptions || {}
+  const testOptions = testOptions_ || {}
   let optimizeDeps: DepOptimizationOptions
   if (testOptions.enabled !== true) {
     testOptions.enabled ??= false

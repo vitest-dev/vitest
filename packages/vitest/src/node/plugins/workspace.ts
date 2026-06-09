@@ -10,10 +10,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import {
-  deleteDefineConfig,
-  resolveFsAllow,
-} from './utils'
+import { resolveFsAllow } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends TestProjectInlineConfiguration {
@@ -86,9 +83,6 @@ export function WorkspaceVitestPlugin(
         this.meta.watchMode = false
       },
       config(viteConfig) {
-        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
-
         const testConfig = viteConfig.test || {}
         const root = testConfig.root || viteConfig.root || options.root
 
@@ -112,9 +106,6 @@ export function WorkspaceVitestPlugin(
           },
           test: {},
         }
-
-        ;(config.test as ResolvedConfig).defines = defines
-        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         config.test ??= {}
         config.test.experimental ??= {}

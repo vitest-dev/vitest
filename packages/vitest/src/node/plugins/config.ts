@@ -1,12 +1,13 @@
 import type { Plugin, UserConfig as ViteConfig } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
+import type { ResolvedConfig } from '../types/config'
 import { relative } from 'pathe'
 import * as vite from 'vite'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { VitestOptimizer } from './optimizer'
 import { ModuleRunnerTransform } from './runnerTransform'
-import { getDefaultResolveOptions } from './utils'
+import { deleteDefineConfig, getDefaultResolveOptions } from './utils'
 
 export function VitestConfig(harness: PluginHarness): Plugin[] {
   let root: string
@@ -20,6 +21,9 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
       config(viteConfig) {
         const testConfig = viteConfig.test || {}
         const resolveOptions = getDefaultResolveOptions()
+
+        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
         const config: ViteConfig = {
           define: {
@@ -40,7 +44,11 @@ export function VitestConfig(harness: PluginHarness): Plugin[] {
               dev: {},
             },
           },
+          test: {},
         }
+
+        ;(config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).viteDefine = originalDefine
 
         if ('rolldownVersion' in vite) {
           // eslint-disable-next-line ts/ban-ts-comment

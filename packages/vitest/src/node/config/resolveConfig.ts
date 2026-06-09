@@ -84,9 +84,6 @@ function parseInspector(inspect: string | undefined | boolean | number) {
   return { host, port: Number(port) || defaultInspectPort }
 }
 
-/**
- * @deprecated Internal function
- */
 export function resolveApiServerConfig<Options extends ApiConfig & Omit<UserConfig, 'expect'>>(
   options: Options,
   defaultPort: number,
@@ -1020,21 +1017,28 @@ export function resolveTestConfig(
   return resolved
 }
 
+function resolveConfigPath(root: string, options: UserConfig) {
+  if (options.config === false) {
+    return false
+  }
+  if (options.config) {
+    return resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config)
+  }
+  return findConfigFile(root)
+}
+
 export async function resolveConfig(
   options: UserConfig = {},
   viteOverrides: ViteUserConfig = {},
   pluginsHarness: PluginHarness = new PluginHarness(),
 ): Promise<ResolvedViteConfig> {
-  const cliOptions = deepClone(options)
+  // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
+  const cliOptionsCopy = deepClone(options)
   const viteOverridesCopy = deepClone(viteOverrides)
   const root = resolve(options.root || process.cwd())
-  const configPath
-    = options.config === false
-      ? false
-      : options.config
-        ? (resolveModule(options.config, { paths: [root] }) ?? resolve(root, options.config))
-        : findConfigFile(root)
+  const configPath = resolveConfigPath(root, options)
   options.config = configPath
+  options.root = root
 
   const { browser: _removeBrowser, ...restOptions } = options
   const inlineConfig: InlineConfig = mergeConfig(
@@ -1047,7 +1051,7 @@ export async function resolveConfig(
         ...VitestCorePlugin(pluginsHarness),
       ],
     } satisfies InlineConfig,
-    mergeConfig(viteOverrides, { root: options.root }),
+    mergeConfig(viteOverrides, { root }),
   )
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
@@ -1059,7 +1063,7 @@ export async function resolveConfig(
   )
   rootViteConfig.test = rootConfig
 
-  rootConfig.cliOptions = cliOptions
+  rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
 
   const userDefinitions = rootConfig.projects as

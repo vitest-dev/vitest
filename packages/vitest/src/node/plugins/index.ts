@@ -1,7 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { CliOptions } from '../cli/cli-api'
 import type { PluginHarness } from '../config/pluginHarness'
-import type { ResolvedConfig, UserConfig } from '../types/config'
+import type { UserConfig } from '../types/config'
 import { deepMerge } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import { defaultPort } from '../../constants'
@@ -13,10 +13,7 @@ import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
-import {
-  deleteDefineConfig,
-  resolveFsAllow,
-} from './utils'
+import { resolveFsAllow } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 // the plugins required when starting Vitest
@@ -86,145 +83,152 @@ export function VitestConfigPlugin(harness: PluginHarness, options: CliOptions =
   const userConfig = deepMerge({}, options) as CliOptions
 
   return [
-    <VitePlugin>{
-      name: 'vitest',
+    // The CLI plugin overwrites config values with CLI options, making them
+    // avalable in the next plugin. We have to do this via plugins because of watch mode.
+    {
+      name: 'vitest:config:cli',
       enforce: 'pre',
+      config: {
+        order: 'pre',
+        handler() {
+          if (options.watch) {
+            // Earlier runs have overwritten values of the `options`.
+            // Reset it back to initial user config before setting up the server again.
+            options = deepMerge({}, userConfig) as UserConfig
+          }
+
+          return {
+            // Vite will automatically merge CLI options
+            test: options,
+          }
+        },
+      },
+    },
+    // Setting Vite config values based on user settings,
+    // The resolved config value is determined in `configResolved:post`
+    // This is simmilar to `vitest:config` plugin, but the options here are affected by CLI
+    {
+      name: 'vitest:config:append',
+      enforce: 'post',
       options() {
         this.meta.watchMode = false
       },
-      async config(viteConfig) {
-        if (options.watch) {
-          // Earlier runs have overwritten values of the `options`.
-          // Reset it back to initial user config before setting up the server again.
-          options = deepMerge({}, userConfig) as UserConfig
-        }
+      config: {
+        order: 'post',
+        handler(viteConfig) {
+          // Custom user config, this includes CLI overrides
+          const testConfig = viteConfig.test ?? {}
 
-        // preliminary merge of options to be able to create server options for vite
-        // however to allow vitest plugins to modify vitest config values
-        // this is repeated in configResolved where the config is final
-        const testConfig = deepMerge(
-          {} as UserConfig,
-          configDefaults,
-          viteConfig.test ?? {},
-          options,
-        )
-        testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
+          const api = resolveApiServerConfig(
+            testConfig,
+            defaultPort,
+            undefined,
+            harness.logger,
+          )
+          testConfig.api = api
 
-        // store defines for globalThis to make them
-        // reassignable when running in worker in src/runtime/setup.ts
-        const originalDefine = { ...viteConfig.define } // stash original defines for browser mode
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+          let open: string | boolean | undefined = false
 
-        ;(options as unknown as ResolvedConfig).defines = defines
-        ;(options as unknown as ResolvedConfig).viteDefine = originalDefine
-
-        let open: string | boolean | undefined = false
-
-        if (testConfig.ui && testConfig.open) {
-          open = testConfig.uiBase ?? '/__vitest__/'
-        }
-
-        const config: ViteConfig = {
-          base: '/',
-          root: viteConfig.test?.root || options.root,
-          server: {
-            ...testConfig.api,
-            open,
-            hmr: false,
-            ws: testConfig.api?.middlewareMode ? false : undefined,
-            preTransformRequests: false,
-            fs: {
-              allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
-            },
-          },
-          build: {
-            // Vitest doesn't use outputDir, but this value affects what folders are watched
-            // https://github.com/vitejs/vite/pull/16453
-            emptyOutDir: false,
-          },
-          test: {
-            root: testConfig.root ?? viteConfig.test?.root,
-            deps: testConfig.deps ?? viteConfig.test?.deps,
-          },
-        }
-
-        if (options.benchmarkOnly) {
-          config.test!.benchmark ??= {}
-          config.test!.benchmark.enabled = true
-        }
-
-        // inherit so it's available in VitestOptimizer
-        // I cannot wait to rewrite all of this in Vitest 4
-        if (options.cache != null) {
-          config.test!.cache = options.cache
-        }
-
-        // TODO: how does this work now?
-        // if (vitest.configOverride.project) {
-        //   // project filter was set by the user, so we need to filter the project
-        //   options.project = vitest.configOverride.project
-        // }
-
-        // chokidar fsevents is unstable on macos when emitting "ready" event
-        if (
-          process.platform === 'darwin'
-          && process.env.VITE_TEST_WATCHER_DEBUG
-        ) {
-          const watch = config.server!.watch
-          if (watch) {
-            // eslint-disable-next-line ts/ban-ts-comment
-            // @ts-ignore Vite 6 compat
-            watch.useFsEvents = false
-            watch.usePolling = false
+          if (testConfig.ui && testConfig.open) {
+            open = testConfig.uiBase ?? '/__vitest__/'
           }
-        }
 
-        return config
-      },
-      async configResolved(viteConfig) {
-        const viteConfigTest = (viteConfig.test as UserConfig) || {}
-        if (viteConfigTest.watch === false) {
-          ;(viteConfigTest as any).run = true
-        }
+          const root = resolve(options.root || process.cwd())
 
-        if ('alias' in viteConfigTest) {
-          delete viteConfigTest.alias
-        }
+          const config: ViteConfig = {
+            base: '/',
+            root,
+            server: {
+              ...api,
+              open,
+              hmr: false,
+              ws: api?.middlewareMode ? false : undefined,
+              preTransformRequests: false,
+              watch: testConfig.watch ? {} : null,
+              fs: {
+                allow: resolveFsAllow(root, options.config),
+              },
+            },
+            build: {
+              // Vitest doesn't use outputDir, but this value affects what folders are watched
+              // https://github.com/vitejs/vite/pull/16453
+              emptyOutDir: false,
+            },
+          }
 
-        // Merge defaults + Vite's resolved test config + the CLI options into
-        // a single object and assign it back onto `viteConfig.test`.
-        const merged: UserConfig = deepMerge({}, configDefaults, viteConfigTest, options)
-        merged.api = resolveApiServerConfig(merged, defaultPort)
+          if (options.benchmarkOnly) {
+            testConfig.benchmark ??= {}
+            testConfig.benchmark.enabled = true
+          }
 
-        // Auto-name browser instances based on the project name + browser kind.
-        if (merged.browser?.instances) {
-          const baseName = merged.name
-          merged.browser.instances.forEach((instance) => {
-            instance.name ??= baseName ? `${baseName} (${instance.browser})` : instance.browser
-          })
-        }
+          // chokidar fsevents is unstable on macos when emitting "ready" event
+          if (
+            process.platform === 'darwin'
+            && process.env.VITE_TEST_WATCHER_DEBUG
+          ) {
+            const watch = config.server!.watch
+            if (watch) {
+              // eslint-disable-next-line ts/ban-ts-comment
+              // @ts-ignore Vite 6 compat
+              watch.useFsEvents = false
+              watch.usePolling = false
+            }
+          }
 
-        // we replace every "import.meta.env" with "process.env"
-        // to allow reassigning, so we need to put all envs on process.env
-        const { PROD, DEV, ...envs } = viteConfig.env
-
-        // process.env can have only string values and will cast string on it if we pass other type,
-        // so we are making them truthy
-        process.env.PROD ??= PROD ? '1' : ''
-        process.env.DEV ??= DEV ? '1' : ''
-
-        for (const name in envs) {
-          process.env[name] ??= envs[name]
-        }
-
-        // don't watch files in run mode
-        if (!merged.watch) {
-          viteConfig.server.watch = null
-        }
-
-        ;(viteConfig as any).test = merged
+          return config
+        },
       },
     },
     ...VitestConfig(harness),
+    // Final config resolution. Making sure that CLI options always have precedent
+    // even if the value was changed by a user plugin.
+    {
+      name: 'vitest:config:resolve',
+      enforce: 'post',
+      configResolved: {
+        order: 'post',
+        handler(viteConfig) {
+          const testConfig = (viteConfig.test ?? {}) as UserConfig
+
+          if ('alias' in testConfig) {
+            delete testConfig.alias
+          }
+
+          const resolvedConfig: UserConfig = deepMerge(
+            {},
+            configDefaults,
+            testConfig,
+          )
+
+          // Auto-name browser instances based on the project name + browser kind.
+          if (resolvedConfig.browser?.instances) {
+            const baseName = resolvedConfig.name
+            resolvedConfig.browser.instances.forEach((instance) => {
+              instance.name ??= baseName ? `${baseName} (${instance.browser})` : instance.browser
+            })
+          }
+
+          // we replace every "import.meta.env" with "process.env"
+          // to allow reassigning, so we need to put all envs on process.env
+          const { PROD, DEV, ...envs } = viteConfig.env
+
+          // process.env can have only string values and will cast string on it if we pass other type,
+          // so we are making them truthy
+          process.env.PROD ??= PROD ? '1' : ''
+          process.env.DEV ??= DEV ? '1' : ''
+
+          for (const name in envs) {
+            process.env[name] ??= envs[name]
+          }
+
+          // don't watch files in run mode
+          if (!resolvedConfig.watch) {
+            viteConfig.server.watch = null
+          }
+
+          ;(viteConfig as any).test = resolvedConfig
+        },
+      },
+    },
   ]
 }
