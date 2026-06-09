@@ -81,12 +81,13 @@ jobs:
       - name: Dry run publish
         env:
           VERSION: ${{ needs.detect.outputs.version }}
-        run: npm i -g npm@^11.5.2 && pnpm run publish-ci --version "$VERSION" --dry-run
+          PUBLISH_DRY_RUN: 'true'
+        run: npm i -g npm@^11.5.2 && pnpm run publish-ci "$VERSION"
 
       - name: Publish to npm
         env:
           VERSION: ${{ needs.detect.outputs.version }}
-        run: pnpm run publish-ci --version "$VERSION"
+        run: pnpm run publish-ci "$VERSION"
 
       - name: Push release tag
         env:
