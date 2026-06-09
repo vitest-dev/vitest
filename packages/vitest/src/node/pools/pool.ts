@@ -109,19 +109,13 @@ export class Pool {
       function onTaskError(error: unknown) {
         runner.off('message', onFinished)
         runner.off('error', onTaskError)
-        resolver.reject(error instanceof Error ? error : new Error(String(error)))
+        resolver.reject(new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }))
       }
 
       runner.on('message', onFinished)
       runner.on('error', onTaskError)
 
       if (!runner.isStarted) {
-        runner.on('error', (error) => {
-          resolver.reject(
-            new Error(`[vitest-pool]: Worker ${task.worker} emitted error.`, { cause: error }),
-          )
-        })
-
         const id = setTimeout(
           () => resolver.reject(new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)),
           WORKER_START_TIMEOUT,
