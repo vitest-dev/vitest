@@ -11,6 +11,7 @@ export type { CliParseOptions } from '../node/cli/cac'
 export type { CliOptions } from '../node/cli/cli-api'
 export { startVitest } from '../node/cli/cli-api'
 export { PluginHarness } from '../node/config/pluginHarness'
+export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export { resolveConfig } from '../node/config/resolveConfig'
 export type {
   OnServerRestartHandler,

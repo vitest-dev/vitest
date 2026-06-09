@@ -4,7 +4,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { Logger } from '../logger'
-import type { ResolvedBrowserOptions } from '../types/browser'
+// import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -353,17 +353,17 @@ export function resolveTestConfig(
 
   // TODO: TEST THIS
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (
-    options.browser
-    && resolved.browser
-    // if enabled is set to `false`, but CLI overrides it, then always override it
-    && (resolved.browser.enabled !== false || options.browser.enabled)
-  ) {
-    resolved.browser = mergeConfig(
-      resolved.browser,
-      options.browser,
-    ) as ResolvedBrowserOptions
-  }
+  // if (
+  //   options.browser
+  //   && resolved.browser
+  //   // if enabled is set to `false`, but CLI overrides it, then always override it
+  //   && (resolved.browser.enabled !== false || options.browser.enabled)
+  // ) {
+  //   resolved.browser = mergeConfig(
+  //     resolved.browser,
+  //     options.browser,
+  //   ) as ResolvedBrowserOptions
+  // }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
@@ -1164,7 +1164,7 @@ export function matchesProjectFilter(projects: string[], name: string): boolean 
 
 export function isExcludedByProjectFilter(projects: string[], name: string): boolean {
   if (!projects.length) {
-    return true
+    return false
   }
 
   return projects.some((project) => {

@@ -390,16 +390,13 @@ function expandBrowserInstancesInEntries(
 
   for (const entry of browserEntries) {
     const { projectConfig, viteConfig } = entry
-    const instances = projectConfig.browser.instances || []
+    const instances = projectConfig.browser.instances || [] // FIXME: duplicated somewhere
     const parentName = projectConfig.name
-    // If the parent name itself is excluded by a negation filter (e.g.
-    // `--project '!myproject'`), the whole cluster — parent + all instances —
-    // is dropped. Otherwise, if the parent matches a positive filter, every
-    // instance is kept; if not, instances are filtered individually by their
-    // names. This matches the old workspace browser filter behavior.
+
     if (instances.length === 0 || isExcludedByProjectFilter(globalConfig.project, parentName)) {
       continue
     }
+
     const keepAllInstances = matchesProjectFilter(globalConfig.project, parentName)
     const filteredInstances = keepAllInstances
       ? instances
