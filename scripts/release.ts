@@ -12,10 +12,10 @@ try {
     files: packages,
     commit: true,
     push: true,
-    tag: true,
+    tag: false,
   })
 
-  console.log('New release is ready, waiting for conformation at https://github.com/vitest-dev/vitest/actions')
+  console.log('New release commit is ready. Push a prepare branch and open a release PR instead of creating the final tag locally.')
 }
 catch (err) {
   console.error(err)

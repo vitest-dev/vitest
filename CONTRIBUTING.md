@@ -153,6 +153,19 @@ No backport is made to `v3` unless the support policy changes or maintainers dec
 
 Backport PR titles should include the target branch in a `[backport to x]` marker, for example `fix: [backport to v5.0] ...` or `fix: [backport to v4] ...`. Branch names never include patch versions.
 
+#### Release Pull Requests
+
+Release preparation uses the same branch policy:
+
+- Run the release preparation workflow against `main`, `vN`, or `vN.M`.
+- Do not prepare or publish releases from `backport-*` branches. Backport branches are source branches for pull requests that merge into a maintained release branch.
+- The generated release branch should be named `prepare-vX.Y.Z` and contain a `chore: release vX.Y.Z` commit.
+- If the same release preparation is dispatched again, reuse the existing `prepare-vX.Y.Z` branch and pull request instead of force-pushing it.
+- Publishing is triggered by merging the reviewed release pull request into its maintained release branch.
+- Release tags and GitHub release notes are created by the publish workflow after npm publish succeeds. Do not create release tags from a local release command.
+
+When the release workflow itself changes, backport the workflow and release helper scripts to every maintained branch that is still expected to publish releases.
+
 #### Documentation Branches
 
 The release branches are also linked with the documentation site releases:

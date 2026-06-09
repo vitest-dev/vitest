@@ -1,0 +1,114 @@
+name: Prepare Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Release target branch, for example main, v4, or v4.1
+        required: true
+        type: string
+      release:
+        description: Bumpp release type. Ignored when version is set.
+        required: true
+        default: next
+        type: choice
+        options:
+          - next
+          - patch
+          - minor
+          - major
+          - prepatch
+          - preminor
+          - premajor
+      version:
+        description: Optional exact semver version, for example 5.0.0-beta.5
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.target_branch }}-${{ inputs.version || inputs.release }}
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  VITE_TEST_WATCHER_DEBUG: 'false'
+
+jobs:
+  prepare:
+    if: github.repository == 'vitest-dev/vitest'
+    name: Prepare release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: Set node version to 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install
+        run: pnpm install --frozen-lockfile --prefer-offline
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+      - name: Prepare version bump
+        id: prepare
+        env:
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+          RELEASE: ${{ inputs.release }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          args=(--target-branch "$TARGET_BRANCH")
+
+          if [ -n "$VERSION" ]; then
+            args+=(--version "$VERSION")
+          else
+            args+=(--release "$RELEASE")
+          fi
+
+          pnpm exec tsx scripts/prepare-release.ts "${args[@]}"
+
+      - name: Check for existing prepare branch
+        id: existing
+        env:
+          PREPARE_BRANCH: ${{ steps.prepare.outputs.prepare_branch }}
+          COMPARE_URL: ${{ steps.prepare.outputs.compare_url }}
+        run: |
+          if git ls-remote --exit-code --heads origin "$PREPARE_BRANCH"; then
+            echo "Prepare branch already exists: $PREPARE_BRANCH"
+            echo "Open or reuse the release PR from: $COMPARE_URL"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit version bump
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          VERSION: ${{ steps.prepare.outputs.version }}
+        run: |
+          git config user.name "vitest-release-bot"
+          git config user.email "actions@github.com"
+          git add package.json packages/*/package.json
+          git commit -m "chore: release v$VERSION"
+
+      - name: Push prepare branch
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          PREPARE_BRANCH: ${{ steps.prepare.outputs.prepare_branch }}
+        run: git push origin "HEAD:$PREPARE_BRANCH"
+
+      - name: Print release PR URL
+        env:
+          COMPARE_URL: ${{ steps.prepare.outputs.compare_url }}
+        run: echo "Open the release PR from $COMPARE_URL"
