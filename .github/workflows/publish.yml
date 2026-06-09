@@ -12,6 +12,8 @@ env:
   VITE_TEST_WATCHER_DEBUG: 'false'
 
 jobs:
+  # Keep detection outside the Release environment. Environment approval is job-level,
+  # so the publish job is only created after a release commit is detected.
   detect:
     if: github.repository == 'vitest-dev/vitest'
     name: Detect release commit
