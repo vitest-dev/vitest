@@ -161,8 +161,8 @@ To prepare a release:
 
 - Trigger `Prepare Publish` workflow dispatch in GitHub Actions with
    - `target_branch`: the maintained release branch, for example `main`, `v4`, or `v4.1`
-   - `release`: usually `next` (TODO: bumpp convention)
-   - `version`: only when an exact version is required
+   - `release`: Bumpp release type. By default `next`, which derives next major/minor/patch based on conventional commits.
+   - `version`: Override and specify exact version instead of deriving version through `release`.
 - TODO: auto PR creation via Github App or manual creation
   - Wait for the workflow to create or reuse `prepare-vX.Y.Z`.
   - Open the compare URL printed by the workflow and create a pull request back to `target_branch`.
