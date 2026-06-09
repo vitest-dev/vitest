@@ -165,7 +165,7 @@ The release branches are also linked with the documentation site releases:
 
 Releases — publishing the npm packages, creating the git release tag, and generating the associated GitHub release — are driven by a pull request and carried out by GitHub Actions, not from a maintainer's machine. The release PR holds the version bump, and merging it kicks off the actual publish.
 
-1. **Prepare the release PR.** Run the `Prepare Publish` workflow, choosing the `target_branch` to release from (`main`, `v4`, …) and how to bump the version. By default the version is derived from the commit history; you can also force a bump type or pass an exact `version` for pre-releases. The workflow pushes the version bump to a branch and prints a compare URL; open that URL to create the release PR.
+1. **Prepare the release PR.** Run the `Prepare Publish` workflow, choosing the `target_branch` to release from (`main`, `v4`, …) and how to bump the version. By default the version is derived from the commit history; you can also force a bump type or pass an exact `version` for pre-releases. To preview what the resulting version will be, run `pnpm release` locally first — it lists the commits since the last release and lets you pick the bump interactively (cancel before confirming so nothing is committed). The workflow pushes the version bump to a branch and prints a compare URL; open that URL to create the release PR.
 
 2. **Review and merge.** Review the version bump, then merge the PR so the `chore: release v*` commit lands on the release branch — that commit is what triggers the Publish step.
 
