@@ -3,13 +3,14 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ResolvedConfig as ResolvedViteConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { SequenceHooks, SequenceSetupFiles, SerializableRetry, TestTagDefinition } from '../../runtime/runner/types'
 import type { LabelColor, ParsedStack, ProvidedContext, TestError } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { CliOptions } from '../cli/cli-api'
 import type { PoolRunnerInitializer } from '../pools/types'
 import type {
   BuiltinReporterOptions,
@@ -1118,6 +1119,8 @@ export interface UserConfig extends InlineConfig {
    * Log all available tags instead of running tests.
    */
   listTags?: boolean | 'json'
+
+  configLoader?: 'bundle' | 'runner' | 'native'
 }
 
 export type OnUnhandledErrorCallback = (error: (TestError | Error) & { type: string }) => boolean | void
@@ -1126,6 +1129,7 @@ export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
     | 'project'
+    | 'projects'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1230,6 +1234,41 @@ export interface ResolvedConfig
       }
     }
   }
+
+  cliOptions: CliOptions
+  viteOverrides: ViteUserConfig
+
+  /**
+   * Resolved project configs.
+   *
+   * Populated on the root config after `resolveConfig` runs. Each entry pairs the
+   * resolved Vite config (which may be shared between sibling entries — e.g. browser
+   * instance variants of the same parent) with the per-entry resolved Vitest config.
+   *
+   * Use the per-entry `projectConfig` for the current project's test config rather
+   * than `viteConfig.test`, because shared `viteConfig` instances retain only the
+   * primary project's `.test`.
+   */
+  projects?: ResolvedProjectEntry[]
+}
+
+/**
+ * A resolved project entry. `viteConfig` may be shared by reference across multiple
+ * entries (e.g. browser instances or benchmark variants of the same parent), while
+ * `projectConfig` is always a distinct object per entry.
+ */
+export interface ResolvedProjectEntry {
+  viteConfig: ResolvedViteConfig
+  projectConfig: ResolvedConfig
+  /**
+   * When set, this entry exists only so browser-instance siblings can attach
+   * to a parent that owns the Vite server and (later) the browser provider.
+   * The resulting `TestProject` is created and kept alive (so siblings can
+   * reference it via `_parent`) but is NOT pushed to `vitest.projects`.
+   *
+   * @internal
+   */
+  hidden?: boolean
 }
 
 type NonProjectOptions

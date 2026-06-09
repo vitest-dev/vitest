@@ -1,5 +1,5 @@
 import type { GlobOptions } from 'tinyglobby'
-import type { DevEnvironment, ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import type { DevEnvironment, ResolvedConfig as ResolvedViteConfig, ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
@@ -12,8 +12,6 @@ import type {
   ProjectName,
   ResolvedConfig,
   SerializedConfig,
-  TestProjectInlineConfiguration,
-  UserConfig,
 } from './types/config'
 import crypto from 'node:crypto'
 import { promises as fs, readFileSync } from 'node:fs'
@@ -29,7 +27,6 @@ import { setup } from '../api/setup'
 import { createDefinesScript } from '../utils/config-helpers'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
-import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -37,11 +34,9 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MetaEnvReplacerPlugin } from './plugins/metaEnvReplacer'
 import { MocksPlugins } from './plugins/mocks'
-import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { getFilePoolName } from './pool'
 import { VitestResolver } from './resolver'
 import { TestSpecification } from './test-specification'
-import { createViteServer } from './vite'
 
 export class TestProject {
   /**
@@ -66,10 +61,12 @@ export class TestProject {
 
   public readonly benchmark: BenchmarkManager = new BenchmarkManager(this)
 
+  public config: ResolvedConfig
+  public viteConfig: ResolvedViteConfig
+  public vite: ViteDevServer
+  public hash: string
+
   /** @internal */ typechecker?: Typechecker
-  /** @internal */ _config?: ResolvedConfig
-  /** @internal */ _vite?: ViteDevServer
-  /** @internal */ _hash?: string
   /** @internal */ _resolver!: VitestResolver
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
@@ -87,24 +84,56 @@ export class TestProject {
 
   constructor(
     vitest: Vitest,
-    public options?: InitializeProjectOptions | undefined,
-    tmpDir?: string,
+    server: ViteDevServer,
+    viteConfig: ResolvedViteConfig,
+    projectConfig: ResolvedConfig,
   ) {
     this.vitest = vitest
     this.globalConfig = vitest.config
-    this.tmpDir = tmpDir || join(tmpdir(), nanoid())
+    this.tmpDir = join(tmpdir(), nanoid())
+    this.vite = server
+    this.viteConfig = viteConfig
+    this.config = projectConfig
+    this.hash = generateHash(
+      this.config.root + this.config.name,
+    )
+    this._provideObject(projectConfig.provide)
   }
 
-  /**
-   * The unique hash of this project. This value is consistent between the reruns.
-   *
-   * It is based on the root of the project (not consistent between OS) and its name.
-   */
-  public get hash(): string {
-    if (!this._hash) {
-      throw new Error('The server was not set. It means that `project.hash` was called before the Vite server was established.')
+  /** @internal */
+  _initializeRunners(server: ViteDevServer) {
+    this._serializedDefines = createDefinesScript(server.config.define)
+    this._resolver = new VitestResolver(server.config.cacheDir, this.config)
+    this._fetcher = createFetchModuleFunction(
+      this._resolver,
+      this.config,
+      this.vitest._fsCache,
+      this.vitest._traces,
+      this.tmpDir,
+    )
+
+    const environment = server.environments.__vitest__
+    this.runner = this.config.experimental.viteModuleRunner === false
+      ? new NativeModuleRunner(this.config.root)
+      : new ServerModuleRunner(
+          environment,
+          this._fetcher,
+          this.config,
+        )
+
+    const ssrEnvironment = server.environments.ssr
+    if (isRunnableDevEnvironment(ssrEnvironment)) {
+      const ssrRunner = new ServerModuleRunner(
+        ssrEnvironment,
+        this._fetcher,
+        this.config,
+      )
+      Object.defineProperty(ssrEnvironment, 'runner', {
+        value: ssrRunner,
+        writable: true,
+        configurable: true,
+      })
     }
-    return this._hash
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -173,38 +202,6 @@ export class TestProject {
       serializedConfig: this.serializedConfig,
       context: this.getProvidedContext(),
     }
-  }
-
-  /**
-   * Vite's dev server instance. Every workspace project has its own server.
-   */
-  public get vite(): ViteDevServer {
-    if (!this._vite) {
-      throw new Error('The server was not set. It means that `project.vite` was called before the Vite server was established.')
-    }
-    // checking it once should be enough
-    Object.defineProperty(this, 'vite', {
-      configurable: true,
-      writable: true,
-      value: this._vite,
-    })
-    return this._vite
-  }
-
-  /**
-   * Resolved project configuration.
-   */
-  public get config(): ResolvedConfig {
-    if (!this._config) {
-      throw new Error('The config was not set. It means that `project.config` was called before the Vite server was established.')
-    }
-    // checking it once should be enough
-    // Object.defineProperty(this, 'config', {
-    //   configurable: true,
-    //   writable: true,
-    //   value: this._config,
-    // })
-    return this._config
   }
 
   /**
@@ -363,7 +360,7 @@ export class TestProject {
   }
 
   isBrowserEnabled(): boolean {
-    return isBrowserEnabled(this.config)
+    return !!this.config.browser?.enabled
   }
 
   private markTestFile(testPath: string): void {
@@ -488,7 +485,7 @@ export class TestProject {
       project: this,
       mocksPlugins: options => MocksPlugins(options),
       metaEnvReplacer: () => MetaEnvReplacerPlugin(),
-      coveragePlugin: () => CoverageTransform(this.vitest),
+      coveragePlugin: () => CoverageTransform(this.vitest._harness),
     })
     this._parentBrowser = browser
     if (this.config.browser.ui) {
@@ -526,7 +523,6 @@ export class TestProject {
         }
       }).then(() => {
         this._provided = {} as any
-        this._vite = undefined
       })
     }
     return this.closingPromise
@@ -538,73 +534,6 @@ export class TestProject {
    */
   public import<T>(moduleId: string): Promise<T> {
     return this.runner.import(moduleId)
-  }
-
-  private _setHash() {
-    this._hash = generateHash(
-      this._config!.root + this._config!.name,
-    )
-  }
-
-  /** @internal */
-  async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
-    this._config = resolveConfig(
-      this.vitest,
-      {
-        ...options,
-        // root-only configs
-        coverage: this.vitest.config.coverage,
-        attachmentsDir: this.vitest.config.attachmentsDir,
-      },
-      server.config,
-    )
-    this._config.api.token = this.vitest.config.api.token
-    this._config.mergeReportsLabel = this.vitest.config.mergeReportsLabel
-    this._setHash()
-    for (const _providedKey in this.config.provide) {
-      const providedKey = _providedKey as keyof ProvidedContext
-      // type is very strict here, so we cast it to any
-      (this.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        this.config.provide[providedKey],
-      )
-    }
-
-    this.closingPromise = undefined
-
-    this._resolver = new VitestResolver(server.config.cacheDir, this._config)
-    this._vite = server
-    this._serializedDefines = createDefinesScript(server.config.define)
-    this._fetcher = createFetchModuleFunction(
-      this._resolver,
-      this._config,
-      this.vitest._fsCache,
-      this.vitest._traces,
-      this.tmpDir,
-    )
-
-    const environment = server.environments.__vitest__
-    this.runner = this._config.experimental.viteModuleRunner === false
-      ? new NativeModuleRunner(this._config.root)
-      : new ServerModuleRunner(
-          environment,
-          this._fetcher,
-          this._config,
-        )
-
-    const ssrEnvironment = server.environments.ssr
-    if (isRunnableDevEnvironment(ssrEnvironment)) {
-      const ssrRunner = new ServerModuleRunner(
-        ssrEnvironment,
-        this._fetcher,
-        this._config,
-      )
-      Object.defineProperty(ssrEnvironment, 'runner', {
-        value: ssrRunner,
-        writable: true,
-        configurable: true,
-      })
-    }
   }
 
   /** @internal */
@@ -703,8 +632,7 @@ export class TestProject {
     await this.browser?.initBrowserProvider(this)
   })
 
-  /** @internal */
-  public _provideObject(context: Partial<ProvidedContext>): void {
+  private _provideObject(context: Partial<ProvidedContext>): void {
     for (const _providedKey in context) {
       const providedKey = _providedKey as keyof ProvidedContext
       // type is very strict here, so we cast it to any
@@ -715,37 +643,47 @@ export class TestProject {
     }
   }
 
-  /** @internal */
-  static _createBasicProject(vitest: Vitest): TestProject {
+  /**
+   * Create a project that reuses the root's Vite server, runner, resolver,
+   * and fetcher. The default `projectConfig` is the root's `vitest.config`,
+   * but callers can pass a variant (e.g. a browser-instance config) to give
+   * the project its own resolved test config while still sharing the root
+   * server's resources.
+   *
+   * @internal
+   */
+  static _createBasicProject(vitest: Vitest, projectConfig: ResolvedConfig = vitest.config): TestProject {
     const project = new TestProject(
       vitest,
-      undefined,
-      vitest._tmpDir,
+      vitest.vite,
+      vitest.viteConfig,
+      projectConfig,
     )
     project.runner = vitest.runner
-    project._vite = vitest.vite
-    project._config = vitest.config
     project._resolver = vitest._resolver
     project._fetcher = vitest._fetcher
     project._serializedDefines = createDefinesScript(vitest.vite.config.define)
-    project._setHash()
-    project._provideObject(vitest.config.provide)
     return project
   }
 
-  /** @internal */
-  static _cloneTestProject(parent: TestProject, config: ResolvedConfig): TestProject {
-    const clone = new TestProject(parent.vitest, undefined, parent.tmpDir)
-    clone.runner = parent.runner
-    clone._vite = parent._vite
-    clone._resolver = parent._resolver
-    clone._fetcher = parent._fetcher
-    clone._config = config
-    clone._setHash()
-    clone._parent = parent
-    clone._serializedDefines = parent._serializedDefines
-    clone._provideObject(config.provide)
-    return clone
+  /**
+   * Create a sibling project that shares server-derived resources (Vite server,
+   * runner, resolver, fetcher) with a primary project. The sibling has its own
+   * distinct `projectConfig`, but the same `viteConfig` reference as the primary.
+   *
+   * Used for browser-instance and benchmark variants whose entries share a
+   * `viteConfig` reference with a primary project entry.
+   *
+   * @internal
+   */
+  static _spawnSibling(parent: TestProject, config: ResolvedConfig): TestProject {
+    const sibling = new TestProject(parent.vitest, parent.vite, parent.viteConfig, config)
+    sibling.runner = parent.runner
+    sibling._resolver = parent._resolver
+    sibling._fetcher = parent._fetcher
+    sibling._parent = parent
+    sibling._serializedDefines = parent._serializedDefines
+    return sibling
   }
 }
 
@@ -765,36 +703,6 @@ export interface SerializedTestProject {
   name: string
   serializedConfig: SerializedConfig
   context: ProvidedContext
-}
-
-interface InitializeProjectOptions extends TestProjectInlineConfiguration {
-  configFile: string | false
-}
-
-export async function initializeProject(
-  workspacePath: string | number,
-  ctx: Vitest,
-  options: InitializeProjectOptions,
-): Promise<TestProject> {
-  const project = new TestProject(ctx, options)
-
-  const { configFile, ...restOptions } = options
-
-  const config: ViteInlineConfig = {
-    ...restOptions,
-    configFile,
-    configLoader: ctx.vite.config.inlineConfig.configLoader,
-    // this will make "mode": "test" | "benchmark" inside defineConfig
-    mode: options.test?.mode || options.mode || ctx.config.mode,
-    plugins: [
-      ...(options.plugins || []),
-      WorkspaceVitestPlugin(project, { ...options, workspacePath }),
-    ],
-  }
-
-  await createViteServer(config)
-
-  return project
 }
 
 function generateHash(str: string): string {

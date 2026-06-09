@@ -1,14 +1,14 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { CliOptions } from '../cli/cli-api'
+import type { PluginHarness } from '../config/pluginHarness'
 import type { ResolvedConfig, UserConfig } from '../types/config'
-import { deepClone, deepMerge, notNullish } from '@vitest/utils/helpers'
+import { deepMerge } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
-import { Vitest } from '../core'
-import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
@@ -23,16 +23,73 @@ import {
 } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
-export async function VitestPlugin(
-  options: UserConfig = {},
-  vitest: Vitest = new Vitest(deepClone(options)),
-): Promise<VitePlugin[]> {
-  const userConfig = deepMerge({}, options) as UserConfig
+// the plugins required when starting Vitest
+export function VitestCorePlugin(
+  harness: PluginHarness,
+): VitePlugin[] {
+  return [
+    ...CSSEnablerPlugin({
+      get config() {
+        return harness.getVitest().config
+      },
+    }),
+    ...MocksPlugins(),
+    CoverageTransform(() => harness.getVitest()),
+    VitestCoreResolver(),
+    NormalizeURLPlugin(),
+    MetaEnvReplacerPlugin(),
+    {
+      name: 'vitest:ui-injector',
+      enforce: 'post',
+      async configResolved(config) {
+        if (config.test.ui) {
+          await harness.packageInstaller.ensureInstalled('@vitest/ui', resolve(config.root), harness.version)
+          const uiPlugin = (await import('@vitest/ui')).default(
+            harness.logger,
+            harness.version,
+          )
+          // @ts-expect-error mutate readonly
+          config.plugins.push(uiPlugin)
+        }
+      },
+    },
+    // TODO: separetly
+    // {
+    //   name: 'vitest:module-runner-fixer',
+    //   configureServer: {
+    //     // Install a `ServerModuleRunner` override on the SSR environment so
+    //     // that user plugins' `configureServer` hooks can call
+    //     // `server.environments.ssr.runner.import(...)` and get Vitest's
+    //     // module runner (which respects `noExternal` etc.) instead of Vite's
+    //     // default `ESModulesEvaluator` (which does not support CJS deps).
+    //     //
+    //     // Runs `enforce: 'pre'` so it sits before user plugins in the chain.
+    //     order: 'pre',
+    //     async handler(server) {
+    //       const ssrEnvironment = server.environments.ssr
+    //       if (vite.isRunnableDevEnvironment(ssrEnvironment)) {
+    //         const ssrRunner = new ServerModuleRunner(
+    //           ssrEnvironment,
+    //           vitest._fetcher,
+    //           vitest.config,
+    //         )
+    //         Object.defineProperty(ssrEnvironment, 'runner', {
+    //           value: ssrRunner,
+    //           writable: true,
+    //           configurable: true,
+    //         })
+    //       }
+    //     },
+    //   },
+    // },
+  ]
+}
 
-  async function UIPlugin() {
-    await vitest.packageInstaller.ensureInstalled('@vitest/ui', resolve(options.root || process.cwd()), vitest.version)
-    return (await import('@vitest/ui')).default(vitest)
-  }
+// the plugins required when resolving the config
+export function VitestConfigPlugin(options: CliOptions = {}): VitePlugin[] {
+  const userConfig = deepMerge({}, options) as CliOptions
+
+  let resolvedRoot: string
 
   return [
     <VitePlugin>{
@@ -98,10 +155,6 @@ export async function VitestPlugin(
           },
           build: {
             // Vitest doesn't use outputDir, but this value affects what folders are watched
-            // https://github.com/vitest-dev/vitest/issues/5429
-            // This works for Vite <5.2.10
-            outDir: 'dummy-non-existing-folder',
-            // This works for Vite >=5.2.10
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
           },
@@ -150,7 +203,7 @@ export async function VitestPlugin(
           }
         }
 
-        if (vitest._cliOptions.benchmarkOnly) {
+        if (options.benchmarkOnly) {
           config.test!.benchmark ??= {}
           config.test!.benchmark.enabled = true
         }
@@ -161,19 +214,20 @@ export async function VitestPlugin(
           config.test!.cache = options.cache
         }
 
-        if (vitest.configOverride.project) {
-          // project filter was set by the user, so we need to filter the project
-          options.project = vitest.configOverride.project
-        }
+        // if (vitest.configOverride.project) {
+        //   // project filter was set by the user, so we need to filter the project
+        //   options.project = vitest.configOverride.project
+        // }
 
-        config.customLogger = createViteLogger(
-          vitest.logger,
-          viteConfig.logLevel || 'warn',
-          {
-            allowClearScreen: false,
-          },
-        )
-        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+        // TODO!
+        // config.customLogger = createViteLogger(
+        //   vitest.logger,
+        //   viteConfig.logLevel || 'warn',
+        //   {
+        //     allowClearScreen: false,
+        //   },
+        // )
+        // config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         // chokidar fsevents is unstable on macos when emitting "ready" event
         if (
@@ -202,11 +256,10 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = vitest.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
-                relative(root, filename),
+                relative(resolvedRoot, filename),
               )!
             }
           }
@@ -215,6 +268,8 @@ export async function VitestPlugin(
         return config
       },
       async configResolved(viteConfig) {
+        resolvedRoot = viteConfig.root
+
         const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
           ;(viteConfigTest as any).run = true
@@ -224,9 +279,20 @@ export async function VitestPlugin(
           delete viteConfigTest.alias
         }
 
-        // viteConfig.test is final now, merge it for real
-        options = deepMerge({}, configDefaults, viteConfigTest, options)
-        options.api = resolveApiServerConfig(options, defaultPort)
+        // Merge defaults + Vite's resolved test config + the CLI options into
+        // a single object and assign it back onto `viteConfig.test`. Downstream
+        // Vitest reads this resolved test config directly (no `_vitest` stash
+        // needed now that the server can be created from a resolved config).
+        const merged: UserConfig = deepMerge({}, configDefaults, viteConfigTest, options)
+        merged.api = resolveApiServerConfig(merged, defaultPort)
+
+        // Auto-name browser instances based on the project name + browser kind.
+        if (merged.browser?.instances) {
+          const baseName = merged.name
+          merged.browser.instances.forEach((instance) => {
+            instance.name ??= baseName ? `${baseName} (${instance.browser})` : instance.browser
+          })
+        }
 
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env
@@ -242,55 +308,15 @@ export async function VitestPlugin(
         }
 
         // don't watch files in run mode
-        if (!options.watch) {
+        if (!merged.watch) {
           viteConfig.server.watch = null
         }
 
-        if (options.ui) {
-          // @ts-expect-error mutate readonly
-          viteConfig.plugins.push(await UIPlugin())
-        }
-
-        Object.defineProperty(viteConfig, '_vitest', {
-          value: options,
-          enumerable: false,
-          configurable: true,
-        })
-
-        const originalName = options.name
-        if (options.browser?.instances) {
-          options.browser.instances.forEach((instance) => {
-            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
-          })
-        }
-      },
-      configureServer: {
-        async handler(server) {
-          if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
-            server.watcher.on('ready', () => {
-              // eslint-disable-next-line no-console
-              console.log('[debug] watcher is ready')
-            })
-          }
-          await vitest._setServer(options, server)
-          if (options.api && options.watch) {
-            (await import('../../api/setup')).setup(vitest)
-          }
-
-          // #415, in run mode we don't need the watcher, close it would improve the performance
-          if (!options.watch) {
-            await server.watcher.close()
-          }
-        },
+        // TODO: call internal resolveConfig here and assign the value
+        ;(viteConfig as any).test = merged
       },
     },
-    MetaEnvReplacerPlugin(),
-    ...CSSEnablerPlugin(vitest),
-    CoverageTransform(vitest),
-    VitestCoreResolver(vitest),
-    ...MocksPlugins(),
     VitestOptimizer(),
-    NormalizeURLPlugin(),
     ModuleRunnerTransform(),
-  ].filter(notNullish)
+  ]
 }

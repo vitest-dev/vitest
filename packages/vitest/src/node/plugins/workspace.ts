@@ -1,13 +1,10 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import type { TestProject } from '../project'
-import type { BrowserConfigOptions, ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
+import type { PluginHarness } from '../config/pluginHarness'
+import type { ResolvedConfig, TestProjectInlineConfiguration, UserConfig } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
-import { deepMerge } from '@vitest/utils/helpers'
 import { basename, dirname, relative, resolve } from 'pathe'
 import * as vite from 'vite'
-import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -28,11 +25,26 @@ interface WorkspaceOptions extends TestProjectInlineConfiguration {
   workspacePath: string | number
 }
 
+/**
+ * Plugins applied when resolving a single project's Vite config.
+ *
+ * Takes a `Vitest` instance (not a `TestProject` — projects are no longer
+ * created during config resolution). The CSS-modules and CSS-enabler hooks
+ * fire at file transform time, well after the project's resolved config
+ * exists on the Vite resolved config (`viteConfig.test`), so they look up
+ * the project's config there lazily.
+ *
+ * Project filtering (`--project`) is intentionally NOT applied here — it runs
+ * at the end of `resolveConfig` so error messages can list every name that was
+ * considered (browser-instance and benchmark-derived names included).
+ */
 export function WorkspaceVitestPlugin(
-  project: TestProject,
+  harness: PluginHarness,
+  globalViteConfig: vite.ResolvedConfig,
+  globalConfig: ResolvedConfig,
   options: WorkspaceOptions,
-) {
-  return <VitePlugin[]>[
+): VitePlugin[] {
+  return [
     {
       name: 'vitest:project:name',
       enforce: 'post',
@@ -64,44 +76,16 @@ export function WorkspaceVitestPlugin(
           }
         }
 
-        if (project.vitest._cliOptions.benchmarkOnly) {
-          viteConfig.test.benchmark ??= {}
-          viteConfig.test.benchmark.enabled = true
-        }
-
-        const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
-        const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
-        // keep project names to potentially filter it out
-        const workspaceNames = [name]
-        const browser = (viteConfig.test!.browser || {}) as BrowserConfigOptions
-        if (isBrowserEnabled && browser.name && !browser.instances?.length) {
-          // vitest injects `instances` in this case later on
-          workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
-        }
+        // TODO: globalConfig.inlineConfig (?)
+        // if (vitest._cliOptions.benchmarkOnly) {
+        //   viteConfig.test.benchmark ??= {}
+        //   viteConfig.test.benchmark.enabled = true
+        // }
 
         viteConfig.test?.browser?.instances?.forEach((instance) => {
-          // every instance is a potential project
+          // every instance is a potential project — give it a default name
           instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-          if (isBrowserEnabled) {
-            workspaceNames.push(instance.name)
-          }
         })
-        if (viteConfig.test?.benchmark?.enabled) {
-          workspaceNames.push(name ? `${name} (bench)` : 'bench')
-        }
-
-        const filters = project.vitest.config.project
-        // if there is `--project=...` filter, check if any of the potential projects match
-        // if projects don't match, we ignore the test project altogether
-        // if some of them match, they will later be filtered again by `resolveWorkspace`
-        if (filters.length) {
-          const hasProject = workspaceNames.some((name) => {
-            return project.vitest.matchesProjectFilter(name)
-          })
-          if (!hasProject) {
-            throw new VitestFilteredOutProjectError()
-          }
-        }
 
         const vitestConfig: UserConfig = {
           name: { label: name, color },
@@ -110,20 +94,20 @@ export function WorkspaceVitestPlugin(
         vitestConfig.experimental ??= {}
 
         // always inherit the global `fsModuleCache` value even without `extends: true`
-        if (testConfig.experimental?.fsModuleCache == null && project.vitest.config.experimental?.fsModuleCache != null) {
-          vitestConfig.experimental.fsModuleCache = project.vitest.config.experimental.fsModuleCache
+        if (testConfig.experimental?.fsModuleCache == null && globalConfig.experimental?.fsModuleCache != null) {
+          vitestConfig.experimental.fsModuleCache = globalConfig.experimental.fsModuleCache
         }
-        if (testConfig.experimental?.fsModuleCachePath == null && project.vitest.config.experimental?.fsModuleCachePath != null) {
-          vitestConfig.experimental.fsModuleCachePath = project.vitest.config.experimental.fsModuleCachePath
+        if (testConfig.experimental?.fsModuleCachePath == null && globalConfig.experimental?.fsModuleCachePath != null) {
+          vitestConfig.experimental.fsModuleCachePath = globalConfig.experimental.fsModuleCachePath
         }
-        if (testConfig.experimental?.viteModuleRunner == null && project.vitest.config.experimental?.viteModuleRunner != null) {
-          vitestConfig.experimental.viteModuleRunner = project.vitest.config.experimental.viteModuleRunner
+        if (testConfig.experimental?.viteModuleRunner == null && globalConfig.experimental?.viteModuleRunner != null) {
+          vitestConfig.experimental.viteModuleRunner = globalConfig.experimental.viteModuleRunner
         }
-        if (testConfig.experimental?.nodeLoader == null && project.vitest.config.experimental?.nodeLoader != null) {
-          vitestConfig.experimental.nodeLoader = project.vitest.config.experimental.nodeLoader
+        if (testConfig.experimental?.nodeLoader == null && globalConfig.experimental?.nodeLoader != null) {
+          vitestConfig.experimental.nodeLoader = globalConfig.experimental.nodeLoader
         }
-        if (testConfig.experimental?.importDurations == null && project.vitest.config.experimental?.importDurations != null) {
-          vitestConfig.experimental.importDurations = project.vitest.config.experimental.importDurations
+        if (testConfig.experimental?.importDurations == null && globalConfig.experimental?.importDurations != null) {
+          vitestConfig.experimental.importDurations = globalConfig.experimental.importDurations
         }
 
         return {
@@ -172,8 +156,8 @@ export function WorkspaceVitestPlugin(
             middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
-                project.vitest.config.root,
-                project.vitest.vite.config.configFile,
+                globalConfig.root,
+                globalViteConfig.configFile,
               ),
             },
           },
@@ -232,17 +216,21 @@ export function WorkspaceVitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = project.config.root
+              // The project's own resolved root (the project's `viteConfig.root`
+              // mirrors the resolved Vitest `config.root`). At transform time
+              // the resolved viteConfig is available; before then we fall back
+              // to the inline `options.root`.
+              const projectRoot = root || globalConfig.root
               return generateScopedClassName(
                 classNameStrategy,
                 name,
-                relative(root, filename),
+                relative(projectRoot, filename),
               )!
             }
           }
         }
         config.customLogger = createViteLogger(
-          project.vitest.logger,
+          harness.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,
@@ -253,21 +241,41 @@ export function WorkspaceVitestPlugin(
         return config
       },
     },
-    {
-      name: 'vitest:project:server',
-      enforce: 'pre',
-      async configureServer(server) {
-        const options = deepMerge({}, configDefaults, server.config.test || {})
-        await project._configureServer(options, server)
-
-        await server.watcher.close()
-      },
-    },
+    // TODO
+    // {
+    //   name: 'vitest:project:server',
+    //   enforce: 'pre',
+    //   configureServer: {
+    //     // Install Vitest's `ServerModuleRunner` on the project's SSR
+    //     // environment so user plugins' `configureServer` hooks can use
+    //     // `server.environments.ssr.runner.import(...)` and get the runner
+    //     // that respects Vitest's external/noExternal semantics.
+    //     order: 'pre',
+    //     async handler(server) {
+    //       const { ServerModuleRunner } = await import('../environments/serverRunner')
+    //       const { isRunnableDevEnvironment } = await import('vite')
+    //       const ssrEnvironment = server.environments.ssr
+    //       if (isRunnableDevEnvironment(ssrEnvironment)) {
+    //         const ssrRunner = new ServerModuleRunner(
+    //           ssrEnvironment,
+    //           vitest._fetcher,
+    //           vitest.config,
+    //         )
+    //         Object.defineProperty(ssrEnvironment, 'runner', {
+    //           value: ssrRunner,
+    //           writable: true,
+    //           configurable: true,
+    //         })
+    //       }
+    //     },
+    //   },
+    // },
     MetaEnvReplacerPlugin(),
-    ...CSSEnablerPlugin(project),
-    CoverageTransform(project.vitest),
+    // TODO: should be testProject's config
+    ...CSSEnablerPlugin({ config: globalConfig }),
+    CoverageTransform(harness),
     ...MocksPlugins(),
-    VitestProjectResolver(project.vitest),
+    VitestProjectResolver(harness),
     VitestOptimizer(),
     NormalizeURLPlugin(),
     ModuleRunnerTransform(),
