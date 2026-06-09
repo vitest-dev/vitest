@@ -157,6 +157,7 @@ export class Pool {
 
       if (
         !task.isolate
+        && !runner.isTerminated
         && !isMemoryLimitReached
         && this.queue[0]?.task.isolate === false
         && isEqualRunner(runner, this.queue[0].task)
