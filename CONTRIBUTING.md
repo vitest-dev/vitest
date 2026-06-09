@@ -155,16 +155,20 @@ Backport PR titles should include the target branch in a `[backport to x]` marke
 
 #### Release Pull Requests
 
-Release preparation uses the same branch policy:
+Release preparation is done through a pull request and associated multiple workflows.
 
-- Run the release preparation workflow against `main`, `vN`, or `vN.M`.
-- Do not prepare or publish releases from `backport-*` branches. Backport branches are source branches for pull requests that merge into a maintained release branch.
-- The generated release branch should be named `prepare-vX.Y.Z` and contain a `chore: release vX.Y.Z` commit.
-- If the same release preparation is dispatched again, reuse the existing `prepare-vX.Y.Z` branch and pull request instead of force-pushing it.
-- Publishing is triggered by merging the reviewed release pull request into its maintained release branch.
-- Release tags and GitHub release notes are created by the publish workflow after npm publish succeeds. Do not create release tags from a local release command.
+To prepare a release:
 
-When the release workflow itself changes, backport the workflow and release helper scripts to every maintained branch that is still expected to publish releases.
+- Trigger `Prepare Publish` workflow dispatch in GitHub Actions with
+   - `target_branch`: the maintained release branch, for example `main`, `v4`, or `v4.1`
+   - `release`: usually `next` (TODO: bumpp convention)
+   - `version`: only when an exact version is required
+- TODO: auto PR creation via Github App or manual creation
+  - Wait for the workflow to create or reuse `prepare-vX.Y.Z`.
+  - Open the compare URL printed by the workflow and create a pull request back to `target_branch`.
+- Review the version bump PR like a normal PR and merge into the target release branch.
+- Approve the `Release` environment when automatically triggered `publish` workflow requests approval.
+- Confirm that npm publish, tag creation, and GitHub release note generation completed successfully.
 
 #### Documentation Branches
 
