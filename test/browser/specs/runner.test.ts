@@ -257,6 +257,7 @@ error with a stack
   test('popup apis should log a warning', () => {
     expect(stderr).toContain('Vitest encountered a `alert("test")`')
     expect(stderr).toContain('Vitest encountered a `confirm("test")`')
+    expect(stderr).toContain('Vitest encountered a `print()`')
     expect(stderr).toContain('Vitest encountered a `prompt("test")`')
   })
 })
