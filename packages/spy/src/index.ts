@@ -502,7 +502,9 @@ function createMock(
           returnValue = Reflect.construct(implementation, args, new.target)
           const implementationPrototype = (implementation as any).prototype
           if (
+            // prototypeMembers is used by automocking case and we want to skip that case.
             prototypeMembers.length === 0
+            // TODO: no idea what
             && new.target?.prototype
             && implementationPrototype
             && Object.getPrototypeOf(returnValue) === new.target.prototype
