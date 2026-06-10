@@ -172,7 +172,7 @@ Releases — publishing the npm packages, creating the git release tag, and gene
 
    The workflow pushes the bump to a branch and prints a compare URL; open it to create the release PR. To preview what a `release` input resolves to, run `pnpm release` locally first — it lists commits since the last release and lets you browse release types and versions interactively (cancel before confirming so nothing is committed).
 
-2. **Review and merge the PR.** Review the version bump, then merge the PR so the `chore: release v*` commit lands on the release branch — that commit is what triggers the Publish step.
+2. **Review and merge the PR.** Check the version bump, then merge so the `chore: release v*` commit lands on the release branch — that commit is what triggers publishing.
 
 3. **Approve the publish.** Merging triggers the `Publish Package` workflow, which builds the packages and then pauses for `Release` environment approval. Approve it when prompted; the workflow publishes to npm, pushes the release tag, and generates the GitHub release. Afterwards, confirm npm, the tag, and the GitHub release all look right.
 
