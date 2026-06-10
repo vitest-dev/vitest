@@ -8,14 +8,10 @@ if (process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
   throw new Error(`Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `)
 }
 
-let version = process.argv[2]
+const version = process.argv[2]
 
 if (!version) {
-  throw new Error('No tag specified')
-}
-
-if (version.startsWith('v')) {
-  version = version.slice(1)
+  throw new Error('No version specified')
 }
 
 const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url))
@@ -23,7 +19,7 @@ const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
 
 if (pkg.version !== version) {
   throw new Error(
-    `Package version from tag "${version}" mismatches with the current version "${pkg.version}"`,
+    `Input version "${version}" does not match package.json version "${pkg.version}"`,
   )
 }
 
@@ -35,7 +31,12 @@ const releaseTag = version.includes('beta')
 const dryRun = process.env.PUBLISH_DRY_RUN === 'true'
 const dryRunArgs = dryRun ? ['--dry-run'] : []
 
-console.log(dryRun ? 'Dry-running version' : 'Publishing version', version, 'with tag', releaseTag || 'latest')
+console.log(
+  dryRun ? 'Dry-running version' : 'Publishing version',
+  version,
+  'with tag',
+  releaseTag || 'latest',
+)
 
 if (releaseTag) {
   await $$`pnpm -r publish --access public --no-git-checks --tag ${releaseTag} ${dryRunArgs}`
