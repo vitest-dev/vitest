@@ -366,7 +366,7 @@ await expect(
 
 Dynamic content like timestamps, user data, or random values will cause tests to fail. You can either mock the sources of dynamic content or mask them when using the Playwright provider by using the [`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask) in `screenshotOptions`.
 
-```ts
+```ts{8}
 const profile = page.getByRole(
   'article',
   { name: 'Gracie\'s profile' },
@@ -435,7 +435,7 @@ Font availability and rendering varies significantly between systems. Some possi
 
 - Increase comparison threshold for text-heavy areas:
 
-  ```ts
+  ```ts{6-7}
   await expect(
     page.getByRole('article', { name: 'How to grow tomatoes' })
   ).toMatchScreenshot({
@@ -480,7 +480,7 @@ We first need to install the browsers since GitHub runners don't have them prein
 ::: tabs key:provider
 == Playwright
 
-[Playwright](https://npmx.dev/package/playwright) makes this easy. Just pin your version and add this before running tests:
+[Playwright](https://npmx.dev/package/playwright) makes this easy. Just pin your version and add this step before running tests:
 
 ```yaml [.github/workflows/ci.yml]
 # ...the rest of the workflow
@@ -490,7 +490,7 @@ We first need to install the browsers since GitHub runners don't have them prein
 
 == WebdriverIO
 
-[WebdriverIO](https://npmx.dev/package/webdriverio) expects you to bring your own browsers. The folks at [@browser-actions](https://github.com/browser-actions) have your back:
+[WebdriverIO](https://npmx.dev/package/webdriverio) installs browsers automatically if none can be found when a test run starts, but it's recommended to decouple the installation process. To help with this, the folks at [@browser-actions](https://github.com/browser-actions) have packaged scripts to install [Chrome](https://github.com/browser-actions/setup-chrome), [Edge](https://github.com/browser-actions/setup-edge), and [Firefox](https://github.com/browser-actions/setup-firefox) in convenient reusable actions:
 
 ```yaml [.github/workflows/ci.yml]
 # ...the rest of the workflow
