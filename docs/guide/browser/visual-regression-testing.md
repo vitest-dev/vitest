@@ -181,9 +181,9 @@ When a visual test fails, Vitest provides three images to help debug:
 
 1. **Reference screenshot**: the expected baseline image
 1. **Actual screenshot**: what was captured during the test
-1. **Diff image**: highlights the differences, but this might not get generated
+1. **Diff image**: highlights the differences; only generated when the screenshots have the same dimensions (behavior may vary with custom matchers)
 
-You'll see something like:
+You'll see something like this in the CLI output:
 
 ```
 expect(element).toMatchScreenshot()
@@ -200,6 +200,15 @@ Actual screenshot:
 Diff image:
   tests/.vitest/attachments/button.vrt.test.ts/button-chromium-darwin-diff.png
 ```
+
+While in UI mode, Vitest shows a tabbed diff view with an A/B slider as shown below.
+
+<center>
+  <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-light src="/visual-regression/diff-view-light.avif">
+  <img alt="Animated demo of the visual regression diff view, switching tabs and using the slider to reveal differences" img-dark src="/visual-regression/diff-view-dark.avif">
+
+  <sup>An example of the visual regression diff UI, showing the "Diff", "Reference", "Actual", and "Slider" tabs, and how the slider reveals unexpected visual changes in a component.</sup>
+</center>
 
 #### Understanding the diff image
 
