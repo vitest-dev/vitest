@@ -246,7 +246,12 @@ export abstract class Locator {
   protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return this.locator(getByRoleSelector(role, options))
+    const { hasText, hasNotText, has, hasNot, ...ariaOptions } = options ?? {}
+    const locator = this.locator(getByRoleSelector(role, ariaOptions))
+    if (hasText !== undefined || hasNotText !== undefined || has !== undefined || hasNot !== undefined) {
+      return locator.filter({ hasText, hasNotText, has, hasNot })
+    }
+    return locator
   }
 
   public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {

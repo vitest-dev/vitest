@@ -105,7 +105,12 @@ page.extend({
     return new PreviewLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    return new PreviewLocator(getByRoleSelector(role, options))
+    const { hasText, hasNotText, has, hasNot, ...ariaOptions } = options ?? {}
+    const locator = new PreviewLocator(getByRoleSelector(role, ariaOptions))
+    if (hasText !== undefined || hasNotText !== undefined || has !== undefined || hasNot !== undefined) {
+      return locator.filter({ hasText, hasNotText, has, hasNot })
+    }
+    return locator
   },
   getByTestId(testId) {
     return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))

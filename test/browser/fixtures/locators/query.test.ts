@@ -157,3 +157,50 @@ describe('locator.filter', () => {
     )
   })
 })
+
+describe('getByRole inline filter options', () => {
+  test('hasText filters by text content', () => {
+    document.body.innerHTML = `
+    <button>A</button>
+    <button>B</button>
+    `
+    const locator = page.getByRole('button', { hasText: 'A' })
+    expect(locator.element()).toBe(document.querySelectorAll('button')[0])
+  })
+
+  test('hasNotText filters out matching text', () => {
+    document.body.innerHTML = `
+    <button>A</button>
+    <button>B</button>
+    `
+    const locator = page.getByRole('button', { hasNotText: 'B' })
+    expect(locator.element()).toBe(document.querySelectorAll('button')[0])
+  })
+
+  test('name and hasText can be combined', () => {
+    document.body.innerHTML = `
+    <button aria-label="submit">Save</button>
+    <button aria-label="submit">Cancel</button>
+    `
+    const locator = page.getByRole('button', { name: 'submit', hasText: 'Save' })
+    expect(locator.element()).toBe(document.querySelectorAll('button')[0])
+  })
+
+  test('has filters by nested locator', () => {
+    document.body.innerHTML = `
+    <article><span>Vitest</span></article>
+    <article><span>Playwright</span></article>
+    `
+    const locator = page.getByRole('article', { has: page.getByText('Vitest') })
+    expect(locator.element()).toBe(document.querySelectorAll('article')[0])
+  })
+
+  test('ARIA-only options still work without filter properties', () => {
+    document.body.innerHTML = `
+    <button>A</button>
+    <button disabled>B</button>
+    `
+    const locator = page.getByRole('button', { disabled: false })
+    expect(locator.element()).toBe(document.querySelectorAll('button')[0])
+  })
+})

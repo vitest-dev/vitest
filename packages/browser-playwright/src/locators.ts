@@ -89,7 +89,12 @@ page.extend({
     return new PlaywrightLocator(getByLabelSelector(text, options))
   },
   getByRole(role, options) {
-    return new PlaywrightLocator(getByRoleSelector(role, options))
+    const { hasText, hasNotText, has, hasNot, ...ariaOptions } = options ?? {}
+    const locator = new PlaywrightLocator(getByRoleSelector(role, ariaOptions))
+    if (hasText !== undefined || hasNotText !== undefined || has !== undefined || hasNot !== undefined) {
+      return locator.filter({ hasText, hasNotText, has, hasNot })
+    }
+    return locator
   },
   getByTestId(testId) {
     return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
