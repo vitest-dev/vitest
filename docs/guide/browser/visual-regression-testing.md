@@ -64,7 +64,7 @@ It's worth calling out that **`toMatchScreenshot` is not a substitute for proper
 
 A test that renders a button and just takes a screenshot is just documenting the current state. How do we tell if users can interact with the button? It's simply not possible from a screenshot alone. **Visual tests work best as a complementary layer on top of behavior tests, not a replacement for them**.
 
-Very generally, **visual testing doesn't tell you why something renders the way it does**. It just tells you that something rendered a certain way, or a different way than it did last time.
+Put another way, **visual testing doesn't tell you why something renders the way it does**. It just tells you that something rendered a certain way, or a different way than it did last time.
 
 For example take a business requirement to sort recent purchases in a table by purchase date. If you're looking only at the visual regression tests, you might notice that the same items from the last test are in a different order. This could be because you just introduced the sorting or because the sorting is broken. Either way, you don't know why the order is different just by looking at the UI. Someone could push that change, marking the visual diff as a false red flag because the table looks the same except for the item order. Now you have a broken business requirement in production.
 
@@ -171,7 +171,7 @@ $ vitest --project vrt --update
 
 Review updated screenshots before committing to make sure changes are intentional.
 
-::: tip
+::: warning Stale screenshots
 Note that **screenshots for deleted or renamed tests aren't removed automatically**. Clean up the `__screenshots__` folder manually when you remove or rename tests, otherwise stale references will accumulate over time.
 :::
 
