@@ -13,8 +13,10 @@ async function main() {
   await versionBump({
     files: packages,
     release,
+    commit: true,
     tag: false,
     push: false,
+    printCommits: false,
     confirm: !release,
   })
 }
