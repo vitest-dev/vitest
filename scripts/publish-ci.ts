@@ -31,12 +31,10 @@ const releaseTag = version.includes('beta')
 const dryRun = process.env.PUBLISH_DRY_RUN === 'true'
 const dryRunArgs = dryRun ? ['--dry-run'] : []
 
-console.log(
-  dryRun ? 'Dry-running version' : 'Publishing version',
-  version,
-  'with tag',
-  releaseTag || 'latest',
-)
+if (dryRun) {
+  console.log('== DRY RUN ==')
+}
+console.log('Publishing version', version, 'with tag', releaseTag || 'latest')
 
 if (releaseTag) {
   await $$`pnpm -r publish --access public --no-git-checks --tag ${releaseTag} ${dryRunArgs}`
