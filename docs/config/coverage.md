@@ -233,12 +233,67 @@ Global threshold for statements.
 
 ### coverage.thresholds.perFile
 
-- **Type:** `boolean`
+- **Type:** `boolean | { 100?: boolean, lines?: number, functions?: number, branches?: number, statements?: number }`
 - **Default:** `false`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.perFile`, `--coverage.thresholds.perFile=false`
 
-Check thresholds per file.
+When `true`, each file is checked against the top-level thresholds instead of the project-wide aggregate. When set to an object, both are checked: the aggregate against the top-level thresholds, and every file against these per-file minimums.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      functions: 80,
+      branches: 80,
+      statements: 80,
+      perFile: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    }
+  }
+}
+```
+
+`{ 100: true }` is also accepted inside the object as a shortcut for setting all four metrics to `100`:
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      lines: 80,
+      perFile: {
+        100: true,
+      },
+    }
+  }
+}
+```
+
+`perFile` can also be set on an individual [glob-pattern threshold](/config/coverage#coverage-thresholds-glob-pattern). Glob patterns do **not** inherit the top-level `perFile`; set it on each glob explicitly.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      perFile: true,
+      lines: 80,
+
+      'src/utils/**': {
+        lines: 90,
+        perFile: true,
+      },
+    }
+  }
+}
+```
 
 ### coverage.thresholds.autoUpdate
 
@@ -257,9 +312,6 @@ You can also pass a function for formatting the updated threshold values. The fu
 {
   coverage: {
     thresholds: {
-      // Update thresholds without decimals
-      autoUpdate: (newThreshold) => Math.floor(newThreshold),
-
       // Log the change and update without decimals
       autoUpdate: (newThreshold, previousThreshold) => {
         console.log(`Updated threshold from ${previousThreshold} to ${newThreshold}`)
@@ -285,11 +337,13 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 ### coverage.thresholds[glob-pattern]
 
-- **Type:** `{ statements?: number functions?: number branches?: number lines?: number }`
+- **Type:** `{ statements?: number, functions?: number, branches?: number, lines?: number, perFile?: boolean | object }`
 - **Default:** `undefined`
 - **Available for providers:** `'v8' | 'istanbul'`
 
 Sets thresholds for files matching the glob pattern.
+
+Each glob pattern can set its own `perFile` (`boolean | object`), checked exactly like the top-level `perFile` but scoped to the matched files. Glob patterns do not inherit the top-level `perFile` — set it per glob.
 
 ::: tip NOTE
 Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
@@ -311,6 +365,8 @@ This is different from Jest behavior.
         functions: 90,
         branches: 85,
         lines: 80,
+        // each matching file must individually hit the thresholds above
+        perFile: true,
       },
 
       // Files matching this pattern will only have lines thresholds set.

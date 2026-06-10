@@ -125,6 +125,27 @@ await expect.element(banner).toMatchTextContent(/error/i) // [!code ++]
 await expect.element(banner).toHaveTextContent('Error!')
 ```
 
+### Glob Coverage Thresholds No Longer Inherit `perFile`
+
+`coverage.thresholds.perFile` previously applied to every threshold set, including files matched by glob-pattern thresholds. Glob patterns now control their own per-file checking and no longer inherit the top-level `perFile` — set `perFile` on each glob that needs it.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: {
+        'perFile': true,
+
+        'src/utils/**': {
+          lines: 80,
+          perFile: true, // [!code ++]
+        },
+      },
+    },
+  },
+})
+```
+
 ### Config Files Are Not Looked Up From Parent Directories
 
 Vitest no longer searches parent directories for config files. If you previously relied on running `vitest` from a subdirectory while using a config file from a parent directory, pass the config explicitly and scope test discovery with `--dir`. For example,
