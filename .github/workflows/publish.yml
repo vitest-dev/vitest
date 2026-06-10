@@ -31,18 +31,17 @@ jobs:
         id: detect
         run: |
           SUBJECT="$(git log -1 --format=%s)"
-
-          if [[ "$SUBJECT" != "chore: release v"* ]]; then
+          VERSION="$(jq -r .version package.json)"
+          EXPECTED="chore: release v$VERSION"
+          # use prefix match since commit has PR number trailier.
+          if [[ "$SUBJECT" == "$EXPECTED"* ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "Detected release v$VERSION"
+          else
             echo "release=false" >> "$GITHUB_OUTPUT"
             echo "No release commit found at HEAD"
-            exit 0
           fi
-
-          VERSION="${SUBJECT#chore: release v}"
-
-          echo "release=true" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected release v$VERSION"
 
   publish:
     if: needs.detect.outputs.release == 'true'
