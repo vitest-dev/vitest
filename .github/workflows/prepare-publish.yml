@@ -6,6 +6,7 @@ on:
       target_branch:
         description: Release target branch.
         required: true
+        default: main
         type: string
       release:
         description: Bumpp release type.
