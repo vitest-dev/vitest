@@ -19,11 +19,19 @@ export function MetaEnvReplacerPlugin(): Plugin {
       const envs = cleanCode.matchAll(/\bimport\.meta\.env\b/g)
 
       for (const env of envs) {
-        s ||= new MagicString(code)
-
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
+        // Skip when `import.meta.env` itself is the target of an assignment
+        // (e.g. `import.meta.env = {}` or `import.meta.env ||= {}`). Wrapping it
+        // in `Object.assign(...)` would produce an invalid assignment target and
+        // a parse error. Property assignments like `import.meta.env.FOO = 1` are
+        // not affected because `import.meta.env` is followed by `.FOO` there.
+        if (isAssignmentTarget(cleanCode, endIndex)) {
+          continue
+        }
+
+        s ||= new MagicString(code)
         s.overwrite(
           startIndex,
           endIndex,
@@ -44,4 +52,12 @@ export function MetaEnvReplacerPlugin(): Plugin {
       }
     },
   }
+}
+
+// Matches an assignment operator (`=`, `+=`, `||=`, `??=`, etc.) right after the
+// given index, while ignoring comparisons (`==`, `===`) and arrow functions (`=>`).
+function isAssignmentTarget(code: string, index: number): boolean {
+  return /^\s*(?:\?\?=|\|\|=|&&=|\*\*=|>>>=|<<=|>>=|[-+*/%&|^]=|=(?![=>]))/.test(
+    code.slice(index),
+  )
 }

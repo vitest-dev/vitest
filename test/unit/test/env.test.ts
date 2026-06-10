@@ -22,6 +22,20 @@ test('can reassign env locally', () => {
   expect(import.meta.env.VITEST_ENV).toBe('TEST')
 })
 
+// https://github.com/vitest-dev/vitest/issues/10091
+test('can reassign import.meta.env itself', () => {
+  import.meta.env = import.meta.env || ({} as any)
+  import.meta.env.VITEST_ENV_REASSIGN = 'reassigned'
+  expect(import.meta.env.VITEST_ENV_REASSIGN).toBe('reassigned')
+})
+
+// https://github.com/vitest-dev/vitest/issues/10091
+test('can use logical assignment on import.meta.env', () => {
+  import.meta.env ||= {} as any
+  import.meta.env.VITEST_ENV_LOGICAL = 'logical'
+  expect(import.meta.env.VITEST_ENV_LOGICAL).toBe('logical')
+})
+
 test('can reassign env everywhere', () => {
   import.meta.env.AUTH_TOKEN = '123'
   expect(getAuthToken()).toBe('123')
