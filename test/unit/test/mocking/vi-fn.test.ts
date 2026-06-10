@@ -799,6 +799,38 @@ describe('vi.fn() implementations', () => {
     expect(Mock.mock.calls).toEqual([['test', 42]])
   })
 
+  test('vi.fn(class) exposes prototype methods on constructed instances', () => {
+    const Mock = vi.fn(class {
+      method() {
+        return 'mocked'
+      }
+    })
+
+    expect(new Mock().method()).toBe('mocked')
+  })
+
+  test('vi.fn(class) does not leak prototype methods from once implementations', () => {
+    const Mock = vi.fn()
+      .mockImplementationOnce(class {
+        first() {
+          return 'first'
+        }
+      })
+      .mockImplementation(class {
+        second() {
+          return 'second'
+        }
+      })
+
+    const first = new Mock()
+    const second = new Mock()
+
+    expect(first.first()).toBe('first')
+    expect(first.second).toBeUndefined()
+    expect(second.second()).toBe('second')
+    expect(second.first).toBeUndefined()
+  })
+
   test('vi.fn() with mockReturnValue throws when called with new', () => {
     const Mock = vi.fn()
     Mock.mockReturnValue(42)
