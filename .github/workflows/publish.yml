@@ -89,10 +89,10 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install npm for publish
+      - name: Install good npm
         run: npm i -g npm@^11.5.2
 
-      - name: Dry run publish
+      - name: Publish to npm (dry run)
         env:
           VERSION: ${{ needs.detect.outputs.version }}
           PUBLISH_DRY_RUN: 'true'
