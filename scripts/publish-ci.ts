@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { $ } from 'zx'
 
+const $$ = $({ stdio: 'inherit' })
+
 if (process.env.VITE_TEST_WATCHER_DEBUG !== 'false') {
   throw new Error(`Cannot release Vitest without VITE_TEST_WATCHER_DEBUG=${process.env.VITE_TEST_WATCHER_DEBUG} environment variable. `)
 }
@@ -32,7 +34,6 @@ const releaseTag = version.includes('beta')
     : undefined
 const dryRun = process.env.PUBLISH_DRY_RUN === 'true'
 const dryRunArgs = dryRun ? ['--dry-run'] : []
-const $$ = $({ stdio: 'inherit' })
 
 console.log(dryRun ? 'Dry-running version' : 'Publishing version', version, 'with tag', releaseTag || 'latest')
 
