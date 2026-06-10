@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: Release target branch, for example main, v4, or v4.1
+        description: Release target branch.
         required: true
         type: string
       release:
-        description: Bumpp release type. Ignored when version is set.
+        description: Bumpp release type.
         required: true
         default: next
         type: choice
@@ -21,7 +21,7 @@ on:
           - preminor
           - premajor
       version:
-        description: Optional exact semver version, for example 5.0.0-beta.5
+        description: Specify exact version instead of bumpp release type
         required: false
         type: string
 
