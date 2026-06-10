@@ -94,12 +94,14 @@ jobs:
       - name: Publish to npm (dry run)
         env:
           VERSION: ${{ needs.detect.outputs.version }}
+          PUBLISH_BRANCH: ${{ github.ref_name }}
           PUBLISH_DRY_RUN: 'true'
         run: pnpm run publish-ci "$VERSION"
 
       - name: Publish to npm
         env:
           VERSION: ${{ needs.detect.outputs.version }}
+          PUBLISH_BRANCH: ${{ github.ref_name }}
         run: pnpm run publish-ci "$VERSION"
 
       - name: Push release tag
