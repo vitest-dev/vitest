@@ -66,7 +66,9 @@ test('clean() throws an actionable error when another live process holds the loc
 
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
   await new Promise(resolve => child.once('spawn', resolve))
-  onTestFinished(() => child.kill())
+  onTestFinished(() => {
+    child.kill()
+  })
 
   writeFileSync(lockFile, JSON.stringify({ pid: child.pid, reportsDirectory, timestamp: Date.now() }))
 
