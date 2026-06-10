@@ -19,7 +19,7 @@ Visual bugs don’t throw errors, they just look wrong. That’s where visual te
 
 - That button still submits the form... but why is it hot pink now?
 - The text fits perfectly... until someone views it on mobile
-- Everything works great... except those two containers are out of viewport
+- Everything works great... except those two containers are outside the viewport
 - That careful CSS refactor works... but broke the layout on a page no one tests
 
 Visual regression testing acts as a safety net for your UI, automatically catching these visual changes before they reach production.
@@ -44,7 +44,7 @@ test('button renders in default state', async () => {
 
 ### Environmental stability
 
-Visual regression tests are **sensitive to environmental differences** because rendering is not perfectly reproducible across different environments and depends on multiple factors:
+Visual regression tests are **sensitive to environmental differences** because rendering is not perfectly deterministic across environments and depends on multiple factors:
 
 - GPU, drivers, and hardware acceleration
 - Operating System
@@ -54,7 +54,7 @@ Visual regression tests are **sensitive to environmental differences** because r
 - Screen scaling, color profiles, and display settings
 - ...and occasionally what feels like the phase of the moon <MoonPhase />
 
-In practice, even seemingly identical environments can occasionally produce subtle rendering differences. For this reason, **visual regression tests are most reliable when run in a standardized and tightly controlled environment**. This is also why we strongly recommend [Docker containers](https://playwright.dev/docs/docker), [generating and running them only in CI](#visual-testing-for-teams), or [cloud services](#visual-testing-for-teams) like Azure App Testing.
+In practice, even seemingly identical environments can occasionally produce subtle rendering differences. For this reason, **visual regression tests are most reliable when run in a standardized and tightly controlled environment**. This is also why [Docker containers](https://playwright.dev/docs/docker), [CI-only visual testing workflows, or cloud services](#visual-testing-for-teams) are strongly recommended.
 
 ### Not a replacement for behavior testing
 
@@ -62,11 +62,11 @@ When a visual test fails alongside behavior tests, it's harder to tell what's ac
 
 It's worth calling out that **`toMatchScreenshot` is not a substitute for proper assertions**.
 
-A test that renders a button and just takes a screenshot is just documenting the current state. How do we tell if users can interact with the button? It's simply not possible from a screenshot alone. **Visual tests work best as a complementary layer on top of behavior tests, not a replacement for them**.
+A test that renders a button and just takes a screenshot is just documenting the current state. There's no way to tell from a screenshot whether users can interact with the button. **Visual tests work best as a complementary layer on top of behavior tests, not a replacement for them**.
 
 Put another way, **visual testing doesn't tell you why something renders the way it does**. It just tells you that something rendered a certain way, or a different way than it did last time.
 
-For example take a business requirement to sort recent purchases in a table by purchase date. If you're looking only at the visual regression tests, you might notice that the same items from the last test are in a different order. This could be because you just introduced the sorting or because the sorting is broken. Either way, you don't know why the order is different just by looking at the UI. Someone could push that change, marking the visual diff as a false red flag because the table looks the same except for the item order. Now you have a broken business requirement in production.
+For example, take a business requirement to sort recent purchases in a table by purchase date. If you're looking only at the visual regression tests, you might notice that the same items from the last test are in a different order. This could be because you just introduced the sorting or because the sorting is broken. Either way, you don't know why the order is different just by looking at the UI. Someone could dismiss the visual diff as noise because the table "looks the same", even though the ordering logic is now broken. Now you have a broken business requirement in production.
 
 ### Project structure
 
@@ -109,7 +109,7 @@ export default defineConfig({
 })
 ```
 
-Since we now have two projects, we can create scripts to launch each separately:
+With this configuration in place, add scripts to launch each project separately:
 
 ```json [package.json]
 {
@@ -136,8 +136,7 @@ Reference screenshot:
 This is normal. Check that the screenshot looks right, then run the test again. Vitest will now compare future runs against this baseline.
 
 ::: tip
-Reference screenshots live in `__screenshots__` folders next to your tests.
-**Don't forget to commit them!**
+Reference screenshots live in `__screenshots__` folders next to your tests. **Commit them to your repository.**
 :::
 
 ### Screenshot organization
@@ -156,7 +155,7 @@ By default, screenshots are organized as:
 
 The naming convention includes:
 - **Test name**: either the first argument of the `toMatchScreenshot()` call, or automatically generated from the test's name.
-- **Browser name**: `chrome`, `chromium`, `firefox` or `webkit`.
+- **Browser name**: depends on the configured browser provider, for example `chrome`, `chromium`, `firefox` or `webkit`.
 - **Platform**: `aix`, `darwin`, `freebsd`, `linux`, `openbsd`, `sunos`, or `win32`.
 
 This ensures screenshots from different environments don't overwrite each other.
@@ -248,7 +247,7 @@ export default defineConfig({
 })
 ```
 
-For more fine-grained control, you can override global settings in specific tests directly when calling the assertion:
+For more fine-grained control, override global settings in specific tests by passing options directly to the assertion:
 
 ```ts{2-6}
 await expect(element).toMatchScreenshot('button', {
@@ -262,7 +261,7 @@ await expect(element).toMatchScreenshot('button', {
 
 ## Third-party comparators
 
-Vitest ships with `pixelmatch` as its built-in comparator. It is fast, compares images pixel-by-pixel, has no native dependencies, and handles the majority of cases well. Perceptual comparators aren't included by default because they bring heavier dependencies and there's no clear single "best one" to pick as different algorithms make different trade-offs, but the comparator API exists precisely to let you plug in whatever fits your needs. This decision may change as the ecosystem matures, though.
+Vitest ships with `pixelmatch` as its built-in comparator. It's fast, compares images pixel-by-pixel, has no native dependencies, and handles the majority of cases well. Perceptual comparators aren't included by default because they bring heavier dependencies and there's no clear single "best one" to pick as different algorithms make different trade-offs, but the comparator API exists precisely to let you plug in whatever fits your needs. This decision may change as the ecosystem matures, though.
 
 For use cases where pixel-level diffing produces excessive noise, a perceptual or structural similarity comparator may be a better fit. These compare images more like a human would, tolerating minor rendering differences while still detecting meaningful visual changes.
 
@@ -280,7 +279,7 @@ import { defineConfig } from 'vitest/config'
 
 declare module 'vitest/browser' {
   interface ScreenshotComparatorRegistry {
-    'standard-sim': SsimOptionsExtended & {
+    'standard-ssim': SsimOptionsExtended & {
       threshold?: number
     }
   }
@@ -293,7 +292,7 @@ export default defineConfig({
         toMatchScreenshot: {
           comparators: {
             // naive implementation, always check the library's docs
-            'standard-sim': (
+            'standard-ssim': (
               reference,
               actual,
               { createDiff, ...options }
@@ -327,7 +326,7 @@ export default defineConfig({
 })
 ```
 
-Now you can use it by referencing it by name in your config or on a per-test basis:
+Once registered, the comparator can be referenced by name in your config or on a per-test basis:
 
 :::code-group
 
@@ -373,7 +372,7 @@ await expect(
 
 ### Handle dynamic content
 
-Dynamic content like timestamps, user data, or random values will cause tests to fail. You can either mock the sources of dynamic content or mask them when using the Playwright provider by using the [`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask) in `screenshotOptions`.
+Dynamic content like timestamps, user data, or random values will cause tests to fail. Either mock the underlying data sources or mask them using the [`mask` option](https://playwright.dev/docs/api/class-page#page-screenshot-option-mask) in `screenshotOptions` when using the Playwright provider.
 
 ```ts{8}
 const profile = page.getByRole(
@@ -393,7 +392,7 @@ await expect(profile).toMatchScreenshot({
 ::: tip
 When using the Playwright provider, animations are automatically disabled when using the built-in assertion: the `animations` option's value in `screenshotOptions` is set to `"disabled"` by default.
 
-If you prefer to disable all animations to save some execution time, go ahead.
+If you prefer to disable all animations to save some execution time, continue reading.
 :::
 
 Animations can cause flaky tests. Disable them during testing by injecting a custom CSS snippet using [`setupFiles`](/config/setupfiles) or directly in your tests:
@@ -419,7 +418,7 @@ Alternatively, you can declare the CSS in a custom HTML template by using [`brow
 
 Tuning thresholds is tricky. It depends on the content, test environment, what's acceptable for your app, and might also change based on the test.
 
-Vitest does not set a default for the mismatching pixels, that's up for the user to decide based on their needs. The recommendation is to use `allowedMismatchedPixelRatio`, so that the threshold is computed on the size of the screenshot and not a fixed number.
+Vitest does not define a default tolerance for mismatched pixels. The appropriate value depends on your application and environment. The recommendation is to use `allowedMismatchedPixelRatio`, so that the threshold is computed on the size of the screenshot and not a fixed number.
 
 When setting both `allowedMismatchedPixelRatio` and `allowedMismatchedPixels`, Vitest uses whichever limit is stricter.
 
@@ -473,18 +472,18 @@ If tests pass and fail randomly, or if screenshots have different dimensions bet
 
 Even with a controlled local setup, references generated on one machine will often fail on another. This matters as soon as more than one person is running the suite.
 
-To fix this issue, you can set your visual regression suite in a way that it runs in the same environment for everyone. There are three ways to do this:
+Running the visual regression suite in a shared environment solves this problem. There are three ways to do this:
 
 1. **Self-hosted runners** (e.g., Docker images), complex to set up and maintain
-1. **Generate references in CI**, requires some setup
+1. **Generate references in CI**, which requires some setup
 1. **Cloud services**, like [Azure App Testing](https://azure.microsoft.com/en-us/products/app-testing/), built to solve this exact problem, but usually restricted to specific providers and browsers
 
-We'll focus on options 2 and 3 since they're the quickest to get running.
+Options 2 and 3 are the quickest to get running, so those are covered below.
 
 :::: tabs key:shared-environment-vrt
 === GitHub Actions (CI)
 
-We first need to install the browsers since GitHub runners don't have them preinstalled. How you do this depends on your provider:
+GitHub runners don't have browsers preinstalled. Install them before running tests, using the steps for your provider:
 
 ::: tabs key:provider
 == Playwright
@@ -541,9 +540,9 @@ The workflow below:
     <img alt="Action summary after no updates" img-dark src="/vrt-gha-summary-no-update-dark.png">
 
 ::: tip
-This is just one approach. Some prefer PR comments (`/update-screenshots`), others use labels. Adjust it to fit your workflow!
+This is just one approach. Some prefer PR comments (`/update-screenshots`), others use labels. Adjust it to fit your workflow.
 
-The important part is having a controlled way to update baselines.
+The important part is having a controlled way to update reference screenshots.
 :::
 
 ```yaml [.github/workflows/update-screenshots.yml]
@@ -600,7 +599,6 @@ jobs:
       - name: Install Playwright Browsers
         run: npx --no playwright install --with-deps --only-shell
 
-      # the magic happens below 🪄
       - name: Update Visual Regression Screenshots
         run: npm run test:visual --update
 
@@ -673,7 +671,7 @@ import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
 
 export default defineConfig({
-  tests: {
+  test: {
     // ...other configurations
     projects: [
       {
@@ -737,7 +735,7 @@ npm run test:visual -- --update
 
 ### CI setup
 
-In your CI, it should be enough to add the secrets:
+Add the secrets to your CI configuration:
 
 ```yaml
 env:
@@ -745,11 +743,11 @@ env:
   PLAYWRIGHT_SERVICE_ACCESS_TOKEN: ${{ secrets.PLAYWRIGHT_SERVICE_ACCESS_TOKEN }}
 ```
 
-Then run your tests like normal. The service handles the rest.
+Then run your tests like normal. The service handles the browser infrastructure.
 
 ::::
 
-### So which one?
+### Picking the right option
 
 All approaches work. The real question is what pain points matter most to you and your team.
 
@@ -765,15 +763,15 @@ Still on the fence? Start with the CI workflow. You can always move to a contain
 
 ### How Vitest ensures screenshot stability
 
-Visual regression tests need screenshots stable across multiple runs to compare against, but since pages aren't instantly stable as images load, animations finish, fonts render, and layouts settle, Vitest uses a "Stable Screenshot Detection" strategy:
+Visual regression tests rely on screenshots remaining stable across runs. In practice, pages are not instantly stable: images load asynchronously, animations finish at different times, fonts render, and layouts settle. To mitigate this, Vitest uses a "Stable Screenshot Detection" strategy:
 
-1. It takes a first screenshot (or uses the reference screenshot if available) as baseline
+1. It takes an initial screenshot (or uses the reference screenshot if available) as baseline
 1. It takes another screenshot and compares it with the baseline
     - If the screenshots match, the page is stable and testing continues
     - If they differ, Vitest uses the newest screenshot as the baseline and repeats
 1. This continues until stability is achieved or the timeout is reached
 
-This ensures that transient visual changes (like loading spinners or animations) don't cause false failures. If something never stops animating though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
+This ensures that transient visual changes (like loading spinners or animations) don't cause false positives. If something never stops animating, though, you'll hit the timeout, so consider [disabling animations during testing](#disable-animations).
 
 If a stable screenshot is captured after one or more retries and a reference screenshot exists, Vitest performs a final comparison with the reference using `createDiff: true`. This will generate a diff image if they don't match.
 
