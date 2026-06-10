@@ -809,6 +809,24 @@ describe('vi.fn() implementations', () => {
     expect(new Mock().method()).toBe('mocked')
   })
 
+  test('vi.fn(class) does not copy prototype methods when constructor returns an object', () => {
+    const returned = { custom: true }
+    const Mock = vi.fn(class {
+      constructor() {
+        return returned as any
+      }
+
+      method() {
+        return 'mocked'
+      }
+    })
+
+    const instance = new Mock()
+
+    expect(instance).toBe(returned)
+    expect(instance.method).toBeUndefined()
+  })
+
   test('vi.fn(class) does not leak prototype methods from once implementations', () => {
     const Mock = vi.fn()
       .mockImplementationOnce(class {

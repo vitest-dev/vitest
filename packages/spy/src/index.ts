@@ -504,9 +504,9 @@ function createMock(
           if (
             // prototypeMembers is used by automocking case and we want to skip that case.
             prototypeMembers.length === 0
-            // TODO: no idea what
-            && new.target?.prototype
+            && new.target.prototype
             && implementationPrototype
+            // skip when constructor returns value
             && Object.getPrototypeOf(returnValue) === new.target.prototype
           ) {
             const { properties, descriptors } = getAllProperties(implementationPrototype)
