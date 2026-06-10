@@ -165,11 +165,16 @@ The release branches are also linked with the documentation site releases:
 
 Releases — publishing the npm packages, creating the git release tag, and generating the associated GitHub release — are driven by a pull request and carried out by GitHub Actions, not from a maintainer's machine. The release PR holds the version bump, and merging it kicks off the actual publish.
 
-1. **Prepare the release PR.** Run the `Prepare Publish` workflow, setting the `target_branch` input to the branch that matches the [release branch](#release-branches) convention for the release line, then choose the `release` or `version` input to control the version bump. Note that the GitHub Actions menu also has a "Use workflow from" branch selector; for normal releases, choose the same branch there as `target_branch` to keep the workflow definition and release target aligned. The default input is `release: next`, which bumps the version to the next patch version for stable releases (e.g. `4.1.2 -> 4.1.3`), or the next prerelease version when the current version is already a prerelease (e.g. `4.2.0-beta.2 -> 4.2.0-beta.3`). Use `release: conventional` to derive the bump from the commit history, set `release` to a specific bump type, or pass an exact `version` for pre-releases. To preview the version a given `release` input resolves to, you can run `pnpm release` locally first — it lists the commits since the last release and lets you browse available release types and versions interactively (cancel before confirming so nothing is committed). The workflow pushes the version bump to a branch and prints a compare URL; open that URL to create the release PR.
+1. **Prepare the release PR.** Run the `Prepare Publish` workflow with two inputs:
 
-2. **Review and merge.** Review the version bump, then merge the PR so the `chore: release v*` commit lands on the release branch — that commit is what triggers the Publish step.
+   - `target_branch` — the branch matching the [release branch](#release-branches) convention for the release line. The Actions menu's separate "Use workflow from" selector should point at the same branch, to keep the workflow definition and release target aligned.
+   - `release` or `version` — the version bump. The default `release: next` bumps to the next patch for stable releases (`4.1.2 -> 4.1.3`), or the next prerelease when already on one (`4.2.0-beta.2 -> 4.2.0-beta.3`). Otherwise set `release` to a specific bump type, or pass an exact `version` for pre-releases.
 
-3. **Publish.** The release commit starts the `Publish Package` workflow, which pauses for a maintainer to approve the `Release` environment. Once approved, it builds and publishes the packages to npm, pushes the release tag, and generates the GitHub release. Approve when prompted, then confirm npm, the tag, and the GitHub release all look right.
+   The workflow pushes the bump to a branch and prints a compare URL; open it to create the release PR. To preview what a `release` input resolves to, run `pnpm release` locally first — it lists commits since the last release and lets you browse release types and versions interactively (cancel before confirming so nothing is committed).
+
+2. **Review and merge the PR.** Review the version bump, then merge the PR so the `chore: release v*` commit lands on the release branch — that commit is what triggers the Publish step.
+
+3. **Approve the publish.** Merging triggers the `Publish Package` workflow, which builds the packages and then pauses for `Release` environment approval. Approve it when prompted; the workflow publishes to npm, pushes the release tag, and generates the GitHub release. Afterwards, confirm npm, the tag, and the GitHub release all look right.
 
 ### Issue Triaging Workflow
 
