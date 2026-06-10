@@ -81,5 +81,5 @@ jobs:
           git config user.email "actions@github.com"
           pnpm run release
           git push "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$PREPARE_BRANCH"
-          COMPARE_URL="https://github.com/vitest-dev/vitest/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
+          COMPARE_URL="https://github.com/$GITHUB_REPOSITORY/compare/$TARGET_BRANCH...$PREPARE_BRANCH?expand=1"
           echo "::notice title=Open release PR::$COMPARE_URL"
