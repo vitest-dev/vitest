@@ -3,8 +3,9 @@ import type {
   ResolvedConfig as ResolvedViteConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
-// import type { ResolvedBrowserOptions } from '../types/browser'
+import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -174,6 +175,7 @@ export function resolveTestConfig(
   logger: Logger,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
+  cliOptions: CliOptions,
 ): ResolvedConfig {
   if (options.dom) {
     if (
@@ -351,19 +353,13 @@ export function resolveTestConfig(
     }
   }
 
-  // TODO: TEST THIS
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  // if (
-  //   options.browser
-  //   && resolved.browser
-  //   // if enabled is set to `false`, but CLI overrides it, then always override it
-  //   && (resolved.browser.enabled !== false || options.browser.enabled)
-  // ) {
-  //   resolved.browser = mergeConfig(
-  //     resolved.browser,
-  //     options.browser,
-  //   ) as ResolvedBrowserOptions
-  // }
+  if (resolved.browser && cliOptions.browser && (resolved.browser.enabled !== false || cliOptions.browser.enabled)) {
+    resolved.browser = mergeConfig(
+      resolved.browser,
+      cliOptions.browser,
+    ) as ResolvedBrowserOptions
+  }
 
   resolved.browser ??= {} as any
   const browser = resolved.browser
@@ -402,66 +398,6 @@ export function resolveTestConfig(
 
   if (browser.enabled && resolved.detectAsyncLeaks) {
     logger.console.warn(c.yellow('The option "detectAsyncLeaks" is not supported in browser mode and will be ignored.'))
-  }
-
-  const containsChromium = hasChromiumBrowser(resolved.project, resolved)
-  const hasOnlyChromium = hasOnlyChromiumBrowser(resolved.project, resolved)
-
-  // Browser-mode "Chromium" only features:
-  if (browser.enabled && (!containsChromium || !hasOnlyChromium)) {
-    const browserConfig = `
-{
-  browser: {
-    provider: ${browser.provider?.name || 'preview'}(),
-    instances: [
-      ${(browser.instances || []).map(i => `{ browser: '${i.browser}' }`).join(',\n      ')}
-    ],
-  },
-}
-    `.trim()
-
-    const preferredProvider = (!browser.provider?.name || browser.provider.name === 'preview')
-      ? 'playwright'
-      : browser.provider.name
-    const preferredBrowser = preferredProvider === 'playwright' ? 'chromium' : 'chrome'
-    const correctExample = `
-{
-  browser: {
-    provider: ${preferredProvider}(),
-    instances: [
-      { browser: '${preferredBrowser}' }
-    ],
-  },
-}
-    `.trim()
-
-    // requires all projects to be chromium
-    if (!hasOnlyChromium && resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
-      const coverageExample = `
-{
-  coverage: {
-    provider: 'istanbul',
-  },
-}
-      `.trim()
-
-      throw new Error(
-        `@vitest/coverage-v8 does not work with\n${browserConfig}\n`
-        + `\nUse either:\n${correctExample}`
-        + `\n\n...or change your coverage provider to:\n${coverageExample}\n`,
-      )
-    }
-
-    // ignores non-chromium browsers when there is at least one chromium project
-    if (!containsChromium && (resolved.inspect || resolved.inspectBrk)) {
-      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
-
-      throw new Error(
-        `${inspectOption} does not work with\n${browserConfig}\n`
-        + `\nUse either:\n${correctExample}`
-        + `\n\n...or disable ${inspectOption}\n`,
-      )
-    }
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
@@ -1060,6 +996,7 @@ export async function resolveConfig(
     pluginsHarness.logger,
     (rootViteConfig.test as UserConfig | undefined) || {},
     rootViteConfig,
+    cliOptionsCopy,
   )
   rootViteConfig.test = rootConfig
 
@@ -1100,55 +1037,6 @@ export function resolveCoverageReporters(configReporters: NonNullable<CoverageOp
   }
 
   return resolvedReporters
-}
-
-function isChromiumName(provider: string, name: string) {
-  if (provider === 'playwright') {
-    return name === 'chromium'
-  }
-  return name === 'chrome' || name === 'edge'
-}
-
-function hasChromiumBrowser(projects: string[], config: ResolvedConfig) {
-  const browser = config.browser
-  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
-    return false
-  }
-  if (browser.name) {
-    return isChromiumName(browser.provider.name, browser.name)
-  }
-  if (!browser.instances) {
-    return false
-  }
-  return browser.instances.some((instance) => {
-    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
-    // browser config is filtered out
-    if (!matchesProjectFilter(projects, name)) {
-      return false
-    }
-    return isChromiumName(browser.provider!.name, instance.browser)
-  })
-}
-
-function hasOnlyChromiumBrowser(projects: string[], config: ResolvedConfig) {
-  const browser = config.browser
-  if (!browser || !browser.provider || browser.provider.name === 'preview' || !browser.enabled) {
-    return false
-  }
-  if (browser.name) {
-    return isChromiumName(browser.provider.name, browser.name)
-  }
-  if (!browser.instances) {
-    return false
-  }
-  return browser.instances.every((instance) => {
-    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
-    // browser config is filtered out
-    if (!matchesProjectFilter(projects, name)) {
-      return true // ignore this project
-    }
-    return isChromiumName(browser.provider!.name, instance.browser)
-  })
 }
 
 export function matchesProjectFilter(projects: string[], name: string): boolean {

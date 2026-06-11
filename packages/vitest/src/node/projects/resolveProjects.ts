@@ -329,6 +329,7 @@ async function resolveSingleProjectEntry(
       attachmentsDir: globalConfig.attachmentsDir,
     },
     projectViteConfig,
+    globalConfig.cliOptions,
   )
   projectConfig.api.token = globalConfig.api.token
   projectConfig.mergeReportsLabel = globalConfig.mergeReportsLabel
@@ -412,6 +413,64 @@ function expandBrowserInstancesInEntries(
       }
       if (instance.provider?.name != null && projectConfig.browser.provider?.name != null && instance.provider?.name !== projectConfig.browser.provider?.name) {
         throw new Error(`The instance cannot have a different provider from its parent. The "${name}" instance specifies "${instance.provider?.name}" provider, but its parent has a "${projectConfig.browser.provider?.name}" provider.`)
+      }
+
+      const provider = instance.provider?.name ?? projectConfig.browser.provider?.name ?? 'preview'
+
+      // Browser-mode "Chromium" only features:
+      if (!isChromiumName(provider, browser)) {
+        const browserConfig = `
+{
+  browser: {
+    provider: ${provider}(),
+    instances: [
+      ${(filteredInstances || []).map(i => `{ browser: '${i.browser}' }`).join(',\n      ')}
+    ],
+  },
+}
+          `.trim()
+
+        const preferredProvider = provider === 'preview'
+          ? 'playwright'
+          : provider
+        const preferredBrowser = preferredProvider === 'playwright' ? 'chromium' : 'chrome'
+        const correctExample = `
+{
+  browser: {
+    provider: ${preferredProvider}(),
+    instances: [
+      { browser: '${preferredBrowser}' }
+    ],
+  },
+}
+          `.trim()
+
+        if (projectConfig.coverage.enabled && projectConfig.coverage.provider === 'v8') {
+          const coverageExample = `
+{
+  coverage: {
+    provider: 'istanbul',
+  },
+}
+            `.trim()
+
+          throw new Error(
+            `@vitest/coverage-v8 does not work with\n${browserConfig}\n`
+            + `\nUse either:\n${correctExample}`
+            + `\n\n...or change your coverage provider to:\n${coverageExample}\n`,
+          )
+        }
+
+        // ignores non-chromium browsers when there is at least one chromium project
+        if (projectConfig.inspect || projectConfig.inspectBrk) {
+          const inspectOption = `--inspect${projectConfig.inspectBrk ? '-brk' : ''}`
+
+          throw new Error(
+            `${inspectOption} does not work with\n${browserConfig}\n`
+            + `\nUse either:\n${correctExample}`
+            + `\n\n...or disable ${inspectOption}\n`,
+          )
+        }
       }
 
       if (names.has(name)) {
@@ -833,4 +892,11 @@ export async function resolveAndAttachProjects(
     },
   )
   return attachProjectsFromEntries(vitest, entries)
+}
+
+function isChromiumName(provider: string, name: string) {
+  if (provider === 'playwright') {
+    return name === 'chromium'
+  }
+  return name === 'chrome' || name === 'edge'
 }
