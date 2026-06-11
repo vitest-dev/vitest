@@ -11,7 +11,7 @@ function createProvider() {
   provider.coverageFilesDirectory = join(reportsDirectory, '.tmp')
   provider.options = { reportsDirectory } as any
 
-  const lockFile = (provider as any).reportsDirectoryLockFile as string
+  const lockFile = (provider as any).reportsDirectoryLock.lockFile as string
 
   onTestFinished(() => {
     rmSync(reportsDirectory, { recursive: true, force: true })

@@ -87,6 +87,113 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
+/**
+ * Cross-process lock on a coverage `reportsDirectory`.
+ *
+ * Two `vitest run --coverage` processes pointed at the same reports directory
+ * would delete each other's reports, so the second one to start must fail fast.
+ * The lock file lives in the OS temp directory (keyed by the resolved reports
+ * directory) so it survives the directory cleanup it guards.
+ */
+class ReportsDirectoryLock {
+  readonly lockFile: string
+
+  constructor(private readonly reportsDirectory: string) {
+    const hash = createHash('sha256')
+      .update(reportsDirectory)
+      .digest('hex')
+      .slice(0, 16)
+
+    this.lockFile = resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
+  }
+
+  async acquire(): Promise<void> {
+    const payload = JSON.stringify({
+      pid: process.pid,
+      reportsDirectory: this.reportsDirectory,
+      timestamp: Date.now(),
+    })
+
+    // One initial attempt, plus a single retry that is only reached after
+    // reclaiming a stale lock left behind by a process that no longer exists.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+        return
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+          throw error
+        }
+      }
+
+      const owner = await this.readOwner()
+
+      // This same process already holds the lock (e.g. watch-mode reruns).
+      if (owner?.pid === process.pid) {
+        return
+      }
+
+      // The lock is held by another running process, so fail fast.
+      if (owner != null && isProcessAlive(owner.pid)) {
+        throw this.inUseError(owner.pid)
+      }
+
+      // The lock is stale (its owner is gone or the file is unreadable).
+      // Steal it with an atomic rename so that two processes racing to reclaim
+      // the same stale lock can't both succeed: only the one whose rename wins
+      // removes the file, the loser's rename fails with ENOENT and it retries
+      // the exclusive create on the next iteration.
+      try {
+        await fs.rename(this.lockFile, `${this.lockFile}.${process.pid}.stale`)
+        await fs.rm(`${this.lockFile}.${process.pid}.stale`, { force: true })
+      }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error
+        }
+      }
+    }
+
+    // The reclaimed stale lock was taken by another process before we could grab it.
+    throw this.inUseError()
+  }
+
+  async release(): Promise<void> {
+    const owner = await this.readOwner()
+
+    // Only remove the lock when we can confirm we own it. A transient unreadable
+    // read (e.g. another process mid-write) must not authorize deleting a lock
+    // that belongs to a different process.
+    if (owner?.pid === process.pid) {
+      await fs.rm(this.lockFile, { force: true })
+    }
+  }
+
+  private async readOwner(): Promise<{ pid: number } | null> {
+    try {
+      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+
+      if (typeof owner?.pid === 'number') {
+        return owner
+      }
+    }
+    catch {}
+
+    return null
+  }
+
+  private inUseError(pid?: number): Error {
+    return new Error(
+      `The coverage report directory "${this.reportsDirectory}" is already in use by `
+      + `another Vitest process${pid ? ` (pid ${pid})` : ''}. Running coverage for multiple Vitest `
+      + `processes in the same directory at the same time is not supported, because they would delete `
+      + `each other's reports.\nGive each run its own "coverage.reportsDirectory" `
+      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
+    )
+  }
+}
+
 export class BaseCoverageProvider {
   ctx!: Vitest
   readonly name!: 'v8' | 'istanbul'
@@ -100,6 +207,14 @@ export class BaseCoverageProvider {
   coverageFilesDirectory!: string
   roots: string[] = []
   changedFiles?: string[]
+
+  private _reportsDirectoryLock?: ReportsDirectoryLock
+
+  private get reportsDirectoryLock(): ReportsDirectoryLock {
+    return (this._reportsDirectoryLock ??= new ReportsDirectoryLock(
+      resolve(this.options.reportsDirectory),
+    ))
+  }
 
   _initialize(ctx: Vitest): void {
     this.ctx = ctx
@@ -253,7 +368,7 @@ export class BaseCoverageProvider {
   }
 
   async clean(clean = true): Promise<void> {
-    await this.acquireReportsDirectoryLock()
+    await this.reportsDirectoryLock.acquire()
 
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
@@ -275,105 +390,6 @@ export class BaseCoverageProvider {
 
     this.coverageFiles = new Map()
     this.pendingPromises = []
-  }
-
-  private get reportsDirectoryLockFile(): string {
-    const hash = createHash('sha256')
-      .update(resolve(this.options.reportsDirectory))
-      .digest('hex')
-      .slice(0, 16)
-
-    return resolve(tmpdir(), `vitest-coverage-${hash}.lock`)
-  }
-
-  private async acquireReportsDirectoryLock(): Promise<void> {
-    const lockFile = this.reportsDirectoryLockFile
-    const payload = JSON.stringify({
-      pid: process.pid,
-      reportsDirectory: resolve(this.options.reportsDirectory),
-      timestamp: Date.now(),
-    })
-
-    // One initial attempt, plus a single retry that is only reached after
-    // reclaiming a stale lock left behind by a process that no longer exists.
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await fs.writeFile(lockFile, payload, { flag: 'wx' })
-        return
-      }
-      catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-          throw error
-        }
-      }
-
-      const owner = await this.readReportsDirectoryLockOwner(lockFile)
-
-      // This same process already holds the lock (e.g. watch-mode reruns).
-      if (owner?.pid === process.pid) {
-        return
-      }
-
-      // The lock is held by another running process, so fail fast.
-      if (owner != null && isProcessAlive(owner.pid)) {
-        throw this.reportsDirectoryInUseError(owner.pid)
-      }
-
-      // The lock is stale (its owner is gone or the file is unreadable).
-      // Steal it with an atomic rename so that two processes racing to reclaim
-      // the same stale lock can't both succeed: only the one whose rename wins
-      // removes the file, the loser's rename fails with ENOENT and it retries
-      // the exclusive create on the next iteration.
-      try {
-        await fs.rename(lockFile, `${lockFile}.${process.pid}.stale`)
-        await fs.rm(`${lockFile}.${process.pid}.stale`, { force: true })
-      }
-      catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw error
-        }
-      }
-    }
-
-    // The reclaimed stale lock was taken by another process before we could grab it.
-    throw this.reportsDirectoryInUseError()
-  }
-
-  private reportsDirectoryInUseError(pid?: number): Error {
-    return new Error(
-      `The coverage report directory "${this.options.reportsDirectory}" is already in use by `
-      + `another Vitest process${pid ? ` (pid ${pid})` : ''}. Running coverage for multiple Vitest `
-      + `processes in the same directory at the same time is not supported, because they would delete `
-      + `each other's reports.\nGive each run its own "coverage.reportsDirectory" `
-      + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
-    )
-  }
-
-  private async readReportsDirectoryLockOwner(
-    lockFile: string,
-  ): Promise<{ pid: number } | null> {
-    try {
-      const owner = JSON.parse(await fs.readFile(lockFile, 'utf-8'))
-
-      if (typeof owner?.pid === 'number') {
-        return owner
-      }
-    }
-    catch {}
-
-    return null
-  }
-
-  private async releaseReportsDirectoryLock(): Promise<void> {
-    const lockFile = this.reportsDirectoryLockFile
-    const owner = await this.readReportsDirectoryLockOwner(lockFile)
-
-    // Only remove the lock when we can confirm we own it. A transient unreadable
-    // read (e.g. another process mid-write) must not authorize deleting a lock
-    // that belongs to a different process.
-    if (owner?.pid === process.pid) {
-      await fs.rm(lockFile, { force: true })
-    }
   }
 
   private normalizeCoverageFileError(error: unknown): unknown {
@@ -473,7 +489,7 @@ export class BaseCoverageProvider {
       }
     }
     finally {
-      await this.releaseReportsDirectoryLock()
+      await this.reportsDirectoryLock.release()
     }
   }
 
