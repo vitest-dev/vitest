@@ -25,9 +25,12 @@ on:
         description: Specify exact version instead of bumpp release type
         required: false
         type: string
+  push:
+    branches:
+      - test-flight/prepare-publish-app-pr
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.target_branch }}-${{ inputs.version || inputs.release }}
+  group: ${{ github.workflow }}-${{ inputs.target_branch || 'main' }}-${{ inputs.version || inputs.release || 'next' }}
   cancel-in-progress: false
 
 permissions: {}
@@ -45,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ inputs.target_branch }}
+          ref: ${{ inputs.target_branch || 'main' }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -65,9 +68,9 @@ jobs:
 
       - name: Create branch and update version
         env:
-          TARGET_BRANCH: ${{ inputs.target_branch }}
-          RELEASE_TYPE: ${{ inputs.release }}
-          RELEASE_VERSION: ${{ inputs.version }}
+          TARGET_BRANCH: ${{ inputs.target_branch || 'main' }}
+          RELEASE_TYPE: ${{ inputs.release || 'next' }}
+          RELEASE_VERSION: ${{ inputs.version || '' }}
           RUN_ID: ${{ github.run_id }}
         run: |
           RELEASE_INPUT="${RELEASE_VERSION:-$RELEASE_TYPE}"
@@ -89,7 +92,7 @@ jobs:
 
       - name: Open release PR
         env:
-          TARGET_BRANCH: ${{ inputs.target_branch }}
+          TARGET_BRANCH: ${{ inputs.target_branch || 'main' }}
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           PREPARE_BRANCH="$(git branch --show-current)"
