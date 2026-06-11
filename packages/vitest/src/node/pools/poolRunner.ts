@@ -368,6 +368,7 @@ export class PoolRunner {
 
   private emitUnexpectedExit = (): void => {
     const error = new Error('Worker exited unexpectedly')
+    this._state = RunnerState.STOPPED
 
     this._eventEmitter.emit('error', error)
   }
