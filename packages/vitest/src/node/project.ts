@@ -74,6 +74,7 @@ export class TestProject {
   /** @internal */ _fetcher!: VitestFetchFunction
   /** @internal */ _serializedDefines?: string
   /** @internal */ testFilesList: string[] | null = null
+  /** @internal */ inSourceTestFiles = new Set<string>()
   /** @internal */ _browserReadySessions = new Set<string>()
 
   private runner!: ModuleRunner
@@ -162,7 +163,9 @@ export class TestProject {
       this,
       moduleId,
       pool || getFilePoolName(this),
-      locationsOrOptions,
+      Array.isArray(locationsOrOptions)
+        ? { testLines: locationsOrOptions, isInSourceTest: this.inSourceTestFiles.has(moduleId) }
+        : { ...locationsOrOptions, isInSourceTest: this.inSourceTestFiles.has(moduleId) },
       taskIdOverride,
     )
   }
@@ -337,6 +340,8 @@ export class TestProject {
       return this.testFilesList
     }
 
+    this.inSourceTestFiles.clear()
+
     const testFiles = await this.globFiles(include, exclude, cwd)
 
     if (includeSource?.length) {
@@ -347,6 +352,7 @@ export class TestProject {
           try {
             const code = await fs.readFile(file, 'utf-8')
             if (this.isInSourceTestCode(code)) {
+              this.inSourceTestFiles.add(file)
               testFiles.push(file)
             }
           }

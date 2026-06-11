@@ -151,6 +151,7 @@ export function createPool(ctx: Vitest): ProcessPool {
           context: {
             files: specs.map(spec => ({
               filepath: spec.moduleId,
+              isInSourceTest: spec.isInSourceTest,
               fileTags: tags.get(spec),
               testLocations: spec.testLines,
               testNamePattern: spec.testNamePattern,

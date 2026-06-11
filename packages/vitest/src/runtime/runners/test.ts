@@ -8,6 +8,7 @@ import type { SerializedConfig } from '../config'
 import type {
   CancelReason,
   File,
+  FileSpecification,
   ImportDuration,
   Suite,
   Task,
@@ -26,6 +27,7 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { createFileTask, getNames, getTestName, getTests } from '../../utils/tasks'
 import { createBench, kFinalize } from '../benchmark'
+import { injectQuery } from '../moduleRunner/utils'
 import { rpc } from '../rpc'
 import { getFn, getHooks } from '../runner/map'
 import { createTaskCollector, getCurrentSuite } from '../runner/suite'
@@ -48,6 +50,7 @@ export class TestRunner implements VitestTestRunner {
    * @internal
    */
   public _otel!: Traces
+  public _currentSpecification?: FileSpecification | undefined
   public viteEnvironment: string
   private viteModuleRunner: boolean
 
@@ -72,8 +75,8 @@ export class TestRunner implements VitestTestRunner {
         },
       },
       () => {
-        if (!this.viteModuleRunner) {
-          filepath = `${filepath}?vitest=${Date.now()}`
+        if (!this.viteModuleRunner || (source === 'collect' && this._currentSpecification?.isInSourceTest)) {
+          filepath = injectQuery(filepath, `vitest=${Date.now()}`)
         }
         return this.moduleRunner.import(filepath)
       },

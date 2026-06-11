@@ -6,6 +6,7 @@ import { relative } from 'pathe'
 import { generateFileHash } from '../utils/tasks'
 
 export interface TestSpecificationOptions {
+  isInSourceTest?: boolean
   testNamePattern?: RegExp
   testIds?: string[]
   testLines?: number[]
@@ -45,6 +46,10 @@ export class TestSpecification {
    * The tags of tests to run.
    */
   public testTagsFilter: string[] | undefined
+  /**
+   * Whether this specification was discovered via includeSource.
+   */
+  public isInSourceTest = false
 
   /**
    * This class represents a test suite for a test module within a single project.
@@ -71,6 +76,7 @@ export class TestSpecification {
       this.testLines = testLinesOrOptions
     }
     else if (testLinesOrOptions && typeof testLinesOrOptions === 'object') {
+      this.isInSourceTest = testLinesOrOptions.isInSourceTest ?? false
       this.testLines = testLinesOrOptions.testLines
       this.testNamePattern = testLinesOrOptions.testNamePattern
       this.testIds = testLinesOrOptions.testIds
@@ -98,6 +104,7 @@ export class TestSpecification {
       this.moduleId,
       {
         pool: this.pool,
+        isInSourceTest: this.isInSourceTest,
         testLines: this.testLines,
         testIds: this.testIds,
         testNamePattern: this.testNamePattern,

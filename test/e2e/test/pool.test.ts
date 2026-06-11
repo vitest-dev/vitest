@@ -2,7 +2,7 @@ import type { SerializedConfig } from 'vitest'
 import type { TestUserConfig } from 'vitest/node'
 import { normalize } from 'pathe'
 import { assert, describe, expect, test, vi } from 'vitest'
-import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
+import { runInlineTests, runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) => {
   test('resolves top-level pool', async () => {
@@ -87,6 +87,73 @@ test('non-isolated single worker pool receives all testfiles at once', async () 
       "<process-cwd>/fixtures/pool/c.test.ts",
       "<process-cwd>/fixtures/pool/print-testfiles.test.ts",
     ]
+  `)
+})
+
+test('non-isolated single worker pool collects in-source tests after importing the same files', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      '0-import-source.test.ts': `
+        import { add } from './source-with-test'
+        import { multiply } from './source-importing-source'
+        import { expect, test } from 'vitest'
+
+        test('imports source files', () => {
+          expect(add(1, 2)).toBe(3)
+          expect(multiply(2, 3)).toBe(6)
+        })
+      `,
+      'source-with-test.ts': `
+        export function add(a: number, b: number) {
+          return a + b
+        }
+
+        if (import.meta.vitest) {
+          const { expect, test } = import.meta.vitest
+
+          test('add in source', () => {
+            expect(add(2, 3)).toBe(5)
+          })
+        }
+      `,
+      'source-importing-source.ts': `
+        import { add } from './source-with-test'
+
+        export function multiply(a: number, b: number) {
+          return Array.from({ length: b }).reduce<number>((total) => add(total, a), 0)
+        }
+
+        if (import.meta.vitest) {
+          const { expect, test } = import.meta.vitest
+
+          test('multiply in source', () => {
+            expect(multiply(2, 4)).toBe(8)
+          })
+        }
+      `,
+    },
+    {
+      include: ['0-import-source.test.ts'],
+      includeSource: ['source-*.ts'],
+      isolate: false,
+      maxWorkers: 1,
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "0-import-source.test.ts": {
+        "imports source files": "passed",
+      },
+      "source-importing-source.ts": {
+        "multiply in source": "passed",
+      },
+      "source-with-test.ts": {
+        "add in source": "passed",
+      },
+    }
   `)
 })
 

@@ -74,6 +74,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       const files = groupedFiles.get(project) || []
       files.push({
         filepath: moduleId,
+        isInSourceTest: spec.isInSourceTest,
         testLocations: testLines,
         testIds,
         testNamePattern,

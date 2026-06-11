@@ -17,7 +17,7 @@ export async function getModuleGraph(
 
   const environment = project.config.experimental.viteModuleRunner === false
     ? project.vite.environments.__vitest__
-    : getTestFileEnvironment(project, testFilePath, browser)
+    : getTestFileEnvironment(project, testFilePath, browser) ?? project.vite.environments.__vitest__
 
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)

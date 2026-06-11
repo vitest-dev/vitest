@@ -492,6 +492,59 @@ test.for([
   `)
 })
 
+test('html reporter can merge in-source test reports', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    'import-source.test.ts': `
+import { value } from './source'
+import { expect, test } from 'vitest'
+
+test('imports source', () => {
+  expect(value).toBe(1)
+})
+`,
+    'source.ts': `
+export const value = 1
+
+if (import.meta.vitest) {
+  const { expect, test } = import.meta.vitest
+
+  test('in-source test', () => {
+    expect(value).toBe(1)
+  })
+}
+`,
+  })
+
+  const result1 = await runVitest({
+    root,
+    include: ['import-source.test.ts'],
+    includeSource: ['source.ts'],
+    isolate: false,
+    maxWorkers: 1,
+    reporters: ['blob'],
+  })
+  expect(result1.stderr).toMatchInlineSnapshot(`""`)
+  expect(result1.errorTree()).toMatchInlineSnapshot(`
+    {
+      "import-source.test.ts": {
+        "imports source": "passed",
+      },
+      "source.ts": {
+        "in-source test": "passed",
+      },
+    }
+  `)
+
+  const result2 = await runVitest({
+    root,
+    mergeReports: resolve(root, '.vitest/blob'),
+    reporters: ['html'],
+  })
+  expect(result2.stderr).toMatchInlineSnapshot(`""`)
+  expect(result2.stdout).toContain('HTML  Report is generated')
+})
+
 async function getSerializedModuleGraph(ctx: Vitest) {
   const files = ctx.state.getFiles().slice().sort((a, b) => a.filepath.localeCompare(b.filepath))
   const moduleGraphs = Object.fromEntries(

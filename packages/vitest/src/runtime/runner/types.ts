@@ -1572,6 +1572,7 @@ export type TestArtifact
  */
 export interface FileSpecification {
   filepath: string
+  isInSourceTest?: boolean
   // file can be marked via a jsdoc comment to have tags,
   // these are _not_ tags to filter tests by
   fileTags?: string[]
