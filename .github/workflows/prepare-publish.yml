@@ -30,7 +30,7 @@ on:
       - test-flight/prepare-publish-app-pr
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.target_branch || 'main' }}-${{ inputs.version || inputs.release || 'next' }}
+  group: ${{ github.workflow }}-${{ inputs.target_branch || 'test-flight/prepare-publish-app-pr' }}-${{ inputs.version || inputs.release || 'next' }}
   cancel-in-progress: false
 
 permissions: {}
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ inputs.target_branch || 'main' }}
+          ref: ${{ inputs.target_branch || 'test-flight/prepare-publish-app-pr' }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -68,7 +68,7 @@ jobs:
 
       - name: Create branch and update version
         env:
-          TARGET_BRANCH: ${{ inputs.target_branch || 'main' }}
+          TARGET_BRANCH: ${{ inputs.target_branch || 'test-flight/prepare-publish-app-pr' }}
           RELEASE_TYPE: ${{ inputs.release || 'next' }}
           RELEASE_VERSION: ${{ inputs.version || '' }}
           RUN_ID: ${{ github.run_id }}
@@ -92,7 +92,7 @@ jobs:
 
       - name: Open release PR
         env:
-          TARGET_BRANCH: ${{ inputs.target_branch || 'main' }}
+          TARGET_BRANCH: ${{ inputs.target_branch || 'test-flight/prepare-publish-app-pr' }}
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           PREPARE_BRANCH="$(git branch --show-current)"
