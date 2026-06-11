@@ -5,8 +5,8 @@ import type { CoverageModuleLoader, CoverageOptions, CoverageProvider, ReportCon
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
-import { createHash } from 'node:crypto'
-import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import { createHash, randomUUID } from 'node:crypto'
+import { existsSync, promises as fs, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -83,7 +83,9 @@ function isProcessAlive(pid: number): boolean {
     return true
   }
   catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'EPERM'
+    // ESRCH = no such process. Any other error (EPERM = exists but not ours, or an
+    // unexpected code) should bias toward "alive" so we never stomp a live owner.
+    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
   }
 }
 
@@ -95,8 +97,18 @@ function isProcessAlive(pid: number): boolean {
  * The lock file lives in the OS temp directory (keyed by the resolved reports
  * directory) so it survives the directory cleanup it guards.
  */
+interface LockOwner {
+  pid: number
+  reportsDirectory: string
+  timestamp: number
+  nonce: string
+}
+
 class ReportsDirectoryLock {
   readonly lockFile: string
+  private exitHandler?: () => void
+  private acquiredTimestamp?: number
+  private acquiredNonce?: string
 
   constructor(private readonly reportsDirectory: string) {
     const hash = createHash('sha256')
@@ -108,85 +120,271 @@ class ReportsDirectoryLock {
   }
 
   async acquire(): Promise<void> {
+    const timestamp = Date.now()
+    const nonce = randomUUID()
     const payload = JSON.stringify({
       pid: process.pid,
       reportsDirectory: this.reportsDirectory,
-      timestamp: Date.now(),
+      timestamp,
+      nonce,
     })
 
     // One initial attempt, plus a single retry that is only reached after
     // reclaiming a stale lock left behind by a process that no longer exists.
     for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await fs.writeFile(this.lockFile, payload, { flag: 'wx' })
+      if (await this.tryClaim(payload)) {
+        this.acquiredTimestamp = timestamp
+        this.acquiredNonce = nonce
+        this.registerExitCleanup()
         return
-      }
-      catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-          throw error
-        }
       }
 
       const owner = await this.readOwner()
 
-      // This same process already holds the lock (e.g. watch-mode reruns).
-      if (owner?.pid === process.pid) {
+      // This same process already holds the lock for this directory (e.g.
+      // watch-mode reruns). A matching pid with a different reportsDirectory is
+      // not our lock and falls through to the reclaim path below.
+      if (owner?.pid === process.pid && owner.reportsDirectory === this.reportsDirectory) {
+        this.acquiredTimestamp = owner.timestamp
+        this.acquiredNonce = owner.nonce
+        this.registerExitCleanup()
         return
       }
 
-      // The lock is held by another running process, so fail fast.
-      if (owner != null && isProcessAlive(owner.pid)) {
-        throw this.inUseError(owner.pid)
+      // The lock is held by another running Vitest pointed at the same reports
+      // directory, so fail fast. A mismatched reportsDirectory means it is not
+      // our lock (e.g. a 64-bit hash collision) and is therefore reclaimable.
+      if (owner != null && this.isLiveOwner(owner)) {
+        throw this.inUseError(owner)
       }
 
-      // The lock is stale (its owner is gone or the file is unreadable).
-      // Steal it with an atomic rename so that two processes racing to reclaim
-      // the same stale lock can't both succeed: only the one whose rename wins
-      // removes the file, the loser's rename fails with ENOENT and it retries
-      // the exclusive create on the next iteration.
-      try {
-        await fs.rename(this.lockFile, `${this.lockFile}.${process.pid}.stale`)
-        await fs.rm(`${this.lockFile}.${process.pid}.stale`, { force: true })
-      }
-      catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw error
-        }
-      }
+      // The lock is stale: its owner exited (its own exit handler should have
+      // removed it; a leaked lock with a since-reused pid is a SIGKILL-only
+      // edge), the file is unreadable, or it belongs to a different directory.
+      // Reclaim it via an atomic rename onto a private path, then re-read that
+      // moved inode race-free: only discard-and-reclaim if it is still the
+      // stale/garbage lock we intended to remove. A concurrent reclaimer may
+      // have already published a live lock at this path between our read and our
+      // rename (CWE-367); if we displaced a live/newer owner we restore it and
+      // fail closed rather than clobber its reports.
+      await this.reclaimStaleLock(owner)
     }
 
     // The reclaimed stale lock was taken by another process before we could grab it.
     throw this.inUseError()
   }
 
+  private isLiveOwner(owner: LockOwner): boolean {
+    return owner.reportsDirectory === this.reportsDirectory && isProcessAlive(owner.pid)
+  }
+
+  /**
+   * Move the contested lock aside onto a private path so the moved inode can be
+   * inspected race-free, then decide whether it was genuinely reclaimable.
+   *
+   * Returns (leaving the lock path free to retry the claim) when the moved inode
+   * was the stale/garbage lock we observed, or the rename lost to a concurrent
+   * reclaimer. Throws `inUseError` when the rename displaced a different or
+   * now-live owner — in that case the inode is restored and we fail closed.
+   *
+   * Limitation: the common 2-process case is fully serialized and fail-closed.
+   * A 3+-process simultaneous reclaim of a SIGKILL-orphaned lock for the *same*
+   * reportsDirectory has an inherent transient window — advisory `rename`+`link`
+   * file locks cannot atomically conditional-replace, so the canonical path is
+   * briefly empty between our rename and our restore. That window is bounded by
+   * `restoreInode`: it never destroys a displaced owner's only remaining copy,
+   * so no live lock content is lost; at worst a possibly-spurious "in use" error
+   * that the next run resolves.
+   */
+  private async reclaimStaleLock(observed: LockOwner | null): Promise<void> {
+    const stalePath = `${this.lockFile}.${process.pid}.${randomUUID()}.stale`
+
+    try {
+      await fs.rename(this.lockFile, stalePath)
+    }
+    catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      // Lost the race (ENOENT) or transient win32 contention: retry the claim.
+      if (code === 'ENOENT' || code === 'EPERM' || code === 'EBUSY' || code === 'EACCES') {
+        return
+      }
+      throw error
+    }
+
+    let moved: LockOwner | null
+    try {
+      moved = await this.readOwner(stalePath)
+    }
+    catch (error) {
+      // We could not re-read the moved inode (e.g. EACCES/EMFILE). Restore it so
+      // we never leave a displaced owner orphaned, then propagate.
+      await this.restoreInode(stalePath)
+      throw error
+    }
+
+    const sameAsObserved = moved != null && observed != null
+      && moved.pid === observed.pid
+      && moved.timestamp === observed.timestamp
+      && moved.reportsDirectory === observed.reportsDirectory
+
+    // The moved inode is the corrupt/garbage file or the exact stale owner we
+    // observed and it is still not a live owner of this directory: discard it,
+    // the path is now free, retry the claim.
+    if (moved == null || (sameAsObserved && !this.isLiveOwner(moved))) {
+      await fs.rm(stalePath, { force: true })
+      return
+    }
+
+    // We displaced a different or now-live owner. Put it back and fail closed.
+    await this.restoreInode(stalePath)
+    throw this.inUseError(moved)
+  }
+
+  private async restoreInode(stalePath: string): Promise<void> {
+    try {
+      await fs.link(stalePath, this.lockFile)
+    }
+    catch {
+      // The path was re-taken by another claimant (EEXIST), or the restore hit a
+      // transient filesystem error. Either way, never delete stalePath here — it
+      // is the displaced owner's only remaining copy, so destroying it would lose
+      // a live owner's lock. Leave it as a recovery artifact (only reachable under
+      // the 3+-process simultaneous reclaim documented in reclaimStaleLock).
+      return
+    }
+
+    // Restored: lockFile and stalePath now name the same inode; drop the duplicate.
+    await fs.rm(stalePath, { force: true })
+  }
+
   async release(): Promise<void> {
+    this.deregisterExitCleanup()
+
     const owner = await this.readOwner()
 
-    // Only remove the lock when we can confirm we own it. A transient unreadable
-    // read (e.g. another process mid-write) must not authorize deleting a lock
-    // that belongs to a different process.
-    if (owner?.pid === process.pid) {
+    // Only remove the lock when we can confirm we own this exact lock. Matching
+    // pid + reportsDirectory + the timestamp and nonce we wrote rules out a
+    // reused pid that now points at a foreign live lock. A transient unreadable
+    // read (e.g. another process mid-write) must not authorize deleting a foreign
+    // lock.
+    if (
+      owner?.pid === process.pid
+      && owner.reportsDirectory === this.reportsDirectory
+      && owner.timestamp === this.acquiredTimestamp
+      && owner.nonce === this.acquiredNonce
+    ) {
       await fs.rm(this.lockFile, { force: true })
+    }
+
+    this.acquiredTimestamp = undefined
+    this.acquiredNonce = undefined
+  }
+
+  /**
+   * Publish the lock atomically so the file is never observable without complete
+   * content: write the full payload to a unique temp file, then claim the lock
+   * with `fs.link`, which is atomic and fails with EEXIST when the lock is already
+   * held. This gives exclusive-create *with* the payload already present, closing
+   * the empty/partial-file window of `writeFile(..., { flag: 'wx' })`.
+   */
+  private async tryClaim(payload: string): Promise<boolean> {
+    const tempPath = `${this.lockFile}.${process.pid}.${randomUUID()}.tmp`
+    try {
+      await fs.writeFile(tempPath, payload)
+      await fs.link(tempPath, this.lockFile)
+      return true
+    }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        return false
+      }
+      throw error
+    }
+    finally {
+      await fs.rm(tempPath, { force: true })
     }
   }
 
-  private async readOwner(): Promise<{ pid: number } | null> {
-    try {
-      const owner = JSON.parse(await fs.readFile(this.lockFile, 'utf-8'))
+  private registerExitCleanup(): void {
+    if (this.exitHandler) {
+      return
+    }
 
-      if (typeof owner?.pid === 'number') {
+    // Best-effort: a cleanly exiting process removes its own lock so a throwing
+    // report path, reportOnFailure, watch-mode keepResults, or a graceful close()
+    // never leaves a stale lock in tmpdir. A hard SIGKILL can still leak it; that
+    // case is recovered by the dead-pid reclaim path in acquire().
+    this.exitHandler = () => {
+      try {
+        const owner = JSON.parse(readFileSync(this.lockFile, 'utf-8')) as Partial<LockOwner>
+        if (
+          owner.pid === process.pid
+          && owner.reportsDirectory === this.reportsDirectory
+          && owner.timestamp === this.acquiredTimestamp
+          && owner.nonce === this.acquiredNonce
+        ) {
+          rmSync(this.lockFile, { force: true })
+        }
+      }
+      catch {
+        // Exit handlers must never throw.
+      }
+    }
+
+    process.once('exit', this.exitHandler)
+  }
+
+  private deregisterExitCleanup(): void {
+    if (this.exitHandler) {
+      process.removeListener('exit', this.exitHandler)
+      this.exitHandler = undefined
+    }
+  }
+
+  private async readOwner(lockPath: string = this.lockFile): Promise<LockOwner | null> {
+    let contents: string
+    try {
+      contents = await fs.readFile(lockPath, 'utf-8')
+    }
+    catch (error) {
+      // The lock is genuinely absent. Unexpected I/O errors (EACCES, EMFILE, ...)
+      // propagate so acquisition fails loudly instead of silently stealing a lock
+      // it could not read.
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null
+      }
+      throw error
+    }
+
+    try {
+      const owner = JSON.parse(contents)
+      // Trust the owner only when the full shape is present. A partial-but-valid
+      // JSON (e.g. an older/foreign lock missing timestamp or nonce) is treated
+      // as corrupt -> reclaimable, so identity checks and the `since` clause
+      // never read undefined fields.
+      if (
+        typeof owner?.pid === 'number'
+        && typeof owner?.reportsDirectory === 'string'
+        && typeof owner?.timestamp === 'number'
+        && typeof owner?.nonce === 'string'
+      ) {
         return owner
       }
     }
-    catch {}
+    catch {
+      // Corrupt / empty / non-JSON payload: no valid owner.
+    }
 
     return null
   }
 
-  private inUseError(pid?: number): Error {
+  private inUseError(owner?: LockOwner | null): Error {
+    const since = Number.isFinite(owner?.timestamp)
+      ? ` since ${new Date(owner!.timestamp).toISOString()}`
+      : ''
     return new Error(
       `The coverage report directory "${this.reportsDirectory}" is already in use by `
-      + `another Vitest process${pid ? ` (pid ${pid})` : ''}. Running coverage for multiple Vitest `
+      + `another Vitest process${owner ? ` (pid ${owner.pid}${since})` : ''}. Running coverage for multiple Vitest `
       + `processes in the same directory at the same time is not supported, because they would delete `
       + `each other's reports.\nGive each run its own "coverage.reportsDirectory" `
       + `(e.g. --coverage.reportsDirectory=coverage-${process.pid}) or run them sequentially.`,
