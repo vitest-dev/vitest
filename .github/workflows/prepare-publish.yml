@@ -74,7 +74,7 @@ jobs:
           PREPARE_BRANCH="prepare-$TARGET_BRANCH-$RELEASE_INPUT-$RUN_ID"
           git switch -c "$PREPARE_BRANCH"
           # The numeric prefix comes from `gh api /users/vitest-release-bot%5Bbot%5D --jq .id`.
-          # (TODO: seems possible to make a signed commit as GitHub App like peter-evans/create-pull-request but maybe later)
+          # This is just to make the avatar in the commit look pretty.
           git config user.name "vitest-release-bot[bot]"
           git config user.email "292707936+vitest-release-bot[bot]@users.noreply.github.com"
           pnpm run release
