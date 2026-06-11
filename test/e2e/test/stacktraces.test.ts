@@ -292,6 +292,7 @@ it('resolves/rejects', async () => {
            18|       })
            19|
 
+      Caused by: 3
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
       "
