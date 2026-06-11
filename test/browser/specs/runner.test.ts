@@ -436,7 +436,7 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
   // some tests (`onTestFailed > fails*`) report two errors (AssertionError from
   // `expect.unreachable()` + TimeoutError from the click), and the order in
   // which they reach stderr varies across runs and platforms.
-  const failHeaderRe = /FAIL\s+\|(chromium|firefox|webkit)\|\s+hooks-timeout\.test\.ts\s+>\s+(.+?)\s*$/
+  const failHeaderRe = /FAIL +\|(chromium|firefox|webkit)\| hooks-timeout\.test\.ts > (.+)$/
   const seenFails = new Set<string>()
   for (const line of stderr.split('\n')) {
     const m = line.match(failHeaderRe)
@@ -466,7 +466,7 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
   // Source-map regression sample: `click on non-existing element fails` is a
   // body-level locator click with exactly one error variant, so its `❯` source
   // line is stable. Verify Vitest reports the correct source location.
-  const sourceRe = /❯\s+hooks-timeout\.test\.ts:(\d+):\d+/
+  const sourceRe = /❯ +hooks-timeout\.test\.ts:(\d+):\d+/
   const sourceLines: number[] = []
   const lines = stderr.split('\n')
   for (let i = 0; i < lines.length; i++) {
@@ -487,7 +487,6 @@ test.runIf(provider.name === 'playwright')('timeout hooks', async ({ onTestFaile
   for (const line of sourceLines) {
     expect(line).toBe(6)
   }
-
 
   // page.getByRole('code').click()
   expect(stderr).toContain('locator.click: Timeout')
