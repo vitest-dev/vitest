@@ -1093,6 +1093,35 @@ test('onTestRunEnd(testModules) are preserved from different test run roots', as
   `)
 })
 
+test('total and merged transform times are shown', async () => {
+  for (const [_index, name] of ['first.test.ts', 'second.test.ts'].entries()) {
+    const index = 1 + _index
+    const file = TestRunner.createFileTask(
+      resolve('./fixtures/reporters/merge-reports', name),
+      resolve('./fixtures/reporters/merge-reports'),
+      '',
+    )
+    file.tasks.push(createTest('some test', file))
+
+    await writeBlob(
+      [version, [file], [], undefined, 1500 * index, {}, 2000 * index],
+      resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
+    )
+  }
+
+  const { stdout } = await runVitest({
+    root: resolve('./fixtures/reporters/merge-reports'),
+    mergeReports: resolve('./fixtures/reporters/merge-reports/.vitest/blob'),
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stdout).toContain('✓ first.test.ts (1 test)')
+  expect(stdout).toContain('✓ second.test.ts (1 test)')
+
+  expect(stdout).toContain('Duration  4.50s (transform 6.00s')
+  expect(stdout).toContain('Per blob  1.50s 3.00s')
+})
+
 async function writeBlob(content: MergeReport, filename: string): Promise<void> {
   const report = stringify(content)
 
