@@ -17,7 +17,7 @@ jobs:
   detect:
     if: github.repository == 'vitest-dev/vitest'
     name: Detect release commit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       release: ${{ steps.detect.outputs.release }}
       version: ${{ steps.detect.outputs.version }}
