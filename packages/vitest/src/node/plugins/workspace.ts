@@ -7,6 +7,7 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import * as vite from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { API_TOKEN_FS_DENY } from '../config/apiToken'
 import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
@@ -175,6 +176,7 @@ export function WorkspaceVitestPlugin(
                 project.vitest.config.root,
                 project.vitest.vite.config.configFile,
               ),
+              deny: [...(viteConfig.server?.fs?.deny ?? []), API_TOKEN_FS_DENY],
             },
           },
           // eslint-disable-next-line ts/ban-ts-comment
